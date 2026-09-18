@@ -550,7 +550,7 @@ body {
 }
 .btn-primary {
   background: var(--gradient-primary);
-  color: white;
+  color: var(--accent-text, white);
   border: none;
 }
 .btn-secondary {
@@ -2542,7 +2542,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
 .workout-hero-card .hero-actions .hero-btn-primary {
   padding: 0.8rem 1.5rem;
   background: var(--accent-primary);
-  color: white;
+  color: var(--accent-text, white);
   border: none;
   border-radius: var(--radius-md);
   font-family: var(--font-main);
