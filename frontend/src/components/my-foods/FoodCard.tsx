@@ -64,22 +64,39 @@ export default function FoodCard({
   if (viewMode === 'grid') {
     return (
       <div draggable onClick={() => onToggleSelect(food.id)} onDragStart={handleDrag} style={{ ...itemStyle(isSelected), alignItems: 'flex-start' }}>
-        <div style={{ paddingTop: '0.3rem', minWidth: '24px', color: isSelected ? 'var(--color-success)' : 'var(--text-secondary)', opacity: isSelected ? 1 : 0.3 }}>
+        <div style={{ paddingTop: '0.1rem', minWidth: '24px', color: isSelected ? 'var(--color-success)' : 'var(--text-secondary)', opacity: isSelected ? 1 : 0.3 }}>
           {isSelected ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
         </div>
-        <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
-            <span style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{food.name}</span>
-            {food.brand && <span style={{ opacity: 0.5, fontSize: '0.75rem', flexShrink: 0 }}>({food.brand})</span>}
-            {food.servingSize > 0 && (
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-primary)', opacity: 0.8, flexShrink: 0, paddingLeft: '0.3rem', borderLeft: '1px solid var(--border-subtle)' }}>
-                {food.servingSize}g/{food.servingLabel||'ud'}
+        <div style={{ overflow: 'hidden', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          {/* Fila 1: Nombre + Marca (Forzado a 1 línea con ellipsis) */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.3rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+            <span style={{ fontWeight: 600, fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {food.name}
+            </span>
+            {food.brand && (
+              <span style={{ opacity: 0.5, fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 2 }}>
+                ({food.brand})
               </span>
             )}
           </div>
-          <div>{macroLine(food.kcalPer100g, food.proteinPer100g, food.carbsPer100g, food.fatPer100g)}</div>
+          
+          {/* Fila 2: Porción (Mantiene la altura aunque esté vacío) */}
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', minHeight: '16px', display: 'flex', alignItems: 'center' }}>
+            {food.servingSize > 0 ? (
+              <span style={{ background: 'var(--bg-primary)', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
+                {food.servingSize}g / {food.servingLabel || 'ud'}
+              </span>
+            ) : null}
+          </div>
+          
+          {/* Fila 3: Macros */}
+          <div style={{ marginTop: '0.1rem' }}>
+            {macroLine(food.kcalPer100g, food.proteinPer100g, food.carbsPer100g, food.fatPer100g)}
+          </div>
         </div>
-        <EditBtn onClick={() => onEdit(food)} />
+        <div style={{ paddingTop: '0.1rem' }}>
+          <EditBtn onClick={() => onEdit(food)} />
+        </div>
       </div>
     );
   }
