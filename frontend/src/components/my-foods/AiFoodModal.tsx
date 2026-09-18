@@ -29,8 +29,8 @@ export default function AiFoodModal({
     <div className="modal-backdrop" onClick={() => { stopListening(); onClose(); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
       <div className="card fade-in-anim" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '500px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h3 style={{ margin: 0, fontSize: '1.2rem' }}>✨ Crear con IA</h3>
-          <button onClick={() => { stopListening(); onClose(); }} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+          <h3 style={{ margin: 0, fontSize: '1.2rem' }}> Crear con IA</h3>
+          <button onClick={() => { stopListening(); onClose(); }} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}></button>
         </div>
         
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
@@ -58,7 +58,7 @@ export default function AiFoodModal({
               }} 
               title={isListening ? 'Detener dictado' : 'Dictar por voz'}
             >
-              {isListening ? '⏹️' : '🎤'}
+              {isListening ? '⏹️' : ''}
             </button>
             <input 
               type="text" 
@@ -79,7 +79,7 @@ export default function AiFoodModal({
           )}
 
           <button type="submit" className="btn btn-primary" disabled={!aiQuery.trim()} style={{ width: '100%', padding: '0.8rem' }}>
-            {pendingAiCount > 0 ? `Buscando (${pendingAiCount})...` : '✨ Buscar Alimento'}
+            {pendingAiCount > 0 ? `Buscando (${pendingAiCount})...` : ' Buscar Alimento'}
           </button>
         </form>
       </div>

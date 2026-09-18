@@ -4,10 +4,10 @@ import toast from 'react-hot-toast';
 import api from '../api/client';
 
 const DEFAULT_MEALS = [
-  { name: 'Desayuno', icon: '🌅', sortOrder: 0, startTime: '06:00', endTime: '11:00' },
-  { name: 'Comida', icon: '🍽️', sortOrder: 1, startTime: '13:00', endTime: '17:00' },
-  { name: 'Cena', icon: '🌙', sortOrder: 2, startTime: '20:00', endTime: '05:59' },
-  { name: 'Snacks', icon: '🍫', sortOrder: 3, startTime: '11:00', endTime: '13:00', isDefault: true }
+  { name: 'Desayuno', icon: '', sortOrder: 0, startTime: '06:00', endTime: '11:00' },
+  { name: 'Comida', icon: '️', sortOrder: 1, startTime: '13:00', endTime: '17:00' },
+  { name: 'Cena', icon: '', sortOrder: 2, startTime: '20:00', endTime: '05:59' },
+  { name: 'Snacks', icon: '', sortOrder: 3, startTime: '11:00', endTime: '13:00', isDefault: true }
 ];
 
 export default function MealConfigurator({ onSaved }) {
@@ -93,7 +93,7 @@ export default function MealConfigurator({ onSaved }) {
   const handleAddMeal = async () => {
     setSaving(true);
     try {
-      await api.post('/nutrition/meals', { name: 'Nueva Comida', icon: '🍽️', startTime: '12:00', endTime: '13:00' });
+      await api.post('/nutrition/meals', { name: 'Nueva Comida', icon: '️', startTime: '12:00', endTime: '13:00' });
       await fetchMeals();
     } catch {
       toast.error('Error al añadir comida');
@@ -239,7 +239,7 @@ export default function MealConfigurator({ onSaved }) {
                           disabled={saving}
                           title="Eliminar comida"
                         >
-                          ✕
+                          
                         </button>
                       </div>
 
@@ -336,7 +336,7 @@ export default function MealConfigurator({ onSaved }) {
         }}>
           <p style={{ margin: '0 0 12px 0' }}>No tienes comidas configuradas.</p>
           <button className="btn btn-secondary btn-sm" onClick={handleResetDefaults} disabled={saving}>
-            🔄 Restablecer comidas por defecto
+             Restablecer comidas por defecto
           </button>
         </div>
       )}
@@ -357,7 +357,7 @@ export default function MealConfigurator({ onSaved }) {
           disabled={saving}
           title="Restablecer las 4 comidas por defecto (Desayuno, Comida, Cena, Snacks)"
         >
-          🔄 Por Defecto
+           Por Defecto
         </button>
       </div>
 

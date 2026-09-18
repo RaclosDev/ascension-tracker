@@ -33,7 +33,7 @@ export default function RecipeFormModal({
   return (
     <form onSubmit={handleAddRecipe} style={{ marginBottom: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.6rem', background: 'var(--bg-secondary)', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={onToggle}>
-        <h3 style={{ fontSize: '0.85rem', margin: 0, color: 'var(--text-secondary)' }}>{editingRecipeId ? '✏️ Editar Receta' : '➕ Añadir Nueva'}</h3>
+        <h3 style={{ fontSize: '0.85rem', margin: 0, color: 'var(--text-secondary)' }}>{editingRecipeId ? '️ Editar Receta' : ' Añadir Nueva'}</h3>
         <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{isOpen ? '−' : '+'}</span>
       </div>
       {isOpen && (
@@ -50,7 +50,7 @@ export default function RecipeFormModal({
             {editingRecipeId && (
               <>
                 <button type="button" className="btn btn-secondary" style={{ padding: '0.35rem', flex: 1, fontSize: '0.8rem' }} onClick={onCancelEdit}>Cancelar</button>
-                <button type="button" style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--color-fat)', borderRadius: '8px', cursor: 'pointer' }} onClick={() => handleDeleteRecipe(editingRecipeId)}>🗑️</button>
+                <button type="button" style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--color-fat)', borderRadius: '8px', cursor: 'pointer' }} onClick={() => handleDeleteRecipe(editingRecipeId)}>️</button>
               </>
             )}
             <button type="submit" className="btn btn-primary" style={{ padding: '0.35rem', flex: 1, fontSize: '0.8rem' }}>{editingRecipeId ? 'Actualizar' : 'Guardar'}</button>

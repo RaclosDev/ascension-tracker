@@ -31,8 +31,8 @@ export default function MealSelectorModal({
     <div className="modal-backdrop" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }}>
       <div className="card" style={{ maxWidth: '400px', width: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--text-primary)' }}>🍽️ Añadir al Diario</h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+          <h3 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--text-primary)' }}>️ Añadir al Diario</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}></button>
         </div>
         
         <div>
@@ -67,10 +67,10 @@ export default function MealSelectorModal({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <label className="form-label">¿A qué comida?</label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-            <button onClick={() => handleBulkAddToMeal(0)} disabled={isAddingToMeal} className="btn btn-secondary">☕ Desayuno</button>
-            <button onClick={() => handleBulkAddToMeal(1)} disabled={isAddingToMeal} className="btn btn-secondary">🍲 Comida</button>
-            <button onClick={() => handleBulkAddToMeal(2)} disabled={isAddingToMeal} className="btn btn-secondary">🥗 Cena</button>
-            <button onClick={() => handleBulkAddToMeal(3)} disabled={isAddingToMeal} className="btn btn-secondary">🍎 Snack</button>
+            <button onClick={() => handleBulkAddToMeal(0)} disabled={isAddingToMeal} className="btn btn-secondary"> Desayuno</button>
+            <button onClick={() => handleBulkAddToMeal(1)} disabled={isAddingToMeal} className="btn btn-secondary"> Comida</button>
+            <button onClick={() => handleBulkAddToMeal(2)} disabled={isAddingToMeal} className="btn btn-secondary"> Cena</button>
+            <button onClick={() => handleBulkAddToMeal(3)} disabled={isAddingToMeal} className="btn btn-secondary"> Snack</button>
           </div>
         </div>
       </div>

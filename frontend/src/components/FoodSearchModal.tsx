@@ -148,7 +148,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
       setOffResults(allCleanProducts);
 
       if (allCleanProducts.length === 0) {
-        toast('No se encontraron resultados exactos', { icon: '🔍' });
+        toast('No se encontraron resultados exactos', { icon: '' });
       }
     } catch (err) {
       console.error(err);
@@ -213,7 +213,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
           return;
         }
       }
-      toast('Producto no encontrado por código de barras', { icon: '❓' });
+      toast('Producto no encontrado por código de barras', { icon: '' });
       setOffResults([]);
     } catch (err) {
       console.error(err);
@@ -418,7 +418,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                 Comida {selectedMealIndex + 1} - {date}
               </span>
             </div>
-            <button className="workout-sheet-close" onClick={onClose}>✕</button>
+            <button className="workout-sheet-close" onClick={onClose}></button>
           </div>
         </div>
         <div className="food-search-body">
@@ -426,7 +426,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
         {/* Mode Tabs */}
         {!selectedProduct && (
           <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '1.5rem', padding: '0.35rem', background: 'rgba(255, 255, 255, 0.04)', borderRadius: '14px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.02)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)' }} className="mobile-scroll-x">
-            {[{id:'search', icon:'🔍', label:'Buscar'}, {id:'ai', icon:'✨', label:'IA'}, {id:'ocr', icon:'🧾', label:'Etiqueta'}, {id:'scanner', icon:'📸', label:'Barras'}, {id:'manual', icon:'✏️', label:'Manual'}].map(t => (
+            {[{id:'search', icon:'', label:'Buscar'}, {id:'ai', icon:'', label:'IA'}, {id:'ocr', icon:'', label:'Etiqueta'}, {id:'scanner', icon:'', label:'Barras'}, {id:'manual', icon:'️', label:'Manual'}].map(t => (
               <button 
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
@@ -694,7 +694,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                         borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', cursor: 'pointer'
                       }}
                     >
-                      ✕
+                      
                     </button>
                   </div>
                 </div>
@@ -727,7 +727,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                   }}
                   title="Adjuntar foto"
                 >
-                  📷
+                  
                 </button>
                 <button 
                   type="button"
@@ -749,7 +749,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                   }}
                   title={isListening ? 'Detener dictado (Pulsar para parar)' : 'Dictar por voz (Habla a tu ritmo)'}
                 >
-                  {isListening ? '⏹️' : '🎤'}
+                  {isListening ? '⏹️' : ''}
                 </button>
               </div>
             </div>
@@ -797,7 +797,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                 value={selectedMealIndex} 
                 onChange={(e) => setSelectedMealIndex(Number(e.target.value))}
               >
-                <option value={-1}>✨ Detectar automáticamente / Todo el día</option>
+                <option value={-1}> Detectar automáticamente / Todo el día</option>
                 {meals && meals.length > 0 ? (
                   meals.map((m, idx) => (
                     <option key={m.id || idx} value={idx}>
@@ -823,7 +823,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                   if (!query.trim() && !selectedImage) return toast.error('Escribe algo o adjunta una foto primero');
                   stopListening();
                   const queryText = query.trim();
-                  toast(`🧠 Procesando con IA...`, { duration: 2500 });
+                  toast(` Procesando con IA...`, { duration: 2500 });
                   setQuery('');
                   
                   const payload: any = { text: queryText, mealIndex: selectedMealIndex, date };
@@ -839,9 +839,9 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                     .then((res) => {
                       const count = Array.isArray(res.data) ? res.data.length : 1;
                       if (selectedMealIndex === -1) {
-                        toast.success(`¡${count} alimento(s) repartidos en tus comidas por IA! ✨`);
+                        toast.success(`¡${count} alimento(s) repartidos en tus comidas por IA! `);
                       } else {
-                        toast.success(`¡${count} alimento(s) añadidos por IA! ✨`);
+                        toast.success(`¡${count} alimento(s) añadidos por IA! `);
                       }
                       onLogAdded();
                     })
@@ -861,7 +861,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
         ) : activeTab === 'ocr' ? (
           /* VIEW: OCR / PHOTO */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', textAlign: 'center', padding: '1rem 0' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>📸</div>
+            <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}></div>
             <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>Escanear Etiqueta Nutricional</h4>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', maxWidth: '300px' }}>
               Haz una foto de la tabla nutricional de cualquier alimento para extraer sus macros automáticamente con IA.
@@ -940,7 +940,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px'
                   }}>
-                    <span>🏪</span> Supermercados y Marcas ({offResults.length})
+                    <span></span> Supermercados y Marcas ({offResults.length})
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                     {offResults.map((p, idx) => {
@@ -997,7 +997,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                     {filteredSaved.length > 0 && (
                     <div style={{ marginBottom: '1.5rem' }}>
                       <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                        🍗 Mis Alimentos Guardados
+                         Mis Alimentos Guardados
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                         {filteredSaved.map((food) => (
@@ -1041,7 +1041,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                   {filteredRecent.length > 0 && (
                     <div>
                       <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                        🕒 Últimos Alimentos Añadidos
+                         Últimos Alimentos Añadidos
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                         {filteredRecent.map((log) => {
@@ -1093,7 +1093,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                       setActiveTab('manual');
                     }}
                   >
-                    ✍️ Crear "{query}" como entrada manual
+                    ️ Crear "{query}" como entrada manual
                   </button>
                 </div>
               )}
