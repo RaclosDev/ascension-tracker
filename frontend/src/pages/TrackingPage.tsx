@@ -4,7 +4,7 @@ import api from '../api/client';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import {  Trash2 , Footprints, Flame, Target } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { parseSafeWeight } from '../utils/weightHelper';
 
 const DayCell = ({ dateStr, dayName, dayData, isToday, onOpenModal, showWeight, showSteps, showCalories }) => {
@@ -215,19 +215,19 @@ export default function TrackingPage() {
           onClick={() => setShowWeight(!showWeight)}
           style={{ flex: 1, padding: '0.45rem 0.6rem', borderRadius: '10px', border: 'none', background: showWeight ? 'rgba(255, 255, 255, 0.12)' : 'transparent', color: showWeight ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: showWeight ? 700 : 500, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', minWidth: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', boxShadow: showWeight ? '0 4px 12px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(255, 255, 255, 0.05) inset' : 'none', transform: showWeight ? 'scale(1)' : 'scale(0.98)' }}
         >
-          ️ Peso
+          ⚖️ Peso
         </button>
         <button 
           onClick={() => setShowSteps(!showSteps)}
           style={{ flex: 1, padding: '0.45rem 0.6rem', borderRadius: '10px', border: 'none', background: showSteps ? 'rgba(255, 255, 255, 0.12)' : 'transparent', color: showSteps ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: showSteps ? 700 : 500, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', minWidth: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', boxShadow: showSteps ? '0 4px 12px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(255, 255, 255, 0.05) inset' : 'none', transform: showSteps ? 'scale(1)' : 'scale(0.98)' }}
         >
-           Pasos
+          👟 Pasos
         </button>
         <button 
           onClick={() => setShowCalories(!showCalories)}
           style={{ flex: 1, padding: '0.45rem 0.6rem', borderRadius: '10px', border: 'none', background: showCalories ? 'rgba(255, 255, 255, 0.12)' : 'transparent', color: showCalories ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: showCalories ? 700 : 500, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', minWidth: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', boxShadow: showCalories ? '0 4px 12px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(255, 255, 255, 0.05) inset' : 'none', transform: showCalories ? 'scale(1)' : 'scale(0.98)' }}
         >
-           Kcal
+          🍎 Kcal
         </button>
       </div>
 
@@ -248,7 +248,7 @@ export default function TrackingPage() {
                     <>
                       <div style={{ fontSize: '0.85rem', background: 'var(--bg-secondary)', padding: '0.3rem 0.5rem', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                         <span className="hide-on-mobile" style={{ color: 'var(--text-secondary)' }}>Peso:</span>
-                        <span className="show-on-mobile" style={{ display: 'none', color: 'var(--text-secondary)' }}>️</span>
+                        <span className="show-on-mobile" style={{ display: 'none', color: 'var(--text-secondary)' }}>⚖️</span>
                         <strong style={{ color: 'var(--accent-primary-light)' }}>
                           {week.averageWeight !== null ? <>{week.averageWeight.toFixed(2)}<span className="hide-on-mobile"> kg</span></> : '—'}
                         </strong>
@@ -268,7 +268,7 @@ export default function TrackingPage() {
                   {showSteps && (
                     <div style={{ fontSize: '0.85rem', background: 'var(--bg-secondary)', padding: '0.3rem 0.5rem', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                       <span className="hide-on-mobile" style={{ color: 'var(--text-secondary)' }}>Pasos:</span>
-                      <span className="show-on-mobile" style={{ display: 'none', color: 'var(--text-secondary)' }}></span>
+                      <span className="show-on-mobile" style={{ display: 'none', color: 'var(--text-secondary)' }}>👟</span>
                       <strong style={{ color: 'var(--accent-primary-light)' }}>
                         {week.averageSteps !== null ? <>{Math.round(week.averageSteps)}<span className="hide-on-mobile"> pasos</span></> : '—'}
                       </strong>
@@ -277,7 +277,7 @@ export default function TrackingPage() {
                   {showCalories && (
                     <div style={{ fontSize: '0.85rem', background: 'var(--bg-secondary)', padding: '0.3rem 0.5rem', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                       <span className="hide-on-mobile" style={{ color: 'var(--text-secondary)' }}>Kcal:</span>
-                      <span className="show-on-mobile" style={{ display: 'none', color: 'var(--text-secondary)' }}></span>
+                      <span className="show-on-mobile" style={{ display: 'none', color: 'var(--text-secondary)' }}>🍎</span>
                       <strong style={{ color: 'var(--accent-primary-light)' }}>
                         {week.averageCalories !== null ? <>{Math.round(week.averageCalories)}<span className="hide-on-mobile"> kcal</span></> : '—'}
                       </strong>
@@ -334,7 +334,7 @@ export default function TrackingPage() {
                 onClick={() => setModalData(null)}
                 style={{ padding: '0.2rem 0.6rem', borderRadius: '50%' }}
               >
-                
+                ✕
               </button>
             </div>
 
@@ -344,7 +344,7 @@ export default function TrackingPage() {
               <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                   <span style={{ fontWeight: 600, color: 'var(--accent-primary-light)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    ️ Peso
+                    ⚖️ Peso
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
@@ -373,7 +373,7 @@ export default function TrackingPage() {
               <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                   <span style={{ fontWeight: 600, color: 'var(--accent-primary-light)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                     Pasos
+                    👟 Pasos
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
@@ -401,7 +401,7 @@ export default function TrackingPage() {
               {/* Calories Read-only Section */}
               <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontWeight: 600, color: 'var(--accent-primary-light)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                   Calorías de hoy
+                  🍎 Calorías de hoy
                 </span>
                 <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--accent-primary-light)' }}>
                   {modalData.dayData.calories !== null ? `${Math.round(modalData.dayData.calories)} kcal` : '—'}
