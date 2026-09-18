@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import toast from 'react-hot-toast';
+import BottomSheet from './BottomSheet';
 
 const navItems = [
   { path: '/dashboard', icon: '📊', label: 'Dashboard', shortLabel: 'Inicio' },
@@ -157,41 +158,33 @@ export default function Layout() {
       </nav>
 
       {/* Bottom Sheet Menu */}
-      {moreMenuOpen && (
-        <div 
-          className="bottom-sheet-overlay"
-          onClick={() => setMoreMenuOpen(false)}
-        >
-          <div 
-            className="bottom-sheet-content"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="bottom-sheet-drag-handle" />
-            <h3 className="bottom-sheet-title">Más opciones</h3>
-            <div className="bottom-sheet-grid">
-              {navItems.filter(i => moreMenuPaths.includes(i.path)).map(item => {
-                const isActive = location.pathname === item.path;
-                return (
-                  <button
-                    key={item.path}
-                    type="button"
-                    className={`bottom-sheet-item ${isActive ? 'active' : ''}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setMoreMenuOpen(false);
-                      if (location.pathname !== item.path) navigate(item.path);
-                    }}
-                  >
-                    <div className="bottom-sheet-item-icon">{item.icon}</div>
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+      <BottomSheet 
+        isOpen={moreMenuOpen} 
+        onClose={() => setMoreMenuOpen(false)}
+        title="Más opciones"
+      >
+        <div className="bottom-sheet-grid">
+          {navItems.filter(i => moreMenuPaths.includes(i.path)).map(item => {
+            const isActive = location.pathname === item.path;
+            return (
+              <button
+                key={item.path}
+                type="button"
+                className={`bottom-sheet-item ${isActive ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMoreMenuOpen(false);
+                  if (location.pathname !== item.path) navigate(item.path);
+                }}
+              >
+                <div className="bottom-sheet-item-icon">{item.icon}</div>
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </div>
-      )}
+      </BottomSheet>
     </div>
   );
 }
