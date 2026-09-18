@@ -63,40 +63,52 @@ export default function FoodCard({
 
   if (viewMode === 'grid') {
     return (
-      <div draggable onClick={() => onToggleSelect(food.id)} onDragStart={handleDrag} style={{ ...itemStyle(isSelected), alignItems: 'flex-start' }}>
-        <div style={{ paddingTop: '0.4rem', minWidth: '24px', color: isSelected ? 'var(--color-success)' : 'var(--text-secondary)', opacity: isSelected ? 1 : 0.3 }}>
-          {isSelected ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
-        </div>
-        <div style={{ overflow: 'hidden', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-          
-          {/* Fila Superior: Marca (Derecha) + Lapiz de Edicion */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.4rem', minHeight: '28px', marginBottom: '0.2rem' }}>
-            <span style={{ opacity: 0.5, fontSize: '0.7rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {food.brand || ''}
-            </span>
-            <EditBtn onClick={() => onEdit(food)} />
-          </div>
-
-          {/* Fila 1: Nombre (Ocupa todo el ancho disponible ahora, sin miedo a chocar con la marca) */}
-          <div style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingBottom: '0.3rem' }}>
+      <div draggable onClick={() => onToggleSelect(food.id)} onDragStart={handleDrag} style={{ ...itemStyle(isSelected), flexDirection: 'column', alignItems: 'stretch', gap: '0.4rem' }}>
+        
+        {/* Fila 1: Nombre (Izquierda) + Lápiz (Derecha) */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+          <div style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, paddingTop: '0.2rem' }}>
             {food.name}
           </div>
-          
-          {/* Fila 2: Porción (Mantiene la altura aunque esté vacío) */}
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', minHeight: '18px', display: 'flex', alignItems: 'center', marginBottom: '0.2rem' }}>
-            {food.servingSize > 0 ? (
-              <span style={{ background: 'var(--bg-primary)', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
-                {food.servingSize}g / {food.servingLabel || 'ud'}
-              </span>
-            ) : null}
+          <div style={{ flexShrink: 0, marginTop: '-0.2rem', marginRight: '-0.2rem' }}>
+            <EditBtn onClick={() => onEdit(food)} />
           </div>
-          
-          {/* Fila 3: Macros */}
-          <div style={{ paddingBottom: '0.2rem' }}>
-            {macroLine(food.kcalPer100g, food.proteinPer100g, food.carbsPer100g, food.fatPer100g)}
-          </div>
-          
         </div>
+        
+        {/* Fila 2: Kcal, Porción, Marca */}
+        <div style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-secondary)' }}>
+          <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{Math.round(food.kcalPer100g)} kcal</span>
+          
+          {(food.servingSize > 0 || food.brand) && (
+            <span style={{ opacity: 0.5 }}>•</span>
+          )}
+
+          {food.servingSize > 0 && (
+            <span style={{ background: 'var(--bg-primary)', padding: '0.1rem 0.3rem', borderRadius: '4px', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}>
+              {food.servingSize}g/{food.servingLabel || 'ud'}
+            </span>
+          )}
+
+          {food.servingSize > 0 && food.brand && (
+            <span style={{ opacity: 0.5 }}>•</span>
+          )}
+
+          {food.brand && (
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', opacity: 0.8 }}>
+              {food.brand}
+            </span>
+          )}
+        </div>
+
+        {/* Fila 3: Macros Restantes */}
+        <div style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-secondary)' }}>
+          <span>P: {Number(food.proteinPer100g).toFixed(1)}g</span>
+          <span style={{ opacity: 0.5 }}>•</span>
+          <span>C: {Number(food.carbsPer100g).toFixed(1)}g</span>
+          <span style={{ opacity: 0.5 }}>•</span>
+          <span>G: {Number(food.fatPer100g).toFixed(1)}g</span>
+        </div>
+
       </div>
     );
   }
