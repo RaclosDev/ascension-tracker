@@ -52,6 +52,7 @@ export function applyThemeColor(hexColor: string) {
   root.style.setProperty('--accent-primary-dark', dark);
   
   root.style.setProperty('--accent-glow', `rgba(${rgb}, 0.15)`);
+  root.style.setProperty('--accent-shadow', `rgba(${rgb}, 0.4)`);
   
   root.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${hexColor}, ${dark})`);
   

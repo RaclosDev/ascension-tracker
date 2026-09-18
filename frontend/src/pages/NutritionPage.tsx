@@ -308,9 +308,9 @@ export default function NutritionPage() {
             fontSize: '2rem',
             lineHeight: 1,
             background: 'var(--gradient-primary)',
-            color: 'white',
+            color: 'var(--accent-text, white)',
             border: 'none',
-            boxShadow: '0 8px 24px rgba(0, 133, 255, 0.4), inset 0 1px 2px rgba(255,255,255,0.2)'
+            boxShadow: '0 8px 24px var(--accent-shadow), inset 0 1px 2px rgba(255,255,255,0.2)'
           }}
           onClick={() => {
             setSelectedMealIndex(0);

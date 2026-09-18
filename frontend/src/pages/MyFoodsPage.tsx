@@ -748,7 +748,7 @@ export default function MyFoodsPage() {
                   <div className="bulk-action-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--color-danger-bg)', border: '1px solid rgba(239,68,68,0.3)', padding: '0.75rem 1rem', borderRadius: '10px' }}>
                     <span style={{ fontSize: '0.85rem', color: 'var(--color-danger)', fontWeight: 600 }}>{selectedFoods.size} seleccionados</span>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                      <button onClick={() => setIsMealSelectorOpen(true)} style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}><Utensils className="w-4 h-4" /> Añadir</button>
+                      <button onClick={() => setIsMealSelectorOpen(true)} style={{ background: 'var(--accent-primary)', color: 'var(--accent-text, white)', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}><Utensils className="w-4 h-4" /> Añadir</button>
                       <button onClick={handleBulkDelete} style={{ background: 'var(--bg-glass)', color: 'var(--color-danger)', border: '1px solid rgba(239,68,68,0.3)', padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}> <Trash2 className="w-4 h-4" /> Borrar</button>
                       <button onClick={() => setSelectedFoods(new Set())} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.85rem', padding: '0.4rem 0.5rem' }}><X className="w-4 h-4" /></button>
                     </div>
@@ -1100,7 +1100,7 @@ export default function MyFoodsPage() {
           alignItems: 'center',
           justifyContent: 'center',
           fontSize: '1.5rem',
-          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)' // Blueish shadow
+          boxShadow: '0 4px 12px var(--accent-shadow)' // Blueish shadow
         }}
         title="Crear o Añadir Alimento">
         <Plus className="w-6 h-6" />
