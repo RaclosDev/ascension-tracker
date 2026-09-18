@@ -196,7 +196,7 @@ export function ExercisePicker() {
           {/* Recents Section */}
           {recentExercises.length > 0 && !query && filterMuscle === "ALL" && filterEquip === "ALL" && (
             <div className="picker-recents-section">
-              <div className="picker-recents-label">⚡ Recientes</div>
+              <div className="picker-recents-label"> Recientes</div>
               <div className="picker-recents-grid">
                 {recentExercises.map(ex => {
                   const dName = aliases[ex.id] || ex.name;

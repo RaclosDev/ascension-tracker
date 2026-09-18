@@ -36,7 +36,7 @@ const itemStyle = (highlight: boolean) => ({
 
 const EditBtn = ({ onClick }: { onClick: () => void }) => (
   <button onClick={(e) => { e.stopPropagation(); onClick(); }} className="icon-btn edit-btn" style={{ padding: '0.4rem', width: '28px', height: '28px' }} title="Editar">
-    ✏️
+    
   </button>
 );
 

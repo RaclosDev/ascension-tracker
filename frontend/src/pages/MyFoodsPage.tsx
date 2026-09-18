@@ -216,9 +216,9 @@ export default function MyFoodsPage() {
     stopListening();
     setAiQuery('');
     setPendingAiCount(prev => prev + 1);
-    toast(`Buscando "${queryText}"...`, { icon: '✨', duration: 2000 });
+    toast(`Buscando "${queryText}"...`, { icon: '', duration: 2000 });
     api.post('/nutrition/ai/food', { text: queryText })
-      .then(() => { toast.success(`"${queryText}" añadido ✨`); fetchData(); })
+      .then(() => { toast.success(`"${queryText}" añadido `); fetchData(); })
       .catch((err) => { toast.error(`Error: ${err.response?.data?.error || 'IA'}`); })
       .finally(() => { setPendingAiCount(prev => Math.max(0, prev - 1)); });
   };
@@ -486,7 +486,7 @@ export default function MyFoodsPage() {
 
     try {
       await api.post('/nutrition/my-foods', dto);
-      toast.success(`"${scannedProduct.name}" añadido a Mis Alimentos 🎉`);
+      toast.success(`"${scannedProduct.name}" añadido a Mis Alimentos `);
       setIsScannerOpen(false);
       setScannedProduct(null);
       setLookupError(null);
@@ -578,7 +578,7 @@ export default function MyFoodsPage() {
 
   const EditBtn = ({ onClick }) => (
     <button onClick={(e) => { e.stopPropagation(); onClick(); }} className="icon-btn edit-btn" style={{ padding: '0.4rem', width: '28px', height: '28px' }} title="Editar">
-      ✏️
+      
     </button>
   );
 
@@ -597,7 +597,7 @@ export default function MyFoodsPage() {
         gap: '0.65rem'
       }}>
         <div style={{ position: 'relative', width: '100%' }}>
-          <span style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.95rem', pointerEvents: 'none' }}>🔍</span>
+          <span style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.95rem', pointerEvents: 'none' }}></span>
           <input
             type="text"
             className="form-input"
@@ -644,10 +644,10 @@ export default function MyFoodsPage() {
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
           <div className="mobile-scroll-x" style={{ display: 'flex', gap: '0.35rem', flexWrap: 'nowrap', alignItems: 'center', overflowX: 'auto', paddingBottom: '2px', flex: 1 }}>
             {[
-              { id: 'all', icon: '♾️', label: 'Todo', count: q ? totalResults : (recentFoods.length + savedFoods.length + recipes.length) },
-              { id: 'recent', icon: '⏱️', label: 'Recientes', count: filteredRecent.length },
-              { id: 'foods', icon: '🍗', label: 'Alimentos', count: filteredFoods.length },
-              { id: 'recipes', icon: '🍳', label: 'Recetas', count: filteredRecipes.length }
+              { id: 'all', icon: '', label: 'Todo', count: q ? totalResults : (recentFoods.length + savedFoods.length + recipes.length) },
+              { id: 'recent', icon: '', label: 'Recientes', count: filteredRecent.length },
+              { id: 'foods', icon: '', label: 'Alimentos', count: filteredFoods.length },
+              { id: 'recipes', icon: '', label: 'Recetas', count: filteredRecipes.length }
             ].map(tab => {
               const active = searchFilter === tab.id;
               return (
@@ -690,7 +690,7 @@ export default function MyFoodsPage() {
           </div>
           
           <button onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')} className="btn btn-secondary btn-sm" style={{ padding: '0.3rem', width: '32px', height: '32px', flexShrink: 0, borderRadius: '8px' }} title="Cambiar Vista">
-            {viewMode === 'grid' ? '📋' : '🗂️'}
+            {viewMode === 'grid' ? '' : '🗂️'}
           </button>
         </div>
 
@@ -719,7 +719,7 @@ export default function MyFoodsPage() {
               
               <div onClick={(e) => toggleSection('foods', e)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', gap: '0.5rem', padding: '0.5rem 0.8rem', background: 'var(--bg-glass)', borderRadius: '10px', cursor: 'pointer' }}>
                 <h2 style={{ fontSize: '1.2rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  <span>🍗</span> Mis Alimentos
+                  <span></span> Mis Alimentos
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', color: 'var(--text-secondary)' }}>
                   {(expandedSections.foods || q) && (
@@ -728,7 +728,7 @@ export default function MyFoodsPage() {
                       style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '6px', width: '28px', height: '28px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-primary)' }}
                       title={sortBy === 'recent' ? 'Ordenado por más recientes. Cambiar a A-Z' : 'Ordenado de A-Z. Cambiar a más recientes'}
                     >
-                      {sortBy === 'recent' ? '⏱️' : '🔤'}
+                      {sortBy === 'recent' ? '' : '🔤'}
                     </button>
                   )}
                   <div>{expandedSections.foods ? '▼' : '▶'}</div>
@@ -740,7 +740,7 @@ export default function MyFoodsPage() {
                 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center', background: 'var(--bg-secondary)', padding: '0.5rem', borderRadius: '10px' }}>
                   <div className="mobile-scroll-x" style={{ display: 'flex', gap: '0.3rem', flex: 1, minWidth: '0', overflowX: 'auto', paddingBottom: '2px' }}>
-                    {[{id:'all', label:'Todos'}, {id:'protein', label:'🥩 Pro'}, {id:'carbs', label:'🍚 Car'}, {id:'fat', label:'🥑 Gra'}].map(m => (
+                    {[{id:'all', label:'Todos'}, {id:'protein', label:'🥩 Pro'}, {id:'carbs', label:'🍚 Car'}, {id:'fat', label:' Gra'}].map(m => (
                       <button key={m.id} onClick={() => setMacroFilter(m.id)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', borderRadius: '6px', cursor: 'pointer', border: 'none', background: macroFilter === m.id ? 'rgba(255, 255, 255, 0.12)' : 'transparent', boxShadow: macroFilter === m.id ? '0 4px 12px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(255, 255, 255, 0.05) inset' : 'none', transform: macroFilter === m.id ? 'scale(1)' : 'scale(0.98)', transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', color: macroFilter === m.id ? 'var(--text-primary)' : 'var(--text-secondary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                         {m.label}
                       </button>
@@ -754,7 +754,7 @@ export default function MyFoodsPage() {
                     <span style={{ fontSize: '0.85rem', color: 'var(--color-danger)', fontWeight: 600 }}>{selectedFoods.size} seleccionados</span>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                       <button onClick={() => setIsMealSelectorOpen(true)} style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}>🍽️ Añadir</button>
-                      <button onClick={handleBulkDelete} style={{ background: 'var(--bg-glass)', color: 'var(--color-danger)', border: '1px solid rgba(239,68,68,0.3)', padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}>🗑️ Borrar</button>
+                      <button onClick={handleBulkDelete} style={{ background: 'var(--bg-glass)', color: 'var(--color-danger)', border: '1px solid rgba(239,68,68,0.3)', padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}> Borrar</button>
                       <button onClick={() => setSelectedFoods(new Set())} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.85rem', padding: '0.4rem 0.5rem' }}>✕</button>
                     </div>
                   </div>
@@ -821,7 +821,7 @@ export default function MyFoodsPage() {
           <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
             <div onClick={(e) => toggleSection('recent', e)} style={{ cursor: 'pointer', padding: '0.5rem 0.8rem', background: 'var(--bg-glass)', borderRadius: '10px', marginBottom: '0.75rem' }}>
               <h2 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-                <span>⏱️</span> Recientes
+                <span></span> Recientes
                 <span style={{ fontSize: '0.7rem', fontWeight: 400, color: 'var(--text-secondary)', marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span className="hide-on-mobile">Arrastra →</span>
                   <span className="show-on-mobile" style={{ display: 'none' }}>{(expandedSections.recent || q) ? '▼' : '▶'}</span>
@@ -861,7 +861,7 @@ export default function MyFoodsPage() {
           <div className="card" style={{ display: 'flex', flexDirection: 'column', border: dragOverTarget === 'recipes' ? '2px dashed var(--color-warning)' : undefined, transition: 'border 0.2s' }} onDragOver={(e) => handleDragOver(e, 'recipes')} onDragLeave={handleDragLeave} onDrop={handleDropOnRecipes}>
             <div onClick={(e) => toggleSection('recipes', e)} style={{ cursor: 'pointer', padding: '0.5rem 0.8rem', background: 'var(--bg-glass)', borderRadius: '10px', marginBottom: '0.75rem' }}>
               <h2 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-                <span>🍳</span> Mis Recetas
+                <span></span> Mis Recetas
                 <span style={{ fontSize: '0.7rem', fontWeight: 400, color: 'var(--text-secondary)', marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span className="show-on-mobile" style={{ display: 'none' }}>{(expandedSections.recipes || q) ? '▼' : '▶'}</span>
                 </span>
@@ -939,7 +939,7 @@ export default function MyFoodsPage() {
             {/* Modal Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '1.25rem' }}>📷</span>
+                <span style={{ fontSize: '1.25rem' }}></span>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)' }}>Escanear Código / QR</h3>
                   <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Escanea el código de un envase para guardarlo en Mis Alimentos</p>
@@ -1026,7 +1026,7 @@ export default function MyFoodsPage() {
                       onClick={handleEditScannedProduct}
                       style={{ flex: 1, padding: '0.5rem', fontSize: '0.82rem' }}
                     >
-                      ✏️ Editar antes de guardar
+                       Editar antes de guardar
                     </button>
                     <button
                       type="button"
@@ -1042,7 +1042,7 @@ export default function MyFoodsPage() {
             ) : lookupError ? (
               /* Product Not Found */
               <div style={{ padding: '1.5rem 1rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={{ fontSize: '2.2rem' }}>❓</span>
+                <span style={{ fontSize: '2.2rem' }}></span>
                 <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-fat)', fontWeight: 600 }}>Producto no encontrado</p>
                 <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{lookupError}</p>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', width: '100%' }}>
@@ -1118,7 +1118,7 @@ export default function MyFoodsPage() {
       {isActionMenuOpen && (
         <div className="modal-backdrop" onClick={() => setIsActionMenuOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 10000, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div className="card slide-up-anim" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '500px', margin: '0 auto', borderBottomLeftRadius: 0, borderBottomRightRadius: 0, padding: '1.5rem', paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--text-primary)', textAlign: 'center', fontSize: '1.1rem' }}>➕ Crear Alimento</h3>
+            <h3 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--text-primary)', textAlign: 'center', fontSize: '1.1rem' }}> Crear Alimento</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <button 
@@ -1126,7 +1126,7 @@ export default function MyFoodsPage() {
                 onClick={() => { setIsActionMenuOpen(false); setIsAiModalOpen(true); }}
                 style={{ padding: '1rem', justifyContent: 'flex-start', fontSize: '1rem', background: 'var(--bg-primary)' }}
               >
-                ✨ Crear con IA (Texto / Voz)
+                 Crear con IA (Texto / Voz)
               </button>
 
               <button 
@@ -1134,7 +1134,7 @@ export default function MyFoodsPage() {
                 onClick={() => { setIsActionMenuOpen(false); setIsScannerOpen(true); setScannedProduct(null); setLookupError(null); }}
                 style={{ padding: '1rem', justifyContent: 'flex-start', fontSize: '1rem', background: 'var(--bg-primary)' }}
               >
-                📸 Escanear Código (Barras/QR)
+                 Escanear Código (Barras/QR)
               </button>
 
               <button 

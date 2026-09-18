@@ -142,7 +142,7 @@ export default function DashboardPage() {
           <div className="kpi-detail">Media semanal: {dashboard.currentWeeklyAverage?.toFixed(2)} kg</div>
         </div>
         <div className="kpi-card accent">
-          <div className="kpi-label">📉 Total Perdido</div>
+          <div className="kpi-label"> Total Perdido</div>
           <div className="kpi-value accent">{dashboard.totalLost?.toFixed(2)} kg</div>
           <div className="kpi-detail">
             {dashboard.totalLost < 0 ? (
@@ -153,7 +153,7 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="kpi-card info">
-          <div className="kpi-label">🎯 Te Falta</div>
+          <div className="kpi-label"> Te Falta</div>
           <div className="kpi-value info">{dashboard.remaining?.toFixed(1)} kg</div>
           <div className="kpi-detail">{dashboard.remaining > 0 ? 'por perder' : '¡Meta alcanzada!'}</div>
         </div>
@@ -185,7 +185,7 @@ export default function DashboardPage() {
       <div className="charts-grid">
         {/* Weight Evolution Chart */}
         <div className="chart-card full-width">
-          <div className="chart-title">📈 Evolución de Peso</div>
+          <div className="chart-title"> Evolución de Peso</div>
           <div className="chart-wrapper">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={weightChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -213,7 +213,7 @@ export default function DashboardPage() {
 
         {/* Delta Chart */}
         <div className="chart-card">
-          <div className="chart-title">📊 Variación Semanal (Δ)</div>
+          <div className="chart-title"> Variación Semanal (Δ)</div>
           <div className="chart-wrapper">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={deltaData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>

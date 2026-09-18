@@ -144,7 +144,7 @@ export default function UtilitiesPage() {
         {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          text: `⚠️ Lo siento, ocurrió un error: ${errorMsg}. Por favor prueba de nuevo.`,
+          text: ` Lo siento, ocurrió un error: ${errorMsg}. Por favor prueba de nuevo.`,
           mealOptions: []
         }
       ]);
@@ -173,7 +173,7 @@ export default function UtilitiesPage() {
         foods: option.suggestedFoods
       });
 
-      toast.success(`¡${option.title || 'Opción'} añadida a tu diario de hoy! ✨`);
+      toast.success(`¡${option.title || 'Opción'} añadida a tu diario de hoy! `);
 
       setAppliedOptionKeys((prev) => new Set([...prev, optionKey]));
       // Refresh remaining macros
@@ -355,15 +355,15 @@ export default function UtilitiesPage() {
         <div style={{ marginTop: '0.75rem', marginBottom: '1rem' }}>
           <div style={{ padding: '0.75rem', background: 'var(--bg-secondary)', borderRadius: '10px', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>🎯 Macros Restantes para hoy</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}> Macros Restantes para hoy</span>
               {loadingSummary && <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Actualizando...</span>}
             </div>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <span>🔥 <strong style={{ color: 'var(--text-primary)' }}>{remaining.kcal}</strong> kcal</span>
+              <span> <strong style={{ color: 'var(--text-primary)' }}>{remaining.kcal}</strong> kcal</span>
               <span>🥩 <strong style={{ color: 'var(--text-primary)' }}>{remaining.protein}</strong>g P</span>
               <span>🍞 <strong style={{ color: 'var(--text-primary)' }}>{remaining.carbs}</strong>g C</span>
-              <span>🥑 <strong style={{ color: 'var(--text-primary)' }}>{remaining.fat}</strong>g G</span>
+              <span> <strong style={{ color: 'var(--text-primary)' }}>{remaining.fat}</strong>g G</span>
             </div>
           </div>
         </div>
@@ -462,7 +462,7 @@ export default function UtilitiesPage() {
                           {activeOption.totalMacros && (
                             <div style={{ padding: '0.75rem', background: 'var(--bg-glass-strong)', borderRadius: '10px', border: '1px solid var(--border-subtle)', marginTop: '0.75rem' }}>
                               <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.4rem' }}>
-                                🎯 Resumen de Opción
+                                 Resumen de Opción
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                                 <span><strong style={{ color: 'var(--text-primary)' }}>{activeOption.totalMacros.kcal}</strong> kcal</span>
@@ -499,7 +499,7 @@ export default function UtilitiesPage() {
                               ) : applyingOptionKey === activeOptionKey ? (
                                 <>Añadiendo...</>
                               ) : (
-                                <>➕ Añadir opción al diario</>
+                                <> Añadir opción al diario</>
                               )}
                             </button>
                           </div>
@@ -528,7 +528,7 @@ export default function UtilitiesPage() {
                 style={{ borderRadius: '12px', fontSize: '0.75rem', padding: '0.4rem 0.75rem', textAlign: 'left', width: 'fit-content' }}
                 onClick={() => handleQuickPrompt('Sugiéreme snacks o meriendas altas en proteína.')}
               >
-                🥗 Snacks altos en proteína
+                 Snacks altos en proteína
               </button>
             </div>
           )}
@@ -638,7 +638,7 @@ export default function UtilitiesPage() {
               }}
               title="Adjuntar foto de comida"
             >
-              📷
+              
             </button>
             <button
               type="button"
@@ -658,7 +658,7 @@ export default function UtilitiesPage() {
               }}
               title={isListening ? 'Detener dictado' : 'Dictar por voz'}
             >
-              {isListening ? '⏹️' : '🎤'}
+              {isListening ? '⏹️' : ''}
             </button>
 
             <input
@@ -752,7 +752,7 @@ export default function UtilitiesPage() {
                 </div>
 
                 <div className="kpi-card accent" style={{ marginTop: '1.5rem' }}>
-                  <div className="kpi-label">🔥 Calorías Quemadas</div>
+                  <div className="kpi-label"> Calorías Quemadas</div>
                   <div className="kpi-value accent">
                     {calc1Result > 0 ? calc1Result.toFixed(2) : '0.00'} <span style={{ fontSize: '1.25rem' }}>kcal</span>
                   </div>
@@ -840,7 +840,7 @@ export default function UtilitiesPage() {
                 </div>
 
                 <div className="kpi-card success" style={{ marginTop: '1.5rem' }}>
-                  <div className="kpi-label">🔥 Gasto Metabólico Total</div>
+                  <div className="kpi-label"> Gasto Metabólico Total</div>
                   <div className="kpi-value success">
                     {calc2Result > 0 ? calc2Result.toFixed(2) : '0.00'} <span style={{ fontSize: '1.25rem' }}>kcal</span>
                   </div>

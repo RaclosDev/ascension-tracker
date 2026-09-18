@@ -195,7 +195,7 @@ export default function SettingsPage() {
             onClick={(e) => toggleSection('personal', e)}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
           >
-            <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>📋 Datos Personales</span>
+            <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Datos Personales</span>
             <span style={{ transform: openSections.personal ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               ▼
             </span>
@@ -261,7 +261,7 @@ export default function SettingsPage() {
             onClick={(e) => toggleSection('macros', e)}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
           >
-            <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>⚙️ Estrategia de Macros</span>
+            <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Estrategia de Macros</span>
             <span style={{ transform: openSections.macros ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               ▼
             </span>
@@ -278,7 +278,7 @@ export default function SettingsPage() {
                 >
                   <option value="CUSTOM_GRAMS">Gramos Exactos (Recomendado ⭐)</option>
                   <option value="CUSTOM_PCT">Porcentajes (%)</option>
-                  <option value="BALANCED">Balanceada Automática ⚖️</option>
+                  <option value="BALANCED">Balanceada Automática </option>
                 </select>
               </div>
 
@@ -298,7 +298,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label" style={{ fontSize: '0.8rem', color: 'var(--color-fat)' }}>🥑 Grasas (g)</label>
+                      <label className="form-label" style={{ fontSize: '0.8rem', color: 'var(--color-fat)' }}> Grasas (g)</label>
                       <input
                         type="number" inputMode="decimal"
                         className="form-input"
@@ -335,7 +335,7 @@ export default function SettingsPage() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                           <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Calorías calculadas:</span>
                           <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--accent-color)' }}>
-                            🔥 {totalK} kcal
+                             {totalK} kcal
                           </span>
                         </div>
                         <div style={{ display: 'flex', gap: '8px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
@@ -382,7 +382,7 @@ export default function SettingsPage() {
                           toast.success(`Hidratos ajustados a ${needed}g`);
                         }}
                       >
-                        ⚡ Cuadrar hidratos
+                         Cuadrar hidratos
                       </button>
                     </div>
                   </div>
@@ -393,7 +393,7 @@ export default function SettingsPage() {
               {form.macroStrategy === 'CUSTOM_PCT' && (
                 <div>
                   <div className="form-group" style={{ marginBottom: 'var(--space-md)' }}>
-                    <label className="form-label">🔥 Calorías Totales Objetivo</label>
+                    <label className="form-label"> Calorías Totales Objetivo</label>
                     <input 
                       type="number" inputMode="decimal" 
                       className="form-input" 
@@ -449,7 +449,7 @@ export default function SettingsPage() {
                         marginBottom: 'var(--space-md)'
                       }}>
                         <span style={{ fontSize: '0.85rem', fontWeight: 600, color: isExact ? 'var(--color-success)' : 'var(--color-fat)' }}>
-                          {isExact ? '✅ Suma: 100%' : `⚠️ Suma: ${totalPct}% (Falta/Sobra: ${(100 - totalPct).toFixed(1)}%)`}
+                          {isExact ? ' Suma: 100%' : ` Suma: ${totalPct}% (Falta/Sobra: ${(100 - totalPct).toFixed(1)}%)`}
                         </span>
                         {!isExact && (
                           <button
@@ -462,7 +462,7 @@ export default function SettingsPage() {
                               toast.success(`Hidratos fijados a ${rem}%`);
                             }}
                           >
-                            ⚡ Ajustar a 100%
+                             Ajustar a 100%
                           </button>
                         )}
                       </div>
@@ -475,7 +475,7 @@ export default function SettingsPage() {
               {form.macroStrategy === 'BALANCED' && (
                 <div>
                   <div className="form-group" style={{ marginBottom: 'var(--space-md)' }}>
-                    <label className="form-label">🔥 Calorías Totales Objetivo</label>
+                    <label className="form-label"> Calorías Totales Objetivo</label>
                     <input 
                       type="number" inputMode="decimal" 
                       className="form-input" 
@@ -496,7 +496,7 @@ export default function SettingsPage() {
                         <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '8px' }}>Cálculo automático:</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                           <div>🥩 <strong>Proteínas:</strong> ~{bP}g (2g por kg peso)</div>
-                          <div>🥑 <strong>Grasas:</strong> ~{bF}g (22% de calorías)</div>
+                          <div> <strong>Grasas:</strong> ~{bF}g (22% de calorías)</div>
                           <div>🍚 <strong>Hidratos:</strong> ~{bC}g (resto para rendimiento)</div>
                         </div>
                       </div>
@@ -601,7 +601,7 @@ export default function SettingsPage() {
             onClick={(e) => toggleSection('workout', e)}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
           >
-            <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>💪 Entrenamiento</span>
+            <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Entrenamiento</span>
             <span style={{ transform: openSections.workout ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               ▼
             </span>
@@ -611,7 +611,7 @@ export default function SettingsPage() {
               
               <div className="form-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
                 <div style={{ paddingRight: '1rem' }}>
-                  <label className="form-label" style={{ marginBottom: '2px' }}>⏱️ Descanso Base (segundos)</label>
+                  <label className="form-label" style={{ marginBottom: '2px' }}> Descanso Base (segundos)</label>
                   <div className="form-hint" style={{ marginTop: 0 }}>El tiempo que se aplicará por defecto a todos los ejercicios si no configuras uno específico.</div>
                 </div>
                 <input

@@ -376,7 +376,7 @@ export default function NutritionPage() {
               setSearchModalOpen(true);
             }}
           >
-            <span>✨</span> Registro IA
+            <span></span> Registro IA
           </button>
         </div>
 
@@ -491,7 +491,7 @@ export default function NutritionPage() {
                                     onClick={(e) => { e.stopPropagation(); handleEditLog(log); }}
                                     title="Editar cantidad"
                                   >
-                                    ✏️
+                                    
                                   </button>
                                   <button
                                     className="icon-btn delete-btn"

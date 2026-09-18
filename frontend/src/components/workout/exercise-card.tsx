@@ -248,7 +248,7 @@ export function ExerciseCard({
             <span>{meta ? MUSCLE_LABEL[meta.muscle] : "—"}</span>
             <span style={{ color: "var(--border-medium)" }}>|</span>
             <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-              ⏱️ 
+               
               <select
                 value={restTimers[row.exerciseId] ?? restPreset}
                 onChange={(e) => setExerciseRestTimer(row.exerciseId, Number(e.target.value))}

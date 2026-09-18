@@ -35,7 +35,7 @@ export default function FoodFormModal({
       <div className="card" style={{ maxWidth: '450px', width: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {editingFoodId ? '✏️ Editar Alimento' : '➕ Crear Alimento'}
+            {editingFoodId ? ' Editar Alimento' : ' Crear Alimento'}
           </h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
         </div>

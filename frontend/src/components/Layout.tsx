@@ -4,13 +4,15 @@ import api from '../api/client';
 import toast from 'react-hot-toast';
 import BottomSheet from './BottomSheet';
 
+import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings } from 'lucide-react';
+
 const navItems = [
-  { path: '/dashboard', icon: '📊', label: 'Dashboard', shortLabel: 'Inicio' },
-  { path: '/tracking', icon: '⚖️', label: 'Tracking Semanal', shortLabel: 'Tracking' },
-  { path: '/nutrition', icon: '🥗', label: 'Nutrición & Macros', shortLabel: 'Nutrición' },
-  { path: '/workout', icon: '🏋️', label: 'Entreno', shortLabel: 'Entreno' },
-  { path: '/utilities', icon: '🧮', label: 'Utilidades', shortLabel: 'Utilidades' },
-  { path: '/settings', icon: '⚙️', label: 'Configuración', shortLabel: 'Ajustes' },
+  { path: '/dashboard', icon: <Home className="w-5 h-5" />, label: 'Dashboard', shortLabel: 'Inicio' },
+  { path: '/tracking', icon: <LineChart className="w-5 h-5" />, label: 'Tracking Semanal', shortLabel: 'Tracking' },
+  { path: '/nutrition', icon: <Utensils className="w-5 h-5" />, label: 'Nutrición & Macros', shortLabel: 'Nutrición' },
+  { path: '/workout', icon: <Dumbbell className="w-5 h-5" />, label: 'Entreno', shortLabel: 'Entreno' },
+  { path: '/utilities', icon: <Wrench className="w-5 h-5" />, label: 'Utilidades', shortLabel: 'Utilidades' },
+  { path: '/settings', icon: <Settings className="w-5 h-5" />, label: 'Configuración', shortLabel: 'Ajustes' },
 ];
 
 const bottomNavPaths = ['/dashboard', '/tracking', '/nutrition', '/workout'];

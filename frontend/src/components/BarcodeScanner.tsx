@@ -274,7 +274,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
             background: 'rgba(10, 12, 15, 0.95)',
             zIndex: 14
           }}>
-            <div style={{ fontSize: '2.2rem', marginBottom: '4px' }}>📷</div>
+            <div style={{ fontSize: '2.2rem', marginBottom: '4px' }}></div>
             <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
               {cameraError ? 'Acceso a Cámara Limitado' : 'Cámara en Pausa'}
             </div>
@@ -303,7 +303,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
           onClick={handleToggleCamera}
           disabled={isStarting || scanningFile}
         >
-          {isScanning ? '⏹ Pausar Cámara' : '📷 Iniciar Cámara'}
+          {isScanning ? '⏹ Pausar Cámara' : ' Iniciar Cámara'}
         </button>
 
         {cameras.length > 1 && isScanning && (
