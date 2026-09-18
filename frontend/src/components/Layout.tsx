@@ -153,7 +153,7 @@ export default function Layout() {
           }}
           aria-label="Más opciones"
         >
-          <span className="mobile-bottom-icon">☰</span>
+          <span className="mobile-bottom-icon"></span>
           <span className="mobile-bottom-label">Más</span>
           {isMoreActive && <span className="mobile-bottom-indicator" />}
         </button>

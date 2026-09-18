@@ -296,7 +296,7 @@ export function ExercisesView() {
               className="form-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar press, sentadilla…"
+              placeholder="Buscar press, sentadilla"
               style={{ width: "100%", padding: "0.45rem 0.5rem 0.45rem 2rem", fontSize: "0.85rem" }}
             />
           </div>

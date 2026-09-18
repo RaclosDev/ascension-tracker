@@ -141,7 +141,7 @@ function SwipeableSetRow({
           >
             {typeLabel}
           </button>
-          {prev !== "—" && (
+          {prev !== "" && (
             <span style={{ fontSize: "0.55rem", color: "var(--text-muted)", whiteSpace: "nowrap", maxWidth: "48px", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1 }}>
               {prev}
             </span>
@@ -154,7 +154,7 @@ function SwipeableSetRow({
         <input
           inputMode="decimal"
           value={isCardio ? s.distance || "" : s.weight || ""}
-          placeholder={prev === "—" ? "0" : prev.split("×")[0]?.trim()}
+          placeholder={prev === "" ? "0" : prev.split("×")[0]?.trim()}
           onChange={(e) => {
             if (isCardio) {
               updateSet(row.id, s.id, { distance: e.target.value.replace(",", ".") });
@@ -183,7 +183,7 @@ function SwipeableSetRow({
           <input
             inputMode="decimal"
             value={s.rpe || ""}
-            placeholder="—"
+            placeholder=""
             onChange={(e) => updateSet(row.id, s.id, { rpe: e.target.value.replace(",", ".") })}
             className={`set-input ${s.completed ? "completed" : ""}`}
           />
@@ -245,7 +245,7 @@ export function ExerciseCard({
             {meta?.name ?? "Ejercicio"}
           </h3>
           <div className="exercise-card-meta">
-            <span>{meta ? MUSCLE_LABEL[meta.muscle] : "—"}</span>
+            <span>{meta ? MUSCLE_LABEL[meta.muscle] : ""}</span>
             <span style={{ color: "var(--border-medium)" }}>|</span>
             <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                
@@ -293,7 +293,7 @@ export function ExerciseCard({
         <input
           value={row.notes}
           onChange={(e) => setExerciseNotes(row.id, e.target.value)}
-          placeholder="Notas de la serie, tempo, RIR…"
+          placeholder="Notas de la serie, tempo, RIR"
           className="form-input" style={{ width: "100%", padding: "0.35rem 0.5rem", fontSize: "0.8rem", background: "rgba(0,0,0,0.2)", border: "none" }}
         />
       </div>

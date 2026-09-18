@@ -37,7 +37,7 @@ export default function FoodFormModal({
           <h3 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {editingFoodId ? ' Editar Alimento' : ' Crear Alimento'}
           </h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}></button>
         </div>
         
         <form onSubmit={handleAddSavedFood} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>

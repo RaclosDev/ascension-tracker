@@ -197,7 +197,7 @@ export default function SettingsPage() {
           >
             <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Datos Personales</span>
             <span style={{ transform: openSections.personal ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              ▼
+              
             </span>
           </div>
           {openSections.personal && (
@@ -235,7 +235,7 @@ export default function SettingsPage() {
                   value={form.weeklyGoal || ''}
                   onChange={e => setForm({ ...form, weeklyGoal: e.target.value })}
                 />
-                <div className="form-hint">Recomendado: 0.5 – 1.0 kg/semana para pérdida saludable</div>
+                <div className="form-hint">Recomendado: 0.5  1.0 kg/semana para pérdida saludable</div>
               </div>
                 <div className="form-group" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                   <label className="form-label">Fecha de Inicio</label>
@@ -263,7 +263,7 @@ export default function SettingsPage() {
           >
             <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Estrategia de Macros</span>
             <span style={{ transform: openSections.macros ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              ▼
+              
             </span>
           </div>
           {openSections.macros && (
@@ -276,7 +276,7 @@ export default function SettingsPage() {
                   value={form.macroStrategy || 'CUSTOM_GRAMS'} 
                   onChange={(e) => setForm({...form, macroStrategy: e.target.value})}
                 >
-                  <option value="CUSTOM_GRAMS">Gramos Exactos (Recomendado ⭐)</option>
+                  <option value="CUSTOM_GRAMS">Gramos Exactos (Recomendado )</option>
                   <option value="CUSTOM_PCT">Porcentajes (%)</option>
                   <option value="BALANCED">Balanceada Automática </option>
                 </select>
@@ -287,7 +287,7 @@ export default function SettingsPage() {
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label" style={{ fontSize: '0.8rem', color: 'var(--color-protein-light, #a78bfa)' }}>🥩 Proteínas (g)</label>
+                      <label className="form-label" style={{ fontSize: '0.8rem', color: 'var(--color-protein-light, #a78bfa)' }}> Proteínas (g)</label>
                       <input
                         type="number" inputMode="decimal"
                         className="form-input"
@@ -309,7 +309,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label" style={{ fontSize: '0.8rem', color: 'var(--color-warning)' }}>🍚 Hidratos (g)</label>
+                      <label className="form-label" style={{ fontSize: '0.8rem', color: 'var(--color-warning)' }}> Hidratos (g)</label>
                       <input
                         type="number" inputMode="decimal"
                         className="form-input"
@@ -340,9 +340,9 @@ export default function SettingsPage() {
                         </div>
                         <div style={{ display: 'flex', gap: '8px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                           <span style={{ color: 'var(--color-protein-light, #a78bfa)' }}>P: {p}g ({pP}%)</span>
-                          <span>•</span>
+                          <span></span>
                           <span style={{ color: 'var(--color-fat)' }}>G: {f}g ({fP}%)</span>
-                          <span>•</span>
+                          <span></span>
                           <span style={{ color: 'var(--color-warning)' }}>H: {c}g ({cP}%)</span>
                         </div>
                       </div>
@@ -414,17 +414,17 @@ export default function SettingsPage() {
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label" style={{ fontSize: '0.8rem', color: 'var(--color-protein-light, #a78bfa)' }}>% Proteínas</label>
                             <input type="number" inputMode="decimal" className="form-input" value={form.customProteinPct ?? ''} onChange={e => setForm({...form, customProteinPct: e.target.value})} />
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>≈ {Math.round((currentKcal * (pP / 100)) / 4)}g</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}> {Math.round((currentKcal * (pP / 100)) / 4)}g</span>
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label" style={{ fontSize: '0.8rem', color: 'var(--color-fat)' }}>% Grasas</label>
                             <input type="number" inputMode="decimal" className="form-input" value={form.customFatPct ?? ''} onChange={e => setForm({...form, customFatPct: e.target.value})} />
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>≈ {Math.round((currentKcal * (fP / 100)) / 9)}g</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}> {Math.round((currentKcal * (fP / 100)) / 9)}g</span>
                           </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label" style={{ fontSize: '0.8rem', color: 'var(--color-warning)' }}>% Hidratos</label>
                             <input type="number" inputMode="decimal" className="form-input" value={form.customCarbsPct ?? ''} onChange={e => setForm({...form, customCarbsPct: e.target.value})} />
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>≈ {Math.round((currentKcal * (cP / 100)) / 4)}g</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}> {Math.round((currentKcal * (cP / 100)) / 4)}g</span>
                           </div>
                         </>
                       );
@@ -495,9 +495,9 @@ export default function SettingsPage() {
                       <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px', marginBottom: 'var(--space-md)' }}>
                         <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '8px' }}>Cálculo automático:</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                          <div>🥩 <strong>Proteínas:</strong> ~{bP}g (2g por kg peso)</div>
+                          <div> <strong>Proteínas:</strong> ~{bP}g (2g por kg peso)</div>
                           <div> <strong>Grasas:</strong> ~{bF}g (22% de calorías)</div>
-                          <div>🍚 <strong>Hidratos:</strong> ~{bC}g (resto para rendimiento)</div>
+                          <div> <strong>Hidratos:</strong> ~{bC}g (resto para rendimiento)</div>
                         </div>
                       </div>
                     );
@@ -519,9 +519,9 @@ export default function SettingsPage() {
             onClick={(e) => toggleSection('meals', e)}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
           >
-            <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>🍽️ Configurar Comidas</span>
+            <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Configurar Comidas</span>
             <span style={{ transform: openSections.meals ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              ▼
+              
             </span>
           </div>
           {openSections.meals && (
@@ -541,12 +541,12 @@ export default function SettingsPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem' }}>
-                🎨
+                
               </div>
               <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Tema y Apariencia</span>
             </div>
             <span style={{ transform: openSections.theme ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              ▼
+              
             </span>
           </div>
           {openSections.theme && (
@@ -603,7 +603,7 @@ export default function SettingsPage() {
           >
             <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Entrenamiento</span>
             <span style={{ transform: openSections.workout ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              ▼
+              
             </span>
           </div>
           {openSections.workout && (
@@ -686,7 +686,7 @@ export default function SettingsPage() {
                   style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <span>📥</span> Seleccionar archivo CSV de Hevy
+                  <span></span> Seleccionar archivo CSV de Hevy
                 </button>
               </div>
 

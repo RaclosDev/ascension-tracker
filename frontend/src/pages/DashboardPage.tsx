@@ -137,7 +137,7 @@ export default function DashboardPage() {
       {/* KPI Cards */}
       <div className="kpi-grid">
         <div className="kpi-card accent">
-          <div className="kpi-label">📏 Peso Actual</div>
+          <div className="kpi-label"> Peso Actual</div>
           <div className="kpi-value accent">{dashboard.currentWeight?.toFixed(2)} kg</div>
           <div className="kpi-detail">Media semanal: {dashboard.currentWeeklyAverage?.toFixed(2)} kg</div>
         </div>
@@ -146,9 +146,9 @@ export default function DashboardPage() {
           <div className="kpi-value accent">{dashboard.totalLost?.toFixed(2)} kg</div>
           <div className="kpi-detail">
             {dashboard.totalLost < 0 ? (
-              <span className="kpi-badge positive">↓ {Math.abs(dashboard.totalLost).toFixed(1)} kg perdidos</span>
+              <span className="kpi-badge positive"> {Math.abs(dashboard.totalLost).toFixed(1)} kg perdidos</span>
             ) : (
-              <span className="kpi-badge negative">↑ {dashboard.totalLost?.toFixed(1)} kg ganados</span>
+              <span className="kpi-badge negative"> {dashboard.totalLost?.toFixed(1)} kg ganados</span>
             )}
           </div>
         </div>
@@ -158,7 +158,7 @@ export default function DashboardPage() {
           <div className="kpi-detail">{dashboard.remaining > 0 ? 'por perder' : '¡Meta alcanzada!'}</div>
         </div>
         <div className="kpi-card info">
-          <div className="kpi-label">📅 Fecha Estimada</div>
+          <div className="kpi-label"> Fecha Estimada</div>
           <div className="kpi-value info" style={{ fontSize: '1.15rem' }}>{dashboard.estimatedDate}</div>
           <div className="kpi-detail">A ritmo de {Math.abs(dashboard.avgWeeklyChange).toFixed(2)} kg/semana</div>
         </div>

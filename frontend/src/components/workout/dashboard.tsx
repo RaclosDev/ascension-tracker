@@ -211,7 +211,7 @@ export function Dashboard() {
                       <p style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: "0.9rem" }}>{w.name}</p>
                       <p style={{ marginTop: "0.1rem", fontSize: "0.8rem", color: "var(--text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {names.join(" · ")}
-                        {w.exercises.length > 4 ? "…" : ""}
+                        {w.exercises.length > 4 ? "" : ""}
                       </p>
                     </button>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>

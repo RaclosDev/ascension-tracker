@@ -97,7 +97,7 @@ export function previousSetLabel(
       return `${set.weight} × ${set.reps}`;
     }
   }
-  return "—";
+  return "";
 }
 
 export function previousFill(

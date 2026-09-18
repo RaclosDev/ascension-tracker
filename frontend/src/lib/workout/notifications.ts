@@ -1,4 +1,4 @@
-// ─── Notifications module ────────────────────────────────────────────
+//  Notifications module 
 // Handles:
 // 1. Subscribing to Web Push (so the server can send background notifications)
 // 2. Playing a bell sound when rest finishes (in-app)
@@ -77,7 +77,7 @@ export function notifyRestFinished() {
   }
 }
 
-// ─── Web Push subscription ───────────────────────────────────────────
+//  Web Push subscription 
 
 async function subscribeToPush() {
   if (pushSubscribed) return;
@@ -127,7 +127,7 @@ async function subscribeToPush() {
   }
 }
 
-// ─── Rest timer API calls ────────────────────────────────────────────
+//  Rest timer API calls 
 
 /**
  * Tell the server to send a push notification after `delaySec` seconds.
@@ -153,7 +153,7 @@ export async function cancelServerRestTimer() {
   }
 }
 
-// ─── Utility ─────────────────────────────────────────────────────────
+//  Utility 
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);

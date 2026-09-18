@@ -551,7 +551,7 @@ public class GeminiAiService {
                 "   - Do NOT restrict yourself only to saved foods; offer varied, healthy alternatives that fit the remaining budget.\n" +
                 "   - Calculate exact grams and macros for RAW/UNCOOKED weight (en crudo).\n" +
                 "3. If general chat without meal request, return empty 'mealOptions' and answer conversationally.\n\n" +
-                "OUTPUT FORMAT: Return STRICTLY a valid JSON object (no markdown, no extra text):\n" +
+                "4. NO EMOJIS: Do NOT use any emojis in your reply or in the meal options.\n\nOUTPUT FORMAT: Return STRICTLY a valid JSON object (no markdown, no extra text):\n" +
                 "{\n" +
                 "  \"reply\": \"Análisis nutricional estratégico y completo en español...\",\n" +
                 "  \"mealOptions\": [\n" +

@@ -27,17 +27,17 @@ const DayCell = ({ dateStr, dayName, dayData, isToday, onOpenModal, showWeight, 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: 'auto', paddingTop: '0.5rem', flex: 1, justifyContent: 'flex-end', width: '100%' }}>
         {showWeight && (
           <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
-            {dayData.weight !== null ? <>{dayData.weight.toFixed(2)}<span className="hide-on-mobile" style={{fontWeight:400, opacity:0.5, marginLeft:'2px'}}>kg</span></> : <span style={{opacity: 0.3}}>—</span>}
+            {dayData.weight !== null ? <>{dayData.weight.toFixed(2)}<span className="hide-on-mobile" style={{fontWeight:400, opacity:0.5, marginLeft:'2px'}}>kg</span></> : <span style={{opacity: 0.3}}></span>}
           </div>
         )}
         {showSteps && (
           <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
-            {dayData.steps !== null ? <>{Math.round(dayData.steps)}<span className="hide-on-mobile" style={{fontWeight:400, opacity:0.7, marginLeft:'2px'}}>pas</span></> : <span style={{opacity: 0.3}}>—</span>}
+            {dayData.steps !== null ? <>{Math.round(dayData.steps)}<span className="hide-on-mobile" style={{fontWeight:400, opacity:0.7, marginLeft:'2px'}}>pas</span></> : <span style={{opacity: 0.3}}></span>}
           </div>
         )}
         {showCalories && (
           <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
-            {dayData.calories !== null ? <>{Math.round(dayData.calories)}<span className="hide-on-mobile" style={{fontWeight:400, opacity:0.7, marginLeft:'2px'}}>kcal</span></> : <span style={{opacity: 0.3}}>—</span>}
+            {dayData.calories !== null ? <>{Math.round(dayData.calories)}<span className="hide-on-mobile" style={{fontWeight:400, opacity:0.7, marginLeft:'2px'}}>kcal</span></> : <span style={{opacity: 0.3}}></span>}
           </div>
         )}
       </div>
@@ -239,7 +239,7 @@ export default function TrackingPage() {
               <div className="calendar-week-header">
                 <div className="calendar-week-title">
                   {format(new Date(week.weekStart + 'T00:00:00'), "d MMM", { locale: es })}
-                  {isCurrentWeek && <span className="current-week-label"> • ACTUAL</span>}
+                  {isCurrentWeek && <span className="current-week-label">  ACTUAL</span>}
                 </div>
                 
                 {/* Stats Container */}
@@ -250,7 +250,7 @@ export default function TrackingPage() {
                         <span className="hide-on-mobile" style={{ color: 'var(--text-secondary)' }}>Peso:</span>
                         <span className="show-on-mobile" style={{ display: 'none', color: 'var(--text-secondary)' }}><Scale className="w-4 h-4 inline-block mr-1" /></span>
                         <strong style={{ color: 'var(--accent-primary-light)' }}>
-                          {week.averageWeight !== null ? <>{week.averageWeight.toFixed(2)}<span className="hide-on-mobile"> kg</span></> : '—'}
+                          {week.averageWeight !== null ? <>{week.averageWeight.toFixed(2)}<span className="hide-on-mobile"> kg</span></> : ''}
                         </strong>
                       </div>
                       <div style={{ fontSize: '0.85rem', background: 'var(--bg-secondary)', padding: '0.3rem 0.5rem', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
@@ -260,7 +260,7 @@ export default function TrackingPage() {
                           week.deltaWeight < 0 ? 'delta-negative' :
                           week.deltaWeight > 0 ? 'delta-positive' : 'delta-neutral'
                         }>
-                          {week.deltaWeight !== null ? <>{week.deltaWeight > 0 ? `+${week.deltaWeight.toFixed(2)}` : week.deltaWeight.toFixed(2)}<span className="hide-on-mobile"> kg</span></> : '—'}
+                          {week.deltaWeight !== null ? <>{week.deltaWeight > 0 ? `+${week.deltaWeight.toFixed(2)}` : week.deltaWeight.toFixed(2)}<span className="hide-on-mobile"> kg</span></> : ''}
                         </strong>
                       </div>
                     </>
@@ -270,7 +270,7 @@ export default function TrackingPage() {
                       <span className="hide-on-mobile" style={{ color: 'var(--text-secondary)' }}>Pasos:</span>
                       <span className="show-on-mobile" style={{ display: 'none', color: 'var(--text-secondary)' }}><Footprints className="w-4 h-4 inline-block mr-1" /></span>
                       <strong style={{ color: 'var(--accent-primary-light)' }}>
-                        {week.averageSteps !== null ? <>{Math.round(week.averageSteps)}<span className="hide-on-mobile"> pasos</span></> : '—'}
+                        {week.averageSteps !== null ? <>{Math.round(week.averageSteps)}<span className="hide-on-mobile"> pasos</span></> : ''}
                       </strong>
                     </div>
                   )}
@@ -279,7 +279,7 @@ export default function TrackingPage() {
                       <span className="hide-on-mobile" style={{ color: 'var(--text-secondary)' }}>Kcal:</span>
                       <span className="show-on-mobile" style={{ display: 'none', color: 'var(--text-secondary)' }}><Apple className="w-4 h-4 inline-block mr-1" /></span>
                       <strong style={{ color: 'var(--accent-primary-light)' }}>
-                        {week.averageCalories !== null ? <>{Math.round(week.averageCalories)}<span className="hide-on-mobile"> kcal</span></> : '—'}
+                        {week.averageCalories !== null ? <>{Math.round(week.averageCalories)}<span className="hide-on-mobile"> kcal</span></> : ''}
                       </strong>
                     </div>
                   )}
@@ -404,7 +404,7 @@ export default function TrackingPage() {
                   <Apple className="w-4 h-4 inline-block mr-1" /> Calorías de hoy
                 </span>
                 <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--accent-primary-light)' }}>
-                  {modalData.dayData.calories !== null ? `${Math.round(modalData.dayData.calories)} kcal` : '—'}
+                  {modalData.dayData.calories !== null ? `${Math.round(modalData.dayData.calories)} kcal` : ''}
                 </span>
               </div>
 

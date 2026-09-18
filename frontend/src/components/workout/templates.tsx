@@ -61,7 +61,7 @@ export function TemplatesView() {
                 </div>
                 <p style={{ marginTop: "0.75rem", flex: 1, fontSize: "0.85rem", lineHeight: 1.5, color: "var(--text-secondary)" }}>
                   {names.slice(0, 6).join(" · ")}
-                  {names.length > 6 ? "…" : ""}
+                  {names.length > 6 ? "" : ""}
                 </p>
                 <button onClick={() => startFromTemplate(tpl, recentWorkouts)} className="btn btn-primary" style={{ marginTop: "1.25rem", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
                   <Play size={18} />

@@ -240,7 +240,7 @@ export default function MealConfigurator({ onSaved }) {
                           disabled={saving}
                           title="Eliminar comida"
                         >
-                          ✕
+                          
                         </button>
                       </div>
 
@@ -337,7 +337,7 @@ export default function MealConfigurator({ onSaved }) {
         }}>
           <p style={{ margin: '0 0 12px 0' }}>No tienes comidas configuradas.</p>
           <button className="btn btn-secondary btn-sm" onClick={handleResetDefaults} disabled={saving}>
-            🔄 Restablecer comidas por defecto
+             Restablecer comidas por defecto
           </button>
         </div>
       )}
@@ -349,7 +349,7 @@ export default function MealConfigurator({ onSaved }) {
           onClick={handleAddMeal}
           disabled={saving}
         >
-          ＋ Añadir Comida
+           Añadir Comida
         </button>
         <button
           className="btn btn-secondary"
@@ -358,7 +358,7 @@ export default function MealConfigurator({ onSaved }) {
           disabled={saving}
           title="Restablecer las 4 comidas por defecto (Desayuno, Comida, Cena, Snacks)"
         >
-          🔄 Por Defecto
+           Por Defecto
         </button>
       </div>
 

@@ -418,7 +418,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                 Comida {selectedMealIndex + 1} - {date}
               </span>
             </div>
-            <button className="workout-sheet-close" onClick={onClose}>✕</button>
+            <button className="workout-sheet-close" onClick={onClose}></button>
           </div>
         </div>
         <div className="food-search-body">
@@ -426,7 +426,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
         {/* Mode Tabs */}
         {!selectedProduct && (
           <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '1.5rem', padding: '0.35rem', background: 'rgba(255, 255, 255, 0.04)', borderRadius: '14px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.02)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)' }} className="mobile-scroll-x">
-            {[{id:'search', icon:'', label:'Buscar'}, {id:'ai', icon:'', label:'IA'}, {id:'ocr', icon:'🧾', label:'Etiqueta'}, {id:'scanner', icon:'', label:'Barras'}, {id:'manual', icon:'', label:'Manual'}].map(t => (
+            {[{id:'search', icon:'', label:'Buscar'}, {id:'ai', icon:'', label:'IA'}, {id:'ocr', icon:'', label:'Etiqueta'}, {id:'scanner', icon:'', label:'Barras'}, {id:'manual', icon:'', label:'Manual'}].map(t => (
               <button 
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
@@ -560,7 +560,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                 className="btn btn-secondary" 
                 onClick={() => setSelectedProduct(null)}
               >
-                ← Volver
+                 Volver
               </button>
               <button 
                 type="button" 
@@ -694,7 +694,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                         borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', cursor: 'pointer'
                       }}
                     >
-                      ✕
+                      
                     </button>
                   </div>
                 </div>
@@ -749,7 +749,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                   }}
                   title={isListening ? 'Detener dictado (Pulsar para parar)' : 'Dictar por voz (Habla a tu ritmo)'}
                 >
-                  {isListening ? '⏹️' : ''}
+                  {isListening ? '' : ''}
                 </button>
               </div>
             </div>
@@ -769,7 +769,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span className="recording-dot" />
-                  <span><strong>Escuchando...</strong> Habla con calma a tu ritmo con pausas. Pulsa ⏹️ cuando termines.</span>
+                  <span><strong>Escuchando...</strong> Habla con calma a tu ritmo con pausas. Pulsa  cuando termines.</span>
                 </div>
                 <button
                   type="button"
@@ -940,7 +940,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px'
                   }}>
-                    <span>🏪</span> Supermercados y Marcas ({offResults.length})
+                    <span></span> Supermercados y Marcas ({offResults.length})
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                     {offResults.map((p, idx) => {
@@ -1041,7 +1041,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                   {filteredRecent.length > 0 && (
                     <div>
                       <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                        🕒 Últimos Alimentos Añadidos
+                         Últimos Alimentos Añadidos
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                         {filteredRecent.map((log) => {
@@ -1093,7 +1093,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                       setActiveTab('manual');
                     }}
                   >
-                    ✍️ Crear "{query}" como entrada manual
+                     Crear "{query}" como entrada manual
                   </button>
                 </div>
               )}

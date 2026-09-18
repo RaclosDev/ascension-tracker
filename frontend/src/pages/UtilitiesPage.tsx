@@ -203,7 +203,7 @@ export default function UtilitiesPage() {
             key={idx}
             style={{ display: 'flex', gap: '0.45rem', marginLeft: '0.6rem', marginBottom: '0.25rem', alignItems: 'flex-start' }}
           >
-            <span style={{ color: 'var(--accent-primary, #e11d48)', fontWeight: 700 }}>•</span>
+            <span style={{ color: 'var(--accent-primary, #e11d48)', fontWeight: 700 }}></span>
             <span dangerouslySetInnerHTML={{ __html: bulletText }} />
           </div>
         );
@@ -361,8 +361,8 @@ export default function UtilitiesPage() {
             
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
               <span> <strong style={{ color: 'var(--text-primary)' }}>{remaining.kcal}</strong> kcal</span>
-              <span>🥩 <strong style={{ color: 'var(--text-primary)' }}>{remaining.protein}</strong>g P</span>
-              <span>🍞 <strong style={{ color: 'var(--text-primary)' }}>{remaining.carbs}</strong>g C</span>
+              <span> <strong style={{ color: 'var(--text-primary)' }}>{remaining.protein}</strong>g P</span>
+              <span> <strong style={{ color: 'var(--text-primary)' }}>{remaining.carbs}</strong>g C</span>
               <span> <strong style={{ color: 'var(--text-primary)' }}>{remaining.fat}</strong>g G</span>
             </div>
           </div>
@@ -415,7 +415,7 @@ export default function UtilitiesPage() {
                                 onClick={() => setActiveOptionIndices((prev) => ({ ...prev, [msg.id]: optIdx }))}
                               >
                                 <span>{opt.title || `Opción ${optIdx + 1}`}</span>
-                                {isApplied && <span style={{ color: 'var(--color-success)', fontSize: '0.75rem' }}>✓</span>}
+                                {isApplied && <span style={{ color: 'var(--color-success)', fontSize: '0.75rem' }}></span>}
                               </button>
                             );
                           })}
@@ -427,7 +427,7 @@ export default function UtilitiesPage() {
                         <div className="suggested-meal-box">
                           <div>
                             <div className="meal-box-header">
-                              <span>🍽️ {activeOption.title || `Propuesta (${activeOption.mealName || 'Cena'})`}</span>
+                              <span> {activeOption.title || `Propuesta (${activeOption.mealName || 'Cena'})`}</span>
                               <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
                                 {activeOption.suggestedFoods?.length || 0} alimentos
                               </span>
@@ -495,7 +495,7 @@ export default function UtilitiesPage() {
                               }}
                             >
                               {isOptionApplied ? (
-                                <>✓ Añadido a tu diario</>
+                                <> Añadido a tu diario</>
                               ) : applyingOptionKey === activeOptionKey ? (
                                 <>Añadiendo...</>
                               ) : (
@@ -520,7 +520,7 @@ export default function UtilitiesPage() {
                 style={{ borderRadius: '12px', fontSize: '0.75rem', padding: '0.4rem 0.75rem', textAlign: 'left', width: 'fit-content' }}
                 onClick={() => handleQuickPrompt('Diseña varias opciones de cena equilibradas para mis macros.')}
               >
-                🍽️ Diseñar cena para mis macros
+                 Diseñar cena para mis macros
               </button>
               <button
                 type="button"
@@ -568,7 +568,7 @@ export default function UtilitiesPage() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span className="recording-dot" />
-                <span><strong>Escuchando...</strong> Habla a tu ritmo con pausas. Pulsa ⏹️ cuando termines.</span>
+                <span><strong>Escuchando...</strong> Habla a tu ritmo con pausas. Pulsa  cuando termines.</span>
               </div>
               <button
                 type="button"
@@ -601,7 +601,7 @@ export default function UtilitiesPage() {
                   borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', cursor: 'pointer', zIndex: 10
                 }}
               >
-                ✕
+                
               </button>
             </div>
           )}
@@ -658,7 +658,7 @@ export default function UtilitiesPage() {
               }}
               title={isListening ? 'Detener dictado' : 'Dictar por voz'}
             >
-              {isListening ? '⏹️' : ''}
+              {isListening ? '' : ''}
             </button>
 
             <input
@@ -716,9 +716,9 @@ export default function UtilitiesPage() {
               onClick={(e) => toggleSection('calc1', e)}
               style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
             >
-              <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>🔬 Gasto por Pasos</span>
+              <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Gasto por Pasos</span>
               <span style={{ transform: openSections.calc1 ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                ▼
+                
               </span>
             </div>
 
@@ -768,16 +768,16 @@ export default function UtilitiesPage() {
               onClick={(e) => toggleSection('calc2', e)}
               style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
             >
-              <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>🫀 Gasto Metabólico por Tiempo</span>
+              <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Gasto Metabólico por Tiempo</span>
               <span style={{ transform: openSections.calc2 ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                ▼
+                
               </span>
             </div>
 
             {openSections.calc2 && (
               <div className="accordion-content fade-in" style={{ marginTop: '1.25rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.25rem' }}>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem', lineHeight: '1.4' }}>
-                  Calcula el VO₂ y gasto calórico avanzado de una sesión de carrera/caminata considerando tu biometría.
+                  Calcula el VO y gasto calórico avanzado de una sesión de carrera/caminata considerando tu biometría.
                 </p>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -845,7 +845,7 @@ export default function UtilitiesPage() {
                     {calc2Result > 0 ? calc2Result.toFixed(2) : '0.00'} <span style={{ fontSize: '1.25rem' }}>kcal</span>
                   </div>
                   {vo2Result > 0 && (
-                    <div className="kpi-detail">VO₂ Consumido: {vo2Result.toFixed(2)} ml/kg/min</div>
+                    <div className="kpi-detail">VO Consumido: {vo2Result.toFixed(2)} ml/kg/min</div>
                   )}
                 </div>
               </div>

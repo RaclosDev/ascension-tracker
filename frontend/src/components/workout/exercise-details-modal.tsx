@@ -109,7 +109,7 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
             <div className="card" style={{ padding: "1rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", background: "linear-gradient(145deg, rgba(255,215,0,0.1) 0%, rgba(255,215,0,0.02) 100%)", border: "1px solid rgba(255,215,0,0.2)" }}>
               <Trophy size={20} style={{ color: "#FBBF24" }} />
               <p style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-secondary)" }}>Peso Máximo Absoluto</p>
-              <p style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text-primary)" }}>{stats?.maxWeight ? formatKg(stats.maxWeight) : "—"}</p>
+              <p style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text-primary)" }}>{stats?.maxWeight ? formatKg(stats.maxWeight) : ""}</p>
             </div>
             
             <div className="card" style={{ padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -121,7 +121,7 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
                 {Object.entries(stats?.maxWeightPerRange || {}).map(([range, weight]) => (
                   <div key={range} style={{ background: "var(--bg-primary)", padding: "0.5rem", borderRadius: "8px", textAlign: "center", border: "1px solid var(--border-color)" }}>
                     <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginBottom: "0.2rem" }}>{range} reps</div>
-                    <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)" }}>{weight > 0 ? formatKg(weight) : "—"}</div>
+                    <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)" }}>{weight > 0 ? formatKg(weight) : ""}</div>
                   </div>
                 ))}
               </div>

@@ -14187,7 +14187,7 @@ export const EXERCISE_CATALOG: any[] = [
   },
   {
     "id": "ex-0738",
-    "name": "Sled 45в° calf press",
+    "name": "Sled 45° calf press",
     "muscle": "gemelos",
     "equipment": "maquina",
     "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0738-qCNVnaU.gif",
@@ -14198,7 +14198,7 @@ export const EXERCISE_CATALOG: any[] = [
   },
   {
     "id": "ex-0739",
-    "name": "Sled 45в° leg press",
+    "name": "Sled 45° leg press",
     "muscle": "gluteos",
     "equipment": "maquina",
     "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0739-10Z2DXU.gif",
@@ -14211,7 +14211,7 @@ export const EXERCISE_CATALOG: any[] = [
   },
   {
     "id": "ex-1464",
-    "name": "Sled 45в° leg press (back pov)",
+    "name": "Sled 45° leg press (back pov)",
     "muscle": "gluteos",
     "equipment": "maquina",
     "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1464-yn2lLSI.gif",
@@ -14237,7 +14237,7 @@ export const EXERCISE_CATALOG: any[] = [
   },
   {
     "id": "ex-0740",
-    "name": "Sled 45в° leg wide press",
+    "name": "Sled 45° leg wide press",
     "muscle": "gluteos",
     "equipment": "maquina",
     "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0740-tj41Nu6.gif",

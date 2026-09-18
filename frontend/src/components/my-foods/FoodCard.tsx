@@ -64,7 +64,7 @@ export default function FoodCard({
     return (
       <div draggable onClick={() => onToggleSelect(food.id)} onDragStart={handleDrag} style={{ ...itemStyle(isSelected), alignItems: 'flex-start' }}>
         <div style={{ paddingTop: '0.2rem', minWidth: '20px', color: isSelected ? 'var(--color-success)' : 'var(--text-secondary)', opacity: isSelected ? 1 : 0.3 }}>
-          {isSelected ? '✔️' : '○'}
+          {isSelected ? '' : ''}
         </div>
         <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.2rem' }}>
@@ -83,7 +83,7 @@ export default function FoodCard({
   return (
     <div draggable onClick={() => onToggleSelect(food.id)} onDragStart={handleDrag} style={{ display: 'flex', padding: '0.5rem', borderBottom: '1px solid var(--border-subtle)', fontSize: '0.8rem', alignItems: 'center', background: isSelected ? 'var(--bg-glass-strong)' : 'transparent', cursor: 'pointer' }}>
       <div style={{ width: '30px', color: isSelected ? 'var(--color-success)' : 'var(--text-secondary)', opacity: isSelected ? 1 : 0.3 }}>
-        {isSelected ? '✔️' : '○'}
+        {isSelected ? '' : ''}
       </div>
       <div style={{ flex: 2, minWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 500 }}>
         {food.name} {food.brand && <span style={{opacity:0.5, fontSize:'0.7rem'}}>({food.brand})</span>}

@@ -231,9 +231,9 @@ export function HistoryView() {
                                   {SET_TYPE_LABEL[s.type] || normalCount + 1}
                                 </span>
                               </td>
-                              <td className="bold-val">{isCardio ? s.distance || "—" : s.weight || "—"}</td>
-                              <td className="bold-val">{isCardio ? s.duration || "—" : s.reps || "—"}</td>
-                              {showRpe && <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{s.rpe || "—"}</td>}
+                              <td className="bold-val">{isCardio ? s.distance || "" : s.weight || ""}</td>
+                              <td className="bold-val">{isCardio ? s.duration || "" : s.reps || ""}</td>
+                              {showRpe && <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{s.rpe || ""}</td>}
                               <td>
                                 {s.completed && isPrSet(ex.exerciseId, s.weight, history, detail.id) ? (
                                   <span className="text-[0.65rem] font-bold text-[var(--color-success)] bg-emerald-500/15 px-1.5 py-1 rounded-sm">PR</span>

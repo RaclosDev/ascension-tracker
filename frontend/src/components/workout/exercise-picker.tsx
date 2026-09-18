@@ -155,7 +155,7 @@ export function ExercisePicker() {
                 autoCorrect="off"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar press, sentadilla…"
+                placeholder="Buscar press, sentadilla"
                 className="picker-search-input"
               />
             </div>
@@ -210,7 +210,7 @@ export function ExercisePicker() {
                       {ex.gifUrl ? (
                         <img src={ex.gifUrl} alt="" className="picker-recent-chip-img" loading="lazy" />
                       ) : null}
-                      {dName.length > 25 ? dName.slice(0, 25) + "…" : dName}
+                      {dName.length > 25 ? dName.slice(0, 25) + "" : dName}
                       {on && <Check size={13} />}
                     </button>
                   );

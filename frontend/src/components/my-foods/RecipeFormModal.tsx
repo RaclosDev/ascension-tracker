@@ -34,7 +34,7 @@ export default function RecipeFormModal({
     <form onSubmit={handleAddRecipe} style={{ marginBottom: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.6rem', background: 'var(--bg-secondary)', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={onToggle}>
         <h3 style={{ fontSize: '0.85rem', margin: 0, color: 'var(--text-secondary)' }}>{editingRecipeId ? ' Editar Receta' : ' Añadir Nueva'}</h3>
-        <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{isOpen ? '−' : '+'}</span>
+        <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{isOpen ? '' : '+'}</span>
       </div>
       {isOpen && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.2rem' }}>
