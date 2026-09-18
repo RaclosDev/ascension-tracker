@@ -1,4 +1,5 @@
 import React from 'react';
+import { Sunrise, Utensils, Moon, Apple } from 'lucide-react';
 
 interface MealSelectorModalProps {
   isOpen: boolean;
@@ -67,10 +68,10 @@ export default function MealSelectorModal({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <label className="form-label">¿A qué comida?</label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-            <button onClick={() => handleBulkAddToMeal(0)} disabled={isAddingToMeal} className="btn btn-secondary">☕ Desayuno</button>
-            <button onClick={() => handleBulkAddToMeal(1)} disabled={isAddingToMeal} className="btn btn-secondary">🍲 Comida</button>
-            <button onClick={() => handleBulkAddToMeal(2)} disabled={isAddingToMeal} className="btn btn-secondary"> Cena</button>
-            <button onClick={() => handleBulkAddToMeal(3)} disabled={isAddingToMeal} className="btn btn-secondary"> Snack</button>
+            <button onClick={() => handleBulkAddToMeal(0)} disabled={isAddingToMeal} className="btn btn-secondary flex items-center justify-center gap-2"><Sunrise className="w-4 h-4" /> Desayuno</button>
+            <button onClick={() => handleBulkAddToMeal(1)} disabled={isAddingToMeal} className="btn btn-secondary flex items-center justify-center gap-2"><Utensils className="w-4 h-4" /> Comida</button>
+            <button onClick={() => handleBulkAddToMeal(2)} disabled={isAddingToMeal} className="btn btn-secondary flex items-center justify-center gap-2"><Moon className="w-4 h-4" /> Cena</button>
+            <button onClick={() => handleBulkAddToMeal(3)} disabled={isAddingToMeal} className="btn btn-secondary flex items-center justify-center gap-2"><Apple className="w-4 h-4" /> Snack</button>
           </div>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { MealIcon } from '../components/MealIcon';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import MyFoodsPage from './MyFoodsPage';
@@ -413,7 +414,7 @@ export default function NutritionPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem', cursor: 'pointer' }} onClick={(e) => toggleMealCollapse(index, e)}>
                     <div style={{ fontWeight: 600, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <ChevronDown size={18} style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease', color: 'var(--text-secondary)' }} />
-                      <span style={{ marginRight: 'var(--space-xs)' }}>{meal.icon}</span> {meal.name}
+                      <span style={{ marginRight: "var(--space-xs)" }}><MealIcon iconString={meal.icon || meal.name} className="w-5 h-5 inline-block text-[var(--text-secondary)]" /></span> {meal.name}
                     </div>
                   <button 
                     className="btn btn-primary btn-sm" 

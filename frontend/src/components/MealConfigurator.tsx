@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import { MealIcon } from './MealIcon';
 
 const DEFAULT_MEALS = [
-  { name: 'Desayuno', icon: '🌅', sortOrder: 0, startTime: '06:00', endTime: '11:00' },
-  { name: 'Comida', icon: '🍽️', sortOrder: 1, startTime: '13:00', endTime: '17:00' },
+  { name: 'Desayuno', icon: '', sortOrder: 0, startTime: '06:00', endTime: '11:00' },
+  { name: 'Comida', icon: '', sortOrder: 1, startTime: '13:00', endTime: '17:00' },
   { name: 'Cena', icon: '', sortOrder: 2, startTime: '20:00', endTime: '05:59' },
-  { name: 'Snacks', icon: '🍫', sortOrder: 3, startTime: '11:00', endTime: '13:00', isDefault: true }
+  { name: 'Snacks', icon: '', sortOrder: 3, startTime: '11:00', endTime: '13:00', isDefault: true }
 ];
 
 export default function MealConfigurator({ onSaved }) {
@@ -93,7 +94,7 @@ export default function MealConfigurator({ onSaved }) {
   const handleAddMeal = async () => {
     setSaving(true);
     try {
-      await api.post('/nutrition/meals', { name: 'Nueva Comida', icon: '🍽️', startTime: '12:00', endTime: '13:00' });
+      await api.post('/nutrition/meals', { name: 'Nueva Comida', icon: '', startTime: '12:00', endTime: '13:00' });
       await fetchMeals();
     } catch {
       toast.error('Error al añadir comida');
