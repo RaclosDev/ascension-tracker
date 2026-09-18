@@ -109,12 +109,10 @@ public class AuthController {
                 .map(refreshTokenService::verifyExpiration)
                 .map(refreshToken -> {
                     String token = generateJwt(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture());
-                    // Opcional: Rotar el refresh token
-                    RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture());
                     
                     Map<String, String> response = new HashMap<>();
                     response.put("token", token);
-                    response.put("refreshToken", newRefreshToken.getPlainToken());
+                    response.put("refreshToken", requestRefreshToken);
                     return ResponseEntity.ok(response);
                 })
                 .orElseThrow(() -> new com.ascension.exception.TokenRefreshException("Refresh token is not in database!"));
@@ -125,7 +123,7 @@ public class AuthController {
         String requestRefreshToken = request.get("refreshToken");
         if (requestRefreshToken == null) return ResponseEntity.badRequest().body("Refresh token is missing");
         refreshTokenService.findByToken(RefreshToken.hashToken(requestRefreshToken)).ifPresent(token -> {
-                refreshTokenService.deleteByEmail(token.getEmail());
+                refreshTokenService.delete(token);
             });
         return ResponseEntity.ok(Map.of("message", "Log out successful"));
     }

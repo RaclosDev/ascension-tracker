@@ -21,7 +21,6 @@ public class RefreshTokenService {
 
     @Transactional
     public RefreshToken createRefreshToken(String email, String name, String picture) {
-        refreshTokenRepository.deleteByEmail(email);
         RefreshToken refreshToken = new RefreshToken(
                 email, name, picture,
                 Instant.now().plus(REFRESH_TOKEN_EXPIRATION_DAYS, ChronoUnit.DAYS)
@@ -44,6 +43,11 @@ public class RefreshTokenService {
     @Transactional
     public void deleteByEmail(String email) {
         refreshTokenRepository.deleteByEmail(email);
+    }
+
+    @Transactional
+    public void delete(RefreshToken token) {
+        refreshTokenRepository.delete(token);
     }
 }
 
