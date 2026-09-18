@@ -370,7 +370,7 @@ export function ExercisesView() {
                   <div style={{ minWidth: 0, overflow: "hidden" }}>
                     <h3 style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.9rem", fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {aliases[ex.id] || ex.name}
-                      {ex.custom && <span style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", background: "var(--accent-primary-light)", color: "var(--bg-primary)", borderRadius: "3px", textTransform: "uppercase", letterSpacing: "0.02em", fontWeight: 700, flexShrink: 0 }}>Custom</span>}
+                      {ex.custom && <span className="text-[0.6rem] px-1.5 py-0.5 bg-[var(--accent-primary-light)] text-[var(--bg-primary)] rounded-sm uppercase tracking-wide font-bold shrink-0">Custom</span>}
                     </h3>
                     <p style={{ marginTop: "0.15rem", fontSize: "0.7rem", color: "var(--text-secondary)", textTransform: "capitalize" }}>
                       {MUSCLE_LABEL[ex.muscle]} · {ex.equipment}
@@ -685,7 +685,7 @@ export function ExercisesView() {
                             <div>
                               <p style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontWeight: 600, color: "var(--text-primary)", fontSize: "0.95rem" }}>
                                 {ex.name}
-                                {ex.custom && <span style={{ fontSize: "0.55rem", padding: "0.05rem 0.25rem", background: "var(--accent-primary-light)", color: "var(--bg-primary)", borderRadius: "3px", textTransform: "uppercase", letterSpacing: "0.02em", fontWeight: 700 }}>Custom</span>}
+                                {ex.custom && <span className="text-[0.55rem] px-1 py-[0.1rem] bg-[var(--accent-primary-light)] text-[var(--bg-primary)] rounded-sm uppercase tracking-wide font-bold">Custom</span>}
                               </p>
                               <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", textTransform: "capitalize", marginTop: "0.1rem" }}>
                                 {MUSCLE_LABEL[ex.muscle]} · {ex.equipment}

@@ -1028,7 +1028,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                                 )}
                               </div>
                             </div>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--color-carbs)', background: 'var(--color-carbs-bg)', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>
+                            <span className="text-xs text-[var(--color-carbs)] bg-[var(--color-carbs-bg)] px-1.5 py-1 rounded-sm">
                               Guardado
                             </span>
                           </div>

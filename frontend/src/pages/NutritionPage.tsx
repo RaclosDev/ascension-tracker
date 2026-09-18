@@ -9,6 +9,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import { ChevronDown, Trash2, Edit3, GripVertical } from 'lucide-react';
+import { SegmentedControl } from '../components/ui/segmented-control';
 
 export default function NutritionPage() {
   const queryClient = useQueryClient();
@@ -229,51 +230,15 @@ export default function NutritionPage() {
   return (
     <div className="fade-in">
       {/* Segmented Control */}
-      <div style={{
-        display: 'flex',
-        background: 'rgba(255, 255, 255, 0.05)',
-        padding: '0.35rem',
-        borderRadius: '20px',
-        marginBottom: '1.5rem',
-        position: 'relative'
-      }}>
-        <button
-          onClick={() => setActiveTab('diary')}
-          style={{
-            flex: 1,
-            padding: '0.65rem',
-            borderRadius: '16px',
-            background: activeTab === 'diary' ? 'var(--bg-card)' : 'transparent',
-            color: activeTab === 'diary' ? 'var(--text-primary)' : 'var(--text-secondary)',
-            fontWeight: activeTab === 'diary' ? 600 : 500,
-            boxShadow: activeTab === 'diary' ? '0 4px 16px rgba(0,0,0,0.4)' : 'none',
-            border: activeTab === 'diary' ? '1px solid var(--border-medium)' : '1px solid transparent',
-            transition: 'all 0.25s ease',
-            cursor: 'pointer',
-            fontSize: '0.9rem'
-          }}
-        >
-          Diario
-        </button>
-        <button
-          onClick={() => setActiveTab('foods')}
-          style={{
-            flex: 1,
-            padding: '0.65rem',
-            borderRadius: '16px',
-            background: activeTab === 'foods' ? 'var(--bg-card)' : 'transparent',
-            color: activeTab === 'foods' ? 'var(--text-primary)' : 'var(--text-secondary)',
-            fontWeight: activeTab === 'foods' ? 600 : 500,
-            boxShadow: activeTab === 'foods' ? '0 4px 16px rgba(0,0,0,0.4)' : 'none',
-            border: activeTab === 'foods' ? '1px solid var(--border-medium)' : '1px solid transparent',
-            transition: 'all 0.25s ease',
-            cursor: 'pointer',
-            fontSize: '0.9rem'
-          }}
-        >
-          Mis Alimentos
-        </button>
-      </div>
+      <SegmentedControl
+        options={[
+          { label: 'Diario', value: 'diary' },
+          { label: 'Mis Alimentos', value: 'foods' }
+        ]}
+        value={activeTab}
+        onChange={(val) => setActiveTab(val as 'diary' | 'foods')}
+        className="mb-6"
+      />
 
       {activeTab === 'foods' ? (
         <MyFoodsPage />

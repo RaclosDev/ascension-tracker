@@ -236,7 +236,7 @@ export function HistoryView() {
                               {showRpe && <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{s.rpe || "—"}</td>}
                               <td>
                                 {s.completed && isPrSet(ex.exerciseId, s.weight, history, detail.id) ? (
-                                  <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-success)', background: 'rgba(16,185,129,0.15)', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>PR</span>
+                                  <span className="text-[0.65rem] font-bold text-[var(--color-success)] bg-emerald-500/15 px-1.5 py-1 rounded-sm">PR</span>
                                 ) : null}
                               </td>
                             </tr>
