@@ -64,24 +64,26 @@ export default function FoodCard({
   if (viewMode === 'grid') {
     return (
       <div draggable onClick={() => onToggleSelect(food.id)} onDragStart={handleDrag} style={{ ...itemStyle(isSelected), alignItems: 'flex-start' }}>
-        <div style={{ paddingTop: '0.1rem', minWidth: '24px', color: isSelected ? 'var(--color-success)' : 'var(--text-secondary)', opacity: isSelected ? 1 : 0.3 }}>
+        <div style={{ paddingTop: '0.4rem', minWidth: '24px', color: isSelected ? 'var(--color-success)' : 'var(--text-secondary)', opacity: isSelected ? 1 : 0.3 }}>
           {isSelected ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
         </div>
-        <div style={{ overflow: 'hidden', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-          {/* Fila 1: Nombre + Marca (Forzado a 1 línea con ellipsis) */}
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.3rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-            <span style={{ fontWeight: 600, fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {food.name}
+        <div style={{ overflow: 'hidden', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          
+          {/* Fila Superior: Marca (Derecha) + Lapiz de Edicion */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.4rem', minHeight: '28px', marginBottom: '0.2rem' }}>
+            <span style={{ opacity: 0.5, fontSize: '0.7rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {food.brand || ''}
             </span>
-            {food.brand && (
-              <span style={{ opacity: 0.5, fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 2 }}>
-                ({food.brand})
-              </span>
-            )}
+            <EditBtn onClick={() => onEdit(food)} />
+          </div>
+
+          {/* Fila 1: Nombre (Ocupa todo el ancho disponible ahora, sin miedo a chocar con la marca) */}
+          <div style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingBottom: '0.3rem' }}>
+            {food.name}
           </div>
           
           {/* Fila 2: Porción (Mantiene la altura aunque esté vacío) */}
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', minHeight: '16px', display: 'flex', alignItems: 'center' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', minHeight: '18px', display: 'flex', alignItems: 'center', marginBottom: '0.2rem' }}>
             {food.servingSize > 0 ? (
               <span style={{ background: 'var(--bg-primary)', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
                 {food.servingSize}g / {food.servingLabel || 'ud'}
@@ -90,12 +92,10 @@ export default function FoodCard({
           </div>
           
           {/* Fila 3: Macros */}
-          <div style={{ marginTop: '0.1rem' }}>
+          <div style={{ paddingBottom: '0.2rem' }}>
             {macroLine(food.kcalPer100g, food.proteinPer100g, food.carbsPer100g, food.fatPer100g)}
           </div>
-        </div>
-        <div style={{ paddingTop: '0.1rem' }}>
-          <EditBtn onClick={() => onEdit(food)} />
+          
         </div>
       </div>
     );
