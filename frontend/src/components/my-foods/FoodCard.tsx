@@ -1,4 +1,5 @@
 import React from 'react';
+import { CheckCircle2, Circle, Edit3 } from 'lucide-react';
 
 interface FoodCardProps {
   food: any;
@@ -12,11 +13,11 @@ interface FoodCardProps {
 const macroLine = (kcal: number, p: number, c: number, f: number) => (
   <span className="meal-subtotal-row" style={{ fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
     <span className="subtotal-val kcal"><strong style={{ color: 'var(--text-primary)' }}>{Math.round(kcal)}</strong> kcal</span>
-    <span className="subtotal-dot">·</span>
+    <span className="subtotal-dot" style={{ margin: '0 0.3rem', opacity: 0.5 }}>•</span>
     <span className="subtotal-val">P: {Number(p).toFixed(1)}g</span>
-    <span className="subtotal-dot">·</span>
+    <span className="subtotal-dot" style={{ margin: '0 0.3rem', opacity: 0.5 }}>•</span>
     <span className="subtotal-val">C: {Number(c).toFixed(1)}g</span>
-    <span className="subtotal-dot">·</span>
+    <span className="subtotal-dot" style={{ margin: '0 0.3rem', opacity: 0.5 }}>•</span>
     <span className="subtotal-val">G: {Number(f).toFixed(1)}g</span>
   </span>
 );
@@ -35,8 +36,8 @@ const itemStyle = (highlight: boolean) => ({
 });
 
 const EditBtn = ({ onClick }: { onClick: () => void }) => (
-  <button onClick={(e) => { e.stopPropagation(); onClick(); }} className="icon-btn edit-btn" style={{ padding: '0.4rem', width: '28px', height: '28px' }} title="Editar">
-    
+  <button onClick={(e) => { e.stopPropagation(); onClick(); }} className="icon-btn edit-btn" style={{ padding: '0.4rem', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Editar">
+    <Edit3 className="w-4 h-4 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" />
   </button>
 );
 
@@ -63,15 +64,19 @@ export default function FoodCard({
   if (viewMode === 'grid') {
     return (
       <div draggable onClick={() => onToggleSelect(food.id)} onDragStart={handleDrag} style={{ ...itemStyle(isSelected), alignItems: 'flex-start' }}>
-        <div style={{ paddingTop: '0.2rem', minWidth: '20px', color: isSelected ? 'var(--color-success)' : 'var(--text-secondary)', opacity: isSelected ? 1 : 0.3 }}>
-          {isSelected ? '' : ''}
+        <div style={{ paddingTop: '0.3rem', minWidth: '24px', color: isSelected ? 'var(--color-success)' : 'var(--text-secondary)', opacity: isSelected ? 1 : 0.3 }}>
+          {isSelected ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
         </div>
         <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
             <span style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{food.name}</span>
             {food.brand && <span style={{ opacity: 0.5, fontSize: '0.75rem', flexShrink: 0 }}>({food.brand})</span>}
+            {food.servingSize > 0 && (
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-primary)', opacity: 0.8, flexShrink: 0, paddingLeft: '0.3rem', borderLeft: '1px solid var(--border-subtle)' }}>
+                {food.servingSize}g/{food.servingLabel||'ud'}
+              </span>
+            )}
           </div>
-          {food.servingSize > 0 && <div style={{ fontSize: '0.65rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>[{food.servingSize}g/{food.servingLabel||'ud'}]</div>}
           <div>{macroLine(food.kcalPer100g, food.proteinPer100g, food.carbsPer100g, food.fatPer100g)}</div>
         </div>
         <EditBtn onClick={() => onEdit(food)} />
@@ -83,7 +88,7 @@ export default function FoodCard({
   return (
     <div draggable onClick={() => onToggleSelect(food.id)} onDragStart={handleDrag} style={{ display: 'flex', padding: '0.5rem', borderBottom: '1px solid var(--border-subtle)', fontSize: '0.8rem', alignItems: 'center', background: isSelected ? 'var(--bg-glass-strong)' : 'transparent', cursor: 'pointer' }}>
       <div style={{ width: '30px', color: isSelected ? 'var(--color-success)' : 'var(--text-secondary)', opacity: isSelected ? 1 : 0.3 }}>
-        {isSelected ? '' : ''}
+        {isSelected ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
       </div>
       <div style={{ flex: 2, minWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 500 }}>
         {food.name} {food.brand && <span style={{opacity:0.5, fontSize:'0.7rem'}}>({food.brand})</span>}
