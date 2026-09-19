@@ -194,7 +194,10 @@ export default function SettingsPage() {
             onClick={(e) => toggleSection('personal', e)}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
           >
-            <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Datos Personales</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <User size={20} className="text-primary" />
+              <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Datos Personales</span>
+            </div>
             <span style={{ transform: openSections.personal ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               
             </span>
@@ -260,7 +263,10 @@ export default function SettingsPage() {
             onClick={(e) => toggleSection('macros', e)}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
           >
-            <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Estrategia de Macros</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Scale size={20} className="text-primary" />
+              <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Estrategia de Macros</span>
+            </div>
             <span style={{ transform: openSections.macros ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               
             </span>
@@ -518,7 +524,10 @@ export default function SettingsPage() {
             onClick={(e) => toggleSection('meals', e)}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
           >
-            <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Configurar Comidas</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Utensils size={20} className="text-primary" />
+              <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Configurar Comidas</span>
+            </div>
             <span style={{ transform: openSections.meals ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               
             </span>
@@ -598,7 +607,10 @@ export default function SettingsPage() {
             onClick={(e) => toggleSection('workout', e)}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
           >
-            <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Entrenamiento</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Dumbbell size={20} className="text-primary" />
+              <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Entrenamiento</span>
+            </div>
             <span style={{ transform: openSections.workout ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               
             </span>
