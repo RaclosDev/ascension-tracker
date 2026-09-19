@@ -292,27 +292,26 @@ export default function NutritionPage() {
 
 
       {/* Global Add Button (FAB-style for mobile, fixed for PC) */}
-              <button
-          className="btn shadow-glow"
-          style={{
-            position: 'fixed',
-            bottom: 'calc(95px + env(safe-area-inset-bottom))',
-            right: '20px',
-            zIndex: 90,
-            borderRadius: '50%',
-            width: '56px',
-            height: '56px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '2rem',
-            lineHeight: 1,
-            background: 'var(--gradient-primary)',
-            color: 'var(--accent-text, white)',
-            border: 'none',
-            boxShadow: '0 8px 24px var(--accent-shadow), inset 0 1px 2px rgba(255,255,255,0.2)'
-          }}
-          onClick={() => {
+      <button
+        className="btn"
+        style={{
+          position: 'fixed',
+          bottom: 'calc(95px + env(safe-area-inset-bottom))',
+          right: '20px',
+          zIndex: 90,
+          borderRadius: '50%',
+          width: '56px',
+          height: '56px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '2rem',
+          lineHeight: 1,
+          background: 'var(--gradient-primary)',
+          color: 'var(--accent-text, white)',
+          border: 'none'
+        }}
+        onClick={() => {
             setSelectedMealIndex(0);
             setSearchModalOpen(true);
           }}

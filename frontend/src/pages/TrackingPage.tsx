@@ -26,18 +26,18 @@ const DayCell = ({ dateStr, dayName, dayData, isToday, onOpenModal, showWeight, 
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: 'auto', paddingTop: '0.5rem', flex: 1, justifyContent: 'flex-end', width: '100%' }}>
         {showWeight && (
-          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
-            {dayData.weight !== null ? <>{dayData.weight.toFixed(2)}<span className="hide-on-mobile" style={{fontWeight:400, opacity:0.5, marginLeft:'2px'}}>kg</span></> : <span style={{opacity: 0.3}}></span>}
+          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)', minHeight: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {dayData.weight !== null ? <>{dayData.weight.toFixed(2)}<span className="hide-on-mobile" style={{fontWeight:400, opacity:0.5, marginLeft:'2px'}}>kg</span></> : <span style={{opacity: 0.3}}>—</span>}
           </div>
         )}
         {showSteps && (
-          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
-            {dayData.steps !== null ? <>{Math.round(dayData.steps)}<span className="hide-on-mobile" style={{fontWeight:400, opacity:0.7, marginLeft:'2px'}}>pas</span></> : <span style={{opacity: 0.3}}></span>}
+          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)', minHeight: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {dayData.steps !== null ? <>{Math.round(dayData.steps)}<span className="hide-on-mobile" style={{fontWeight:400, opacity:0.7, marginLeft:'2px'}}>pas</span></> : <span style={{opacity: 0.3}}>—</span>}
           </div>
         )}
         {showCalories && (
-          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
-            {dayData.calories !== null ? <>{Math.round(dayData.calories)}<span className="hide-on-mobile" style={{fontWeight:400, opacity:0.7, marginLeft:'2px'}}>kcal</span></> : <span style={{opacity: 0.3}}></span>}
+          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)', minHeight: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {dayData.calories !== null ? <>{Math.round(dayData.calories)}<span className="hide-on-mobile" style={{fontWeight:400, opacity:0.7, marginLeft:'2px'}}>kcal</span></> : <span style={{opacity: 0.3}}>—</span>}
           </div>
         )}
       </div>

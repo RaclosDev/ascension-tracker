@@ -1,14 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import MealConfigurator from '../components/MealConfigurator';
-import { getLocalDateString } from '../utils/dateHelper';
 import { useWorkoutStore } from '../lib/workout/store';
 import { importHevyCSV } from '../lib/workout/import';
-import { useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { applyThemeColor } from '../utils/colorHelper';
+import { Palette, ChevronDown, User, Scale, Activity, Dumbbell, Utensils } from 'lucide-react';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<any>(null);
@@ -539,10 +538,8 @@ export default function SettingsPage() {
             onClick={(e) => toggleSection('theme', e)}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem' }}>
-                
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Palette size={20} className="text-primary" />
               <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Tema y Apariencia</span>
             </div>
             <span style={{ transform: openSections.theme ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>

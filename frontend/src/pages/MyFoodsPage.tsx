@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { LayoutGrid, List, Clock, ArrowDownAZ, Utensils, Trash2, ScanLine, Pencil, Plus, ChevronDown, ChevronRight, X, Check } from 'lucide-react';
+import { LayoutGrid, List, Clock, ArrowDownAZ, Utensils, Trash2, ScanLine, Pencil, Plus, ChevronDown, ChevronRight, X, Check, Beef, Wheat, Droplet, Apple, ChefHat } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/client';
 import toast from 'react-hot-toast';
@@ -643,10 +643,10 @@ export default function MyFoodsPage() {
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
           <div className="mobile-scroll-x" style={{ display: 'flex', gap: '0.35rem', flexWrap: 'nowrap', alignItems: 'center', overflowX: 'auto', paddingBottom: '2px', flex: 1 }}>
             {[
-              { id: 'all', icon: '', label: 'Todo', count: q ? totalResults : (recentFoods.length + savedFoods.length + recipes.length) },
-              { id: 'recent', icon: '', label: 'Recientes', count: filteredRecent.length },
-              { id: 'foods', icon: '', label: 'Alimentos', count: filteredFoods.length },
-              { id: 'recipes', icon: '', label: 'Recetas', count: filteredRecipes.length }
+              { id: 'all', icon: LayoutGrid, label: 'Todo', count: q ? totalResults : (recentFoods.length + savedFoods.length + recipes.length) },
+              { id: 'recent', icon: Clock, label: 'Recientes', count: filteredRecent.length },
+              { id: 'foods', icon: Apple, label: 'Alimentos', count: filteredFoods.length },
+              { id: 'recipes', icon: ChefHat, label: 'Recetas', count: filteredRecipes.length }
             ].map(tab => {
               const active = searchFilter === tab.id;
               return (
@@ -671,7 +671,7 @@ export default function MyFoodsPage() {
                   title={tab.label}
                 >
                   <span style={{ display: 'flex', alignItems: 'center' }}>
-                    {tab.icon}
+                    <tab.icon size={14} style={{ marginRight: '0.15rem' }} />
                     {active && <span style={{ marginLeft: '0.3rem' }} className="fade-in-anim">{tab.label}</span>}
                   </span>
                   <span style={{
@@ -735,9 +735,20 @@ export default function MyFoodsPage() {
                 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center', background: 'var(--bg-secondary)', padding: '0.5rem', borderRadius: '10px' }}>
                   <div className="mobile-scroll-x" style={{ display: 'flex', gap: '0.3rem', flex: 1, minWidth: '0', overflowX: 'auto', paddingBottom: '2px' }}>
-                    {[{id:'all', label:'Todos'}, {id:'protein', label:'🥩 Pro'}, {id:'carbs', label:'🍚 Car'}, {id:'fat', label:' Gra'}].map(m => (
-                      <button key={m.id} onClick={() => setMacroFilter(m.id)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', borderRadius: '6px', cursor: 'pointer', border: 'none', background: macroFilter === m.id ? 'rgba(255, 255, 255, 0.12)' : 'transparent', boxShadow: macroFilter === m.id ? '0 4px 12px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(255, 255, 255, 0.05) inset' : 'none', transform: macroFilter === m.id ? 'scale(1)' : 'scale(0.98)', transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', color: macroFilter === m.id ? 'var(--text-primary)' : 'var(--text-secondary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                        {m.label}
+                    {[{id:'all', label:'Todos', icon: LayoutGrid}, {id:'protein', label:'Pro', icon: Beef}, {id:'carbs', label:'Car', icon: Wheat}, {id:'fat', label:'Gra', icon: Droplet}].map(m => (
+                      <button 
+                        key={m.id} 
+                        onClick={() => setMacroFilter(m.id)} 
+                        style={{ 
+                          whiteSpace: 'nowrap', padding: '0.35rem 0.65rem', borderRadius: '8px', 
+                          border: `1px solid ${macroFilter === m.id ? 'var(--accent-primary)' : 'var(--border-subtle)'}`, 
+                          background: macroFilter === m.id ? 'var(--accent-glow)' : 'transparent', 
+                          color: macroFilter === m.id ? 'var(--accent-primary-light)' : 'var(--text-secondary)', 
+                          fontSize: '0.82rem', fontWeight: macroFilter === m.id ? 600 : 500, cursor: 'pointer', transition: 'all 0.2s',
+                          display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0
+                        }}
+                      >
+                        {m.icon && <m.icon size={14} />} {m.label}
                       </button>
                     ))}
                   </div>
@@ -1086,7 +1097,7 @@ export default function MyFoodsPage() {
       />
       {/* CUSTOM FAB FOR CREATION ACTIONS */}
       <button
-        className="btn btn-primary shadow-glow"
+        className="btn"
         onClick={() => setIsActionMenuOpen(true)}
         style={{
           position: 'fixed',
@@ -1099,11 +1110,15 @@ export default function MyFoodsPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '1.5rem',
-          boxShadow: '0 4px 12px var(--accent-shadow)' // Blueish shadow
+          fontSize: '2rem',
+          lineHeight: 1,
+          background: 'var(--gradient-primary)',
+          color: 'white',
+          border: 'none'
         }}
-        title="Crear o Añadir Alimento">
-        <Plus className="w-6 h-6" />
+        title="Crear o Añadir Alimento"
+      >
+        +
       </button>
 
       {/* ACTION MENU MODAL */}
