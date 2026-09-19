@@ -1113,7 +1113,7 @@ export default function MyFoodsPage() {
           fontSize: '2rem',
           lineHeight: 1,
           background: 'var(--gradient-primary)',
-          color: 'white',
+          color: 'var(--accent-text, white)',
           border: 'none'
         }}
         title="Crear o Añadir Alimento"
