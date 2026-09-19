@@ -180,7 +180,7 @@ export default function MealConfigurator({ onSaved }) {
                         ...provided.draggableProps.style
                       }}
                     >
-                      {/* Primera Fila: Reordenar, Icono, Nombre y Eliminar */}
+                      {/* Primera Fila: Reordenar, Nombre y Eliminar */}
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <div 
                           {...provided.dragHandleProps} 
@@ -203,14 +203,7 @@ export default function MealConfigurator({ onSaved }) {
                             <line x1="3" y1="18" x2="3.01" y2="18"></line>
                           </svg>
                         </div>
-                        <input
-                          type="text"
-                          className="form-input"
-                          style={{ width: '48px', textAlign: 'center', padding: '8px 4px' }}
-                          value={meal.icon || ''}
-                          onChange={e => updateMeal(index, 'icon', e.target.value)}
-                          placeholder="Icono"
-                        />
+
                         <input
                           type="text"
                           className="form-input"
