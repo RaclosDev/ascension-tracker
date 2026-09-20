@@ -4,7 +4,7 @@ import api from '../api/client';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, Scale, Footprints, Apple, Flame } from 'lucide-react';
+import { Trash2, Scale, Footprints, Apple, Flame, X } from 'lucide-react';
 import { parseSafeWeight } from '../utils/weightHelper';
 
 const DayCell = ({ dateStr, dayName, dayData, isToday, onOpenModal, showWeight, showSteps, showCalories }) => {
@@ -334,7 +334,7 @@ export default function TrackingPage() {
                 onClick={() => setModalData(null)}
                 style={{ padding: '0.2rem 0.6rem', borderRadius: '50%' }}
               >
-                
+                <X size={18} />
               </button>
             </div>
 

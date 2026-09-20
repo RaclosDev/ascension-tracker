@@ -6,6 +6,7 @@ import { useSpeechToText } from '../hooks/useSpeechToText';
 import { getSanitizedKcal, extractPortions } from '../utils/portionHelper';
 import { getSmartFallbackQueries } from '../utils/searchHelper';
 import BarcodeScanner from './BarcodeScanner';
+import { Mic, ImageIcon, X, Search, ScanLine, FileText, Cpu } from 'lucide-react';
 
 export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLogAdded, meals = [] }) {
   const [activeTab, setActiveTab] = useState('ai'); // 'search' | 'manual' | 'scanner' | 'ai'
@@ -418,7 +419,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                 Comida {selectedMealIndex + 1} - {date}
               </span>
             </div>
-            <button className="workout-sheet-close" onClick={onClose}></button>
+            <button className="workout-sheet-close" onClick={onClose}><X size={24} /></button>
           </div>
         </div>
         <div className="food-search-body">
@@ -426,7 +427,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
         {/* Mode Tabs */}
         {!selectedProduct && (
           <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '1.5rem', padding: '0.35rem', background: 'rgba(255, 255, 255, 0.04)', borderRadius: '14px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.02)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)' }} className="mobile-scroll-x">
-            {[{id:'search', icon:'', label:'Buscar'}, {id:'ai', icon:'', label:'IA'}, {id:'ocr', icon:'', label:'Etiqueta'}, {id:'scanner', icon:'', label:'Barras'}, {id:'manual', icon:'', label:'Manual'}].map(t => (
+            {[{id:'search', icon:<Search size={16}/>, label:'Buscar'}, {id:'ai', icon:<Cpu size={16}/>, label:'IA'}, {id:'ocr', icon:<ImageIcon size={16}/>, label:'Etiqueta'}, {id:'scanner', icon:<ScanLine size={16}/>, label:'Barras'}, {id:'manual', icon:<FileText size={16}/>, label:'Manual'}].map(t => (
               <button 
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
@@ -694,7 +695,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                         borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', cursor: 'pointer'
                       }}
                     >
-                      
+                      <X size={12} />
                     </button>
                   </div>
                 </div>
@@ -727,7 +728,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                   }}
                   title="Adjuntar foto"
                 >
-                  
+                  <ImageIcon size={20} />
                 </button>
                 <button 
                   type="button"
@@ -749,7 +750,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
                   }}
                   title={isListening ? 'Detener dictado (Pulsar para parar)' : 'Dictar por voz (Habla a tu ritmo)'}
                 >
-                  {isListening ? '' : ''}
+                  {isListening ? <Mic size={20} color="#ef4444" /> : <Mic size={20} />}
                 </button>
               </div>
             </div>
@@ -769,7 +770,7 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span className="recording-dot" />
-                  <span><strong>Escuchando...</strong> Habla con calma a tu ritmo con pausas. Pulsa  cuando termines.</span>
+                  <span><strong>Escuchando...</strong> Habla con calma a tu ritmo con pausas. Pulsa el micrófono cuando termines.</span>
                 </div>
                 <button
                   type="button"

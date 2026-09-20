@@ -9,7 +9,7 @@ import { getLocalDateString, addDaysToDateString, isTodayLocal } from '../utils/
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import api from '../api/client';
 import toast from 'react-hot-toast';
-import { ChevronDown, Trash2, Edit3, GripVertical } from 'lucide-react';
+import { ChevronDown, Trash2, Edit3, GripVertical, Cpu } from 'lucide-react';
 import { SegmentedControl } from '../components/ui/segmented-control';
 
 export default function NutritionPage() {
@@ -376,7 +376,7 @@ export default function NutritionPage() {
               setSearchModalOpen(true);
             }}
           >
-            <span></span> Registro IA
+            <Cpu size={16} /> Registro IA
           </button>
         </div>
 
@@ -491,7 +491,7 @@ export default function NutritionPage() {
                                     onClick={(e) => { e.stopPropagation(); handleEditLog(log); }}
                                     title="Editar cantidad"
                                   >
-                                    
+                                    <Edit3 size={16} />
                                   </button>
                                   <button
                                     className="icon-btn delete-btn"
