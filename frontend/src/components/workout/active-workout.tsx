@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Bookmark, Plus, Square, Check } from "lucide-react";
 import toast from "react-hot-toast";
 import {
@@ -15,6 +15,8 @@ import { ExerciseCard } from "@/components/workout/exercise-card";
 import { ExercisePicker } from "@/components/workout/exercise-picker";
 import { RestBanner } from "@/components/workout/rest-banner";
 import { EmptyCard } from "@/components/workout/dashboard";
+import { useNow } from "@/hooks/use-now";
+import { formatDuration } from "@/lib/workout/format";
 import { useWorkoutStore } from "@/lib/workout/store";
 
 export function ActiveWorkout() {
@@ -68,29 +70,27 @@ export function ActiveWorkout() {
 
 function LiveSession() {
   const active = useWorkoutStore((s) => s.active)!;
-  const [showNotes, setShowNotes] = useState(false);
-
-  // Listen for toggle-workout-notes custom event from top bar
-  useEffect(() => {
-    const handler = () => setShowNotes((v) => !v);
-    window.addEventListener('toggle-workout-notes', handler);
-    return () => window.removeEventListener('toggle-workout-notes', handler);
-  }, []);
+  const now = useNow(true, 500);
+  const elapsed = now - active.startedAt;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-      {/* Collapsible notes panel */}
-      {showNotes && (
-        <div className="active-workout-header" style={{ padding: "0.6rem 1rem" }}>
-          <input
-            value={active.notes ?? ""}
-            onChange={(e) => useWorkoutStore.setState(s => ({ active: s.active ? { ...s.active, notes: e.target.value } : null }))}
-            placeholder="Añadir notas del entrenamiento..."
-            className="active-workout-notes-input"
-            autoFocus
-          />
+      {/* Floating timer pill */}
+      <div className="active-workout-header" style={{ padding: "0.5rem 1rem", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <div className="active-workout-timer">
+          <span className="active-workout-timer-dot" />
+          <span className="active-workout-timer-text">
+            {formatDuration(elapsed)}
+          </span>
         </div>
-      )}
+        <input
+          value={active.notes ?? ""}
+          onChange={(e) => useWorkoutStore.setState(s => ({ active: s.active ? { ...s.active, notes: e.target.value } : null }))}
+          placeholder="Notas..."
+          className="active-workout-notes-input"
+          style={{ textAlign: "right", flex: 1 }}
+        />
+      </div>
 
       <RestBanner />
 

@@ -4,9 +4,6 @@ import api from '../api/client';
 import toast from 'react-hot-toast';
 import BottomSheet from './BottomSheet';
 import { useWorkoutStore } from '@/lib/workout/store';
-import { useNow } from '@/hooks/use-now';
-import { formatDuration } from '@/lib/workout/format';
-import { StickyNote } from 'lucide-react';
 
 import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings } from 'lucide-react';
 
@@ -28,10 +25,8 @@ export default function Layout() {
   const moreMenuRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const activeWorkout = useWorkoutStore((s) => s.active);
-  const hideNav = activeWorkout !== null && location.pathname === '/workout';
-  const now = useNow(hideNav, 500);
-  const elapsed = activeWorkout ? now - activeWorkout.startedAt : 0;
+  const hasActiveWorkout = useWorkoutStore((s) => s.active !== null);
+  const hideNav = hasActiveWorkout && location.pathname === '/workout';
 
   // Cerrar el menú automáticamente al cambiar de página y resetear scroll
   useEffect(() => {
@@ -75,32 +70,12 @@ export default function Layout() {
   return (
     <div className="app-root">
       {/* Barra superior de app para móvil */}
-      <header className={`mobile-top-bar${hideNav ? ' workout-active' : ''}`}>
-        {hideNav ? (
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent('toggle-workout-notes'))}
-            className="topbar-workout-btn"
-            aria-label="Notas del entrenamiento"
-          >
-            <StickyNote className="w-5 h-5" />
-          </button>
-        ) : (
-          <div style={{ width: '48px' }} />
-        )}
+      <header className="mobile-top-bar">
+        <div style={{ width: '48px' }} />
         <div className="mobile-top-logo">
           <img src="/ascension-title.png" alt="Ascension" className="mobile-header-title-img" />
         </div>
-        {hideNav ? (
-          <div className="topbar-workout-timer">
-            <span className="active-workout-timer-dot" />
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
-              {formatDuration(elapsed)}
-            </span>
-          </div>
-        ) : (
-          <div style={{ width: '48px' }} />
-        )}
+        <div style={{ width: '48px' }} />
       </header>
 
       {/* Capa de fondo oscurecida para cerrar el menú */}
