@@ -234,3 +234,9 @@ export const calcStepsKcal = (weightKg: number, steps: number): number => {
   const energyJ = 2.74 * weightKg * (steps / 2);
   return energyJ / 4184;
 };
+
+/** Reverse: how many steps to burn targetKcal */
+export const calcStepsFromKcal = (weightKg: number, targetKcal: number): number => {
+  if (weightKg <= 0 || targetKcal <= 0) return 0;
+  return (targetKcal * 4184 * 2) / (2.74 * weightKg);
+};

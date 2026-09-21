@@ -716,158 +716,164 @@ export default function UtilitiesPage() {
         </div>
       </div>
 
-      {/* --- EXISTING PERFORMANCE CALCULATORS --- */}
+      {/* --- CALCULATORS: 2-column independent scroll on desktop --- */}
       <div style={{ marginTop: '2.5rem' }}>
-        <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '1rem', letterSpacing: '-0.01em' }}>
-          Calculadoras de Rendimiento Físico
-        </h3>
+        <div className="utilities-grid--scroll">
+          {/* Left column: performance */}
+          <div className="utilities-col">
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '1rem', letterSpacing: '-0.01em' }}>
+              Calculadoras de Rendimiento Físico
+            </h3>
 
-        <div className="utilities-grid">
-          {/* Calculator 1 */}
-          <div className="card accordion-card" style={{ padding: openSections.calc1 ? 'var(--space-lg)' : '1rem 1.25rem', transition: 'all 0.25s ease' }}>
-            <div
-              className="accordion-header"
-              onClick={(e) => toggleSection('calc1', e)}
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
-            >
-              <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Gasto por Pasos</span>
-              <span style={{ transform: openSections.calc1 ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                
-              </span>
-            </div>
-
-            {openSections.calc1 && (
-              <div className="accordion-content fade-in" style={{ marginTop: '1.25rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.25rem' }}>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem', lineHeight: '1.4' }}>
-                  Estima la energía mecánica usada en cada impacto según la biomecánica de Weyand.
-                </p>
-
-                <div className="form-group">
-                  <label className="form-label">Peso Corporal (kg)</label>
-                  <input
-                    type="number" inputMode="decimal"
-                    className="form-input"
-                    value={weight1}
-                    onChange={(e) => setWeight1(e.target.value)}
-                    placeholder="Ej: 80.5"
-                    step="0.1"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Pasos Totales</label>
-                  <input
-                    type="number" inputMode="decimal"
-                    className="form-input"
-                    value={steps}
-                    onChange={(e) => setSteps(e.target.value)}
-                    placeholder="Ej: 10000"
-                  />
-                </div>
-
-                <div className="kpi-card accent" style={{ marginTop: '1.5rem' }}>
-                  <div className="kpi-label"> Calorías Quemadas</div>
-                  <div className="kpi-value accent">
-                    {calc1Result > 0 ? calc1Result.toFixed(2) : '0.00'} <span style={{ fontSize: '1.25rem' }}>kcal</span>
-                  </div>
-                </div>
+            {/* Calculator 1 */}
+            <div className="card accordion-card" style={{ padding: openSections.calc1 ? 'var(--space-lg)' : '1rem 1.25rem', transition: 'all 0.25s ease', marginBottom: 'var(--space-lg)' }}>
+              <div
+                className="accordion-header"
+                onClick={(e) => toggleSection('calc1', e)}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
+              >
+                <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Gasto por Pasos</span>
+                <span style={{ transform: openSections.calc1 ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  ▾
+                </span>
               </div>
-            )}
-          </div>
 
-          {/* Calculator 2 */}
-          <div className="card accordion-card" style={{ padding: openSections.calc2 ? 'var(--space-lg)' : '1rem 1.25rem', transition: 'all 0.25s ease' }}>
-            <div
-              className="accordion-header"
-              onClick={(e) => toggleSection('calc2', e)}
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
-            >
-              <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Gasto Metabólico por Tiempo</span>
-              <span style={{ transform: openSections.calc2 ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                
-              </span>
-            </div>
+              {openSections.calc1 && (
+                <div className="accordion-content fade-in" style={{ marginTop: '1.25rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.25rem' }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem', lineHeight: '1.4' }}>
+                    Estima la energía mecánica usada en cada impacto según la biomecánica de Weyand.
+                  </p>
 
-            {openSections.calc2 && (
-              <div className="accordion-content fade-in" style={{ marginTop: '1.25rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.25rem' }}>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem', lineHeight: '1.4' }}>
-                  Calcula el VO y gasto calórico avanzado de una sesión de carrera/caminata considerando tu biometría.
-                </p>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="form-group">
-                    <label className="form-label">Peso (kg)</label>
+                    <label className="form-label">Peso Corporal (kg)</label>
                     <input
                       type="number" inputMode="decimal"
                       className="form-input"
-                      value={weight2}
-                      onChange={(e) => setWeight2(e.target.value)}
+                      value={weight1}
+                      onChange={(e) => setWeight1(e.target.value)}
                       placeholder="Ej: 80.5"
                       step="0.1"
                     />
                   </div>
+
                   <div className="form-group">
-                    <label className="form-label">Altura (m)</label>
+                    <label className="form-label">Pasos Totales</label>
                     <input
                       type="number" inputMode="decimal"
                       className="form-input"
-                      value={height}
-                      onChange={(e) => setHeight(e.target.value)}
-                      placeholder="Ej: 1.73"
-                      step="0.01"
+                      value={steps}
+                      onChange={(e) => setSteps(e.target.value)}
+                      placeholder="Ej: 10000"
                     />
                   </div>
-                </div>
 
-                <div className="form-group">
-                  <label className="form-label">Distancia (metros)</label>
-                  <input
-                    type="number" inputMode="decimal"
-                    className="form-input"
-                    value={distance}
-                    onChange={(e) => setDistance(e.target.value)}
-                    placeholder="Ej: 400"
-                  />
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Tiempo (min)</label>
-                    <input
-                      type="number" inputMode="decimal"
-                      className="form-input"
-                      value={minutes}
-                      onChange={(e) => setMinutes(e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Tiempo (seg)</label>
-                    <input
-                      type="number" inputMode="decimal"
-                      className="form-input"
-                      value={seconds}
-                      onChange={(e) => setSeconds(e.target.value)}
-                      placeholder="0"
-                    />
+                  <div className="kpi-card accent" style={{ marginTop: '1.5rem' }}>
+                    <div className="kpi-label"> Calorías Quemadas</div>
+                    <div className="kpi-value accent">
+                      {calc1Result > 0 ? calc1Result.toFixed(2) : '0.00'} <span style={{ fontSize: '1.25rem' }}>kcal</span>
+                    </div>
                   </div>
                 </div>
+              )}
+            </div>
 
-                <div className="kpi-card success" style={{ marginTop: '1.5rem' }}>
-                  <div className="kpi-label"> Gasto Metabólico Total</div>
-                  <div className="kpi-value success">
-                    {calc2Result > 0 ? calc2Result.toFixed(2) : '0.00'} <span style={{ fontSize: '1.25rem' }}>kcal</span>
-                  </div>
-                  {vo2Result > 0 && (
-                    <div className="kpi-detail">VO Consumido: {vo2Result.toFixed(2)} ml/kg/min</div>
-                  )}
-                </div>
+            {/* Calculator 2 */}
+            <div className="card accordion-card" style={{ padding: openSections.calc2 ? 'var(--space-lg)' : '1rem 1.25rem', transition: 'all 0.25s ease' }}>
+              <div
+                className="accordion-header"
+                onClick={(e) => toggleSection('calc2', e)}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
+              >
+                <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}> Gasto Metabólico por Tiempo</span>
+                <span style={{ transform: openSections.calc2 ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  ▾
+                </span>
               </div>
-            )}
+
+              {openSections.calc2 && (
+                <div className="accordion-content fade-in" style={{ marginTop: '1.25rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.25rem' }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem', lineHeight: '1.4' }}>
+                    Calcula el VO y gasto calórico avanzado de una sesión de carrera/caminata considerando tu biometría.
+                  </p>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="form-group">
+                      <label className="form-label">Peso (kg)</label>
+                      <input
+                        type="number" inputMode="decimal"
+                        className="form-input"
+                        value={weight2}
+                        onChange={(e) => setWeight2(e.target.value)}
+                        placeholder="Ej: 80.5"
+                        step="0.1"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Altura (m)</label>
+                      <input
+                        type="number" inputMode="decimal"
+                        className="form-input"
+                        value={height}
+                        onChange={(e) => setHeight(e.target.value)}
+                        placeholder="Ej: 1.73"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Distancia (metros)</label>
+                    <input
+                      type="number" inputMode="decimal"
+                      className="form-input"
+                      value={distance}
+                      onChange={(e) => setDistance(e.target.value)}
+                      placeholder="Ej: 400"
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="form-group">
+                      <label className="form-label">Tiempo (min)</label>
+                      <input
+                        type="number" inputMode="decimal"
+                        className="form-input"
+                        value={minutes}
+                        onChange={(e) => setMinutes(e.target.value)}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Tiempo (seg)</label>
+                      <input
+                        type="number" inputMode="decimal"
+                        className="form-input"
+                        value={seconds}
+                        onChange={(e) => setSeconds(e.target.value)}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="kpi-card success" style={{ marginTop: '1.5rem' }}>
+                    <div className="kpi-label"> Gasto Metabólico Total</div>
+                    <div className="kpi-value success">
+                      {calc2Result > 0 ? calc2Result.toFixed(2) : '0.00'} <span style={{ fontSize: '1.25rem' }}>kcal</span>
+                    </div>
+                    {vo2Result > 0 && (
+                      <div className="kpi-detail">VO Consumido: {vo2Result.toFixed(2)} ml/kg/min</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right column: nutrition */}
+          <div className="utilities-col">
+            <NutritionCalculators />
           </div>
         </div>
-
-        <NutritionCalculators />
       </div>
 
 

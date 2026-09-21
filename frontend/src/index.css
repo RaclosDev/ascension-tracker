@@ -965,6 +965,30 @@ input[type=number] {
   align-items: start;
 }
 
+/* Desktop: independent scroll per column */
+@media (min-width: 769px) {
+  .utilities-grid--scroll {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+    max-height: calc(100vh - 120px);
+  }
+  .utilities-grid--scroll > .utilities-col {
+    overflow-y: auto;
+    max-height: calc(100vh - 120px);
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+  }
+  .utilities-grid--scroll > .utilities-col::-webkit-scrollbar {
+    width: 4px;
+  }
+  .utilities-grid--scroll > .utilities-col::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+  }
+}
+
 .macros-overview {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -1146,6 +1170,16 @@ input[type=number] {
   }
   .utilities-grid {
     grid-template-columns: 1fr;
+  }
+  .utilities-grid--scroll {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    max-height: none;
+  }
+  .utilities-grid--scroll > .utilities-col {
+    overflow-y: visible;
+    max-height: none;
   }
   .quick-add-card {
     padding: var(--space-md);
@@ -5169,7 +5203,36 @@ button, a, input, select, textarea, [role=button], [onclick] {
   }
 }
 
+/* Range slider (deficit split) */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 34px;
+  border-radius: 6px;
+  background: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: grab;
+}
 
+input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 34px;
+  border-radius: 6px;
+  background: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: grab;
+}
 
+input[type="range"]:active::-webkit-slider-thumb {
+  cursor: grabbing;
+  transform: scale(1.1);
+}
 
+input[type="range"]:active::-moz-range-thumb {
+  cursor: grabbing;
+  transform: scale(1.1);
+}
 

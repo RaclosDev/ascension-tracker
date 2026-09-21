@@ -8,6 +8,7 @@ import {
   calcTdee,
   calcMacros,
   calcStepsKcal,
+  calcStepsFromKcal,
   calcBodyFatNavy,
   calcBodyComposition
 } from '../../utils/nutritionCalculators';
@@ -22,7 +23,7 @@ export default function NutritionCalculators() {
   // Plan inputs
   const [goalWeight, setGoalWeight] = useState<string>('');
   const [weeks, setWeeks] = useState<string>('16');
-  const [dailySteps, setDailySteps] = useState<string>('10000');
+  const [stepsPct, setStepsPct] = useState<number>(50); // % of deficit from steps
 
   // Body fat inputs
   const [waistCm, setWaistCm] = useState<string>('');
@@ -60,7 +61,6 @@ export default function NutritionCalculators() {
   // Plan calculations
   const pGoal = parseNumber(goalWeight);
   const pWeeks = parseNumber(weeks);
-  const pSteps = parseNumber(dailySteps);
 
   const plan = useMemo(() => {
     if (!tdee || !bmr || !pWeight || !pGoal || !pWeeks || pWeeks < 1) return null;
@@ -71,23 +71,19 @@ export default function NutritionCalculators() {
     const totalDays = pWeeks * 7;
     const dailyDeficitNeeded = totalKcalToLose / totalDays;
     const weeklyRate = totalKgToLose / pWeeks;
-    const ratePct = (weeklyRate / pWeight) * 100;
 
-    // Steps contribution
-    const stepsKcal = pSteps && pWeight ? calcStepsKcal(pWeight, pSteps) : 0;
+    // Split based on slider
+    const stepsKcal = dailyDeficitNeeded * (stepsPct / 100);
+    const dietDeficit = dailyDeficitNeeded - stepsKcal;
+    const dailyIntake = tdee - dietDeficit;
 
-    // TDEE already includes the base activity factor (sedentary etc.)
-    // Steps burn is ADDITIONAL activity on top of TDEE
-    const tdeeWithSteps = tdee + stepsKcal;
-
-    // How much diet restriction is needed after steps
-    const dietDeficit = Math.max(0, dailyDeficitNeeded - stepsKcal);
-    const dailyIntake = tdee - dietDeficit; // what you eat (before steps bonus)
-    // Alternatively: dailyIntake = tdeeWithSteps - dailyDeficitNeeded
+    // How many steps are needed for that kcal?
+    const stepsNeeded = Math.round(calcStepsFromKcal(pWeight, stepsKcal));
 
     // Warnings
     const warnings: { level: 'warning' | 'danger'; msg: string }[] = [];
 
+    const ratePct = (weeklyRate / pWeight) * 100;
     if (ratePct > 1.5) {
       warnings.push({ level: 'danger', msg: `Ritmo del ${ratePct.toFixed(1)}% semanal: riesgo de pérdida muscular. Aumenta el plazo.` });
     } else if (ratePct > 1) {
@@ -95,34 +91,32 @@ export default function NutritionCalculators() {
     }
 
     if (dailyIntake < bmr) {
-      warnings.push({ level: 'danger', msg: `Ingesta de ${Math.round(dailyIntake)} kcal por debajo de tu BMR (${Math.round(bmr)} kcal). Sube los pasos o aumenta el plazo.` });
+      warnings.push({ level: 'danger', msg: `Ingesta de ${Math.round(dailyIntake)} kcal por debajo de tu BMR (${Math.round(bmr)} kcal). Mueve el slider hacia pasos o aumenta el plazo.` });
     }
 
-    const deficitPctOfTdee = (dietDeficit / tdee) * 100;
-    if (deficitPctOfTdee > 30) {
-      warnings.push({ level: 'warning', msg: `La restricción calórica representa el ${Math.round(deficitPctOfTdee)}% de tu TDEE. Considera añadir más pasos.` });
+    if (stepsNeeded > 25000) {
+      warnings.push({ level: 'warning', msg: `${stepsNeeded.toLocaleString()} pasos diarios es muy ambicioso. Reduce el % de pasos o aumenta el plazo.` });
     }
 
-    if (stepsKcal > 0 && stepsKcal >= dailyDeficitNeeded) {
-      warnings.push({ level: 'warning', msg: `¡Solo con los pasos ya cubres el déficit! Puedes comer a mantenimiento (${Math.round(tdee)} kcal) y perder peso.` });
+    if (stepsPct >= 100) {
+      warnings.push({ level: 'warning', msg: `¡Solo con los pasos cubres el déficit! Puedes comer a mantenimiento (${Math.round(tdee)} kcal).` });
     }
 
     // Macros on the resulting intake
-    const macros = pWeight ? calcMacros({ kcal: dailyIntake, weightKg: pWeight }) : null;
+    const macros = pWeight ? calcMacros({ kcal: Math.max(dailyIntake, 800), weightKg: pWeight }) : null;
 
     return {
       totalKgToLose,
-      totalKcalToLose,
       dailyDeficitNeeded,
       weeklyRate,
       stepsKcal,
+      stepsNeeded,
       dietDeficit,
       dailyIntake,
-      tdeeWithSteps,
       macros,
       warnings
     };
-  }, [tdee, bmr, pWeight, pGoal, pWeeks, pSteps, pAct, sex]);
+  }, [tdee, bmr, pWeight, pGoal, pWeeks, stepsPct, pAct, sex]);
 
   // Body Fat logic
   const pWaist = parseNumber(waistCm);
@@ -134,14 +128,17 @@ export default function NutritionCalculators() {
   });
   const bodyComp = (bfPct && pWeight) ? calcBodyComposition(pWeight, bfPct) : null;
 
+  // Slider gradient style
+  const sliderBg = `linear-gradient(to right, var(--color-carbs) 0%, var(--color-carbs) ${stepsPct}%, var(--color-fat) ${stepsPct}%, var(--color-fat) 100%)`;
+
   return (
     <div style={{ marginTop: '2rem' }}>
       <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '1rem', letterSpacing: '-0.01em' }}>
         Calculadoras de Nutrición
       </h3>
 
-      {/* TDEE Card */}
       <div className="utilities-grid">
+        {/* TDEE Card */}
         <CalculatorCard title="Gasto de mantenimiento (TDEE)">
           {tdee && bmr ? (
             <div>
@@ -173,10 +170,6 @@ export default function NutritionCalculators() {
                   <label className="form-label" htmlFor="plan-weeks">Plazo (semanas)</label>
                   <input id="plan-weeks" type="number" className="form-input" value={weeks} onChange={e => setWeeks(e.target.value)} min={1} max={104} />
                 </div>
-                <div className="form-group" style={{ marginBottom: 0, gridColumn: '1 / -1' }}>
-                  <label className="form-label" htmlFor="plan-steps">Pasos diarios objetivo</label>
-                  <input id="plan-steps" type="number" className="form-input" value={dailySteps} onChange={e => setDailySteps(e.target.value)} step={500} />
-                </div>
               </div>
 
               {pGoal && pWeight && pGoal >= pWeight && (
@@ -197,35 +190,44 @@ export default function NutritionCalculators() {
                     </div>
                   </div>
 
-                  {/* The split: steps vs diet */}
+                  {/* Interactive slider */}
                   <div className="kpi-card" style={{ padding: '20px', marginBottom: '1rem' }}>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '12px', fontWeight: 600 }}>Reparto del déficit</div>
-
-                    {/* Visual bar */}
-                    <div style={{ display: 'flex', borderRadius: '8px', overflow: 'hidden', height: '28px', marginBottom: '12px' }}>
-                      <div style={{
-                        width: `${Math.min(100, (plan.stepsKcal / plan.dailyDeficitNeeded) * 100)}%`,
-                        background: 'var(--color-carbs)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '0.75rem', fontWeight: 700, color: '#fff',
-                        minWidth: plan.stepsKcal > 0 ? '40px' : '0'
-                      }}>
-                        {plan.stepsKcal > 0 ? `${Math.round(plan.stepsKcal)}` : ''}
-                      </div>
-                      <div style={{
-                        flex: 1,
-                        background: 'var(--color-fat)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '0.75rem', fontWeight: 700, color: '#fff',
-                        minWidth: '40px'
-                      }}>
-                        {Math.round(plan.dietDeficit)}
-                      </div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: 600 }}>
+                      Reparto del déficit — arrastra para ajustar
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                      <span style={{ color: 'var(--color-carbs)' }}>🚶 Pasos: {Math.round(plan.stepsKcal)} kcal</span>
-                      <span style={{ color: 'var(--color-fat)' }}>🍽️ Dieta: {Math.round(plan.dietDeficit)} kcal</span>
+                    {/* Range slider */}
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={stepsPct}
+                      onChange={e => setStepsPct(Number(e.target.value))}
+                      style={{
+                        width: '100%',
+                        height: '28px',
+                        borderRadius: '8px',
+                        appearance: 'none',
+                        WebkitAppearance: 'none',
+                        background: sliderBg,
+                        outline: 'none',
+                        cursor: 'grab',
+                        border: 'none',
+                      }}
+                      aria-label="Reparto del déficit entre pasos y dieta"
+                    />
+
+                    {/* Labels under slider */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginTop: '8px' }}>
+                      <span style={{ color: 'var(--color-carbs)', fontWeight: 600 }}>🚶 {Math.round(plan.stepsKcal)} kcal</span>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{stepsPct}% pasos / {100 - stepsPct}% dieta</span>
+                      <span style={{ color: 'var(--color-fat)', fontWeight: 600 }}>🍽️ {Math.round(plan.dietDeficit)} kcal</span>
+                    </div>
+
+                    {/* Steps needed */}
+                    <div style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--bg-glass)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Pasos diarios necesarios</span>
+                      <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-carbs)' }}>{plan.stepsNeeded.toLocaleString()}</span>
                     </div>
                   </div>
 
