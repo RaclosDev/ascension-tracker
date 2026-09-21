@@ -7,7 +7,7 @@ import { useWorkoutStore } from '@/lib/workout/store';
 import { useNow } from '@/hooks/use-now';
 import { formatDuration } from '@/lib/workout/format';
 
-import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings } from 'lucide-react';
+import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings, Plus } from 'lucide-react';
 
 const navItems = [
   { path: '/dashboard', icon: <Home className="w-5 h-5" />, label: 'Dashboard', shortLabel: 'Inicio' },
@@ -169,7 +169,7 @@ export default function Layout() {
           }}
           aria-label="Más opciones"
         >
-          <span className="mobile-bottom-icon"></span>
+          <span className="mobile-bottom-icon"><Plus className="w-5 h-5" /></span>
           <span className="mobile-bottom-label">Más</span>
           {isMoreActive && <span className="mobile-bottom-indicator" />}
         </button>
