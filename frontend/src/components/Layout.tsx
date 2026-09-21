@@ -75,12 +75,12 @@ export default function Layout() {
   return (
     <div className="app-root">
       {/* Barra superior de app para móvil */}
-      <header className="mobile-top-bar">
+      <header className={`mobile-top-bar${hideNav ? ' workout-active' : ''}`}>
         {hideNav ? (
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent('toggle-workout-notes'))}
-            style={{ width: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+            className="topbar-workout-btn"
             aria-label="Notas del entrenamiento"
           >
             <StickyNote className="w-5 h-5" />
@@ -92,7 +92,7 @@ export default function Layout() {
           <img src="/ascension-title.png" alt="Ascension" className="mobile-header-title-img" />
         </div>
         {hideNav ? (
-          <div style={{ width: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
+          <div className="topbar-workout-timer">
             <span className="active-workout-timer-dot" />
             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
               {formatDuration(elapsed)}
