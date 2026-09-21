@@ -4,11 +4,13 @@ import toast from 'react-hot-toast';
 import api from '../api/client';
 import { MealIcon } from './MealIcon';
 
+import { Trash2 } from 'lucide-react';
+
 const DEFAULT_MEALS = [
-  { name: 'Desayuno', icon: '', sortOrder: 0, startTime: '06:00', endTime: '11:00' },
-  { name: 'Comida', icon: '', sortOrder: 1, startTime: '13:00', endTime: '17:00' },
-  { name: 'Cena', icon: '', sortOrder: 2, startTime: '20:00', endTime: '05:59' },
-  { name: 'Snacks', icon: '', sortOrder: 3, startTime: '11:00', endTime: '13:00', isDefault: true }
+  { name: 'Desayuno', icon: '', sortOrder: 0 },
+  { name: 'Comida', icon: '', sortOrder: 1 },
+  { name: 'Cena', icon: '', sortOrder: 2 },
+  { name: 'Snacks', icon: '', sortOrder: 3 }
 ];
 
 export default function MealConfigurator({ onSaved }) {
@@ -94,7 +96,7 @@ export default function MealConfigurator({ onSaved }) {
   const handleAddMeal = async () => {
     setSaving(true);
     try {
-      await api.post('/nutrition/meals', { name: 'Nueva Comida', icon: '', startTime: '12:00', endTime: '13:00' });
+      await api.post('/nutrition/meals', { name: 'Nueva Comida', icon: '' });
       await fetchMeals();
     } catch {
       toast.error('Error al añadir comida');
@@ -123,33 +125,7 @@ export default function MealConfigurator({ onSaved }) {
     setMeals(updated);
   };
 
-  const handleTimeBlur = (index, field, val) => {
-    if (!val) return;
-    let clean = val.replace(/[^\d:]/g, '');
-    let h, m;
-    if (clean.includes(':')) {
-      let parts = clean.split(':');
-      h = parts[0].padStart(2, '0').slice(0, 2);
-      m = (parts[1] || '00').padStart(2, '0').slice(0, 2);
-    } else {
-      if (clean.length <= 2) {
-        h = clean.padStart(2, '0');
-        m = '00';
-      } else if (clean.length === 3) {
-        h = clean.slice(0, 1).padStart(2, '0');
-        m = clean.slice(1, 3);
-      } else {
-        h = clean.slice(0, 2);
-        m = clean.slice(2, 4);
-      }
-    }
-    
-    // validate 24h
-    if (parseInt(h) > 23) h = '23';
-    if (parseInt(m) > 59) m = '59';
-    
-    updateMeal(index, field, `${h}:${m}`);
-  };
+
 
   if (loading) return <div className="spinner" style={{ margin: 'auto' }} />;
 
@@ -212,57 +188,15 @@ export default function MealConfigurator({ onSaved }) {
                           onChange={e => updateMeal(index, 'name', e.target.value)}
                           placeholder="Nombre"
                         />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto', marginRight: '4px' }}>
-                          <input 
-                            type="radio" 
-                            name="defaultMeal"
-                            checked={meal.isDefault || false}
-                            onChange={() => {
-                              const updated = meals.map((m, i) => ({ ...m, isDefault: i === index }));
-                              setMeals(updated);
-                            }}
-                            title="Comida abierta por defecto"
-                            style={{ cursor: 'pointer' }}
-                          />
-                          <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Fija</span>
-                        </div>
                         <button
-                          className="btn btn-danger btn-sm"
-                          style={{ width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          className="btn"
+                          style={{ width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', color: '#ef4444' }}
                           onClick={() => handleDeleteMeal(meal.id)}
                           disabled={saving}
                           title="Eliminar comida"
                         >
-                          
+                          <Trash2 size={18} />
                         </button>
-                      </div>
-
-                      {/* Fila intermedia: Horarios */}
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '2px' }}>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Hora Inicio</span>
-                          <input
-                            type="text"
-                            className="form-input"
-                            style={{ padding: '6px', fontSize: '0.85rem' }}
-                            value={meal.startTime || ''}
-                            placeholder="Ej: 06:00"
-                            onChange={e => updateMeal(index, 'startTime', e.target.value)}
-                            onBlur={e => handleTimeBlur(index, 'startTime', e.target.value)}
-                          />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '2px' }}>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Hora Fin</span>
-                          <input
-                            type="text"
-                            className="form-input"
-                            style={{ padding: '6px', fontSize: '0.85rem' }}
-                            value={meal.endTime || ''}
-                            placeholder="Ej: 11:00"
-                            onChange={e => updateMeal(index, 'endTime', e.target.value)}
-                            onBlur={e => handleTimeBlur(index, 'endTime', e.target.value)}
-                          />
-                        </div>
                       </div>
 
                       {/* Tercera Fila: Macros fijos */}
