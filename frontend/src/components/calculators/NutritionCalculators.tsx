@@ -141,39 +141,6 @@ export default function NutritionCalculators() {
     <div style={{ marginTop: '2rem' }}>
       <h2 style={{ fontSize: '1.2rem', marginBottom: '16px', color: 'var(--text-primary)' }}>Calculadoras de Nutrición</h2>
 
-      <div className="card" style={{ padding: '16px', marginBottom: '24px' }}>
-        <h3 className="card-title" style={{ margin: '0 0 16px 0', fontSize: '1rem', fontWeight: 600 }}>Tus datos base</h3>
-        <div className="utilities-grid">
-          <div className="form-group">
-            <label className="form-label" htmlFor="calc-sex">Sexo</label>
-            <select id="calc-sex" className="form-input" value={sex} onChange={e => setSex(e.target.value as 'M'|'F')}>
-              <option value="M">Hombre</option>
-              <option value="F">Mujer</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="calc-age">Edad</label>
-            <input id="calc-age" type="number" className="form-input" value={age} onChange={e => setAge(e.target.value)} />
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="calc-height">Altura (cm)</label>
-            <input id="calc-height" type="number" className="form-input" value={heightCm} onChange={e => setHeightCm(e.target.value)} />
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="calc-weight">Peso actual (kg)</label>
-            <input id="calc-weight" type="number" className="form-input" value={weightKg} onChange={e => setWeightKg(e.target.value)} />
-          </div>
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label className="form-label" htmlFor="calc-activity">Nivel de Actividad</label>
-            <select id="calc-activity" className="form-input" value={activityFactor} onChange={e => setActivityFactor(e.target.value)}>
-              {ACTIVITY_LEVELS.map(l => (
-                <option key={l.value} value={l.value}>{l.label}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
       <CalculatorCard title="Gasto de mantenimiento (TDEE)">
         {tdee ? (
           <div>
@@ -187,7 +154,7 @@ export default function NutritionCalculators() {
             </div>
           </div>
         ) : (
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Rellena tu sexo, edad, altura y peso en "Tus datos base".</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Rellena tu sexo, edad, altura, peso y nivel de actividad en Ajustes.</p>
         )}
       </CalculatorCard>
 
@@ -209,7 +176,7 @@ export default function NutritionCalculators() {
           </p>
         )}
 
-        {!tdee && <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Faltan datos base.</p>}
+        {!tdee && <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Faltan datos base en Ajustes.</p>}
         {tdee && (!pGoal || !pWeeks) && <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Rellena el peso objetivo y el plazo.</p>}
         {tdee && pGoal && pWeight && pGoal >= pWeight && <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>El peso objetivo debe ser menor al actual (solo pérdida de peso).</p>}
         {tdee && pGoal && pWeight && pGoal < pWeight && planParams?.unreachable && (
@@ -298,7 +265,7 @@ export default function NutritionCalculators() {
           </div>
         </div>
 
-        {!pWeight && <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Falta tu peso en "Tus datos base".</p>}
+        {!pWeight && <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Falta tu peso en Ajustes o en tus registros.</p>}
         {pWeight && macros && (
           <div>
             <div className="utilities-grid" style={{ marginBottom: '16px' }}>
