@@ -36,31 +36,16 @@ export default function NutritionCalculators() {
   const [hipCm, setHipCm] = useState<string>('');
 
   useEffect(() => {
-    const saved = localStorage.getItem('ascension_calc_profile');
-    let loadedWeight = false;
-    let loadedGoal = false;
-
-    if (saved) {
-      try {
-        const p = JSON.parse(saved);
-        if (p.sex) setSex(p.sex);
-        if (p.age) setAge(p.age);
-        if (p.heightCm) setHeightCm(p.heightCm);
-        if (p.activityFactor) setActivityFactor(p.activityFactor);
-        if (p.weightKg) { setWeightKg(p.weightKg); loadedWeight = true; }
-      } catch (e) {}
-    }
-
     Promise.allSettled([
       api.get('/weights/dashboard'),
       api.get('/settings')
     ]).then(([weightsRes, settingsRes]) => {
-      if (!loadedWeight && weightsRes.status === 'fulfilled' && weightsRes.value.data.currentWeight) {
-        setWeightKg(String(weightsRes.value.data.currentWeight.weight));
+      if (weightsRes.status === 'fulfilled' && weightsRes.value.data.currentWeight) {
+        setWeightKg(String(weightsRes.value.data.currentWeight));
       }
       if (settingsRes.status === 'fulfilled') {
         const s = settingsRes.value.data;
-        if (!loadedGoal && s.goalWeight) {
+        if (s.goalWeight) {
           setGoalWeight(String(s.goalWeight));
         }
         if (s.weeklyGoal) {
@@ -73,11 +58,6 @@ export default function NutritionCalculators() {
       }
     });
   }, []);
-
-  useEffect(() => {
-    const profile = { sex, age, heightCm, weightKg, activityFactor };
-    localStorage.setItem('ascension_calc_profile', JSON.stringify(profile));
-  }, [sex, age, heightCm, weightKg, activityFactor]);
 
   const pAge = parseNumber(age);
   const pHeight = parseNumber(heightCm);
