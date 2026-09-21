@@ -145,7 +145,7 @@ body {
   justify-content: center;
   font-weight: 800;
   font-size: 1.2rem;
-  color: white;
+  color: var(--accent-text, white);
   box-shadow: var(--shadow-glow);
 }
 .logo-text {
@@ -2038,7 +2038,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 .chat-msg-row .chat-bubble.user-bubble {
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--accent-text, white);
   border-bottom-right-radius: 4px;
   box-shadow: 0 4px 15px var(--accent-glow);
 }
@@ -3709,7 +3709,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
 .exercise-picker-item.selected .exercise-picker-item-check {
   background: var(--accent-primary);
   border-color: var(--accent-primary);
-  color: white;
+  color: var(--accent-text, white);
   font-weight: 900;
 }
 .exercise-picker-item .exercise-picker-item-info {
@@ -4339,7 +4339,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 .start-workout-option-primary .start-workout-option-icon {
   background: var(--gradient-primary);
-  color: white;
+  color: var(--accent-text, white);
 }
 .start-workout-option-secondary .start-workout-option-icon {
   background: var(--bg-card);
@@ -4547,7 +4547,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   font-size: 0.55rem;
   padding: 0.05rem 0.3rem;
   background: var(--accent-primary);
-  color: white;
+  color: var(--accent-text, white);
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -4876,7 +4876,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 .set-check-btn.checked {
   background: var(--accent-primary);
-  color: white;
+  color: var(--accent-text, white);
 }
 
 .add-set-btn {
@@ -4920,7 +4920,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   border: none;
   cursor: pointer;
   background: var(--accent-primary);
-  color: white;
+  color: var(--accent-text, white);
   font-family: var(--font-main);
   transition: all 0.15s ease;
   display: flex;
@@ -5098,7 +5098,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 .bottom-sheet-item.active .bottom-sheet-item-icon {
   background: var(--accent-primary);
-  color: #fff;
+  color: var(--accent-text, white);
 }
 .subsection-title {
   font-size: 0.85rem;
