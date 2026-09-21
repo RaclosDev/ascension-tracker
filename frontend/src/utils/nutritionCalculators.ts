@@ -227,3 +227,10 @@ export const calcBodyComposition = (weightKg: number, bfPct: number) => {
   const leanKg = weightKg - fatKg;
   return { fatKg, leanKg };
 };
+
+/** Weyand biomechanics: energy per step impact */
+export const calcStepsKcal = (weightKg: number, steps: number): number => {
+  if (weightKg <= 0 || steps <= 0) return 0;
+  const energyJ = 2.74 * weightKg * (steps / 2);
+  return energyJ / 4184;
+};
