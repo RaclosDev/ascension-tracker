@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Check, ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { getExerciseMap } from "@/lib/workout/exercises";
 import { isPrSet, previousSetLabel } from "@/lib/workout/format";
@@ -233,39 +233,60 @@ export function ExerciseCard({
 
   // Compact columns: set#(with prev below), kg, reps, [rpe], check
   const cols = showRpe
-    ? "50px minmax(0,1fr) minmax(0,1fr) minmax(0,0.8fr) 38px"
-    : "50px minmax(0,1fr) minmax(0,1fr) 38px";
+    ? "50px minmax(0,1fr) minmax(0,1fr) minmax(0,0.8fr) 44px"
+    : "50px minmax(0,1fr) minmax(0,1fr) 44px";
+
+  // Collapsible sets
+  const [collapsed, setCollapsed] = useState(false);
+  const allDone = row.sets.length > 0 && row.sets.every(s => s.completed);
+  const doneCount = row.sets.filter(s => s.completed).length;
+
+  // Auto-collapse when all sets completed
+  const prevAllDone = useRef(allDone);
+  useEffect(() => {
+    if (allDone && !prevAllDone.current) {
+      setCollapsed(true);
+    }
+    prevAllDone.current = allDone;
+  }, [allDone]);
 
   return (
     <article className="card" style={{ padding: 0, overflow: "hidden" }}>
       {/* Header */}
-      <div className="exercise-card-header">
-        <div style={{ minWidth: 0 }}>
-          <h3 className="exercise-card-name">
-            {meta?.name ?? "Ejercicio"}
-          </h3>
-          <div className="exercise-card-meta">
-            <span>{meta ? MUSCLE_LABEL[meta.muscle] : ""}</span>
-            <span style={{ color: "var(--border-medium)" }}>|</span>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-               
-              <select
-                value={restTimers[row.exerciseId] ?? restPreset}
-                onChange={(e) => setExerciseRestTimer(row.exerciseId, Number(e.target.value))}
-                className="exercise-card-rest-select"
-              >
-                {[30, 60, 90, 120, 150, 180, 240, 300].map(s => (
-                  <option key={s} value={s}>{s}s</option>
-                ))}
-              </select>
-            </span>
+      <div className="exercise-card-header" onClick={() => setCollapsed(!collapsed)} style={{ cursor: "pointer" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", minWidth: 0 }}>
+          {meta?.gifUrl && (
+            <img src={meta.gifUrl} alt="" className="exercise-card-thumb" loading="lazy" />
+          )}
+          <div style={{ minWidth: 0 }}>
+            <h3 className="exercise-card-name">
+              {meta?.name ?? "Ejercicio"}
+            </h3>
+            <div className="exercise-card-meta">
+              <span>{meta ? MUSCLE_LABEL[meta.muscle] : ""}</span>
+              <span style={{ color: "var(--border-medium)" }}>|</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                 
+                <select
+                  value={restTimers[row.exerciseId] ?? restPreset}
+                  onChange={(e) => { e.stopPropagation(); setExerciseRestTimer(row.exerciseId, Number(e.target.value)); }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="exercise-card-rest-select"
+                >
+                  {[30, 60, 90, 120, 150, 180, 240, 300].map(s => (
+                    <option key={s} value={s}>{s}s</option>
+                  ))}
+                </select>
+              </span>
+            </div>
           </div>
         </div>
         <div className="exercise-card-actions">
+          <ChevronDown size={18} style={{ color: "var(--text-muted)", transform: collapsed ? "rotate(-90deg)" : "none", transition: "transform 0.2s ease" }} />
           <button
             disabled={index === 0}
             aria-label="Subir"
-            onClick={() => moveExercise(row.id, -1)}
+            onClick={(e) => { e.stopPropagation(); moveExercise(row.id, -1); }}
             className="exercise-card-action-btn"
           >
             <ChevronUp size={20} />
@@ -273,14 +294,14 @@ export function ExerciseCard({
           <button
             disabled={index === total - 1}
             aria-label="Bajar"
-            onClick={() => moveExercise(row.id, 1)}
+            onClick={(e) => { e.stopPropagation(); moveExercise(row.id, 1); }}
             className="exercise-card-action-btn"
           >
             <ChevronDown size={20} />
           </button>
           <button
             aria-label="Quitar ejercicio"
-            onClick={() => removeExercise(row.id)}
+            onClick={(e) => { e.stopPropagation(); removeExercise(row.id); }}
             className="exercise-card-action-btn danger"
           >
             <Trash2 size={18} />
@@ -288,54 +309,64 @@ export function ExerciseCard({
         </div>
       </div>
 
-      {/* Notes */}
-      <div style={{ borderTop: "1px solid var(--border-subtle)", padding: "0.4rem 1rem" }}>
-        <input
-          value={row.notes}
-          onChange={(e) => setExerciseNotes(row.id, e.target.value)}
-          placeholder="Notas de la serie, tempo, RIR"
-          className="form-input" style={{ width: "100%", padding: "0.35rem 0.5rem", fontSize: "0.8rem", background: "rgba(0,0,0,0.2)", border: "none" }}
-        />
-      </div>
-
-      {/* Sets */}
-      <div style={{ padding: "0.25rem 0.5rem 0.75rem" }}>
-        {/* Header */}
-        <div className="set-grid-header" style={{ gridTemplateColumns: cols }}>
-          <span>#</span>
-          <span>{isCardio ? "Km" : "Kg"}</span>
-          <span>{isCardio ? "Tpo" : "Reps"}</span>
-          {showRpe && <span>RPE</span>}
-          <span />
+      {collapsed ? (
+        /* Collapsed summary */
+        <div className="exercise-card-summary">
+          <Check size={14} style={{ color: allDone ? "var(--color-success, #10b981)" : "var(--text-muted)" }} />
+          <span>{doneCount}/{row.sets.length} series completadas</span>
         </div>
+      ) : (
+        <>
+          {/* Notes */}
+          <div style={{ borderTop: "1px solid var(--border-subtle)", padding: "0.4rem 1rem" }}>
+            <input
+              value={row.notes}
+              onChange={(e) => setExerciseNotes(row.id, e.target.value)}
+              placeholder="Notas de la serie, tempo, RIR"
+              className="form-input" style={{ width: "100%", padding: "0.35rem 0.5rem", fontSize: "0.8rem", background: "rgba(0,0,0,0.2)", border: "none" }}
+            />
+          </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
-          {row.sets.map((s, i) => {
-            let normalCount = 0;
-            for (let j = 0; j < i; j++) {
-              if (row.sets[j].type === "normal") normalCount++;
-            }
-            return (
-              <SwipeableSetRow
-                key={s.id}
-                s={s}
-                i={i}
-                workingIndex={normalCount}
-                row={row}
-                showRpe={showRpe}
-                isCardio={isCardio}
-                cols={cols}
-                recentWorkouts={recentWorkouts}
-              />
-            );
-          })}
-        </div>
+          {/* Sets */}
+          <div style={{ padding: "0.25rem 0.5rem 0.75rem" }}>
+            {/* Header */}
+            <div className="set-grid-header" style={{ gridTemplateColumns: cols }}>
+              <span>#</span>
+              <span>{isCardio ? "Km" : "Kg"}</span>
+              <span>{isCardio ? "Tpo" : "Reps"}</span>
+              {showRpe && <span>RPE</span>}
+              <span />
+            </div>
 
-        <button onClick={() => addSet(row.id, recentWorkouts)} className="add-set-btn">
-          <Plus size={16} />
-          Añadir serie
-        </button>
-      </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+              {row.sets.map((s, i) => {
+                let normalCount = 0;
+                for (let j = 0; j < i; j++) {
+                  if (row.sets[j].type === "normal") normalCount++;
+                }
+                return (
+                  <SwipeableSetRow
+                    key={s.id}
+                    s={s}
+                    i={i}
+                    workingIndex={normalCount}
+                    row={row}
+                    showRpe={showRpe}
+                    isCardio={isCardio}
+                    cols={cols}
+                    recentWorkouts={recentWorkouts}
+                  />
+                );
+              })}
+            </div>
+
+            <button onClick={() => addSet(row.id, recentWorkouts)} className="add-set-btn">
+              <Plus size={16} />
+              Añadir serie
+            </button>
+          </div>
+        </>
+      )}
     </article>
   );
 }

@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import BottomSheet from './BottomSheet';
+import { useWorkoutStore } from '@/lib/workout/store';
 
 import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings } from 'lucide-react';
 
@@ -24,6 +25,8 @@ export default function Layout() {
   const moreMenuRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const hasActiveWorkout = useWorkoutStore((s) => s.active !== null);
+  const hideNav = hasActiveWorkout && location.pathname === '/workout';
 
   // Cerrar el menú automáticamente al cambiar de página y resetear scroll
   useEffect(() => {
@@ -119,7 +122,7 @@ export default function Layout() {
       </div>
 
       {/* Bottom Nav */}
-      <nav className="mobile-bottom-nav" aria-label="Navegación inferior">
+      <nav className={`mobile-bottom-nav${hideNav ? ' nav-hidden' : ''}`} aria-label="Navegación inferior">
         {navItems.filter(i => bottomNavPaths.includes(i.path)).map(item => {
           const isActive = location.pathname === item.path;
           return (

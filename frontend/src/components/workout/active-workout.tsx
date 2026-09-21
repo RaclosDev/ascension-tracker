@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bookmark, Plus, Square, Check } from "lucide-react";
+import { Bookmark, Plus, Square, Check, StickyNote, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
 import {
   AlertDialog,
@@ -82,17 +82,19 @@ function LiveSession() {
   const vol = sessionVolume(active.exercises);
   const done = completedSets(active.exercises);
   const total = totalSets(active.exercises);
+  const [showNotes, setShowNotes] = useState(false);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-      {/* Sticky header */}
+      {/* Compact sticky header */}
       <div className="active-workout-header">
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.75rem" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
           <input
             value={active.name}
             onChange={(e) => setWorkoutName(e.target.value)}
             className="active-workout-name-input"
             aria-label="Nombre del entrenamiento"
+            style={{ fontSize: "1.1rem" }}
           />
           <div className="active-workout-timer">
             <span className="active-workout-timer-dot" />
@@ -101,26 +103,40 @@ function LiveSession() {
             </span>
           </div>
         </div>
-        <input
-          value={active.notes ?? ""}
-          onChange={(e) => useWorkoutStore.setState(s => ({ active: s.active ? { ...s.active, notes: e.target.value } : null }))}
-          placeholder="Añadir notas del entrenamiento..."
-          className="active-workout-notes-input"
-        />
-        <div className="active-workout-stats">
-          <span>
-            Series{" "}
-            <span className="active-workout-stat-value">
-              {done}/{total}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div className="active-workout-stats">
+            <span>
+              Series{" "}
+              <span className="active-workout-stat-value">
+                {done}/{total}
+              </span>
             </span>
-          </span>
-          <span>
-            Volumen{" "}
-            <span className="active-workout-stat-value">
-              {formatKg(vol)}
+            <span>
+              Volumen{" "}
+              <span className="active-workout-stat-value">
+                {formatKg(vol)}
+              </span>
             </span>
-          </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowNotes(!showNotes)}
+            className="active-workout-notes-toggle"
+            aria-label="Notas del entrenamiento"
+          >
+            <StickyNote className="w-4 h-4" />
+            <ChevronDown className="w-3 h-3" style={{ transform: showNotes ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+          </button>
         </div>
+        {showNotes && (
+          <input
+            value={active.notes ?? ""}
+            onChange={(e) => useWorkoutStore.setState(s => ({ active: s.active ? { ...s.active, notes: e.target.value } : null }))}
+            placeholder="Añadir notas del entrenamiento..."
+            className="active-workout-notes-input"
+            autoFocus
+          />
+        )}
       </div>
 
       <RestBanner />

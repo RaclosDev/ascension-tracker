@@ -3,7 +3,6 @@ import { useNow } from "@/hooks/use-now";
 import { formatRest } from "@/lib/workout/format";
 import { useWorkoutStore } from "@/lib/workout/store";
 import { playRestSound, notifyRestFinished } from "@/lib/workout/notifications";
-import { Button } from "@/components/ui/button";
 
 export function RestBanner() {
   const restUntil = useWorkoutStore((s) => s.restUntil);
@@ -42,55 +41,60 @@ export function RestBanner() {
       className="fade-in"
       style={{
         position: 'fixed',
-        bottom: 'calc(64px + env(safe-area-inset-bottom))',
-        left: 0,
-        right: 0,
+        bottom: 'calc(1rem + env(safe-area-inset-bottom))',
+        left: '1rem',
+        right: '1rem',
         zIndex: 110,
-        background: 'var(--bg-primary)',
-        borderTop: '2px solid var(--accent-primary)',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
+        background: 'rgba(28, 28, 30, 0.7)',
+        backdropFilter: 'blur(24px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        borderRadius: '20px',
+        overflow: 'hidden',
       }}
     >
+      {/* Progress bar */}
       <div 
         style={{ 
           position: 'absolute', 
-          top: -2, 
+          top: 0, 
           left: 0, 
-          height: '2px', 
-          background: 'var(--text-primary)', 
+          height: '3px', 
+          background: 'var(--accent-primary)', 
           width: `${Math.min(100, progress * 100)}%`,
-          transition: 'width 0.2s linear'
+          transition: 'width 0.2s linear',
+          borderRadius: '20px 0 0 0',
         }} 
       />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.25rem' }}>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.65rem 1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
             Descanso
           </span>
-          <span style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
             {formatRest(remaining)}
           </span>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
           <button 
             onClick={() => adjustRest(-15)}
             className="btn btn-secondary"
-            style={{ padding: '0.5rem 0.75rem', fontSize: '1rem', fontWeight: 600, minWidth: '45px' }}
+            style={{ padding: '0.35rem 0.6rem', fontSize: '0.85rem', fontWeight: 600, minWidth: '40px', borderRadius: '12px' }}
           >
             -15
           </button>
           <button 
             onClick={() => adjustRest(15)}
             className="btn btn-secondary"
-            style={{ padding: '0.5rem 0.75rem', fontSize: '1rem', fontWeight: 600, minWidth: '45px' }}
+            style={{ padding: '0.35rem 0.6rem', fontSize: '0.85rem', fontWeight: 600, minWidth: '40px', borderRadius: '12px' }}
           >
             +15
           </button>
           <button 
             onClick={skipRest}
             className="btn btn-primary"
-            style={{ padding: '0.5rem 1.25rem', fontSize: '1rem', fontWeight: 700 }}
+            style={{ padding: '0.35rem 0.85rem', fontSize: '0.85rem', fontWeight: 700, borderRadius: '12px' }}
           >
             Omitir
           </button>
