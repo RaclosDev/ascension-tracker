@@ -1368,35 +1368,6 @@ input[type=number]::-webkit-outer-spin-button {
   z-index: 90;
   pointer-events: none;
 }
-.mobile-top-bar.workout-active {
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-subtle);
-  pointer-events: auto;
-}
-.topbar-workout-btn {
-  width: 48px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: color 0.15s ease;
-}
-.topbar-workout-btn:hover {
-  color: var(--text-primary);
-}
-.topbar-workout-timer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  padding-right: 0.25rem;
-}
 .mobile-top-btn {
   background: transparent;
   border: none;
@@ -4672,37 +4643,15 @@ button, a, input, select, textarea, [role=button], [onclick] {
   background: var(--accent-glow);
 }
 
-/* ---- Active Workout Header ---- */
-.active-workout-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  padding: 0.75rem 1rem;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.active-workout-name-input {
-  flex: 1;
-  min-width: 0;
-  background: transparent;
-  border: none;
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  outline: none;
-  font-family: var(--font-main);
-}
+/* ---- Active Workout Timer (Top Bar) ---- */
 .active-workout-timer {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  background: var(--bg-secondary);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
   padding: 0.35rem 0.65rem;
   border-radius: 20px;
   flex-shrink: 0;
@@ -4723,26 +4672,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   font-weight: 600;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
-}
-.active-workout-notes-input {
-  background: transparent;
-  border: none;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  outline: none;
-  width: 100%;
-  font-family: var(--font-main);
-}
-.active-workout-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-}
-.active-workout-stat-value {
-  font-weight: 600;
-  color: var(--text-primary);
 }
 .active-workout-notes-toggle {
   display: flex;

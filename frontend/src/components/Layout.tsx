@@ -74,11 +74,11 @@ export default function Layout() {
   return (
     <div className="app-root">
       {/* Barra superior de app para móvil */}
-      <header className={`mobile-top-bar${hideNav ? ' workout-active' : ''}`}>
+      <header className="mobile-top-bar">
         {hideNav ? (
-          <div className="topbar-workout-timer">
+          <div className="active-workout-timer" style={{ pointerEvents: 'auto', minWidth: '48px', justifyContent: 'center' }}>
             <span className="active-workout-timer-dot" />
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+            <span className="active-workout-timer-text">
               {formatDuration(elapsed)}
             </span>
           </div>

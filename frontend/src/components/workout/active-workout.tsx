@@ -71,16 +71,6 @@ function LiveSession() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-      {/* Notas input inline */}
-      <div className="active-workout-header" style={{ padding: "0.5rem 1rem", flexDirection: "row", alignItems: "center" }}>
-        <input
-          value={active.notes ?? ""}
-          onChange={(e) => useWorkoutStore.setState(s => ({ active: s.active ? { ...s.active, notes: e.target.value } : null }))}
-          placeholder="Notas del entrenamiento..."
-          className="active-workout-notes-input"
-          style={{ flex: 1 }}
-        />
-      </div>
 
       <RestBanner />
 
