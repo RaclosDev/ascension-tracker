@@ -3,6 +3,7 @@ import api from '../api/client';
 import toast from 'react-hot-toast';
 import { useSpeechToText } from '../hooks/useSpeechToText';
 import { getLocalDateString, addDaysToDateString, formatFriendlyDate, isTodayLocal } from '../utils/dateHelper';
+import NutritionCalculators from '../components/calculators/NutritionCalculators';
 
 export default function UtilitiesPage() {
   // --- AI ASSISTANT STATE ---
@@ -852,14 +853,13 @@ export default function UtilitiesPage() {
             )}
           </div>
         </div>
+
+        <NutritionCalculators />
       </div>
 
 
 
     </div>
   );
+
 }
-
-
-
-
