@@ -17,6 +17,7 @@ export default function SettingsPage() {
     customProteinPct: '', customFatPct: '', customCarbsPct: '',
     customProteinGrams: '', customFatGrams: '', customCarbsGrams: '',
     kcal: '',
+    age: '', heightCm: '', sex: 'M', activityFactor: '1.2'
   });
   const [loading, setLoading] = useState(true);
   const location = useLocation();
@@ -101,6 +102,10 @@ export default function SettingsPage() {
         customProteinGrams: settingsRes.data.customProteinGrams || 150,
         customFatGrams: settingsRes.data.customFatGrams || 60,
         customCarbsGrams: settingsRes.data.customCarbsGrams || 150,
+        age: settingsRes.data.age || '',
+        heightCm: settingsRes.data.heightCm || '',
+        sex: settingsRes.data.sex || 'M',
+        activityFactor: settingsRes.data.activityFactor || '1.2'
       });
     } catch {
       toast.error('Error al cargar configuración');
@@ -125,6 +130,10 @@ export default function SettingsPage() {
         goalWeight: parseSafeFloat(form.goalWeight, settings?.goalWeight || 74.0),
         weeklyGoal: parseSafeFloat(form.weeklyGoal, settings?.weeklyGoal || 1.0),
         startDate: form.startDate || settings?.startDate || '2026-05-25',
+        age: form.age ? parseInt(form.age, 10) : null,
+        heightCm: form.heightCm ? parseInt(form.heightCm, 10) : null,
+        sex: form.sex,
+        activityFactor: form.activityFactor ? parseFloat(form.activityFactor) : null,
       });
       toast.success('Datos personales guardados');
       fetchData();
@@ -204,51 +213,54 @@ export default function SettingsPage() {
           </div>
           {openSections.personal && (
             <div className="accordion-content fade-in" style={{ marginTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1.25rem' }}>
-              <h4 className="subsection-title">Métricas Corporales</h4>
-              <div className="form-group">
-                <label className="form-label">Peso Inicial (kg)</label>
-                <input
-                  type="number" inputMode="decimal"
-                  className="form-input"
-                  step="0.1"
-                  value={form.startWeight || ''}
-                  onChange={e => setForm({ ...form, startWeight: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Peso Deseado (kg)</label>
-                <input
-                  type="number" inputMode="decimal"
-                  className="form-input"
-                  step="0.1"
-                  value={form.goalWeight || ''}
-                  onChange={e => setForm({ ...form, goalWeight: e.target.value })}
-                />
-              </div>
-              <h4 className="subsection-title">Progreso y Fechas</h4>
-              <div className="form-group">
-                <label className="form-label">Objetivo de Pérdida Semanal (kg)</label>
-                <input
-                  type="number" inputMode="decimal"
-                  className="form-input"
-                  step="0.1"
-                  min="0.1"
-                  max="2"
-                  value={form.weeklyGoal || ''}
-                  onChange={e => setForm({ ...form, weeklyGoal: e.target.value })}
-                />
-                <div className="form-hint">Recomendado: 0.5  1.0 kg/semana para pérdida saludable</div>
-              </div>
-                <div className="form-group" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                  <label className="form-label">Fecha de Inicio</label>
-                  <input
-                    type="date"
-                    className="form-input"
-                    style={{ width: 'auto', minWidth: '180px', maxWidth: '100%' }}
-                    value={form.startDate || ''}
-                    onChange={e => setForm({ ...form, startDate: e.target.value })}
-                  />
+              <h4 className="subsection-title">Métricas Corporales y Biometría</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Sexo</label>
+                  <select className="form-input" value={form.sex || 'M'} onChange={e => setForm({ ...form, sex: e.target.value })}>
+                    <option value="M">Hombre</option>
+                    <option value="F">Mujer</option>
+                  </select>
                 </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Edad</label>
+                  <input type="number" className="form-input" value={form.age || ''} onChange={e => setForm({ ...form, age: e.target.value })} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Altura (cm)</label>
+                  <input type="number" className="form-input" value={form.heightCm || ''} onChange={e => setForm({ ...form, heightCm: e.target.value })} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Actividad</label>
+                  <select className="form-input" value={form.activityFactor || '1.2'} onChange={e => setForm({ ...form, activityFactor: e.target.value })}>
+                    <option value="1.2">Sedentario</option>
+                    <option value="1.375">Ligero</option>
+                    <option value="1.55">Moderado</option>
+                    <option value="1.725">Alto</option>
+                    <option value="1.9">Muy Alto</option>
+                  </select>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Peso Inicial (kg)</label>
+                  <input type="number" inputMode="decimal" className="form-input" step="0.1" value={form.startWeight || ''} onChange={e => setForm({ ...form, startWeight: e.target.value })} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Peso Deseado (kg)</label>
+                  <input type="number" inputMode="decimal" className="form-input" step="0.1" value={form.goalWeight || ''} onChange={e => setForm({ ...form, goalWeight: e.target.value })} />
+                </div>
+              </div>
+
+              <h4 className="subsection-title" style={{ marginTop: '1.5rem' }}>Progreso y Fechas</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Pérdida (kg/sem)</label>
+                  <input type="number" inputMode="decimal" className="form-input" step="0.1" min="0.1" max="2" value={form.weeklyGoal || ''} onChange={e => setForm({ ...form, weeklyGoal: e.target.value })} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Fecha de Inicio</label>
+                  <input type="date" className="form-input" value={form.startDate || ''} onChange={e => setForm({ ...form, startDate: e.target.value })} />
+                </div>
+              </div>
               <button className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }} onClick={handleSavePersonal}>
                 Guardar Cambios
               </button>

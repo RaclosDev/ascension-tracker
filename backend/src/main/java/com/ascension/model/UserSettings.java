@@ -56,6 +56,18 @@ public class UserSettings {
     @Column(name = "custom_carbs_grams")
     private Double customCarbsGrams;
 
+    @Column(name = "age")
+    private Integer age;
+
+    @Column(name = "height_cm")
+    private Integer heightCm;
+
+    @Column(name = "sex", length = 1)
+    private String sex;
+
+    @Column(name = "activity_factor")
+    private Double activityFactor;
+
     @Column(name = "workout_data", columnDefinition = "TEXT")
     private String workoutData;
 

@@ -58,13 +58,18 @@ export default function NutritionCalculators() {
       if (!loadedWeight && weightsRes.status === 'fulfilled' && weightsRes.value.data.currentWeight) {
         setWeightKg(String(weightsRes.value.data.currentWeight.weight));
       }
-      if (settingsRes.status === 'fulfilled' && settingsRes.value.data) {
-        if (settingsRes.value.data.goalWeight) {
-          setGoalWeight(String(settingsRes.value.data.goalWeight));
+      if (settingsRes.status === 'fulfilled') {
+        const s = settingsRes.value.data;
+        if (!loadedGoal && s.goalWeight) {
+          setGoalWeight(String(s.goalWeight));
         }
-        if (settingsRes.value.data.weeklyGoal) {
-          setSettingsWeeklyGoal(settingsRes.value.data.weeklyGoal);
+        if (s.weeklyGoal) {
+          setSettingsWeeklyGoal(s.weeklyGoal);
         }
+        if (s.age) setAge(String(s.age));
+        if (s.heightCm) setHeightCm(String(s.heightCm));
+        if (s.sex) setSex(s.sex);
+        if (s.activityFactor) setActivityFactor(String(s.activityFactor));
       }
     });
   }, []);

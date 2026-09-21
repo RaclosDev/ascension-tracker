@@ -38,6 +38,10 @@ public class SettingsService {
         if (dto.getCustomProteinGrams() != null) settings.setCustomProteinGrams(dto.getCustomProteinGrams());
         if (dto.getCustomFatGrams() != null) settings.setCustomFatGrams(dto.getCustomFatGrams());
         if (dto.getCustomCarbsGrams() != null) settings.setCustomCarbsGrams(dto.getCustomCarbsGrams());
+        if (dto.getAge() != null) settings.setAge(dto.getAge());
+        if (dto.getHeightCm() != null) settings.setHeightCm(dto.getHeightCm());
+        if (dto.getSex() != null) settings.setSex(dto.getSex());
+        if (dto.getActivityFactor() != null) settings.setActivityFactor(dto.getActivityFactor());
         if (dto.getWorkoutData() != null) settings.setWorkoutData(dto.getWorkoutData());
 
         if ("CUSTOM_GRAMS".equals(settings.getMacroStrategy())) {
@@ -83,6 +87,10 @@ public class SettingsService {
                 .customProteinGrams(s.getCustomProteinGrams())
                 .customFatGrams(s.getCustomFatGrams())
                 .customCarbsGrams(s.getCustomCarbsGrams())
+                .age(s.getAge())
+                .heightCm(s.getHeightCm())
+                .sex(s.getSex())
+                .activityFactor(s.getActivityFactor())
                 .workoutData(s.getWorkoutData())
                 .build();
     }

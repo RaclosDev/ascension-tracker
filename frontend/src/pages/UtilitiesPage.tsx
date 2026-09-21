@@ -231,6 +231,7 @@ export default function UtilitiesPage() {
   const [seconds, setSeconds] = useState('');
 
   const [openSections, setOpenSections] = useState({
+    aiAssistant: false,
     calc1: false,
     calc2: false
   });
@@ -320,10 +321,14 @@ export default function UtilitiesPage() {
     <div className="fade-in" style={{ paddingBottom: '3rem' }}>
 
       {/* --- AI NUTRITION STRATEGIST & MULTI-OPTION CHEF --- */}
-      <div className="ai-assistant-container" style={{ padding: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.35rem' }}>
+      <div style={{ marginBottom: '2.5rem' }}>
+        <div className="card accordion-card" style={{ padding: openSections.aiAssistant ? 'var(--space-lg)' : '1rem 1.25rem', transition: 'all 0.25s ease' }}>
+          <div
+            className="accordion-header"
+            onClick={(e) => toggleSection('aiAssistant', e)}
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div style={{
                 width: '38px',
                 height: '38px',
@@ -348,9 +353,14 @@ export default function UtilitiesPage() {
                 Estratega IA
               </h2>
             </div>
+            <span style={{ transform: openSections.aiAssistant ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              
+            </span>
           </div>
 
-        </div>
+          {openSections.aiAssistant && (
+            <div className="accordion-content fade-in ai-assistant-container" style={{ marginTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1.25rem' }}>
+
 
         {/* REMAINING MACROS BAR (THEME-AWARE & CENTERED) */}
         <div style={{ marginTop: '0.75rem', marginBottom: '1rem' }}>
@@ -701,7 +711,10 @@ export default function UtilitiesPage() {
           </form>
           </div>
           <div ref={chatBottomRef} />
+            </div>
+          )}
         </div>
+      </div>
 
       {/* --- EXISTING PERFORMANCE CALCULATORS --- */}
       <div style={{ marginTop: '2.5rem' }}>

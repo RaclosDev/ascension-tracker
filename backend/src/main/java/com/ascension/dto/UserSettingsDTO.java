@@ -17,5 +17,9 @@ public class UserSettingsDTO {
     private Double customProteinGrams;
     private Double customFatGrams;
     private Double customCarbsGrams;
+    private Integer age;
+    private Integer heightCm;
+    private String sex;
+    private Double activityFactor;
     private String workoutData;
 }
