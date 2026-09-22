@@ -137,7 +137,7 @@ export default function NutritionCalculators() {
         Calculadoras de Nutrición
       </h3>
 
-      <div className="utilities-grid">
+      <div>
         {/* TDEE Card */}
         <CalculatorCard title="Gasto de mantenimiento (TDEE)">
           {tdee && bmr ? (
