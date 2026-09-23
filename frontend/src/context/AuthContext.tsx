@@ -62,12 +62,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    if (user?.email === 'raclosnegocios@gmail.com') {
-      try {
-        await api.delete('/settings/nuke-test-account');
-      } catch (e) {
-        console.error('Failed to nuke test account', e);
-      }
     }
 
     if (refreshToken) {
