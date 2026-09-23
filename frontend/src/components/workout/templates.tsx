@@ -20,16 +20,10 @@ export function TemplatesView() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      <header style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "flex-end", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-          <button onClick={() => setTab("home")} className="btn btn-secondary" style={{ width: "fit-content", display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.85rem" }}>
-            <ArrowLeft size={16} /> Volver
-          </button>
-          <p style={{ fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.16em", color: "var(--text-secondary)" }}>
-            Rutinas
-          </p>
-          <h1 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--text-primary)" }}>Plantillas</h1>
-        </div>
+      <header style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+        <button onClick={() => setTab("home")} className="btn btn-secondary" style={{ width: "fit-content", display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 0.75rem", fontSize: "0.85rem" }}>
+          <ArrowLeft size={16} /> Volver
+        </button>
         <Button onClick={startEmpty} size="sm">
           Nueva Plantilla
         </Button>
