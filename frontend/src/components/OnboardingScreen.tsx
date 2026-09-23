@@ -3,10 +3,11 @@ import api from '../api/client';
 import toast from 'react-hot-toast';
 import { User, Scale, Activity } from 'lucide-react';
 import WeightLossPlan from './calculators/WeightLossPlan';
+import MacroConfigurator from './calculators/MacroConfigurator';
 
 export default function OnboardingScreen({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<any>({
     sex: 'M',
     age: '',
     heightCm: '',
@@ -277,19 +278,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               
-              <div className="form-group" style={{ marginBottom: '1rem' }}>
-                <label className="form-label">Estrategia</label>
-                <select 
-                  className="form-input" 
-                  value={form.macroStrategy} 
-                  onChange={(e) => setForm({...form, macroStrategy: e.target.value})}
-                >
-                  <option value="BALANCED">Balanceada (Recomendada)</option>
-                  <option value="LOW_CARB">Baja en Carbohidratos</option>
-                  <option value="LOW_FAT">Baja en Grasas</option>
-                  <option value="HIGH_PROTEIN">Alta en Proteínas</option>
-                </select>
-              </div>
+              <MacroConfigurator form={form as any} setForm={setForm} />
 
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
                 <button 

@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import WeightLossPlan from '../components/calculators/WeightLossPlan';
+import MacroConfigurator from '../components/calculators/MacroConfigurator';
 import MealConfigurator from '../components/MealConfigurator';
 import { useWorkoutStore } from '../lib/workout/store';
 import { importHevyCSV } from '../lib/workout/import';
@@ -270,6 +271,41 @@ export default function SettingsPage() {
           )}
         </div>
 
+
+        {/* 1.5 Plan de Adelgazamiento */}
+        <div className="card accordion-card" style={{ padding: openSections.plan ? 'var(--space-lg)' : '1rem 1.25rem', transition: 'all 0.25s ease', marginBottom: '1rem' }}>
+          <div 
+            className="accordion-header" 
+            onClick={(e) => toggleSection('plan', e)}
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Activity size={20} className="text-primary" />
+              <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Plan de Adelgazamiento</span>
+            </div>
+            <span style={{ transform: openSections.plan ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              ▼
+            </span>
+          </div>
+          {openSections.plan && (
+            <div className="accordion-content fade-in" style={{ marginTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1.25rem' }}>
+              <WeightLossPlan
+                initialWeightKg={String(settings?.currentWeight || settings?.startWeight || '')}
+                initialGoalWeight={form.goalWeight}
+                age={form.age}
+                heightCm={form.heightCm}
+                sex={form.sex as 'M' | 'F'}
+                activityFactor={form.activityFactor}
+                onSave={(kcal) => {
+                  setForm({...form, kcal});
+                  setOpenSections({...openSections, plan: false, macros: true});
+                }}
+                saveButtonText="Aplicar Calorías a Macros"
+              />
+            </div>
+          )}
+        </div>
+
         {/* 2. Macro Strategy */}
         <div className="card accordion-card" style={{ padding: openSections.macros ? 'var(--space-lg)' : '1rem 1.25rem', transition: 'all 0.25s ease' }}>
           <div 
@@ -287,6 +323,7 @@ export default function SettingsPage() {
           </div>
           {openSections.macros && (
             <div className="accordion-content fade-in" style={{ marginTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1.25rem' }}>
+              <MacroConfigurator form={form} setForm={setForm} />
               <h4 className="subsection-title">Estrategia General</h4>
               <div className="form-group" style={{ marginBottom: 'var(--space-md)' }}>
                 <label className="form-label">Modo de Cálculo</label>
