@@ -62,7 +62,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    }
 
     if (refreshToken) {
       // Opcional: avisar al backend
