@@ -21,4 +21,5 @@ public class FoodLogDTO {
     private double protein;
     private double carbs;
     private double fat;
+    private String portionsJson;
 }

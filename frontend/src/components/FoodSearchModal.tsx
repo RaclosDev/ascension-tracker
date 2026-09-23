@@ -334,7 +334,8 @@ export default function FoodSearchModal({ isOpen, onClose, mealIndex, date, onLo
       kcal: Math.round(((selectedProduct.kcal || 0) * factor) * 10) / 10,
       protein: Math.round(((selectedProduct.protein || 0) * factor) * 10) / 10,
       carbs: Math.round(((selectedProduct.carbs || 0) * factor) * 10) / 10,
-      fat: Math.round(((selectedProduct.fat || 0) * factor) * 10) / 10
+      fat: Math.round(((selectedProduct.fat || 0) * factor) * 10) / 10,
+      portionsJson: selectedProduct.portions && selectedProduct.portions.length > 0 ? JSON.stringify(selectedProduct.portions) : null
     };
 
     try {

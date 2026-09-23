@@ -248,6 +248,7 @@ public class NutritionService {
         log.setProtein(dto.getProtein());
         log.setCarbs(dto.getCarbs());
         log.setFat(dto.getFat());
+        log.setPortionsJson(dto.getPortionsJson());
         
         FoodLog saved = foodLogRepository.save(log);
 
@@ -284,6 +285,7 @@ public class NutritionService {
         log.setProtein(dto.getProtein());
         log.setCarbs(dto.getCarbs());
         log.setFat(dto.getFat());
+        log.setPortionsJson(dto.getPortionsJson());
         if (dto.getMealIndex() != null) {
             log.setMealIndex(dto.getMealIndex());
         }
@@ -303,6 +305,7 @@ public class NutritionService {
                 .protein(log.getProtein())
                 .carbs(log.getCarbs())
                 .fat(log.getFat())
+                .portionsJson(log.getPortionsJson())
                 .build();
     }
 

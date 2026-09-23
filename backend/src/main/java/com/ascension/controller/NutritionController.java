@@ -274,6 +274,9 @@ public class NutritionController {
                     dto.setProtein(((Number) f.get("protein")).doubleValue());
                     dto.setCarbs(((Number) f.get("carbs")).doubleValue());
                     dto.setFat(((Number) f.get("fat")).doubleValue());
+                    if (f.containsKey("portionsJson") && f.get("portionsJson") != null) {
+                        dto.setPortionsJson((String) f.get("portionsJson"));
+                    }
 
                     added.add(nutritionService.addFoodLog(userEmail, dto));
                 }

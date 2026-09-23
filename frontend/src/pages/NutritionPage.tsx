@@ -107,7 +107,8 @@ export default function NutritionPage() {
         protein: data.protein,
         carbs: data.carbs,
         fat: data.fat,
-        mealIndex: targetMealIndex
+        mealIndex: targetMealIndex,
+        portionsJson: data.portionsJson
       });
       fetchData();
       toast.success('Movido correctamente');
@@ -173,6 +174,7 @@ export default function NutritionPage() {
       _protPer100: log.quantity > 0 ? (log.protein / log.quantity) * 100 : 0,
       _carbsPer100: log.quantity > 0 ? (log.carbs / log.quantity) * 100 : 0,
       _fatPer100: log.quantity > 0 ? (log.fat / log.quantity) * 100 : 0,
+      portionsJson: log.portionsJson
     });
   };
 
@@ -198,6 +200,7 @@ export default function NutritionPage() {
         protein: editingLog.protein,
         carbs: editingLog.carbs,
         fat: editingLog.fat,
+        portionsJson: editingLog.portionsJson
       });
       setEditingLog(null);
       fetchData();
@@ -468,6 +471,34 @@ export default function NutritionPage() {
                                     autoFocus
                                   />
                                 </div>
+                                {(() => {
+                                  if (!editingLog.portionsJson) return null;
+                                  try {
+                                    const portions = JSON.parse(editingLog.portionsJson);
+                                    if (!Array.isArray(portions) || portions.length === 0) return null;
+                                    return (
+                                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
+                                        {portions.map((p, idx) => (
+                                          <div key={idx} style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '0.25rem', borderRadius: '8px', border: '1px solid var(--border-medium)' }}>
+                                            <input 
+                                              type="number" 
+                                              style={{ width: '45px', background: 'transparent', border: 'none', color: 'var(--text-primary)', textAlign: 'center', fontSize: '0.85rem' }} 
+                                              placeholder="0"
+                                              min="0"
+                                              onChange={(e) => {
+                                                const count = parseFloat(e.target.value) || 0;
+                                                handleEditQuantityChange(count * p.amount);
+                                              }} 
+                                            />
+                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: '0.25rem', marginRight: '0.25rem' }}>x {p.label}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    );
+                                  } catch (e) {
+                                    return null;
+                                  }
+                                })()}
                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                                   {Math.round(editingLog.kcal)} kcal | P: {editingLog.protein.toFixed(1)}g | C: {editingLog.carbs.toFixed(1)}g | G: {editingLog.fat.toFixed(1)}g
                                 </div>

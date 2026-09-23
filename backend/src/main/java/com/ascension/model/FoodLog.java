@@ -44,4 +44,7 @@ public class FoodLog {
 
     @Column(nullable = false)
     private double fat;
+
+    @Column(name = "portions_json", columnDefinition = "TEXT")
+    private String portionsJson;
 }
