@@ -173,10 +173,10 @@ public class NutritionService {
     @Transactional
     public void seedDefaultMeals(String userEmail) {
         mealRepository.saveAll(List.of(
-            Meal.builder().userEmail(userEmail).name("Desayuno").sortOrder(0).startTime("06:00").endTime("11:00").build(),
-            Meal.builder().userEmail(userEmail).name("Comida").sortOrder(1).startTime("13:00").endTime("17:00").build(),
-            Meal.builder().userEmail(userEmail).name("Cena").sortOrder(2).startTime("20:00").endTime("05:59").build(),
-            Meal.builder().userEmail(userEmail).name("Snacks").sortOrder(3).startTime("11:00").endTime("13:00").isDefault(true).build()
+            Meal.builder().userEmail(userEmail).name("Desayuno").icon("☕").sortOrder(0).startTime("06:00").endTime("11:00").build(),
+            Meal.builder().userEmail(userEmail).name("Comida").icon("🍽️").sortOrder(1).startTime("13:00").endTime("17:00").build(),
+            Meal.builder().userEmail(userEmail).name("Cena").icon("🌙").sortOrder(2).startTime("20:00").endTime("05:59").build(),
+            Meal.builder().userEmail(userEmail).name("Snacks").icon("🍎").sortOrder(3).startTime("11:00").endTime("13:00").isDefault(true).build()
         ));
     }
 
