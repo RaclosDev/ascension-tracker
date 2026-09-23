@@ -7,7 +7,7 @@ import { useWorkoutStore } from '../lib/workout/store';
 import { importHevyCSV } from '../lib/workout/import';
 import { useAuth } from '../context/AuthContext';
 import { applyThemeColor } from '../utils/colorHelper';
-import { Palette, ChevronDown, User, Scale, Activity, Dumbbell, Utensils } from 'lucide-react';
+import { Palette, ChevronDown, User, Scale, Activity, Dumbbell, Utensils, LogOut } from 'lucide-react';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<any>(null);
@@ -715,8 +715,32 @@ export default function SettingsPage() {
           )}
         </div>
 
+        {/* 5. Account / Logout */}
+        <div className="card accordion-card" style={{ padding: 'var(--space-lg)', transition: 'all 0.25s ease', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <LogOut size={20} style={{ color: 'var(--color-danger, #ef4444)' }} />
+              <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: 'var(--color-danger, #ef4444)' }}>Cuenta</span>
+            </div>
+          </div>
+          <div style={{ marginTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1.25rem' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+              Cierra tu sesión de forma segura en este dispositivo.
+            </p>
+            <button
+              className="btn btn-secondary"
+              style={{ width: '100%', borderColor: 'rgba(239, 68, 68, 0.5)', color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)' }}
+              onClick={() => {
+                logout();
+                toast.success('Sesión cerrada');
+              }}
+            >
+              Cerrar Sesión
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   );
 }
-
