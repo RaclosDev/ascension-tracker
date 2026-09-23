@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Repeat2, Trash2, ArrowLeft, Edit3 } from "lucide-react";
+import { Repeat2, Trash2, ArrowLeft, Edit3, Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -141,12 +141,12 @@ export function HistoryView() {
 
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetailId(null)}>
         {detail ? (
-          <DialogContent className="workout-detail-modal" style={{ padding: '0', overflow: 'hidden', background: 'var(--bg-primary)', border: '1px solid var(--border-medium)', borderRadius: '16px', display: 'flex', flexDirection: 'column', maxHeight: '85dvh', width: '95vw', maxWidth: '500px' }}>
-            <div style={{ padding: '2rem', background: 'linear-gradient(to bottom, rgba(255,255,255,0.03), transparent)', flexShrink: 0 }}>
-              <div className="detail-modal-header" style={{ alignItems: 'flex-start' }}>
+          <DialogContent className="workout-detail-modal" style={{ padding: '0', background: 'var(--bg-primary)', border: '1px solid var(--border-medium)', borderRadius: '16px', display: 'flex', flexDirection: 'column', maxHeight: '90dvh', width: '95vw', maxWidth: '500px', overflow: 'hidden' }}>
+            <div style={{ padding: '1.25rem 1.25rem 1rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                    <h2 className="detail-modal-title" style={{ fontSize: '1.75rem', background: 'linear-gradient(to right, var(--text-primary), var(--text-secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>{detail.name}</h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>{detail.name}</h2>
                     <button 
                       onClick={() => {
                         setEditName(detail.name);
@@ -155,47 +155,53 @@ export function HistoryView() {
                       }}
                       style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.25rem' }}
                     >
-                      <Edit3 size={18} />
+                      <Edit3 size={16} />
                     </button>
                   </div>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textTransform: 'capitalize', fontWeight: 500 }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'capitalize', marginTop: '0.2rem' }}>
                     {formatDay(detail.finishedAt)}
                   </p>
                 </div>
               </div>
               
-              <div className="detail-stat-row" style={{ marginTop: '1.5rem', background: 'rgba(0,0,0,0.2)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ display: 'flex', gap: '1rem', background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px' }}>
                 <Stat label="Duración" value={formatDuration(detail.finishedAt - detail.startedAt)} />
                 <Stat label="Volumen" value={formatKg(sessionVolume(detail.exercises))} />
                 <Stat label="Series" value={`${completedSets(detail.exercises)}`} />
               </div>
 
               {detail.notes ? (
-                <div style={{ marginTop: '1.25rem', padding: '1rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '8px', borderLeft: '3px solid var(--accent-color)' }}>
+                <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '8px', borderLeft: '3px solid var(--accent-color)' }}>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', margin: 0 }}>"{detail.notes}"</p>
                 </div>
               ) : null}
             </div>
 
-            <div style={{ padding: '0 2rem 2rem 2rem', overflowY: 'auto', flex: 1, minHeight: 0, scrollbarWidth: 'thin' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ padding: '1rem 1.25rem', overflowY: 'auto', flex: 1, scrollbarWidth: 'thin' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {detail.exercises.map((ex) => {
                   const meta = catalog.get(ex.exerciseId);
                   const isCardio = meta?.muscle === "cardio";
                   return (
-                    <div key={ex.id} className="detail-exercise-block" style={{ background: 'var(--bg-secondary)', borderRadius: '12px', padding: '1.25rem', border: '1px solid var(--border-subtle)', margin: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                        {ex.supersetId && (
-                          <span style={{ 
-                            fontSize: '0.65rem', fontWeight: 700, padding: '0.2rem 0.4rem', 
-                            borderRadius: '4px', background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', letterSpacing: '0.5px' 
-                          }}>
-                            SUPER
-                          </span>
+                    <div key={ex.id} style={{ background: 'var(--bg-secondary)', borderRadius: '12px', padding: '1rem', border: '1px solid var(--border-subtle)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                        {meta?.gifUrl ? (
+                          <img src={meta.gifUrl} alt="" style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', background: 'var(--bg-primary)' }} />
+                        ) : (
+                          <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <Dumbbell size={18} style={{ color: "var(--text-secondary)" }} />
+                          </div>
                         )}
-                        <h3 className="detail-exercise-title" style={{ color: 'var(--text-primary)', margin: 0 }}>
-                          {meta?.name ?? "Ejercicio"}
-                        </h3>
+                        <div>
+                          {ex.supersetId && (
+                            <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.1rem 0.3rem', borderRadius: '4px', background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', letterSpacing: '0.5px', marginRight: '0.4rem', display: 'inline-block', marginBottom: '0.2rem' }}>
+                              SUPER
+                            </span>
+                          )}
+                          <h3 style={{ color: 'var(--text-primary)', margin: 0, fontSize: '1rem', fontWeight: 600, lineHeight: 1.2 }}>
+                            {meta?.name ?? "Ejercicio"}
+                          </h3>
+                        </div>
                       </div>
                       
                       {ex.notes && (
@@ -335,10 +341,10 @@ export function HistoryView() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+      <p style={{ fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
         {label}
       </p>
-      <p className="mt-1 font-display text-lg font-semibold tabular-nums">{value}</p>
+      <p style={{ marginTop: '0.15rem', fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>{value}</p>
     </div>
   );
 }
