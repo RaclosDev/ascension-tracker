@@ -31,14 +31,4 @@ public class SettingsController {
     public ResponseEntity<UserSettingsDTO> updateSettings(@RequestBody UserSettingsDTO dto, @AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(settingsService.updateSettings(jwt.getClaimAsString("email"), dto));
     }
-
-    @DeleteMapping("/nuke-test-account")
-    public ResponseEntity<Void> nukeTestAccount(@AuthenticationPrincipal Jwt jwt) {
-        String email = jwt.getClaimAsString("email");
-        if (!"raclosnegocios@gmail.com".equals(email)) {
-            return ResponseEntity.status(403).build();
-        }
-        settingsService.nukeTestAccount(email);
-        return ResponseEntity.ok().build();
-    }
 }

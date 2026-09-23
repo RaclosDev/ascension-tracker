@@ -25,18 +25,6 @@ public class SettingsService {
     private final FoodLogRepository foodLogRepository;
     private final StepsEntryRepository stepsEntryRepository;
 
-    @Transactional
-    public void nukeTestAccount(String userEmail) {
-        if (!"raclosnegocios@gmail.com".equals(userEmail)) {
-            throw new RuntimeException("Unauthorized nuke attempt");
-        }
-        foodLogRepository.deleteAllByUserEmail(userEmail);
-        mealRepository.deleteAllByUserEmail(userEmail);
-        stepsEntryRepository.deleteAllByUserEmail(userEmail);
-        weightEntryRepository.deleteAllByUserEmail(userEmail);
-        settingsRepository.deleteByUserEmail(userEmail);
-    }
-
     public UserSettingsDTO getSettings(String userEmail) {
         return settingsRepository.findSettings(userEmail)
                 .map(this::toDTO)
