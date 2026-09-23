@@ -12,4 +12,7 @@ import java.util.Optional;
 public interface StepsEntryRepository extends JpaRepository<StepsEntry, Long> {
     List<StepsEntry> findAllByUserEmailOrderByDateAsc(String userEmail);
     Optional<StepsEntry> findByUserEmailAndDate(String userEmail, LocalDate date);
+    void deleteAllByUserEmail(String userEmail);
 }
+
+

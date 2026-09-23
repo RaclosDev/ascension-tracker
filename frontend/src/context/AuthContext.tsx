@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
+import api from '../api/client';
 
 export interface User {
   email: string;
@@ -60,7 +61,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(newToken);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    if (user?.email === 'raclosnegocios@gmail.com') {
+      try {
+        await api.delete('/settings/nuke-test-account');
+      } catch (e) {
+        console.error('Failed to nuke test account', e);
+      }
+    }
+
     if (refreshToken) {
       // Opcional: avisar al backend
       fetch('/api/auth/logout', {
