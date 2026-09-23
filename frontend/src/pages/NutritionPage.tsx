@@ -12,6 +12,17 @@ import toast from 'react-hot-toast';
 import { ChevronDown, Trash2, Edit3, GripVertical, Cpu } from 'lucide-react';
 import { SegmentedControl } from '../components/ui/segmented-control';
 
+const getBasePortion = (portionsJson) => {
+   if (!portionsJson) return null;
+   try {
+      const portions = JSON.parse(portionsJson);
+      if (!portions || !Array.isArray(portions) || portions.length === 0) return null;
+      const base = portions.find(p => typeof p.label === 'string' && p.label.startsWith("1 "));
+      if (base) return { label: base.label.replace(/^1\s+/, ''), amount: base.amount };
+      return { label: portions[0].label, amount: portions[0].amount };
+   } catch(e) { return null; }
+};
+
 export default function NutritionPage() {
   const queryClient = useQueryClient();
   
@@ -174,9 +185,7 @@ export default function NutritionPage() {
       _protPer100: log.quantity > 0 ? (log.protein / log.quantity) * 100 : 0,
       _carbsPer100: log.quantity > 0 ? (log.carbs / log.quantity) * 100 : 0,
       _fatPer100: log.quantity > 0 ? (log.fat / log.quantity) * 100 : 0,
-      portionsJson: log.portionsJson,
-      _selectedPortionIdx: -1,
-      _portionMultiplier: log.quantity
+      portionsJson: log.portionsJson
     });
   };
 
@@ -462,57 +471,52 @@ export default function NutritionPage() {
                               /* EDIT MODE */
                               <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 <div style={{ fontWeight: 500, marginBottom: '0.15rem' }}>{editingLog.product}</div>
-                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                  <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Cantidad:</label>
-                                  <input
-                                    type="number"
-                                    className="form-input"
-                                    style={{ width: '80px', padding: '0.4rem' }}
-                                    value={editingLog._selectedPortionIdx === -1 ? editingLog.quantity : editingLog._portionMultiplier}
-                                    onChange={(e) => {
-                                      const val = parseFloat(e.target.value) || 0;
-                                      if (editingLog._selectedPortionIdx === -1) {
-                                         handleEditQuantityChange(val);
-                                      } else {
-                                         setEditingLog(prev => ({...prev, _portionMultiplier: val}));
-                                         const p = JSON.parse(editingLog.portionsJson)[editingLog._selectedPortionIdx];
-                                         handleEditQuantityChange(val * p.amount);
-                                      }
-                                    }}
-                                    autoFocus
-                                  />
-                                  <select
-                                    className="form-select"
-                                    style={{ padding: '0.4rem', borderRadius: '8px', flex: 1 }}
-                                    value={editingLog._selectedPortionIdx}
-                                    onChange={(e) => {
-                                       const idx = parseInt(e.target.value, 10);
-                                       setEditingLog(prev => ({ ...prev, _selectedPortionIdx: idx, _portionMultiplier: 1 }));
-                                       if (idx === -1) {
-                                          // Keep current quantity as grams, just update state
-                                       } else {
-                                          const p = JSON.parse(editingLog.portionsJson)[idx];
-                                          handleEditQuantityChange(1 * p.amount);
-                                       }
-                                    }}
-                                  >
-                                    <option value="-1">g (gramos)</option>
-                                    {(() => {
-                                        if (!editingLog.portionsJson) return null;
-                                        try {
-                                           const portions = JSON.parse(editingLog.portionsJson);
-                                           return portions.map((p, idx) => (
-                                              <option key={idx} value={idx}>{p.label} ({p.amount}g)</option>
-                                           ));
-                                        } catch(e) { return null; }
-                                    })()}
-                                  </select>
-                                </div>
-                                {editingLog._selectedPortionIdx !== -1 && (
-                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textAlign: 'right' }}>
-                                    = {editingLog.quantity}g en total
-                                  </div>
-                                )}
+                                {(() => {
+                                  const basePortion = getBasePortion(editingLog.portionsJson);
+                                  return (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+                                      {basePortion && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.2rem 0.5rem', borderRadius: '20px' }}>
+                                          <button 
+                                            type="button"
+                                            style={{ width: '24px', height: '24px', borderRadius: '50%', border: 'none', background: 'var(--border-medium)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            onClick={() => {
+                                               const currentPortions = editingLog.quantity / basePortion.amount;
+                                               const newPortions = Math.max(0, currentPortions - 1);
+                                               handleEditQuantityChange(newPortions * basePortion.amount);
+                                            }}
+                                          >-</button>
+                                          
+                                          <span style={{ fontSize: '0.85rem', fontWeight: 500, minWidth: '3rem', textAlign: 'center' }}>
+                                            {Number((editingLog.quantity / basePortion.amount).toFixed(1))} {basePortion.label}
+                                          </span>
+                                          
+                                          <button 
+                                            type="button"
+                                            style={{ width: '24px', height: '24px', borderRadius: '50%', border: 'none', background: 'var(--border-medium)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            onClick={() => {
+                                               const currentPortions = editingLog.quantity / basePortion.amount;
+                                               const newPortions = currentPortions + 1;
+                                               handleEditQuantityChange(newPortions * basePortion.amount);
+                                            }}
+                                          >+</button>
+                                        </div>
+                                      )}
+                                      
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                        <input
+                                          type="number"
+                                          className="form-input"
+                                          style={{ width: '70px', padding: '0.4rem', textAlign: 'center' }}
+                                          value={editingLog.quantity}
+                                          onChange={(e) => handleEditQuantityChange(e.target.value)}
+                                          autoFocus={!basePortion}
+                                        />
+                                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>g</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                                   {Math.round(editingLog.kcal)} kcal | P: {editingLog.protein.toFixed(1)}g | C: {editingLog.carbs.toFixed(1)}g | G: {editingLog.fat.toFixed(1)}g
                                 </div>
