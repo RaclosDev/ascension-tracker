@@ -140,7 +140,7 @@ export function ExercisePicker() {
         <div className="workout-sheet-header">
           <span className="workout-sheet-title">Añadir ejercicios</span>
           <button className="workout-sheet-close" onClick={close}>
-            <X size={16} />
+            <X size={22} />
           </button>
         </div>
 

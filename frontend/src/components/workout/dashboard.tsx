@@ -50,7 +50,7 @@ export function Dashboard() {
             <div className="workout-sheet-header">
               <span className="workout-sheet-title">Empezar Entrenamiento</span>
               <button className="workout-sheet-close" onClick={() => setStartModalOpen(false)}>
-                <X size={16} />
+                <X size={22} />
               </button>
             </div>
             <div className="workout-sheet-body">

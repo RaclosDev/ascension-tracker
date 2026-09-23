@@ -4288,11 +4288,11 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 
 .workout-sheet-close {
-  background: var(--bg-glass-strong);
+  background: var(--bg-secondary);
   border: none;
   color: var(--text-secondary);
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
