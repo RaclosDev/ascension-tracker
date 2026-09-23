@@ -142,8 +142,8 @@ export function HistoryView() {
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetailId(null)}>
         {detail ? (
           <DialogContent className="workout-detail-modal" style={{ padding: '0', background: 'var(--bg-primary)', border: '1px solid var(--border-medium)', borderRadius: '16px', display: 'flex', flexDirection: 'column', maxHeight: '90dvh', width: '95vw', maxWidth: '500px', overflow: 'hidden' }}>
-            <div style={{ padding: '1.25rem 1.25rem 1rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <div style={{ padding: '1rem 1rem 0.5rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>{detail.name}</h2>
@@ -171,13 +171,13 @@ export function HistoryView() {
               </div>
 
               {detail.notes ? (
-                <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '8px', borderLeft: '3px solid var(--accent-color)' }}>
+                <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '8px', borderLeft: '3px solid var(--accent-color)' }}>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', margin: 0 }}>"{detail.notes}"</p>
                 </div>
               ) : null}
             </div>
 
-            <div style={{ padding: '1rem 1.25rem', overflowY: 'auto', flex: 1, scrollbarWidth: 'thin' }}>
+            <div style={{ padding: '0.5rem 1rem 1rem 1rem', overflowY: 'auto', flex: 1, scrollbarWidth: 'thin' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {detail.exercises.map((ex) => {
                   const meta = catalog.get(ex.exerciseId);

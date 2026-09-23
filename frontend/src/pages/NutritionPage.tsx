@@ -530,19 +530,20 @@ export default function NutritionPage() {
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem' }}>
                                 <div>
                                   <div style={{ fontWeight: 500, marginBottom: '0.15rem' }}>
-                                    {log.product}{' '}
-                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 400 }}>
+                                    {log.product}
+                                  </div>
+                                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                    <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>
                                       {(() => {
                                          const basePortion = getBasePortion(log.portionsJson);
                                          if (basePortion) {
                                             const count = Number((log.quantity / basePortion.amount).toFixed(1));
-                                            return `(${count}x ${basePortion.label} | ${log.quantity}g)`;
+                                            return `${count}x ${basePortion.label} (${log.quantity}g)`;
                                          }
-                                         return `(${log.quantity}g)`;
+                                         return `${log.quantity}g`;
                                       })()}
                                     </span>
-                                  </div>
-                                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                    {' • '}
                                     {Math.round(Number(log.kcal) || 0)} kcal | P: {(Number(log.protein) || 0).toFixed(1)}g | C: {(Number(log.carbs) || 0).toFixed(1)}g | G: {(Number(log.fat) || 0).toFixed(1)}g
                                   </div>
                                 </div>
