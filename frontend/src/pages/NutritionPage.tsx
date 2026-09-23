@@ -174,7 +174,9 @@ export default function NutritionPage() {
       _protPer100: log.quantity > 0 ? (log.protein / log.quantity) * 100 : 0,
       _carbsPer100: log.quantity > 0 ? (log.carbs / log.quantity) * 100 : 0,
       _fatPer100: log.quantity > 0 ? (log.fat / log.quantity) * 100 : 0,
-      portionsJson: log.portionsJson
+      portionsJson: log.portionsJson,
+      _selectedPortionIdx: -1,
+      _portionMultiplier: log.quantity
     });
   };
 
@@ -461,44 +463,56 @@ export default function NutritionPage() {
                               <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 <div style={{ fontWeight: 500, marginBottom: '0.15rem' }}>{editingLog.product}</div>
                                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                  <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Cantidad (g):</label>
+                                  <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Cantidad:</label>
                                   <input
                                     type="number"
                                     className="form-input"
-                                    style={{ width: '100px', padding: '0.4rem' }}
-                                    value={editingLog.quantity}
-                                    onChange={(e) => handleEditQuantityChange(e.target.value)}
+                                    style={{ width: '80px', padding: '0.4rem' }}
+                                    value={editingLog._selectedPortionIdx === -1 ? editingLog.quantity : editingLog._portionMultiplier}
+                                    onChange={(e) => {
+                                      const val = parseFloat(e.target.value) || 0;
+                                      if (editingLog._selectedPortionIdx === -1) {
+                                         handleEditQuantityChange(val);
+                                      } else {
+                                         setEditingLog(prev => ({...prev, _portionMultiplier: val}));
+                                         const p = JSON.parse(editingLog.portionsJson)[editingLog._selectedPortionIdx];
+                                         handleEditQuantityChange(val * p.amount);
+                                      }
+                                    }}
                                     autoFocus
                                   />
+                                  <select
+                                    className="form-select"
+                                    style={{ padding: '0.4rem', borderRadius: '8px', flex: 1 }}
+                                    value={editingLog._selectedPortionIdx}
+                                    onChange={(e) => {
+                                       const idx = parseInt(e.target.value, 10);
+                                       setEditingLog(prev => ({ ...prev, _selectedPortionIdx: idx, _portionMultiplier: 1 }));
+                                       if (idx === -1) {
+                                          // Keep current quantity as grams, just update state
+                                       } else {
+                                          const p = JSON.parse(editingLog.portionsJson)[idx];
+                                          handleEditQuantityChange(1 * p.amount);
+                                       }
+                                    }}
+                                  >
+                                    <option value="-1">g (gramos)</option>
+                                    {(() => {
+                                        if (!editingLog.portionsJson) return null;
+                                        try {
+                                           const portions = JSON.parse(editingLog.portionsJson);
+                                           return portions.map((p, idx) => (
+                                              <option key={idx} value={idx}>{p.label} ({p.amount}g)</option>
+                                           ));
+                                        } catch(e) { return null; }
+                                    })()}
+                                  </select>
                                 </div>
-                                {(() => {
-                                  if (!editingLog.portionsJson) return null;
-                                  try {
-                                    const portions = JSON.parse(editingLog.portionsJson);
-                                    if (!Array.isArray(portions) || portions.length === 0) return null;
-                                    return (
-                                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
-                                        {portions.map((p, idx) => (
-                                          <div key={idx} style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '0.25rem', borderRadius: '8px', border: '1px solid var(--border-medium)' }}>
-                                            <input 
-                                              type="number" 
-                                              style={{ width: '45px', background: 'transparent', border: 'none', color: 'var(--text-primary)', textAlign: 'center', fontSize: '0.85rem' }} 
-                                              placeholder="0"
-                                              min="0"
-                                              onChange={(e) => {
-                                                const count = parseFloat(e.target.value) || 0;
-                                                handleEditQuantityChange(count * p.amount);
-                                              }} 
-                                            />
-                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: '0.25rem', marginRight: '0.25rem' }}>x {p.label}</span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    );
-                                  } catch (e) {
-                                    return null;
-                                  }
-                                })()}
+                                {editingLog._selectedPortionIdx !== -1 && (
+                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textAlign: 'right' }}>
+                                    = {editingLog.quantity}g en total
+                                  </div>
+                                )}
                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                                   {Math.round(editingLog.kcal)} kcal | P: {editingLog.protein.toFixed(1)}g | C: {editingLog.carbs.toFixed(1)}g | G: {editingLog.fat.toFixed(1)}g
                                 </div>
