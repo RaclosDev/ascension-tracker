@@ -6,6 +6,7 @@ import BottomSheet from './BottomSheet';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { useNow } from '@/hooks/use-now';
 import { formatDuration } from '@/lib/workout/format';
+import OnboardingScreen from './OnboardingScreen';
 
 import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings, Plus } from 'lucide-react';
 
@@ -31,6 +32,22 @@ export default function Layout() {
   const hideNav = activeWorkout !== null && location.pathname === '/workout';
   const now = useNow(hideNav, 500);
   const elapsed = activeWorkout ? now - activeWorkout.startedAt : 0;
+
+  const [loadingConfig, setLoadingConfig] = useState(true);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+
+  useEffect(() => {
+    api.get('/settings')
+      .then(res => {
+        if (res.status === 204 || !res.data) {
+          setNeedsOnboarding(true);
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching settings', err);
+      })
+      .finally(() => setLoadingConfig(false));
+  }, []);
 
   // Cerrar el menú automáticamente al cambiar de página y resetear scroll
   useEffect(() => {
@@ -70,6 +87,18 @@ export default function Layout() {
 
   const closeSidebar = () => setSidebarOpen(false);
   const isMoreActive = moreMenuPaths.includes(location.pathname);
+
+  if (loadingConfig) {
+    return (
+      <div style={{ display: 'flex', height: '100dvh', justifyContent: 'center', alignItems: 'center' }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  if (needsOnboarding) {
+    return <OnboardingScreen onComplete={() => setNeedsOnboarding(false)} />;
+  }
 
   return (
     <div className="app-root">

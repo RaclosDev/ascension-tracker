@@ -72,6 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     googleLogout();
     setToken(null);
     setRefreshToken(null);
+
+    // Save custom theme, clear local storage to prevent data leaks between accounts, and reload
+    const theme = localStorage.getItem('ascension_custom_color');
+    localStorage.clear();
+    if (theme) localStorage.setItem('ascension_custom_color', theme);
+    
+    window.location.href = '/login';
   };
 
   return (

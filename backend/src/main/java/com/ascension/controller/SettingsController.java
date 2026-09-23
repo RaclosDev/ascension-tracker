@@ -19,6 +19,9 @@ public class SettingsController {
     @GetMapping
     public ResponseEntity<UserSettingsDTO> getSettings(@AuthenticationPrincipal Jwt jwt) {
         UserSettingsDTO dto = settingsService.getSettings(jwt.getClaimAsString("email"));
+        if (dto == null) {
+            return ResponseEntity.noContent().build();
+        }
         // 🔥 CRITICAL SHIELD: Prevent old PWA from downloading the empty state and overwriting mobile data
         dto.setWorkoutData(null);
         return ResponseEntity.ok(dto);

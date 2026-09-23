@@ -16,15 +16,28 @@ public class SettingsService {
     private final UserSettingsRepository settingsRepository;
 
     public UserSettingsDTO getSettings(String userEmail) {
-        UserSettings settings = settingsRepository.findSettings(userEmail)
-                .orElseGet(() -> createDefaults(userEmail));
-        return toDTO(settings);
+        return settingsRepository.findSettings(userEmail)
+                .map(this::toDTO)
+                .orElse(null);
     }
 
     @Transactional
     public UserSettingsDTO updateSettings(String userEmail, UserSettingsDTO dto) {
         UserSettings settings = settingsRepository.findSettings(userEmail)
-                .orElseGet(() -> createDefaults(userEmail));
+                .orElseGet(() -> {
+                    UserSettings s = new UserSettings();
+                    s.setUserEmail(userEmail);
+                    s.setStartWeight(80.0);
+                    s.setGoalWeight(75.0);
+                    s.setWeeklyGoal(0.5);
+                    s.setStartDate(LocalDate.now());
+                    s.setKcal(2000);
+                    s.setMacroStrategy("BALANCED");
+                    s.setCustomProteinPct(30.0);
+                    s.setCustomFatPct(35.0);
+                    s.setCustomCarbsPct(35.0);
+                    return s;
+                });
 
         if (dto.getStartWeight() != null) settings.setStartWeight(dto.getStartWeight());
         if (dto.getGoalWeight() != null) settings.setGoalWeight(dto.getGoalWeight());
@@ -54,24 +67,7 @@ public class SettingsService {
         return toDTO(settingsRepository.save(settings));
     }
 
-    private UserSettings createDefaults(String userEmail) {
-        UserSettings defaults = UserSettings.builder()
-                .userEmail(userEmail)
-                .startWeight(89.4)
-                .goalWeight(74.0)
-                .weeklyGoal(1.0)
-                .startDate(LocalDate.of(2026, 5, 25))
-                .kcal(1900)
-                .macroStrategy("BALANCED")
-                .customProteinPct(30.0)
-                .customFatPct(35.0)
-                .customCarbsPct(35.0)
-                .customProteinGrams(150.0)
-                .customFatGrams(60.0)
-                .customCarbsGrams(150.0)
-                .build();
-        return settingsRepository.save(defaults);
-    }
+
 
     private UserSettingsDTO toDTO(UserSettings s) {
         return UserSettingsDTO.builder()
