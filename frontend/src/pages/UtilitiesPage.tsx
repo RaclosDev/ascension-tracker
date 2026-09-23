@@ -354,7 +354,7 @@ export default function UtilitiesPage() {
               </h2>
             </div>
             <span style={{ transform: openSections.aiAssistant ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              
+              ▾
             </span>
           </div>
 
@@ -363,23 +363,33 @@ export default function UtilitiesPage() {
 
 
         {/* REMAINING MACROS BAR (THEME-AWARE & CENTERED) */}
-        <div style={{ marginTop: '0.75rem', marginBottom: '1rem' }}>
-          <div style={{ padding: '0.75rem', background: 'var(--bg-secondary)', borderRadius: '10px', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div style={{ marginTop: '0.75rem', marginBottom: '1.25rem' }}>
+          <div style={{ padding: '1rem', background: 'var(--gradient-card)', borderRadius: '12px', border: '1px solid var(--border-medium)', boxShadow: 'var(--shadow-md)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}> Macros Restantes para hoy</span>
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '0.5px' }}>⚡ TUS MACROS RESTANTES</span>
               {loadingSummary && <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Actualizando...</span>}
             </div>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <span> <strong style={{ color: 'var(--text-primary)' }}>{remaining.kcal}</strong> kcal</span>
-              <span> <strong style={{ color: 'var(--text-primary)' }}>{remaining.protein}</strong>g P</span>
-              <span> <strong style={{ color: 'var(--text-primary)' }}>{remaining.carbs}</strong>g C</span>
-              <span> <strong style={{ color: 'var(--text-primary)' }}>{remaining.fat}</strong>g G</span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', textAlign: 'center' }}>
+              <div style={{ background: 'var(--bg-glass)', borderRadius: '8px', padding: '0.5rem' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>{remaining.kcal}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Kcal</div>
+              </div>
+              <div style={{ background: 'var(--bg-glass)', borderRadius: '8px', padding: '0.5rem' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-protein)' }}>{remaining.protein}g</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Prot</div>
+              </div>
+              <div style={{ background: 'var(--bg-glass)', borderRadius: '8px', padding: '0.5rem' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-carbs)' }}>{remaining.carbs}g</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Carbs</div>
+              </div>
+              <div style={{ background: 'var(--bg-glass)', borderRadius: '8px', padding: '0.5rem' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-fat)' }}>{remaining.fat}g</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Grasa</div>
+              </div>
             </div>
           </div>
         </div>
-
-
 
         {/* CHAT MESSAGES SCROLL */}
         <div className="chat-history-scroll">
@@ -579,7 +589,7 @@ export default function UtilitiesPage() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span className="recording-dot" />
-                <span><strong>Escuchando...</strong> Habla a tu ritmo con pausas. Pulsa  cuando termines.</span>
+                <span><strong>Escuchando...</strong> Habla a tu ritmo con pausas. Pulsa listo cuando termines.</span>
               </div>
               <button
                 type="button"
@@ -612,7 +622,7 @@ export default function UtilitiesPage() {
                   borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', cursor: 'pointer', zIndex: 10
                 }}
               >
-                
+                ✕
               </button>
             </div>
           )}
@@ -649,7 +659,10 @@ export default function UtilitiesPage() {
               }}
               title="Adjuntar foto de comida"
             >
-              
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
             </button>
             <button
               type="button"
@@ -669,7 +682,17 @@ export default function UtilitiesPage() {
               }}
               title={isListening ? 'Detener dictado' : 'Dictar por voz'}
             >
-              {isListening ? '' : ''}
+              {isListening ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="22"/>
+                </svg>
+              )}
             </button>
 
             <input
@@ -716,9 +739,8 @@ export default function UtilitiesPage() {
         </div>
       </div>
 
-      {/* --- ALL CALCULATORS --- */}
       <div style={{ marginTop: '2.5rem' }}>
-        <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '1rem', letterSpacing: '-0.01em' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>
           Calculadoras
         </h3>
 

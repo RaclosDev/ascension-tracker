@@ -133,11 +133,11 @@ export default function NutritionCalculators() {
 
   return (
     <div style={{ marginTop: '2rem' }}>
-      <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '1rem', letterSpacing: '-0.01em' }}>
+      <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>
         Calculadoras de Nutrición
       </h3>
 
-      <div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {/* TDEE Card */}
         <CalculatorCard title="Gasto de mantenimiento (TDEE)">
           {tdee && bmr ? (
