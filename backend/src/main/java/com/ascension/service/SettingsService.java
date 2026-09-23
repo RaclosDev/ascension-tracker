@@ -2,18 +2,22 @@ package com.ascension.service;
 
 import com.ascension.dto.UserSettingsDTO;
 import com.ascension.model.UserSettings;
+import com.ascension.model.WeightEntry;
 import com.ascension.repository.UserSettingsRepository;
+import com.ascension.repository.WeightEntryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class SettingsService {
 
     private final UserSettingsRepository settingsRepository;
+    private final WeightEntryRepository weightEntryRepository;
 
     public UserSettingsDTO getSettings(String userEmail) {
         return settingsRepository.findSettings(userEmail)
@@ -23,21 +27,22 @@ public class SettingsService {
 
     @Transactional
     public UserSettingsDTO updateSettings(String userEmail, UserSettingsDTO dto) {
-        UserSettings settings = settingsRepository.findSettings(userEmail)
-                .orElseGet(() -> {
-                    UserSettings s = new UserSettings();
-                    s.setUserEmail(userEmail);
-                    s.setStartWeight(80.0);
-                    s.setGoalWeight(75.0);
-                    s.setWeeklyGoal(0.5);
-                    s.setStartDate(LocalDate.now());
-                    s.setKcal(2000);
-                    s.setMacroStrategy("BALANCED");
-                    s.setCustomProteinPct(30.0);
-                    s.setCustomFatPct(35.0);
-                    s.setCustomCarbsPct(35.0);
-                    return s;
-                });
+        Optional<UserSettings> existing = settingsRepository.findSettings(userEmail);
+        boolean isNew = existing.isEmpty();
+        UserSettings settings = existing.orElseGet(() -> {
+            UserSettings s = new UserSettings();
+            s.setUserEmail(userEmail);
+            s.setStartWeight(80.0);
+            s.setGoalWeight(75.0);
+            s.setWeeklyGoal(0.5);
+            s.setStartDate(LocalDate.now());
+            s.setKcal(2000);
+            s.setMacroStrategy("BALANCED");
+            s.setCustomProteinPct(30.0);
+            s.setCustomFatPct(35.0);
+            s.setCustomCarbsPct(35.0);
+            return s;
+        });
 
         if (dto.getStartWeight() != null) settings.setStartWeight(dto.getStartWeight());
         if (dto.getGoalWeight() != null) settings.setGoalWeight(dto.getGoalWeight());
@@ -62,6 +67,14 @@ public class SettingsService {
             double f = settings.getCustomFatGrams() != null ? settings.getCustomFatGrams() : 60.0;
             double c = settings.getCustomCarbsGrams() != null ? settings.getCustomCarbsGrams() : 150.0;
             settings.setKcal((int) Math.round(p * 4 + f * 9 + c * 4));
+        }
+
+        if (isNew && dto.getStartWeight() != null) {
+            WeightEntry entry = new WeightEntry();
+            entry.setUserEmail(userEmail);
+            entry.setDate(LocalDate.now());
+            entry.setWeight(dto.getStartWeight());
+            weightEntryRepository.save(entry);
         }
 
         return toDTO(settingsRepository.save(settings));
