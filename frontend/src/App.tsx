@@ -46,45 +46,27 @@ function AppContent() {
 
   if (!token) {
     return (
-      <>
-        <LoginPage />
-              </>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
     );
   }
 
   return (
-    <BrowserRouter>
-      <Toaster
-        position="top-center"
-        containerStyle={{
-          top: 70,
-          left: 20,
-          right: 20,
-        }}
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: 'var(--bg-glass-strong, rgba(17, 24, 39, 0.95))',
-            color: 'var(--text-primary, #f1f5f9)',
-            border: '1px solid var(--border-medium, rgba(255,255,255,0.1))',
-            borderRadius: '12px',
-            backdropFilter: 'blur(12px)',
-          },
-        }}
-      />
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="tracking" element={<TrackingPage />} />
-          <Route path="nutrition" element={<NutritionPage />} />
-          <Route path="workout" element={<WorkoutPage />} />
-          <Route path="utilities" element={<UtilitiesPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-          </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="tracking" element={<TrackingPage />} />
+        <Route path="nutrition" element={<NutritionPage />} />
+        <Route path="workout" element={<WorkoutPage />} />
+        <Route path="utilities" element={<UtilitiesPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+      </Route>
+      <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
@@ -173,11 +155,31 @@ export default function App() {
   }
 
   return (
-    <GoogleOAuthProvider clientId={googleClientId}>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </GoogleOAuthProvider>
+    <BrowserRouter>
+      <GoogleOAuthProvider clientId={googleClientId}>
+        <AuthProvider>
+          <Toaster
+            position="top-center"
+            containerStyle={{
+              top: 70,
+              left: 20,
+              right: 20,
+            }}
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: 'var(--bg-glass-strong, rgba(17, 24, 39, 0.95))',
+                color: 'var(--text-primary, #f1f5f9)',
+                border: '1px solid var(--border-medium, rgba(255,255,255,0.1))',
+                borderRadius: '12px',
+                backdropFilter: 'blur(12px)',
+              },
+            }}
+          />
+          <AppContent />
+        </AuthProvider>
+      </GoogleOAuthProvider>
+    </BrowserRouter>
   );
 }
 
