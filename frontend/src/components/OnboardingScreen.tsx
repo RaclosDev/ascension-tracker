@@ -2,6 +2,7 @@ import { useState } from 'react';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import { User, Scale, Activity } from 'lucide-react';
+import WeightLossPlan from './calculators/WeightLossPlan';
 
 export default function OnboardingScreen({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState(1);
@@ -11,7 +12,9 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
     heightCm: '',
     startWeight: '',
     goalWeight: '',
-    activityFactor: '1.2'
+    activityFactor: '1.2',
+    kcal: 2000,
+    macroStrategy: 'BALANCED'
   });
   
   const [mealOption, setMealOption] = useState<'default' | 'custom'>('default');
@@ -21,7 +24,16 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
 
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
-    setStep(2);
+    setStep(step + 1);
+  };
+
+  const handlePreviousStep = () => {
+    setStep(step - 1);
+  };
+
+  const handleSavePlan = (kcal: number) => {
+    setForm({ ...form, kcal });
+    setStep(4);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +49,8 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
         startWeight: parseFloat(form.startWeight) || null,
         goalWeight: parseFloat(form.goalWeight) || null,
         activityFactor: parseFloat(form.activityFactor),
-        macroStrategy: 'BALANCED'
+        kcal: form.kcal,
+        macroStrategy: form.macroStrategy
       });
 
       // 2. Configurar comidas
@@ -150,7 +163,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
               </button>
             </form>
           </>
-        ) : (
+        ) : step === 2 ? (
           <>
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem 0' }}>Configura tus Comidas</h2>
@@ -159,7 +172,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleNextStep} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               
               <div 
                 onClick={() => setMealOption('default')}
@@ -203,15 +216,86 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
                 )}
               </div>
 
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.5rem' }}>
-                Podrás cambiar sus nombres o iconos más adelante desde Ajustes.
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={handlePreviousStep}
+                  style={{ flex: 1, padding: '0.875rem' }}
+                >
+                  Atrás
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  style={{ flex: 2, padding: '0.875rem' }}
+                >
+                  Continuar
+                </button>
+              </div>
+            </form>
+          </>
+        ) : step === 3 ? (
+          <>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem 0' }}>Plan de Adelgazamiento</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+                Ajusta tu plazo y actividad diaria para calcular tus calorías.
               </p>
+            </div>
+
+            <WeightLossPlan
+              initialWeightKg={form.startWeight}
+              initialGoalWeight={form.goalWeight}
+              age={form.age}
+              heightCm={form.heightCm}
+              sex={form.sex as 'M' | 'F'}
+              activityFactor={form.activityFactor}
+              onSave={handleSavePlan}
+              saveButtonText="Guardar y Continuar"
+            />
+            
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={handlePreviousStep}
+                style={{ width: '100%', padding: '0.875rem' }}
+              >
+                Atrás
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem 0' }}>Estrategia de Macros</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+                Elige cómo quieres repartir tus {Math.round(form.kcal)} kcal.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Estrategia</label>
+                <select 
+                  className="form-input" 
+                  value={form.macroStrategy} 
+                  onChange={(e) => setForm({...form, macroStrategy: e.target.value})}
+                >
+                  <option value="BALANCED">Balanceada (Recomendada)</option>
+                  <option value="LOW_CARB">Baja en Carbohidratos</option>
+                  <option value="LOW_FAT">Baja en Grasas</option>
+                  <option value="HIGH_PROTEIN">Alta en Proteínas</option>
+                </select>
+              </div>
 
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
                 <button 
                   type="button" 
                   className="btn btn-secondary" 
-                  onClick={() => setStep(1)}
+                  onClick={handlePreviousStep}
                   style={{ flex: 1, padding: '0.875rem' }}
                 >
                   Atrás

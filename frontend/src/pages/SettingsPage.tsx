@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import api from '../api/client';
 import toast from 'react-hot-toast';
+import WeightLossPlan from '../components/calculators/WeightLossPlan';
 import MealConfigurator from '../components/MealConfigurator';
 import { useWorkoutStore } from '../lib/workout/store';
 import { importHevyCSV } from '../lib/workout/import';
@@ -23,6 +24,7 @@ export default function SettingsPage() {
   const location = useLocation();
   const [openSections, setOpenSections] = useState<any>({
     personal: false,
+    plan: false,
     macros: false,
     theme: false,
     workout: false,
