@@ -567,6 +567,8 @@ public class GeminiAiService {
                 "   - ALLOWED FLEXIBILITY: Match if the user just omits the brand or uses an abbreviation (e.g., user says 'natillas proteina' -> match 'Natillas Proteína Chocolate (Lidl)').\n" +
                 "   - DO NOT MATCH DIFFERENT CUTS OR PREPARATIONS: This is CRITICAL. 'Pechuga de pollo' IS DIFFERENT from 'Pollo asado deshuesado'. 'Lomo de cerdo' (fresh meat) IS DIFFERENT from 'Lomo embuchado' (cured charcuterie). 'Atún al natural' IS DIFFERENT from 'Atún en aceite'. If the preparation, state (raw vs cured), or cut differs, DO NOT match the saved food.\n" +
                 "   - DO NOT MATCH CONTRADICTING FLAVORS: If user asks for 'Fresa' but saved food is 'Vainilla', do not match.\n" +
+                "   - STRICT BRAND MATCHING: If the user explicitly mentions a brand (e.g. 'Alipende', 'Danone'), DO NOT match it with a saved food from a completely different brand (e.g. 'Lidl', 'Hacendado'). Estimate from general knowledge instead.\n" +
+                "   - NO HALLUCINATIONS: Do not guess or substitute items. If they ask for 2 items, output exactly 2 items. Do not duplicate items to fill space.\n" +
                 "   - If no valid match is found among saved foods, estimate macros from standard databases instead.\n" +
                 "2. When a matched saved food has a serving size (e.g. serving=125g/envase), use that as the default quantity if the user says '1 natilla' or just mentions the food without specifying grams.\n" +
                 "3. CRITICAL: Use the EXACT_NAME exactly as it appears in brackets as the product name. DO NOT append quantities (like '4 unidades') to the product name. The name must remain pure.\n" +
