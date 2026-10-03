@@ -460,7 +460,7 @@ export default function FoodSearchModal({
       return toast.error('Escribe algo o adjunta una foto primero');
     stopListening();
     const queryText = query.trim();
-    toast(`✨✨ Procesando con IA...`, { duration: 2500 });
+    toast(` Procesando con IA...`, { duration: 2500 });
     setQuery('');
 
     const payload: any = { text: queryText, mealIndex: selectedMealIndex, date };
@@ -477,10 +477,10 @@ export default function FoodSearchModal({
         const count = Array.isArray(res.data) ? res.data.length : 1;
         if (selectedMealIndex === -1) {
           const aiModel = res.headers['x-ai-model'] || 'desconocido';
-          toast.success(`¡${count} alimento(s) repartidos en tus comidas por IA (${aiModel})! ✨`);
+          toast.success(`¡${count} alimento(s) repartidos en tus comidas por IA (${aiModel})!`);
         } else {
           const aiModel = res.headers['x-ai-model'] || 'desconocido';
-          toast.success(`¡${count} alimento(s) añadidos por IA (${aiModel})! ✨`);
+          toast.success(`¡${count} alimento(s) añadidos por IA (${aiModel})!`);
         }
         onLogAdded();
       })
