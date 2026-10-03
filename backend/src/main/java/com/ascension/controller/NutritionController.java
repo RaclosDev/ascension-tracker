@@ -155,7 +155,8 @@ public class NutritionController {
                     .body(Map.of("error", "La imagen no puede superar los 4 MB."));
         }
         try {
-            return ResponseEntity.ok(geminiAiService.processNutritionalLabel(jwt.getClaimAsString("email"), image));
+            var result = geminiAiService.processNutritionalLabel(jwt.getClaimAsString("email"), image);
+            return ResponseEntity.ok().header("X-AI-Model", geminiAiService.getActiveModelName()).body(result);
         } catch (Exception e) {
             log.error("Nutrition endpoint error", e);
             throw new com.ascension.exception.AiProcessingException("Error procesando la solicitud en la IA", e);
@@ -176,7 +177,8 @@ public class NutritionController {
                         .body(Map.of("error", "La imagen no puede superar los 4 MB."));
             }
             
-            return ResponseEntity.ok().header("X-AI-Model", geminiAiService.getActiveModelName()).body(geminiAiService.processNaturalLanguageLog(jwt.getClaimAsString("email"), text, base64Image, mealIndex, date));
+            var result = geminiAiService.processNaturalLanguageLog(jwt.getClaimAsString("email"), text, base64Image, mealIndex, date);
+            return ResponseEntity.ok().header("X-AI-Model", geminiAiService.getActiveModelName()).body(result);
         } catch (Exception e) {
             log.error("Nutrition endpoint error", e);
             throw new com.ascension.exception.AiProcessingException("Error procesando la solicitud en la IA", e);
@@ -189,7 +191,8 @@ public class NutritionController {
             @AuthenticationPrincipal Jwt jwt) {
         try {
             String text = request.getText();
-            return ResponseEntity.ok().header("X-AI-Model", geminiAiService.getActiveModelName()).body(geminiAiService.processNaturalLanguageFood(jwt.getClaimAsString("email"), text));
+            var result = geminiAiService.processNaturalLanguageFood(jwt.getClaimAsString("email"), text);
+            return ResponseEntity.ok().header("X-AI-Model", geminiAiService.getActiveModelName()).body(result);
         } catch (Exception e) {
             log.error("Nutrition endpoint error", e);
             throw new com.ascension.exception.AiProcessingException("Error procesando la solicitud en la IA", e);
