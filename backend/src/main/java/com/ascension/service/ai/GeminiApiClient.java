@@ -112,11 +112,11 @@ public class GeminiApiClient {
             candidates.add(geminiModel.trim());
         }
         
+        candidates.add("gemini-3.8-flash");
+        candidates.add("gemini-3.5-flash");
+        candidates.add("gemini-3.1-flash-lite");
         candidates.add("gemini-2.5-flash");
-        candidates.add("gemini-1.5-flash-latest");
         candidates.add("gemini-1.5-flash");
-        candidates.add("gemini-1.5-pro-latest");
-        candidates.add("gemini-1.0-pro");
 
         try {
             String url = "https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey;
