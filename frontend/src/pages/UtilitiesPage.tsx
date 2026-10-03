@@ -967,11 +967,11 @@ export default function UtilitiesPage() {
                     }}
                     title="Adjuntar foto de comida"
                   >
-                    <Camera size={20} color="#FFFFFF" />
+                    <Camera size={16} />
                   </button>
                   <button
                     type="button"
-                    className={`btn btn-secondary ${isListening ? 'recording-pulse-btn' : ''}`}
+                    className={isListening ? 'recording-pulse-btn' : ''}
                     onClick={() => toggleListening(userInput)}
                     style={{
                       borderRadius: '50%',
@@ -987,7 +987,7 @@ export default function UtilitiesPage() {
                     }}
                     title={isListening ? 'Detener dictado' : 'Dictar por voz'}
                   >
-                    {isListening ? <Square size={20} color="#FFFFFF" /> : <Mic size={20} color="#FFFFFF" />}
+                    {isListening ? <Square size={16} /> : <Mic size={16} />}
                   </button>
 
                   <input
