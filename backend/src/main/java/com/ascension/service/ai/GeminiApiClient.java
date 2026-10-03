@@ -179,15 +179,37 @@ public class GeminiApiClient {
 
     private String cleanJsonResponse(String response) {
         if (response == null) return "{}";
-        response = response.trim();
-        if (response.startsWith("```json")) {
-            response = response.substring(7);
-        } else if (response.startsWith("```")) {
-            response = response.substring(3);
+        
+        int firstBrace = response.indexOf('{');
+        int firstBracket = response.indexOf('[');
+        
+        int start = -1;
+        if (firstBrace != -1 && firstBracket != -1) {
+            start = Math.min(firstBrace, firstBracket);
+        } else if (firstBrace != -1) {
+            start = firstBrace;
+        } else if (firstBracket != -1) {
+            start = firstBracket;
         }
-        if (response.endsWith("```")) {
-            response = response.substring(0, response.length() - 3);
+        
+        if (start == -1) return response.trim();
+        
+        int lastBrace = response.lastIndexOf('}');
+        int lastBracket = response.lastIndexOf(']');
+        
+        int end = -1;
+        if (lastBrace != -1 && lastBracket != -1) {
+            end = Math.max(lastBrace, lastBracket);
+        } else if (lastBrace != -1) {
+            end = lastBrace;
+        } else if (lastBracket != -1) {
+            end = lastBracket;
         }
+        
+        if (end != -1 && end >= start) {
+            return response.substring(start, end + 1);
+        }
+        
         return response.trim();
     }
 }
