@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import toast from 'react-hot-toast';
 
 const parseSafeFloat = (val: any, fallback = 0) => {

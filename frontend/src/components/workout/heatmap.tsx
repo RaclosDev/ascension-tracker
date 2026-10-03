@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useMounted } from "@/hooks/use-mounted";
 import type { CompletedWorkout } from "@/lib/workout/types";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, getDay, isSameDay } from "date-fns";

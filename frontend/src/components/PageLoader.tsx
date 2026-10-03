@@ -1,4 +1,4 @@
-﻿export const PageLoader = () => (
+export const PageLoader = () => (
   <div className="flex-center fade-in" style={{ height: '100vh', background: 'var(--bg-primary)' }}>
     <img 
       src="/ascension-title.png" 

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Edit3 } from 'lucide-react';
 
 interface RecipeCardProps {

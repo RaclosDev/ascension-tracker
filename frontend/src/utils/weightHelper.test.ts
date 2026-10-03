@@ -1,4 +1,4 @@
-﻿import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { parseSafeWeight } from './weightHelper';
 
 describe('weightHelper', () => {

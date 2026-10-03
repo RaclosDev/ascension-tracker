@@ -1,4 +1,4 @@
-﻿/* eslint-disable */
+/* eslint-disable */
 import { useState, useEffect, useRef } from 'react';
 import {
   LayoutGrid,

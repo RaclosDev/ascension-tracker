@@ -1,4 +1,4 @@
-﻿import { getLocalDateString } from '../utils/dateHelper';
+import { getLocalDateString } from '../utils/dateHelper';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../api/client';

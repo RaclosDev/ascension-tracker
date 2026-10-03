@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Sunrise, Utensils, Moon, Apple, Coffee } from 'lucide-react';
 
 export function MealIcon({ iconString, className = "w-5 h-5" }: { iconString: string, className?: string }) {

@@ -1,4 +1,4 @@
-﻿import React, { Component, useEffect, useState, lazy, Suspense } from 'react';
+import React, { Component, useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';

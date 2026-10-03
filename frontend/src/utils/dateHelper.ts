@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Date helper utilities in local timezone.
  * Fixes timezone shift bugs caused by `toISOString().split('T')[0]`,
  * which converts local time to UTC and returns yesterday after midnight in UTC+ timezones.

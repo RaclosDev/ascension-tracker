@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Check, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { getExerciseMap } from '@/lib/workout/exercises';
 import { isPrSet, previousSetLabel, formatVariant } from '@/lib/workout/format';

@@ -1,4 +1,4 @@
-﻿import { SetType, Exercise, CompletedWorkout, WorkoutSet } from './types';
+import { SetType, Exercise, CompletedWorkout, WorkoutSet } from './types';
 import Papa from 'papaparse';
 import { uid } from '@/lib/utils';
 import { EXERCISE_CATALOG } from './exercises';

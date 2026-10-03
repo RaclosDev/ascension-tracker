@@ -1,4 +1,4 @@
-﻿import { Repeat2, Trash2, Edit3, Dumbbell } from 'lucide-react';
+import { Repeat2, Trash2, Edit3, Dumbbell } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContentFullScreen } from '@/components/ui/dialog';
 import {} from '@/components/ui/alert-dialog';

@@ -1,4 +1,4 @@
-﻿/// <reference lib="webworker" />
+/// <reference lib="webworker" />
 declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: any };
 
 import { precacheAndRoute } from 'workbox-precaching';

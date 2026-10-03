@@ -1,4 +1,4 @@
-﻿import { Play, Trash2 } from 'lucide-react';
+import { Play, Trash2 } from 'lucide-react';
 import { EmptyCard } from '@/components/workout/dashboard';
 import { getExerciseMap } from '@/lib/workout/exercises';
 import { useWorkoutStore } from '@/lib/workout/store';

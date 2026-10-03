@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { CheckCircle2, Circle, Edit3 } from 'lucide-react';
 
 interface FoodCardProps {

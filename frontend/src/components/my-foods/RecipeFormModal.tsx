@@ -1,4 +1,4 @@
-﻿/* eslint-disable */
+/* eslint-disable */
 import React, { useState, useEffect } from 'react';
 import FoodSearchModal from '../FoodSearchModal';
 import { Plus, Trash2 } from 'lucide-react';

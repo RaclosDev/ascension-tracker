@@ -1,4 +1,4 @@
-﻿export const parseSafeWeight = (val: string | number | null | undefined): number | null => {
+export const parseSafeWeight = (val: string | number | null | undefined): number | null => {
   if (val === null || val === undefined || val === '') return null;
   const str = String(val).replace(',', '.').trim();
   const parsed = parseFloat(str);

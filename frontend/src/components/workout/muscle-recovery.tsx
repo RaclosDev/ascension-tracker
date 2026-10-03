@@ -1,4 +1,4 @@
-﻿import { type CompletedWorkout, type Exercise } from '@/lib/workout/types';
+import { type CompletedWorkout, type Exercise } from '@/lib/workout/types';
 import { getExerciseMap } from '@/lib/workout/exercises';
 
 const INDIVIDUAL_MUSCLES: Record<string, { label: string }> = {

@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { ArrowRight, Clock3, Dumbbell, Play, X } from 'lucide-react';
 import { ActivityHeatmap } from '@/components/workout/heatmap';
 import { MuscleRecovery } from '@/components/workout/muscle-recovery';

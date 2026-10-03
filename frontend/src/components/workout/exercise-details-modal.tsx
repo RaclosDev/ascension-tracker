@@ -1,4 +1,4 @@
-﻿import { VariantSelector } from './variant-selector';
+import { VariantSelector } from './variant-selector';
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';

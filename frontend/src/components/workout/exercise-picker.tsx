@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Search, Dumbbell, X, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { VariantSelector } from './variant-selector';
 import { EXERCISE_CATALOG, BASE_EXERCISES } from '@/lib/workout/exercises';

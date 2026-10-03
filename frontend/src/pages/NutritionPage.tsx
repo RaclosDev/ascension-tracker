@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { MealIcon } from '../components/MealIcon';
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
@@ -200,7 +200,7 @@ export default function NutritionPage() {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
       toast.dismiss(loadingToast);
-      toast.success('Ã‚Â¡Comida copiada!');
+      toast.success('¡Comida copiada!');
     } catch (err: any) {
       console.error(err);
       toast.dismiss(loadingToast);
@@ -406,11 +406,11 @@ export default function NutritionPage() {
 
 
   const pieData = [
-    { name: 'ProteÃƒÂ­nas Consumidas', value: consumed.protein * 4, color: 'var(--color-protein)' },
+    { name: 'Proteínas Consumidas', value: consumed.protein * 4, color: 'var(--color-protein)' },
     { name: 'Hidratos Consumidos', value: consumed.carbs * 4, color: 'var(--color-carbs)' },
     { name: 'Grasas Consumidas', value: consumed.fat * 9, color: 'var(--color-fat)' },
     {
-      name: 'CalorÃƒÂ­as Restantes',
+      name: 'Calorías Restantes',
       value: Math.max(0, macros.kcal - consumed.kcal),
       color: 'rgba(255,255,255,0.05)',
     },
@@ -718,7 +718,7 @@ export default function NutritionPage() {
                                               <SegmentedControl
                                                 options={[
                                                   { label: 'Gramos', value: 'grams' },
-                                                  { label: 'PorciÃƒÂ³n', value: 'portions' },
+                                                  { label: 'Porción', value: 'portions' },
                                                 ]}
                                                 value={editInputMode}
                                                 onChange={(val: string) =>
@@ -956,7 +956,7 @@ export default function NutritionPage() {
               <h3
                 style={{ marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '1rem' }}
               >
-                DistribuciÃƒÂ³n de Macros
+                Distribución de Macros
               </h3>
               <div style={{ width: '100%', maxWidth: '300px', height: 250, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {showChart ? (

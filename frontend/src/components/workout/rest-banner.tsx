@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useNow } from "@/hooks/use-now";
 import { formatRest } from "@/lib/workout/format";
 import { useWorkoutStore } from "@/lib/workout/store";

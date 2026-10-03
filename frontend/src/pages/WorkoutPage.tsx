@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { lazy, Suspense, useEffect } from 'react';
 import { useWorkoutStore } from '../lib/workout/store';
 import { SegmentedControl } from '../components/ui/segmented-control';

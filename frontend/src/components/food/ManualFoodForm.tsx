@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 

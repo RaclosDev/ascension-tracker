@@ -1,4 +1,4 @@
-﻿export const GENERIC_FOODS = [
+export const GENERIC_FOODS = [
   {
     id: 'gen-platano',
     name: 'Plátano',

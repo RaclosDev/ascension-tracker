@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Trash2, Edit3 } from 'lucide-react';
 
 interface SwipeableRowProps {

@@ -1,4 +1,4 @@
-﻿export function getSmartFallbackQueries(originalQuery: string): string[] {
+export function getSmartFallbackQueries(originalQuery: string): string[] {
   const queries: string[] = [];
   const q = originalQuery.trim().toLowerCase();
   

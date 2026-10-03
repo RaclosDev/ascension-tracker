@@ -1,4 +1,4 @@
-﻿import api from '@/api/client';
+import api from '@/api/client';
 //  Notifications module
 // Handles:
 // 1. Subscribing to Web Push (so the server can send background notifications)

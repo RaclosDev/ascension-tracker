@@ -1,4 +1,4 @@
-﻿import type { CompletedWorkout, Template } from "./types";
+import type { CompletedWorkout, Template } from "./types";
 
 export const SEED_TEMPLATES: Template[] = [];
 

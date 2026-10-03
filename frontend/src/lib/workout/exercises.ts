@@ -1,4 +1,4 @@
-﻿import type { Exercise } from './types';
+import type { Exercise } from './types';
 
 export let EXERCISE_CATALOG: Exercise[] = [];
 export let BASE_EXERCISES: Exercise[] = [];

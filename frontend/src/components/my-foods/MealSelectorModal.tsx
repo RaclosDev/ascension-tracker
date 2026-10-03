@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Sunrise, Utensils, Moon, Apple, X } from 'lucide-react';
 
 interface MealSelectorModalProps {

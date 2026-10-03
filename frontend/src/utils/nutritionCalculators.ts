@@ -1,4 +1,4 @@
-﻿export const KCAL_PER_KG_FAT = 7700;
+export const KCAL_PER_KG_FAT = 7700;
 
 export const ACTIVITY_LEVELS = [
   { value: 1.2, label: 'Sedentario (poco o ningún ejercicio)' },

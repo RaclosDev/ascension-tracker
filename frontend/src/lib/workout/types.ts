@@ -1,4 +1,4 @@
-﻿export type MuscleGroup =
+export type MuscleGroup =
   | 'pecho'
   | 'espalda_alta'
   | 'dorsales'

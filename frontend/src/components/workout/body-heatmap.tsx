@@ -1,4 +1,4 @@
-﻿import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Model, { IExerciseData, Muscle } from 'react-body-highlighter';
 import type { CompletedWorkout, Exercise } from '../../lib/workout/types';
 import { getExerciseMap } from '../../lib/workout/exercises';

@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import { User, Scale, Activity } from 'lucide-react';
