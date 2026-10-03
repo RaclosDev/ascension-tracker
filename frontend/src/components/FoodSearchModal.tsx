@@ -476,9 +476,11 @@ export default function FoodSearchModal({
       .then((res) => {
         const count = Array.isArray(res.data) ? res.data.length : 1;
         if (selectedMealIndex === -1) {
-          toast.success(`¡${count} alimento(s) repartidos en tus comidas por IA! ✨`);
+          const aiModel = res.headers['x-ai-model'] || 'desconocido';
+          toast.success(`¡${count} alimento(s) repartidos en tus comidas por IA (${aiModel})! ✨`);
         } else {
-          toast.success(`¡${count} alimento(s) aÃ±adidos por IA! ✨`);
+          const aiModel = res.headers['x-ai-model'] || 'desconocido';
+          toast.success(`¡${count} alimento(s) añadidos por IA (${aiModel})! ✨`);
         }
         onLogAdded();
       })
