@@ -89,7 +89,7 @@ export default function FoodCard({
           gap: '0.4rem',
         }}
       >
-        {/* Fila 1: Nombre (Izquierda) + LÃ¡piz (Derecha) */}
+        {/* Fila 1: Nombre (Izquierda) + Lápiz (Derecha) */}
         <div
           style={{
             display: 'flex',
@@ -116,7 +116,7 @@ export default function FoodCard({
           </div>
         </div>
 
-        {/* Fila 2: Kcal, PorciÃ³n, Marca */}
+        {/* Fila 2: Kcal, Porción, Marca */}
         <div
           style={{
             fontSize: '0.75rem',

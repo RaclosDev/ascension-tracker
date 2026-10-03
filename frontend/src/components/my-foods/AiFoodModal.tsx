@@ -35,7 +35,7 @@ export default function AiFoodModal({
         </div>
         
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-          Escribe o dicta el alimento y la IA calcularÃ¡ los macros aproximados. Ej: "Natillas de proteÃ­na de Mercadona".
+          Escribe o dicta el alimento y la IA calculará los macros aproximados. Ej: "Natillas de proteína de Mercadona".
         </p>
 
         <form onSubmit={(e) => { e.preventDefault(); handleAiSubmit(e); onClose(); }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

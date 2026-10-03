@@ -66,7 +66,7 @@ export function notifyRestFinished() {
 
   if (Notification.permission === 'granted') {
     try {
-      new Notification('Â¡Descanso terminado!', {
+      new Notification('¡Descanso terminado!', {
         body: 'Es hora de la siguiente serie.',
         icon: '/icon-192.png',
         vibrate: [200, 100, 200, 100, 200],

@@ -117,10 +117,10 @@ export function BodyHeatmap({
   return (
     <div className="card p-6 flex flex-col items-center min-h-[300px]">
       <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-        MÃºsculos esta Semana
+        Músculos esta Semana
       </h3>
       <p className="text-sm mb-6 text-center" style={{ color: 'var(--text-secondary)' }}>
-        Zonas mÃ¡s trabajadas en los Ãºltimos 7 dÃ­as
+        Zonas más trabajadas en los últimos 7 días
       </p>
 
       <div className="flex gap-4 w-full justify-center">

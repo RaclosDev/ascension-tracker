@@ -32,7 +32,7 @@ export default function MealConfigurator({ onSaved }) {
         if (onSaved) onSaved();
         return;
       } catch {
-        // Fallback si el backend todavÃ­a no se ha reiniciado
+        // Fallback si el backend todavía no se ha reiniciado
         for (const m of DEFAULT_MEALS) {
           await api.post('/nutrition/meals', m);
         }
@@ -100,14 +100,14 @@ export default function MealConfigurator({ onSaved }) {
       await api.post('/nutrition/meals', { name: 'Nueva Comida', icon: '' });
       await fetchMeals();
     } catch {
-      toast.error('Error al aÃ±adir comida');
+      toast.error('Error al añadir comida');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeleteMeal = async (id) => {
-    if (!window.confirm('Â¿Eliminar esta comida? Los registros de esta comida se perderÃ¡n.')) return;
+    if (!window.confirm('¿Eliminar esta comida? Los registros de esta comida se perderán.')) return;
     setSaving(true);
     try {
       await api.delete(`/nutrition/meals/${id}`);
@@ -235,7 +235,7 @@ export default function MealConfigurator({ onSaved }) {
                               fontWeight: 600,
                             }}
                           >
-                            ProteÃ­nas (g)
+                            Proteínas (g)
                           </span>
                           <input
                             type="number"
@@ -336,7 +336,7 @@ export default function MealConfigurator({ onSaved }) {
           onClick={handleAddMeal}
           disabled={saving}
         >
-          AÃ±adir Comida
+          Añadir Comida
         </button>
         <button
           className="btn btn-secondary"

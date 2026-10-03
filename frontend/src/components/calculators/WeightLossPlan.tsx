@@ -32,7 +32,7 @@ export default function WeightLossPlan({
   onSave,
   saveButtonText = 'Guardar y Continuar',
 }: WeightLossPlanProps) {
-  // Recuperar Ãºltimo plan guardado en localStorage
+  // Recuperar último plan guardado en localStorage
   const savedPlan = (() => {
     try {
       return JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}');
@@ -93,12 +93,12 @@ export default function WeightLossPlan({
     if (ratePct > 1.5) {
       warnings.push({
         level: 'danger',
-        msg: `Ritmo del ${ratePct.toFixed(1)}% semanal: riesgo de pÃ©rdida muscular. Aumenta el plazo.`,
+        msg: `Ritmo del ${ratePct.toFixed(1)}% semanal: riesgo de pérdida muscular. Aumenta el plazo.`,
       });
     } else if (ratePct > 1) {
       warnings.push({
         level: 'warning',
-        msg: `Ritmo del ${ratePct.toFixed(1)}% semanal: agresivo pero viable si mantienes proteÃ­na alta.`,
+        msg: `Ritmo del ${ratePct.toFixed(1)}% semanal: agresivo pero viable si mantienes proteína alta.`,
       });
     }
 
@@ -119,7 +119,7 @@ export default function WeightLossPlan({
     if (stepsPct >= 100) {
       warnings.push({
         level: 'warning',
-        msg: `Â¡Solo con los pasos cubres el dÃ©ficit! Puedes comer a mantenimiento (${Math.round(tdee)} kcal).`,
+        msg: `¡Solo con los pasos cubres el déficit! Puedes comer a mantenimiento (${Math.round(tdee)} kcal).`,
       });
     }
 
@@ -149,7 +149,7 @@ export default function WeightLossPlan({
   if (!tdee) {
     return (
       <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-        Faltan datos bÃ¡sicos para calcular tu TDEE.
+        Faltan datos básicos para calcular tu TDEE.
       </p>
     );
   }
@@ -227,7 +227,7 @@ export default function WeightLossPlan({
               <div className="kpi-value" style={{ fontSize: '1.3rem' }}>
                 {Math.round(plan.dailyDeficitNeeded)}
               </div>
-              <div className="kpi-detail">DÃ©ficit diario (kcal)</div>
+              <div className="kpi-detail">Déficit diario (kcal)</div>
             </div>
           </div>
 
@@ -266,7 +266,7 @@ export default function WeightLossPlan({
                 cursor: 'grab',
                 border: 'none',
               }}
-              aria-label="Reparto del dÃ©ficit entre pasos y dieta"
+              aria-label="Reparto del déficit entre pasos y dieta"
             />
 
             {/* Labels under slider */}
@@ -335,7 +335,7 @@ export default function WeightLossPlan({
             >
               {Math.round(plan.dailyIntake)} kcal
             </div>
-            <div className="kpi-detail">CalorÃ­as diarias a comer</div>
+            <div className="kpi-detail">Calorías diarias a comer</div>
             <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               TDEE {Math.round(tdee)} âˆ’ restricciÃ³n {Math.round(plan.dietDeficit)} kcal
             </div>

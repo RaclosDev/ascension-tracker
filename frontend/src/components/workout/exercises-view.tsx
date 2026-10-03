@@ -49,11 +49,11 @@ function levenshtein(a: string, b: string): number {
 }
 
 export const EQUIPMENT_OPTIONS = [
-  { id: 'banda', label: 'Banda ElÃ¡stica' },
+  { id: 'banda', label: 'Banda Elástica' },
   { id: 'barra', label: 'Barra' },
   { id: 'kettlebell', label: 'Kettlebell' },
   { id: 'mancuernas', label: 'Mancuernas' },
-  { id: 'maquina', label: 'MÃ¡quina' },
+  { id: 'maquina', label: 'Máquina' },
   { id: 'multipower', label: 'Multipower (Smith)' },
   { id: 'peso corporal', label: 'Peso Corporal' },
   { id: 'polea', label: 'Polea' },
@@ -290,7 +290,7 @@ export function ExercisesView() {
         queryClient.invalidateQueries({ queryKey: ['customExercises'] });
       }
 
-      toast.success('FusiÃ³n completada con Ã©xito', { id: toastId });
+      toast.success('Fusión completada con éxito', { id: toastId });
     } catch (err: any) {
       console.error('Error merging exercises:', err);
       toast.error('Error al fusionar ejercicios', { id: toastId });
@@ -499,7 +499,7 @@ export function ExercisesView() {
               }
               style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem' }}
             >
-              <option value="ALL">MÃºsculo (Todos)</option>
+              <option value="ALL">Músculo (Todos)</option>
               {MUSCLE_OPTIONS.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.label}
@@ -547,7 +547,7 @@ export function ExercisesView() {
                 transition: 'all 0.2s',
               }}
             >
-              BÃ¡sicos
+              Básicos
             </button>
             <button
               onClick={() => setFilter('todos')}
@@ -639,7 +639,7 @@ export function ExercisesView() {
                 <input
                   value={newGrip}
                   onChange={(e) => setNewGrip(e.target.value)}
-                  placeholder="AÃ±adir agarre..."
+                  placeholder="Añadir agarre..."
                   className="form-input"
                   style={{
                     flex: 1,
@@ -659,7 +659,7 @@ export function ExercisesView() {
                   className="btn btn-primary"
                   style={{ padding: '0.5rem 1rem', borderRadius: '8px' }}
                 >
-                  AÃ±adir
+                  Añadir
                 </button>
               </div>
             </div>
@@ -668,14 +668,14 @@ export function ExercisesView() {
               <h3
                 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}
               >
-                MÃ¡quinas / Marcas
+                Máquinas / Marcas
               </h3>
               <div
                 style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}
               >
                 {globalMachines.length === 0 && (
                   <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                    No hay mÃ¡quinas guardadas.
+                    No hay máquinas guardadas.
                   </div>
                 )}
                 {globalMachines.map((m) => (
@@ -713,7 +713,7 @@ export function ExercisesView() {
                 <input
                   value={newMachine}
                   onChange={(e) => setNewMachine(e.target.value)}
-                  placeholder="AÃ±adir mÃ¡quina..."
+                  placeholder="Añadir máquina..."
                   className="form-input"
                   style={{
                     flex: 1,
@@ -733,7 +733,7 @@ export function ExercisesView() {
                   className="btn btn-primary"
                   style={{ padding: '0.5rem 1rem', borderRadius: '8px' }}
                 >
-                  AÃ±adir
+                  Añadir
                 </button>
               </div>
             </div>
@@ -742,7 +742,7 @@ export function ExercisesView() {
           <div
             style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-secondary)' }}
           >
-            <p>No hay ejercicios que coincidan con la bÃºsqueda.</p>
+            <p>No hay ejercicios que coincidan con la búsqueda.</p>
           </div>
         ) : (
           <ul
@@ -844,7 +844,7 @@ export function ExercisesView() {
                         textTransform: 'capitalize',
                       }}
                     >
-                      {MUSCLE_LABEL[ex.muscle]} Â· {ex.equipment}
+                      {MUSCLE_LABEL[ex.muscle]} · {ex.equipment}
                       {lastUsedMap.has(ex.id) && (
                         <span style={{ color: 'var(--accent-primary-light)' }}>
                           {' '}
@@ -874,7 +874,7 @@ export function ExercisesView() {
                       display: 'flex',
                       alignItems: 'center',
                     }}
-                    aria-label="MÃ¡s opciones"
+                    aria-label="Más opciones"
                   >
                     <MoreVertical size={18} />
                   </button>
@@ -966,7 +966,7 @@ export function ExercisesView() {
                         }}
                       >
                         <Plus size={16} />
-                        AÃ±adir Variante
+                        Añadir Variante
                       </button>
                       <button
                         onClick={(e) => {
@@ -1066,7 +1066,7 @@ export function ExercisesView() {
               Crear Ejercicio / Variante
             </DialogTitle>
             <DialogDescription style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              AÃ±ade un nuevo ejercicio personalizado a tu catÃ¡logo.
+              Añade un nuevo ejercicio personalizado a tu catálogo.
             </DialogDescription>
           </DialogHeader>
 
@@ -1098,7 +1098,7 @@ export function ExercisesView() {
                 <label
                   style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}
                 >
-                  MÃºsculo
+                  Músculo
                 </label>
                 <select
                   className="form-input"
@@ -1143,7 +1143,7 @@ export function ExercisesView() {
               <label
                 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}
               >
-                Foto de la MÃ¡quina (Opcional)
+                Foto de la Máquina (Opcional)
               </label>
               <div
                 style={{
@@ -1191,7 +1191,7 @@ export function ExercisesView() {
                 />
               </div>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                La imagen se optimizarÃ¡ automÃ¡ticamente para no ocupar espacio.
+                La imagen se optimizará automáticamente para no ocupar espacio.
               </p>
             </div>
           </div>
@@ -1225,7 +1225,7 @@ export function ExercisesView() {
               Seleccionar GIF
             </DialogTitle>
             <DialogDescription style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Busca y selecciona un ejercicio del catÃ¡logo para usar su GIF.
+              Busca y selecciona un ejercicio del catálogo para usar su GIF.
             </DialogDescription>
           </DialogHeader>
           <div
@@ -1346,7 +1346,7 @@ export function ExercisesView() {
                 <label
                   style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}
                 >
-                  MÃºsculo
+                  Músculo
                 </label>
                 <select
                   className="form-input"
@@ -1391,7 +1391,7 @@ export function ExercisesView() {
               <label
                 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}
               >
-                Foto de la MÃ¡quina (Opcional)
+                Foto de la Máquina (Opcional)
               </label>
               <div
                 style={{
@@ -1477,7 +1477,7 @@ export function ExercisesView() {
               <strong style={{ color: 'var(--text-primary)' }}>
                 {allExercises.find((e) => e.id === mergeSourceId)?.name}
               </strong>{' '}
-              se pasarÃ¡n al nuevo ejercicio.
+              se pasarán al nuevo ejercicio.
             </DialogDescription>
           </DialogHeader>
 
@@ -1525,7 +1525,7 @@ export function ExercisesView() {
                     }
                     style={{ width: '50%', padding: '0.5rem', fontSize: '0.8rem' }}
                   >
-                    <option value="ALL">MÃºsculo (Todos)</option>
+                    <option value="ALL">Músculo (Todos)</option>
                     {MUSCLE_OPTIONS.map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.label}
@@ -1651,7 +1651,7 @@ export function ExercisesView() {
                                   marginTop: '0.1rem',
                                 }}
                               >
-                                {MUSCLE_LABEL[ex.muscle]} Â· {ex.equipment}
+                                {MUSCLE_LABEL[ex.muscle]} · {ex.equipment}
                               </p>
                             </div>
                           </div>
@@ -1708,7 +1708,7 @@ export function ExercisesView() {
                         fontSize: '0.95rem',
                       }}
                     >
-                      Confirmar FusiÃ³n
+                      Confirmar Fusión
                     </h4>
                     <p
                       style={{
@@ -1718,7 +1718,7 @@ export function ExercisesView() {
                         lineHeight: 1.5,
                       }}
                     >
-                      EstÃ¡s a punto de mover todos los datos de{' '}
+                      Estás a punto de mover todos los datos de{' '}
                       <strong>{allExercises.find((e) => e.id === mergeSourceId)?.name}</strong>{' '}
                       hacia{' '}
                       <strong>
@@ -1734,7 +1734,7 @@ export function ExercisesView() {
                         lineHeight: 1.5,
                       }}
                     >
-                      Esta acciÃ³n no se puede deshacer y el ejercicio original serÃ¡ eliminado.
+                      Esta acción no se puede deshacer y el ejercicio original será eliminado.
                     </p>
                   </div>
                 </div>
@@ -1748,7 +1748,7 @@ export function ExercisesView() {
                 }}
               >
                 <button onClick={() => setMergeConfirmTargetId(null)} className="btn btn-secondary">
-                  AtrÃ¡s
+                  Atrás
                 </button>
                 <button onClick={handleConfirmMerge} className="btn btn-danger">
                   Fusionar Definitivamente
@@ -1774,7 +1774,7 @@ export function ExercisesView() {
               Renombrar Ejercicio
             </DialogTitle>
             <DialogDescription style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Este nombre se mostrarÃ¡ en lugar del original.
+              Este nombre se mostrará en lugar del original.
             </DialogDescription>
           </DialogHeader>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>

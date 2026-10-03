@@ -72,11 +72,11 @@ export default function FoodFormModal({
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
             <div>
-              <label className="form-label">RaciÃ³n (g)</label>
+              <label className="form-label">Ración (g)</label>
               <input type="number" inputMode="decimal" step="0.1" className="form-input" placeholder="Ej: 30" value={foodForm.servingSize} onChange={e => updateFoodForm('servingSize', e.target.value)} />
             </div>
             <div>
-              <label className="form-label">Etiqueta raciÃ³n</label>
+              <label className="form-label">Etiqueta ración</label>
               <input className="form-input" placeholder="Ej: 1 cazo" value={foodForm.servingLabel} onChange={e => updateFoodForm('servingLabel', e.target.value)} />
             </div>
           </div>

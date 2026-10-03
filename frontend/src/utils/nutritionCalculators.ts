@@ -1,11 +1,11 @@
 ﻿export const KCAL_PER_KG_FAT = 7700;
 
 export const ACTIVITY_LEVELS = [
-  { value: 1.2, label: 'Sedentario (poco o ningÃºn ejercicio)' },
-  { value: 1.375, label: 'Ligero (ejercicio ligero 1-3 dÃ­as/semana)' },
-  { value: 1.55, label: 'Moderado (ejercicio moderado 3-5 dÃ­as/semana)' },
-  { value: 1.725, label: 'Alto (ejercicio fuerte 6-7 dÃ­as/semana)' },
-  { value: 1.9, label: 'Muy Alto (ejercicio muy fuerte o trabajo fÃ­sico)' },
+  { value: 1.2, label: 'Sedentario (poco o ningún ejercicio)' },
+  { value: 1.375, label: 'Ligero (ejercicio ligero 1-3 días/semana)' },
+  { value: 1.55, label: 'Moderado (ejercicio moderado 3-5 días/semana)' },
+  { value: 1.725, label: 'Alto (ejercicio fuerte 6-7 días/semana)' },
+  { value: 1.9, label: 'Muy Alto (ejercicio muy fuerte o trabajo físico)' },
 ];
 
 export const getActivityFactor = (factor?: number): number => {
@@ -175,13 +175,13 @@ export const assessPlan = (
       code: 'RATE_VERY_HIGH',
       level: 'danger',
       message:
-        'Ritmo de pÃ©rdida superior al 1.5% semanal. Riesgo de pÃ©rdida muscular y problemas metabÃ³licos.',
+        'Ritmo de pérdida superior al 1.5% semanal. Riesgo de pérdida muscular y problemas metabólicos.',
     });
   } else if (ratePct > 1) {
     warnings.push({
       code: 'RATE_HIGH',
       level: 'warning',
-      message: 'Ritmo de pÃ©rdida superior al 1% semanal. Recomendado solo para obesidad severa.',
+      message: 'Ritmo de pérdida superior al 1% semanal. Recomendado solo para obesidad severa.',
     });
   }
 
@@ -191,13 +191,13 @@ export const assessPlan = (
       code: 'DEFICIT_VERY_HIGH',
       level: 'danger',
       message:
-        'DÃ©ficit superior al 35% de tu mantenimiento. DifÃ­cil de adherir y poco saludable a medio plazo.',
+        'Déficit superior al 35% de tu mantenimiento. Difícil de adherir y poco saludable a medio plazo.',
     });
   } else if (deficitPct > 25) {
     warnings.push({
       code: 'DEFICIT_HIGH',
       level: 'warning',
-      message: 'DÃ©ficit superior al 25%. PodrÃ­as experimentar fatiga y pÃ©rdida de fuerza.',
+      message: 'Déficit superior al 25%. Podrías experimentar fatiga y pérdida de fuerza.',
     });
   }
 
@@ -206,7 +206,7 @@ export const assessPlan = (
       code: 'BELOW_BMR',
       level: 'danger',
       message:
-        'Ingesta por debajo de tu tasa metabÃ³lica basal (BMR). No recomendado sin supervisiÃ³n mÃ©dica.',
+        'Ingesta por debajo de tu tasa metabólica basal (BMR). No recomendado sin supervisión médica.',
     });
   }
 

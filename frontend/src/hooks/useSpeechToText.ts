@@ -127,7 +127,7 @@ export function useSpeechToText({ onTranscript, lang = 'es-ES' }: SpeechToTextOp
             }
 
             if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-              toast.error('Permiso de micrÃ³fono no concedido en el navegador');
+              toast.error('Permiso de micrófono no concedido en el navegador');
               shouldListenRef.current = false;
               setIsListening(false);
               isStartingRef.current = false;
@@ -135,7 +135,7 @@ export function useSpeechToText({ onTranscript, lang = 'es-ES' }: SpeechToTextOp
             }
 
             if (event.error === 'audio-capture') {
-              toast.error('No se detecta micrÃ³fono disponible');
+              toast.error('No se detecta micrófono disponible');
               shouldListenRef.current = false;
               setIsListening(false);
               isStartingRef.current = false;

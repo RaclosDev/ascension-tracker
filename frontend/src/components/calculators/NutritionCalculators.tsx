@@ -86,7 +86,7 @@ export default function NutritionCalculators() {
           letterSpacing: '-0.02em',
         }}
       >
-        Calculadoras de NutriciÃ³n
+        Calculadoras de Nutrición
       </h3>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -101,7 +101,7 @@ export default function NutritionCalculators() {
                 >
                   {Math.round(tdee)} kcal
                 </div>
-                <div className="kpi-detail">Gasto EnergÃ©tico Diario (TDEE)</div>
+                <div className="kpi-detail">Gasto Energético Diario (TDEE)</div>
                 <div
                   style={{ marginTop: '8px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}
                 >
@@ -117,7 +117,7 @@ export default function NutritionCalculators() {
         </CalculatorCard>
 
         {/* Body fat Card */}
-        <CalculatorCard title="% de grasa corporal (mÃ©todo Marina)">
+        <CalculatorCard title="% de grasa corporal (método Marina)">
           <div className="utilities-grid" style={{ marginBottom: '16px' }}>
             <div className="form-group">
               <label className="form-label" htmlFor="calc-bf-waist">
@@ -156,7 +156,7 @@ export default function NutritionCalculators() {
                   className="form-input"
                   value={hipCm}
                   onChange={(e) => setHipCm(e.target.value)}
-                  placeholder="Parte mÃ¡s ancha"
+                  placeholder="Parte más ancha"
                 />
               </div>
             )}
@@ -189,13 +189,13 @@ export default function NutritionCalculators() {
                 </div>
               )}
               <p style={{ marginTop: '16px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                Nota: Este mÃ©todo tiene un margen de error de Â±3-4%. Para mayor precisiÃ³n usa
-                plicÃ³metros (calipers) o DEXA.
+                Nota: Este método tiene un margen de error de ±3-4%. Para mayor precisión usa
+                plicómetros (calipers) o DEXA.
               </p>
             </div>
           ) : (
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Faltan medidas para calcular (o los valores no son vÃ¡lidos).
+              Faltan medidas para calcular (o los valores no son válidos).
             </p>
           )}
         </CalculatorCard>
@@ -209,8 +209,8 @@ export default function NutritionCalculators() {
           textAlign: 'center',
         }}
       >
-        Las calculadoras proporcionan estimaciones orientativas basadas en fÃ³rmulas estÃ¡ndar. No
-        sustituyen el consejo de un profesional mÃ©dico o nutricionista.
+        Las calculadoras proporcionan estimaciones orientativas basadas en fórmulas estándar. No
+        sustituyen el consejo de un profesional médico o nutricionista.
       </p>
     </div>
   );

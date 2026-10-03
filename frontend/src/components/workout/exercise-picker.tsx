@@ -241,7 +241,7 @@ export function ExercisePicker() {
       <div className="workout-sheet" style={{ maxHeight: '95dvh' }}>
         <div className="workout-sheet-handle" />
         <div className="workout-sheet-header">
-          <span className="workout-sheet-title">AÃ±adir ejercicios</span>
+          <span className="workout-sheet-title">Añadir ejercicios</span>
           <button className="workout-sheet-close" onClick={close}>
             <X size={22} />
           </button>
@@ -276,7 +276,7 @@ export function ExercisePicker() {
                 cursor: 'pointer',
               }}
             >
-              {t === 'base' ? 'BÃ¡sicos' : t === 'all' ? 'Todos' : 'Personalizados'}
+              {t === 'base' ? 'Básicos' : t === 'all' ? 'Todos' : 'Personalizados'}
             </button>
           ))}
         </div>
@@ -320,7 +320,7 @@ export function ExercisePicker() {
                 color: 'var(--text-primary)',
               }}
             >
-              <option value="ALL">MÃºsculo: Todos</option>
+              <option value="ALL">Músculo: Todos</option>
               {MUSCLE_OPTIONS.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.label}
@@ -456,7 +456,7 @@ export function ExercisePicker() {
                                   {ex.custom && <span className="picker-custom-badge">Custom</span>}
                                 </div>
                                 <div className="picker-exercise-meta">
-                                  {MUSCLE_LABEL[ex.muscle]} Â· {ex.equipment}
+                                  {MUSCLE_LABEL[ex.muscle]} · {ex.equipment}
                                 </div>
                               </div>
                               <div
@@ -516,7 +516,7 @@ export function ExercisePicker() {
                                         fontWeight: 600,
                                       }}
                                     >
-                                      MÃ¡quina / Variante
+                                      Máquina / Variante
                                     </div>
                                     <VariantSelector
                                       type="machine"
@@ -539,7 +539,7 @@ export function ExercisePicker() {
                                   }}
                                   onClick={() => handleAddVariant(ex.id)}
                                 >
-                                  AÃ±adir al entreno
+                                  Añadir al entreno
                                 </button>
                               </div>
                             )}

@@ -27,7 +27,7 @@ export default function DashboardCharts({
     <div className="charts-grid">
       {/* Weight Evolution Chart */}
       <div className="chart-card full-width">
-        <div className="chart-title"> EvoluciÃ³n de Peso</div>
+        <div className="chart-title"> Evolución de Peso</div>
         <div className="chart-wrapper">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={weightChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -110,7 +110,7 @@ export default function DashboardCharts({
                 }}
                 formatter={(v: any) => [
                   `${v > 0 ? '+' : ''}${Number(v).toFixed(2)} kg`,
-                  'VariaciÃ³n',
+                  'Variación',
                 ]}
               />
               <Bar dataKey="delta" radius={[6, 6, 0, 0]}>

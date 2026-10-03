@@ -217,7 +217,7 @@ export default function RecipeFormModal({
                   margin: '0 0 0.5rem 0',
                 }}
               >
-                No hay ingredientes. Â¡AÃ±ade algunos!
+                No hay ingredientes. ¡Añade algunos!
               </p>
             )}
 
@@ -234,7 +234,7 @@ export default function RecipeFormModal({
                 fontSize: '0.8rem',
               }}
             >
-              <Plus size={14} /> AÃ±adir ingrediente
+              <Plus size={14} /> Añadir ingrediente
             </button>
           </div>
 

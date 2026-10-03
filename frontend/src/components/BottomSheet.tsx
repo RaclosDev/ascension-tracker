@@ -41,11 +41,11 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
   const handleTouchEnd = () => {
     setIsDragging(false);
     const diff = currentYRef.current - startYRef.current;
-    // Si se arrastrÃ³ mÃ¡s de 80px hacia abajo, cerramos
+    // Si se arrastró más de 80px hacia abajo, cerramos
     if (diff > 80) {
       onClose();
     } else {
-      // Si no, vuelve a la posiciÃ³n original
+      // Si no, vuelve a la posición original
       setTranslateY(0);
     }
   };

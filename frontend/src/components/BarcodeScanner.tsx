@@ -14,7 +14,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
   const fileInputRef = useRef<any>(null);
   const isMountedRef = useRef(true);
 
-  // Inicializar escÃ¡ner y arrancar cÃ¡mara
+  // Inicializar escáner y arrancar cámara
   useEffect(() => {
     isMountedRef.current = true;
     const elementId = 'ascension-barcode-reader';
@@ -26,7 +26,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
       setCameraError(null);
 
       try {
-        // Consultar cÃ¡maras disponibles
+        // Consultar cámaras disponibles
         try {
           const devices = await Html5Qrcode.getCameras();
           if (devices && devices.length > 0 && isMountedRef.current) {
@@ -73,14 +73,14 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
           setIsStarting(false);
         }
       } catch (err: any) {
-        console.warn('No se pudo iniciar la cÃ¡mara automÃ¡ticamente:', err);
+        console.warn('No se pudo iniciar la cámara automáticamente:', err);
         if (isMountedRef.current) {
           setIsStarting(false);
           setIsScanning(false);
           setCameraError(
             err?.name === 'NotAllowedError' || err?.message?.includes('Permission')
-              ? 'Permiso de cÃ¡mara denegado. Puedes habilitarlo en los ajustes del navegador o subir una foto directamente.'
-              : 'No se encontrÃ³ una cÃ¡mara activa o no se pudo iniciar.',
+              ? 'Permiso de cámara denegado. Puedes habilitarlo en los ajustes del navegador o subir una foto directamente.'
+              : 'No se encontró una cámara activa o no se pudo iniciar.',
           );
         }
       }
@@ -120,15 +120,15 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
     if (!scannerRef.current) return;
 
     if (isScanning) {
-      // Detener cÃ¡mara
+      // Detener cámara
       try {
         await scannerRef.current.stop();
         setIsScanning(false);
       } catch (e: any) {
-        console.error('Error al detener cÃ¡mara:', e);
+        console.error('Error al detener cámara:', e);
       }
     } else {
-      // Reanudar cÃ¡mara
+      // Reanudar cámara
       setIsStarting(true);
       setCameraError(null);
       try {
@@ -156,7 +156,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
         setIsScanning(true);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err: any) {
-        setCameraError('Error al encender la cÃ¡mara. Revisa los permisos.');
+        setCameraError('Error al encender la cámara. Revisa los permisos.');
       } finally {
         setIsStarting(false);
       }
@@ -194,7 +194,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
       );
       setIsScanning(true);
     } catch (err: any) {
-      console.error('Error al cambiar cÃ¡mara:', err);
+      console.error('Error al cambiar cámara:', err);
     } finally {
       setIsStarting(false);
     }
@@ -206,7 +206,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
 
     setScanningFile(true);
     try {
-      // Si la cÃ¡mara estÃ¡ activa, detenerla primero
+      // Si la cámara está activa, detenerla primero
       if (scannerRef.current.isScanning) {
         await scannerRef.current.stop();
         setIsScanning(false);
@@ -222,7 +222,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
       }
     } catch (err: any) {
       console.warn('Fallo al escanear archivo:', err);
-      toast.error('No se detectÃ³ un cÃ³digo de barras claro en la foto. Intenta con otra imagen.', {
+      toast.error('No se detectó un código de barras claro en la foto. Intenta con otra imagen.', {
         duration: 4000,
       });
     } finally {
@@ -233,12 +233,12 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
 
   return (
     <div className="barcode-scanner-wrapper">
-      {/* Visor de CÃ¡mara y RetÃ­cula TÃ¡ctica */}
+      {/* Visor de Cámara y Retícula Táctica */}
       <div className="barcode-viewport-frame">
         {/* Contenedor del video de Html5Qrcode */}
         <div id="ascension-barcode-reader"></div>
 
-        {/* RetÃ­culas y LÃ¡ser de Escaneo en Crimson Forge */}
+        {/* Retículas y Láser de Escaneo en Crimson Forge */}
         {isScanning && (
           <>
             <div className="scanner-laser"></div>
@@ -267,7 +267,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
           >
             <div className="spinner" style={{ width: '28px', height: '28px' }}></div>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Iniciando cÃ¡mara...
+              Iniciando cámara...
             </span>
           </div>
         )}
@@ -290,12 +290,12 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
           >
             <div className="spinner" style={{ width: '28px', height: '28px' }}></div>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Analizando cÃ³digo en la imagen...
+              Analizando código en la imagen...
             </span>
           </div>
         )}
 
-        {/* Overlay si la cÃ¡mara estÃ¡ apagada o con error */}
+        {/* Overlay si la cámara está apagada o con error */}
         {!isScanning && !isStarting && !scanningFile && (
           <div
             style={{
@@ -314,7 +314,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
           >
             <div style={{ fontSize: '2.2rem', marginBottom: '4px' }}></div>
             <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-              {cameraError ? 'Acceso a CÃ¡mara Limitado' : 'CÃ¡mara en Pausa'}
+              {cameraError ? 'Acceso a Cámara Limitado' : 'Cámara en Pausa'}
             </div>
             <p
               style={{
@@ -325,7 +325,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
               }}
             >
               {cameraError ||
-                'Enfoca el cÃ³digo de barras del producto o sube una foto de la etiqueta.'}
+                'Enfoca el código de barras del producto o sube una foto de la etiqueta.'}
             </p>
           </div>
         )}
@@ -340,7 +340,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
         onChange={handleFileScan}
       />
 
-      {/* Botones de Control de EscÃ¡ner */}
+      {/* Botones de Control de Escáner */}
       <div className="scanner-controls">
         <button
           type="button"
@@ -349,7 +349,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
           onClick={handleToggleCamera}
           disabled={isStarting || scanningFile}
         >
-          {isScanning ? ' Pausar CÃ¡mara' : ' Iniciar CÃ¡mara'}
+          {isScanning ? ' Pausar Cámara' : ' Iniciar Cámara'}
         </button>
 
         {cameras.length > 1 && isScanning && (
@@ -364,7 +364,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
               justifyContent: 'center',
             }}
             onClick={handleSwitchCamera}
-            title="Cambiar CÃ¡mara"
+            title="Cambiar Cámara"
           ></button>
         )}
 
@@ -382,7 +382,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
       <p
         style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', margin: 0 }}
       >
-        Compatible con cÃ³digos de barras de supermercados espaÃ±oles y europeos (EAN-13, EAN-8 y
+        Compatible con códigos de barras de supermercados españoles y europeos (EAN-13, EAN-8 y
         UPC).
       </p>
     </div>

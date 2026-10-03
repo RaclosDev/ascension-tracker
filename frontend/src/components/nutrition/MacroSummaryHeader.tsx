@@ -20,7 +20,7 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
     <div className="card nutrition-summary-card">
       <div className="nutrition-summary-main">
         <div className="nutrition-summary-header">
-          <span className="nutrition-summary-title">CalorÃ­as</span>
+          <span className="nutrition-summary-title">Calorías</span>
           <span className="nutrition-summary-value">
             {Math.round(consumed.kcal)}{' '}
             <span className="nutrition-summary-unit">/ {macros.kcal} kcal</span>
@@ -41,7 +41,7 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
         {/* Prot */}
         <div className="macro-item">
           <div className="macro-item-header">
-            <span className="macro-item-title">ProteÃ­nas</span>
+            <span className="macro-item-title">Proteínas</span>
             <span className="macro-item-value">
               {consumed.protein.toFixed(0)}/{macros.protein.toFixed(0)}g
             </span>

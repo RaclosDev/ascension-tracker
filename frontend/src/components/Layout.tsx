@@ -30,8 +30,8 @@ const navItems = [
   {
     path: '/nutrition',
     icon: <Utensils className="w-5 h-5" />,
-    label: 'NutriciÃ³n & Macros',
-    shortLabel: 'NutriciÃ³n',
+    label: 'Nutrición & Macros',
+    shortLabel: 'Nutrición',
   },
   {
     path: '/workout',
@@ -48,7 +48,7 @@ const navItems = [
   {
     path: '/settings',
     icon: <Settings className="w-5 h-5" />,
-    label: 'ConfiguraciÃ³n',
+    label: 'Configuración',
     shortLabel: 'Ajustes',
   },
 ];
@@ -77,7 +77,7 @@ export default function Layout() {
   });
   const needsOnboarding = !loadingConfig && settings === null;
 
-  // Cerrar el menÃº automÃ¡ticamente al cambiar de pÃ¡gina y resetear scroll
+  // Cerrar el menú automáticamente al cambiar de página y resetear scroll
   useEffect(() => {
     setSidebarOpen(false);
     setMoreMenuOpen(false);
@@ -96,7 +96,7 @@ export default function Layout() {
     return () => document.removeEventListener('pointerdown', handleClick);
   }, [moreMenuOpen]);
 
-  // Interceptar cualquier enlace de navegaciÃ³n interna en modo PWA standalone
+  // Interceptar cualquier enlace de navegación interna en modo PWA standalone
   useEffect(() => {
     const handleGlobalClick = (e) => {
       const anchor = e.target.closest('a');
@@ -120,7 +120,7 @@ export default function Layout() {
 
   return (
     <div className="app-root">
-      {/* Barra superior de app para mÃ³vil */}
+      {/* Barra superior de app para móvil */}
       <header className="mobile-top-bar">
         {hideNav ? (
           <div
@@ -139,11 +139,11 @@ export default function Layout() {
         <div style={{ width: '48px' }} />
       </header>
 
-      {/* Capa de fondo oscurecida para cerrar el menÃº */}
+      {/* Capa de fondo oscurecida para cerrar el menú */}
       <div className={`mobile-overlay ${sidebarOpen ? 'active' : ''}`} onClick={closeSidebar} />
 
       <div className="app-container">
-        {/* Barra lateral / CajÃ³n deslizable (desktop) */}
+        {/* Barra lateral / Cajón deslizable (desktop) */}
         <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <div className="sidebar-header">
             <div className="sidebar-brand-container">
@@ -206,7 +206,7 @@ export default function Layout() {
       {/* Bottom Nav */}
       <nav
         className={`mobile-bottom-nav${hideNav ? ' nav-hidden' : ''}`}
-        aria-label="NavegaciÃ³n inferior"
+        aria-label="Navegación inferior"
       >
         {navItems
           .filter((i) => bottomNavPaths.includes(i.path))
@@ -246,7 +246,7 @@ export default function Layout() {
               </button>
             );
           })}
-        {/* BotÃ³n 'MÃ¡s' */}
+        {/* Botón 'Más' */}
         <button
           type="button"
           className={`mobile-bottom-item ${isMoreActive ? 'active' : ''}`}
@@ -255,7 +255,7 @@ export default function Layout() {
             e.stopPropagation();
             setMoreMenuOpen(!moreMenuOpen);
           }}
-          aria-label="MÃ¡s opciones"
+          aria-label="Más opciones"
           style={{
             width: '100%',
             height: '100%',
@@ -269,7 +269,7 @@ export default function Layout() {
             <Plus className="w-5 h-5" />
           </span>
           <span className="mobile-bottom-label" style={{ pointerEvents: 'none' }}>
-            MÃ¡s
+            Más
           </span>
           {isMoreActive && (
             <span className="mobile-bottom-indicator" style={{ pointerEvents: 'none' }} />
@@ -281,7 +281,7 @@ export default function Layout() {
       <BottomSheet
         isOpen={moreMenuOpen}
         onClose={() => setMoreMenuOpen(false)}
-        title="MÃ¡s opciones"
+        title="Más opciones"
       >
         <div className="bottom-sheet-grid">
           {navItems

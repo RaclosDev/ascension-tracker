@@ -76,7 +76,7 @@ export default function DashboardPage() {
   const handleQuickAdd = () => {
     const val = parseSafeWeight(quickWeight);
     if (val === null) {
-      toast.error('Introduce un peso vÃ¡lido en kg (ej: 80.5)');
+      toast.error('Introduce un peso válido en kg (ej: 80.5)');
       return;
     }
     addWeightMutation.mutate(val);
@@ -140,7 +140,7 @@ export default function DashboardPage() {
 
   if (!dashboard || !settings) return null;
 
-  const dayNames = ['Domingo', 'Lunes', 'Martes', 'MiÃ©rcoles', 'Jueves', 'Viernes', 'SÃ¡bado'];
+  const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   const todayLabel = `${dayNames[today.getDay()]}, ${format(today, "d 'de' MMMM 'de' yyyy", { locale: es })}`;
 
   // Chart data
@@ -222,7 +222,7 @@ export default function DashboardPage() {
           <div className="kpi-label"> Te Falta</div>
           <div className="kpi-value">{dashboard.remaining?.toFixed(1)} kg</div>
           <div className="kpi-detail">
-            {dashboard.remaining > 0 ? 'por perder' : 'Â¡Meta alcanzada!'}
+            {dashboard.remaining > 0 ? 'por perder' : '¡Meta alcanzada!'}
           </div>
         </div>
         <div className="kpi-card">

@@ -37,12 +37,12 @@ export function ActiveWorkout() {
             Entrenar
           </p>
           <h1 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-            Sin sesiÃ³n activa
+            Sin sesión activa
           </h1>
         </header>
         <EmptyCard
           title="Empieza cuando quieras"
-          body="Crea una sesiÃ³n vacÃ­a o lanza una plantilla. El historial rellena kilos y reps."
+          body="Crea una sesión vacía o lanza una plantilla. El historial rellena kilos y reps."
         />
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
           <button
@@ -58,7 +58,7 @@ export function ActiveWorkout() {
             }}
           >
             <Plus size={18} style={{ marginRight: '0.5rem' }} />
-            Entrenamiento vacÃ­o
+            Entrenamiento vacío
           </button>
           <button
             onClick={() => useWorkoutStore.getState().setTab('templates')}
@@ -86,7 +86,7 @@ export function ActiveWorkout() {
       <ExercisePicker />
       <button onClick={() => setPickerOpen(true)} className="add-exercise-btn">
         <Plus size={18} />
-        AÃ±adir ejercicio
+        Añadir ejercicio
       </button>
       <FooterActions />
     </>
@@ -102,8 +102,8 @@ function LiveSession() {
 
       {active.exercises.length === 0 ? (
         <EmptyCard
-          title="AÃ±ade el primer ejercicio"
-          body="Elige de la biblioteca o crea uno propio. Las series vacÃ­as esperan kilos y reps."
+          title="Añade el primer ejercicio"
+          body="Elige de la biblioteca o crea uno propio. Las series vacías esperan kilos y reps."
         />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -206,12 +206,12 @@ function FooterActions() {
             <AlertDialogTitle
               style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}
             >
-              Â¿Descartar la sesiÃ³n?
+              ¿Descartar la sesión?
             </AlertDialogTitle>
             <AlertDialogDescription
               style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.5rem' }}
             >
-              Se pierde el cronÃ³metro y las series de esta sesiÃ³n. El historial no cambia.
+              Se pierde el cronómetro y las series de esta sesión. El historial no cambia.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -271,7 +271,7 @@ function FooterActions() {
             <AlertDialogTitle
               style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}
             >
-              Finalizar SesiÃ³n
+              Finalizar Sesión
             </AlertDialogTitle>
             <div
               style={{
@@ -319,7 +319,7 @@ function FooterActions() {
                     display: 'block',
                   }}
                 >
-                  DuraciÃ³n (minutos)
+                  Duración (minutos)
                 </label>
                 <input
                   type="number"

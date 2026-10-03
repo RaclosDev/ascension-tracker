@@ -151,7 +151,7 @@ export function TemplatesView() {
                     color: 'var(--text-secondary)',
                   }}
                 >
-                  {names.slice(0, 6).join(' Â· ')}
+                  {names.slice(0, 6).join(' · ')}
                   {names.length > 6 ? '' : ''}
                 </p>
                 <button

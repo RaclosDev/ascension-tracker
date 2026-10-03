@@ -63,7 +63,7 @@ export default function MealSelectorModal({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--text-primary)' }}>
             {' '}
-            AÃ±adir al Diario
+            Añadir al Diario
           </h3>
           <button
             onClick={onClose}
@@ -156,7 +156,7 @@ export default function MealSelectorModal({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <label className="form-label">Â¿A quÃ© comida?</label>
+          <label className="form-label">¿A qué comida?</label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
             <button
               onClick={() => handleBulkAddToMeal(0)}

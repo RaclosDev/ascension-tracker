@@ -89,8 +89,8 @@ export function HistoryView() {
         </ul>
       ) : history.length === 0 ? (
         <EmptyCard
-          title="El diario estÃ¡ vacÃ­o"
-          body="Las sesiones terminadas aparecen aquÃ­, con volumen y cada serie."
+          title="El diario está vacío"
+          body="Las sesiones terminadas aparecen aquí, con volumen y cada serie."
         />
       ) : (
         <ul
@@ -220,7 +220,7 @@ export function HistoryView() {
                         overflow: 'hidden',
                       }}
                     >
-                      {names.join(' Â· ')}
+                      {names.join(' · ')}
                     </p>
                   </button>
 
@@ -315,7 +315,7 @@ export function HistoryView() {
               onClick={() => fetchNextPage()}
               disabled={isFetchingNextPage}
             >
-              {isFetchingNextPage ? 'Cargando...' : 'Cargar mÃ¡s entrenamientos'}
+              {isFetchingNextPage ? 'Cargando...' : 'Cargar más entrenamientos'}
             </button>
           )}
         </ul>
@@ -384,7 +384,7 @@ export function HistoryView() {
                 }}
               >
                 <Stat
-                  label="DuraciÃ³n"
+                  label="Duración"
                   value={formatDuration(detail.finishedAt - detail.startedAt)}
                 />
                 <Stat label="Volumen" value={formatKg(sessionVolume(detail.exercises))} />

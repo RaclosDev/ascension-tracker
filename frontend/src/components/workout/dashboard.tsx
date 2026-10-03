@@ -153,7 +153,7 @@ export function Dashboard() {
                     <Play size={22} />
                   </div>
                   <div>
-                    <div className="start-workout-option-title">Entrenamiento VacÃ­o</div>
+                    <div className="start-workout-option-title">Entrenamiento Vacío</div>
                     <div className="start-workout-option-desc">
                       Empezar desde cero sin ejercicios predefinidos
                     </div>
@@ -223,7 +223,7 @@ export function Dashboard() {
                             {w.name}
                           </div>
                           <div className="start-workout-option-desc">
-                            {formatDuration(w.finishedAt - w.startedAt)} Â·{' '}
+                            {formatDuration(w.finishedAt - w.startedAt)} ·{' '}
                             {w?.exercises?.length || 0} ejercicios
                           </div>
                         </div>
@@ -281,7 +281,7 @@ export function Dashboard() {
             <p
               style={{ marginTop: '0.25rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}
             >
-              {active?.exercises?.length || 0} ejercicios Â· continuar
+              {active?.exercises?.length || 0} ejercicios · continuar
             </p>
           </div>
           <ArrowRight className="size-5 text-muted-foreground" />
@@ -341,8 +341,8 @@ export function Dashboard() {
         </div>
         {history.length === 0 ? (
           <EmptyCard
-            title="TodavÃ­a no hay sesiones"
-            body="Empieza un entrenamiento vacÃ­o o usa una plantilla."
+            title="Todavía no hay sesiones"
+            body="Empieza un entrenamiento vacío o usa una plantilla."
           />
         ) : (
           <ul
@@ -406,7 +406,7 @@ export function Dashboard() {
                           textOverflow: 'ellipsis',
                         }}
                       >
-                        {names.join(' Â· ')}
+                        {names.join(' · ')}
                         {w.exercises.length > 4 ? '' : ''}
                       </p>
                     </button>

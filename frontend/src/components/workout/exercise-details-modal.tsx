@@ -168,7 +168,7 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
       >
         <DialogHeader style={{ display: 'none' }}>
           <DialogTitle>Detalles de {exercise.name}</DialogTitle>
-          <DialogDescription>EstadÃ­sticas e historial del ejercicio.</DialogDescription>
+          <DialogDescription>Estadísticas e historial del ejercicio.</DialogDescription>
         </DialogHeader>
 
         {/* Header Section */}
@@ -225,8 +225,8 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
                 letterSpacing: '0.05em',
               }}
             >
-              {MUSCLE_LABEL[exercise.muscle]} Â· {exercise.equipment}{' '}
-              {exercise.custom ? 'Â· Personalizado' : ''}
+              {MUSCLE_LABEL[exercise.muscle]} · {exercise.equipment}{' '}
+              {exercise.custom ? '· Personalizado' : ''}
             </p>
           </div>
         </div>
@@ -272,7 +272,7 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
                   <label
                     style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}
                   >
-                    MÃ¡quina (Filtro)
+                    Máquina (Filtro)
                   </label>
                   <VariantSelector
                     type="machine"
@@ -313,7 +313,7 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
                   textAlign: 'center',
                 }}
               >
-                Peso MÃ¡ximo
+                Peso Máximo
               </p>
               <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 {stats?.maxWeight ? formatKg(stats.maxWeight) : ''}
@@ -344,7 +344,7 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
                     textAlign: 'center',
                   }}
                 >
-                  RÃ©cords x Reps
+                  Récords x Reps
                 </p>
               </div>
               <div
@@ -400,7 +400,7 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
               }}
             >
               <Activity size={18} style={{ color: 'var(--color-primary)' }} />
-              ImplicaciÃ³n Muscular
+              Implicación Muscular
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {(() => {

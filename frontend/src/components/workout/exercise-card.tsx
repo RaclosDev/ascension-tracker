@@ -520,7 +520,7 @@ export function ExerciseCard({
                     fontWeight: 600,
                   }}
                 >
-                  MÃQUINA / VARIANTE
+                  MÁQUINA / VARIANTE
                 </div>
                 <VariantSelector
                   type="machine"
@@ -588,7 +588,7 @@ export function ExerciseCard({
 
             <button onClick={() => addSet(row.id, recentWorkouts)} className="add-set-btn">
               <Plus size={16} />
-              AÃ±adir serie
+              Añadir serie
             </button>
           </div>
         </>

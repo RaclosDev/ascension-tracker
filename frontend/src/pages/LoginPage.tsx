@@ -82,7 +82,7 @@ export default function LoginPage() {
             lineHeight: '1.5',
           }}
         >
-          Tu progreso, tu esfuerzo. Inicia sesiÃ³n para continuar.
+          Tu progreso, tu esfuerzo. Inicia sesión para continuar.
         </p>
 
         <div style={{ display: 'flex', justifyContent: 'center' }}>

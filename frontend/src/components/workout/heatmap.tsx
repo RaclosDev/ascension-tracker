@@ -100,7 +100,7 @@ export function ActivityHeatmap({ history }: { history: CompletedWorkout[] }) {
                   return (
                     <div
                       key={dateStr}
-                      title={`${format(day, "d MMM yyyy", { locale: es })}${vol ? ` Â· ${Math.round(vol)} kg` : ""}`}
+                      title={`${format(day, "d MMM yyyy", { locale: es })}${vol ? ` · ${Math.round(vol)} kg` : ""}`}
                       style={{
                         aspectRatio: "1/1",
                         borderRadius: "6px",
@@ -135,7 +135,7 @@ export function ActivityHeatmap({ history }: { history: CompletedWorkout[] }) {
           <div style={{ width: "12px", height: "12px", borderRadius: "3px", background: "rgba(16, 185, 129, 0.75)" }} />
           <div style={{ width: "12px", height: "12px", borderRadius: "3px", background: "rgba(16, 185, 129, 1)" }} />
         </div>
-        <span>MÃ¡s</span>
+        <span>Más</span>
       </div>
     </div>
   );

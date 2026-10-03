@@ -36,7 +36,7 @@ registerRoute(
 
 // Push event â€” fires even when the app is in the background
 self.addEventListener('push', (event: PushEvent) => {
-  let data = { title: 'Â¡Descanso terminado!', body: 'Es hora de la siguiente serie.' };
+  let data = { title: '¡Descanso terminado!', body: 'Es hora de la siguiente serie.' };
 
   try {
     if (event.data) {
@@ -63,7 +63,7 @@ self.addEventListener('push', (event: PushEvent) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Â¡Descanso terminado!', options),
+    self.registration.showNotification(data.title || '¡Descanso terminado!', options),
   );
 });
 

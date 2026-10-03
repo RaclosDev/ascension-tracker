@@ -517,7 +517,7 @@ export default function NutritionPage() {
             onClick={() => {
               setSelectedMealIndex(0);
               setSearchModalOpen(true);
-            }} aria-label="AÃ±adir alimento"
+            }} aria-label="Añadir alimento"
           >
             +
           </button>

@@ -121,7 +121,7 @@ class GlobalErrorBoundary extends Component<{ children: React.ReactNode }, { has
             textAlign: 'center',
           }}
         >
-          <h2 style={{ marginBottom: '10px' }}>Nueva versiÃ³n disponible</h2>
+          <h2 style={{ marginBottom: '10px' }}>Nueva versión disponible</h2>
           <p style={{ color: '#94a3b8', marginBottom: '20px' }}>
             Estamos actualizando la app. Por favor, recarga.
           </p>
@@ -219,9 +219,9 @@ export default function App() {
           textAlign: 'center',
         }}
       >
-        <h2 style={{ marginBottom: '10px' }}>Error de conexiÃ³n</h2>
+        <h2 style={{ marginBottom: '10px' }}>Error de conexión</h2>
         <p style={{ color: '#94a3b8', marginBottom: '20px' }}>
-          No se pudo cargar la configuraciÃ³n segura. Comprueba tu conexiÃ³n y que el servidor estÃ¡
+          No se pudo cargar la configuración segura. Comprueba tu conexión y que el servidor está
           online.
         </p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>

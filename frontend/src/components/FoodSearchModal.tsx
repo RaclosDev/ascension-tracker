@@ -266,7 +266,7 @@ export default function FoodSearchModal({
         fat: data.fatPer100g ? data.fatPer100g.toString() : prev.fat,
       }));
 
-      toast.success('Â¡Macros extraÃ­dos correctamente!');
+      toast.success('¡Macros extraídos correctamente!');
     } catch (err: any) {
       console.error(err);
       toast.error(err.response?.data?.error || 'Error al analizar la etiqueta.');
@@ -310,7 +310,7 @@ export default function FoodSearchModal({
       setOffResults([]);
     } catch (err: any) {
       console.error(err);
-      toast.error('Error al consultar cÃ³digo de barras');
+      toast.error('Error al consultar código de barras');
     } finally {
       setSearching(false);
     }
@@ -396,8 +396,8 @@ export default function FoodSearchModal({
     }
 
     setSelectedProduct({
-      name: food.name + (food.brand && food.brand !== 'GenÃ©rico' ? ` (${food.brand})` : ''),
-      category: food.brand === 'GenÃ©rico' ? 'BÃ¡sico' : 'Guardado',
+      name: food.name + (food.brand && food.brand !== 'Genérico' ? ` (${food.brand})` : ''),
+      category: food.brand === 'Genérico' ? 'Básico' : 'Guardado',
       kcal: food.kcalPer100g ?? food.kcal,
       protein: food.proteinPer100g ?? food.protein,
       carbs: food.carbsPer100g ?? food.carbs,
@@ -414,7 +414,7 @@ export default function FoodSearchModal({
 
   const handleConfirmAdd = async () => {
     if (!selectedProduct || !quantity || quantity <= 0) {
-      toast.error('Indica una cantidad vÃ¡lida en gramos');
+      toast.error('Indica una cantidad válida en gramos');
       return;
     }
 
@@ -443,7 +443,7 @@ export default function FoodSearchModal({
 
     try {
       await api.post('/nutrition/logs', logEntry);
-      toast.success('Alimento aÃ±adido correctamente');
+      toast.success('Alimento añadido correctamente');
       setSelectedProduct(null);
       setQuery('');
       setOffResults([]);
@@ -512,9 +512,9 @@ export default function FoodSearchModal({
 
           <div style={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>
             {selectedProduct
-              ? 'AÃ±adir Registro'
+              ? 'Añadir Registro'
               : activeOverlay === 'scanner'
-                ? 'Escanear CÃ³digo'
+                ? 'Escanear Código'
                 : activeOverlay === 'ai'
                   ? 'Asistente IA'
                   : activeOverlay === 'manual'
@@ -588,7 +588,7 @@ export default function FoodSearchModal({
                           <SegmentedControl
                             options={[
                               { label: 'Gramos', value: 'grams' },
-                              { label: 'PorciÃ³n', value: 'portions' },
+                              { label: 'Porción', value: 'portions' },
                             ]}
                             value={inputMode}
                             onChange={(val: string) => setInputMode(val as 'grams' | 'portions')}
@@ -736,7 +736,7 @@ export default function FoodSearchModal({
                 style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }}
                 onClick={handleConfirmAdd}
               >
-                AÃ±adir a mi registro
+                Añadir a mi registro
               </button>
             </div>
           ) : activeOverlay === 'manual' ? (
@@ -940,7 +940,7 @@ export default function FoodSearchModal({
                     border: 'none',
                   }}
                 >
-                  Analizar y AÃ±adir
+                  Analizar y Añadir
                 </button>
               </div>
             </div>
@@ -961,7 +961,7 @@ export default function FoodSearchModal({
                     color: 'var(--text-primary)',
                   }}
                 >
-                  <option value={-1}> Detectar automÃ¡ticamente (IA)</option>
+                  <option value={-1}> Detectar automáticamente (IA)</option>
                   {meals && meals.length > 0 ? (
                     meals.map((m, idx) => (
                       <option key={m.id || idx} value={idx}>
@@ -1052,7 +1052,7 @@ export default function FoodSearchModal({
                       color: 'var(--text-primary)',
                       cursor: 'pointer',
                     }}
-                    title="CÃ³digo de barras"
+                    title="Código de barras"
                   >
                     <ScanLine size={18} />
                   </button>
@@ -1213,7 +1213,7 @@ export default function FoodSearchModal({
                               marginBottom: '0.5rem',
                             }}
                           >
-                            Alimentos BÃ¡sicos
+                            Alimentos Básicos
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                             {filteredGeneric.map((food: any) => (
@@ -1275,7 +1275,7 @@ export default function FoodSearchModal({
                         marginTop: '1.5rem',
                       }}
                     >
-                      Resultados de BÃºsqueda
+                      Resultados de Búsqueda
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                       {offResults.map((p, idx) => {
@@ -1340,7 +1340,7 @@ export default function FoodSearchModal({
                     }}
                   >
                     <p style={{ margin: '0 0 0.75rem 0', color: 'var(--text-secondary)' }}>
-                      Â¿No encuentras el producto exacto?
+                      ¿No encuentras el producto exacto?
                     </p>
                     <button
                       className="btn btn-primary btn-sm"

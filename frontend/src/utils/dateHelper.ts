@@ -47,7 +47,7 @@ export function formatFriendlyDate(dateStr: string) {
   } else if (dateStr === yesterday) {
     return `Ayer (${d} ${monthStr})`;
   } else if (dateStr === tomorrow) {
-    return `MaÃ±ana (${d} ${monthStr})`;
+    return `Mañana (${d} ${monthStr})`;
   }
 
   const currentYear = new Date().getFullYear();

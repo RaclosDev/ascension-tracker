@@ -27,8 +27,8 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', justifyContent: 'center', alignItems: 'center', color: '#f1f5f9', background: '#09090B', padding: '20px', textAlign: 'center' }}>
-          <h2 style={{ marginBottom: '10px' }}>Algo saliÃ³ mal.</h2>
-          <p style={{ color: '#94a3b8', marginBottom: '20px' }}>Ha ocurrido un error en la aplicaciÃ³n.</p>
+          <h2 style={{ marginBottom: '10px' }}>Algo salió mal.</h2>
+          <p style={{ color: '#94a3b8', marginBottom: '20px' }}>Ha ocurrido un error en la aplicación.</p>
           <pre style={{ color: '#ef4444', marginBottom: '20px', maxWidth: '80%', overflowX: 'auto', textAlign: 'left', padding: '10px', background: '#1e1e1e', borderRadius: '8px' }}>
             {this.state.error?.message}
             <br/><br/>

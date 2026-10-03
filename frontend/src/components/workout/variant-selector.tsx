@@ -47,7 +47,7 @@ export function VariantSelector({
     setInputValue('');
   };
 
-  const placeholderText = type === 'grip' ? 'Nuevo agarre (Ej. Prono)' : 'Nueva mÃ¡quina / variante';
+  const placeholderText = type === 'grip' ? 'Nuevo agarre (Ej. Prono)' : 'Nueva máquina / variante';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>

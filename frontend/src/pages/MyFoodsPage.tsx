@@ -278,7 +278,7 @@ export default function MyFoodsPage() {
     api
       .post('/nutrition/ai/food', { text: queryText })
       .then(() => {
-        toast.success(`"${queryText}" aÃ±adido `);
+        toast.success(`"${queryText}" añadido `);
         fetchData();
       })
       .catch((err: any) => {
@@ -386,7 +386,7 @@ export default function MyFoodsPage() {
   };
 
   const handleBulkDelete = async () => {
-    if (!confirm(`Â¿Borrar los ${selectedFoods.size} alimentos seleccionados?`)) return;
+    if (!confirm(`¿Borrar los ${selectedFoods.size} alimentos seleccionados?`)) return;
     try {
       await Promise.all(
         Array.from(selectedFoods).map((id) => api.delete(`/nutrition/my-foods/${id}`)),
@@ -427,18 +427,18 @@ export default function MyFoodsPage() {
         return api.post('/nutrition/logs', logEntry);
       });
       await Promise.all(promises);
-      toast.success(`${selectedFoods.size} alimentos aÃ±adidos al diario`);
+      toast.success(`${selectedFoods.size} alimentos añadidos al diario`);
       setSelectedFoods(new Set());
       setIsMealSelectorOpen(false);
     } catch (err: any) {
-      toast.error('Error al aÃ±adir al diario');
+      toast.error('Error al añadir al diario');
     } finally {
       setIsAddingToMeal(false);
     }
   };
 
   const deleteSavedFood = async (id) => {
-    if (!confirm('Â¿Borrar este alimento?')) return;
+    if (!confirm('¿Borrar este alimento?')) return;
     try {
       await api.delete(`/nutrition/my-foods/${id}`);
       toast.success('Eliminado');
@@ -449,7 +449,7 @@ export default function MyFoodsPage() {
   };
 
   const handleDeleteRecipe = async (id) => {
-    if (!window.confirm('Â¿Seguro que quieres eliminar esta receta?')) return;
+    if (!window.confirm('¿Seguro que quieres eliminar esta receta?')) return;
     try {
       await api.delete(`/nutrition/recipes/${id}`);
       toast.success('Eliminada');
@@ -484,7 +484,7 @@ export default function MyFoodsPage() {
       });
 
       toast.dismiss(loadingToast);
-      toast.success('Â¡Datos extraÃ­dos correctamente!');
+      toast.success('¡Datos extraídos correctamente!');
 
       // Pre-fill the form and open it
       setEditingFoodId(null);
@@ -575,7 +575,7 @@ export default function MyFoodsPage() {
         }
       }
       setLookupError(
-        `No se encontrÃ³ ningÃºn producto para el cÃ³digo "${code}". Puedes aÃ±adirlo manualmente.`,
+        `No se encontró ningún producto para el código "${code}". Puedes añadirlo manualmente.`,
       );
     } catch (err: any) {
       console.error(err);
@@ -600,7 +600,7 @@ export default function MyFoodsPage() {
 
     try {
       await api.post('/nutrition/my-foods', dto);
-      toast.success(`"${scannedProduct.name}" aÃ±adido a Mis Alimentos `);
+      toast.success(`"${scannedProduct.name}" añadido a Mis Alimentos `);
       setIsScannerOpen(false);
       setScannedProduct(null);
       setLookupError(null);
@@ -711,11 +711,11 @@ export default function MyFoodsPage() {
       <span className="subtotal-val kcal">
         <strong style={{ color: 'var(--text-primary)' }}>{Math.round(kcal)}</strong> kcal
       </span>
-      <span className="subtotal-dot">Â·</span>
+      <span className="subtotal-dot">·</span>
       <span className="subtotal-val">P: {Number(p).toFixed(1)}g</span>
-      <span className="subtotal-dot">Â·</span>
+      <span className="subtotal-dot">·</span>
       <span className="subtotal-val">C: {Number(c).toFixed(1)}g</span>
-      <span className="subtotal-dot">Â·</span>
+      <span className="subtotal-dot">·</span>
       <span className="subtotal-val">G: {Number(f).toFixed(1)}g</span>
     </span>
   );
@@ -838,7 +838,7 @@ export default function MyFoodsPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
-              title="Limpiar bÃºsqueda"
+              title="Limpiar búsqueda"
             >
               <X className="w-4 h-4" />
             </button>
@@ -1057,8 +1057,8 @@ export default function MyFoodsPage() {
                       }}
                       title={
                         sortBy === 'recent'
-                          ? 'Ordenado por mÃ¡s recientes. Cambiar a A-Z'
-                          : 'Ordenado de A-Z. Cambiar a mÃ¡s recientes'
+                          ? 'Ordenado por más recientes. Cambiar a A-Z'
+                          : 'Ordenado de A-Z. Cambiar a más recientes'
                       }
                     >
                       {sortBy === 'recent' ? (
@@ -1184,7 +1184,7 @@ export default function MyFoodsPage() {
                           fontWeight: 600,
                         }}
                       >
-                        <Utensils className="w-4 h-4" /> AÃ±adir
+                        <Utensils className="w-4 h-4" /> Añadir
                       </button>
                       <button
                         onClick={handleBulkDelete}
@@ -1422,7 +1422,7 @@ export default function MyFoodsPage() {
                               justifyContent: 'center',
                               flexShrink: 0,
                             }}
-                            title="AÃ±adir a Mis Alimentos"
+                            title="Añadir a Mis Alimentos"
                           >
                             +
                           </button>
@@ -1562,7 +1562,7 @@ export default function MyFoodsPage() {
                       >
                         {q
                           ? `No hay recetas que coincidan con "${searchQuery}"`
-                          : 'Arrastra desde Recientes o aÃ±ade manualmente'}
+                          : 'Arrastra desde Recientes o añade manualmente'}
                       </p>
                     )}
                   </div>
@@ -1626,10 +1626,10 @@ export default function MyFoodsPage() {
                 <span style={{ fontSize: '1.25rem' }}></span>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)' }}>
-                    Escanear CÃ³digo / QR
+                    Escanear Código / QR
                   </h3>
                   <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                    Escanea el cÃ³digo de un envase para guardarlo en Mis Alimentos
+                    Escanea el código de un envase para guardarlo en Mis Alimentos
                   </p>
                 </div>
               </div>
@@ -1748,7 +1748,7 @@ export default function MyFoodsPage() {
                           color: 'var(--text-primary)',
                         }}
                       >
-                        RaciÃ³n detectada: {scannedProduct.servingSize}g{' '}
+                        Ración detectada: {scannedProduct.servingSize}g{' '}
                         {scannedProduct.servingLabel ? `(${scannedProduct.servingLabel})` : ''}
                       </div>
                     )}
@@ -1896,7 +1896,7 @@ export default function MyFoodsPage() {
           color: 'var(--accent-text, white)',
           border: 'none',
         }}
-        title="Crear o AÃ±adir Alimento"
+        title="Crear o Añadir Alimento"
       >
         +
       </button>
@@ -1975,7 +1975,7 @@ export default function MyFoodsPage() {
                   background: 'var(--bg-primary)',
                 }}
               >
-                Escanear CÃ³digo (Barras/QR)
+                Escanear Código (Barras/QR)
               </button>
 
               <button

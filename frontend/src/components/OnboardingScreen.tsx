@@ -64,10 +64,10 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
         }
       }
 
-      toast.success('Â¡ConfiguraciÃ³n completada!');
+      toast.success('¡Configuración completada!');
       onComplete();
     } catch (err: any) {
-      toast.error('Error al guardar configuraciÃ³n inicial');
+      toast.error('Error al guardar configuración inicial');
       console.error(err);
       setLoading(false);
     }
@@ -105,7 +105,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
                 Bienvenido a Ascension
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-                Para empezar, necesitamos conocer algunos datos bÃ¡sicos sobre ti.
+                Para empezar, necesitamos conocer algunos datos básicos sobre ti.
               </p>
             </div>
 
@@ -223,7 +223,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
                 Configura tus Comidas
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-                Â¿CuÃ¡ntas comidas haces al dÃ­a normalmente?
+                ¿Cuántas comidas haces al día normalmente?
               </p>
             </div>
 
@@ -277,7 +277,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
                     marginBottom: '8px',
                   }}
                 >
-                  Elige el nÃºmero de comidas y las llamaremos "Comida 1", "Comida 2", etc.
+                  Elige el número de comidas y las llamaremos "Comida 1", "Comida 2", etc.
                 </div>
                 {mealOption === 'custom' && (
                   <input
@@ -299,7 +299,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
                   onClick={handlePreviousStep}
                   style={{ flex: 1, padding: '0.875rem' }}
                 >
-                  AtrÃ¡s
+                  Atrás
                 </button>
                 <button
                   type="submit"
@@ -318,7 +318,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
                 Plan de Adelgazamiento
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-                Ajusta tu plazo y actividad diaria para calcular tus calorÃ­as.
+                Ajusta tu plazo y actividad diaria para calcular tus calorías.
               </p>
             </div>
 
@@ -340,7 +340,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
                 onClick={handlePreviousStep}
                 style={{ width: '100%', padding: '0.875rem' }}
               >
-                AtrÃ¡s
+                Atrás
               </button>
             </div>
           </>
@@ -351,7 +351,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
                 Estrategia de Macros
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-                Elige cÃ³mo quieres repartir tus {Math.round(form.kcal)} kcal.
+                Elige cómo quieres repartir tus {Math.round(form.kcal)} kcal.
               </p>
             </div>
 
@@ -368,7 +368,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
                   onClick={handlePreviousStep}
                   style={{ flex: 1, padding: '0.875rem' }}
                 >
-                  AtrÃ¡s
+                  Atrás
                 </button>
                 <button
                   type="submit"

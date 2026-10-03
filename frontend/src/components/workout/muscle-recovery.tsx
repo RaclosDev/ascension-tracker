@@ -4,15 +4,15 @@ import { getExerciseMap } from '@/lib/workout/exercises';
 const INDIVIDUAL_MUSCLES: Record<string, { label: string }> = {
   pecho: { label: 'Pecho' },
   hombros: { label: 'Hombros' },
-  triceps: { label: 'TrÃ­ceps' },
+  triceps: { label: 'Tríceps' },
   dorsales: { label: 'Dorsales' },
   espalda_alta: { label: 'Espalda Alta' },
-  biceps: { label: 'BÃ­ceps' },
+  biceps: { label: 'Bíceps' },
   trapecios: { label: 'Trapecios' },
   lumbares: { label: 'Lumbares' },
   antebrazos: { label: 'Antebrazos' },
-  cuadriceps: { label: 'CuÃ¡driceps' },
-  gluteos: { label: 'GlÃºteos' },
+  cuadriceps: { label: 'Cuádriceps' },
+  gluteos: { label: 'Glúteos' },
   femorales: { label: 'Femorales' },
   gemelos: { label: 'Gemelos' },
   aductores: { label: 'Aductores' },
@@ -90,10 +90,10 @@ export function MuscleRecovery({
     >
       <div>
         <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-          Estado de RecuperaciÃ³n
+          Estado de Recuperación
         </h3>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-          Basado en el volumen de las Ãºltimas 72 horas.
+          Basado en el volumen de las últimas 72 horas.
         </p>
       </div>
 

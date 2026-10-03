@@ -23,7 +23,7 @@ export interface MacroForm {
 interface MacroConfiguratorProps {
   form: MacroForm;
   setForm: (form: MacroForm | ((prev: MacroForm) => MacroForm)) => void;
-  /** Peso actual del usuario (Ãºltimo registro). Si no hay registros, se usa startWeight como fallback. */
+  /** Peso actual del usuario (último registro). Si no hay registros, se usa startWeight como fallback. */
   initialStartWeight?: number | string;
 }
 
@@ -55,7 +55,7 @@ export default function MacroConfigurator({
 
   const balancedData = React.useMemo(() => {
     const currentKcal = parseSafeFloat(form.kcal, 2000);
-    // Usar el peso inicial guardado en BD; si no estÃ¡ disponible, fallback a form.startWeight
+    // Usar el peso inicial guardado en BD; si no está disponible, fallback a form.startWeight
     const w = parseSafeFloat(initialStartWeight ?? form.startWeight, 80);
     const bP = Math.round(w * 2);
     const bF = Math.round((currentKcal * 0.22) / 9);
@@ -67,7 +67,7 @@ export default function MacroConfigurator({
     <div>
       <h4 className="subsection-title">Estrategia General</h4>
       <div className="form-group" style={{ marginBottom: 'var(--space-md)' }}>
-        <label className="form-label">Modo de CÃ¡lculo</label>
+        <label className="form-label">Modo de Cálculo</label>
         <select
           className="form-input"
           value={form.macroStrategy || 'CUSTOM_GRAMS'}
@@ -75,7 +75,7 @@ export default function MacroConfigurator({
         >
           <option value="CUSTOM_GRAMS">Gramos Exactos (Recomendado )</option>
           <option value="CUSTOM_PCT">Porcentajes (%)</option>
-          <option value="BALANCED">Balanceada AutomÃ¡tica </option>
+          <option value="BALANCED">Balanceada Automática </option>
         </select>
       </div>
 
@@ -96,7 +96,7 @@ export default function MacroConfigurator({
                 style={{ fontSize: '0.8rem', color: 'var(--color-protein-light, #a78bfa)' }}
               >
                 {' '}
-                ProteÃ­nas (g)
+                Proteínas (g)
               </label>
               <input
                 type="number"
@@ -165,7 +165,7 @@ export default function MacroConfigurator({
               }}
             >
               <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                CalorÃ­as calculadas:
+                Calorías calculadas:
               </span>
               <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--accent-color)' }}>
                 {customGramsData.totalK} kcal
@@ -208,7 +208,7 @@ export default function MacroConfigurator({
                 <label
                   style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block' }}
                 >
-                  Â¿Objetivo especÃ­fico de kcal?
+                  ¿Objetivo específico de kcal?
                 </label>
                 <input
                   type="number"
@@ -236,7 +236,7 @@ export default function MacroConfigurator({
                   const f = parseSafeFloat(form.customFatGrams, 0);
                   const rem = target - (p * 4 + f * 9);
                   if (rem <= 0) {
-                    toast.error('ProteÃ­nas y grasas ya superan las calorÃ­as objetivo');
+                    toast.error('Proteínas y grasas ya superan las calorías objetivo');
                     return;
                   }
                   const needed = Math.round(rem / 4);
@@ -255,7 +255,7 @@ export default function MacroConfigurator({
       {form.macroStrategy === 'CUSTOM_PCT' && (
         <div>
           <div className="form-group" style={{ marginBottom: 'var(--space-md)' }}>
-            <label className="form-label"> CalorÃ­as Totales Objetivo</label>
+            <label className="form-label"> Calorías Totales Objetivo</label>
             <input
               type="number"
               inputMode="decimal"
@@ -280,7 +280,7 @@ export default function MacroConfigurator({
                   className="form-label"
                   style={{ fontSize: '0.8rem', color: 'var(--color-protein-light, #a78bfa)' }}
                 >
-                  % ProteÃ­nas
+                  % Proteínas
                 </label>
                 <input
                   type="number"
@@ -382,7 +382,7 @@ export default function MacroConfigurator({
       {form.macroStrategy === 'BALANCED' && (
         <div>
           <div className="form-group" style={{ marginBottom: 'var(--space-md)' }}>
-            <label className="form-label"> CalorÃ­as Totales Objetivo</label>
+            <label className="form-label"> Calorías Totales Objetivo</label>
             <input
               type="number"
               inputMode="decimal"
@@ -403,7 +403,7 @@ export default function MacroConfigurator({
             }}
           >
             <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '8px' }}>
-              CÃ¡lculo automÃ¡tico:
+              Cálculo automático:
             </div>
             <div
               style={{
@@ -421,7 +421,7 @@ export default function MacroConfigurator({
               </div>
               <div>
                 {' '}
-                <strong>Grasas:</strong> ~{balancedData.bF}g (22% de calorÃ­as)
+                <strong>Grasas:</strong> ~{balancedData.bF}g (22% de calorías)
               </div>
               <div>
                 {' '}

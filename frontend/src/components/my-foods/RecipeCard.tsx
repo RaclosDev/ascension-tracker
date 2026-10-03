@@ -12,11 +12,11 @@ const macroLine = (kcal: number, p: number, c: number, f: number) => (
     <span className="subtotal-val kcal">
       <strong style={{ color: 'var(--text-primary)' }}>{Math.round(kcal)}</strong> kcal
     </span>
-    <span className="subtotal-dot">Â·</span>
+    <span className="subtotal-dot">·</span>
     <span className="subtotal-val">P: {Number(p).toFixed(1)}g</span>
-    <span className="subtotal-dot">Â·</span>
+    <span className="subtotal-dot">·</span>
     <span className="subtotal-val">C: {Number(c).toFixed(1)}g</span>
-    <span className="subtotal-dot">Â·</span>
+    <span className="subtotal-dot">·</span>
     <span className="subtotal-val">G: {Number(f).toFixed(1)}g</span>
   </span>
 );

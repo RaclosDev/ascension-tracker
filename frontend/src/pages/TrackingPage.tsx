@@ -350,7 +350,7 @@ export default function TrackingPage() {
     return format(d, 'yyyy-MM-dd');
   };
   const currentMonday = getMondayStr();
-  const dayNames = ['Lun', 'Mar', 'MiÃ©', 'Jue', 'Vie', 'SÃ¡b', 'Dom'];
+  const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
   if (isLoading && weeks.length === 0) {
     return (
@@ -679,7 +679,7 @@ export default function TrackingPage() {
         })}
         {weeks.length === 0 && !isLoading && (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
-            No hay datos registrados aÃºn.
+            No hay datos registrados aún.
           </div>
         )}
       </div>
@@ -704,7 +704,7 @@ export default function TrackingPage() {
                   {modalData.fullLabel}
                 </div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Edita las mÃ©tricas del dÃ­a
+                  Edita las métricas del día
                 </div>
               </div>
               <button
@@ -878,7 +878,7 @@ export default function TrackingPage() {
                     gap: '0.4rem',
                   }}
                 >
-                  <Apple className="w-4 h-4 inline-block mr-1" /> CalorÃ­as de hoy
+                  <Apple className="w-4 h-4 inline-block mr-1" /> Calorías de hoy
                 </span>
                 <span
                   style={{

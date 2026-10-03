@@ -1,8 +1,8 @@
 ﻿export const GENERIC_FOODS = [
   {
     id: 'gen-platano',
-    name: 'PlÃ¡tano',
-    brand: 'GenÃ©rico',
+    name: 'Plátano',
+    brand: 'Genérico',
     kcal: 89,
     protein: 1.1,
     carbs: 22.8,
@@ -14,7 +14,7 @@
   {
     id: 'gen-manzana',
     name: 'Manzana',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 52,
     protein: 0.3,
     carbs: 13.8,
@@ -26,7 +26,7 @@
   {
     id: 'gen-pollo',
     name: 'Pechuga de Pollo (Cruda)',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 110,
     protein: 23.1,
     carbs: 0,
@@ -38,7 +38,7 @@
   {
     id: 'gen-pavo',
     name: 'Pechuga de Pavo (Cruda)',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 104,
     protein: 24,
     carbs: 0,
@@ -50,7 +50,7 @@
   {
     id: 'gen-ternera',
     name: 'Carne de Ternera (Magra)',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 143,
     protein: 26,
     carbs: 0,
@@ -62,7 +62,7 @@
   {
     id: 'gen-cerdo',
     name: 'Lomo de Cerdo',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 143,
     protein: 21,
     carbs: 0,
@@ -74,7 +74,7 @@
   {
     id: 'gen-huevo',
     name: 'Huevo entero',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 155,
     protein: 13,
     carbs: 1.1,
@@ -86,7 +86,7 @@
   {
     id: 'gen-claras',
     name: 'Claras de Huevo',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 52,
     protein: 11,
     carbs: 0.7,
@@ -98,7 +98,7 @@
   {
     id: 'gen-arroz-blanco',
     name: 'Arroz Blanco (Crudo)',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 360,
     protein: 7,
     carbs: 79,
@@ -110,7 +110,7 @@
   {
     id: 'gen-pasta',
     name: 'Pasta / Macarrones (Crudo)',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 350,
     protein: 12,
     carbs: 71,
@@ -122,7 +122,7 @@
   {
     id: 'gen-patata',
     name: 'Patata (Cruda)',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 77,
     protein: 2,
     carbs: 17,
@@ -134,7 +134,7 @@
   {
     id: 'gen-boniato',
     name: 'Boniato / Batata (Cruda)',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 86,
     protein: 1.6,
     carbs: 20,
@@ -146,7 +146,7 @@
   {
     id: 'gen-avena',
     name: 'Copos de Avena',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 389,
     protein: 16.9,
     carbs: 66.3,
@@ -158,7 +158,7 @@
   {
     id: 'gen-pan',
     name: 'Pan Blanco',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 265,
     protein: 9,
     carbs: 49,
@@ -170,7 +170,7 @@
   {
     id: 'gen-leche-entera',
     name: 'Leche Entera',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 61,
     protein: 3.2,
     carbs: 4.8,
@@ -182,7 +182,7 @@
   {
     id: 'gen-leche-semi',
     name: 'Leche Semidesnatada',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 47,
     protein: 3.4,
     carbs: 4.8,
@@ -194,7 +194,7 @@
   {
     id: 'gen-yogur',
     name: 'Yogur Natural',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 61,
     protein: 3.5,
     carbs: 4.7,
@@ -205,8 +205,8 @@
   },
   {
     id: 'gen-atun-lata',
-    name: 'AtÃºn al Natural (Escurrido)',
-    brand: 'GenÃ©rico',
+    name: 'Atún al Natural (Escurrido)',
+    brand: 'Genérico',
     kcal: 99,
     protein: 23,
     carbs: 0,
@@ -218,7 +218,7 @@
   {
     id: 'gen-aceite-oliva',
     name: 'Aceite de Oliva Virgen Extra',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 884,
     protein: 0,
     carbs: 0,
@@ -230,7 +230,7 @@
   {
     id: 'gen-almendras',
     name: 'Almendras',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 579,
     protein: 21,
     carbs: 21,
@@ -242,7 +242,7 @@
   {
     id: 'gen-nueces',
     name: 'Nueces',
-    brand: 'GenÃ©rico',
+    brand: 'Genérico',
     kcal: 654,
     protein: 15,
     carbs: 13,

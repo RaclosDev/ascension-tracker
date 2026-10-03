@@ -58,9 +58,9 @@ export default function ManualFoodForm({
       };
       await api
         .post('/nutrition/my-foods', myFoodDto)
-        .catch(() => console.warn('Ya existÃ­a o error al guardar en mis alimentos'));
+        .catch(() => console.warn('Ya existía o error al guardar en mis alimentos'));
 
-      toast.success('Alimento guardado y aÃ±adido a tus alimentos');
+      toast.success('Alimento guardado y añadido a tus alimentos');
       onLogAdded();
       onClose();
     } catch (err: any) {
@@ -95,7 +95,7 @@ export default function ManualFoodForm({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <div className="form-group">
           <label className="form-label" htmlFor="food-portion">
-            PorciÃ³n consumida (g)
+            Porción consumida (g)
           </label>
           <input
             id="food-portion"
@@ -108,7 +108,7 @@ export default function ManualFoodForm({
         </div>
         <div className="form-group">
           <label className="form-label" htmlFor="food-kcal">
-            CalorÃ­as (por 100g)
+            Calorías (por 100g)
           </label>
           <input
             id="food-kcal"
@@ -167,7 +167,7 @@ export default function ManualFoodForm({
             htmlFor="food-protein"
             style={{ color: 'var(--color-protein)', fontSize: '0.8rem' }}
           >
-            ProteÃ­na (g/100g)
+            Proteína (g/100g)
           </label>
           <input
             id="food-protein"
