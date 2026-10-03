@@ -17,15 +17,15 @@ const macroLine = (kcal: number, p: number, c: number, f: number) => (
       <strong style={{ color: 'var(--text-primary)' }}>{Math.round(kcal)}</strong> kcal
     </span>
     <span className="subtotal-dot" style={{ margin: '0 0.3rem', opacity: 0.5 }}>
-      â€¢
+      •
     </span>
     <span className="subtotal-val">P: {Number(p).toFixed(1)}g</span>
     <span className="subtotal-dot" style={{ margin: '0 0.3rem', opacity: 0.5 }}>
-      â€¢
+      •
     </span>
     <span className="subtotal-val">C: {Number(c).toFixed(1)}g</span>
     <span className="subtotal-dot" style={{ margin: '0 0.3rem', opacity: 0.5 }}>
-      â€¢
+      •
     </span>
     <span className="subtotal-val">G: {Number(f).toFixed(1)}g</span>
   </span>
@@ -133,7 +133,7 @@ export default function FoodCard({
             {Math.round(food.kcalPer100g)} kcal
           </span>
 
-          {(food.servingSize > 0 || food.brand) && <span style={{ opacity: 0.5 }}>â€¢</span>}
+          {(food.servingSize > 0 || food.brand) && <span style={{ opacity: 0.5 }}>•</span>}
 
           {food.servingSize > 0 && (
             <span
@@ -149,7 +149,7 @@ export default function FoodCard({
             </span>
           )}
 
-          {food.servingSize > 0 && food.brand && <span style={{ opacity: 0.5 }}>â€¢</span>}
+          {food.servingSize > 0 && food.brand && <span style={{ opacity: 0.5 }}>•</span>}
 
           {food.brand && (
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', opacity: 0.8 }}>
@@ -169,9 +169,9 @@ export default function FoodCard({
           }}
         >
           <span>P: {Number(food.proteinPer100g).toFixed(1)}g</span>
-          <span style={{ opacity: 0.5 }}>â€¢</span>
+          <span style={{ opacity: 0.5 }}>•</span>
           <span>C: {Number(food.carbsPer100g).toFixed(1)}g</span>
-          <span style={{ opacity: 0.5 }}>â€¢</span>
+          <span style={{ opacity: 0.5 }}>•</span>
           <span>G: {Number(food.fatPer100g).toFixed(1)}g</span>
         </div>
       </div>

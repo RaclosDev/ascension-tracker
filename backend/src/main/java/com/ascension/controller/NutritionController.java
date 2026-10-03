@@ -176,7 +176,7 @@ public class NutritionController {
                         .body(Map.of("error", "La imagen no puede superar los 4 MB."));
             }
             
-            return ResponseEntity.ok(geminiAiService.processNaturalLanguageLog(jwt.getClaimAsString("email"), text, base64Image, mealIndex, date));
+            return ResponseEntity.ok().header("X-AI-Model", geminiAiService.getActiveModelName()).body(geminiAiService.processNaturalLanguageLog(jwt.getClaimAsString("email"), text, base64Image, mealIndex, date));
         } catch (Exception e) {
             log.error("Nutrition endpoint error", e);
             throw new com.ascension.exception.AiProcessingException("Error procesando la solicitud en la IA", e);
@@ -189,7 +189,7 @@ public class NutritionController {
             @AuthenticationPrincipal Jwt jwt) {
         try {
             String text = request.getText();
-            return ResponseEntity.ok(geminiAiService.processNaturalLanguageFood(jwt.getClaimAsString("email"), text));
+            return ResponseEntity.ok().header("X-AI-Model", geminiAiService.getActiveModelName()).body(geminiAiService.processNaturalLanguageFood(jwt.getClaimAsString("email"), text));
         } catch (Exception e) {
             log.error("Nutrition endpoint error", e);
             throw new com.ascension.exception.AiProcessingException("Error procesando la solicitud en la IA", e);

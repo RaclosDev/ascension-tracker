@@ -189,7 +189,7 @@ export default function RecipeFormModal({
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontWeight: 500 }}>{ing.product}</span>
                       <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                        {ing.quantity}g â€¢ {ing.kcal} kcal
+                        {ing.quantity}g • {ing.kcal} kcal
                       </span>
                     </div>
                     <button

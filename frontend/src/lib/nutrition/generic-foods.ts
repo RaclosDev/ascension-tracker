@@ -69,7 +69,7 @@ export const GENERIC_FOODS = [
     fat: 6,
     servingSize: 100,
     servingLabel: 'g',
-    image: 'ðŸ¥“',
+    image: '🥓',
   },
   {
     id: 'gen-huevo',

@@ -921,7 +921,7 @@ export default function NutritionPage() {
                                               return `${log.quantity}g`;
                                             })()}
                                           </span>
-                                          {' Ã¢â‚¬¢ '}
+                                          {' •â‚¬¢ '}
                                           {Math.round(Number(log.kcal) || 0)} kcal | P:{' '}
                                           {(Number(log.protein) || 0).toFixed(1)}g | C:{' '}
                                           {(Number(log.carbs) || 0).toFixed(1)}g | G:{' '}

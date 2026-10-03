@@ -62,6 +62,11 @@ public class GeminiAiService {
     }
 
 
+    
+    public String getActiveModelName() {
+        return apiClient.getActiveModelName();
+    }
+
     public List<FoodLogDTO> processNaturalLanguageLog(String userEmail, String text, String base64Image, int defaultMealIndex, LocalDate date) {
         
 

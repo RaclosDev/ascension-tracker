@@ -101,7 +101,7 @@ public class SecurityConfig {
         
         configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(java.util.Arrays.asList("*"));
-        configuration.setExposedHeaders(java.util.Arrays.asList("Content-Type", "Authorization"));
+        configuration.setExposedHeaders(java.util.Arrays.asList("Content-Type", "Authorization", "X-AI-Model"));
         
         org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", configuration);

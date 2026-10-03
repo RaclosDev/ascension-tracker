@@ -52,6 +52,19 @@ public class GeminiApiClient {
         return executePrompt(prompt, null, null);
     }
 
+    public String getActiveModelName() {
+        if (cachedWorkingUrl != null) {
+            try {
+                int start = cachedWorkingUrl.indexOf("models/") + 7;
+                int end = cachedWorkingUrl.indexOf(":", start);
+                return cachedWorkingUrl.substring(start, end);
+            } catch (Exception e) {
+                return "gemini-unknown";
+            }
+        }
+        return "detecting...";
+    }
+
     public String executePrompt(String prompt, String base64Image, String mimeType) {
         if (geminiApiKey == null || geminiApiKey.trim().isEmpty()) {
             throw new RuntimeException("GEMINI_API_KEY is not configured.");
