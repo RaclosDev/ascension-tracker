@@ -54,7 +54,7 @@ export default function UtilitiesPage() {
     if (summary && chatMessages.length === 0) {
       const rem = summary.remaining || {};
       const kcalText = rem.kcal !== undefined ? `${rem.kcal} kcal` : 'tus caloras';
-      const pText = rem.protein !== undefined ? `${rem.protein}g protena` : '';
+      const pText = rem.protein !== undefined ? `${rem.protein}g proteína` : '';
       const cText = rem.carbs !== undefined ? `${rem.carbs}g hidratos` : '';
       const fText = rem.fat !== undefined ? `${rem.fat}g grasas` : '';
       const macroDetails = [pText, cText, fText].filter(Boolean).join(', ');
@@ -63,7 +63,7 @@ export default function UtilitiesPage() {
         {
           id: 'welcome',
           role: 'assistant',
-          text: `Hola. Para hoy te quedan aprox. **${kcalText}** (${macroDetails}).\nQu te apetece comer? Puedo disearte una cena rpida, usar lo que tengas en la nevera o darte ideas sueltas.`,
+          text: `Hola. Para hoy te quedan aprox. **${kcalText}** (${macroDetails}).\nQué te apetece comer? Puedo diseñarte una cena rápida, usar lo que tengas en la nevera o darte ideas sueltas.`,
           mealOptions: [],
         },
       ]);
@@ -136,7 +136,7 @@ export default function UtilitiesPage() {
       const aiMsg = {
         id: aiMsgId,
         role: 'assistant',
-        text: data.reply || 'Aqu tienes las opciones calculadas para tus macros restantes:',
+        text: data.reply || 'Aquí tienes las opciones calculadas para tus macros restantes:',
         mealOptions: options,
       };
 
@@ -357,7 +357,7 @@ export default function UtilitiesPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'var(--text-primary)',
+                  color: '#FFFFFF',
                   flexShrink: 0,
                 }}
               >
@@ -384,7 +384,7 @@ export default function UtilitiesPage() {
                   fontSize: '1.2rem',
                   fontWeight: 800,
                   letterSpacing: '-0.02em',
-                  color: 'var(--text-primary)',
+                  color: '#FFFFFF',
                 }}
               >
                 Estratega IA
@@ -436,11 +436,11 @@ export default function UtilitiesPage() {
                       style={{
                         fontSize: '0.9rem',
                         fontWeight: 700,
-                        color: 'var(--text-primary)',
+                        color: '#FFFFFF',
                         letterSpacing: '0.5px',
                       }}
                     >
-                      ? TUS MACROS RESTANTES
+                      TUS MACROS RESTANTES
                     </span>
                     {loadingSummary && (
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
@@ -468,7 +468,7 @@ export default function UtilitiesPage() {
                         style={{
                           fontSize: '1.1rem',
                           fontWeight: 800,
-                          color: 'var(--text-primary)',
+                          color: '#FFFFFF',
                         }}
                       >
                         {remaining.kcal}
@@ -697,7 +697,7 @@ export default function UtilitiesPage() {
                                         }}
                                       >
                                         <span>
-                                          <strong style={{ color: 'var(--text-primary)' }}>
+                                          <strong style={{ color: '#FFFFFF' }}>
                                             {Math.round(food.kcal)}
                                           </strong>{' '}
                                           kcal
@@ -728,7 +728,7 @@ export default function UtilitiesPage() {
                                       style={{
                                         fontSize: '0.8rem',
                                         fontWeight: 600,
-                                        color: 'var(--text-primary)',
+                                        color: '#FFFFFF',
                                         marginBottom: '0.4rem',
                                       }}
                                     >
@@ -743,28 +743,28 @@ export default function UtilitiesPage() {
                                       }}
                                     >
                                       <span>
-                                        <strong style={{ color: 'var(--text-primary)' }}>
+                                        <strong style={{ color: '#FFFFFF' }}>
                                           {activeOption.totalMacros.kcal}
                                         </strong>{' '}
                                         kcal
                                       </span>
                                       <span></span>
                                       <span>
-                                        <strong style={{ color: 'var(--text-primary)' }}>
+                                        <strong style={{ color: '#FFFFFF' }}>
                                           {activeOption.totalMacros.protein}g
                                         </strong>{' '}
                                         P
                                       </span>
                                       <span></span>
                                       <span>
-                                        <strong style={{ color: 'var(--text-primary)' }}>
+                                        <strong style={{ color: '#FFFFFF' }}>
                                           {activeOption.totalMacros.carbs}g
                                         </strong>{' '}
                                         C
                                       </span>
                                       <span></span>
                                       <span>
-                                        <strong style={{ color: 'var(--text-primary)' }}>
+                                        <strong style={{ color: '#FFFFFF' }}>
                                           {activeOption.totalMacros.fat}g
                                         </strong>{' '}
                                         G
@@ -798,11 +798,11 @@ export default function UtilitiesPage() {
                                     }}
                                   >
                                     {isOptionApplied ? (
-                                      <> Aadido a tu diario</>
+                                      <> Añadido a tu diario</>
                                     ) : applyingOptionKey === activeOptionKey ? (
-                                      <>Aadiendo...</>
+                                      <>Añadiendo...</>
                                     ) : (
-                                      <> Aadir opcin al diario</>
+                                      <> Añadir opción al diario</>
                                     )}
                                   </button>
                                 </div>
@@ -841,7 +841,7 @@ export default function UtilitiesPage() {
                         )
                       }
                     >
-                      Disear cena para mis macros
+                      Diseñar cena para mis macros
                     </button>
                     <button
                       type="button"
@@ -854,10 +854,10 @@ export default function UtilitiesPage() {
                         width: 'fit-content',
                       }}
                       onClick={() =>
-                        handleQuickPrompt('Sugireme snacks o meriendas altas en protena.')
+                        handleQuickPrompt('Sugiéreme snacks o meriendas altas en proteína.')
                       }
                     >
-                      Snacks altos en protena
+                      Snacks altos en proteína
                     </button>
                   </div>
                 )}
@@ -968,7 +968,7 @@ export default function UtilitiesPage() {
                         top: '-5px',
                         right: '-5px',
                         background: 'var(--bg-card)',
-                        color: 'var(--text-primary)',
+                        color: '#FFFFFF',
                         border: '1px solid var(--border-subtle)',
                         borderRadius: '50%',
                         width: '20px',
@@ -1006,13 +1006,13 @@ export default function UtilitiesPage() {
                     onClick={() => fileInputRef.current && fileInputRef.current.click()}
                     style={{
                       borderRadius: '50%',
-                      width: '42px',
-                      height: '42px',
+                      minWidth: '42px', width: '42px',
+                      minHeight: '42px', height: '42px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      background: 'var(--bg-primary)',
-                      color: 'var(--text-primary)',
+                      background: '#1C1C1E',
+                      color: '#FFFFFF',
                       border: '1px solid var(--border-subtle)',
                       flexShrink: 0,
                     }}
@@ -1026,13 +1026,13 @@ export default function UtilitiesPage() {
                     onClick={() => toggleListening(userInput)}
                     style={{
                       borderRadius: '50%',
-                      width: '42px',
-                      height: '42px',
+                      minWidth: '42px', width: '42px',
+                      minHeight: '42px', height: '42px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      background: isListening ? 'rgba(239,68,68,0.2)' : 'var(--bg-primary)',
-                      color: isListening ? '#ef4444' : 'var(--text-primary)',
+                      background: isListening ? 'rgba(239,68,68,0.2)' : '#1C1C1E',
+                      color: isListening ? '#ef4444' : '#FFFFFF',
                       border: isListening ? '1px solid #ef4444' : '1px solid var(--border-subtle)',
                       flexShrink: 0,
                     }}
@@ -1046,13 +1046,13 @@ export default function UtilitiesPage() {
                     className="form-input"
                     style={{
                       flex: 1,
-                      height: '42px',
+                      minHeight: '42px', height: '42px',
                       borderRadius: '12px',
-                      background: 'var(--bg-primary)',
+                      background: '#1C1C1E',
                       border: '1px solid var(--border-subtle)',
-                      color: 'var(--text-primary)',
+                      color: '#FFFFFF',
                     }}
-                    placeholder="Ej: Tengo huevos, atn y verduras en la nevera, qu opciones me recomiendas?"
+                    placeholder="Ej: Tengo huevos, atún y verduras en la nevera, qu opciones me recomiendas?"
                     value={userInput}
                     onChange={(e) => setUserInput(e.target.value)}
                     disabled={sending}
@@ -1062,8 +1062,8 @@ export default function UtilitiesPage() {
                     type="submit"
                     disabled={(!userInput.trim() && !selectedImage) || sending}
                     style={{
-                      height: '42px',
-                      width: '42px',
+                      minHeight: '42px', height: '42px',
+                      minWidth: '42px', width: '42px',
                       borderRadius: '50%',
                       flexShrink: 0,
                       background:
@@ -1117,7 +1117,7 @@ export default function UtilitiesPage() {
           style={{
             fontSize: '1.25rem',
             fontWeight: 800,
-            color: 'var(--text-primary)',
+            color: '#FFFFFF',
             marginBottom: '1.5rem',
             letterSpacing: '-0.02em',
           }}
