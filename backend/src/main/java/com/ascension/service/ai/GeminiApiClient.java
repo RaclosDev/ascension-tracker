@@ -166,17 +166,7 @@ public class GeminiApiClient {
         contents.add(contentMap);
         request.put("contents", contents);
 
-        Map<String, Object> systemInstruction = new HashMap<>();
-        List<Map<String, Object>> systemParts = new ArrayList<>();
-        Map<String, Object> systemTextPart = new HashMap<>();
-        systemTextPart.put("text", "You are Ascension Tracker AI. Always return minified valid JSON. Never use markdown code blocks.");
-        systemParts.add(systemTextPart);
-        systemInstruction.put("parts", systemParts);
-        
-        request.put("systemInstruction", systemInstruction);
-
         Map<String, Object> generationConfig = new HashMap<>();
-        generationConfig.put("responseMimeType", "application/json");
         generationConfig.put("temperature", 0.1);
         request.put("generationConfig", generationConfig);
 
