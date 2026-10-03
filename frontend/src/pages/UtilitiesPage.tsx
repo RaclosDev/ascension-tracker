@@ -1157,7 +1157,7 @@ export default function UtilitiesPage() {
                   color: 'var(--text-secondary)',
                 }}
               >
-                ?
+                ▼
               </span>
             </div>
 
@@ -1248,7 +1248,7 @@ export default function UtilitiesPage() {
                   color: 'var(--text-secondary)',
                 }}
               >
-                ?
+                ▼
               </span>
             </div>
 
