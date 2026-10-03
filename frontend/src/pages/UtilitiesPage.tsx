@@ -5,7 +5,7 @@ import api from '../api/client';
 import toast from 'react-hot-toast';
 import { useSpeechToText } from '../hooks/useSpeechToText';
 import NutritionCalculators from '../components/calculators/NutritionCalculators';
-import { Camera, Mic, Square } from 'lucide-react';
+import { Camera, Mic, Square, Bot, User } from 'lucide-react';
 import DOMPurify from 'dompurify';
 
 export default function UtilitiesPage() {
@@ -361,22 +361,7 @@ export default function UtilitiesPage() {
                   flexShrink: 0,
                 }}
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                  <path d="M5 3v4" />
-                  <path d="M19 17v4" />
-                  <path d="M3 5h4" />
-                  <path d="M17 19h4" />
-                </svg>
+                <Bot size={20} color="#FFFFFF" />
               </div>
               <h2
                 style={{
@@ -577,33 +562,9 @@ export default function UtilitiesPage() {
                     <div key={msg.id} className={`chat-msg-row ${isUser ? 'user-row' : ''}`}>
                       <div className="chat-avatar">
                         {isUser ? (
-                          <svg
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                          </svg>
+                          <User size={18} />
                         ) : (
-                          <svg
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            style={{ color: 'var(--accent-primary)' }}
-                          >
-                            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                          </svg>
+                          <Bot size={18} color="var(--accent-primary)" />
                         )}
                       </div>
                       <div className={`chat-bubble ${isUser ? 'user-bubble' : 'ai-bubble'}`}>
@@ -865,19 +826,7 @@ export default function UtilitiesPage() {
                 {sending && (
                   <div className="chat-msg-row">
                     <div className="chat-avatar">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        style={{ color: 'var(--accent-primary)' }}
-                      >
-                        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                      </svg>
+                      <Bot size={18} color="var(--accent-primary)" />
                     </div>
                     <div
                       className="chat-bubble ai-bubble"
@@ -1018,7 +967,7 @@ export default function UtilitiesPage() {
                     }}
                     title="Adjuntar foto de comida"
                   >
-                    <Camera size={20} />
+                    <Camera size={20} color="#FFFFFF" />
                   </button>
                   <button
                     type="button"
@@ -1038,7 +987,7 @@ export default function UtilitiesPage() {
                     }}
                     title={isListening ? 'Detener dictado' : 'Dictar por voz'}
                   >
-                    {isListening ? <Square size={20} /> : <Mic size={20} />}
+                    {isListening ? <Square size={20} color="#FFFFFF" /> : <Mic size={20} color="#FFFFFF" />}
                   </button>
 
                   <input

@@ -59,7 +59,7 @@ export default function AiFoodModal({
               }} 
               title={isListening ? 'Detener dictado' : 'Dictar por voz'}
             >
-              {isListening ? <Square size={20} /> : <Mic size={20} />}
+              {isListening ? <Square size={20} color="#FFFFFF" /> : <Mic size={20} color="#FFFFFF" />}
             </button>
             <input 
               type="text" 
