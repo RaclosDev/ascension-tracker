@@ -63,12 +63,6 @@ public class GeminiApiClient {
             try {
                 return cleanJsonResponse(callApiEndpoint(cachedWorkingUrl, prompt, base64Image, mimeType));
             } catch (Exception e) {
-                if (e instanceof org.springframework.web.client.HttpStatusCodeException) {
-                    int statusCode = ((org.springframework.web.client.HttpStatusCodeException) e).getStatusCode().value();
-                    if (statusCode == 400 || statusCode == 401 || statusCode == 403 || statusCode == 429) {
-                        throw new RuntimeException("API error: " + statusCode + " - " + e.getMessage(), e);
-                    }
-                }
                 cachedWorkingUrl = null; 
             }
         }
@@ -92,12 +86,6 @@ public class GeminiApiClient {
                 cachedWorkingUrl = url;
                 return cleanJsonResponse(responseText);
             } catch (Exception e) {
-                if (e instanceof org.springframework.web.client.HttpStatusCodeException) {
-                    int statusCode = ((org.springframework.web.client.HttpStatusCodeException) e).getStatusCode().value();
-                    if (statusCode == 400 || statusCode == 401 || statusCode == 403 || statusCode == 429) {
-                        throw new RuntimeException("API error: " + statusCode + " - " + e.getMessage(), e);
-                    }
-                }
                 lastException = e;
             }
         }
