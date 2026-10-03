@@ -416,7 +416,7 @@ export default function MacroConfigurator({
             >
               <div>
                 {' '}
-                <strong>ProteÃ­nas:</strong> ~{balancedData.bP}g (2g Ã—{' '}
+                <strong>Proteínas:</strong> ~{balancedData.bP}g (2g Ã—{' '}
                 {parseSafeFloat(initialStartWeight ?? form.startWeight, 80)}kg peso actual)
               </div>
               <div>

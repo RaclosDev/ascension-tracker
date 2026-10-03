@@ -337,7 +337,7 @@ export default function WeightLossPlan({
             </div>
             <div className="kpi-detail">Calorías diarias a comer</div>
             <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              TDEE {Math.round(tdee)} âˆ’ restricciÃ³n {Math.round(plan.dietDeficit)} kcal
+              TDEE {Math.round(tdee)} âˆ’ restricción {Math.round(plan.dietDeficit)} kcal
             </div>
           </div>
 

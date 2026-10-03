@@ -45,7 +45,7 @@ export const GENERIC_FOODS = [
     fat: 1,
     servingSize: 100,
     servingLabel: 'g',
-    image: 'ðŸ¦ƒ',
+    image: '🦃',
   },
   {
     id: 'gen-ternera',
@@ -57,7 +57,7 @@ export const GENERIC_FOODS = [
     fat: 3.5,
     servingSize: 100,
     servingLabel: 'g',
-    image: 'ðŸ¥©',
+    image: '🥩',
   },
   {
     id: 'gen-cerdo',
@@ -81,7 +81,7 @@ export const GENERIC_FOODS = [
     fat: 11,
     servingSize: 55,
     servingLabel: 'ud',
-    image: 'ðŸ¥š',
+    image: '🥚',
   },
   {
     id: 'gen-claras',
@@ -153,7 +153,7 @@ export const GENERIC_FOODS = [
     fat: 6.9,
     servingSize: 100,
     servingLabel: 'g',
-    image: 'ðŸ¥£',
+    image: '🥣',
   },
   {
     id: 'gen-pan',
@@ -237,7 +237,7 @@ export const GENERIC_FOODS = [
     fat: 49,
     servingSize: 30,
     servingLabel: 'g',
-    image: 'ðŸŒ°',
+    image: '🌰',
   },
   {
     id: 'gen-nueces',
@@ -249,7 +249,7 @@ export const GENERIC_FOODS = [
     fat: 65,
     servingSize: 30,
     servingLabel: 'g',
-    image: 'ðŸ¥œ',
+    image: '🥜',
   },
 ];
 

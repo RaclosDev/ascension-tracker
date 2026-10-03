@@ -106,7 +106,7 @@ export function MuscleRecovery({
             padding: '1rem 0',
           }}
         >
-          Â¡Todos tus mÃºsculos estÃ¡n al 100% recuperados! ðŸ’ª
+          Â¡Todos tus mÃºsculos estÃ¡n al 100% recuperados! 💪
         </div>
       ) : (
         <div

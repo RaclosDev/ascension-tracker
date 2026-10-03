@@ -848,7 +848,7 @@ export function ExercisesView() {
                       {lastUsedMap.has(ex.id) && (
                         <span style={{ color: 'var(--accent-primary-light)' }}>
                           {' '}
-                          Â· {usageCountMap.get(ex.id)}Ã— Â·{' '}
+                          · {usageCountMap.get(ex.id)}Ã— ·{' '}
                           {new Date(lastUsedMap.get(ex.id)!).toLocaleDateString('es-ES', {
                             day: 'numeric',
                             month: 'short',
