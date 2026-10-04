@@ -81,14 +81,6 @@ export default function FoodSearchModal({
     }
   }, [selectedProduct?.name]);
 
-  useEffect(() => {
-    if (selectedProduct && selectedProduct.portions && selectedProduct.portions.length > 0) {
-      setInputMode('portions');
-    } else {
-      setInputMode('grams');
-    }
-  }, [selectedProduct?.name]);
-
   const { isListening, toggleListening, stopListening } = useSpeechToText({
     onTranscript: (text) => setQuery(text),
     lang: 'es-ES',
@@ -159,6 +151,8 @@ export default function FoodSearchModal({
     }
   }, [isOpen]);
 
+  const searchRequestId = useRef(0);
+
   if (!isOpen) return null;
 
   const handleQueryChange = (val: string) => {
@@ -169,8 +163,6 @@ export default function FoodSearchModal({
       return;
     }
   };
-
-  const searchRequestId = useRef(0);
 
   const handleSearch = async (e?: any) => {
     if (e) e.preventDefault();
