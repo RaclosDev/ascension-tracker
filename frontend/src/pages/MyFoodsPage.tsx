@@ -48,7 +48,7 @@ export default function MyFoodsPage() {
   const {
     data = {},
     isLoading: loadingData,
-    refetch: fetchData,
+    refetch: refetchQuery,
   } = useQuery<any, any>({
     queryKey: ['myFoodsData'],
     queryFn: async () => {
@@ -64,6 +64,11 @@ export default function MyFoodsPage() {
       };
     },
   });
+
+  const fetchData = () => {
+    refetchQuery();
+    queryClient.invalidateQueries({ queryKey: ['foodLists'] });
+  };
 
   const { recentFoods = [], savedFoods = [], recipes = [] } = data as any;
 
