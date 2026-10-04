@@ -13,8 +13,8 @@ import {
 } from 'recharts';
 
 interface DashboardChartsProps {
-  weightChartData: any[];
-  deltaData: any[];
+  weightChartData: Array<{ label: string; weight: number; [key: string]: unknown }>;
+  deltaData: Array<{ week: string; delta: number; fill: string; [key: string]: unknown }>;
   goalWeight: number;
 }
 
@@ -50,7 +50,7 @@ export default function DashboardCharts({
                   (dataMin: number) => Math.floor(dataMin),
                   (dataMax: number) => Math.ceil(dataMax),
                 ]}
-                tickFormatter={(v: any) => `${v}`}
+                tickFormatter={(v: number) => `${v}`}
               />
               <Tooltip
                 contentStyle={{
@@ -60,7 +60,7 @@ export default function DashboardCharts({
                 }}
                 labelStyle={{ color: '#F4F5F7' }}
                 itemStyle={{ color: '#9BA3AF' }}
-                formatter={(v: any) => [`${Number(v).toFixed(2)} kg`, 'Peso']}
+                formatter={(v: number) => [`${Number(v).toFixed(2)} kg`, 'Peso']}
               />
               <ReferenceLine
                 y={goalWeight}
@@ -89,7 +89,7 @@ export default function DashboardCharts({
 
       {/* Delta Chart */}
       <div className="chart-card">
-        <div className="chart-title"> VariaciÃ³n Semanal (Î”)</div>
+        <div className="chart-title"> Variación Semanal (Δ)</div>
         <div className="chart-wrapper">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={deltaData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -98,7 +98,7 @@ export default function DashboardCharts({
               <YAxis
                 width={40}
                 tick={{ fill: '#64748b', fontSize: 11 }}
-                tickFormatter={(v: any) => `${v > 0 ? '+' : ''}${v.toFixed(1)}`}
+                tickFormatter={(v: number) => `${v > 0 ? '+' : ''}${v.toFixed(1)}`}
               />
               <Tooltip
                 labelStyle={{ color: '#F4F5F7' }}
@@ -108,13 +108,13 @@ export default function DashboardCharts({
                   border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: 8,
                 }}
-                formatter={(v: any) => [
+                formatter={(v: number) => [
                   `${v > 0 ? '+' : ''}${Number(v).toFixed(2)} kg`,
                   'Variación',
                 ]}
               />
               <Bar dataKey="delta" radius={[6, 6, 0, 0]}>
-                {deltaData.map((entry: any, i: number) => (
+                {deltaData.map((entry: { fill: string }, i: number) => (
                   <rect key={i} fill={entry.fill} />
                 ))}
               </Bar>
@@ -125,8 +125,3 @@ export default function DashboardCharts({
     </div>
   );
 }
-
-
-
-
-

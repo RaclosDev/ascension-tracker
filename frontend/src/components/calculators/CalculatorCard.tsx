@@ -52,7 +52,7 @@ export default function CalculatorCard({ title, defaultOpen = false, children }:
             color: 'var(--text-secondary)',
           }}
         >
-          â–¾
+          ▾
         </span>
       </button>
       {isOpen && (
@@ -70,7 +70,3 @@ export default function CalculatorCard({ title, defaultOpen = false, children }:
     </div>
   );
 }
-
-
-
-

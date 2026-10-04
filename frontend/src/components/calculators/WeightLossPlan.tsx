@@ -241,7 +241,7 @@ export default function WeightLossPlan({
                 fontWeight: 600,
               }}
             >
-              Reparto del dÃ©ficit â€” arrastra para ajustar
+              Reparto del déficit — arrastra para ajustar
             </div>
 
             {/* Range slider */}
@@ -279,13 +279,13 @@ export default function WeightLossPlan({
               }}
             >
               <span style={{ color: 'var(--color-carbs)', fontWeight: 600 }}>
-                ðŸ‘Ÿ {Math.round(plan.stepsKcal)} kcal
+                👟 {Math.round(plan.stepsKcal)} kcal
               </span>
               <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
                 {Math.round(stepsPct)}% pasos / {Math.round(100 - stepsPct)}% dieta
               </span>
               <span style={{ color: 'var(--color-fat)', fontWeight: 600 }}>
-                ðŸ½ï¸ {Math.round(plan.dietDeficit)} kcal
+                🍽️ {Math.round(plan.dietDeficit)} kcal
               </span>
             </div>
 
@@ -337,7 +337,7 @@ export default function WeightLossPlan({
             </div>
             <div className="kpi-detail">Calorías diarias a comer</div>
             <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              TDEE {Math.round(tdee)} âˆ’ restricción {Math.round(plan.dietDeficit)} kcal
+              TDEE {Math.round(tdee)} − restricción {Math.round(plan.dietDeficit)} kcal
             </div>
           </div>
 
@@ -372,7 +372,3 @@ export default function WeightLossPlan({
     </div>
   );
 }
-
-
-
-

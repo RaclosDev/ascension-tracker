@@ -138,7 +138,16 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
     return {
       maxWeight,
       maxWeightPerRange,
-      sessions: sessions.sort((a: any, b: any) => b.date - a.date),
+      sessions: sessions.sort(
+        (
+          a: { date: { getTime: () => number } | number },
+          b: { date: { getTime: () => number } | number },
+        ) => {
+          const dateA = typeof a.date === 'number' ? a.date : a.date.getTime();
+          const dateB = typeof b.date === 'number' ? b.date : b.date.getTime();
+          return dateB - dateA;
+        },
+      ),
     };
   }, [exercise, history, filterGrip, filterMachine]);
 
@@ -559,7 +568,7 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
                             color: 'var(--text-secondary)',
                           }}
                         >
-                          {set.weight} Ã— {set.reps}
+                          {set.weight} × {set.reps}
                         </span>
                       ))}
                     </div>
@@ -573,7 +582,3 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
     </Dialog>
   );
 }
-
-
-
-

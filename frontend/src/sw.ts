@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
-declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: any };
+import { precacheAndRoute, PrecacheEntry } from 'workbox-precaching';
+declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (PrecacheEntry | string)[] };
 
-import { precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
@@ -32,11 +32,11 @@ registerRoute(
   }),
 );
 
-// Ascension Service Worker â€“ handles push notifications
+// Ascension Service Worker — handles push notifications
 
-// Push event â€” fires even when the app is in the background
+// Push event — fires even when the app is in the background
 self.addEventListener('push', (event: PushEvent) => {
-  let data = { title: '¡Descanso terminado!', body: 'Es hora de la siguiente serie.' };
+  let data = { title: '¡¡Descanso terminado!', body: 'Es hora de la siguiente serie.' };
 
   try {
     if (event.data) {
@@ -63,11 +63,11 @@ self.addEventListener('push', (event: PushEvent) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || '¡Descanso terminado!', options),
+    self.registration.showNotification(data.title || '¡¡Descanso terminado!', options),
   );
 });
 
-// Notification click â€” open the app
+// Notification click — open the app
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
 
@@ -89,16 +89,12 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   );
 });
 
-// Activate â€” claim clients immediately
+// Activate — claim clients immediately
 self.addEventListener('activate', (event: ExtendableEvent) => {
   event.waitUntil(self.clients.claim());
 });
 
-// Install â€” skip waiting
+// Install — skip waiting
 self.addEventListener('install', () => {
   self.skipWaiting();
 });
-
-
-
-

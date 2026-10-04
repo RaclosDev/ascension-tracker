@@ -9,7 +9,7 @@ export const GENERIC_FOODS = [
     fat: 0.3,
     servingSize: 100,
     servingLabel: 'g',
-    image: 'ðŸŒ',
+    image: '🍌',
   },
   {
     id: 'gen-manzana',
@@ -21,7 +21,7 @@ export const GENERIC_FOODS = [
     fat: 0.2,
     servingSize: 100,
     servingLabel: 'g',
-    image: 'ðŸŽ',
+    image: '🍎',
   },
   {
     id: 'gen-pollo',
@@ -33,7 +33,7 @@ export const GENERIC_FOODS = [
     fat: 1.2,
     servingSize: 100,
     servingLabel: 'g',
-    image: 'ðŸ—',
+    image: '🍗',
   },
   {
     id: 'gen-pavo',
@@ -93,7 +93,7 @@ export const GENERIC_FOODS = [
     fat: 0.2,
     servingSize: 100,
     servingLabel: 'g',
-    image: 'ðŸ³',
+    image: '🍳',
   },
   {
     id: 'gen-arroz-blanco',
@@ -105,7 +105,7 @@ export const GENERIC_FOODS = [
     fat: 0.6,
     servingSize: 100,
     servingLabel: 'g',
-    image: 'ðŸš',
+    image: '🍚',
   },
   {
     id: 'gen-pasta',
@@ -117,7 +117,7 @@ export const GENERIC_FOODS = [
     fat: 1.5,
     servingSize: 100,
     servingLabel: 'g',
-    image: 'ðŸ',
+    image: '🍝',
   },
   {
     id: 'gen-patata',
@@ -129,7 +129,7 @@ export const GENERIC_FOODS = [
     fat: 0.1,
     servingSize: 100,
     servingLabel: 'g',
-    image: 'ðŸ¥”',
+    image: '🥔',
   },
   {
     id: 'gen-boniato',
@@ -141,7 +141,7 @@ export const GENERIC_FOODS = [
     fat: 0.1,
     servingSize: 100,
     servingLabel: 'g',
-    image: 'ðŸ ',
+    image: '🍠',
   },
   {
     id: 'gen-avena',
@@ -165,7 +165,7 @@ export const GENERIC_FOODS = [
     fat: 3.2,
     servingSize: 100,
     servingLabel: 'g',
-    image: 'ðŸ¥–',
+    image: '🥖',
   },
   {
     id: 'gen-leche-entera',
@@ -177,7 +177,7 @@ export const GENERIC_FOODS = [
     fat: 3.6,
     servingSize: 100,
     servingLabel: 'ml',
-    image: 'ðŸ¥›',
+    image: '🥛',
   },
   {
     id: 'gen-leche-semi',
@@ -189,7 +189,7 @@ export const GENERIC_FOODS = [
     fat: 1.6,
     servingSize: 100,
     servingLabel: 'ml',
-    image: 'ðŸ¥›',
+    image: '🥛',
   },
   {
     id: 'gen-yogur',
@@ -201,7 +201,7 @@ export const GENERIC_FOODS = [
     fat: 3.3,
     servingSize: 125,
     servingLabel: 'g',
-    image: 'ðŸ¶',
+    image: '🍶',
   },
   {
     id: 'gen-atun-lata',
@@ -213,7 +213,7 @@ export const GENERIC_FOODS = [
     fat: 0.8,
     servingSize: 56,
     servingLabel: 'g',
-    image: 'ðŸŸ',
+    image: '🐟',
   },
   {
     id: 'gen-aceite-oliva',
@@ -225,7 +225,7 @@ export const GENERIC_FOODS = [
     fat: 100,
     servingSize: 10,
     servingLabel: 'cdta',
-    image: 'ðŸ«’',
+    image: '🫒',
   },
   {
     id: 'gen-almendras',
@@ -252,7 +252,3 @@ export const GENERIC_FOODS = [
     image: '🥜',
   },
 ];
-
-
-
-

@@ -185,7 +185,7 @@ function SwipeableSetRow({
         <input
           inputMode="decimal"
           value={isCardio ? s.distance || '' : s.weight || ''}
-          placeholder={prev === '' ? '0' : prev.split('Ã—')[0]?.trim()}
+          placeholder={prev === '' ? '0' : prev.split('×')[0]?.trim()}
           onChange={(e) => {
             if (isCardio) {
               updateSet(row.id, s.id, { distance: e.target.value.replace(',', '.') });
@@ -596,7 +596,3 @@ export function ExerciseCard({
     </article>
   );
 }
-
-
-
-

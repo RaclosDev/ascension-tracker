@@ -1,7 +1,7 @@
 import React from 'react';
 import toast from 'react-hot-toast';
 
-const parseSafeFloat = (val: any, fallback = 0) => {
+const parseSafeFloat = (val: unknown, fallback = 0) => {
   const parsed = parseFloat(String(val));
   return isNaN(parsed) ? fallback : parsed;
 };
@@ -17,7 +17,7 @@ export interface MacroForm {
   customCarbsPct: number | string;
   startWeight: number | string;
   goalWeight: number | string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface MacroConfiguratorProps {
@@ -416,7 +416,7 @@ export default function MacroConfigurator({
             >
               <div>
                 {' '}
-                <strong>Proteínas:</strong> ~{balancedData.bP}g (2g Ã—{' '}
+                <strong>Proteínas:</strong> ~{balancedData.bP}g (2g ×{' '}
                 {parseSafeFloat(initialStartWeight ?? form.startWeight, 80)}kg peso actual)
               </div>
               <div>
@@ -434,7 +434,3 @@ export default function MacroConfigurator({
     </div>
   );
 }
-
-
-
-

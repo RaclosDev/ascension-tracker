@@ -57,11 +57,11 @@ export const EQUIPMENT_OPTIONS = [
   { id: 'multipower', label: 'Multipower (Smith)' },
   { id: 'peso corporal', label: 'Peso Corporal' },
   { id: 'polea', label: 'Polea' },
-].sort((a: any, b: any) => a.label.localeCompare(b.label, 'es'));
+].sort((a: { label: string }, b: { label: string }) => a.label.localeCompare(b.label, 'es'));
 
 export const MUSCLE_OPTIONS = Object.entries(MUSCLE_LABEL)
   .map(([id, label]) => ({ id, label }))
-  .sort((a: any, b: any) => a.label.localeCompare(b.label, 'es'));
+  .sort((a: { label: string }, b: { label: string }) => a.label.localeCompare(b.label, 'es'));
 
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -141,7 +141,7 @@ export function ExercisesView() {
   // Calculate last used times and usage count
   const lastUsedMap = new Map<string, number>();
   const usageCountMap = new Map<string, number>();
-  history.forEach((w: any) => {
+  history.forEach((w: { exercises: Array<{ exerciseId: string }>; startedAt: number }) => {
     w.exercises.forEach((ex) => {
       const current = lastUsedMap.get(ex.exerciseId) || 0;
       if (w.startedAt > current) {
@@ -165,7 +165,7 @@ export function ExercisesView() {
       const equipName = normalizeString(ex.equipment);
       const tagsName = normalizeString((ex.tags || []).join(' '));
       return queryWords.every(
-        (w: any) =>
+        (w: string) =>
           targetName.includes(w) ||
           originalName.includes(w) ||
           muscleName.includes(w) ||
@@ -175,7 +175,7 @@ export function ExercisesView() {
     })
     .filter((ex) => filterMuscle === 'ALL' || ex.muscle === filterMuscle)
     .filter((ex) => filterEquip === 'ALL' || ex.equipment === filterEquip)
-    .sort((a: any, b: any) => {
+    .sort((a: { id: string }, b: { id: string }) => {
       const aTime = lastUsedMap.get(a.id) || 0;
       const bTime = lastUsedMap.get(b.id) || 0;
       if (aTime !== bTime) {
@@ -215,7 +215,7 @@ export function ExercisesView() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event: any) => {
+    reader.onload = (event: ProgressEvent<FileReader>) => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
@@ -260,7 +260,7 @@ export function ExercisesView() {
 
     try {
       // Find all workouts using the source exercise
-      const toUpdate = history.filter((w: any) =>
+      const toUpdate = history.filter((w: { exercises: Array<{ exerciseId: string }> }) =>
         w.exercises.some((e) => e.exerciseId === mergeSourceId),
       );
 
@@ -271,7 +271,7 @@ export function ExercisesView() {
             e.exerciseId === mergeSourceId ? { ...e, exerciseId: mergeConfirmTargetId } : e,
           ),
         };
-        if (updated.id && updated.id.includes('-')) {
+        if ('id' in updated && typeof updated.id === 'string' && updated.id.includes('-')) {
           await api.put(`/workouts/${updated.id}`, updated);
         } else {
           await api.post('/workouts', updated);
@@ -291,7 +291,7 @@ export function ExercisesView() {
       }
 
       toast.success('Fusión completada con éxito', { id: toastId });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error merging exercises:', err);
       toast.error('Error al fusionar ejercicios', { id: toastId });
     }
@@ -327,7 +327,7 @@ export function ExercisesView() {
     ]);
     const sourceWords = normalizeString(sourceExercise.name)
       .split(/[\s()]+/)
-      .filter((w: any) => w.length > 2 && !ignoreWords.has(w));
+      .filter((w: string) => w.length > 2 && !ignoreWords.has(w));
 
     const isSearchingOrFiltering =
       mergeTargetQuery.trim() || mergeFilterMuscle !== 'ALL' || mergeFilterEquip !== 'ALL';
@@ -347,7 +347,7 @@ export function ExercisesView() {
         const equipName = normalizeString(ex.equipment);
         const tagsName = normalizeString((ex.tags || []).join(' '));
         return queryWords.every(
-          (w: any) =>
+          (w: string) =>
             targetName.includes(w) ||
             originalName.includes(w) ||
             muscleName.includes(w) ||
@@ -373,7 +373,7 @@ export function ExercisesView() {
         return { ex, score };
       })
       .filter((item) => isSearchingOrFiltering || item.score > 0)
-      .sort((a: any, b: any) => b.score - a.score)
+      .sort((a: { score: number }, b: { score: number }) => b.score - a.score)
       .map((item) => item.ex);
   }
 
@@ -848,7 +848,7 @@ export function ExercisesView() {
                       {lastUsedMap.has(ex.id) && (
                         <span style={{ color: 'var(--accent-primary-light)' }}>
                           {' '}
-                          · {usageCountMap.get(ex.id)}Ã— ·{' '}
+                          · {usageCountMap.get(ex.id)}× ·{' '}
                           {new Date(lastUsedMap.get(ex.id)!).toLocaleDateString('es-ES', {
                             day: 'numeric',
                             month: 'short',
@@ -1804,7 +1804,3 @@ export function ExercisesView() {
     </div>
   );
 }
-
-
-
-

@@ -656,7 +656,7 @@ export default function MyFoodsPage() {
         carbsPer100g: data.carbs,
         fatPer100g: data.fat,
       });
-      toast.success(`"${data.name}" â†’ Mis Alimentos`);
+      toast.success(`"${data.name}" → Mis Alimentos`);
       fetchData();
     } catch {
       toast.error('Error');
@@ -676,7 +676,7 @@ export default function MyFoodsPage() {
         totalCarbs: data.carbs,
         totalFat: data.fat,
       });
-      toast.success(`"${data.name}" â†’ Mis Recetas`);
+      toast.success(`"${data.name}" → Mis Recetas`);
       fetchData();
     } catch {
       toast.error('Error');
@@ -694,7 +694,7 @@ export default function MyFoodsPage() {
         carbsPer100g: Math.round(((f.carbs || 0) / q) * 100 * 10) / 10,
         fatPer100g: Math.round(((f.fat || 0) / q) * 100 * 10) / 10,
       });
-      toast.success(`"${f.product}" â†’ Mis Alimentos`);
+      toast.success(`"${f.product}" → Mis Alimentos`);
       fetchData();
     } catch {
       toast.error('Error');
@@ -1338,9 +1338,9 @@ export default function MyFoodsPage() {
                         gap: '0.5rem',
                       }}
                     >
-                      <span className="hide-on-mobile">Arrastra â†’</span>
+                      <span className="hide-on-mobile">Arrastra →</span>
                       <span className="show-on-mobile" style={{ display: 'none' }}>
-                        {expandedSections.recent || q ? 'â–¼' : 'â–¶'}
+                        {expandedSections.recent || q ? '▼' : '→'}
                       </span>
                     </span>
                   </h2>
@@ -1497,7 +1497,7 @@ export default function MyFoodsPage() {
                       }}
                     >
                       <span className="show-on-mobile" style={{ display: 'none' }}>
-                        {expandedSections.recipes || q ? 'â–¼' : 'â–¶'}
+                        {expandedSections.recipes || q ? '▼' : '→'}
                       </span>
                     </span>
                   </h2>
@@ -2062,7 +2062,3 @@ export default function MyFoodsPage() {
     </div>
   );
 }
-
-
-
-

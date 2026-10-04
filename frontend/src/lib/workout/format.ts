@@ -95,7 +95,7 @@ export function previousSetLabel(
     if (!ex) continue;
     const set = ex.sets.filter((s) => s.type !== 'warmup')[setIndex] ?? ex.sets[setIndex];
     if (set && set.completed && set.weight && set.reps) {
-      return `${set.weight} Ã— ${set.reps}`;
+      return `${set.weight} × ${set.reps}`;
     }
   }
   return '';
@@ -140,7 +140,3 @@ export function normalizeString(str: string) {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 }
-
-
-
-

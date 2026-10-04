@@ -226,7 +226,7 @@ export default function FoodSearchModal({
       setOffResults(allCleanProducts);
 
       if (allCleanProducts.length === 0) {
-        toast('No se encontraron resultados exactos', { icon: 'â„¹ï¸' });
+        toast('No se encontraron resultados exactos', { icon: 'ℹ️' });
       }
     } catch (err: any) {
       if (currentRequestId !== searchRequestId.current) return;
@@ -306,7 +306,7 @@ export default function FoodSearchModal({
           return;
         }
       }
-      toast('Producto no encontrado por cÃ³digo de barras', { icon: 'ðŸ¤”' });
+      toast('Producto no encontrado por código de barras', { icon: '🤔' });
       setOffResults([]);
     } catch (err: any) {
       console.error(err);
@@ -1114,7 +1114,7 @@ export default function FoodSearchModal({
                               marginBottom: '0.5rem',
                             }}
                           >
-                            Ãšltimos Alimentos AÃ±adidos
+                            Últimos Alimentos Añadidos
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                             {filteredRecent.map((log: any) => {
@@ -1363,7 +1363,3 @@ export default function FoodSearchModal({
     </>
   );
 }
-
-
-
-

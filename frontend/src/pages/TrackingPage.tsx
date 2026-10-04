@@ -19,7 +19,7 @@ interface DayCellProps {
   dayName: string;
   dayData: DayData;
   isToday: boolean;
-  onOpenModal: (data: any) => void;
+  onOpenModal: (data: { dateStr: string; dayName: string; dayData: DayData }) => void;
   showWeight: boolean;
   showSteps: boolean;
   showCalories: boolean;
@@ -98,7 +98,7 @@ const DayCell = ({
                 </span>
               </>
             ) : (
-              <span style={{ opacity: 0.3 }}>â€”</span>
+              <span style={{ opacity: 0.3 }}>”</span>
             )}
           </div>
         )}
@@ -130,7 +130,7 @@ const DayCell = ({
                 </span>
               </>
             ) : (
-              <span style={{ opacity: 0.3 }}>â€”</span>
+              <span style={{ opacity: 0.3 }}>”</span>
             )}
           </div>
         )}
@@ -162,7 +162,7 @@ const DayCell = ({
                 </span>
               </>
             ) : (
-              <span style={{ opacity: 0.3 }}>â€”</span>
+              <span style={{ opacity: 0.3 }}>”</span>
             )}
           </div>
         )}
@@ -196,7 +196,12 @@ export default function TrackingPage() {
     localStorage.setItem('tracking_showCalories', JSON.stringify(showCalories));
   }, [showCalories]);
 
-  const [modalData, setModalData] = useState<any>(null);
+  const [modalData, setModalData] = useState<{
+    dateStr: string;
+    dayName: string;
+    dayData: DayData;
+    fullLabel: string;
+  } | null>(null);
   const [modalWeight, setModalWeight] = useState('');
   const [modalSteps, setModalSteps] = useState('');
 
@@ -204,7 +209,7 @@ export default function TrackingPage() {
     data: weeks = [],
     isLoading,
     refetch: fetchData,
-  } = useQuery<any, any>({
+  } = useQuery({
     queryKey: ['trackingWeeks'],
     queryFn: async () => {
       const [weightsRes, stepsRes, caloriesRes] = await Promise.all([
@@ -215,7 +220,15 @@ export default function TrackingPage() {
 
       const weeksMap = new Map();
 
-      const mergeIntoWeeks = (resData: any[], type: string) => {
+      const mergeIntoWeeks = (
+        resData: Array<{
+          weekStart: string;
+          average: number;
+          delta: number;
+          days: (number | null)[];
+        }>,
+        type: string,
+      ) => {
         if (!resData) return;
         resData.forEach((week) => {
           if (!weeksMap.has(week.weekStart)) {
@@ -237,17 +250,17 @@ export default function TrackingPage() {
           if (type === 'weight') {
             w.averageWeight = week.average;
             w.deltaWeight = week.delta;
-            week.days.forEach((val: any, i: number) => (w.days[i].weight = val));
+            week.days.forEach((val: number | null, i: number) => (w.days[i].weight = val));
           }
           if (type === 'steps') {
             w.averageSteps = week.average;
             w.deltaSteps = week.delta;
-            week.days.forEach((val: any, i: number) => (w.days[i].steps = val));
+            week.days.forEach((val: number | null, i: number) => (w.days[i].steps = val));
           }
           if (type === 'calories') {
             w.averageCalories = week.average;
             w.deltaCalories = week.delta;
-            week.days.forEach((val: any, i: number) => (w.days[i].calories = val));
+            week.days.forEach((val: number | null, i: number) => (w.days[i].calories = val));
           }
         });
       };
@@ -256,13 +269,22 @@ export default function TrackingPage() {
       mergeIntoWeeks(stepsRes.data, 'steps');
       mergeIntoWeeks(caloriesRes.data, 'calories');
 
-      return Array.from(weeksMap.values()).sort((a: any, b: any) =>
-        a.weekStart.localeCompare(b.weekStart),
+      return Array.from(weeksMap.values()).sort(
+        (a: { weekStart: string }, b: { weekStart: string }) =>
+          a.weekStart.localeCompare(b.weekStart),
       );
     },
   });
 
-  const handleOpenDayModal = ({ dateStr, dayName, dayData }) => {
+  const handleOpenDayModal = ({
+    dateStr,
+    dayName,
+    dayData,
+  }: {
+    dateStr: string;
+    dayName: string;
+    dayData: DayData;
+  }) => {
     const dateObj = new Date(dateStr + 'T00:00:00');
     setModalData({
       dateStr,
@@ -309,8 +331,11 @@ export default function TrackingPage() {
         queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       }
       setModalData(null);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Error al guardar');
+    } catch (err: unknown) {
+      toast.error(
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+          'Error al guardar',
+      );
     }
   };
 
@@ -324,8 +349,11 @@ export default function TrackingPage() {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       toast.success('Registros eliminados');
       setModalData(null);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Error al eliminar');
+    } catch (err: unknown) {
+      toast.error(
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+          'Error al eliminar',
+      );
     }
   };
 
@@ -558,7 +586,7 @@ export default function TrackingPage() {
                           gap: '0.3rem',
                         }}
                       >
-                        <span style={{ color: 'var(--text-secondary)' }}>Î”:</span>
+                        <span style={{ color: 'var(--text-secondary)' }}>Δ:</span>
                         <strong
                           className={
                             week.deltaWeight === null
@@ -938,8 +966,3 @@ export default function TrackingPage() {
     </div>
   );
 }
-
-
-
-
-
