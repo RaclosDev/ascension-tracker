@@ -60,7 +60,10 @@ export default function DashboardCharts({
                 }}
                 labelStyle={{ color: '#F4F5F7' }}
                 itemStyle={{ color: '#9BA3AF' }}
-                formatter={(v: number) => [`${Number(v).toFixed(2)} kg`, 'Peso']}
+                formatter={(v: number | string | undefined | readonly (string | number)[]) => [
+                  `${Number(v).toFixed(2)} kg`,
+                  'Peso',
+                ]}
               />
               <ReferenceLine
                 y={goalWeight}
@@ -108,8 +111,8 @@ export default function DashboardCharts({
                   border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: 8,
                 }}
-                formatter={(v: number) => [
-                  `${v > 0 ? '+' : ''}${Number(v).toFixed(2)} kg`,
+                formatter={(v: number | string | undefined | readonly (string | number)[]) => [
+                  `${Number(v) > 0 ? '+' : ''}${Number(v).toFixed(2)} kg`,
                   'Variación',
                 ]}
               />
