@@ -47,14 +47,12 @@ for i in range(0xa0, 0x100):
 
 # Reemplazos de bytes directos (para casos especificos que el algoritmo general no cubre)
 DIRECT_BYTE_FIXES = [
-    # em dash en contextos especificos de comentarios
-    (b'\xe2\x80\x9c handles', b'\xe2\x80\x94 handles'),
-    (b'\xe2\x80\x9d fires', b'\xe2\x80\x94 fires'),
-    (b'\xe2\x80\x9d open', b'\xe2\x80\x94 open'),
-    (b'\xe2\x80\x9d claim', b'\xe2\x80\x94 claim'),
-    (b'\xe2\x80\x9d skip', b'\xe2\x80\x94 skip'),
-    (b'\xe2\x80\x9d not', b'\xe2\x80\x94 not'),
-    (b'\xe2\x80\x9c not', b'\xe2\x80\x94 not'),
+    # Los bytes \x93 y \x94 en CP1252 corresponden a comillas dobles, pero en el
+    # contexto de este proyecto solían ser em-dash ('—' E2 80 94) corrompidos
+    # como 'â€"' que terminó siendo interpretado como comillas en scripts viejos.
+    # Corregimos esos casos residuales donde aparezcan como comillas.
+    (b'\xe2\x80\x9c', b'\xe2\x80\x94'),
+    (b'\xe2\x80\x9d', b'\xe2\x80\x94'),
 ]
 
 

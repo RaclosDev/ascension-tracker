@@ -44,18 +44,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem('jwt_token');
 
       if (!stored) {
-        // No token at all ” not logged in
+        // No token at all — not logged in
         setIsReady(true);
         return;
       }
 
       if (!isTokenExpired(stored)) {
-        // Token is still valid ” use it directly
+        // Token is still valid — use it directly
         setIsReady(true);
         return;
       }
 
-      // Token is expired ” try to refresh using fetch (bypasses axios interceptors entirely)
+      // Token is expired — try to refresh using fetch (bypasses axios interceptors entirely)
       console.log('[Auth] JWT expired, attempting proactive refresh...');
       try {
         const baseUrl = import.meta.env.VITE_API_URL || '';

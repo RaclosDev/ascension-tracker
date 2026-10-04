@@ -98,7 +98,7 @@ const DayCell = ({
                 </span>
               </>
             ) : (
-              <span style={{ opacity: 0.3 }}>”</span>
+              <span style={{ opacity: 0.3 }}>—</span>
             )}
           </div>
         )}
@@ -130,7 +130,7 @@ const DayCell = ({
                 </span>
               </>
             ) : (
-              <span style={{ opacity: 0.3 }}>”</span>
+              <span style={{ opacity: 0.3 }}>—</span>
             )}
           </div>
         )}
@@ -162,7 +162,7 @@ const DayCell = ({
                 </span>
               </>
             ) : (
-              <span style={{ opacity: 0.3 }}>”</span>
+              <span style={{ opacity: 0.3 }}>—</span>
             )}
           </div>
         )}
