@@ -1,4 +1,24 @@
-# GEMINI.md — Reglas del proyecto Ascension Tracker
+# GEMINI.md — REGLAS ABSOLUTAS (prioridad máxima)
+
+## 🛑 PROHIBICIONES DURAS DE BASURA EN EL REPO (nunca violar)
+
+- NUNCA crees archivos temporales, de parche o de utilidad en la raíz del repo ni dentro de `backend/`, `frontend/` u otras carpetas de código.
+- Patrones PROHIBIDOS en el repo: `fix_*.py`, `patch_*.py`, `nuke_*.py`, `temp_*.py`, `tmp_*.py`, `update_*.py`, `read_*.py`, `remove_*.py`, `strict_*.py`, `*_temp.py`, `*_tmp.py`.
+- NUNCA hagas `git add .`. Añade siempre archivos por nombre explícito.
+- Antes de cualquier `git commit` o `git add`, ejecuta `git status`. Si aparece cualquier `.py` basura o archivo temporal en el repo, BÓRRALO antes de continuar.
+- NUNCA dejes scripts residuales dentro del repositorio.
+
+## 🐍 Uso de scripts Python (única excepción permitida)
+
+- Por defecto: edita los archivos directamente con las herramientas nativas de edición (`replace_file_content` / edit tools). No uses Python.
+- **ÚNICA excepción:** si necesitas un script Python para evitar corrupción UTF-8 / mojibake en Windows, DEBES crearlo SOLO en:
+  `~/.gemini/antigravity/scratch/`
+  (ruta fuera del repositorio).
+- Tras usarlo, BÓRRALO inmediatamente. No lo copies ni lo muevas al repo.
+
+## ☠️ Penalización
+
+Si dejas cualquier archivo basura (`.py` temporal, `fix_*`, `patch_*`, etc.) dentro del repositorio, la tarea se considera **fallida**. Debes borrarlo de inmediato y no dar la tarea por terminada hasta que `git status` esté limpio de basura.
 
 ## 🛑 REGLA ESTRICTA: NUNCA saltar verificaciones (Linting, Tests, Git Hooks)
 
