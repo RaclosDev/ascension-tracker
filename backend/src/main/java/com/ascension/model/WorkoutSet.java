@@ -3,10 +3,12 @@ package com.ascension.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.springframework.data.domain.Persistable;
+
 @Entity
 @Table(name = "workout_sets", indexes = { @Index(name = "idx_workout_set_workout_exercise_id", columnList = "workout_exercise_id") })
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class WorkoutSet {
+public class WorkoutSet implements Persistable<String> {
     @Id
     private String id;
 
@@ -24,4 +26,19 @@ public class WorkoutSet {
     private String duration;
     private String rpe;
     private Boolean completed;
+
+    @Transient
+    @Builder.Default
+    private boolean isNew = true;
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.isNew = false;
+    }
 }

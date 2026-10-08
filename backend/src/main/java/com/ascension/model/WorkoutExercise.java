@@ -5,10 +5,12 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.domain.Persistable;
+
 @Entity
 @Table(name = "workout_exercises", indexes = { @Index(name = "idx_workout_exercise_workout_id", columnList = "workout_id") })
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class WorkoutExercise {
+public class WorkoutExercise implements Persistable<String> {
     @Id
     private String id;
 
@@ -38,4 +40,19 @@ public class WorkoutExercise {
     @OrderBy("orderIndex ASC")
     @Builder.Default
     private List<WorkoutSet> sets = new ArrayList<>();
+
+    @Transient
+    @Builder.Default
+    private boolean isNew = true;
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.isNew = false;
+    }
 }
