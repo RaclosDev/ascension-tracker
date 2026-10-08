@@ -8,6 +8,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.time.Instant;
 import com.ascension.model.RefreshToken;
 import com.ascension.service.RefreshTokenService;
+import com.ascension.service.AccountDeletionService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -57,13 +60,15 @@ public class AuthController {
 
     private final JwtEncoder jwtEncoder;
     private final RefreshTokenService refreshTokenService;
+    private final AccountDeletionService accountDeletionService;
     
     @Value("${google.client-id:CHANGE_ME}")
     private String googleClientId;
 
-    public AuthController(JwtEncoder jwtEncoder, RefreshTokenService refreshTokenService) {
+    public AuthController(JwtEncoder jwtEncoder, RefreshTokenService refreshTokenService, AccountDeletionService accountDeletionService) {
         this.jwtEncoder = jwtEncoder;
         this.refreshTokenService = refreshTokenService;
+        this.accountDeletionService = accountDeletionService;
     }
 
     private String generateJwt(String email, String name, String picture) {
@@ -224,6 +229,16 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
                 .body(Map.of("message", "Log out successful"));
+    }
+
+    @DeleteMapping("/account")
+    public ResponseEntity<Map<String, String>> deleteAccount(@AuthenticationPrincipal Jwt jwt) {
+        if (jwt == null) {
+            return ResponseEntity.status(401).build();
+        }
+        String email = jwt.getSubject();
+        accountDeletionService.wipeAccountData(email);
+        return ResponseEntity.ok(Collections.singletonMap("message", "Account deleted successfully"));
     }
 
     @GetMapping("/config")

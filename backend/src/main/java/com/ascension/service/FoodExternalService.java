@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.Cacheable;
 import lombok.RequiredArgsConstructor;
 import jakarta.annotation.PostConstruct;
 import org.springframework.web.client.RestTemplate;
@@ -102,6 +103,7 @@ public class FoodExternalService {
         }
     }
 
+    @Cacheable(value = "foodSearch", key = "#query", unless = "#result == null or #result.contains('error')")
     public String searchOpenFoodFacts(String query) {
         if (query == null || query.isBlank()) return "{\"products\": []}";
         try {
@@ -154,6 +156,7 @@ public class FoodExternalService {
         }
     }
 
+    @Cacheable(value = "foodSearch", key = "#barcode", unless = "#result == null or #result.contains('error')")
     public String searchBarcode(String barcode) {
         if (barcode == null || barcode.isBlank()) return "{\"product\": null}";
         try {
