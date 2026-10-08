@@ -22,9 +22,9 @@ export default tseslint.config(
     rules: {
       'react/jsx-uses-react': 'error',
       'react/jsx-uses-vars': 'error',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/ban-ts-comment': 'warn',
+      '@typescript-eslint/no-unused-vars': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/ban-ts-comment': 'error',
       'prefer-const': 'warn',
       'no-undef': 'off',
       'no-empty': 'off',

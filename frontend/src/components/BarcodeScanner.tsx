@@ -66,10 +66,11 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
           config,
           (decodedText, decodedResult) => {
             if (onScanSuccess) {
-               
               try {
                 /* empty */ navigator.vibrate?.(100);
-              } catch {}
+              } catch {
+                /* ignore */
+              }
               onScanSuccess(decodedText, decodedResult);
             }
           },
@@ -107,22 +108,25 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
           scannerRef.current
             .stop()
             .then(() => {
-               
               try {
                 /* empty */ scannerRef.current?.clear();
-              } catch {}
+              } catch {
+                /* ignore */
+              }
             })
             .catch(() => {
-               
               try {
                 /* empty */ scannerRef.current?.clear();
-              } catch {}
+              } catch {
+                /* ignore */
+              }
             });
         } else {
-           
           try {
             /* empty */ scannerRef.current?.clear();
-          } catch {}
+          } catch {
+            /* ignore */
+          }
         }
       }
     };
@@ -156,19 +160,23 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
           config,
           (decodedText: string, decodedResult: Html5QrcodeResult) => {
             if (onScanSuccess) {
-               
               try {
                 /* empty */ navigator.vibrate?.(100);
-              } catch {}
+              } catch {
+                /* ignore */
+              }
               onScanSuccess(decodedText, decodedResult);
             }
           },
-          () => {},
+          () => {
+            /* ignore */
+          },
         );
         setIsScanning(true);
-      } catch (err) {
+      } catch {
         setCameraError('Error al encender la cámara. Revisa los permisos.');
       } finally {
+        /* ignore */
         setIsStarting(false);
       }
     }
@@ -194,19 +202,23 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
         config,
         (decodedText: string, decodedResult: Html5QrcodeResult) => {
           if (onScanSuccess) {
-             
             try {
               /* empty */ navigator.vibrate?.(100);
-            } catch {}
+            } catch {
+              /* ignore */
+            }
             onScanSuccess(decodedText, decodedResult);
           }
         },
-        () => {},
+        () => {
+          /* ignore */
+        },
       );
       setIsScanning(true);
     } catch (err) {
       console.error('Error al cambiar cámara:', err);
     } finally {
+      /* ignore */
       setIsStarting(false);
     }
   };
@@ -225,10 +237,11 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
 
       const decodedText = await scannerRef.current.scanFile(file, true);
       if (decodedText && onScanSuccess) {
-         
         try {
           /* empty */ navigator.vibrate?.(100);
-        } catch {}
+        } catch {
+          /* ignore */
+        }
         onScanSuccess(decodedText);
       }
     } catch (err) {
@@ -237,6 +250,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
         duration: 4000,
       });
     } finally {
+      /* ignore */
       setScanningFile(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -399,7 +413,3 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
     </div>
   );
 }
-
-
-
-

@@ -13,7 +13,7 @@ import BarcodeScanner from './BarcodeScanner';
 import ManualFoodForm from './food/ManualFoodForm';
 
 import { Mic, ImageIcon, X, ScanLine, ArrowLeft } from 'lucide-react';
-import { FoodListsData, FoodLog, SavedFood, Meal, Recipe } from '../types/api';
+import { FoodListsData, FoodLog, Meal, Recipe } from '../types/api';
 
 interface SearchProduct {
   name: string;
@@ -90,8 +90,8 @@ export default function FoodSearchModal({
     isRecipe: true,
   }));
   const savedFoods = [...(foodLists?.saved || []), ...mappedRecipes];
-  const [searching, setSearching] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  // const [searching, setSearching] = useState(false);
+  // const [hasSearched, setHasSearched] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<SearchProduct | null>(null);
   const [quantity, setQuantity] = useState(100);
   const [inputMode, setInputMode] = useState<'grams' | 'portions'>('grams');
@@ -169,7 +169,6 @@ export default function FoodSearchModal({
         fileInputRef.current.value = '';
       }
       setOffResults([]);
-      setHasSearched(false);
       setSelectedProduct(null);
       setQuantity(100);
       setActiveOverlay('none');
@@ -186,7 +185,6 @@ export default function FoodSearchModal({
     setQuery(val);
     if (!val.trim()) {
       setOffResults([]);
-      setHasSearched(false);
       return;
     }
   };
@@ -199,9 +197,6 @@ export default function FoodSearchModal({
     searchRequestId.current += 1;
     const currentRequestId = searchRequestId.current;
 
-    setSearching(true);
-    setHasSearched(true);
-
     const queriesToTry = getSmartFallbackQueries(q);
     let allCleanProducts: Array<Record<string, unknown>> = [];
 
@@ -212,7 +207,7 @@ export default function FoodSearchModal({
         try {
           const res = await api.get(`/food-external/search?q=${encodeURIComponent(currentQ)}`);
           data = res.data;
-        } catch (err) {
+        } catch {
           continue;
         }
         if (currentRequestId !== searchRequestId.current) return;
@@ -252,9 +247,10 @@ export default function FoodSearchModal({
       console.error(err);
       toast.error('Error al consultar base de datos');
     } finally {
+      /* ignore */
       if (currentRequestId === searchRequestId.current) {
-        setSearching(false);
-      }
+        /* ignore */
+      } /* ignore */
     }
   };
 
@@ -290,9 +286,10 @@ export default function FoodSearchModal({
       console.error(err);
       toast.error(
         (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
-          'Error al analizar la etiqueta.'
+          'Error al analizar la etiqueta.',
       );
     } finally {
+      /* ignore */
       setOcrLoading(false);
       e.target.value = '';
     }
@@ -301,8 +298,6 @@ export default function FoodSearchModal({
   const handleScanSuccess = async (decodedText: string) => {
     setActiveOverlay('none');
     setQuery(decodedText);
-    setSearching(true);
-    setHasSearched(true);
 
     try {
       const res = await api.get(`/food-external/barcode?code=${encodeURIComponent(decodedText)}`);
@@ -334,7 +329,7 @@ export default function FoodSearchModal({
       console.error(err);
       toast.error('Error al consultar código de barras');
     } finally {
-      setSearching(false);
+      /* ignore */
     }
   };
 
@@ -485,7 +480,11 @@ export default function FoodSearchModal({
     toast(` Procesando con IA...`, { duration: 2500 });
     setQuery('');
 
-    const payload: Record<string, unknown> = { text: queryText, mealIndex: selectedMealIndex, date };
+    const payload: Record<string, unknown> = {
+      text: queryText,
+      mealIndex: selectedMealIndex,
+      date,
+    };
     if (selectedImage) {
       payload.base64Image = selectedImage;
     }
@@ -505,7 +504,9 @@ export default function FoodSearchModal({
         if (onLogAdded) onLogAdded();
       })
       .catch((e: unknown) => {
-        const msg = (e as { response?: { data?: { error?: string } } }).response?.data?.error || 'Error procesando texto con IA';
+        const msg =
+          (e as { response?: { data?: { error?: string } } }).response?.data?.error ||
+          'Error procesando texto con IA';
         toast.error(msg);
         console.error(e);
       });
@@ -579,8 +580,9 @@ export default function FoodSearchModal({
                 const portions = selectedProduct.portions || [];
                 const hasPortions = portions.length > 0;
                 const basePortion = hasPortions
-                  ? portions.find((p: { label: string; amount: number }) => p.label.startsWith('1 ')) ||
-                    portions[0]
+                  ? portions.find((p: { label: string; amount: number }) =>
+                      p.label.startsWith('1 '),
+                    ) || portions[0]
                   : null;
                 const baseAmount = basePortion ? basePortion.amount : 100;
                 const multiplier = quantity ? Number((quantity / baseAmount).toFixed(2)) : 0;
@@ -701,20 +703,22 @@ export default function FoodSearchModal({
                 <div
                   style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}
                 >
-                  {selectedProduct.portions.map((port: { label: string; amount: number }, idx: number) => (
-                    <button
-                      key={idx}
-                      className="btn btn-secondary btn-sm"
-                      onClick={() => setQuantity(port.amount)}
-                      style={{
-                        background: quantity === port.amount ? 'var(--color-protein-bg)' : '',
-                        color: quantity === port.amount ? 'var(--color-protein)' : '',
-                        borderColor: quantity === port.amount ? 'var(--color-protein)' : '',
-                      }}
-                    >
-                      {port.label} ({port.amount}g)
-                    </button>
-                  ))}
+                  {selectedProduct.portions.map(
+                    (port: { label: string; amount: number }, idx: number) => (
+                      <button
+                        key={idx}
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => setQuantity(port.amount)}
+                        style={{
+                          background: quantity === port.amount ? 'var(--color-protein-bg)' : '',
+                          color: quantity === port.amount ? 'var(--color-protein)' : '',
+                          borderColor: quantity === port.amount ? 'var(--color-protein)' : '',
+                        }}
+                      >
+                        {port.label} ({port.amount}g)
+                      </button>
+                    ),
+                  )}
                 </div>
               )}
 

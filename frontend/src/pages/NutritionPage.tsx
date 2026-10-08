@@ -10,7 +10,7 @@ import { getLocalDateString, addDaysToDateString, isTodayLocal } from '../utils/
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import api from '../api/client';
 import toast from 'react-hot-toast';
-import { ChevronDown, Trash2, Edit3, GripVertical, Cpu, Copy, Loader2 } from 'lucide-react';
+import { ChevronDown, Copy, Loader2 } from 'lucide-react';
 import { SegmentedControl } from '../components/ui/segmented-control';
 import { Skeleton } from '../components/ui/skeleton';
 import { SwipeableRow } from '../components/SwipeableRow';
@@ -31,7 +31,7 @@ const getBasePortion = (portionsJson: string | null) => {
     const base = portions.find((p) => typeof p.label === 'string' && p.label.startsWith('1 '));
     if (base) return { label: base.label.replace(/^1\s+/, ''), amount: base.amount };
     return { label: portions[0].label, amount: portions[0].amount };
-  } catch (e: unknown) {
+  } catch {
     return null;
   }
 };
@@ -173,7 +173,10 @@ export default function NutritionPage() {
     }
   };
 
-  const handleCopyFromYesterday = async (e: React.MouseEvent<HTMLButtonElement>, mealIndex: number) => {
+  const handleCopyFromYesterday = async (
+    e: React.MouseEvent<HTMLButtonElement>,
+    mealIndex: number,
+  ) => {
     e.stopPropagation();
     const loadingToast = toast.loading('Copiando de ayer...');
     try {
@@ -219,7 +222,7 @@ export default function NutritionPage() {
     data,
     isLoading: loading,
     refetch: fetchData,
-  } = useQuery<{ foodLogs: FoodLog[], macros: Macros, meals: Meal[], settings: UserSettings }>({
+  } = useQuery<{ foodLogs: FoodLog[]; macros: Macros; meals: Meal[]; settings: UserSettings }>({
     queryKey: ['nutritionData', selectedDate],
     queryFn: async () => {
       const [macrosRes, mealsRes, settingsRes, logsRes] = await Promise.all([
@@ -251,7 +254,7 @@ export default function NutritionPage() {
     }
   }, [meals.length]); // Only run when meals array length changes, indicating load
 
-  const deleteLogMutation = useMutation<any, Error, number | string>({
+  const deleteLogMutation = useMutation<unknown, Error, number | string>({
     mutationFn: (id) => api.delete(`/nutrition/logs/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
@@ -300,14 +303,18 @@ export default function NutritionPage() {
 
   const handleEditQuantityChange = (newQty: number | string) => {
     const q = typeof newQty === 'string' ? parseFloat(newQty) || 0 : newQty;
-    setEditingLog((prev: EditingLog | null) => (prev ? {
-      ...prev,
-      quantity: q,
-      kcal: Math.round(((prev._kcalPer100 * q) / 100) * 10) / 10,
-      protein: Math.round(((prev._protPer100 * q) / 100) * 10) / 10,
-      carbs: Math.round(((prev._carbsPer100 * q) / 100) * 10) / 10,
-      fat: Math.round(((prev._fatPer100 * q) / 100) * 10) / 10,
-    } : prev));
+    setEditingLog((prev: EditingLog | null) =>
+      prev
+        ? {
+            ...prev,
+            quantity: q,
+            kcal: Math.round(((prev._kcalPer100 * q) / 100) * 10) / 10,
+            protein: Math.round(((prev._protPer100 * q) / 100) * 10) / 10,
+            carbs: Math.round(((prev._carbsPer100 * q) / 100) * 10) / 10,
+            fat: Math.round(((prev._fatPer100 * q) / 100) * 10) / 10,
+          }
+        : prev,
+    );
   };
 
   const updateLogMutation = useMutation({
@@ -410,8 +417,6 @@ export default function NutritionPage() {
   }
   if (!macros || !settings) return null;
 
-
-
   const pieData = [
     { name: 'Proteínas Consumidas', value: consumed.protein * 4, color: 'var(--color-protein)' },
     { name: 'Hidratos Consumidos', value: consumed.carbs * 4, color: 'var(--color-carbs)' },
@@ -423,7 +428,7 @@ export default function NutritionPage() {
     },
   ];
 
-  const totalProtein = macros.protein;
+  //   const totalProtein = macros.protein;
 
   return (
     <div className="fade-in">
@@ -439,7 +444,9 @@ export default function NutritionPage() {
       />
 
       {activeTab === 'foods' ? (
-        <Suspense fallback={<div className="p-4 text-center text-gray-500">Cargando alimentos...</div>}>
+        <Suspense
+          fallback={<div className="p-4 text-center text-gray-500">Cargando alimentos...</div>}
+        >
           <MyFoodsPage />
         </Suspense>
       ) : (
@@ -524,7 +531,8 @@ export default function NutritionPage() {
             onClick={() => {
               setSelectedMealIndex(0);
               setSearchModalOpen(true);
-            }} aria-label="Añadir alimento"
+            }}
+            aria-label="Añadir alimento"
           >
             +
           </button>
@@ -570,7 +578,12 @@ export default function NutritionPage() {
                     <div
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMealCollapse(index, e); } }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          toggleMealCollapse(index, e);
+                        }
+                      }}
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -699,7 +712,9 @@ export default function NutritionPage() {
                                       <span>{editingLog.product}</span>
                                     </div>
                                     {(() => {
-                                      const basePortion = getBasePortion(editingLog.portionsJson || null);
+                                      const basePortion = getBasePortion(
+                                        editingLog.portionsJson || null,
+                                      );
                                       const hasPortions = !!basePortion;
                                       const multiplier =
                                         hasPortions && editingLog.quantity
@@ -918,7 +933,9 @@ export default function NutritionPage() {
                                             }}
                                           >
                                             {(() => {
-                                              const basePortion = getBasePortion(log.portionsJson || null);
+                                              const basePortion = getBasePortion(
+                                                log.portionsJson || null,
+                                              );
                                               if (basePortion) {
                                                 const count = Number(
                                                   (log.quantity / basePortion.amount).toFixed(1),
@@ -965,7 +982,16 @@ export default function NutritionPage() {
               >
                 Distribución de Macros
               </h3>
-              <div style={{ width: '100%', maxWidth: '300px', height: 250, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <div
+                style={{
+                  width: '100%',
+                  maxWidth: '300px',
+                  height: 250,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
                 {showChart ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -989,7 +1015,10 @@ export default function NutritionPage() {
                           borderRadius: 8,
                         }}
                         formatter={(value, name) => {
-                          const total = pieData.reduce((a: number, b: { value: number }) => a + b.value, 0);
+                          const total = pieData.reduce(
+                            (a: number, b: { value: number }) => a + b.value,
+                            0,
+                          );
                           return [
                             `${Number(value).toFixed(0)} kcal (${((Number(value) / total) * 100).toFixed(1)}%)`,
                             name,
@@ -1010,15 +1039,15 @@ export default function NutritionPage() {
               <FoodSearchModal
                 isOpen={searchModalOpen}
                 onClose={() => setSearchModalOpen(false)}
-            mealIndex={selectedMealIndex}
-            date={selectedDate}
-            onLogAdded={() => {
-              fetchData();
-              queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-              queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
-            }}
-            meals={meals}
-          />
+                mealIndex={selectedMealIndex}
+                date={selectedDate}
+                onLogAdded={() => {
+                  fetchData();
+                  queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+                  queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
+                }}
+                meals={meals}
+              />
             )}
           </Suspense>
         </>
@@ -1026,7 +1055,3 @@ export default function NutritionPage() {
     </div>
   );
 }
-
-
-
-

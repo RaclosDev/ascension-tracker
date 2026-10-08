@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import {
   LayoutGrid,
@@ -20,7 +19,7 @@ import {
   Apple,
   ChefHat,
 } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import BarcodeScanner from '../components/BarcodeScanner';
@@ -40,7 +39,11 @@ const getLocalISODate = () => {
   return d.toISOString().split('T')[0];
 };
 
-import { Skeleton } from '../components/ui/skeleton'; import { PageFoodItem, PageRecipeItem } from "../types/myfoods";
+import { Skeleton } from '../components/ui/skeleton';
+import { PageFoodItem } from '../types/myfoods';
+import { SavedFood } from '../types/api';
+import { RecipeForm } from '../components/my-foods/RecipeFormModal';
+import { FoodForm as FoodFormState } from '../components/my-foods/FoodFormModal';
 
 export default function MyFoodsPage() {
   const queryClient = useQueryClient();
@@ -49,11 +52,14 @@ export default function MyFoodsPage() {
     data = {},
     isLoading: loadingData,
     refetch: refetchQuery,
-  } = useQuery<{
-    recentFoods: import("../types/api").FoodLog[];
-    savedFoods: PageFoodItem[];
-    recipes: import("../types/api").Recipe[];
-  }, Error>({
+  } = useQuery<
+    {
+      recentFoods: import('../types/api').FoodLog[];
+      savedFoods: PageFoodItem[];
+      recipes: import('../types/api').Recipe[];
+    },
+    Error
+  >({
     queryKey: ['myFoodsData'],
     queryFn: async () => {
       const [recentRes, savedRes, recipesRes] = await Promise.all([
@@ -74,7 +80,15 @@ export default function MyFoodsPage() {
     queryClient.invalidateQueries({ queryKey: ['foodLists'] });
   };
 
-  const { recentFoods = [], savedFoods = [], recipes = [] } = data as { recentFoods?: PageFoodItem[], savedFoods?: PageFoodItem[], recipes?: import("../types/api").Recipe[] };
+  const {
+    recentFoods = [],
+    savedFoods = [],
+    recipes = [],
+  } = data as {
+    recentFoods?: PageFoodItem[];
+    savedFoods?: PageFoodItem[];
+    recipes?: import('../types/api').Recipe[];
+  };
 
   // AI State
   const [aiQuery, setAiQuery] = useState('');
@@ -138,9 +152,9 @@ export default function MyFoodsPage() {
     if (isMealSelectorOpen) {
       const initial: Record<string, number> = {};
       Array.from(selectedFoods).forEach((id) => {
-        const food = savedFoods.find((f: PageFoodItem) => f.id === (id as any));
+        const food = savedFoods.find((f: PageFoodItem) => f.id === Number(id));
         if (food) {
-          initial[id] = (food.servingSize || 0) > 0 ? (food.servingSize || 100) : 100;
+          initial[id] = (food.servingSize || 0) > 0 ? food.servingSize || 100 : 100;
         }
       });
       setBulkQuantities(initial);
@@ -202,8 +216,8 @@ export default function MyFoodsPage() {
     .sort((a: PageFoodItem, b: PageFoodItem) => {
       if (sortBy === 'name_asc') return (a.name || '').localeCompare(b.name || '');
       if (sortBy === 'recent') {
-        const dateA = (a as any).createdAt ? new Date((a as any).createdAt).getTime() : 0;
-        const dateB = (b as any).createdAt ? new Date((b as any).createdAt).getTime() : 0;
+        const dateA = Number(a.createdAt) || 0 ? new Date(Number(a.createdAt) || 0).getTime() : 0;
+        const dateB = Number(b.createdAt) || 0 ? new Date(Number(b.createdAt) || 0).getTime() : 0;
         if (dateA !== dateB) return dateB - dateA;
         if (a.id && b.id) {
           if (typeof a.id === 'number' && typeof b.id === 'number') return b.id - a.id;
@@ -214,7 +228,7 @@ export default function MyFoodsPage() {
       return 0;
     });
 
-  const filteredRecipes = recipes.filter((r: import("../types/api").Recipe) => {
+  const filteredRecipes = recipes.filter((r: import('../types/api').Recipe) => {
     if (!q) return true;
     const nameMatch = (r.name || '').toLowerCase().includes(q);
     const descMatch = (r.description || '').toLowerCase().includes(q);
@@ -223,7 +237,10 @@ export default function MyFoodsPage() {
 
   const totalResults = filteredRecent.length + filteredFoods.length + filteredRecipes.length;
 
-  const toggleSection = (sec: keyof typeof expandedSections, e: React.MouseEvent<HTMLDivElement>) => {
+  const toggleSection = (
+    sec: keyof typeof expandedSections,
+    e: React.MouseEvent<HTMLDivElement>,
+  ) => {
     if (!expandedSections[sec] && e?.currentTarget) {
       const el = e.currentTarget;
       setTimeout(() => {
@@ -238,7 +255,8 @@ export default function MyFoodsPage() {
     setExpandedSections((prev) => ({ ...prev, [sec]: !prev[sec] }));
   };
 
-  const toFormVal = (val: string | number | null | undefined) => (val !== null && val !== undefined ? val : '');
+  const toFormVal = (val: string | number | null | undefined) =>
+    val !== null && val !== undefined ? val : '';
 
   const updateFoodForm = (field: string, value: string | number | null) => {
     const newForm = { ...foodForm, [field]: value };
@@ -262,17 +280,17 @@ export default function MyFoodsPage() {
     setRecipeForm((prev) => {
       let newForm = { ...prev };
       if (typeof field === 'object' && field !== null) {
-        newForm = { ...newForm, ...(field as any) };
+        newForm = { ...newForm, ...(field as Record<string, unknown>) };
       } else {
-        (newForm as any)[field] = value;
+        (newForm as Record<string, unknown>)[field as string] = value;
       }
 
       const p = parseFloat(newForm.protein) || 0;
       const c = parseFloat(newForm.carbs) || 0;
       const f = parseFloat(newForm.fat) || 0;
 
-      if (typeof field === 'object' && (field as any).kcal !== undefined) {
-        newForm.kcal = (field as any).kcal;
+      if (typeof field === 'object' && field !== null && 'kcal' in field) {
+        newForm.kcal = String((field as Record<string, unknown>).kcal);
       } else if (typeof field === 'object' || ['protein', 'carbs', 'fat'].includes(field)) {
         const hasAny = [newForm.protein, newForm.carbs, newForm.fat].some(
           (v: unknown) => v !== '' && v !== null && v !== undefined,
@@ -304,7 +322,9 @@ export default function MyFoodsPage() {
         fetchData();
       })
       .catch((err: unknown) => {
-        toast.error(`Error: ${(err as any).response?.data?.error || 'IA'}`);
+        toast.error(
+          `Error: ${(err as { response?: { data?: { error?: string } } }).response?.data?.error || 'IA'}`,
+        );
       })
       .finally(() => {
         setPendingAiCount((prev) => Math.max(0, prev - 1));
@@ -363,7 +383,7 @@ export default function MyFoodsPage() {
       servingSize: String(toFormVal(food.servingSize)),
       servingLabel: food.servingLabel || '',
     });
-    setEditingFoodId(food.id as any);
+    setEditingFoodId(String(food.id));
     setIsFoodFormOpen(true);
   };
 
@@ -394,7 +414,7 @@ export default function MyFoodsPage() {
     }
   };
 
-  const handleEditRecipe = (recipe: import("../types/api").Recipe) => {
+  const handleEditRecipe = (recipe: import('../types/api').Recipe) => {
     setRecipeForm({
       name: recipe.name || '',
       description: recipe.description || '',
@@ -403,7 +423,7 @@ export default function MyFoodsPage() {
       carbs: String(toFormVal(recipe.totalCarbs)),
       fat: String(toFormVal(recipe.totalFat)),
     });
-    setEditingRecipeId(recipe.id as any);
+    setEditingRecipeId(String(recipe.id));
     setIsRecipeFormOpen(true);
   };
 
@@ -432,7 +452,9 @@ export default function MyFoodsPage() {
     if (selectedFoods.size === 0) return;
     setIsAddingToMeal(true);
     try {
-      const foodsToAdd = savedFoods.filter((f: PageFoodItem) => f.id !== undefined && selectedFoods.has(f.id as any));
+      const foodsToAdd = savedFoods.filter(
+        (f: PageFoodItem) => f.id !== undefined && selectedFoods.has(Number(f.id)),
+      );
       const promises = foodsToAdd.map((food: PageFoodItem) => {
         const qty = bulkQuantities[food.id!] || 100;
         const factor = qty / 100.0;
@@ -452,23 +474,24 @@ export default function MyFoodsPage() {
       toast.success(`${selectedFoods.size} alimentos añadidos al diario`);
       setSelectedFoods(new Set());
       setIsMealSelectorOpen(false);
-    } catch (err: unknown) {
+    } catch {
       toast.error('Error al añadir al diario');
     } finally {
+      /* ignore */
       setIsAddingToMeal(false);
     }
   };
 
-  const deleteSavedFood = async (id: string) => {
-    if (!confirm('¿Borrar este alimento?')) return;
-    try {
-      await api.delete(`/nutrition/my-foods/${id}`);
-      toast.success('Eliminado');
-      fetchData();
-    } catch {
-      toast.error('Error');
-    }
-  };
+  //   const deleteSavedFood = async (id: string) => {
+  //     if (!confirm('¿Borrar este alimento?')) return;
+  //     try {
+  //       await api.delete(`/nutrition/my-foods/${id}`);
+  //       toast.success('Eliminado');
+  //       fetchData();
+  //     } catch {
+  //       toast.error('Error');
+  //     }
+  //   };
 
   const handleDeleteRecipe = async (id: string) => {
     if (!window.confirm('¿Seguro que quieres eliminar esta receta?')) return;
@@ -526,7 +549,11 @@ export default function MyFoodsPage() {
       setIsFoodFormOpen(true);
     } catch (err: unknown) {
       toast.dismiss(loadingToast);
-      toast.error('Error al escanear: ' + ((err as any).response?.data?.error || (err as Error).message));
+      toast.error(
+        'Error al escanear: ' +
+          ((err as { response?: { data?: { error?: string } } }).response?.data?.error ||
+            (err as Error).message),
+      );
       console.error(err);
     }
   };
@@ -555,10 +582,12 @@ export default function MyFoodsPage() {
             servingSize: parsed.servingSize || undefined,
             servingLabel: parsed.servingLabel || undefined,
             barcode: code,
-          } as any);
+          } as PageFoodItem);
           return;
         }
-      } catch {}
+      } catch {
+        /* ignore */
+      }
     }
 
     setIsLookingUpCode(true);
@@ -603,6 +632,7 @@ export default function MyFoodsPage() {
       console.error(err);
       setLookupError('Error al consultar la base de datos de alimentos.');
     } finally {
+      /* ignore */
       setIsLookingUpCode(false);
     }
   };
@@ -637,10 +667,10 @@ export default function MyFoodsPage() {
     setFoodForm({
       name: scannedProduct.name || '',
       brand: scannedProduct.brand || '',
-      kcal: String(toFormVal((scannedProduct as any).kcalPer100g)),
-      protein: String(toFormVal((scannedProduct as any).proteinPer100g)),
-      carbs: String(toFormVal((scannedProduct as any).carbsPer100g)),
-      fat: String(toFormVal((scannedProduct as any).fatPer100g)),
+      kcal: String(toFormVal(scannedProduct.kcal)),
+      protein: String(toFormVal(scannedProduct.protein)),
+      carbs: String(toFormVal(scannedProduct.carbs)),
+      fat: String(toFormVal(scannedProduct.fat)),
       servingSize: String(toFormVal(scannedProduct.servingSize)),
       servingLabel: scannedProduct.servingLabel || '',
     });
@@ -755,17 +785,17 @@ export default function MyFoodsPage() {
     transition: 'all 0.2s',
   });
 
-  const EditBtn = ({ onClick }: { onClick: () => void }) => (
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-      className="icon-btn edit-btn"
-      style={{ padding: '0.4rem', width: '28px', height: '28px' }}
-      title="Editar"
-    ></button>
-  );
+  //   const EditBtn = ({ onClick }: { onClick: () => void }) => (
+  //     <button
+  //       onClick={(e) => {
+  //         e.stopPropagation();
+  //         onClick();
+  //       }}
+  //       className="icon-btn edit-btn"
+  //       style={{ padding: '0.4rem', width: '28px', height: '28px' }}
+  //       title="Editar"
+  //     ></button>
+  //   );
 
   if (loadingData) {
     return (
@@ -1271,11 +1301,16 @@ export default function MyFoodsPage() {
                         <FoodCard
                           key={f.id}
                           food={f}
-                          isSelected={f.id !== undefined && selectedFoods.has(f.id as any)}
-                          onToggleSelect={toggleFoodSelection as any}
-                          onEdit={handleEditFood as any}
+                          isSelected={f.id !== undefined && selectedFoods.has(Number(f.id))}
+                          onToggleSelect={toggleFoodSelection as (id: number) => void}
+                          onEdit={handleEditFood as (food: SavedFood) => void}
                           viewMode="grid"
-                          onDragStart={handleDragStart as any}
+                          onDragStart={
+                            handleDragStart as (
+                              e: React.DragEvent,
+                              data: import('../components/my-foods/FoodCard').DragFoodData,
+                            ) => void
+                          }
                         />
                       ))}
                     </div>
@@ -1305,11 +1340,16 @@ export default function MyFoodsPage() {
                         <FoodCard
                           key={f.id}
                           food={f}
-                          isSelected={f.id !== undefined && selectedFoods.has(f.id as any)}
-                          onToggleSelect={toggleFoodSelection as any}
-                          onEdit={handleEditFood as any}
+                          isSelected={f.id !== undefined && selectedFoods.has(Number(f.id))}
+                          onToggleSelect={toggleFoodSelection as (id: number) => void}
+                          onEdit={handleEditFood as (food: SavedFood) => void}
                           viewMode="list"
-                          onDragStart={handleDragStart as any}
+                          onDragStart={
+                            handleDragStart as (
+                              e: React.DragEvent,
+                              data: import('../components/my-foods/FoodCard').DragFoodData,
+                            ) => void
+                          }
                         />
                       ))}
                     </div>
@@ -1394,7 +1434,7 @@ export default function MyFoodsPage() {
                             protein: parseFloat(p),
                             carbs: parseFloat(c),
                             fat: parseFloat(g),
-                          } as any)
+                          } as PageFoodItem)
                         }
                         style={itemStyle(false)}
                       >
@@ -1549,8 +1589,13 @@ export default function MyFoodsPage() {
                       }
                       setIsRecipeFormOpen(!isRecipeFormOpen);
                     }}
-                    recipeForm={recipeForm as any}
-                    updateRecipeForm={updateRecipeForm as any}
+                    recipeForm={recipeForm as unknown as RecipeForm}
+                    updateRecipeForm={
+                      updateRecipeForm as unknown as (
+                        field: Partial<RecipeForm> | keyof RecipeForm,
+                        value?: string | null | undefined,
+                      ) => void
+                    }
                     handleAddRecipe={handleAddRecipe}
                     editingRecipeId={editingRecipeId}
                     onCancelEdit={() => {
@@ -1565,11 +1610,11 @@ export default function MyFoodsPage() {
                       });
                       setIsRecipeFormOpen(false);
                     }}
-                    handleDeleteRecipe={handleDeleteRecipe as any}
+                    handleDeleteRecipe={handleDeleteRecipe as (id: number | string) => void}
                   />
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
-                    {filteredRecipes.map((r: import("../types/api").Recipe) => (
+                    {filteredRecipes.map((r: import('../types/api').Recipe) => (
                       <RecipeCard key={r.id} recipe={r} onEdit={handleEditRecipe} />
                     ))}
                     {filteredRecipes.length === 0 && (
@@ -1602,8 +1647,8 @@ export default function MyFoodsPage() {
           setIsFoodFormOpen(false);
           setEditingFoodId(null);
         }}
-        foodForm={foodForm as any}
-        updateFoodForm={updateFoodForm as any}
+        foodForm={foodForm as unknown as FoodFormState}
+        updateFoodForm={updateFoodForm as unknown as (f: string, v: string | number | null) => void}
         handleAddSavedFood={handleAddSavedFood}
         editingFoodId={editingFoodId}
       />

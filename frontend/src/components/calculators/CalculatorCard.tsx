@@ -11,13 +11,13 @@ export default function CalculatorCard({ title, defaultOpen = false, children }:
 
   const toggle = () => setIsOpen(!isOpen);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      toggle();
-    }
-  };
-
+  //   const handleKeyDown = (e: React.KeyboardEvent) => {
+  //     if (e.key === 'Enter' || e.key === ' ') {
+  //       e.preventDefault();
+  //       toggle();
+  //     }
+  //   };
+  //
   return (
     <div
       className="card accordion-card"

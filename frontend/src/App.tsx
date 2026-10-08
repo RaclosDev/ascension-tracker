@@ -94,7 +94,7 @@ class GlobalErrorBoundary extends Component<{ children: React.ReactNode }, { has
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(_error: Error) {
+  static getDerivedStateFromError() {
     return { hasError: true };
   }
 
@@ -264,7 +264,3 @@ export default function App() {
     </GlobalErrorBoundary>
   );
 }
-
-
-
-

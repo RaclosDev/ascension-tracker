@@ -1,8 +1,7 @@
-﻿
-import { useState, useEffect, useCallback, useRef } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { lazy } from 'react';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 
@@ -188,7 +187,11 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     } catch (err: unknown) {
       console.error('Error al guardar datos personales:', err);
-      const e = err as { response?: { data?: { message?: string, error?: string } }, message?: string }; const msg = e.response?.data?.message || e.response?.data?.error || e.message;
+      const e = err as {
+        response?: { data?: { message?: string; error?: string } };
+        message?: string;
+      };
+      const msg = e.response?.data?.message || e.response?.data?.error || e.message;
       toast.error(msg ? `Error al guardar: ${msg}` : 'Error al guardar datos personales');
     }
   };
@@ -471,7 +474,13 @@ export default function SettingsPage() {
             <div className="accordion-content fade-in mt-5 pt-5 border-t border-white/10">
               <MacroConfigurator
                 form={form}
-                setForm={setForm as unknown as React.Dispatch<React.SetStateAction<import("../components/calculators/MacroConfigurator").MacroForm>>}
+                setForm={
+                  setForm as unknown as React.Dispatch<
+                    React.SetStateAction<
+                      import('../components/calculators/MacroConfigurator').MacroForm
+                    >
+                  >
+                }
                 initialStartWeight={dashboard?.currentWeight || settings?.startWeight}
               />
               <button
@@ -811,8 +820,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-
-
-
-
