@@ -1,10 +1,11 @@
 package com.ascension.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.concurrent.ConcurrentHashMap;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.time.Instant;
-
 import com.ascension.model.RefreshToken;
 import com.ascension.service.RefreshTokenService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -46,16 +47,14 @@ public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     
-    // Rate limiting simple en memoria (IP -> contador + timestamp de ventana)
-    private final ConcurrentHashMap<String, RateLimitEntry> rateLimitMap = new ConcurrentHashMap<>();
+    // Rate limiting seguro en memoria usando Caffeine (previene OOM)
     private static final int MAX_REQUESTS_PER_MINUTE = 10;
-    private static final long WINDOW_MS = 60_000; // 1 minuto
-
-    private static class RateLimitEntry {
-        final AtomicInteger count = new AtomicInteger(0);
-        volatile long windowStart = System.currentTimeMillis();
-    }
     
+    private final Cache<String, AtomicInteger> rateLimitCache = Caffeine.newBuilder()
+            .maximumSize(10_000) // Protege contra inyección infinita de IPs
+            .expireAfterWrite(1, TimeUnit.MINUTES) // Ventana de 1 minuto
+            .build();
+
     private final JwtEncoder jwtEncoder;
     private final RefreshTokenService refreshTokenService;
     
@@ -116,7 +115,7 @@ public class AuthController {
                     .secure(true) // Should be true in production, works in localhost
                     .path("/")
                     .maxAge(30L * 24 * 60 * 60)
-                    .sameSite("Lax")
+                    .sameSite("Strict")
                     .build();
 
             return ResponseEntity.ok()
@@ -200,7 +199,7 @@ public class AuthController {
                 .secure(true)
                 .path("/")
                 .maxAge(30L * 24 * 60 * 60)
-                .sameSite("Lax")
+                .sameSite("Strict")
                 .build();
     }
 
@@ -219,7 +218,7 @@ public class AuthController {
                 .secure(true)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite("Strict")
                 .build();
                 
         return ResponseEntity.ok()
@@ -237,29 +236,12 @@ public class AuthController {
      * @return true si está limitado (debe rechazar), false si puede continuar.
      */
     private boolean isRateLimited(HttpServletRequest request) {
+        // Obtenemos la IP de forma segura. Si hay proxy, Spring debe configurarse 
+        // con server.forward-headers-strategy=framework para resolver request.getRemoteAddr() correctamente.
         String ip = request.getRemoteAddr();
-        // Soporte básico para proxies (X-Forwarded-For)
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            ip = forwarded.split(",")[0].trim();
-        }
-
-        long now = System.currentTimeMillis();
-        RateLimitEntry entry = rateLimitMap.computeIfAbsent(ip, k -> new RateLimitEntry());
-
-        synchronized (entry) {
-            if (now - entry.windowStart > WINDOW_MS) {
-                // Nueva ventana
-                entry.windowStart = now;
-                entry.count.set(1);
-                return false;
-            }
-
-            if (entry.count.incrementAndGet() > MAX_REQUESTS_PER_MINUTE) {
-                return true; // limitado
-            }
-            return false;
-        }
+        
+        AtomicInteger count = rateLimitCache.get(ip, k -> new AtomicInteger(0));
+        return count.incrementAndGet() > MAX_REQUESTS_PER_MINUTE;
     }
 }
 
