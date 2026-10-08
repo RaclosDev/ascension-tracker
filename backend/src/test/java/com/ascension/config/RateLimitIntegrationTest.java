@@ -9,12 +9,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = {
-    "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
-    "spring.datasource.driver-class-name=org.h2.Driver",
-    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
-    "spring.jpa.hibernate.ddl-auto=update"
-})
+@SpringBootTest
 @AutoConfigureMockMvc
 class RateLimitIntegrationTest {
 
