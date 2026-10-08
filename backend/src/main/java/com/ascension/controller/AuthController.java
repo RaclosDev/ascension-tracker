@@ -168,20 +168,9 @@ public class AuthController {
         }
 
         if (refreshToken.getReplacedAt() != null) {
-            // Token was already used — check grace period
-            if (refreshToken.getReplacedAt().plus(1, ChronoUnit.MINUTES).compareTo(Instant.now()) > 0) {
-                log.info("Refresh token reuse within grace period for user {}", refreshToken.getEmail());
-                RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture());
-                String token = generateJwt(newRefreshToken.getEmail(), newRefreshToken.getName(), newRefreshToken.getPicture());
-                
-                return ResponseEntity.ok()
-                        .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(newRefreshToken.getPlainToken()).toString())
-                        .body(Map.of("token", token));
-            } else {
-                log.warn("Refresh token reuse OUTSIDE grace period for user {}. Invalidating all sessions.", refreshToken.getEmail());
-                refreshTokenService.deleteByEmail(refreshToken.getEmail());
-                return ResponseEntity.status(401).body(Map.of("error", "Session expired. Please log in again."));
-            }
+            log.warn("Refresh token REUSE detected for user {}. Invalidating all sessions.", refreshToken.getEmail());
+            refreshTokenService.deleteByEmail(refreshToken.getEmail());
+            return ResponseEntity.status(401).body(Map.of("error", "Session expired. Please log in again."));
         }
 
         // Normal rotation: mark old token as replaced, create new one
