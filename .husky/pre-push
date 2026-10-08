@@ -1,0 +1,30 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "========================================================="
+echo "🚀 [PRE-PUSH] AUDITORÍA PROFESIONAL DE INTEGRIDAD 🚀"
+echo "========================================================="
+
+# 1. VERIFICACIÓN DEL BACKEND
+echo "⚙️  Construyendo y Verificando el Backend (Maven)..."
+cd backend && ./mvnw clean verify -DskipTests || {
+  echo "❌ ERROR CRÍTICO: El Backend está roto. No puedes hacer push a código que no compila."
+  echo "💡 Solución: Revisa los errores de Maven arriba, arréglalos, haz un commit y vuelve a intentar el push."
+  exit 1
+}
+cd ..
+echo "✅ Backend perfecto."
+
+# 2. VERIFICACIÓN DEL FRONTEND
+echo "🎨 Verificando compilación del Frontend (Vite/TypeScript)..."
+cd frontend && npm run build || {
+  echo "❌ ERROR CRÍTICO: El Frontend no compila (falla el build de Vite o los tipos estáticos)."
+  echo "💡 Solución: Ejecuta 'npm run typecheck' y 'npm run build' localmente para depurar."
+  exit 1
+}
+cd ..
+echo "✅ Frontend perfecto."
+
+echo "========================================================="
+echo "✅ AUDITORÍA SUPERADA. Subiendo código a GitHub..."
+echo "========================================================="
