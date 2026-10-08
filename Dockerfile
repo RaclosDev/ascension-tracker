@@ -1,4 +1,4 @@
-# ── Etapa 1: Build del Frontend (React + Vite) ──────────────────────────────
+# Etapa 1: Build del Frontend (React + Vite)
 FROM node:22-alpine AS frontend-build
 WORKDIR /app/frontend
 
@@ -14,7 +14,7 @@ COPY frontend/ ./
 RUN npm run build
 # El resultado queda en /app/frontend/dist
 
-# ── Etapa 2: Build del Backend (Spring Boot + Maven) ────────────────────────
+# Etapa 2: Build del Backend (Spring Boot + Maven)
 FROM maven:3.9.6-eclipse-temurin-17 AS backend-build
 WORKDIR /app
 
@@ -28,14 +28,19 @@ COPY backend/src ./src
 # Copiamos el frontend compilado a los recursos estáticos de Spring Boot
 COPY --from=frontend-build /app/frontend/dist ./src/main/resources/static
 
-# Compilamos el backend (el .jar ya incluirá el frontend)
+# Compilamos el backend y extraemos las capas (Layered Jars) para optimizar Docker Cache
 RUN mvn clean package -DskipTests
+RUN java -Djarmode=layertools -jar target/*.jar extract --destination target/extracted
 
-# ── Etapa 3: Imagen de producción (JRE mínimo Alpine) ───────────────────────
+# Etapa 3: Imagen de producción (JRE mínimo Alpine)
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-COPY --from=backend-build /app/target/*.jar app.jar
+# Copiamos las capas en orden inverso de frecuencia de cambio
+COPY --from=backend-build /app/target/extracted/dependencies/ ./
+COPY --from=backend-build /app/target/extracted/spring-boot-loader/ ./
+COPY --from=backend-build /app/target/extracted/snapshot-dependencies/ ./
+COPY --from=backend-build /app/target/extracted/application/ ./
 
 EXPOSE 8080
 
@@ -53,4 +58,4 @@ ENV SPRING_PROFILES_ACTIVE=prod
 HEALTHCHECK --interval=30s --timeout=3s \
   CMD wget -q -O - http://localhost:8080/api/auth/config || exit 1
 
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "org.springframework.boot.loader.launch.JarLauncher"]
