@@ -155,14 +155,14 @@ graph LR
 | **Build** | Maven (con wrapper `mvnw`) |
 
 ### Optimización y Rendimiento
-- **Base de Datos**: Índices compuestos estratégicos inyectados vía Flyway para queries en O(log N) (incluso con +1M de registros).
-- **Red**: Compresión GZIP forzada nativamente en Backend (Spring Boot) y Servidor Web (Nginx) para acelerar tiempos de carga en un ~80%.
+- **Base de Datos y JPA**: Índices compuestos estratégicos vía Flyway y entidades con UUID que implementan `Persistable<String>` para erradicar el problema N+1 SELECT de Hibernate en inserciones en lote.
+- **Seguridad y Red**: Rate Limiter en memoria (Caffeine) para mitigar DDoS por IP sin colapsar la RAM (OOM), y compresión GZIP forzada nativamente en Backend y Nginx.
 
 ### Infraestructura
-- **Docker multi-stage**, con dos formas de desplegar:
+- **Docker Layered Jars**, optimizado para el motor de Spring Boot 3.3, con dos formas de desplegar:
   - `docker-compose.yml`: 3 contenedores separados (postgres, backend, frontend servido con Nginx).
   - `Dockerfile` (raíz): build monolítico que compila el frontend y lo empaqueta como recursos estáticos dentro del propio `.jar` de Spring Boot (útil para plataformas de un solo servicio tipo Railway/Render).
-- **CI en GitHub Actions** (`.github/workflows/ci.yml`): build de frontend + build y tests de backend en cada push/PR a `main`.
+- **CI en GitHub Actions** (`.github/workflows/ci.yml`): build de frontend + build y tests de backend en cada push/PR a `main`, usando caché avanzado para binarios de Playwright y Maven.
 - Perfil `prod` preparado para variables `PGHOST`/`PGPORT`/`PGDATABASE`/`PGUSER`/`PGPASSWORD` (convención habitual en plataformas tipo Railway).
 
 ## Estructura del proyecto
