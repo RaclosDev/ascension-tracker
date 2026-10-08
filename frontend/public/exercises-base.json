@@ -1,0 +1,2340 @@
+[
+  {
+    "id": "base-pecho-press-de-pecho-plano-barra",
+    "name": "Press de Pecho Plano con Barra",
+    "muscle": "pecho",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1254-khlHMqs.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1254",
+      "ex-0025",
+      "ex-0045",
+      "ex-0052",
+      "ex-0122",
+      "ex-1258",
+      "ex-0151",
+      "ex-0289",
+      "ex-0352",
+      "ex-1624",
+      "ex-1743",
+      "ex-0450"
+    ],
+    "tags": [
+      "press de pecho plano"
+    ],
+    "synergists": {
+      "pecho": 8,
+      "triceps": 7,
+      "hombros": 5
+    }
+  },
+  {
+    "id": "base-pecho-press-de-pecho-plano-mancuernas",
+    "name": "Press de Pecho Plano con Mancuernas",
+    "muscle": "pecho",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0289-SpYC0Kp.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0289"
+    ],
+    "tags": [
+      "press de pecho plano"
+    ],
+    "synergists": {
+      "pecho": 9,
+      "hombros": 6,
+      "triceps": 6
+    }
+  },
+  {
+    "id": "base-pecho-press-de-pecho-plano-multipower",
+    "name": "Press de Pecho Plano en Multipower",
+    "muscle": "pecho",
+    "equipment": "multipower",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0748-trqKQv2.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0748"
+    ],
+    "tags": [
+      "press de pecho plano"
+    ],
+    "synergists": {
+      "pecho": 10,
+      "triceps": 7,
+      "hombros": 7
+    }
+  },
+  {
+    "id": "base-pecho-press-de-pecho-plano-maquina",
+    "name": "Press de Pecho Plano en Máquina",
+    "muscle": "pecho",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0577-T0yTjgW.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0577",
+      "ex-0576"
+    ],
+    "tags": [
+      "press de pecho plano"
+    ],
+    "synergists": {
+      "pecho": 9,
+      "hombros": 6,
+      "triceps": 6
+    }
+  },
+  {
+    "id": "base-pecho-press-inclinado-barra",
+    "name": "Press Inclinado con Barra",
+    "muscle": "pecho",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0047-3TZduzM.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0047",
+      "ex-1719",
+      "ex-0048",
+      "ex-0049",
+      "ex-0050",
+      "ex-1257",
+      "ex-0169",
+      "ex-0314",
+      "ex-1623",
+      "ex-0449"
+    ],
+    "tags": [
+      "press inclinado"
+    ],
+    "synergists": {
+      "pecho": 9,
+      "hombros": 8,
+      "triceps": 7
+    }
+  },
+  {
+    "id": "base-pecho-press-inclinado-mancuernas",
+    "name": "Press Inclinado con Mancuernas",
+    "muscle": "pecho",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0314-ns0SIbU.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0314",
+      "ex-1283"
+    ],
+    "tags": [
+      "press inclinado"
+    ],
+    "synergists": {
+      "pecho": 9,
+      "hombros": 6,
+      "triceps": 6
+    }
+  },
+  {
+    "id": "base-pecho-press-inclinado-multipower",
+    "name": "Press Inclinado en Multipower",
+    "muscle": "pecho",
+    "equipment": "multipower",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0757-5v7KYld.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0757",
+      "ex-0758",
+      "ex-0759"
+    ],
+    "tags": [
+      "press inclinado"
+    ],
+    "synergists": {
+      "pecho": 10,
+      "hombros": 8,
+      "triceps": 7
+    }
+  },
+  {
+    "id": "base-pecho-press-inclinado-maquina",
+    "name": "Press Inclinado en Máquina",
+    "muscle": "pecho",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1299-jHAnWmT.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1299",
+      "ex-1479",
+      "ex-1752"
+    ],
+    "tags": [
+      "press inclinado"
+    ],
+    "synergists": {
+      "pecho": 9,
+      "hombros": 7,
+      "triceps": 6
+    }
+  },
+  {
+    "id": "base-pecho-press-declinado-barra",
+    "name": "Press Declinado con Barra",
+    "muscle": "pecho",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0033-GrO65fd.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0033",
+      "ex-1256"
+    ],
+    "tags": [
+      "press declinado"
+    ],
+    "synergists": {
+      "pecho": 10,
+      "triceps": 7,
+      "hombros": 5
+    }
+  },
+  {
+    "id": "base-pecho-press-declinado-mancuernas",
+    "name": "Press Declinado con Mancuernas",
+    "muscle": "pecho",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0301-DwhEmmE.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0301"
+    ],
+    "tags": [
+      "press declinado"
+    ],
+    "synergists": {
+      "pecho": 9,
+      "triceps": 6,
+      "hombros": 5
+    }
+  },
+  {
+    "id": "base-pecho-aperturas-mancuernas",
+    "name": "Aperturas con Mancuernas",
+    "muscle": "pecho",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0308-yz9nUhF.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0308",
+      "ex-1277",
+      "ex-3234"
+    ],
+    "tags": [
+      "aperturas"
+    ],
+    "synergists": {
+      "pecho": 9,
+      "hombros": 5
+    }
+  },
+  {
+    "id": "base-pecho-aperturas-inclinadas-mancuernas",
+    "name": "Aperturas Inclinadas con Mancuernas",
+    "muscle": "pecho",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0319-ESOd5Pl.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0319",
+      "ex-1278"
+    ],
+    "tags": [
+      "aperturas inclinadas"
+    ],
+    "synergists": {
+      "pecho": 9,
+      "hombros": 5
+    }
+  },
+  {
+    "id": "base-pecho-cruces-en-polea-polea",
+    "name": "Cruces en Polea",
+    "muscle": "pecho",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0153-OQ1otBN.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0153",
+      "ex-0154",
+      "ex-0155",
+      "ex-0158",
+      "ex-0171",
+      "ex-0170"
+    ],
+    "tags": [
+      "cruces en polea"
+    ],
+    "synergists": {
+      "dorsales": 9,
+      "espalda_alta": 7,
+      "biceps": 6
+    }
+  },
+  {
+    "id": "base-pecho-pec-deck-maquina",
+    "name": "Pec Deck en Máquina",
+    "muscle": "pecho",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1494-bWlZvXh.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1494",
+      "ex-0596",
+      "ex-0602",
+      "ex-0601"
+    ],
+    "tags": [
+      "pec deck"
+    ],
+    "synergists": {
+      "aductores": 10,
+      "abductores": 2,
+      "gluteos": 1
+    }
+  },
+  {
+    "id": "base-pecho-flexiones-peso-corporal",
+    "name": "Flexiones",
+    "muscle": "pecho",
+    "equipment": "peso corporal",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/3294-A9qxk2F.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-3294",
+      "ex-3216",
+      "ex-1273",
+      "ex-0258",
+      "ex-0279",
+      "ex-1274",
+      "ex-1275",
+      "ex-1772",
+      "ex-3327",
+      "ex-0492",
+      "ex-0493",
+      "ex-3785",
+      "ex-0494",
+      "ex-3011",
+      "ex-0545",
+      "ex-3211",
+      "ex-3217",
+      "ex-1421",
+      "ex-2328",
+      "ex-0642",
+      "ex-1306",
+      "ex-1307",
+      "ex-0662",
+      "ex-0653",
+      "ex-0655",
+      "ex-0656",
+      "ex-0659",
+      "ex-0658",
+      "ex-0661",
+      "ex-0663",
+      "ex-1467",
+      "ex-3145",
+      "ex-0664",
+      "ex-0666",
+      "ex-3021",
+      "ex-0699",
+      "ex-0717",
+      "ex-0725",
+      "ex-0778",
+      "ex-0803",
+      "ex-0806",
+      "ex-1310",
+      "ex-1311"
+    ],
+    "tags": [
+      "flexiones"
+    ],
+    "synergists": {
+      "pecho": 9,
+      "triceps": 7,
+      "hombros": 6,
+      "abdominales": 5
+    }
+  },
+  {
+    "id": "base-pecho-fondos-en-paralelas-peso-corporal",
+    "name": "Fondos en Paralelas",
+    "muscle": "pecho",
+    "equipment": "peso corporal",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0009-PAgTVaK.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0009",
+      "ex-2364",
+      "ex-0251",
+      "ex-1430",
+      "ex-2462",
+      "ex-2363"
+    ],
+    "tags": [
+      "fondos en paralelas"
+    ],
+    "synergists": {
+      "pecho": 8,
+      "triceps": 7,
+      "hombros": 6
+    }
+  },
+  {
+    "id": "base-pecho-pullover-mancuernas",
+    "name": "Pullover con Mancuernas",
+    "muscle": "pecho",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0375-9XjtHvS.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0375",
+      "ex-1294",
+      "ex-1295"
+    ],
+    "tags": [
+      "pullover"
+    ],
+    "synergists": {
+      "pecho": 8,
+      "dorsales": 8,
+      "triceps": 5,
+      "abdominales": 3
+    }
+  },
+  {
+    "id": "base-dorsales-dominadas-peso-corporal",
+    "name": "Dominadas",
+    "muscle": "dorsales",
+    "equipment": "peso corporal",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/3293-72BC5Za.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-3293",
+      "ex-3019",
+      "ex-0139",
+      "ex-0140",
+      "ex-1430",
+      "ex-1326",
+      "ex-0253",
+      "ex-1327",
+      "ex-3418",
+      "ex-0627",
+      "ex-0638",
+      "ex-0651",
+      "ex-0652",
+      "ex-0670",
+      "ex-0674",
+      "ex-0678",
+      "ex-0688",
+      "ex-1763",
+      "ex-2987",
+      "ex-3290",
+      "ex-0841",
+      "ex-1429",
+      "ex-1367"
+    ],
+    "tags": [
+      "dominadas"
+    ],
+    "synergists": {
+      "dorsales": 9,
+      "espalda_alta": 7,
+      "biceps": 7,
+      "antebrazos": 5,
+      "abdominales": 4
+    }
+  },
+  {
+    "id": "base-dorsales-dominadas-asistidas-maquina",
+    "name": "Dominadas Asistidas en Máquina",
+    "muscle": "dorsales",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0017-kiJ4Z2K.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0017",
+      "ex-0970",
+      "ex-0572"
+    ],
+    "tags": [
+      "dominadas asistidas"
+    ],
+    "synergists": {
+      "dorsales": 8,
+      "espalda_alta": 6,
+      "biceps": 6,
+      "antebrazos": 4
+    }
+  },
+  {
+    "id": "base-dorsales-jalon-al-pecho-polea",
+    "name": "Jalón al Pecho en Polea",
+    "muscle": "dorsales",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0198-RVwzP10.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0007",
+      "ex-0150",
+      "ex-0153",
+      "ex-2330",
+      "ex-0177",
+      "ex-2616",
+      "ex-3563",
+      "ex-0198",
+      "ex-0197",
+      "ex-1638",
+      "ex-0205",
+      "ex-0232",
+      "ex-0245",
+      "ex-1325",
+      "ex-0579",
+      "ex-1347",
+      "ex-2736",
+      "ex-0673",
+      "ex-0678",
+      "ex-0818"
+    ],
+    "tags": [
+      "jalón al pecho"
+    ],
+    "synergists": {
+      "dorsales": 9,
+      "espalda_alta": 6,
+      "biceps": 6,
+      "antebrazos": 4,
+      "hombros": 3
+    }
+  },
+  {
+    "id": "base-dorsales-pulldown-brazo-recto-polea",
+    "name": "Pulldown Brazo Recto en Polea",
+    "muscle": "dorsales",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0238-x69MAlq.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0238",
+      "ex-0237"
+    ],
+    "tags": [
+      "pulldown brazo recto"
+    ],
+    "synergists": {
+      "dorsales": 9,
+      "espalda_alta": 6,
+      "triceps": 5,
+      "pecho": 4,
+      "abdominales": 4
+    }
+  },
+  {
+    "id": "base-espalda_alta-remo-con-barra-barra",
+    "name": "Remo con Barra",
+    "muscle": "espalda_alta",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0027-eZyBC3j.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0027",
+      "ex-0063",
+      "ex-0064",
+      "ex-0118",
+      "ex-1317"
+    ],
+    "tags": [
+      "remo con barra"
+    ],
+    "synergists": {
+      "espalda_alta": 9,
+      "dorsales": 8,
+      "biceps": 6,
+      "lumbares": 6,
+      "trapecios": 5,
+      "antebrazos": 4
+    }
+  },
+  {
+    "id": "base-dorsales-remo-con-mancuerna-mancuernas",
+    "name": "Remo con Mancuerna",
+    "muscle": "dorsales",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0293-BJ0Hz5L.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0293",
+      "ex-0327",
+      "ex-0292",
+      "ex-1329",
+      "ex-1330",
+      "ex-1331",
+      "ex-2327"
+    ],
+    "tags": [
+      "remo con mancuerna"
+    ],
+    "synergists": {
+      "espalda_alta": 9,
+      "dorsales": 8,
+      "biceps": 6,
+      "lumbares": 5
+    }
+  },
+  {
+    "id": "base-espalda_alta-remo-pendlay-barra",
+    "name": "Remo Pendlay con Barra",
+    "muscle": "espalda_alta",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/3017-r0z6xzQ.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-3017"
+    ],
+    "tags": [
+      "remo pendlay"
+    ],
+    "synergists": {
+      "espalda_alta": 9,
+      "dorsales": 8,
+      "trapecios": 7,
+      "biceps": 6,
+      "lumbares": 6,
+      "antebrazos": 5
+    }
+  },
+  {
+    "id": "base-espalda_alta-remo-t-barra",
+    "name": "Remo T con Barra",
+    "muscle": "espalda_alta",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1349-BgljGjd.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1349",
+      "ex-0606"
+    ],
+    "tags": [
+      "remo t"
+    ],
+    "synergists": {
+      "espalda_alta": 9,
+      "dorsales": 8,
+      "hombros": 6,
+      "biceps": 5
+    }
+  },
+  {
+    "id": "base-espalda_alta-remo-en-polea-polea",
+    "name": "Remo en Polea",
+    "muscle": "espalda_alta",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0167-ZSJNetl.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0167",
+      "ex-0861",
+      "ex-0159",
+      "ex-0160",
+      "ex-1318",
+      "ex-0180",
+      "ex-0189",
+      "ex-1319",
+      "ex-1320",
+      "ex-1321",
+      "ex-1322",
+      "ex-1323",
+      "ex-0214",
+      "ex-0218",
+      "ex-0234",
+      "ex-0236",
+      "ex-0239",
+      "ex-2464"
+    ],
+    "tags": [
+      "remo en polea"
+    ],
+    "synergists": {
+      "espalda_alta": 9,
+      "dorsales": 7,
+      "biceps": 6,
+      "trapecios": 5,
+      "abdominales": 4
+    }
+  },
+  {
+    "id": "base-espalda_alta-remo-en-maquina-maquina",
+    "name": "Remo en Máquina",
+    "muscle": "espalda_alta",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1350-7I6LNUG.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1350",
+      "ex-0571",
+      "ex-0574",
+      "ex-3200",
+      "ex-0588",
+      "ex-0589",
+      "ex-1348",
+      "ex-1351"
+    ],
+    "tags": [
+      "remo en máquina"
+    ],
+    "synergists": {
+      "espalda_alta": 9,
+      "dorsales": 9,
+      "biceps": 6
+    }
+  },
+  {
+    "id": "base-hombros-press-militar-barra",
+    "name": "Press Militar con Barra",
+    "muscle": "hombros",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0091-kTbSH9h.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0091"
+    ],
+    "tags": [
+      "press militar"
+    ],
+    "synergists": {
+      "hombros": 9,
+      "triceps": 7,
+      "trapecios": 6,
+      "pecho": 4
+    }
+  },
+  {
+    "id": "base-hombros-press-de-hombros-mancuernas",
+    "name": "Press de Hombros con Mancuernas",
+    "muscle": "hombros",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0405-znQUdHY.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0405",
+      "ex-0404"
+    ],
+    "tags": [
+      "press de hombros"
+    ],
+    "synergists": {
+      "hombros": 9,
+      "triceps": 7,
+      "trapecios": 5
+    }
+  },
+  {
+    "id": "base-hombros-press-de-hombros-multipower",
+    "name": "Press de Hombros en Multipower",
+    "muscle": "hombros",
+    "equipment": "multipower",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0765-xUwnBMT.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0765",
+      "ex-0766"
+    ],
+    "tags": [
+      "press de hombros"
+    ],
+    "synergists": {
+      "hombros": 10,
+      "triceps": 7,
+      "trapecios": 5,
+      "pecho": 4
+    }
+  },
+  {
+    "id": "base-hombros-press-de-hombros-maquina",
+    "name": "Press de Hombros en Máquina",
+    "muscle": "hombros",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0603-67n3r98.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0603",
+      "ex-0869",
+      "ex-2318"
+    ],
+    "tags": [
+      "press de hombros"
+    ],
+    "synergists": {
+      "hombros": 10,
+      "triceps": 6,
+      "trapecios": 4
+    }
+  },
+  {
+    "id": "base-hombros-elevaciones-laterales-mancuernas",
+    "name": "Elevaciones Laterales con Mancuernas",
+    "muscle": "hombros",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0334-DsgkuIt.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0334"
+    ],
+    "tags": [
+      "elevaciones laterales"
+    ],
+    "synergists": {
+      "hombros": 10,
+      "trapecios": 4,
+      "antebrazos": 2
+    }
+  },
+  {
+    "id": "base-hombros-elevaciones-laterales-polea",
+    "name": "Elevaciones Laterales en Polea",
+    "muscle": "hombros",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0178-goJ6ezq.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0178",
+      "ex-0191",
+      "ex-0192",
+      "ex-0215"
+    ],
+    "tags": [
+      "elevaciones laterales"
+    ],
+    "synergists": {
+      "hombros": 9,
+      "trapecios": 4,
+      "antebrazos": 2
+    }
+  },
+  {
+    "id": "base-hombros-elevaciones-laterales-maquina",
+    "name": "Elevaciones Laterales en Máquina",
+    "muscle": "hombros",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0584-dRTfGZT.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0584"
+    ],
+    "tags": [
+      "elevaciones laterales"
+    ],
+    "synergists": {
+      "hombros": 10,
+      "trapecios": 4
+    }
+  },
+  {
+    "id": "base-hombros-elevaciones-frontales-mancuernas",
+    "name": "Elevaciones Frontales con Mancuernas",
+    "muscle": "hombros",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0310-3eGE2JC.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0310",
+      "ex-0309"
+    ],
+    "tags": [
+      "elevaciones frontales"
+    ],
+    "synergists": {
+      "hombros": 9,
+      "pecho": 4,
+      "trapecios": 3
+    }
+  },
+  {
+    "id": "base-hombros-elevaciones-frontales-polea",
+    "name": "Elevaciones Frontales en Polea",
+    "muscle": "hombros",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0162-u2X71Np.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0162",
+      "ex-0164",
+      "ex-0161"
+    ],
+    "tags": [
+      "elevaciones frontales"
+    ],
+    "synergists": {
+      "hombros": 9,
+      "pecho": 4
+    }
+  },
+  {
+    "id": "base-hombros-pajaros-deltoides-posterior-mancuernas",
+    "name": "Pájaros (Deltoides Posterior) con Mancuernas",
+    "muscle": "hombros",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/2292-mu5Guxt.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-2292",
+      "ex-0377"
+    ],
+    "tags": [
+      "pájaros (deltoides posterior)"
+    ],
+    "synergists": {
+      "hombros": 10,
+      "espalda_alta": 6,
+      "trapecios": 5
+    }
+  },
+  {
+    "id": "base-hombros-pajaros-en-polea-polea",
+    "name": "Pájaros en Polea",
+    "muscle": "hombros",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0202-yUdIGNs.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0202",
+      "ex-0203"
+    ],
+    "tags": [
+      "pájaros en polea"
+    ],
+    "synergists": {
+      "hombros": 9,
+      "espalda_alta": 7,
+      "trapecios": 5,
+      "biceps": 4
+    }
+  },
+  {
+    "id": "base-trapecios-encogimientos-shrugs-barra",
+    "name": "Encogimientos (Shrugs) con Barra",
+    "muscle": "trapecios",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0095-dG7tG5y.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0095"
+    ],
+    "tags": [
+      "encogimientos (shrugs)"
+    ],
+    "synergists": {
+      "trapecios": 10,
+      "antebrazos": 6,
+      "espalda_alta": 5
+    }
+  },
+  {
+    "id": "base-trapecios-encogimientos-shrugs-mancuernas",
+    "name": "Encogimientos (Shrugs) con Mancuernas",
+    "muscle": "trapecios",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0406-NJzBsGJ.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0406"
+    ],
+    "tags": [
+      "encogimientos (shrugs)"
+    ],
+    "synergists": {
+      "trapecios": 10,
+      "antebrazos": 5,
+      "espalda_alta": 4
+    }
+  },
+  {
+    "id": "base-hombros-remo-al-cuello-barra",
+    "name": "Remo al Cuello con Barra",
+    "muscle": "hombros",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0120-UDlhcO8.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0120",
+      "ex-0119",
+      "ex-0121",
+      "ex-0123",
+      "ex-0363",
+      "ex-0437",
+      "ex-1765",
+      "ex-0775"
+    ],
+    "tags": [
+      "remo al cuello"
+    ],
+    "synergists": {
+      "hombros": 9,
+      "trapecios": 8,
+      "biceps": 6,
+      "antebrazos": 5,
+      "espalda_alta": 5
+    }
+  },
+  {
+    "id": "base-hombros-remo-al-cuello-polea",
+    "name": "Remo al Cuello en Polea",
+    "muscle": "hombros",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0246-cALKspW.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0246"
+    ],
+    "tags": [
+      "remo al cuello"
+    ],
+    "synergists": {
+      "hombros": 9,
+      "trapecios": 8,
+      "biceps": 5,
+      "antebrazos": 4
+    }
+  },
+  {
+    "id": "base-cuadriceps-sentadilla-libre-barra",
+    "name": "Sentadilla Libre con Barra",
+    "muscle": "cuadriceps",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0043-qXTaZnJ.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0043",
+      "ex-1461",
+      "ex-1462",
+      "ex-0102",
+      "ex-2798"
+    ],
+    "tags": [
+      "sentadilla libre"
+    ],
+    "synergists": {
+      "cuadriceps": 10,
+      "gluteos": 8,
+      "aductores": 6,
+      "femorales": 5,
+      "lumbares": 5
+    }
+  },
+  {
+    "id": "base-cuadriceps-sentadilla-frontal-barra",
+    "name": "Sentadilla Frontal con Barra",
+    "muscle": "cuadriceps",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0042-zG0zs85.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0042"
+    ],
+    "tags": [
+      "sentadilla frontal"
+    ],
+    "synergists": {
+      "cuadriceps": 10,
+      "gluteos": 7,
+      "abdominales": 6,
+      "aductores": 5,
+      "lumbares": 5
+    }
+  },
+  {
+    "id": "base-cuadriceps-sentadilla-multipower",
+    "name": "Sentadilla en Multipower",
+    "muscle": "cuadriceps",
+    "equipment": "multipower",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0770-jFtipLl.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0770"
+    ],
+    "tags": [
+      "sentadilla"
+    ],
+    "synergists": {
+      "gluteos": 10,
+      "cuadriceps": 9,
+      "femorales": 6,
+      "lumbares": 4
+    }
+  },
+  {
+    "id": "base-cuadriceps-sentadilla-hack-maquina",
+    "name": "Sentadilla Hack en Máquina",
+    "muscle": "cuadriceps",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0741-gf3ZjB9.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0741",
+      "ex-0743",
+      "ex-0755"
+    ],
+    "tags": [
+      "sentadilla hack"
+    ],
+    "synergists": {
+      "gluteos": 10,
+      "cuadriceps": 9,
+      "femorales": 6,
+      "gemelos": 4
+    }
+  },
+  {
+    "id": "base-cuadriceps-sentadilla-copa-goblet-mancuernas",
+    "name": "Sentadilla Copa (Goblet) con Mancuernas",
+    "muscle": "cuadriceps",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1760-yn8yg1r.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1760",
+      "ex-0534"
+    ],
+    "tags": [
+      "sentadilla copa (goblet)"
+    ],
+    "synergists": {
+      "cuadriceps": 9,
+      "gluteos": 7,
+      "aductores": 4,
+      "abdominales": 4
+    }
+  },
+  {
+    "id": "base-cuadriceps-prensa-de-piernas-maquina",
+    "name": "Prensa de Piernas en Máquina",
+    "muscle": "cuadriceps",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/2287-V07qpXy.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-2287",
+      "ex-2611",
+      "ex-1385",
+      "ex-1425",
+      "ex-0739",
+      "ex-1464",
+      "ex-1463",
+      "ex-1391",
+      "ex-1392",
+      "ex-0760"
+    ],
+    "tags": [
+      "prensa de piernas"
+    ],
+    "synergists": {
+      "cuadriceps": 9,
+      "gluteos": 7,
+      "femorales": 5
+    }
+  },
+  {
+    "id": "base-cuadriceps-zancadas-mancuernas",
+    "name": "Zancadas con Mancuernas",
+    "muscle": "cuadriceps",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0336-RRWFUcw.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0336",
+      "ex-1658",
+      "ex-1460"
+    ],
+    "tags": [
+      "zancadas"
+    ],
+    "synergists": {
+      "cuadriceps": 9,
+      "gluteos": 8,
+      "femorales": 6,
+      "aductores": 4,
+      "gemelos": 3,
+      "antebrazos": 3
+    }
+  },
+  {
+    "id": "base-cuadriceps-zancadas-barra",
+    "name": "Zancadas con Barra",
+    "muscle": "cuadriceps",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0054-t8iSghb.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0054"
+    ],
+    "tags": [
+      "zancadas"
+    ],
+    "synergists": {
+      "cuadriceps": 9,
+      "gluteos": 8,
+      "aductores": 5,
+      "femorales": 5
+    }
+  },
+  {
+    "id": "base-cuadriceps-extensiones-de-cuadriceps-maquina",
+    "name": "Extensiones de Cuádriceps en Máquina",
+    "muscle": "cuadriceps",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0585-my33uHU.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0585",
+      "ex-3007"
+    ],
+    "tags": [
+      "extensiones de cuádriceps"
+    ],
+    "synergists": {
+      "cuadriceps": 10
+    }
+  },
+  {
+    "id": "base-lumbares-peso-muerto-tradicional-barra",
+    "name": "Peso Muerto Tradicional con Barra",
+    "muscle": "lumbares",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0032-ila4NZS.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0032"
+    ],
+    "tags": [
+      "peso muerto tradicional"
+    ],
+    "synergists": {
+      "gluteos": 9,
+      "femorales": 9,
+      "lumbares": 9,
+      "espalda_alta": 8,
+      "trapecios": 7,
+      "cuadriceps": 7,
+      "antebrazos": 7
+    }
+  },
+  {
+    "id": "base-femorales-peso-muerto-rumano-barra",
+    "name": "Peso Muerto Rumano con Barra",
+    "muscle": "femorales",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1009-kuMiR2T.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1009",
+      "ex-1023",
+      "ex-0085",
+      "ex-1459",
+      "ex-0432"
+    ],
+    "tags": [
+      "peso muerto rumano"
+    ],
+    "synergists": {
+      "gluteos": 9,
+      "femorales": 9,
+      "lumbares": 7,
+      "espalda_alta": 3
+    }
+  },
+  {
+    "id": "base-femorales-peso-muerto-rumano-mancuernas",
+    "name": "Peso Muerto Rumano con Mancuernas",
+    "muscle": "femorales",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1459-rR0LJzx.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1459",
+      "ex-0432",
+      "ex-0434"
+    ],
+    "tags": [
+      "peso muerto rumano"
+    ],
+    "synergists": {
+      "femorales": 9,
+      "gluteos": 9,
+      "lumbares": 6,
+      "antebrazos": 4
+    }
+  },
+  {
+    "id": "base-femorales-curl-femoral-tumbado-maquina",
+    "name": "Curl Femoral Tumbado en Máquina",
+    "muscle": "femorales",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0586-17lJ1kr.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0586"
+    ],
+    "tags": [
+      "curl femoral tumbado"
+    ],
+    "synergists": {
+      "femorales": 10,
+      "gemelos": 3,
+      "gluteos": 2
+    }
+  },
+  {
+    "id": "base-femorales-curl-femoral-sentado-maquina",
+    "name": "Curl Femoral Sentado en Máquina",
+    "muscle": "femorales",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0599-Zg3XY7P.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0599"
+    ],
+    "tags": [
+      "curl femoral sentado"
+    ],
+    "synergists": {
+      "femorales": 10,
+      "gemelos": 3
+    }
+  },
+  {
+    "id": "base-gemelos-elevacion-de-gemelos-de-pie-maquina",
+    "name": "Elevación de Gemelos de Pie en Máquina",
+    "muscle": "gemelos",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1372-8ozhUIZ.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1372",
+      "ex-1373",
+      "ex-1375",
+      "ex-0417",
+      "ex-0605",
+      "ex-1490"
+    ],
+    "tags": [
+      "elevación de gemelos de pie"
+    ],
+    "synergists": {
+      "gemelos": 10,
+      "antebrazos": 3,
+      "lumbares": 3
+    }
+  },
+  {
+    "id": "base-gemelos-elevacion-de-gemelos-sentado-maquina",
+    "name": "Elevación de Gemelos Sentado en Máquina",
+    "muscle": "gemelos",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0088-ktsFQAZ.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0088",
+      "ex-1371",
+      "ex-1379",
+      "ex-0594"
+    ],
+    "tags": [
+      "elevación de gemelos sentado"
+    ],
+    "synergists": {
+      "gemelos": 10
+    }
+  },
+  {
+    "id": "base-biceps-curl-de-biceps-barra",
+    "name": "Curl de Bíceps con Barra",
+    "muscle": "biceps",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0031-25GPyDY.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0031",
+      "ex-0447"
+    ],
+    "tags": [
+      "curl de bíceps"
+    ],
+    "synergists": {
+      "biceps": 10,
+      "antebrazos": 6,
+      "hombros": 3
+    }
+  },
+  {
+    "id": "base-biceps-curl-de-biceps-mancuernas",
+    "name": "Curl de Bíceps con Mancuernas",
+    "muscle": "biceps",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0297-gvsWLQw.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0297",
+      "ex-0318",
+      "ex-0317",
+      "ex-0285",
+      "ex-2403",
+      "ex-1650",
+      "ex-1651",
+      "ex-1653",
+      "ex-0294",
+      "ex-2401",
+      "ex-1654",
+      "ex-1656",
+      "ex-1437",
+      "ex-1664",
+      "ex-0315",
+      "ex-0322",
+      "ex-1660",
+      "ex-1661",
+      "ex-0350",
+      "ex-1662",
+      "ex-1665",
+      "ex-1667",
+      "ex-1668",
+      "ex-1670",
+      "ex-0374",
+      "ex-0382",
+      "ex-1675",
+      "ex-1677",
+      "ex-0390",
+      "ex-3547",
+      "ex-0391",
+      "ex-0393",
+      "ex-0416",
+      "ex-2321",
+      "ex-0422",
+      "ex-1680",
+      "ex-0425",
+      "ex-0429",
+      "ex-1684",
+      "ex-5201"
+    ],
+    "tags": [
+      "curl de bíceps"
+    ],
+    "synergists": {
+      "biceps": 10,
+      "antebrazos": 4
+    }
+  },
+  {
+    "id": "base-biceps-curl-de-biceps-polea",
+    "name": "Curl de Bíceps en Polea",
+    "muscle": "biceps",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0868-G08RZcQ.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0868",
+      "ex-3235",
+      "ex-1630",
+      "ex-1632",
+      "ex-1634",
+      "ex-0182",
+      "ex-0190",
+      "ex-1636",
+      "ex-1637",
+      "ex-0206",
+      "ex-1413",
+      "ex-1641",
+      "ex-1643",
+      "ex-1644",
+      "ex-0229",
+      "ex-1645",
+      "ex-2400"
+    ],
+    "tags": [
+      "curl de bíceps"
+    ],
+    "synergists": {
+      "biceps": 9,
+      "antebrazos": 5
+    }
+  },
+  {
+    "id": "base-biceps-curl-martillo-mancuernas",
+    "name": "Curl Martillo con Mancuernas",
+    "muscle": "biceps",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0313-slDvUAU.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0313",
+      "ex-1659",
+      "ex-0312",
+      "ex-2402"
+    ],
+    "tags": [
+      "curl martillo"
+    ],
+    "synergists": {
+      "biceps": 9,
+      "antebrazos": 7
+    }
+  },
+  {
+    "id": "base-biceps-curl-martillo-polea",
+    "name": "Curl Martillo en Polea",
+    "muscle": "biceps",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0165-HPlPoQA.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0165"
+    ],
+    "tags": [
+      "curl martillo"
+    ],
+    "synergists": {
+      "biceps": 8,
+      "antebrazos": 8
+    }
+  },
+  {
+    "id": "base-biceps-curl-predicador-barra",
+    "name": "Curl Predicador con Barra",
+    "muscle": "biceps",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0070-qOgPVf6.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0070"
+    ],
+    "tags": [
+      "curl predicador"
+    ],
+    "synergists": {
+      "biceps": 10,
+      "antebrazos": 6
+    }
+  },
+  {
+    "id": "base-biceps-curl-predicador-maquina",
+    "name": "Curl Predicador en Máquina",
+    "muscle": "biceps",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0592-b6hQYMb.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0592",
+      "ex-1614"
+    ],
+    "tags": [
+      "curl predicador"
+    ],
+    "synergists": {
+      "biceps": 10,
+      "antebrazos": 4
+    }
+  },
+  {
+    "id": "base-triceps-extension-de-triceps-polea",
+    "name": "Extensión de Tríceps en Polea",
+    "muscle": "triceps",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1723-qRZ5S1N.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1723",
+      "ex-2406",
+      "ex-0241",
+      "ex-2405",
+      "ex-0149",
+      "ex-0173",
+      "ex-0176",
+      "ex-0186",
+      "ex-0231"
+    ],
+    "tags": [
+      "extensión de tríceps"
+    ],
+    "synergists": {
+      "triceps": 9,
+      "antebrazos": 2
+    }
+  },
+  {
+    "id": "base-triceps-extension-tras-nuca-polea",
+    "name": "Extensión Tras Nuca en Polea",
+    "muscle": "triceps",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1722-1xHyxys.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1722",
+      "ex-0194",
+      "ex-1724"
+    ],
+    "tags": [
+      "extensión tras nuca"
+    ],
+    "synergists": {
+      "triceps": 9,
+      "abdominales": 4
+    }
+  },
+  {
+    "id": "base-triceps-extension-tras-nuca-mancuernas",
+    "name": "Extensión Tras Nuca con Mancuernas",
+    "muscle": "triceps",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/2188-kont8Ut.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-2188",
+      "ex-0430"
+    ],
+    "tags": [
+      "extensión tras nuca"
+    ],
+    "synergists": {
+      "triceps": 9,
+      "hombros": 3,
+      "antebrazos": 3
+    }
+  },
+  {
+    "id": "base-triceps-press-frances-barra",
+    "name": "Press Francés con Barra",
+    "muscle": "triceps",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0061-iZop9xO.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0061",
+      "ex-0060",
+      "ex-1721",
+      "ex-1748"
+    ],
+    "tags": [
+      "press francés"
+    ],
+    "synergists": {
+      "triceps": 10,
+      "antebrazos": 4
+    }
+  },
+  {
+    "id": "base-triceps-press-frances-mancuernas",
+    "name": "Press Francés con Mancuernas",
+    "muscle": "triceps",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0351-mpKZGWz.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0351"
+    ],
+    "tags": [
+      "press francés"
+    ],
+    "synergists": {
+      "triceps": 9,
+      "hombros": 3,
+      "antebrazos": 3
+    }
+  },
+  {
+    "id": "base-triceps-fondos-de-triceps-peso-corporal",
+    "name": "Fondos de Tríceps",
+    "muscle": "triceps",
+    "equipment": "peso corporal",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0019-J60bN17.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0019",
+      "ex-0975",
+      "ex-0129",
+      "ex-1399",
+      "ex-0259",
+      "ex-2398",
+      "ex-0283",
+      "ex-0490",
+      "ex-0591",
+      "ex-1753",
+      "ex-0814",
+      "ex-0812",
+      "ex-0813",
+      "ex-0815"
+    ],
+    "tags": [
+      "fondos de tríceps"
+    ],
+    "synergists": {
+      "triceps": 8,
+      "pecho": 6,
+      "hombros": 5
+    }
+  },
+  {
+    "id": "base-triceps-patada-de-triceps-mancuernas",
+    "name": "Patada de Tríceps con Mancuernas",
+    "muscle": "triceps",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1728-vvNjDJS.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1728",
+      "ex-0333",
+      "ex-1734",
+      "ex-1739",
+      "ex-1742",
+      "ex-0354",
+      "ex-1730",
+      "ex-0394",
+      "ex-0398",
+      "ex-0420"
+    ],
+    "tags": [
+      "patada de tríceps"
+    ],
+    "synergists": {
+      "triceps": 9,
+      "hombros": 3,
+      "antebrazos": 3
+    }
+  },
+  {
+    "id": "base-abdominales-crunch-abdominal-peso-corporal",
+    "name": "Crunch Abdominal",
+    "muscle": "abdominales",
+    "equipment": "peso corporal",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0972-tZkGYZ9.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0972",
+      "ex-0985",
+      "ex-1005",
+      "ex-1007",
+      "ex-0262",
+      "ex-0267",
+      "ex-0271",
+      "ex-0272",
+      "ex-0274",
+      "ex-0277",
+      "ex-2429",
+      "ex-0469",
+      "ex-3640",
+      "ex-1452",
+      "ex-0595",
+      "ex-3760",
+      "ex-0600",
+      "ex-0634",
+      "ex-1495",
+      "ex-0635",
+      "ex-0872",
+      "ex-2206",
+      "ex-0691",
+      "ex-2297",
+      "ex-0807",
+      "ex-0871",
+      "ex-0832",
+      "ex-0840"
+    ],
+    "tags": [
+      "crunch abdominal"
+    ],
+    "synergists": {
+      "abdominales": 9,
+      "cuadriceps": 4,
+      "cardio": 3
+    }
+  },
+  {
+    "id": "base-abdominales-elevacion-de-piernas-colgado-peso-corporal",
+    "name": "Elevación de Piernas Colgado",
+    "muscle": "abdominales",
+    "equipment": "peso corporal",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0472-I3tsCnC.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0472"
+    ],
+    "tags": [
+      "elevación de piernas colgado"
+    ],
+    "synergists": {
+      "abdominales": 10,
+      "antebrazos": 4
+    }
+  },
+  {
+    "id": "base-abdominales-elevacion-de-piernas-tumbado-peso-corporal",
+    "name": "Elevación de Piernas Tumbado",
+    "muscle": "abdominales",
+    "equipment": "peso corporal",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0012-UGhRD1A.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0012",
+      "ex-0013",
+      "ex-1002",
+      "ex-2799",
+      "ex-2800",
+      "ex-2963",
+      "ex-1649",
+      "ex-1652",
+      "ex-1679",
+      "ex-1343",
+      "ex-0600",
+      "ex-0620",
+      "ex-0689",
+      "ex-2802",
+      "ex-2801",
+      "ex-0826"
+    ],
+    "tags": [
+      "elevación de piernas tumbado"
+    ],
+    "synergists": {
+      "abdominales": 8,
+      "cuadriceps": 3
+    }
+  },
+  {
+    "id": "base-abdominales-rueda-abdominal-peso-corporal",
+    "name": "Rueda Abdominal",
+    "muscle": "abdominales",
+    "equipment": "peso corporal",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0103-xnInPfE.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0103"
+    ],
+    "tags": [
+      "rueda abdominal"
+    ],
+    "synergists": {
+      "abdominales": 10,
+      "lumbares": 7,
+      "dorsales": 6,
+      "pecho": 5,
+      "hombros": 5,
+      "antebrazos": 4
+    }
+  },
+  {
+    "id": "base-abdominales-plancha-peso-corporal",
+    "name": "Plancha",
+    "muscle": "abdominales",
+    "equipment": "peso corporal",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/3544-5VXmnV5.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-3544",
+      "ex-3664",
+      "ex-0464",
+      "ex-3239",
+      "ex-3665",
+      "ex-0664",
+      "ex-3663",
+      "ex-1775",
+      "ex-2135"
+    ],
+    "tags": [
+      "plancha"
+    ],
+    "synergists": {
+      "abdominales": 9,
+      "hombros": 5,
+      "gluteos": 4
+    }
+  },
+  {
+    "id": "base-espalda_alta-remo-alto-maquina",
+    "name": "Remo Alto en Máquina",
+    "muscle": "espalda_alta",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0581-nZZZy9m.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0581",
+      "ex-1356"
+    ],
+    "tags": [
+      "remo alto"
+    ],
+    "synergists": {
+      "espalda_alta": 9,
+      "trapecios": 8,
+      "hombros": 7,
+      "biceps": 6
+    }
+  },
+  {
+    "id": "base-espalda_alta-remo-alto-polea",
+    "name": "Remo Alto en Polea",
+    "muscle": "espalda_alta",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0193-WrYPP2g.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0193",
+      "ex-0208",
+      "ex-0213",
+      "ex-1324"
+    ],
+    "tags": [
+      "remo alto"
+    ],
+    "synergists": {
+      "espalda_alta": 8,
+      "dorsales": 7,
+      "trapecios": 5,
+      "biceps": 4
+    }
+  },
+  {
+    "id": "base-espalda_alta-remo-multipower",
+    "name": "Remo en Multipower",
+    "muscle": "espalda_alta",
+    "equipment": "multipower",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1359-ZX9UZmj.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1359",
+      "ex-0761",
+      "ex-1360",
+      "ex-0762",
+      "ex-1361"
+    ],
+    "tags": [
+      "remo"
+    ],
+    "synergists": {
+      "espalda_alta": 10,
+      "dorsales": 8,
+      "biceps": 6,
+      "hombros": 5,
+      "lumbar": 4,
+      "antebrazos": 4
+    }
+  },
+  {
+    "id": "base-triceps-extension-polea",
+    "name": "Extensión de Tríceps en Polea",
+    "muscle": "triceps",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0172-1PK5Uo3.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0172",
+      "ex-0201",
+      "ex-0200",
+      "ex-0207"
+    ],
+    "tags": [
+      "extensión de tríceps en polea"
+    ],
+    "synergists": {
+      "dorsales": 9,
+      "triceps": 5,
+      "pecho": 4,
+      "abdominales": 4
+    }
+  },
+  {
+    "id": "base-pecho-cruces-polea",
+    "name": "Cruces en Polea",
+    "muscle": "pecho",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0179-FVmZVhk.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0179",
+      "ex-0185",
+      "ex-0188",
+      "ex-1262",
+      "ex-1263",
+      "ex-1264",
+      "ex-0225",
+      "ex-0227",
+      "ex-0240",
+      "ex-1269",
+      "ex-1270"
+    ],
+    "tags": [
+      "cruces en polea"
+    ],
+    "synergists": {
+      "pecho": 9,
+      "hombros": 6,
+      "biceps": 3
+    }
+  },
+  {
+    "id": "base-hombros-press-arnold-mancuernas",
+    "name": "Press Arnold con Mancuernas",
+    "muscle": "hombros",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/2137-Xy4jlWA.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-2137",
+      "ex-0287",
+      "ex-0523"
+    ],
+    "tags": [
+      "press arnold con mancuernas"
+    ],
+    "synergists": {
+      "hombros": 9,
+      "triceps": 6,
+      "pecho": 4
+    }
+  },
+  {
+    "id": "base-hombros-push-press-mancuernas",
+    "name": "Push Press con Mancuernas",
+    "muscle": "hombros",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1700-FS63wTN.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1700"
+    ],
+    "tags": [
+      "push press con mancuernas"
+    ],
+    "synergists": {
+      "hombros": 9,
+      "triceps": 7,
+      "cuadriceps": 6,
+      "gluteos": 5
+    }
+  },
+  {
+    "id": "base-biceps-curl-concentrado-mancuernas",
+    "name": "Curl Concentrado con Mancuernas",
+    "muscle": "biceps",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0353-k5IpyHg.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0353",
+      "ex-0403",
+      "ex-0418",
+      "ex-0421"
+    ],
+    "tags": [
+      "curl concentrado con mancuernas"
+    ],
+    "synergists": {
+      "biceps": 9,
+      "antebrazos": 4,
+      "abdominales": 4
+    }
+  },
+  {
+    "id": "base-biceps-curl-concentrado-polea",
+    "name": "Curl Concentrado en Polea",
+    "muscle": "biceps",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1631-NvfE43H.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1631",
+      "ex-1642"
+    ],
+    "tags": [
+      "curl concentrado en polea"
+    ],
+    "synergists": {
+      "biceps": 9,
+      "antebrazos": 5
+    }
+  },
+  {
+    "id": "base-antebrazos-curl-antebrazo-barra",
+    "name": "Curl de Antebrazo con Barra",
+    "muscle": "antebrazos",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1411-yzYH9pI.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1411",
+      "ex-1412",
+      "ex-0079",
+      "ex-0104",
+      "ex-0126",
+      "ex-0125"
+    ],
+    "tags": [
+      "curl de antebrazo con barra"
+    ],
+    "synergists": {
+      "antebrazos": 10
+    }
+  },
+  {
+    "id": "base-antebrazos-curl-antebrazo-mancuernas",
+    "name": "Curl de Antebrazo con Mancuernas",
+    "muscle": "antebrazos",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1415-YtaCTYl.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-1415",
+      "ex-0364",
+      "ex-0365",
+      "ex-0366",
+      "ex-0367",
+      "ex-0368",
+      "ex-0369",
+      "ex-0397",
+      "ex-0401"
+    ],
+    "tags": [
+      "curl de antebrazo con mancuernas"
+    ],
+    "synergists": {
+      "antebrazos": 9,
+      "biceps": 3
+    }
+  },
+  {
+    "id": "base-antebrazos-curl-antebrazo-polea",
+    "name": "Curl de Antebrazo en Polea",
+    "muscle": "antebrazos",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0224-VhX2JdE.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0224",
+      "ex-0247"
+    ],
+    "tags": [
+      "curl de antebrazo en polea"
+    ],
+    "synergists": {
+      "antebrazos": 10
+    }
+  },
+  {
+    "id": "base-antebrazos-extension-antebrazo-barra",
+    "name": "Extensión de Antebrazo con Barra",
+    "muscle": "antebrazos",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0082-LsZkfU6.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0082"
+    ],
+    "tags": [
+      "extensión de antebrazo con barra"
+    ],
+    "synergists": {
+      "antebrazos": 10
+    }
+  },
+  {
+    "id": "base-antebrazos-extension-antebrazo-mancuernas",
+    "name": "Extensión de Antebrazo con Mancuernas",
+    "muscle": "antebrazos",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0358-BwSNDGt.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0358",
+      "ex-1441",
+      "ex-0385"
+    ],
+    "tags": [
+      "extensión de antebrazo con mancuernas"
+    ],
+    "synergists": {
+      "antebrazos": 10,
+      "biceps": 2
+    }
+  },
+  {
+    "id": "base-gluteos-pull-through-polea",
+    "name": "Pull Through en Polea",
+    "muscle": "gluteos",
+    "equipment": "polea",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0196-OM46QHm.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0196"
+    ],
+    "tags": [
+      "pull through en polea"
+    ],
+    "synergists": {
+      "gluteos": 9,
+      "femorales": 7,
+      "lumbares": 5
+    }
+  },
+  {
+    "id": "base-piernas-aductores-maquina",
+    "name": "Aductores en Máquina",
+    "muscle": "aductores",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0598-oHsrypV.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0598"
+    ],
+    "tags": [
+      "aductores en máquina"
+    ],
+    "synergists": {
+      "aductores": 10,
+      "gluteos": 1
+    }
+  },
+  {
+    "id": "base-piernas-abductores-maquina",
+    "name": "Abductores en Máquina",
+    "muscle": "abductores",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0597-CHpahtl.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0597"
+    ],
+    "tags": [
+      "abductores en máquina"
+    ],
+    "synergists": {
+      "abductores": 10,
+      "gluteos": 4
+    }
+  },
+  {
+    "id": "base-cuadriceps-sentadilla-mancuernas",
+    "name": "Sentadilla con Mancuernas",
+    "muscle": "cuadriceps",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0291-mnzcrIB.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0291",
+      "ex-1655",
+      "ex-0371",
+      "ex-0411",
+      "ex-0413",
+      "ex-2803"
+    ],
+    "tags": [
+      "sentadilla con mancuernas"
+    ],
+    "synergists": {
+      "cuadriceps": 9,
+      "gluteos": 8,
+      "femorales": 5
+    }
+  },
+  {
+    "id": "base-lumbares-buenos-dias-barra",
+    "name": "Buenos Días con Barra",
+    "muscle": "lumbares",
+    "equipment": "barra",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0044-XlZ4lAC.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0044",
+      "ex-0090",
+      "ex-0115"
+    ],
+    "tags": [
+      "buenos días con barra"
+    ],
+    "synergists": {
+      "femorales": 9,
+      "gluteos": 8,
+      "lumbares": 8,
+      "espalda_alta": 5
+    }
+  },
+  {
+    "id": "base-lumbares-buenos-dias-multipower",
+    "name": "Buenos Días en Multipower",
+    "muscle": "lumbares",
+    "equipment": "multipower",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0749-1bQkKZK.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0749"
+    ],
+    "tags": [
+      "buenos días en multipower"
+    ],
+    "synergists": {
+      "gluteos": 10,
+      "femorales": 8,
+      "lumbar": 8,
+      "abdominales": 4
+    }
+  },
+  {
+    "id": "base-biceps-curl-biceps-maquina",
+    "name": "Curl de Bíceps en Máquina",
+    "muscle": "biceps",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0575-q6y3OhV.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0575",
+      "ex-1683"
+    ],
+    "tags": [
+      "curl de bíceps en máquina"
+    ],
+    "synergists": {
+      "biceps": 9,
+      "antebrazos": 6
+    }
+  },
+  {
+    "id": "base-gemelos-elevacion-gemelos-prensa",
+    "name": "Elevación de Gemelos en Prensa",
+    "muscle": "gemelos",
+    "equipment": "maquina",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0742-XDOiFns.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0742",
+      "ex-2289",
+      "ex-2335"
+    ],
+    "tags": [
+      "elevación de gemelos en prensa"
+    ],
+    "synergists": {
+      "gemelos": 10,
+      "cuadriceps": 2
+    }
+  },
+  {
+    "id": "base-biceps-curl-zottman-mancuernas",
+    "name": "Curl Zottman con Mancuernas",
+    "muscle": "biceps",
+    "equipment": "mancuernas",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0439-kXaIn5A.gif",
+    "options": {},
+    "mappedIds": [
+      "ex-0439"
+    ],
+    "tags": [
+      "curl zottman con mancuernas"
+    ],
+    "synergists": {
+      "biceps": 8,
+      "antebrazos": 8,
+      "hombros": 3
+    }
+  }
+]
