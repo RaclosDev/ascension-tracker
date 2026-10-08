@@ -65,9 +65,11 @@ El repositorio está desarrollado en español (comentarios, UI, locale `es`, tim
 
 ### Capturas
 
-| Dashboard | Entrenamiento | Nutrición + IA |
-|-----------|---------------|----------------|
+| Dashboard | Entrenamiento | Nutrición |
+|-----------|---------------|-----------|
 | <image-card alt="Dashboard" src="docs/screenshots/dashboard.png" ></image-card> | <image-card alt="Workout" src="docs/screenshots/workout.png" ></image-card> | <image-card alt="Nutrition" src="docs/screenshots/nutrition.png" ></image-card> |
+| **Tracking y Hábitos** | **Base de Alimentos** | **Asistente de IA** |
+| <image-card alt="Tracking" src="docs/screenshots/tracking.png" ></image-card> | <image-card alt="Foods" src="docs/screenshots/foods.png" ></image-card> | <image-card alt="AI Assistant" src="docs/screenshots/ai.png" ></image-card> |
 
 ## Arquitectura
 
