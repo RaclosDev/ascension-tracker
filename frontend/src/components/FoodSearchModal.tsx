@@ -468,12 +468,8 @@ export default function FoodSearchModal({
       .then((res) => {
         const count = Array.isArray(res.data) ? res.data.length : 1;
         if (selectedMealIndex === -1) {
-          const aiModel = res.headers['x-ai-model'] || 'desconocido';
-          console.log(`[AI] Added ${count} items using model: ${aiModel}`);
           toast.success(`¡${count} alimento(s) repartidos en tus comidas por IA!`);
         } else {
-          const aiModel = res.headers['x-ai-model'] || 'desconocido';
-          console.log(`[AI] Added ${count} items using model: ${aiModel}`);
           toast.success(`¡${count} alimento(s) añadidos por IA!`);
         }
         onLogAdded();
