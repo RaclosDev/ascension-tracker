@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { DashboardData, WeightEntry, WeekSummary, UserSettings } from '../types/api';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { lazy, Suspense } from 'react';
 import api from '../api/client';
@@ -15,28 +16,28 @@ export default function DashboardPage() {
   const [quickWeight, setQuickWeight] = useState('');
 
   // 1. Fetch data with React Query
-  const { data: dashboard, isLoading: loadingDash } = useQuery<any, any>({
+  const { data: dashboard, isLoading: loadingDash } = useQuery<DashboardData>({
     queryKey: ['dashboard'],
     queryFn: () => api.get('/weights/dashboard').then((res) => res.data),
     staleTime: 1000 * 60 * 5,
     placeholderData: keepPreviousData,
   });
 
-  const { data: weights = [], isLoading: loadingWeights } = useQuery<any, any>({
+  const { data: weights = [], isLoading: loadingWeights } = useQuery<WeightEntry[]>({
     queryKey: ['weights'],
     queryFn: () => api.get('/weights').then((res) => res.data),
     staleTime: 1000 * 60 * 5,
     placeholderData: keepPreviousData,
   });
 
-  const { data: weekSummaries = [], isLoading: loadingWeekly } = useQuery<any, any>({
+  const { data: weekSummaries = [], isLoading: loadingWeekly } = useQuery<WeekSummary[]>({
     queryKey: ['weekSummaries'],
     queryFn: () => api.get('/weights/weekly').then((res) => res.data),
     staleTime: 1000 * 60 * 5,
     placeholderData: keepPreviousData,
   });
 
-  const { data: settings, isLoading: loadingSettings } = useQuery<any, any>({
+  const { data: settings, isLoading: loadingSettings } = useQuery<UserSettings>({
     queryKey: ['settings'],
     queryFn: () => api.get('/settings').then((res) => res.data),
     staleTime: Infinity,
@@ -47,7 +48,7 @@ export default function DashboardPage() {
 
   const today = new Date();
   const todayDateStr = format(today, 'yyyy-MM-dd');
-  const todayEntry = weights.find((w: any) => w.date === todayDateStr);
+  const todayEntry = weights.find((w: WeightEntry) => w.date === todayDateStr);
   const hasTodayWeight = !!todayEntry;
 
   useEffect(() => {
@@ -63,10 +64,13 @@ export default function DashboardPage() {
       toast.success(hasTodayWeight ? `Peso actualizado: ${val} kg` : `Peso registrado: ${val} kg`);
       // Invalidate queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['weights'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
+      // Delay invalidation for dashboard and weekly to prevent UI thrashing
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
+      }, 500);
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       console.error('Error al guardar peso:', err);
       const msg = err.response?.data?.message || err.response?.data?.error || err.message;
       toast.error(msg ? `Error al guardar: ${msg}` : 'Error al registrar peso');
@@ -144,7 +148,7 @@ export default function DashboardPage() {
   const todayLabel = `${dayNames[today.getDay()]}, ${format(today, "d 'de' MMMM 'de' yyyy", { locale: es })}`;
 
   // Chart data
-  const weightChartData = weights.map((w: any) => ({
+  const weightChartData = weights.map((w: WeightEntry) => ({
     date: w.date,
     weight: w.weight,
     label: format(new Date(w.date + 'T00:00:00'), 'd MMM', { locale: es }),
@@ -152,8 +156,8 @@ export default function DashboardPage() {
 
   // Delta chart data
   const deltaData = weekSummaries
-    .filter((w: any) => w.delta !== null)
-    .map((w: any) => ({
+    .filter((w: WeekSummary) => w.delta !== null)
+    .map((w: WeekSummary) => ({
       week: format(new Date(w.weekStart + 'T00:00:00'), 'd MMM', { locale: es }),
       delta: w.delta,
       fill:
@@ -271,8 +275,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-
-
-
-

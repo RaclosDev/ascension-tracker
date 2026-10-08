@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getLocalDateString } from '../utils/dateHelper';
+import { DashboardData } from '../types/api';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../api/client';
@@ -10,21 +12,21 @@ import DOMPurify from 'dompurify';
 
 export default function UtilitiesPage() {
   // --- AI ASSISTANT STATE ---
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const todayStr = getLocalDateString();
-  const [summary, setSummary] = useState<any>(null);
+  const [summary, setSummary] = useState(null);
   const [loadingSummary, setLoadingSummary] = useState(true);
 
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatMessages, setChatMessages] = useState<unknown[]>([]);
   const [userInput, setUserInput] = useState('');
   const [sending, setSending] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<any>(null);
-  const fileInputRef = useRef<any>(null);
-  const [applyingOptionKey, setApplyingOptionKey] = useState<any>(null);
-  const [appliedOptionKeys, setAppliedOptionKeys] = useState<any>(new Set());
-  const [activeOptionIndices, setActiveOptionIndices] = useState<any>({});
+  const [selectedImage, setSelectedImage] = useState(null);
+  const fileInputRef = useRef<HTMLDivElement | null>(null);
+  const [applyingOptionKey, setApplyingOptionKey] = useState(null);
+  const [appliedOptionKeys, setAppliedOptionKeys] = useState(new Set());
+  const [activeOptionIndices, setActiveOptionIndices] = useState({});
 
-  const chatBottomRef = useRef<any>(null);
+  const chatBottomRef = useRef<HTMLDivElement | null>(null);
 
   // Speech-to-text hook
   const { isListening, toggleListening, stopListening } = useSpeechToText({
@@ -33,17 +35,20 @@ export default function UtilitiesPage() {
   });
 
   // Fetch Assistant Summary (Remaining Macros)
-  const fetchSummary = useCallback(async (date: any) => {
-    setLoadingSummary(true);
-    try {
-      const res = await api.get(`/nutrition/ai/assistant-summary?date=${date}`);
-      setSummary(res.data);
-    } catch (err: any) {
-      console.error('Error fetching assistant summary:', err);
-    } finally {
-      setLoadingSummary(false);
-    }
-  }, []);
+  const fetchSummary = useCallback(
+    async (date: React.MouseEvent | React.ChangeEvent<HTMLInputElement> | any) => {
+      setLoadingSummary(true);
+      try {
+        const res = await api.get(`/nutrition/ai/assistant-summary?date=${date}`);
+        setSummary(res.data);
+      } catch (err: Error | unknown) {
+        console.error('Error fetching assistant summary:', err);
+      } finally {
+        setLoadingSummary(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     fetchSummary(todayStr);
@@ -143,7 +148,7 @@ export default function UtilitiesPage() {
       setChatMessages((prev) => [...prev, aiMsg]);
       // Default to option 0
       setActiveOptionIndices((prev: any) => ({ ...prev, [aiMsgId]: 0 }));
-    } catch (err: any) {
+    } catch (err: Error | unknown) {
       console.error('AI Assistant Error:', err.response?.data?.error || err);
       const errorMsg = 'Error conectando con el Asistente IA';
       toast.error(errorMsg);
@@ -186,7 +191,7 @@ export default function UtilitiesPage() {
       setAppliedOptionKeys((prev: any) => new Set([...prev, optionKey]));
       // Refresh remaining macros
       fetchSummary(todayStr);
-    } catch (err: any) {
+    } catch (err: Error | unknown) {
       toast.error('Error al aadir la comida al diario');
       console.error(err);
     } finally {
@@ -197,40 +202,42 @@ export default function UtilitiesPage() {
   // Helper to format clean markdown (bold, bullet points)
   const renderMarkdown = (text: any) => {
     if (!text) return null;
-    return text.split('\n').map((line: any, idx: any) => {
-      const trimmed = line.trim();
-      if (!trimmed) return <div key={idx} style={{ height: '0.4rem' }} />;
+    return text
+      .split('\n')
+      .map((line: React.MouseEvent | React.ChangeEvent<HTMLInputElement> | any, idx: any) => {
+        const trimmed = line.trim();
+        if (!trimmed) return <div key={idx} style={{ height: '0.4rem' }} />;
 
-      let formatted = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        let formatted = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-      if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-        const bulletText = formatted.replace(/^[-*]\s+/, '');
+        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          const bulletText = formatted.replace(/^[-*]\s+/, '');
+          return (
+            <div
+              key={idx}
+              style={{
+                display: 'flex',
+                gap: '0.45rem',
+                marginLeft: '0.6rem',
+                marginBottom: '0.25rem',
+                alignItems: 'flex-start',
+              }}
+            >
+              <span style={{ color: 'var(--accent-primary, #e11d48)', fontWeight: 700 }}></span>
+              <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bulletText) }} />
+            </div>
+          );
+        }
+
         return (
-          <div
+          <p
             key={idx}
-            style={{
-              display: 'flex',
-              gap: '0.45rem',
-              marginLeft: '0.6rem',
-              marginBottom: '0.25rem',
-              alignItems: 'flex-start',
-            }}
-          >
-            <span style={{ color: 'var(--accent-primary, #e11d48)', fontWeight: 700 }}></span>
-            <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bulletText) }} />
-          </div>
+            style={{ margin: '0 0 0.45rem 0', lineHeight: 1.5 }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatted) }}
+          />
         );
-      }
-
-      return (
-        <p
-          key={idx}
-          style={{ margin: '0 0 0.45rem 0', lineHeight: 1.5 }}
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatted) }}
-        />
-      );
-    });
+      });
   };
 
   // --- CALCULATORS STATE ---
@@ -249,7 +256,10 @@ export default function UtilitiesPage() {
     calc2: false,
   });
 
-  const toggleSection = (key: keyof typeof openSections, e: any) => {
+  const toggleSection = (
+    key: keyof typeof openSections,
+    e: React.MouseEvent | React.ChangeEvent<HTMLInputElement> | any,
+  ) => {
     if (!openSections[key] && e?.currentTarget) {
       const el = e.currentTarget;
       setTimeout(() => {
@@ -264,7 +274,7 @@ export default function UtilitiesPage() {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleImageChange = (e: any) => {
+  const handleImageChange = (e: React.MouseEvent | React.ChangeEvent<HTMLInputElement> | any) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -275,7 +285,7 @@ export default function UtilitiesPage() {
     }
   };
 
-  const { data: dashboardData } = useQuery<any, any>({
+  const { data: dashboardData } = useQuery<DashboardData>({
     queryKey: ['dashboard'],
     queryFn: () => api.get('/weights/dashboard').then((res) => res.data),
   });
@@ -955,8 +965,10 @@ export default function UtilitiesPage() {
                     onClick={() => fileInputRef.current && fileInputRef.current.click()}
                     style={{
                       borderRadius: '50%',
-                      minWidth: '42px', width: '42px',
-                      minHeight: '42px', height: '42px',
+                      minWidth: '42px',
+                      width: '42px',
+                      minHeight: '42px',
+                      height: '42px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -975,8 +987,10 @@ export default function UtilitiesPage() {
                     onClick={() => toggleListening(userInput)}
                     style={{
                       borderRadius: '50%',
-                      minWidth: '42px', width: '42px',
-                      minHeight: '42px', height: '42px',
+                      minWidth: '42px',
+                      width: '42px',
+                      minHeight: '42px',
+                      height: '42px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -995,7 +1009,8 @@ export default function UtilitiesPage() {
                     className="form-input"
                     style={{
                       flex: 1,
-                      minHeight: '42px', height: '42px',
+                      minHeight: '42px',
+                      height: '42px',
                       borderRadius: '12px',
                       background: '#1C1C1E',
                       border: '1px solid var(--border-subtle)',
@@ -1011,8 +1026,10 @@ export default function UtilitiesPage() {
                     type="submit"
                     disabled={(!userInput.trim() && !selectedImage) || sending}
                     style={{
-                      minHeight: '42px', height: '42px',
-                      minWidth: '42px', width: '42px',
+                      minHeight: '42px',
+                      height: '42px',
+                      minWidth: '42px',
+                      width: '42px',
                       borderRadius: '50%',
                       flexShrink: 0,
                       background:
@@ -1306,9 +1323,3 @@ export default function UtilitiesPage() {
     </div>
   );
 }
-
-
-
-
-
-

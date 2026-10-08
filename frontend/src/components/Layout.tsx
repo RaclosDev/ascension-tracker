@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { UserSettings } from '../types/api';
 import { useRef } from 'react';
 import { useEffect } from 'react';
 import { Suspense } from 'react';
@@ -59,7 +60,7 @@ const moreMenuPaths = ['/utilities', '/settings'];
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
-  const moreMenuRef = useRef<any>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const activeWorkout = useWorkoutStore((s) => s.active);
@@ -67,7 +68,7 @@ export default function Layout() {
   const now = useNow(hideNav, 500);
   const elapsed = activeWorkout ? now - activeWorkout.startedAt : 0;
 
-  const { data: settings, isLoading: loadingConfig } = useQuery<any, any>({
+  const { data: settings, isLoading: loadingConfig } = useQuery<UserSettings>({
     queryKey: ['settings'],
     queryFn: () =>
       api.get('/settings').then((res) => {
@@ -87,7 +88,7 @@ export default function Layout() {
   // Close more menu when clicking outside
   useEffect(() => {
     if (!moreMenuOpen) return;
-    const handleClick = (e: any) => {
+    const handleClick = (e: MouseEvent) => {
       if (moreMenuRef.current && !moreMenuRef.current.contains(e.target)) {
         setMoreMenuOpen(false);
       }
@@ -98,7 +99,7 @@ export default function Layout() {
 
   // Interceptar cualquier enlace de navegación interna en modo PWA standalone
   useEffect(() => {
-    const handleGlobalClick = (e: any) => {
+    const handleGlobalClick = (e: MouseEvent) => {
       const anchor = e.target.closest('a');
       if (!anchor) return;
       const href = anchor.getAttribute('href');
@@ -315,7 +316,3 @@ export default function Layout() {
     </div>
   );
 }
-
-
-
-
