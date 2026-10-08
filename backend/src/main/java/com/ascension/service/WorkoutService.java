@@ -50,7 +50,7 @@ public class WorkoutService {
                 .startedAt(dto.getStartedAt())
                 .finishedAt(dto.getFinishedAt())
                 .notes(dto.getNotes())
-                .exercises(new ArrayList<>())
+                .exercises(new java.util.LinkedHashSet<>())
                 .build();
 
         if (dto.getExercises() != null) {
@@ -63,7 +63,7 @@ public class WorkoutService {
                         .notes(weDTO.getNotes())
                         .supersetId(weDTO.getSupersetId())
                         .orderIndex(order++)
-                        .sets(new ArrayList<>())
+                        .sets(new java.util.LinkedHashSet<>())
                         .build();
 
                 if (weDTO.getSets() != null) {
@@ -112,7 +112,7 @@ public class WorkoutService {
                         .notes(weDTO.getNotes())
                         .supersetId(weDTO.getSupersetId())
                         .orderIndex(order++)
-                        .sets(new ArrayList<>())
+                        .sets(new java.util.LinkedHashSet<>())
                         .build();
 
                 if (weDTO.getSets() != null) {

@@ -1,7 +1,8 @@
 package com.ascension.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
@@ -11,7 +12,8 @@ import java.time.LocalDate;
 @Table(name = "food_logs", indexes = {
     @Index(name = "idx_food_log_user_date", columnList = "user_email, log_date")
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class FoodLog {

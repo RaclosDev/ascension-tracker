@@ -2,8 +2,7 @@ package com.ascension.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Persistable;
 
@@ -39,7 +38,7 @@ public class WorkoutExercise implements Persistable<String> {
     @OneToMany(mappedBy = "workoutExercise", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("orderIndex ASC")
     @Builder.Default
-    private List<WorkoutSet> sets = new ArrayList<>();
+    private Set<WorkoutSet> sets = new java.util.LinkedHashSet<>();
 
     @Transient
     @Builder.Default
