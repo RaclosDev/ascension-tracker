@@ -104,7 +104,7 @@ export function HistoryView() {
           }}
         >
           {history.map((w: any) => {
-            const names = w.exercises.map((e) => {
+            const names = w.exercises.map((e: any) => {
               const base = catalog.get(e.exerciseId)?.name ?? 'Ejercicio';
               const v = formatVariant(e.variant);
               return v ? `${base} ${v}` : base;
@@ -424,7 +424,7 @@ export function HistoryView() {
               }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {detail.exercises.map((ex) => {
+                {detail.exercises.map((ex: any) => {
                   const meta = catalog.get(ex.exerciseId);
                   const isCardio = meta?.muscle === 'cardio';
                   return (
@@ -530,7 +530,7 @@ export function HistoryView() {
                           </tr>
                         </thead>
                         <tbody>
-                          {ex.sets.map((s, i) => {
+                          {ex.sets.map((s: any, i: any) => {
                             let normalCount = 0;
                             for (let j = 0; j < i; j++) {
                               if (ex.sets[j].type === 'normal') normalCount++;
@@ -557,7 +557,7 @@ export function HistoryView() {
                                       color: 'var(--text-secondary)',
                                     }}
                                   >
-                                    {SET_TYPE_LABEL[s.type] || normalCount + 1}
+                                    {SET_TYPE_LABEL[s.type as keyof typeof SET_TYPE_LABEL] || normalCount + 1}
                                   </span>
                                 </td>
                                 <td className="bold-val">

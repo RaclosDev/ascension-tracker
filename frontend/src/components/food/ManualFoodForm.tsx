@@ -14,8 +14,8 @@ export default function ManualFoodForm({
   selectedMealIndex,
   onLogAdded,
   onClose,
-}) {
-  const handleManualSubmit = async (e) => {
+}: any) {
+  const handleManualSubmit = async (e: any) => {
     e.preventDefault();
     if (!manualForm.name.trim()) {
       toast.error('El nombre del alimento es obligatorio');

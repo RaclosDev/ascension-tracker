@@ -87,7 +87,7 @@ export default function Layout() {
   // Close more menu when clicking outside
   useEffect(() => {
     if (!moreMenuOpen) return;
-    const handleClick = (e) => {
+    const handleClick = (e: any) => {
       if (moreMenuRef.current && !moreMenuRef.current.contains(e.target)) {
         setMoreMenuOpen(false);
       }
@@ -98,7 +98,7 @@ export default function Layout() {
 
   // Interceptar cualquier enlace de navegación interna en modo PWA standalone
   useEffect(() => {
-    const handleGlobalClick = (e) => {
+    const handleGlobalClick = (e: any) => {
       const anchor = e.target.closest('a');
       if (!anchor) return;
       const href = anchor.getAttribute('href');

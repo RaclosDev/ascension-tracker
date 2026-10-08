@@ -82,7 +82,7 @@ export function ExercisesView() {
   const addCustomExercise = (ex: Partial<Exercise>) =>
     saveExerciseMutation.mutate({ ...ex, id: Date.now().toString() } as Exercise);
   const updateCustomExercise = (id: string, patch: Partial<Exercise>) => {
-    const ex = customExercises.find((e) => e.id === id);
+    const ex = customExercises.find((e: any) => e.id === id);
     if (ex) saveExerciseMutation.mutate({ ...ex, ...patch });
   };
 
@@ -154,14 +154,14 @@ export function ExercisesView() {
   const list = (
     filter === 'custom' ? customExercises : filter === 'basicos' ? BASE_EXERCISES : EXERCISE_CATALOG
   )
-    .filter((ex) => !hiddenEquipments.includes(ex.equipment))
-    .filter((ex) => {
+    .filter((ex: any) => !hiddenEquipments.includes(ex.equipment))
+    .filter((ex: any) => {
       const q = normalizeString(query.trim());
       if (!q) return true;
       const queryWords = q.split(/\s+/);
       const targetName = normalizeString(aliases[ex.id] || ex.name);
       const originalName = normalizeString(ex.name);
-      const muscleName = normalizeString(MUSCLE_LABEL[ex.muscle]);
+      const muscleName = normalizeString(MUSCLE_LABEL[ex.muscle as keyof typeof MUSCLE_LABEL]);
       const equipName = normalizeString(ex.equipment);
       const tagsName = normalizeString((ex.tags || []).join(' '));
       return queryWords.every(
@@ -173,8 +173,8 @@ export function ExercisesView() {
           tagsName.includes(w),
       );
     })
-    .filter((ex) => filterMuscle === 'ALL' || ex.muscle === filterMuscle)
-    .filter((ex) => filterEquip === 'ALL' || ex.equipment === filterEquip)
+    .filter((ex: any) => filterMuscle === 'ALL' || ex.muscle === filterMuscle)
+    .filter((ex: any) => filterEquip === 'ALL' || ex.equipment === filterEquip)
     .sort((a: { id: string }, b: { id: string }) => {
       const aTime = lastUsedMap.get(a.id) || 0;
       const bTime = lastUsedMap.get(b.id) || 0;
@@ -267,7 +267,7 @@ export function ExercisesView() {
       for (const w of toUpdate) {
         const updated = {
           ...w,
-          exercises: w.exercises.map((e) =>
+          exercises: w.exercises.map((e: any) =>
             e.exerciseId === mergeSourceId ? { ...e, exerciseId: mergeConfirmTargetId } : e,
           ),
         };
@@ -279,7 +279,7 @@ export function ExercisesView() {
       }
 
       // If source was a custom exercise, delete it
-      const isCustom = customExercises.some((e) => e.id === mergeSourceId);
+      const isCustom = customExercises.some((e: any) => e.id === mergeSourceId);
       if (isCustom) {
         await api.delete(`/workouts/custom-exercises/${mergeSourceId}`);
       }
@@ -343,7 +343,7 @@ export function ExercisesView() {
         const queryWords = q.split(/\s+/);
         const targetName = normalizeString(aliases[ex.id] || ex.name);
         const originalName = normalizeString(ex.name);
-        const muscleName = normalizeString(MUSCLE_LABEL[ex.muscle]);
+        const muscleName = normalizeString(MUSCLE_LABEL[ex.muscle as keyof typeof MUSCLE_LABEL]);
         const equipName = normalizeString(ex.equipment);
         const tagsName = normalizeString((ex.tags || []).join(' '));
         return queryWords.every(
@@ -755,7 +755,7 @@ export function ExercisesView() {
               padding: 0,
             }}
           >
-            {list.map((ex) => (
+            {list.map((ex: any) => (
               <li
                 key={ex.id}
                 style={{
@@ -844,7 +844,7 @@ export function ExercisesView() {
                         textTransform: 'capitalize',
                       }}
                     >
-                      {MUSCLE_LABEL[ex.muscle]} · {ex.equipment}
+                      {MUSCLE_LABEL[ex.muscle as keyof typeof MUSCLE_LABEL]} · {ex.equipment}
                       {lastUsedMap.has(ex.id) && (
                         <span style={{ color: 'var(--accent-primary-light)' }}>
                           {' '}
@@ -1651,7 +1651,7 @@ export function ExercisesView() {
                                   marginTop: '0.1rem',
                                 }}
                               >
-                                {MUSCLE_LABEL[ex.muscle]} · {ex.equipment}
+                                {MUSCLE_LABEL[ex.muscle as keyof typeof MUSCLE_LABEL]} · {ex.equipment}
                               </p>
                             </div>
                           </div>

@@ -166,7 +166,7 @@ export function Dashboard() {
                     <div className="start-workout-section-label" style={{ marginTop: '0.5rem' }}>
                       Plantillas
                     </div>
-                    {templates.map((t) => (
+                    {templates.map((t: any) => (
                       <button
                         key={t.id}
                         className="start-workout-option start-workout-option-secondary"
@@ -358,7 +358,7 @@ export function Dashboard() {
             {history.slice(0, 4).map((w: any) => {
               const names = w.exercises
                 .slice(0, 4)
-                .map((e) => catalog.get(e.exerciseId)?.name ?? 'Ejercicio');
+                .map((e: any) => catalog.get(e.exerciseId)?.name ?? 'Ejercicio');
               return (
                 <li key={w.id}>
                   <div

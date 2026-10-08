@@ -34,7 +34,7 @@ export const useRecentWorkouts = (days: number = 60) => {
   const data = useMemo(() => {
     if (!q.data) return undefined;
     const since = Date.now() - days * 24 * 60 * 60 * 1000;
-    return q.data.filter(w => (w.startedAt ?? 0) >= since);
+    return q.data.filter((w: any) => (w.startedAt ?? 0) >= since);
   }, [q.data, days]);
 
   return { ...q, data };

@@ -117,7 +117,7 @@ export default function SettingsPage() {
   };
   useEffect(() => {
     if (location.hash === '#meals') {
-      setOpenSections((prev) => ({ ...prev, meals: true }));
+      setOpenSections((prev: any) => ({ ...prev, meals: true }));
       setTimeout(() => {
         const el = document.getElementById('meals-section');
         if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -125,7 +125,7 @@ export default function SettingsPage() {
     }
   }, [location.hash]);
 
-  const toggleSection = (key, e) => {
+  const toggleSection = (key: any, e: any) => {
     if (!openSections[key] && e?.currentTarget) {
       const el = e.currentTarget;
       setTimeout(() => {
@@ -137,7 +137,7 @@ export default function SettingsPage() {
         window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
       }, 50);
     }
-    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
+    setOpenSections((prev: any) => ({ ...prev, [key]: !prev[key] }));
   };
 
   useEffect(() => {
@@ -161,7 +161,7 @@ export default function SettingsPage() {
     }
   }, [querySettings]);
 
-  const parseSafeFloat = (val, fallback = 0) => {
+  const parseSafeFloat = (val: any, fallback = 0) => {
     if (val === null || val === undefined || val === '') return fallback;
     const normalized = String(val).replace(',', '.').trim();
     const parsed = parseFloat(normalized);

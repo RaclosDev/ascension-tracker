@@ -33,7 +33,7 @@ export default function UtilitiesPage() {
   });
 
   // Fetch Assistant Summary (Remaining Macros)
-  const fetchSummary = useCallback(async (date) => {
+  const fetchSummary = useCallback(async (date: any) => {
     setLoadingSummary(true);
     try {
       const res = await api.get(`/nutrition/ai/assistant-summary?date=${date}`);
@@ -142,7 +142,7 @@ export default function UtilitiesPage() {
 
       setChatMessages((prev) => [...prev, aiMsg]);
       // Default to option 0
-      setActiveOptionIndices((prev) => ({ ...prev, [aiMsgId]: 0 }));
+      setActiveOptionIndices((prev: any) => ({ ...prev, [aiMsgId]: 0 }));
     } catch (err: any) {
       console.error('AI Assistant Error:', err.response?.data?.error || err);
       const errorMsg = 'Error conectando con el Asistente IA';
@@ -163,12 +163,12 @@ export default function UtilitiesPage() {
   };
 
   // Quick Prompt click
-  const handleQuickPrompt = (prompt) => {
+  const handleQuickPrompt = (prompt: any) => {
     handleSendMessage(prompt);
   };
 
   // Apply selected option to daily diary
-  const handleApplyOption = async (msgId, option, optionKey) => {
+  const handleApplyOption = async (msgId: any, option: any, optionKey: any) => {
     if (!option || !option.suggestedFoods || option.suggestedFoods.length === 0) return;
     if (appliedOptionKeys.has(optionKey)) return;
 
@@ -183,7 +183,7 @@ export default function UtilitiesPage() {
 
       toast.success(`${option.title || 'Opcin'} aadida a tu diario de hoy! `);
 
-      setAppliedOptionKeys((prev) => new Set([...prev, optionKey]));
+      setAppliedOptionKeys((prev: any) => new Set([...prev, optionKey]));
       // Refresh remaining macros
       fetchSummary(todayStr);
     } catch (err: any) {
@@ -195,9 +195,9 @@ export default function UtilitiesPage() {
   };
 
   // Helper to format clean markdown (bold, bullet points)
-  const renderMarkdown = (text) => {
+  const renderMarkdown = (text: any) => {
     if (!text) return null;
-    return text.split('\n').map((line, idx) => {
+    return text.split('\n').map((line: any, idx: any) => {
       const trimmed = line.trim();
       if (!trimmed) return <div key={idx} style={{ height: '0.4rem' }} />;
 
@@ -249,7 +249,7 @@ export default function UtilitiesPage() {
     calc2: false,
   });
 
-  const toggleSection = (key, e) => {
+  const toggleSection = (key: keyof typeof openSections, e: any) => {
     if (!openSections[key] && e?.currentTarget) {
       const el = e.currentTarget;
       setTimeout(() => {
@@ -264,7 +264,7 @@ export default function UtilitiesPage() {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = (e: any) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -576,7 +576,7 @@ export default function UtilitiesPage() {
                             {/* Segmented Option Selector Bar */}
                             {msg.mealOptions.length > 1 && (
                               <div className="options-tabs-bar">
-                                {msg.mealOptions.map((opt, optIdx) => {
+                                {msg.mealOptions.map((opt: any, optIdx: any) => {
                                   const optKey = `${msg.id}-${opt.id || optIdx}`;
                                   const isApplied = appliedOptionKeys.has(optKey);
                                   const isActive = currentOptionIndex === optIdx;
@@ -586,7 +586,7 @@ export default function UtilitiesPage() {
                                       type="button"
                                       className={`opt-tab-btn ${isActive ? 'active' : ''}`}
                                       onClick={() =>
-                                        setActiveOptionIndices((prev) => ({
+                                        setActiveOptionIndices((prev: any) => ({
                                           ...prev,
                                           [msg.id]: optIdx,
                                         }))
@@ -640,7 +640,7 @@ export default function UtilitiesPage() {
                                     gap: '0.45rem',
                                   }}
                                 >
-                                  {activeOption.suggestedFoods?.map((food, idx) => (
+                                  {activeOption.suggestedFoods?.map((food: any, idx: any) => (
                                     <div key={idx} className="meal-food-item">
                                       <div className="food-info-header">
                                         <span className="food-name">{food.product}</span>

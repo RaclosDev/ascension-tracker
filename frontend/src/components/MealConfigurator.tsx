@@ -12,7 +12,7 @@ const DEFAULT_MEALS = [
   { name: 'Snacks', icon: '', sortOrder: 3 },
 ];
 
-export default function MealConfigurator({ onSaved }) {
+export default function MealConfigurator({ onSaved }: any) {
   const [meals, setMeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -67,7 +67,7 @@ export default function MealConfigurator({ onSaved }) {
     }
   };
 
-  const handleDragEnd = (result) => {
+  const handleDragEnd = (result: any) => {
     if (!result.destination) return;
     const items = Array.from(meals);
     const [reorderedItem] = items.splice(result.source.index, 1);
@@ -106,7 +106,7 @@ export default function MealConfigurator({ onSaved }) {
     }
   };
 
-  const handleDeleteMeal = async (id) => {
+  const handleDeleteMeal = async (id: any) => {
     if (!window.confirm('¿Eliminar esta comida? Los registros de esta comida se perderán.')) return;
     setSaving(true);
     try {
@@ -120,7 +120,7 @@ export default function MealConfigurator({ onSaved }) {
     }
   };
 
-  const updateMeal = (index, field, value) => {
+  const updateMeal = (index: any, field: any, value: any) => {
     const updated = [...meals];
     updated[index] = { ...updated[index], [field]: value };
     setMeals(updated);

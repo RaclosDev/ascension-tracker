@@ -185,7 +185,7 @@ export const useWorkoutStore = create<WorkoutState>()(
             editingId: w.id,
             editingFinishedAt: w.finishedAt,
             notes: w.notes,
-            exercises: w.exercises.map((ex) => ({ ...ex, sets: ex.sets.map((s) => ({ ...s })) })),
+            exercises: w.exercises.map((ex: any) => ({ ...ex, sets: ex.sets.map((s: any) => ({ ...s })) })),
           },
           restUntil: null,
           tab: 'train',
@@ -199,11 +199,11 @@ export const useWorkoutStore = create<WorkoutState>()(
           active: {
             name: w.name,
             startedAt: Date.now(),
-            exercises: w.exercises.map((ex) => ({
+            exercises: w.exercises.map((ex: any) => ({
               id: uid(),
               exerciseId: ex.exerciseId,
               notes: '',
-              sets: ex.sets.map((s) =>
+              sets: ex.sets.map((s: any) =>
                 blankSet({
                   weight: s.weight,
                   reps: s.reps,

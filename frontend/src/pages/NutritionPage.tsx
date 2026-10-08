@@ -16,7 +16,7 @@ import { Skeleton } from '../components/ui/skeleton';
 import { SwipeableRow } from '../components/SwipeableRow';
 import MacroSummaryHeader from '../components/nutrition/MacroSummaryHeader';
 
-const getBasePortion = (portionsJson) => {
+const getBasePortion = (portionsJson: any) => {
   if (!portionsJson) return null;
   try {
     const portions = JSON.parse(portionsJson);
@@ -53,12 +53,12 @@ export default function NutritionPage() {
   const touchEndRef = useRef<any>(null);
   const minSwipeDistance = 50;
 
-  const onTouchStart = (e) => {
+  const onTouchStart = (e: any) => {
     touchEndRef.current = null;
     touchStartRef.current = e.targetTouches[0].clientX;
   };
 
-  const onTouchMove = (e) => {
+  const onTouchMove = (e: any) => {
     touchEndRef.current = e.targetTouches[0].clientX;
   };
 
@@ -75,8 +75,8 @@ export default function NutritionPage() {
     touchEndRef.current = null;
   };
 
-  const toggleMealCollapse = (index, e) => {
-    setCollapsedMeals((prev) => {
+  const toggleMealCollapse = (index: any, e: any) => {
+    setCollapsedMeals((prev: any) => {
       const isCurrentlyCollapsed = prev[index] !== false; // default true if undefined
       return {
         ...prev,
@@ -102,7 +102,7 @@ export default function NutritionPage() {
     }
   };
 
-  const handleDragStart = (e, log) => {
+  const handleDragStart = (e: any, log: any) => {
     e.dataTransfer.setData(
       'application/json',
       JSON.stringify({ ...log, sourceMealIndex: log.mealIndex }),
@@ -111,7 +111,7 @@ export default function NutritionPage() {
   };
 
   let scrollRAF: number | null = null;
-  const handleDrag = (e) => {
+  const handleDrag = (e: any) => {
     if (e.clientY === 0) return;
     if (!scrollRAF) {
       scrollRAF = requestAnimationFrame(() => {
@@ -129,7 +129,7 @@ export default function NutritionPage() {
     }
   };
 
-  const handleDragOver = (e, index) => {
+  const handleDragOver = (e: any, index: any) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     setDragOverMealIndex(index);
@@ -139,7 +139,7 @@ export default function NutritionPage() {
     setDragOverMealIndex(null);
   };
 
-  const handleDropOnMeal = async (e, targetMealIndex) => {
+  const handleDropOnMeal = async (e: any, targetMealIndex: any) => {
     e.preventDefault();
     setDragOverMealIndex(null);
     try {
@@ -166,13 +166,13 @@ export default function NutritionPage() {
     }
   };
 
-  const handleCopyFromYesterday = async (e, mealIndex) => {
+  const handleCopyFromYesterday = async (e: any, mealIndex: any) => {
     e.stopPropagation();
     const loadingToast = toast.loading('Copiando de ayer...');
     try {
       const yesterday = addDaysToDateString(selectedDate, -1);
       const res = await api.get(`/nutrition/logs?date=${yesterday}`);
-      const logsToCopy = res.data.filter((log) => log.mealIndex === mealIndex);
+      const logsToCopy = res.data.filter((log: any) => log.mealIndex === mealIndex);
 
       if (logsToCopy.length === 0) {
         toast.dismiss(loadingToast);
@@ -237,7 +237,7 @@ export default function NutritionPage() {
   useEffect(() => {
     if (meals.length > 0) {
       const newCollapsed: any = {};
-      meals.forEach((_, i) => {
+      meals.forEach((_: any, i: any) => {
         newCollapsed[i] = true;
       });
       setCollapsedMeals(newCollapsed);
@@ -257,11 +257,11 @@ export default function NutritionPage() {
     },
   });
 
-  const handleDeleteLog = (id) => {
+  const handleDeleteLog = (id: any) => {
     deleteLogMutation.mutate(id);
   };
 
-  const handleEditLog = (log) => {
+  const handleEditLog = (log: any) => {
     let hasPortions = false;
     try {
       if (log.portionsJson) {
@@ -291,9 +291,9 @@ export default function NutritionPage() {
     });
   };
 
-  const handleEditQuantityChange = (newQty) => {
+  const handleEditQuantityChange = (newQty: any) => {
     const q = parseFloat(newQty) || 0;
-    setEditingLog((prev) => ({
+    setEditingLog((prev: any) => ({
       ...prev,
       quantity: q,
       kcal: Math.round(((prev._kcalPer100 * q) / 100) * 10) / 10,
@@ -335,7 +335,7 @@ export default function NutritionPage() {
 
   const consumed = useMemo(() => {
     return (foodLogs || []).reduce(
-      (acc, log) => ({
+      (acc: any, log: any) => ({
         kcal: acc.kcal + (Number(log.kcal) || 0),
         protein: acc.protein + (Number(log.protein) || 0),
         carbs: acc.carbs + (Number(log.carbs) || 0),
@@ -528,11 +528,11 @@ export default function NutritionPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
             {/* Daily Food Logs */}
             <div className="nutrition-meals-grid">
-              {meals.map((meal, index) => {
-                const logs = foodLogs.filter((log) => log.mealIndex === index);
+              {meals.map((meal: any, index: any) => {
+                const logs = foodLogs.filter((log: any) => log.mealIndex === index);
 
                 const mealSubtotal = logs.reduce(
-                  (acc, log) => ({
+                  (acc: any, log: any) => ({
                     kcal: acc.kcal + (Number(log.kcal) || 0),
                     protein: acc.protein + (Number(log.protein) || 0),
                     carbs: acc.carbs + (Number(log.carbs) || 0),
@@ -657,7 +657,7 @@ export default function NutritionPage() {
                               Sin registrar
                             </div>
                           ) : (
-                            logs.map((log) => (
+                            logs.map((log: any) => (
                               <div
                                 key={log.id}
                                 draggable

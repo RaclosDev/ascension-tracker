@@ -92,8 +92,8 @@ export function TemplatesView() {
             listStyle: 'none',
           }}
         >
-          {templates.map((tpl) => {
-            const names = tpl.exercises.map((e) => catalog.get(e.exerciseId)?.name ?? 'Ejercicio');
+          {templates.map((tpl: any) => {
+            const names = tpl.exercises.map((e: any) => catalog.get(e.exerciseId)?.name ?? 'Ejercicio');
             return (
               <li
                 key={tpl.id}

@@ -134,7 +134,7 @@ export default function MyFoodsPage() {
     if (isMealSelectorOpen) {
       const initial: any = {};
       Array.from(selectedFoods).forEach((id) => {
-        const food = savedFoods.find((f) => f.id === id);
+        const food = savedFoods.find((f: any) => f.id === id);
         if (food) {
           initial[id as any] = food.servingSize > 0 ? food.servingSize : 100;
         }
@@ -158,12 +158,12 @@ export default function MyFoodsPage() {
 
   const q = searchQuery.toLowerCase().trim();
 
-  const filteredRecent = recentFoods.filter((f) => {
+  const filteredRecent = recentFoods.filter((f: any) => {
     if (!q) return true;
     return (f.product || '').toLowerCase().includes(q);
   });
 
-  const getPredominantMacro = (f) => {
+  const getPredominantMacro = (f: any) => {
     const p = f.proteinPer100g || 0;
     const c = f.carbsPer100g || 0;
     const fat = f.fatPer100g || 0;
@@ -173,7 +173,7 @@ export default function MyFoodsPage() {
   };
 
   const filteredFoods = savedFoods
-    .filter((f) => {
+    .filter((f: any) => {
       if (q) {
         const nameMatch = (f.name || '').toLowerCase().includes(q);
         const brandMatch = (f.brand || '').toLowerCase().includes(q);
@@ -197,7 +197,7 @@ export default function MyFoodsPage() {
       return 0;
     });
 
-  const filteredRecipes = recipes.filter((r) => {
+  const filteredRecipes = recipes.filter((r: any) => {
     if (!q) return true;
     const nameMatch = (r.name || '').toLowerCase().includes(q);
     const descMatch = (r.description || '').toLowerCase().includes(q);
@@ -206,7 +206,7 @@ export default function MyFoodsPage() {
 
   const totalResults = filteredRecent.length + filteredFoods.length + filteredRecipes.length;
 
-  const toggleSection = (sec, e) => {
+  const toggleSection = (sec: keyof typeof expandedSections, e: any) => {
     if (!expandedSections[sec] && e?.currentTarget) {
       const el = e.currentTarget;
       setTimeout(() => {
@@ -221,9 +221,9 @@ export default function MyFoodsPage() {
     setExpandedSections((prev) => ({ ...prev, [sec]: !prev[sec] }));
   };
 
-  const toFormVal = (val) => (val !== null && val !== undefined ? val : '');
+  const toFormVal = (val: any) => (val !== null && val !== undefined ? val : '');
 
-  const updateFoodForm = (field, value) => {
+  const updateFoodForm = (field: any, value: any) => {
     const newForm = { ...foodForm, [field]: value };
     if (['protein', 'carbs', 'fat'].includes(field)) {
       const p = parseFloat(newForm.protein) || 0;
@@ -241,13 +241,13 @@ export default function MyFoodsPage() {
     setFoodForm(newForm);
   };
 
-  const updateRecipeForm = (field, value) => {
+  const updateRecipeForm = (field: any, value: any) => {
     setRecipeForm((prev) => {
       let newForm = { ...prev };
       if (typeof field === 'object' && field !== null) {
         newForm = { ...newForm, ...field };
       } else {
-        newForm[field] = value;
+        newForm[field as keyof typeof newForm] = value;
       }
 
       const p = parseFloat(newForm.protein) || 0;
@@ -272,7 +272,7 @@ export default function MyFoodsPage() {
 
   const [pendingAiCount, setPendingAiCount] = useState(0);
 
-  const handleAiSubmit = async (e) => {
+  const handleAiSubmit = async (e: any) => {
     e.preventDefault();
     if (!aiQuery.trim()) return;
     const queryText = aiQuery.trim();
@@ -294,7 +294,7 @@ export default function MyFoodsPage() {
       });
   };
 
-  const handleAddSavedFood = async (e) => {
+  const handleAddSavedFood = async (e: any) => {
     e.preventDefault();
     const dto = {
       name: foodForm.name,
@@ -350,7 +350,7 @@ export default function MyFoodsPage() {
     setIsFoodFormOpen(true);
   };
 
-  const handleAddRecipe = async (e) => {
+  const handleAddRecipe = async (e: any) => {
     e.preventDefault();
     const dto = {
       name: recipeForm.name,
@@ -404,18 +404,18 @@ export default function MyFoodsPage() {
     }
   };
 
-  const toggleFoodSelection = (id) => {
+  const toggleFoodSelection = (id: any) => {
     const next = new Set(selectedFoods);
     if (next.has(id)) next.delete(id);
     else next.add(id);
     setSelectedFoods(next);
   };
 
-  const handleBulkAddToMeal = async (mealIndex) => {
+  const handleBulkAddToMeal = async (mealIndex: any) => {
     if (selectedFoods.size === 0) return;
     setIsAddingToMeal(true);
     try {
-      const foodsToAdd = savedFoods.filter((f) => selectedFoods.has(f.id));
+      const foodsToAdd = savedFoods.filter((f: any) => selectedFoods.has(f.id));
       const promises = foodsToAdd.map((food: any) => {
         const qty = bulkQuantities[food.id] || 100;
         const factor = qty / 100.0;
@@ -442,7 +442,7 @@ export default function MyFoodsPage() {
     }
   };
 
-  const deleteSavedFood = async (id) => {
+  const deleteSavedFood = async (id: any) => {
     if (!confirm('¿Borrar este alimento?')) return;
     try {
       await api.delete(`/nutrition/my-foods/${id}`);
@@ -453,7 +453,7 @@ export default function MyFoodsPage() {
     }
   };
 
-  const handleDeleteRecipe = async (id) => {
+  const handleDeleteRecipe = async (id: any) => {
     if (!window.confirm('¿Seguro que quieres eliminar esta receta?')) return;
     try {
       await api.delete(`/nutrition/recipes/${id}`);
@@ -465,7 +465,7 @@ export default function MyFoodsPage() {
     }
   };
 
-  const handleOcrUpload = async (e) => {
+  const handleOcrUpload = async (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -515,7 +515,7 @@ export default function MyFoodsPage() {
   };
 
   // QR / Barcode Scan Handlers
-  const handleScanBarcode = async (decodedText) => {
+  const handleScanBarcode = async (decodedText: any) => {
     let code = (decodedText || '').trim();
     if (!code) return;
 
@@ -635,11 +635,11 @@ export default function MyFoodsPage() {
   };
 
   // Drag & Drop
-  const handleDragStart = (e, foodData) => {
+  const handleDragStart = (e: any, foodData: any) => {
     e.dataTransfer.setData('application/json', JSON.stringify(foodData));
     e.dataTransfer.effectAllowed = 'copy';
   };
-  const handleDragOver = (e, target) => {
+  const handleDragOver = (e: any, target: any) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
     setDragOverTarget(target);
@@ -648,7 +648,7 @@ export default function MyFoodsPage() {
     setDragOverTarget(null);
   };
 
-  const handleDropOnFoods = async (e) => {
+  const handleDropOnFoods = async (e: any) => {
     e.preventDefault();
     setDragOverTarget(null);
     try {
@@ -668,7 +668,7 @@ export default function MyFoodsPage() {
     }
   };
 
-  const handleDropOnRecipes = async (e) => {
+  const handleDropOnRecipes = async (e: any) => {
     e.preventDefault();
     setDragOverTarget(null);
     try {
@@ -688,7 +688,7 @@ export default function MyFoodsPage() {
     }
   };
 
-  const saveRecentAsFood = async (f) => {
+  const saveRecentAsFood = async (f: any) => {
     const q = f.quantity || 100;
     try {
       await api.post('/nutrition/my-foods', {
@@ -706,12 +706,12 @@ export default function MyFoodsPage() {
     }
   };
 
-  const isAlreadySaved = (productName) => {
+  const isAlreadySaved = (productName: any) => {
     const n = productName.toLowerCase().trim();
-    return savedFoods.some((s) => s.name.toLowerCase().trim() === n);
+    return savedFoods.some((s: any) => s.name.toLowerCase().trim() === n);
   };
 
-  const macroLine = (kcal, p, c, f) => (
+  const macroLine = (kcal: any, p: any, c: any, f: any) => (
     <span className="meal-subtotal-row" style={{ fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
       <span className="subtotal-val kcal">
         <strong style={{ color: 'var(--text-primary)' }}>{Math.round(kcal)}</strong> kcal
@@ -725,7 +725,7 @@ export default function MyFoodsPage() {
     </span>
   );
 
-  const itemStyle = (highlight) => ({
+  const itemStyle = (highlight: any) => ({
     padding: '0.5rem 0.7rem',
     background: highlight ? 'var(--bg-glass-strong)' : 'var(--bg-secondary)',
     borderRadius: '10px',
@@ -738,7 +738,7 @@ export default function MyFoodsPage() {
     transition: 'all 0.2s',
   });
 
-  const EditBtn = ({ onClick }) => (
+  const EditBtn = ({ onClick }: any) => (
     <button
       onClick={(e) => {
         e.stopPropagation();
@@ -1358,7 +1358,7 @@ export default function MyFoodsPage() {
                     flex: 1,
                   }}
                 >
-                  {filteredRecent.map((f) => {
+                  {filteredRecent.map((f: any) => {
                     const qg = f.quantity || 100;
                     const k = Math.round((f.kcal / qg) * 100),
                       p = ((f.protein / qg) * 100).toFixed(1),

@@ -16,7 +16,7 @@
 
     /* Linting */
     "strict": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "useUnknownInCatchVariables": false,
     "strictNullChecks": true,
     "noUnusedLocals": false,

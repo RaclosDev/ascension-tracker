@@ -357,7 +357,7 @@ export default function TrackingPage() {
     }
   };
 
-  const handleDeltaAdjust = (metric, delta) => {
+  const handleDeltaAdjust = (metric: any, delta: any) => {
     if (metric === 'weight') {
       let current = parseFloat(modalWeight);
       if (isNaN(current)) current = 75;
@@ -682,7 +682,7 @@ export default function TrackingPage() {
               </div>
 
               <div className="calendar-grid">
-                {week.days.map((dayData, d) => {
+                {week.days.map((dayData: any, d: any) => {
                   const date = new Date(week.weekStart + 'T00:00:00');
                   date.setDate(date.getDate() + d);
                   const dateStr = format(date, 'yyyy-MM-dd');

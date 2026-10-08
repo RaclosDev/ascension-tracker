@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import toast from 'react-hot-toast';
 
-export default function BarcodeScanner({ onScanSuccess, onScanError }) {
+export default function BarcodeScanner({ onScanSuccess, onScanError }: any) {
   const [isScanning, setIsScanning] = useState(false);
   const [isStarting, setIsStarting] = useState(true);
   const [cameraError, setCameraError] = useState<any>(null);
@@ -142,7 +142,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
         await scannerRef.current.start(
           cameraId,
           config,
-          (decodedText, decodedResult) => {
+          (decodedText: any, decodedResult: any) => {
             if (onScanSuccess) {
                
               try {
@@ -181,7 +181,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
       await scannerRef.current.start(
         cameras[nextIndex].id,
         config,
-        (decodedText, decodedResult) => {
+        (decodedText: any, decodedResult: any) => {
           if (onScanSuccess) {
              
             try {
@@ -200,7 +200,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }) {
     }
   };
 
-  const handleFileScan = async (e) => {
+  const handleFileScan = async (e: any) => {
     const file = e.target.files?.[0];
     if (!file || !scannerRef.current) return;
 

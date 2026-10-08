@@ -162,14 +162,14 @@ export function ExercisePicker() {
       tab === 'base' ? BASE_EXERCISES : tab === 'custom' ? customExercises : EXERCISE_CATALOG;
     const q = normalizeString(query.trim());
     const filtered = all
-      .filter((ex) => !hiddenEquipments.includes(ex.equipment))
-      .filter((ex) => filterMuscle === 'ALL' || ex.muscle === filterMuscle)
-      .filter((ex) => filterEquip === 'ALL' || ex.equipment === filterEquip)
-      .filter((ex) => {
+      .filter((ex: any) => !hiddenEquipments.includes(ex.equipment))
+      .filter((ex: any) => filterMuscle === 'ALL' || ex.muscle === filterMuscle)
+      .filter((ex: any) => filterEquip === 'ALL' || ex.equipment === filterEquip)
+      .filter((ex: any) => {
         if (!q) return true;
         const queryWords = q.split(/\s+/);
         const targetName = normalizeString(aliases[ex.id] || ex.name);
-        const muscleName = normalizeString(MUSCLE_LABEL[ex.muscle]);
+        const muscleName = normalizeString(MUSCLE_LABEL[ex.muscle as keyof typeof MUSCLE_LABEL]);
         const equipName = normalizeString(ex.equipment);
         const tagsName = normalizeString((ex.tags || []).join(' '));
         const originalName = normalizeString(ex.name);
@@ -415,7 +415,7 @@ export function ExercisePicker() {
                   <div key={group[0].id + '_group'}>
                     {isGroup && <div className="picker-group-header">{baseName}</div>}
                     <div style={{ paddingLeft: isGroup ? '0.25rem' : '0' }}>
-                      {group.map((ex) => {
+                      {group.map((ex: any) => {
                         const dName = aliases[ex.id] || ex.name;
                         const shortName = isGroup
                           ? dName.replace(/^[^(]*\(\s*/, '').replace(/\)\s*$/, '')
@@ -456,7 +456,7 @@ export function ExercisePicker() {
                                   {ex.custom && <span className="picker-custom-badge">Custom</span>}
                                 </div>
                                 <div className="picker-exercise-meta">
-                                  {MUSCLE_LABEL[ex.muscle]} · {ex.equipment}
+                                  {MUSCLE_LABEL[ex.muscle as keyof typeof MUSCLE_LABEL]} · {ex.equipment}
                                 </div>
                               </div>
                               <div
