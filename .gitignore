@@ -1,4 +1,4 @@
-.env
+﻿.env
 .env.*
 !.env.example
 frontend/.env
@@ -35,29 +35,9 @@ out.txt
 
 docker-compose.override.yml
 
-# Reglas del Agente y Configuración local (No públicas)
-AGENTS.md
-.agents/
-GEMINI.md
-HOOKS.md
-ANTIGRAVITY_HOOKS.md
-MCP_RECOMMENDATIONS.md
-
 # Evitar subida accidental de scripts temporales
 /*.js
 /*.ts
 /*.py
 
-# Patrones de basura de agentes
-fix_*.py
-patch_*.py
-nuke_*.py
-temp_*.py
-tmp_*.py
-update_*.py
-read_*.py
-remove_*.py
-strict_*.py
-*_temp.py
-*_tmp.py
-seed_local.py
+
