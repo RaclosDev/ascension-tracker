@@ -14,17 +14,26 @@ export default function UtilitiesPage() {
   // --- AI ASSISTANT STATE ---
 
   const todayStr = getLocalDateString();
-  const [summary, setSummary] = useState(null);
+  type SummaryType = {
+    remaining?: { kcal?: number; protein?: number; carbs?: number; fat?: number };
+  };
+  const [summary, setSummary] = useState<SummaryType | null>(null);
   const [loadingSummary, setLoadingSummary] = useState(true);
 
-  const [chatMessages, setChatMessages] = useState<unknown[]>([]);
+  type ChatMessage = {
+    id: string;
+    role: string;
+    text: string;
+    mealOptions?: Record<string, unknown>[];
+  };
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [userInput, setUserInput] = useState('');
   const [sending, setSending] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const fileInputRef = useRef<HTMLDivElement | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [applyingOptionKey, setApplyingOptionKey] = useState(null);
   const [appliedOptionKeys, setAppliedOptionKeys] = useState(new Set());
-  const [activeOptionIndices, setActiveOptionIndices] = useState({});
+  const [activeOptionIndices, setActiveOptionIndices] = useState<Record<string, number>>({});
 
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -148,8 +157,9 @@ export default function UtilitiesPage() {
       setChatMessages((prev) => [...prev, aiMsg]);
       // Default to option 0
       setActiveOptionIndices((prev: any) => ({ ...prev, [aiMsgId]: 0 }));
-    } catch (err: Error | unknown) {
-      console.error('AI Assistant Error:', err.response?.data?.error || err);
+    } catch (err: unknown) {
+      const e = err as Error & { response?: { data?: { error?: string } } };
+      console.error('AI Assistant Error:', e.response?.data?.error || e.message || err);
       const errorMsg = 'Error conectando con el Asistente IA';
       toast.error(errorMsg);
       setChatMessages((prev) => [
@@ -274,12 +284,14 @@ export default function UtilitiesPage() {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleImageChange = (e: React.MouseEvent | React.ChangeEvent<HTMLInputElement> | any) => {
-    const file = e.target.files[0];
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setSelectedImage(reader.result);
+        if (typeof reader.result === 'string') {
+          setSelectedImage(reader.result);
+        }
       };
       reader.readAsDataURL(file);
     }

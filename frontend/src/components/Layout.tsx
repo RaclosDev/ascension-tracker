@@ -89,7 +89,7 @@ export default function Layout() {
   useEffect(() => {
     if (!moreMenuOpen) return;
     const handleClick = (e: MouseEvent) => {
-      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target)) {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node | null)) {
         setMoreMenuOpen(false);
       }
     };
@@ -100,7 +100,8 @@ export default function Layout() {
   // Interceptar cualquier enlace de navegación interna en modo PWA standalone
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
-      const anchor = e.target.closest('a');
+      const target = e.target as Element | null;
+      const anchor = target?.closest('a');
       if (!anchor) return;
       const href = anchor.getAttribute('href');
       if (href && href.startsWith('/') && !href.startsWith('//') && anchor.target !== '_blank') {

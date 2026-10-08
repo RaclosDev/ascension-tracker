@@ -72,7 +72,8 @@ export default function DashboardPage() {
     },
     onError: (err: Error) => {
       console.error('Error al guardar peso:', err);
-      const msg = err.response?.data?.message || err.response?.data?.error || err.message;
+      const e = err as Error & { response?: { data?: { message?: string; error?: string } } };
+      const msg = e.response?.data?.message || e.response?.data?.error || e.message;
       toast.error(msg ? `Error al guardar: ${msg}` : 'Error al registrar peso');
     },
   });
@@ -156,8 +157,8 @@ export default function DashboardPage() {
 
   // Delta chart data
   const deltaData = weekSummaries
-    .filter((w: WeekSummary) => w.delta !== null)
-    .map((w: WeekSummary) => ({
+    .filter((w: WeekSummary): w is WeekSummary & { delta: number } => w.delta !== null)
+    .map((w) => ({
       week: format(new Date(w.weekStart + 'T00:00:00'), 'd MMM', { locale: es }),
       delta: w.delta,
       fill:
