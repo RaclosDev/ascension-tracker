@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/client';
 import toast from 'react-hot-toast';
@@ -357,7 +357,7 @@ export default function TrackingPage() {
     }
   };
 
-  const handleDeltaAdjust = (metric: any, delta: any) => {
+  const handleDeltaAdjust = (metric: string, delta: number) => {
     if (metric === 'weight') {
       let current = parseFloat(modalWeight);
       if (isNaN(current)) current = 75;
@@ -682,7 +682,7 @@ export default function TrackingPage() {
               </div>
 
               <div className="calendar-grid">
-                {week.days.map((dayData: any, d: any) => {
+                {week.days.map((dayData: DayData, d: number) => {
                   const date = new Date(week.weekStart + 'T00:00:00');
                   date.setDate(date.getDate() + d);
                   const dateStr = format(date, 'yyyy-MM-dd');

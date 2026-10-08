@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import { Sunrise, Utensils, Moon, Apple, X } from 'lucide-react';
+import { SavedFood } from '../../types/api';
 
 interface MealSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedFoods: Set<any>;
-  savedFoods: any[];
+  selectedFoods: Set<number>;
+  savedFoods: SavedFood[];
   bulkQuantities: Record<string, number>;
   setBulkQuantities: React.Dispatch<React.SetStateAction<Record<string, number>>>;
   mealSelectorDate: string;

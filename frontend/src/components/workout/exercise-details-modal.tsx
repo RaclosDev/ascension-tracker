@@ -93,7 +93,7 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
     }> = [];
 
     for (const session of history) {
-      const exDatas = session.exercises.filter((e: any) => {
+      const exDatas = session.exercises.filter((e: import('@/lib/workout/types').WorkoutExercise) => {
         if (e.exerciseId !== exercise.id) return false;
         if (filterGrip !== 'ALL' && e.variant?.grip !== filterGrip) return false;
         if (filterMachine !== 'ALL' && e.variant?.machine !== filterMachine) return false;
@@ -101,7 +101,7 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
       });
 
       for (const exData of exDatas) {
-        const validSets = exData.sets.filter((s: any) => s.completed);
+        const validSets = exData.sets.filter((s: import('@/lib/workout/types').WorkoutSet) => s.completed);
         if (validSets.length === 0) continue;
 
         const sessionSets: Array<{ weight: string; reps: string }> = [];

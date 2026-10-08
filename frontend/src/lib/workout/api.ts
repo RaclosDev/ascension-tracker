@@ -22,7 +22,7 @@ export const useWorkoutHistory = () => {
 };
 
 export const useRecentWorkouts = (days: number = 60) => {
-  const q = useQuery<any, any>({
+  const q = useQuery<CompletedWorkout[], Error>({
     queryKey: ['recentWorkouts'],
     queryFn: async (): Promise<CompletedWorkout[]> => {
       const since = Date.now() - 365 * 24 * 60 * 60 * 1000;
@@ -34,7 +34,7 @@ export const useRecentWorkouts = (days: number = 60) => {
   const data = useMemo(() => {
     if (!q.data) return undefined;
     const since = Date.now() - days * 24 * 60 * 60 * 1000;
-    return q.data.filter((w: any) => (w.startedAt ?? 0) >= since);
+    return q.data.filter((w: CompletedWorkout) => (w.startedAt ?? 0) >= since);
   }, [q.data, days]);
 
   return { ...q, data };
@@ -88,7 +88,7 @@ export const useDeleteWorkout = () => {
 };
 
 export const useWorkoutTemplates = () => {
-  return useQuery<any, any>({
+  return useQuery<Template[], Error>({
     queryKey: ['workoutTemplates'],
     queryFn: async (): Promise<Template[]> => {
       const { data } = await api.get('/workouts/templates');
@@ -137,7 +137,7 @@ export const useDeleteTemplate = () => {
 };
 
 export const useCustomExercises = () => {
-  return useQuery<any, any>({
+  return useQuery<Exercise[], Error>({
     queryKey: ['customExercises'],
     queryFn: async (): Promise<Exercise[]> => {
       const { data } = await api.get('/workouts/custom-exercises');

@@ -31,7 +31,7 @@ function AppContent() {
         .then((res) => {
           currentAppVersion = res.data.version;
         })
-        .catch((err: any) => console.error('Error fetching app version', err));
+        .catch((err: Error) => console.error('Error fetching app version', err));
 
       const handleVisibilityChange = () => {
         if (document.visibilityState === 'visible') {
@@ -42,7 +42,7 @@ function AppContent() {
                 window.location.reload();
               }
             })
-            .catch((err: any) => console.error('Error fetching app version', err));
+            .catch((err: Error) => console.error('Error fetching app version', err));
         }
       };
 
@@ -94,8 +94,7 @@ class GlobalErrorBoundary extends Component<{ children: React.ReactNode }, { has
     this.state = { hasError: false };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  static getDerivedStateFromError(_error: any) {
+  static getDerivedStateFromError(_error: Error) {
     return { hasError: true };
   }
 
@@ -184,7 +183,7 @@ export default function App() {
           if (!res.ok) throw new Error('Failed config fetch');
           return res.json();
         })
-        .then((data: any) => {
+        .then((data: { googleClientId?: string }) => {
           clearTimeout(timeoutId);
           if (data.googleClientId && data.googleClientId !== 'CHANGE_ME') {
             setGoogleClientId(data.googleClientId);
@@ -192,7 +191,7 @@ export default function App() {
             setAuthError(true);
           }
         })
-        .catch((err: any) => {
+        .catch((err: Error) => {
           clearTimeout(timeoutId);
           console.error('Error al cargar la config de auth:', err);
           setAuthError(true);

@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, FormEvent, ChangeEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import api from '../api/client';
@@ -14,6 +13,34 @@ import BarcodeScanner from './BarcodeScanner';
 import ManualFoodForm from './food/ManualFoodForm';
 
 import { Mic, ImageIcon, X, ScanLine, ArrowLeft } from 'lucide-react';
+import { FoodListsData, FoodLog, SavedFood, Meal, Recipe } from '../types/api';
+
+interface SearchProduct {
+  name: string;
+  category: string;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  portions?: Array<{ label: string; amount: number }>;
+}
+
+export type SavedFoodExtended = {
+  id?: number | string;
+  name: string;
+  brand?: string;
+  kcalPer100g?: number;
+  proteinPer100g?: number;
+  carbsPer100g?: number;
+  fatPer100g?: number;
+  servingSize?: number;
+  servingLabel?: string;
+  isRecipe?: boolean;
+  kcal?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+};
 
 export default function FoodSearchModal({
   isOpen,
@@ -24,20 +51,20 @@ export default function FoodSearchModal({
   meals = [],
   onCustomAdd,
 }: {
-  isOpen?: any;
-  onClose?: any;
-  mealIndex?: any;
-  date?: any;
-  onLogAdded?: any;
-  meals?: any[];
-  onCustomAdd?: (foodObj: any) => void;
+  isOpen?: boolean;
+  onClose?: () => void;
+  mealIndex?: number;
+  date?: string;
+  onLogAdded?: () => void;
+  meals?: Meal[];
+  onCustomAdd?: (foodObj: Partial<FoodLog>) => void;
 }) {
   const [activeOverlay, setActiveOverlay] = useState<'none' | 'scanner' | 'ai' | 'manual'>('none');
   const [query, setQuery] = useState('');
-  const [selectedImage, setSelectedImage] = useState<any>(null);
-  const fileInputRef = useRef<any>(null);
-  const [offResults, setOffResults] = useState<any[]>([]);
-  const { data: foodLists } = useQuery<any, any>({
+  const [selectedImage, setSelectedImage] = useState<string | ArrayBuffer | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [offResults, setOffResults] = useState<Array<Record<string, unknown>>>([]);
+  const { data: foodLists } = useQuery<FoodListsData, Error>({
     queryKey: ['foodLists'],
     enabled: !!isOpen,
     queryFn: async () => {
@@ -50,7 +77,7 @@ export default function FoodSearchModal({
     },
   });
   const recentLogs = foodLists?.recent || [];
-  const mappedRecipes = (foodLists?.recipes || []).map((r: any) => ({
+  const mappedRecipes = (foodLists?.recipes || []).map((r: Recipe) => ({
     ...r,
     brand: 'Receta',
     kcalPer100g: r.totalKcal, // Treat 1 serving of recipe as 100 "units" for calculation simplicity, or we can just say 1 portion = 1 "ud" = 1 serving. Let's make servingSize = 100, kcal = totalKcal.
@@ -65,7 +92,7 @@ export default function FoodSearchModal({
   const savedFoods = [...(foodLists?.saved || []), ...mappedRecipes];
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<SearchProduct | null>(null);
   const [quantity, setQuantity] = useState(100);
   const [inputMode, setInputMode] = useState<'grams' | 'portions'>('grams');
   const [selectedMealIndex, setSelectedMealIndex] = useState(
@@ -108,7 +135,7 @@ export default function FoodSearchModal({
     fat: '',
   });
 
-  const updateManualForm = (field: any, value: any) => {
+  const updateManualForm = (field: string, value: string) => {
     const newForm = { ...manualForm, [field]: value };
     if (['protein', 'carbs', 'fat'].includes(field)) {
       const p = parseFloat(newForm.protein) || 0;
@@ -123,8 +150,8 @@ export default function FoodSearchModal({
     setManualForm(newForm);
   };
 
-  const handleImageChange = (e: any) => {
-    const file = e.target.files[0];
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -164,7 +191,7 @@ export default function FoodSearchModal({
     }
   };
 
-  const handleSearch = async (e?: any) => {
+  const handleSearch = async (e?: FormEvent) => {
     if (e) e.preventDefault();
     const q = query.trim();
     if (!q) return;
@@ -176,34 +203,34 @@ export default function FoodSearchModal({
     setHasSearched(true);
 
     const queriesToTry = getSmartFallbackQueries(q);
-    let allCleanProducts: any[] = [];
+    let allCleanProducts: Array<Record<string, unknown>> = [];
 
     try {
       for (const currentQ of queriesToTry) {
         if (currentRequestId !== searchRequestId.current) return;
-        let data;
+        let data: Record<string, unknown>;
         try {
           const res = await api.get(`/food-external/search?q=${encodeURIComponent(currentQ)}`);
           data = res.data;
-        } catch (err: any) {
+        } catch (err) {
           continue;
         }
         if (currentRequestId !== searchRequestId.current) return;
 
-        let products: any[] = [];
-        if (data.product) products = [data.product];
-        else if (data.products) products = data.products;
+        let products: Array<Record<string, unknown>> = [];
+        if (data.product) products = [data.product as Record<string, unknown>];
+        else if (data.products) products = data.products as Array<Record<string, unknown>>;
 
         const qWords = normalizeString(currentQ).split(/\s+/).filter(Boolean);
         const cleanProducts = products
           .filter((p) => {
-            const name = normalizeString(p.product_name || p.product_name_es || '');
+            const name = normalizeString((p.product_name || p.product_name_es || '') as string);
             if (!name) return false;
-            return qWords.some((w: any) => name.includes(normalizeString(w)));
+            return qWords.some((w: string) => name.includes(normalizeString(w)));
           })
-          .sort((a: any, b: any) => {
-            const nameA = normalizeString(a.product_name || a.product_name_es || '');
-            const nameB = normalizeString(b.product_name || b.product_name_es || '');
+          .sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+            const nameA = normalizeString((a.product_name || a.product_name_es || '') as string);
+            const nameB = normalizeString((b.product_name || b.product_name_es || '') as string);
             return nameA.length - nameB.length;
           });
 
@@ -220,7 +247,7 @@ export default function FoodSearchModal({
       if (allCleanProducts.length === 0) {
         toast('No se encontraron resultados exactos', { icon: 'ℹ️' });
       }
-    } catch (err: any) {
+    } catch (err) {
       if (currentRequestId !== searchRequestId.current) return;
       console.error(err);
       toast.error('Error al consultar base de datos');
@@ -231,8 +258,8 @@ export default function FoodSearchModal({
     }
   };
 
-  const handleOcrUpload = async (e: any) => {
-    const file = e.target.files[0];
+  const handleOcrUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     setOcrLoading(true);
@@ -259,12 +286,15 @@ export default function FoodSearchModal({
       }));
 
       toast.success('¡Macros extraídos correctamente!');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.response?.data?.error || 'Error al analizar la etiqueta.');
+      toast.error(
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
+          'Error al analizar la etiqueta.'
+      );
     } finally {
       setOcrLoading(false);
-      e.target.value = null;
+      e.target.value = '';
     }
   };
 
@@ -282,7 +312,7 @@ export default function FoodSearchModal({
           const offName = data.product.product_name || data.product.product_name_es || '';
           const offBrand = data.product.brands || '';
 
-          const savedMatch = savedFoods.find((sf: any) => {
+          const savedMatch = (savedFoods as SavedFoodExtended[]).find((sf: SavedFoodExtended) => {
             const sfName = sf.name || '';
             const n1 = sfName.toLowerCase();
             const n2 = offName.toLowerCase();
@@ -300,7 +330,7 @@ export default function FoodSearchModal({
       }
       toast('Producto no encontrado por código de barras', { icon: '🤔' });
       setOffResults([]);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       toast.error('Error al consultar código de barras');
     } finally {
@@ -308,10 +338,10 @@ export default function FoodSearchModal({
     }
   };
 
-  const handleSelectOff = (p: any) => {
-    const name = p.product_name || p.product_name_es || 'Producto';
+  const handleSelectOff = (p: Record<string, unknown>) => {
+    const name = (p.product_name || p.product_name_es || 'Producto') as string;
     const brand = p.brands ? ` - ${p.brands}` : '';
-    const nut = p.nutriments || {};
+    const nut = (p.nutriments || {}) as Record<string, unknown>;
 
     const portions = extractPortions(p);
 
@@ -332,7 +362,7 @@ export default function FoodSearchModal({
     }
   };
 
-  const handleSelectRecent = (log: any) => {
+  const handleSelectRecent = (log: FoodLog) => {
     const q = Number(log.quantity) || 100;
     setSelectedProduct({
       name: log.product,
@@ -345,8 +375,8 @@ export default function FoodSearchModal({
     setQuantity(Math.round(q));
   };
 
-  const handleSelectSaved = (food: any) => {
-    let portions: any[] = [];
+  const handleSelectSaved = (food: SavedFoodExtended & { image?: string }) => {
+    let portions: Array<{ label: string; amount: number }> = [];
     if (food.servingSize && food.servingSize > 0) {
       const lbl = food.servingLabel || 'ud';
       if (lbl.toLowerCase() === 'g') {
@@ -390,10 +420,10 @@ export default function FoodSearchModal({
     setSelectedProduct({
       name: food.name + (food.brand && food.brand !== 'Genérico' ? ` (${food.brand})` : ''),
       category: food.brand === 'Genérico' ? 'Básico' : 'Guardado',
-      kcal: food.kcalPer100g ?? food.kcal,
-      protein: food.proteinPer100g ?? food.protein,
-      carbs: food.carbsPer100g ?? food.carbs,
-      fat: food.fatPer100g ?? food.fat,
+      kcal: food.kcalPer100g ?? food.kcal ?? 0,
+      protein: food.proteinPer100g ?? food.protein ?? 0,
+      carbs: food.carbsPer100g ?? food.carbs ?? 0,
+      fat: food.fatPer100g ?? food.fat ?? 0,
       portions: portions,
     });
 
@@ -424,12 +454,12 @@ export default function FoodSearchModal({
       portionsJson:
         selectedProduct.portions && selectedProduct.portions.length > 0
           ? JSON.stringify(selectedProduct.portions)
-          : null,
+          : undefined,
     };
 
     if (onCustomAdd) {
       onCustomAdd(logEntry);
-      onClose();
+      if (onClose) onClose();
       return;
     }
 
@@ -439,9 +469,9 @@ export default function FoodSearchModal({
       setSelectedProduct(null);
       setQuery('');
       setOffResults([]);
-      onLogAdded();
-      onClose();
-    } catch (err: any) {
+      if (onLogAdded) onLogAdded();
+      if (onClose) onClose();
+    } catch (err) {
       console.error(err);
       toast.error('Error al guardar el alimento');
     }
@@ -455,13 +485,13 @@ export default function FoodSearchModal({
     toast(` Procesando con IA...`, { duration: 2500 });
     setQuery('');
 
-    const payload: any = { text: queryText, mealIndex: selectedMealIndex, date };
+    const payload: Record<string, unknown> = { text: queryText, mealIndex: selectedMealIndex, date };
     if (selectedImage) {
       payload.base64Image = selectedImage;
     }
 
     setSelectedImage(null);
-    onClose();
+    if (onClose) onClose();
 
     api
       .post('/nutrition/ai/log', payload)
@@ -472,10 +502,10 @@ export default function FoodSearchModal({
         } else {
           toast.success(`¡${count} alimento(s) añadidos por IA!`);
         }
-        onLogAdded();
+        if (onLogAdded) onLogAdded();
       })
-      .catch((e) => {
-        const msg = e.response?.data?.error || 'Error procesando texto con IA';
+      .catch((e: unknown) => {
+        const msg = (e as { response?: { data?: { error?: string } } }).response?.data?.error || 'Error procesando texto con IA';
         toast.error(msg);
         console.error(e);
       });
@@ -546,10 +576,11 @@ export default function FoodSearchModal({
               </div>
 
               {(() => {
-                const hasPortions = selectedProduct.portions && selectedProduct.portions.length > 0;
+                const portions = selectedProduct.portions || [];
+                const hasPortions = portions.length > 0;
                 const basePortion = hasPortions
-                  ? selectedProduct.portions.find((p: any) => p.label.startsWith('1 ')) ||
-                    selectedProduct.portions[0]
+                  ? portions.find((p: { label: string; amount: number }) => p.label.startsWith('1 ')) ||
+                    portions[0]
                   : null;
                 const baseAmount = basePortion ? basePortion.amount : 100;
                 const multiplier = quantity ? Number((quantity / baseAmount).toFixed(2)) : 0;
@@ -670,7 +701,7 @@ export default function FoodSearchModal({
                 <div
                   style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}
                 >
-                  {selectedProduct.portions.map((port: any, idx: number) => (
+                  {selectedProduct.portions.map((port: { label: string; amount: number }, idx: number) => (
                     <button
                       key={idx}
                       className="btn btn-secondary btn-sm"
@@ -749,7 +780,7 @@ export default function FoodSearchModal({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <BarcodeScanner
                 onScanSuccess={handleScanSuccess}
-                onScanError={(err: any) => console.error(err)}
+                onScanError={(err: string) => console.error(err)}
               />
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button className="btn btn-secondary" onClick={() => setActiveOverlay('none')}>
@@ -776,7 +807,7 @@ export default function FoodSearchModal({
                   <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', zIndex: 3 }}>
                     <div style={{ position: 'relative', display: 'inline-block' }}>
                       <img
-                        src={selectedImage}
+                        src={selectedImage as string}
                         alt="Preview"
                         style={{
                           height: '40px',
@@ -1077,19 +1108,19 @@ export default function FoodSearchModal({
                 {(() => {
                   const qLower = normalizeString(query.trim());
                   const filteredSaved = savedFoods.filter(
-                    (f: any) =>
+                    (f: SavedFoodExtended) =>
                       !qLower ||
-                      normalizeString(f.name).includes(qLower) ||
+                      normalizeString(f.name || '').includes(qLower) ||
                       (f.brand && normalizeString(f.brand).includes(qLower)),
                   );
                   const filteredRecent = recentLogs.filter(
-                    (l: any) => !qLower || normalizeString(l.product).includes(qLower),
+                    (l: FoodLog) => !qLower || normalizeString(l.product).includes(qLower),
                   );
                   const filteredGeneric = GENERIC_FOODS.filter(
-                    (f: any) =>
+                    (f: { name: string; brand?: string }) =>
                       qLower.length > 0 &&
                       (normalizeString(f.name).includes(qLower) ||
-                        normalizeString(f.brand).includes(qLower)),
+                        (f.brand && normalizeString(f.brand).includes(qLower))),
                   );
 
                   return (
@@ -1107,7 +1138,7 @@ export default function FoodSearchModal({
                             Últimos Alimentos Añadidos
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                            {filteredRecent.map((log: any) => {
+                            {filteredRecent.map((log: FoodLog) => {
                               const q = Number(log.quantity) || 100;
                               const kcal100 = Math.round((Number(log.kcal) || 0) * (100 / q));
                               return (
@@ -1150,7 +1181,7 @@ export default function FoodSearchModal({
                             Mis Alimentos Guardados
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                            {filteredSaved.map((food: any) => (
+                            {filteredSaved.map((food: SavedFoodExtended) => (
                               <div
                                 key={food.id}
                                 className="card"
@@ -1177,7 +1208,7 @@ export default function FoodSearchModal({
                                   <div
                                     style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}
                                   >
-                                    {food.kcalPer100g} kcal / 100g
+                                    {food.kcalPer100g ?? food.kcal ?? 0} kcal / 100g
                                     {food.servingSize && food.servingSize > 0 && (
                                       <span
                                         style={{
@@ -1208,7 +1239,7 @@ export default function FoodSearchModal({
                             Alimentos Básicos
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                            {filteredGeneric.map((food: any) => (
+                            {filteredGeneric.map((food: SavedFoodExtended & { image?: string }) => (
                               <div
                                 key={food.id}
                                 className="card"
@@ -1271,9 +1302,9 @@ export default function FoodSearchModal({
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                       {offResults.map((p, idx) => {
-                        const name = p.product_name || p.product_name_es || 'Producto';
-                        const brand = p.brands || '';
-                        const rawNut = p.nutriments || {};
+                        const name = (p.product_name || p.product_name_es || 'Producto') as string;
+                        const brand = (p.brands || '') as string;
+                        const rawNut = (p.nutriments || {}) as Record<string, unknown>;
                         const kcal = getSanitizedKcal(rawNut);
                         const prot = (
                           Number(rawNut['proteins_100g'] ?? rawNut['proteins'] ?? 0) || 0
@@ -1287,7 +1318,7 @@ export default function FoodSearchModal({
 
                         return (
                           <div
-                            key={p.code || idx}
+                            key={(p.code as string) || idx}
                             className="card"
                             style={{
                               padding: '0.65rem 0.85rem',

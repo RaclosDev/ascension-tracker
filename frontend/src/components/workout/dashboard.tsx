@@ -5,6 +5,7 @@ import { MuscleRecovery } from '@/components/workout/muscle-recovery';
 import { BodyHeatmap } from '@/components/workout/body-heatmap';
 import { getExerciseMap } from '@/lib/workout/exercises';
 import { formatDuration, formatKg, sessionVolume } from '@/lib/workout/format';
+import type { Template, CompletedWorkout, WorkoutExercise } from '@/lib/workout/types';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { useRecentWorkouts, useWorkoutTemplates, useCustomExercises } from '@/lib/workout/api';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -166,7 +167,7 @@ export function Dashboard() {
                     <div className="start-workout-section-label" style={{ marginTop: '0.5rem' }}>
                       Plantillas
                     </div>
-                    {templates.map((t: any) => (
+                    {templates.map((t: Template) => (
                       <button
                         key={t.id}
                         className="start-workout-option start-workout-option-secondary"
@@ -199,7 +200,7 @@ export function Dashboard() {
                     <div className="start-workout-section-label" style={{ marginTop: '0.5rem' }}>
                       Repetir Reciente
                     </div>
-                    {history.slice(0, 3).map((w: any) => (
+                    {history.slice(0, 3).map((w: CompletedWorkout) => (
                       <button
                         key={w.id}
                         className="start-workout-option start-workout-option-secondary"
@@ -355,10 +356,10 @@ export function Dashboard() {
               listStyle: 'none',
             }}
           >
-            {history.slice(0, 4).map((w: any) => {
+            {history.slice(0, 4).map((w: CompletedWorkout) => {
               const names = w.exercises
                 .slice(0, 4)
-                .map((e: any) => catalog.get(e.exerciseId)?.name ?? 'Ejercicio');
+                .map((e: WorkoutExercise) => catalog.get(e.exerciseId)?.name ?? 'Ejercicio');
               return (
                 <li key={w.id}>
                   <div

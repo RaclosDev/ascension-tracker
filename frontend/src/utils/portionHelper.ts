@@ -1,4 +1,4 @@
-export function getSanitizedKcal(nutriments: Record<string, any> | undefined) {
+﻿export function getSanitizedKcal(nutriments: Record<string, unknown> | undefined) {
   if (!nutriments) return 0;
 
   const kcal = Number(nutriments['energy-kcal_100g'] ?? nutriments['energy-kcal'] ?? 0);
@@ -23,8 +23,8 @@ export function getSanitizedKcal(nutriments: Record<string, any> | undefined) {
   return Math.round(kcal);
 }
 
-export function extractPortions(product: Record<string, any>) {
-  const portions: any[] = [];
+export function extractPortions(product: Record<string, unknown>) {
+  const portions: { label: string; amount: number; isBase?: boolean }[] = [];
 
   // Try to parse 'quantity' e.g. "4 x 125 g" or "125g"
   if (product.quantity && typeof product.quantity === 'string') {
@@ -48,7 +48,7 @@ export function extractPortions(product: Record<string, any>) {
   // Also check product_quantity e.g. 500
   if (product.product_quantity) {
     const amount = Number(product.product_quantity);
-    if (amount > 0 && !portions.some((p: any) => p.amount === amount)) {
+    if (amount > 0 && !portions.some((p: { amount: number }) => p.amount === amount)) {
       portions.push({ label: `Envase total (${amount}g)`, amount });
     }
   }

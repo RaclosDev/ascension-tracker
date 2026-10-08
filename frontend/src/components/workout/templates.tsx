@@ -92,8 +92,8 @@ export function TemplatesView() {
             listStyle: 'none',
           }}
         >
-          {templates.map((tpl: any) => {
-            const names = tpl.exercises.map((e: any) => catalog.get(e.exerciseId)?.name ?? 'Ejercicio');
+          {templates.map((tpl: import('@/lib/workout/types').Template) => {
+            const names = tpl.exercises.map((e: { exerciseId: string; variant?: { grip?: string; machine?: string } }) => catalog.get(e.exerciseId)?.name ?? 'Ejercicio');
             return (
               <li
                 key={tpl.id}

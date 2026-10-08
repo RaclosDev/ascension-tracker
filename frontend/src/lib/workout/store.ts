@@ -176,7 +176,7 @@ export const useWorkoutStore = create<WorkoutState>()(
         });
       },
 
-      editWorkout: (w: any) => {
+      editWorkout: (w: import('./types').CompletedWorkout) => {
         if (!w) return;
         set({
           active: {
@@ -185,7 +185,7 @@ export const useWorkoutStore = create<WorkoutState>()(
             editingId: w.id,
             editingFinishedAt: w.finishedAt,
             notes: w.notes,
-            exercises: w.exercises.map((ex: any) => ({ ...ex, sets: ex.sets.map((s: any) => ({ ...s })) })),
+            exercises: w.exercises.map((ex: import('./types').WorkoutExercise) => ({ ...ex, sets: ex.sets.map((s: import('./types').WorkoutSet) => ({ ...s })) })),
           },
           restUntil: null,
           tab: 'train',
@@ -193,17 +193,17 @@ export const useWorkoutStore = create<WorkoutState>()(
         });
       },
 
-      startFromHistory: (w: any) => {
+      startFromHistory: (w: import('./types').CompletedWorkout) => {
         if (!w) return;
         set({
           active: {
             name: w.name,
             startedAt: Date.now(),
-            exercises: w.exercises.map((ex: any) => ({
+            exercises: w.exercises.map((ex: import('./types').WorkoutExercise) => ({
               id: uid(),
               exerciseId: ex.exerciseId,
               notes: '',
-              sets: ex.sets.map((s: any) =>
+              sets: ex.sets.map((s: import('./types').WorkoutSet) =>
                 blankSet({
                   weight: s.weight,
                   reps: s.reps,
@@ -520,8 +520,7 @@ export const useWorkoutStore = create<WorkoutState>()(
       }),
       version: 1,
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      migrate: (persistedState: any) => {
+      migrate: (persistedState: unknown) => {
         return persistedState as WorkoutState;
       },
     },

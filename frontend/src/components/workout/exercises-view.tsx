@@ -82,7 +82,7 @@ export function ExercisesView() {
   const addCustomExercise = (ex: Partial<Exercise>) =>
     saveExerciseMutation.mutate({ ...ex, id: Date.now().toString() } as Exercise);
   const updateCustomExercise = (id: string, patch: Partial<Exercise>) => {
-    const ex = customExercises.find((e: any) => e.id === id);
+    const ex = customExercises.find((e: import('@/lib/workout/types').Exercise) => e.id === id);
     if (ex) saveExerciseMutation.mutate({ ...ex, ...patch });
   };
 
@@ -154,8 +154,8 @@ export function ExercisesView() {
   const list = (
     filter === 'custom' ? customExercises : filter === 'basicos' ? BASE_EXERCISES : EXERCISE_CATALOG
   )
-    .filter((ex: any) => !hiddenEquipments.includes(ex.equipment))
-    .filter((ex: any) => {
+    .filter((ex: import('@/lib/workout/types').Exercise) => !hiddenEquipments.includes(ex.equipment))
+    .filter((ex: import('@/lib/workout/types').Exercise) => {
       const q = normalizeString(query.trim());
       if (!q) return true;
       const queryWords = q.split(/\s+/);
@@ -173,8 +173,8 @@ export function ExercisesView() {
           tagsName.includes(w),
       );
     })
-    .filter((ex: any) => filterMuscle === 'ALL' || ex.muscle === filterMuscle)
-    .filter((ex: any) => filterEquip === 'ALL' || ex.equipment === filterEquip)
+    .filter((ex: import('@/lib/workout/types').Exercise) => filterMuscle === 'ALL' || ex.muscle === filterMuscle)
+    .filter((ex: import('@/lib/workout/types').Exercise) => filterEquip === 'ALL' || ex.equipment === filterEquip)
     .sort((a: { id: string }, b: { id: string }) => {
       const aTime = lastUsedMap.get(a.id) || 0;
       const bTime = lastUsedMap.get(b.id) || 0;
@@ -267,7 +267,7 @@ export function ExercisesView() {
       for (const w of toUpdate) {
         const updated = {
           ...w,
-          exercises: w.exercises.map((e: any) =>
+          exercises: w.exercises.map((e: import('@/lib/workout/types').WorkoutExercise) =>
             e.exerciseId === mergeSourceId ? { ...e, exerciseId: mergeConfirmTargetId } : e,
           ),
         };
@@ -279,7 +279,7 @@ export function ExercisesView() {
       }
 
       // If source was a custom exercise, delete it
-      const isCustom = customExercises.some((e: any) => e.id === mergeSourceId);
+      const isCustom = customExercises.some((e: import('@/lib/workout/types').Exercise) => e.id === mergeSourceId);
       if (isCustom) {
         await api.delete(`/workouts/custom-exercises/${mergeSourceId}`);
       }
@@ -755,7 +755,7 @@ export function ExercisesView() {
               padding: 0,
             }}
           >
-            {list.map((ex: any) => (
+            {list.map((ex: import('@/lib/workout/types').Exercise) => (
               <li
                 key={ex.id}
                 style={{

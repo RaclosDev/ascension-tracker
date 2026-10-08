@@ -1,10 +1,12 @@
 import React from 'react';
 import { Edit3 } from 'lucide-react';
+import { Recipe } from '../../types/api';
+import { DragFoodData } from './FoodCard';
 
 interface RecipeCardProps {
-  recipe: any;
-  onEdit: (recipe: any) => void;
-  onDragStart?: (e: React.DragEvent, data: any) => void;
+  recipe: Recipe;
+  onEdit: (recipe: Recipe) => void;
+  onDragStart?: (e: React.DragEvent, data: DragFoodData) => void;
 }
 
 const macroLine = (kcal: number, p: number, c: number, f: number) => (
@@ -71,8 +73,7 @@ export default function RecipeCard({ recipe, onEdit, onDragStart }: RecipeCardPr
           text = parsed.map((ing) => `${ing.quantity}g ${ing.product}`).join(', ');
         }
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (_e) {
+    } catch {
       /* empty */
     }
     return (

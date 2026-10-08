@@ -20,10 +20,10 @@ api.interceptors.request.use(
 );
 
 let isRefreshing = false;
-let failedQueue: Array<{ resolve: (value?: any) => void; reject: (reason?: any) => void }> =
+let failedQueue: Array<{ resolve: (value?: string | null) => void; reject: (reason?: Error | null) => void }> =
   [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: Error | null, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -54,7 +54,7 @@ api.interceptors.response.use(
             originalRequest.headers['Authorization'] = 'Bearer ' + token;
             return api(originalRequest);
           })
-          .catch((err: any) => {
+          .catch((err: Error) => {
             return Promise.reject(err);
           });
       }

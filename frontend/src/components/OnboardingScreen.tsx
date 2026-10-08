@@ -5,9 +5,18 @@ import { User, Scale, Activity } from 'lucide-react';
 import WeightLossPlan from './calculators/WeightLossPlan';
 import MacroConfigurator from './calculators/MacroConfigurator';
 
+import { MacroForm } from './calculators/MacroConfigurator';
+
+interface OnboardingForm extends MacroForm {
+  sex: 'M' | 'F';
+  age: string;
+  heightCm: string;
+  activityFactor: string;
+}
+
 export default function OnboardingScreen({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState<any>({
+  const [form, setForm] = useState<OnboardingForm>({
     sex: 'M',
     age: '',
     heightCm: '',
@@ -16,6 +25,12 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
     activityFactor: '1.2',
     kcal: 2000,
     macroStrategy: 'BALANCED',
+    customProteinGrams: '',
+    customFatGrams: '',
+    customCarbsGrams: '',
+    customProteinPct: '',
+    customFatPct: '',
+    customCarbsPct: '',
   });
 
   const [mealOption, setMealOption] = useState<'default' | 'custom'>('default');
@@ -47,10 +62,10 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
         sex: form.sex,
         age: parseInt(form.age) || null,
         heightCm: parseInt(form.heightCm) || null,
-        startWeight: parseFloat(form.startWeight) || null,
-        goalWeight: parseFloat(form.goalWeight) || null,
+        startWeight: parseFloat(String(form.startWeight)) || null,
+        goalWeight: parseFloat(String(form.goalWeight)) || null,
         activityFactor: parseFloat(form.activityFactor),
-        kcal: form.kcal,
+        kcal: Number(form.kcal),
         macroStrategy: form.macroStrategy,
       });
 
@@ -66,7 +81,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
 
       toast.success('¡Configuración completada!');
       onComplete();
-    } catch (err: any) {
+    } catch (err) {
       toast.error('Error al guardar configuración inicial');
       console.error(err);
       setLoading(false);
@@ -124,7 +139,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
                   <select
                     className="form-input"
                     value={form.sex}
-                    onChange={(e) => setForm({ ...form, sex: e.target.value })}
+                    onChange={(e) => setForm({ ...form, sex: e.target.value as 'M' | 'F' })}
                   >
                     <option value="M">Hombre</option>
                     <option value="F">Mujer</option>
@@ -323,8 +338,8 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
             </div>
 
             <WeightLossPlan
-              initialWeightKg={form.startWeight}
-              initialGoalWeight={form.goalWeight}
+              initialWeightKg={String(form.startWeight)}
+              initialGoalWeight={String(form.goalWeight)}
               age={form.age}
               heightCm={form.heightCm}
               sex={form.sex as 'M' | 'F'}
@@ -351,7 +366,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
                 Estrategia de Macros
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-                Elige cómo quieres repartir tus {Math.round(form.kcal)} kcal.
+                Elige cómo quieres repartir tus {Math.round(Number(form.kcal))} kcal.
               </p>
             </div>
 
@@ -359,7 +374,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
               onSubmit={handleSubmit}
               style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
             >
-              <MacroConfigurator form={form as any} setForm={setForm} />
+              <MacroConfigurator form={form} setForm={setForm as unknown as React.Dispatch<React.SetStateAction<MacroForm>>} />
 
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
                 <button

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 
@@ -100,7 +100,7 @@ export default function LoginPage() {
                 } else {
                   console.error('Login failed on backend', data);
                 }
-              } catch (e: any) {
+              } catch (e: unknown) {
                 console.error('Login error', e);
               }
             }}

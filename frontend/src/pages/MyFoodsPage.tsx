@@ -1,4 +1,4 @@
-/* eslint-disable */
+﻿
 import { useState, useEffect, useRef } from 'react';
 import {
   LayoutGrid,
@@ -40,7 +40,7 @@ const getLocalISODate = () => {
   return d.toISOString().split('T')[0];
 };
 
-import { Skeleton } from '../components/ui/skeleton';
+import { Skeleton } from '../components/ui/skeleton'; import { PageFoodItem, PageRecipeItem } from "../types/myfoods";
 
 export default function MyFoodsPage() {
   const queryClient = useQueryClient();
@@ -49,7 +49,11 @@ export default function MyFoodsPage() {
     data = {},
     isLoading: loadingData,
     refetch: refetchQuery,
-  } = useQuery<any, any>({
+  } = useQuery<{
+    recentFoods: import("../types/api").FoodLog[];
+    savedFoods: PageFoodItem[];
+    recipes: import("../types/api").Recipe[];
+  }, Error>({
     queryKey: ['myFoodsData'],
     queryFn: async () => {
       const [recentRes, savedRes, recipesRes] = await Promise.all([
@@ -70,7 +74,7 @@ export default function MyFoodsPage() {
     queryClient.invalidateQueries({ queryKey: ['foodLists'] });
   };
 
-  const { recentFoods = [], savedFoods = [], recipes = [] } = data as any;
+  const { recentFoods = [], savedFoods = [], recipes = [] } = data as { recentFoods?: PageFoodItem[], savedFoods?: PageFoodItem[], recipes?: import("../types/api").Recipe[] };
 
   // AI State
   const [aiQuery, setAiQuery] = useState('');
@@ -102,18 +106,18 @@ export default function MyFoodsPage() {
   // Edit and Accordion States
   const [isFoodFormOpen, setIsFoodFormOpen] = useState(false);
   const [isRecipeFormOpen, setIsRecipeFormOpen] = useState(false);
-  const [editingFoodId, setEditingFoodId] = useState<any>(null);
-  const [editingRecipeId, setEditingRecipeId] = useState<any>(null);
+  const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
+  const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
 
   // Unified Create Actions
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   // Drag state
-  const [dragOverTarget, setDragOverTarget] = useState<any>(null);
+  const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
 
   // OCR file input reference
-  const ocrFileRef = useRef<any>(null);
+  const ocrFileRef = useRef<HTMLInputElement>(null);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -122,21 +126,21 @@ export default function MyFoodsPage() {
   const [viewMode, setViewMode] = useState('grid');
   const [macroFilter, setMacroFilter] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
-  const [selectedFoods, setSelectedFoods] = useState<any>(new Set());
+  const [selectedFoods, setSelectedFoods] = useState<Set<string>>(new Set());
 
   // Meal Selector States
   const [isMealSelectorOpen, setIsMealSelectorOpen] = useState(false);
   const [mealSelectorDate, setMealSelectorDate] = useState(getLocalISODate());
-  const [bulkQuantities, setBulkQuantities] = useState<any>({});
+  const [bulkQuantities, setBulkQuantities] = useState<Record<string, number>>({});
   const [isAddingToMeal, setIsAddingToMeal] = useState(false);
 
   useEffect(() => {
     if (isMealSelectorOpen) {
-      const initial: any = {};
+      const initial: Record<string, number> = {};
       Array.from(selectedFoods).forEach((id) => {
-        const food = savedFoods.find((f: any) => f.id === id);
+        const food = savedFoods.find((f: PageFoodItem) => f.id === id);
         if (food) {
-          initial[id as any] = food.servingSize > 0 ? food.servingSize : 100;
+          initial[id] = food.servingSize > 0 ? food.servingSize : 100;
         }
       });
       setBulkQuantities(initial);
@@ -147,8 +151,8 @@ export default function MyFoodsPage() {
   // Scanner State
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isLookingUpCode, setIsLookingUpCode] = useState(false);
-  const [scannedProduct, setScannedProduct] = useState<any>(null);
-  const [lookupError, setLookupError] = useState<any>(null);
+  const [scannedProduct, setScannedProduct] = useState<PageFoodItem | null>(null);
+  const [lookupError, setLookupError] = useState<string | null>(null);
 
   const [expandedSections, setExpandedSections] = useState({
     recent: window.innerWidth > 768,
@@ -158,12 +162,12 @@ export default function MyFoodsPage() {
 
   const q = searchQuery.toLowerCase().trim();
 
-  const filteredRecent = recentFoods.filter((f: any) => {
+  const filteredRecent = recentFoods.filter((f: PageFoodItem) => {
     if (!q) return true;
     return (f.product || '').toLowerCase().includes(q);
   });
 
-  const getPredominantMacro = (f: any) => {
+  const getPredominantMacro = (f: PageFoodItem) => {
     const p = f.proteinPer100g || 0;
     const c = f.carbsPer100g || 0;
     const fat = f.fatPer100g || 0;
@@ -173,7 +177,7 @@ export default function MyFoodsPage() {
   };
 
   const filteredFoods = savedFoods
-    .filter((f: any) => {
+    .filter((f: PageFoodItem) => {
       if (q) {
         const nameMatch = (f.name || '').toLowerCase().includes(q);
         const brandMatch = (f.brand || '').toLowerCase().includes(q);
@@ -182,7 +186,7 @@ export default function MyFoodsPage() {
       if (macroFilter !== 'all' && getPredominantMacro(f) !== macroFilter) return false;
       return true;
     })
-    .sort((a: any, b: any) => {
+    .sort((a: PageFoodItem, b: PageFoodItem) => {
       if (sortBy === 'name_asc') return (a.name || '').localeCompare(b.name || '');
       if (sortBy === 'recent') {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -197,7 +201,7 @@ export default function MyFoodsPage() {
       return 0;
     });
 
-  const filteredRecipes = recipes.filter((r: any) => {
+  const filteredRecipes = recipes.filter((r: import("../types/api").Recipe) => {
     if (!q) return true;
     const nameMatch = (r.name || '').toLowerCase().includes(q);
     const descMatch = (r.description || '').toLowerCase().includes(q);
@@ -206,7 +210,7 @@ export default function MyFoodsPage() {
 
   const totalResults = filteredRecent.length + filteredFoods.length + filteredRecipes.length;
 
-  const toggleSection = (sec: keyof typeof expandedSections, e: any) => {
+  const toggleSection = (sec: keyof typeof expandedSections, e: React.MouseEvent<HTMLDivElement>) => {
     if (!expandedSections[sec] && e?.currentTarget) {
       const el = e.currentTarget;
       setTimeout(() => {
@@ -221,16 +225,16 @@ export default function MyFoodsPage() {
     setExpandedSections((prev) => ({ ...prev, [sec]: !prev[sec] }));
   };
 
-  const toFormVal = (val: any) => (val !== null && val !== undefined ? val : '');
+  const toFormVal = (val: string | number | null | undefined) => (val !== null && val !== undefined ? val : '');
 
-  const updateFoodForm = (field: any, value: any) => {
+  const updateFoodForm = (field: string, value: string | number | null) => {
     const newForm = { ...foodForm, [field]: value };
     if (['protein', 'carbs', 'fat'].includes(field)) {
       const p = parseFloat(newForm.protein) || 0;
       const c = parseFloat(newForm.carbs) || 0;
       const f = parseFloat(newForm.fat) || 0;
       const hasAny = [newForm.protein, newForm.carbs, newForm.fat].some(
-        (v: any) => v !== '' && v !== null && v !== undefined,
+        (v: unknown) => v !== '' && v !== null && v !== undefined,
       );
       if (hasAny) {
         newForm.kcal = String(Math.round((p * 4 + c * 4 + f * 9) * 10) / 10);
@@ -241,7 +245,7 @@ export default function MyFoodsPage() {
     setFoodForm(newForm);
   };
 
-  const updateRecipeForm = (field: any, value: any) => {
+  const updateRecipeForm = (field: string, value: string | number | null) => {
     setRecipeForm((prev) => {
       let newForm = { ...prev };
       if (typeof field === 'object' && field !== null) {
@@ -258,7 +262,7 @@ export default function MyFoodsPage() {
         newForm.kcal = field.kcal;
       } else if (typeof field === 'object' || ['protein', 'carbs', 'fat'].includes(field)) {
         const hasAny = [newForm.protein, newForm.carbs, newForm.fat].some(
-          (v: any) => v !== '' && v !== null && v !== undefined,
+          (v: unknown) => v !== '' && v !== null && v !== undefined,
         );
         if (hasAny) {
           newForm.kcal = String(Math.round((p * 4 + c * 4 + f * 9) * 10) / 10);
@@ -272,7 +276,7 @@ export default function MyFoodsPage() {
 
   const [pendingAiCount, setPendingAiCount] = useState(0);
 
-  const handleAiSubmit = async (e: any) => {
+  const handleAiSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!aiQuery.trim()) return;
     const queryText = aiQuery.trim();
@@ -286,7 +290,7 @@ export default function MyFoodsPage() {
         toast.success(`"${queryText}" añadido `);
         fetchData();
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         toast.error(`Error: ${err.response?.data?.error || 'IA'}`);
       })
       .finally(() => {
@@ -294,7 +298,7 @@ export default function MyFoodsPage() {
       });
   };
 
-  const handleAddSavedFood = async (e: any) => {
+  const handleAddSavedFood = async (e: React.FormEvent) => {
     e.preventDefault();
     const dto = {
       name: foodForm.name,
@@ -335,7 +339,7 @@ export default function MyFoodsPage() {
     }
   };
 
-  const handleEditFood = (food: any) => {
+  const handleEditFood = (food: PageFoodItem) => {
     setFoodForm({
       name: food.name || '',
       brand: food.brand || '',
@@ -350,7 +354,7 @@ export default function MyFoodsPage() {
     setIsFoodFormOpen(true);
   };
 
-  const handleAddRecipe = async (e: any) => {
+  const handleAddRecipe = async (e: React.FormEvent) => {
     e.preventDefault();
     const dto = {
       name: recipeForm.name,
@@ -377,7 +381,7 @@ export default function MyFoodsPage() {
     }
   };
 
-  const handleEditRecipe = (recipe: any) => {
+  const handleEditRecipe = (recipe: import("../types/api").Recipe) => {
     setRecipeForm({
       name: recipe.name || '',
       description: recipe.description || '',
@@ -404,19 +408,19 @@ export default function MyFoodsPage() {
     }
   };
 
-  const toggleFoodSelection = (id: any) => {
+  const toggleFoodSelection = (id: string) => {
     const next = new Set(selectedFoods);
     if (next.has(id)) next.delete(id);
     else next.add(id);
     setSelectedFoods(next);
   };
 
-  const handleBulkAddToMeal = async (mealIndex: any) => {
+  const handleBulkAddToMeal = async (mealIndex: number) => {
     if (selectedFoods.size === 0) return;
     setIsAddingToMeal(true);
     try {
-      const foodsToAdd = savedFoods.filter((f: any) => selectedFoods.has(f.id));
-      const promises = foodsToAdd.map((food: any) => {
+      const foodsToAdd = savedFoods.filter((f: PageFoodItem) => selectedFoods.has(f.id));
+      const promises = foodsToAdd.map((food: PageFoodItem) => {
         const qty = bulkQuantities[food.id] || 100;
         const factor = qty / 100.0;
         const logEntry = {
@@ -435,14 +439,14 @@ export default function MyFoodsPage() {
       toast.success(`${selectedFoods.size} alimentos añadidos al diario`);
       setSelectedFoods(new Set());
       setIsMealSelectorOpen(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error('Error al añadir al diario');
     } finally {
       setIsAddingToMeal(false);
     }
   };
 
-  const deleteSavedFood = async (id: any) => {
+  const deleteSavedFood = async (id: string) => {
     if (!confirm('¿Borrar este alimento?')) return;
     try {
       await api.delete(`/nutrition/my-foods/${id}`);
@@ -453,19 +457,19 @@ export default function MyFoodsPage() {
     }
   };
 
-  const handleDeleteRecipe = async (id: any) => {
+  const handleDeleteRecipe = async (id: string) => {
     if (!window.confirm('¿Seguro que quieres eliminar esta receta?')) return;
     try {
       await api.delete(`/nutrition/recipes/${id}`);
       toast.success('Eliminada');
       fetchData();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error('Error al eliminar');
       console.error(err);
     }
   };
 
-  const handleOcrUpload = async (e: any) => {
+  const handleOcrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -507,7 +511,7 @@ export default function MyFoodsPage() {
         servingLabel: data.servingLabel || '',
       });
       setIsFoodFormOpen(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.dismiss(loadingToast);
       toast.error('Error al escanear: ' + (err.response?.data?.error || err.message));
       console.error(err);
@@ -515,7 +519,7 @@ export default function MyFoodsPage() {
   };
 
   // QR / Barcode Scan Handlers
-  const handleScanBarcode = async (decodedText: any) => {
+  const handleScanBarcode = async (decodedText: string) => {
     let code = (decodedText || '').trim();
     if (!code) return;
 
@@ -582,7 +586,7 @@ export default function MyFoodsPage() {
       setLookupError(
         `No se encontró ningún producto para el código "${code}". Puedes añadirlo manualmente.`,
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setLookupError('Error al consultar la base de datos de alimentos.');
     } finally {
@@ -635,11 +639,11 @@ export default function MyFoodsPage() {
   };
 
   // Drag & Drop
-  const handleDragStart = (e: any, foodData: any) => {
+  const handleDragStart = (e: React.DragEvent, foodData: PageFoodItem) => {
     e.dataTransfer.setData('application/json', JSON.stringify(foodData));
     e.dataTransfer.effectAllowed = 'copy';
   };
-  const handleDragOver = (e: any, target: any) => {
+  const handleDragOver = (e: React.DragEvent, target: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
     setDragOverTarget(target);
@@ -648,7 +652,7 @@ export default function MyFoodsPage() {
     setDragOverTarget(null);
   };
 
-  const handleDropOnFoods = async (e: any) => {
+  const handleDropOnFoods = async (e: React.DragEvent) => {
     e.preventDefault();
     setDragOverTarget(null);
     try {
@@ -668,7 +672,7 @@ export default function MyFoodsPage() {
     }
   };
 
-  const handleDropOnRecipes = async (e: any) => {
+  const handleDropOnRecipes = async (e: React.DragEvent) => {
     e.preventDefault();
     setDragOverTarget(null);
     try {
@@ -688,7 +692,7 @@ export default function MyFoodsPage() {
     }
   };
 
-  const saveRecentAsFood = async (f: any) => {
+  const saveRecentAsFood = async (f: PageFoodItem) => {
     const q = f.quantity || 100;
     try {
       await api.post('/nutrition/my-foods', {
@@ -706,12 +710,12 @@ export default function MyFoodsPage() {
     }
   };
 
-  const isAlreadySaved = (productName: any) => {
+  const isAlreadySaved = (productName: string) => {
     const n = productName.toLowerCase().trim();
-    return savedFoods.some((s: any) => s.name.toLowerCase().trim() === n);
+    return savedFoods.some((s: PageFoodItem) => s.name.toLowerCase().trim() === n);
   };
 
-  const macroLine = (kcal: any, p: any, c: any, f: any) => (
+  const macroLine = (kcal: number, p: number, c: number, f: number) => (
     <span className="meal-subtotal-row" style={{ fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
       <span className="subtotal-val kcal">
         <strong style={{ color: 'var(--text-primary)' }}>{Math.round(kcal)}</strong> kcal
@@ -725,7 +729,7 @@ export default function MyFoodsPage() {
     </span>
   );
 
-  const itemStyle = (highlight: any) => ({
+  const itemStyle = (highlight: boolean) => ({
     padding: '0.5rem 0.7rem',
     background: highlight ? 'var(--bg-glass-strong)' : 'var(--bg-secondary)',
     borderRadius: '10px',
@@ -738,7 +742,7 @@ export default function MyFoodsPage() {
     transition: 'all 0.2s',
   });
 
-  const EditBtn = ({ onClick }: any) => (
+  const EditBtn = ({ onClick }: { onClick: () => void }) => (
     <button
       onClick={(e) => {
         e.stopPropagation();
@@ -1250,7 +1254,7 @@ export default function MyFoodsPage() {
                         gap: '0.5rem',
                       }}
                     >
-                      {filteredFoods.map((f: any) => (
+                      {filteredFoods.map((f: PageFoodItem) => (
                         <FoodCard
                           key={f.id}
                           food={f}
@@ -1284,7 +1288,7 @@ export default function MyFoodsPage() {
                         <div style={{ flex: 1, textAlign: 'right' }}>Gra</div>
                         <div style={{ width: '30px' }}></div>
                       </div>
-                      {filteredFoods.map((f: any) => (
+                      {filteredFoods.map((f: PageFoodItem) => (
                         <FoodCard
                           key={f.id}
                           food={f}
@@ -1358,7 +1362,7 @@ export default function MyFoodsPage() {
                     flex: 1,
                   }}
                 >
-                  {filteredRecent.map((f: any) => {
+                  {filteredRecent.map((f: PageFoodItem) => {
                     const qg = f.quantity || 100;
                     const k = Math.round((f.kcal / qg) * 100),
                       p = ((f.protein / qg) * 100).toFixed(1),
@@ -1532,7 +1536,7 @@ export default function MyFoodsPage() {
                       }
                       setIsRecipeFormOpen(!isRecipeFormOpen);
                     }}
-                    recipeForm={recipeForm as any}
+                    recipeForm={recipeForm as unknown as import("../components/my-foods/RecipeFormModal").RecipeForm}
                     updateRecipeForm={updateRecipeForm}
                     handleAddRecipe={handleAddRecipe}
                     editingRecipeId={editingRecipeId}
@@ -1552,7 +1556,7 @@ export default function MyFoodsPage() {
                   />
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
-                    {filteredRecipes.map((r: any) => (
+                    {filteredRecipes.map((r: import("../types/api").Recipe) => (
                       <RecipeCard key={r.id} recipe={r} onEdit={handleEditRecipe} />
                     ))}
                     {filteredRecipes.length === 0 && (
@@ -1585,7 +1589,7 @@ export default function MyFoodsPage() {
           setIsFoodFormOpen(false);
           setEditingFoodId(null);
         }}
-        foodForm={foodForm as any}
+        foodForm={foodForm as unknown as import("../components/my-foods/FoodFormModal").FoodFormState}
         updateFoodForm={updateFoodForm}
         handleAddSavedFood={handleAddSavedFood}
         editingFoodId={editingFoodId}
@@ -1859,7 +1863,7 @@ export default function MyFoodsPage() {
               <div>
                 <BarcodeScanner
                   onScanSuccess={handleScanBarcode}
-                  onScanError={(err: any) => console.error(err)}
+                  onScanError={(err: unknown) => console.error(err)}
                 />
               </div>
             )}

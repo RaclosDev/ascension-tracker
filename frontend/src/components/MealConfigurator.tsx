@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import { Meal } from '../types/api';
 
 import { Trash2 } from 'lucide-react';
 
@@ -12,8 +13,8 @@ const DEFAULT_MEALS = [
   { name: 'Snacks', icon: '', sortOrder: 3 },
 ];
 
-export default function MealConfigurator({ onSaved }: any) {
-  const [meals, setMeals] = useState<any[]>([]);
+export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) {
+  const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -26,7 +27,7 @@ export default function MealConfigurator({ onSaved }: any) {
     try {
       try {
         const res = await api.post('/nutrition/meals/reset');
-        const sorted = (res.data || []).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        const sorted = (res.data || []).sort((a: Meal, b: Meal) => (a.sortOrder || 0) - (b.sortOrder || 0));
         setMeals(sorted);
         toast.success('Comidas por defecto restablecidas (Desayuno, Comida, Cena, Snacks)');
         if (onSaved) onSaved();
@@ -37,7 +38,7 @@ export default function MealConfigurator({ onSaved }: any) {
           await api.post('/nutrition/meals', m);
         }
         const res = await api.get('/nutrition/meals');
-        const sorted = (res.data || []).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        const sorted = (res.data || []).sort((a: Meal, b: Meal) => (a.sortOrder || 0) - (b.sortOrder || 0));
         setMeals(sorted);
         toast.success('Comidas por defecto restablecidas');
         if (onSaved) onSaved();
@@ -58,7 +59,7 @@ export default function MealConfigurator({ onSaved }: any) {
         await handleResetDefaults();
         return;
       }
-      const sorted = res.data.sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
+      const sorted = res.data.sort((a: Meal, b: Meal) => (a.sortOrder || 0) - (b.sortOrder || 0));
       setMeals(sorted);
     } catch {
       toast.error('Error al cargar comidas');
@@ -67,7 +68,7 @@ export default function MealConfigurator({ onSaved }: any) {
     }
   };
 
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     const items = Array.from(meals);
     const [reorderedItem] = items.splice(result.source.index, 1);
@@ -106,7 +107,7 @@ export default function MealConfigurator({ onSaved }: any) {
     }
   };
 
-  const handleDeleteMeal = async (id: any) => {
+  const handleDeleteMeal = async (id: number) => {
     if (!window.confirm('¿Eliminar esta comida? Los registros de esta comida se perderán.')) return;
     setSaving(true);
     try {
@@ -120,9 +121,9 @@ export default function MealConfigurator({ onSaved }: any) {
     }
   };
 
-  const updateMeal = (index: any, field: any, value: any) => {
+  const updateMeal = (index: number, field: keyof Meal, value: string | number | null) => {
     const updated = [...meals];
-    updated[index] = { ...updated[index], [field]: value };
+    updated[index] = { ...updated[index], [field]: value } as Meal;
     setMeals(updated);
   };
 
@@ -139,7 +140,7 @@ export default function MealConfigurator({ onSaved }: any) {
               style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}
             >
               {meals.map((meal, index) => (
-                <Draggable key={meal.id.toString()} draggableId={meal.id.toString()} index={index}>
+                <Draggable key={(meal.id || index).toString()} draggableId={(meal.id || index).toString()} index={index}>
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
@@ -211,8 +212,10 @@ export default function MealConfigurator({ onSaved }: any) {
                             border: 'none',
                             color: '#ef4444',
                           }}
-                          onClick={() => handleDeleteMeal(meal.id)}
-                          disabled={saving}
+                          onClick={() => {
+                            if (meal.id) handleDeleteMeal(meal.id);
+                          }}
+                          disabled={saving || !meal.id}
                           title="Eliminar comida"
                         >
                           <Trash2 size={18} />

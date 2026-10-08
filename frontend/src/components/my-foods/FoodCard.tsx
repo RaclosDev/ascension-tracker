@@ -1,36 +1,24 @@
 import React from 'react';
 import { CheckCircle2, Circle, Edit3 } from 'lucide-react';
+import { SavedFood } from '../../types/api';
 
-interface FoodCardProps {
-  food: any;
-  isSelected: boolean;
-  onToggleSelect: (id: any) => void;
-  onEdit: (food: any) => void;
-  viewMode: string;
-  onDragStart: (e: React.DragEvent, data: any) => void;
+export interface DragFoodData {
+  name: string;
+  brand: string;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const macroLine = (kcal: number, p: number, c: number, f: number) => (
-  <span className="meal-subtotal-row" style={{ fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
-    <span className="subtotal-val kcal">
-      <strong style={{ color: 'var(--text-primary)' }}>{Math.round(kcal)}</strong> kcal
-    </span>
-    <span className="subtotal-dot" style={{ margin: '0 0.3rem', opacity: 0.5 }}>
-      •
-    </span>
-    <span className="subtotal-val">P: {Number(p).toFixed(1)}g</span>
-    <span className="subtotal-dot" style={{ margin: '0 0.3rem', opacity: 0.5 }}>
-      •
-    </span>
-    <span className="subtotal-val">C: {Number(c).toFixed(1)}g</span>
-    <span className="subtotal-dot" style={{ margin: '0 0.3rem', opacity: 0.5 }}>
-      •
-    </span>
-    <span className="subtotal-val">G: {Number(f).toFixed(1)}g</span>
-  </span>
-);
-
+interface FoodCardProps {
+  food: SavedFood;
+  isSelected: boolean;
+  onToggleSelect: (id: number) => void;
+  onEdit: (food: SavedFood) => void;
+  viewMode: string;
+  onDragStart: (e: React.DragEvent, data: DragFoodData) => void;
+}
 const itemStyle = (highlight: boolean) => ({
   padding: '0.5rem 0.7rem',
   background: highlight ? 'var(--bg-glass-strong)' : 'var(--bg-secondary)',
@@ -80,7 +68,7 @@ export default function FoodCard({
     return (
       <div
         draggable
-        onClick={() => onToggleSelect(food.id)}
+        onClick={() => { if (food.id) onToggleSelect(food.id) }}
         onDragStart={handleDrag}
         style={{
           ...itemStyle(isSelected),
@@ -133,9 +121,9 @@ export default function FoodCard({
             {Math.round(food.kcalPer100g)} kcal
           </span>
 
-          {(food.servingSize > 0 || food.brand) && <span style={{ opacity: 0.5 }}>•</span>}
+          {((food.servingSize && food.servingSize > 0) || food.brand) && <span style={{ opacity: 0.5 }}>•</span>}
 
-          {food.servingSize > 0 && (
+          {food.servingSize && food.servingSize > 0 && (
             <span
               style={{
                 background: 'var(--bg-primary)',
@@ -149,7 +137,7 @@ export default function FoodCard({
             </span>
           )}
 
-          {food.servingSize > 0 && food.brand && <span style={{ opacity: 0.5 }}>•</span>}
+          {food.servingSize && food.servingSize > 0 && food.brand && <span style={{ opacity: 0.5 }}>•</span>}
 
           {food.brand && (
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', opacity: 0.8 }}>
@@ -182,7 +170,7 @@ export default function FoodCard({
   return (
     <div
       draggable
-      onClick={() => onToggleSelect(food.id)}
+      onClick={() => { if (food.id) onToggleSelect(food.id) }}
       onDragStart={handleDrag}
       style={{
         display: 'flex',

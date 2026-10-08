@@ -1,4 +1,4 @@
-/// <reference lib="webworker" />
+﻿/// <reference lib="webworker" />
 import { precacheAndRoute, PrecacheEntry } from 'workbox-precaching';
 declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (PrecacheEntry | string)[] };
 
@@ -42,8 +42,8 @@ self.addEventListener('push', (event: PushEvent) => {
     if (event.data) {
       data = event.data.json();
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (_e) {
+
+  } catch {
     // fallback to defaults
   }
 

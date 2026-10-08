@@ -11,7 +11,6 @@ export default function CalculatorCard({ title, defaultOpen = false, children }:
 
   const toggle = () => setIsOpen(!isOpen);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();

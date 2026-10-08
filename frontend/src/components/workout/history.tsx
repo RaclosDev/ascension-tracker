@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React from 'react';
 import { Repeat2, Trash2, Edit3, Dumbbell } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -38,7 +38,7 @@ export function HistoryView() {
   const showRpe = settings?.showRpe ?? false;
   const customGifs = useWorkoutStore((s) => s.exerciseGifs);
   const catalog = getExerciseMap(customExercises);
-  const detail = history.find((w: any) => w.id === detailId) ?? null;
+  const detail = history.find((w: import('@/lib/workout/types').CompletedWorkout) => w.id === detailId) ?? null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -105,7 +105,7 @@ export function HistoryView() {
             listStyle: 'none',
           }}
         >
-          {history.map((w: any) => (
+          {history.map((w: import('@/lib/workout/types').CompletedWorkout) => (
             <HistoryItem
               key={w.id}
               w={w}
@@ -242,7 +242,7 @@ export function HistoryView() {
               }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {detail.exercises.map((ex: any) => {
+                {detail.exercises.map((ex: import('@/lib/workout/types').WorkoutExercise) => {
                   const meta = catalog.get(ex.exerciseId);
                   const isCardio = meta?.muscle === 'cardio';
                   return (
@@ -348,7 +348,7 @@ export function HistoryView() {
                           </tr>
                         </thead>
                         <tbody>
-                          {ex.sets.map((s: any, i: any) => {
+                          {ex.sets.map((s: import('@/lib/workout/types').WorkoutSet, i: number) => {
                             let normalCount = 0;
                             for (let j = 0; j < i; j++) {
                               if (ex.sets[j].type === 'normal') normalCount++;
@@ -521,8 +521,17 @@ const HistoryItem = React.memo(function HistoryItem({
   startFromHistory,
   deleteHistory,
   active,
-}: any) {
-  const names = w.exercises.map((e: any) => {
+}: {
+  w: import('@/lib/workout/types').CompletedWorkout;
+  catalog: Map<string, import('@/lib/workout/types').Exercise>;
+  customExercises: import('@/lib/workout/types').Exercise[];
+  setDetailId: (id: string | null) => void;
+  editWorkout: (w: import('@/lib/workout/types').CompletedWorkout) => void;
+  startFromHistory: (w: import('@/lib/workout/types').CompletedWorkout) => void;
+  deleteHistory: (id: string) => void;
+  active: import('@/lib/workout/types').ActiveWorkout | null;
+}) {
+  const names = w.exercises.map((e: import('@/lib/workout/types').WorkoutExercise) => {
     const base = catalog.get(e.exerciseId)?.name ?? 'Ejercicio';
     const v = formatVariant(e.variant);
     return v ? `${base} ${v}` : base;

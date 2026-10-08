@@ -1,17 +1,27 @@
-import { useState, useEffect, useRef } from 'react';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { useState, useEffect, useRef, ChangeEvent } from 'react';
+import { Html5Qrcode, Html5QrcodeResult, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import toast from 'react-hot-toast';
 
-export default function BarcodeScanner({ onScanSuccess, onScanError }: any) {
+interface CameraDevice {
+  id: string;
+  label: string;
+}
+
+interface BarcodeScannerProps {
+  onScanSuccess?: (decodedText: string, decodedResult?: Html5QrcodeResult) => void;
+  onScanError?: (errorMessage: string) => void;
+}
+
+export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [isStarting, setIsStarting] = useState(true);
-  const [cameraError, setCameraError] = useState<any>(null);
-  const [cameras, setCameras] = useState<any[]>([]);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [cameras, setCameras] = useState<CameraDevice[]>([]);
   const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
   const [scanningFile, setScanningFile] = useState(false);
 
-  const scannerRef = useRef<any>(null);
-  const fileInputRef = useRef<any>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const isMountedRef = useRef(true);
 
   // Inicializar escáner y arrancar cámara
@@ -72,13 +82,15 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: any) {
           setIsScanning(true);
           setIsStarting(false);
         }
-      } catch (err: any) {
+      } catch (err) {
         console.warn('No se pudo iniciar la cámara automáticamente:', err);
         if (isMountedRef.current) {
           setIsStarting(false);
           setIsScanning(false);
+          const errorMsg = err instanceof Error || err instanceof DOMException ? err.message : '';
+          const errorName = err instanceof Error || err instanceof DOMException ? err.name : '';
           setCameraError(
-            err?.name === 'NotAllowedError' || err?.message?.includes('Permission')
+            errorName === 'NotAllowedError' || errorMsg.includes('Permission')
               ? 'Permiso de cámara denegado. Puedes habilitarlo en los ajustes del navegador o subir una foto directamente.'
               : 'No se encontró una cámara activa o no se pudo iniciar.',
           );
@@ -124,7 +136,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: any) {
       try {
         await scannerRef.current.stop();
         setIsScanning(false);
-      } catch (e: any) {
+      } catch (e) {
         console.error('Error al detener cámara:', e);
       }
     } else {
@@ -142,7 +154,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: any) {
         await scannerRef.current.start(
           cameraId,
           config,
-          (decodedText: any, decodedResult: any) => {
+          (decodedText: string, decodedResult: Html5QrcodeResult) => {
             if (onScanSuccess) {
                
               try {
@@ -154,8 +166,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: any) {
           () => {},
         );
         setIsScanning(true);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err: any) {
+      } catch (err) {
         setCameraError('Error al encender la cámara. Revisa los permisos.');
       } finally {
         setIsStarting(false);
@@ -181,7 +192,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: any) {
       await scannerRef.current.start(
         cameras[nextIndex].id,
         config,
-        (decodedText: any, decodedResult: any) => {
+        (decodedText: string, decodedResult: Html5QrcodeResult) => {
           if (onScanSuccess) {
              
             try {
@@ -193,14 +204,14 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: any) {
         () => {},
       );
       setIsScanning(true);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error al cambiar cámara:', err);
     } finally {
       setIsStarting(false);
     }
   };
 
-  const handleFileScan = async (e: any) => {
+  const handleFileScan = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !scannerRef.current) return;
 
@@ -220,7 +231,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: any) {
         } catch {}
         onScanSuccess(decodedText);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.warn('Fallo al escanear archivo:', err);
       toast.error('No se detectó un código de barras claro en la foto. Intenta con otra imagen.', {
         duration: 4000,

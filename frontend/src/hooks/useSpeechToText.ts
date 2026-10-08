@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+﻿import { useState, useRef, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 
 /**
@@ -14,11 +14,45 @@ interface SpeechToTextOptions {
   lang?: string;
 }
 
+interface SpeechRecognitionResult {
+  [index: number]: { transcript: string };
+}
+
+interface SpeechRecognitionEvent {
+  results: {
+    length: number;
+    [index: number]: SpeechRecognitionResult;
+  };
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+}
+
+interface WindowWithSpeech extends Window {
+  SpeechRecognition?: new () => SpeechRecognition;
+  webkitSpeechRecognition?: new () => SpeechRecognition;
+}
+
 export function useSpeechToText({ onTranscript, lang = 'es-ES' }: SpeechToTextOptions = {}) {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
 
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const shouldListenRef = useRef(false);
   const baseTextRef = useRef('');
   const latestTranscriptRef = useRef('');
@@ -27,7 +61,7 @@ export function useSpeechToText({ onTranscript, lang = 'es-ES' }: SpeechToTextOp
 
   useEffect(() => {
     const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      (window as WindowWithSpeech).SpeechRecognition || (window as WindowWithSpeech).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setIsSupported(false);
     }
@@ -41,12 +75,12 @@ export function useSpeechToText({ onTranscript, lang = 'es-ES' }: SpeechToTextOp
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e: any) {
+
+      } catch {
         try {
           recognitionRef.current.abort();
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (_err) {
+
+        } catch {
           /* empty */
         }
       }
@@ -57,7 +91,7 @@ export function useSpeechToText({ onTranscript, lang = 'es-ES' }: SpeechToTextOp
   const startSession = useCallback(
     (currentText = '') => {
       const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        (window as WindowWithSpeech).SpeechRecognition || (window as WindowWithSpeech).webkitSpeechRecognition;
       if (!SpeechRecognition) {
         toast.error('Tu navegador no soporta reconocimiento de voz');
         return;
@@ -73,8 +107,8 @@ export function useSpeechToText({ onTranscript, lang = 'es-ES' }: SpeechToTextOp
           recognitionRef.current.onerror = null;
           recognitionRef.current.onresult = null;
           recognitionRef.current.abort();
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (_) {
+
+        } catch {
           /* empty */
         }
         recognitionRef.current = null;
@@ -98,7 +132,7 @@ export function useSpeechToText({ onTranscript, lang = 'es-ES' }: SpeechToTextOp
             setIsListening(true);
           };
 
-          recognition.onresult = (event: any) => {
+          recognition.onresult = (event: SpeechRecognitionEvent) => {
             let sessionSpeech = '';
             for (let i = 0; i < event.results.length; i++) {
               sessionSpeech += event.results[i][0].transcript;
@@ -116,7 +150,7 @@ export function useSpeechToText({ onTranscript, lang = 'es-ES' }: SpeechToTextOp
             }
           };
 
-          recognition.onerror = (event: any) => {
+          recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
             // 'no-speech' happens when user pauses while thinking; do not stop or show error
             if (event.error === 'no-speech') {
               return;
@@ -180,7 +214,7 @@ export function useSpeechToText({ onTranscript, lang = 'es-ES' }: SpeechToTextOp
 
           recognitionRef.current = recognition;
           recognition.start();
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error('SpeechRecognition start error:', err);
           isStartingRef.current = false;
           setIsListening(false);
@@ -212,8 +246,8 @@ export function useSpeechToText({ onTranscript, lang = 'es-ES' }: SpeechToTextOp
       if (recognitionRef.current) {
         try {
           recognitionRef.current.abort();
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (_) {
+
+        } catch {
           /* empty */
         }
       }

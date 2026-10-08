@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { lazy, Suspense, useEffect } from 'react';
 import { useWorkoutStore } from '../lib/workout/store';
 import { SegmentedControl } from '../components/ui/segmented-control';
@@ -22,18 +22,18 @@ const ExercisesView = lazy(() =>
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
-  { hasError: boolean; error: any; info: any }
+  { hasError: boolean; error: Error | null; info: React.ErrorInfo | null }
 > {
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false, error: null, info: null };
   }
 
-  static getDerivedStateFromError(error: any) {
+  static getDerivedStateFromError(error: Error) {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: any, info: any) {
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
     this.setState({ error, info });
   }
 

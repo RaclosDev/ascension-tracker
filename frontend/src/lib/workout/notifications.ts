@@ -1,4 +1,4 @@
-import api from '@/api/client';
+﻿import api from '@/api/client';
 //  Notifications module
 // Handles:
 // 1. Subscribing to Web Push (so the server can send background notifications)
@@ -25,8 +25,8 @@ export async function initAudioAndNotifications() {
     // Prevent pausing background music on iOS 16.4+
     if ('audioSession' in navigator) {
       try {
-        (navigator as any).audioSession.type = 'transient'; // Mixes with other audio and ducks it slightly
-      } catch (e: any) {
+        (navigator as unknown as { audioSession: { type: string } }).audioSession.type = 'transient'; // Mixes with other audio and ducks it slightly
+      } catch (e: unknown) {
         console.warn('audioSession no soportado', e);
       }
     }
@@ -53,7 +53,7 @@ export function playRestSound() {
   try {
     audio.currentTime = 0;
     audio.play().catch((e) => console.warn('Audio autoplay blocked', e));
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.warn('Error reproduciendo sonido', e);
   }
 }
@@ -71,7 +71,7 @@ export function notifyRestFinished() {
         icon: '/icon-192.png',
         vibrate: [200, 100, 200, 100, 200],
         tag: 'rest-finished',
-      } as any);
+      } as NotificationOptions);
     } catch {
       // On some devices, local Notification constructor fails; SW push will handle it
     }
@@ -106,7 +106,7 @@ async function subscribeToPush() {
 
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: applicationServerKey as any,
+        applicationServerKey: applicationServerKey as unknown as ArrayBuffer,
       });
     }
 
@@ -123,7 +123,7 @@ async function subscribeToPush() {
 
     pushSubscribed = true;
     console.info('Push subscription registered');
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.warn('Push subscription failed', e);
   }
 }
@@ -136,7 +136,7 @@ async function subscribeToPush() {
 export async function scheduleServerRestTimer(delaySec: number) {
   try {
     await api.post('/push/rest-timer', { delaySec });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.warn('Failed to schedule server rest timer', e);
   }
 }
@@ -147,7 +147,7 @@ export async function scheduleServerRestTimer(delaySec: number) {
 export async function cancelServerRestTimer() {
   try {
     await api.post('/push/rest-timer/cancel');
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.warn('Failed to cancel server rest timer', e);
   }
 }

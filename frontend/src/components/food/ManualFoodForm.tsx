@@ -4,6 +4,18 @@ import toast from 'react-hot-toast';
 
 const BASE_GRAMS = 100;
 
+interface ManualFoodFormProps {
+  manualForm: { name: string; brand: string; kcal: string; protein: string; carbs: string; fat: string };
+  updateManualForm: (field: string, value: string) => void;
+  quantity: number | string;
+  setQuantity: (qty: number) => void;
+  ocrLoading: boolean;
+  date?: string;
+  selectedMealIndex: number | string;
+  onLogAdded?: () => void;
+  onClose: () => void;
+}
+
 export default function ManualFoodForm({
   manualForm,
   updateManualForm,
@@ -14,8 +26,8 @@ export default function ManualFoodForm({
   selectedMealIndex,
   onLogAdded,
   onClose,
-}: any) {
-  const handleManualSubmit = async (e: any) => {
+}: ManualFoodFormProps) {
+  const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!manualForm.name.trim()) {
       toast.error('El nombre del alimento es obligatorio');
@@ -61,12 +73,14 @@ export default function ManualFoodForm({
         .catch(() => console.warn('Ya existía o error al guardar en mis alimentos'));
 
       toast.success('Alimento guardado y añadido a tus alimentos');
-      onLogAdded();
+      if (onLogAdded) onLogAdded();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       const errorMessage =
-        err.response?.data?.message || err.message || 'Error al guardar el alimento';
+        (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+        (err as Error).message ||
+        'Error al guardar el alimento';
       toast.error(errorMessage);
     }
   };

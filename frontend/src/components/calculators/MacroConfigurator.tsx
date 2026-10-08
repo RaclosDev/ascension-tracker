@@ -15,8 +15,8 @@ export interface MacroForm {
   customProteinPct: number | string;
   customFatPct: number | string;
   customCarbsPct: number | string;
-  startWeight: number | string;
-  goalWeight: number | string;
+  startWeight?: number | string;
+  goalWeight?: number | string;
   [key: string]: unknown;
 }
 

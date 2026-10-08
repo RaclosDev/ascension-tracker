@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+﻿
 import { getLocalDateString } from '../utils/dateHelper';
 import { DashboardData } from '../types/api';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -19,20 +19,53 @@ export default function UtilitiesPage() {
   };
   const [summary, setSummary] = useState<SummaryType | null>(null);
   const [loadingSummary, setLoadingSummary] = useState(true);
+  type SuggestedFood = {
+    foodId?: string;
+    foodName?: string;
+    product?: string;
+    description?: string;
+    quantity?: number;
+    unit?: string;
+    kcal?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+  };
+
+  type MealOption = {
+    id?: string;
+    mealIndex?: number;
+    title?: string;
+    mealName?: string;
+    description?: string;
+    summaryText?: string;
+    estimatedKcal?: number;
+    totalProtein?: number;
+    totalCarbs?: number;
+    totalFat?: number;
+    totalMacros?: {
+      kcal?: number;
+      protein?: number;
+      carbs?: number;
+      fat?: number;
+    };
+    tags?: string[];
+    suggestedFoods?: SuggestedFood[];
+  };
 
   type ChatMessage = {
     id: string;
     role: string;
     text: string;
-    mealOptions?: Record<string, unknown>[];
+    mealOptions?: MealOption[];
   };
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [userInput, setUserInput] = useState('');
   const [sending, setSending] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [applyingOptionKey, setApplyingOptionKey] = useState(null);
-  const [appliedOptionKeys, setAppliedOptionKeys] = useState(new Set());
+  const [applyingOptionKey, setApplyingOptionKey] = useState<string | null>(null);
+  const [appliedOptionKeys, setAppliedOptionKeys] = useState<Set<string>>(new Set());
   const [activeOptionIndices, setActiveOptionIndices] = useState<Record<string, number>>({});
 
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
@@ -45,7 +78,7 @@ export default function UtilitiesPage() {
 
   // Fetch Assistant Summary (Remaining Macros)
   const fetchSummary = useCallback(
-    async (date: React.MouseEvent | React.ChangeEvent<HTMLInputElement> | any) => {
+    async (date?: string | React.MouseEvent | React.ChangeEvent<HTMLInputElement>) => {
       setLoadingSummary(true);
       try {
         const res = await api.get(`/nutrition/ai/assistant-summary?date=${date}`);
@@ -92,8 +125,8 @@ export default function UtilitiesPage() {
   }, [chatMessages, sending]);
 
   // Send message to AI
-  const handleSendMessage = async (customPrompt?: any) => {
-    const promptToSend = (customPrompt || userInput).trim();
+  const handleSendMessage = async (customPrompt?: string | React.MouseEvent | React.FormEvent) => {
+    const promptToSend = (typeof customPrompt === "string" ? customPrompt : userInput).trim();
     if (!promptToSend && !selectedImage) return;
 
     stopListening();
@@ -116,7 +149,7 @@ export default function UtilitiesPage() {
         content: m.text,
       }));
 
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         message: promptToSend,
         date: todayStr,
         chatHistory: history,
@@ -156,7 +189,7 @@ export default function UtilitiesPage() {
 
       setChatMessages((prev) => [...prev, aiMsg]);
       // Default to option 0
-      setActiveOptionIndices((prev: any) => ({ ...prev, [aiMsgId]: 0 }));
+      setActiveOptionIndices((prev: Record<string, number>) => ({ ...prev, [aiMsgId]: 0 }));
     } catch (err: unknown) {
       const e = err as Error & { response?: { data?: { error?: string } } };
       console.error('AI Assistant Error:', e.response?.data?.error || e.message || err);
@@ -178,12 +211,12 @@ export default function UtilitiesPage() {
   };
 
   // Quick Prompt click
-  const handleQuickPrompt = (prompt: any) => {
+  const handleQuickPrompt = (prompt: string) => {
     handleSendMessage(prompt);
   };
 
   // Apply selected option to daily diary
-  const handleApplyOption = async (msgId: any, option: any, optionKey: any) => {
+  const handleApplyOption = async (msgId: string, option: MealOption, optionKey: string) => {
     if (!option || !option.suggestedFoods || option.suggestedFoods.length === 0) return;
     if (appliedOptionKeys.has(optionKey)) return;
 
@@ -198,7 +231,7 @@ export default function UtilitiesPage() {
 
       toast.success(`${option.title || 'Opcin'} aadida a tu diario de hoy! `);
 
-      setAppliedOptionKeys((prev: any) => new Set([...prev, optionKey]));
+      setAppliedOptionKeys(prev => new Set([...prev, optionKey]));
       // Refresh remaining macros
       fetchSummary(todayStr);
     } catch (err: Error | unknown) {
@@ -210,11 +243,11 @@ export default function UtilitiesPage() {
   };
 
   // Helper to format clean markdown (bold, bullet points)
-  const renderMarkdown = (text: any) => {
+  const renderMarkdown = (text: string) => {
     if (!text) return null;
     return text
       .split('\n')
-      .map((line: React.MouseEvent | React.ChangeEvent<HTMLInputElement> | any, idx: any) => {
+      .map((line: string, idx: number) => {
         const trimmed = line.trim();
         if (!trimmed) return <div key={idx} style={{ height: '0.4rem' }} />;
 
@@ -268,7 +301,7 @@ export default function UtilitiesPage() {
 
   const toggleSection = (
     key: keyof typeof openSections,
-    e: React.MouseEvent | React.ChangeEvent<HTMLInputElement> | any,
+    e: React.MouseEvent | React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (!openSections[key] && e?.currentTarget) {
       const el = e.currentTarget;
@@ -566,12 +599,12 @@ export default function UtilitiesPage() {
 
               {/* CHAT MESSAGES SCROLL */}
               <div className="chat-history-scroll">
-                {chatMessages.map((msg: any) => {
+                {chatMessages.map((msg: ChatMessage) => {
                   const isUser = msg.role === 'user';
-                  const hasOptions = Array.isArray(msg.mealOptions) && msg.mealOptions.length > 0;
+                  const hasOptions = Array.isArray(msg.mealOptions) && (msg.mealOptions?.length || 0) > 0;
                   const currentOptionIndex = activeOptionIndices[msg.id] || 0;
                   const activeOption = hasOptions
-                    ? msg.mealOptions[currentOptionIndex] || msg.mealOptions[0]
+                    ? (msg.mealOptions || [])[currentOptionIndex] || (msg.mealOptions || [])[0]
                     : null;
                   const activeOptionKey = activeOption
                     ? `${msg.id}-${activeOption.id || currentOptionIndex}`
@@ -596,9 +629,9 @@ export default function UtilitiesPage() {
                         {hasOptions && (
                           <div style={{ marginTop: '1rem' }}>
                             {/* Segmented Option Selector Bar */}
-                            {msg.mealOptions.length > 1 && (
+                            {(msg.mealOptions?.length || 0) > 1 && (
                               <div className="options-tabs-bar">
-                                {msg.mealOptions.map((opt: any, optIdx: any) => {
+                                {(msg.mealOptions || []).map((opt: MealOption, optIdx: number) => {
                                   const optKey = `${msg.id}-${opt.id || optIdx}`;
                                   const isApplied = appliedOptionKeys.has(optKey);
                                   const isActive = currentOptionIndex === optIdx;
@@ -608,13 +641,13 @@ export default function UtilitiesPage() {
                                       type="button"
                                       className={`opt-tab-btn ${isActive ? 'active' : ''}`}
                                       onClick={() =>
-                                        setActiveOptionIndices((prev: any) => ({
+                                        setActiveOptionIndices((prev: Record<string, number>) => ({
                                           ...prev,
                                           [msg.id]: optIdx,
                                         }))
                                       }
                                     >
-                                      <span>{opt.title || `Opcin ${optIdx + 1}`}</span>
+                                      <span>{opt.title || `Opcin ${optIdx}`}</span>
                                       {isApplied && (
                                         <span
                                           style={{
@@ -662,12 +695,12 @@ export default function UtilitiesPage() {
                                     gap: '0.45rem',
                                   }}
                                 >
-                                  {activeOption.suggestedFoods?.map((food: any, idx: any) => (
+                                  {(activeOption.suggestedFoods || []).map((food: SuggestedFood, idx: number) => (
                                     <div key={idx} className="meal-food-item">
                                       <div className="food-info-header">
                                         <span className="food-name">{food.product}</span>
                                         <span className="food-quantity-badge">
-                                          {Math.round(food.quantity)}g
+                                          {Math.round(food.quantity || 0)}g
                                         </span>
                                       </div>
                                       <div
@@ -681,7 +714,7 @@ export default function UtilitiesPage() {
                                       >
                                         <span>
                                           <strong style={{ color: '#FFFFFF' }}>
-                                            {Math.round(food.kcal)}
+                                            {Math.round(food.kcal || 0)}
                                           </strong>{' '}
                                           kcal
                                         </span>
@@ -765,7 +798,7 @@ export default function UtilitiesPage() {
                                       isOptionApplied || applyingOptionKey === activeOptionKey
                                     }
                                     onClick={() =>
-                                      handleApplyOption(msg.id, activeOption, activeOptionKey)
+                                      handleApplyOption(msg.id, activeOption, activeOptionKey as string)
                                     }
                                     style={{
                                       width: '100%',

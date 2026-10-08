@@ -53,7 +53,7 @@ export function importHevyCSV(
     skipEmptyLines: true,
     complete: (results) => {
       try {
-        const rows = results.data as any[];
+        const rows = results.data as unknown[];
 
         // Dictionaries to keep track of workouts and exercises
         const workoutsMap = new Map<string, CompletedWorkout>();
@@ -129,7 +129,8 @@ export function importHevyCSV(
           return newEx.id;
         };
 
-        for (const row of rows) {
+        for (const r of rows) {
+          const row = r as Record<string, string>;
           const workoutKey = `${row.title}_${row.start_time}`;
 
           if (!workoutsMap.has(workoutKey)) {
@@ -180,8 +181,8 @@ export function importHevyCSV(
 
         const workoutsList = Array.from(workoutsMap.values());
         onComplete(workoutsList, newCustomExercises);
-      } catch (err: any) {
-        onError(err);
+      } catch (err: unknown) {
+        onError(err instanceof Error ? err : new Error(String(err)));
       }
     },
     error: (error) => {

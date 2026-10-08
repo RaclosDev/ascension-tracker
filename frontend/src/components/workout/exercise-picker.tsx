@@ -153,7 +153,7 @@ export function ExercisePicker() {
       }
     }
     return Array.from(l.values())
-      .sort((a: any, b: any) => b.timestamp - a.timestamp)
+      .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 8);
   }, [history, alreadyStrs, customExercises, aliases, hiddenEquipments]);
 
@@ -162,10 +162,10 @@ export function ExercisePicker() {
       tab === 'base' ? BASE_EXERCISES : tab === 'custom' ? customExercises : EXERCISE_CATALOG;
     const q = normalizeString(query.trim());
     const filtered = all
-      .filter((ex: any) => !hiddenEquipments.includes(ex.equipment))
-      .filter((ex: any) => filterMuscle === 'ALL' || ex.muscle === filterMuscle)
-      .filter((ex: any) => filterEquip === 'ALL' || ex.equipment === filterEquip)
-      .filter((ex: any) => {
+      .filter((ex: import('@/lib/workout/types').Exercise) => !hiddenEquipments.includes(ex.equipment))
+      .filter((ex: import('@/lib/workout/types').Exercise) => filterMuscle === 'ALL' || ex.muscle === filterMuscle)
+      .filter((ex: import('@/lib/workout/types').Exercise) => filterEquip === 'ALL' || ex.equipment === filterEquip)
+      .filter((ex: import('@/lib/workout/types').Exercise) => {
         if (!q) return true;
         const queryWords = q.split(/\s+/);
         const targetName = normalizeString(aliases[ex.id] || ex.name);
@@ -175,7 +175,7 @@ export function ExercisePicker() {
         const originalName = normalizeString(ex.name);
 
         return queryWords.every(
-          (w: any) =>
+          (w: string) =>
             targetName.includes(w) ||
             originalName.includes(w) ||
             muscleName.includes(w) ||
@@ -195,7 +195,7 @@ export function ExercisePicker() {
       groups.get(baseName)!.push(ex);
     }
 
-    return Array.from(groups.values()).sort((a: any, b: any) => {
+    return Array.from(groups.values()).sort((a: import('@/lib/workout/types').Exercise[], b: import('@/lib/workout/types').Exercise[]) => {
       const nameA = aliases[a[0].id] || a[0].name;
       const nameB = aliases[b[0].id] || b[0].name;
       return nameA.localeCompare(nameB);
@@ -415,7 +415,7 @@ export function ExercisePicker() {
                   <div key={group[0].id + '_group'}>
                     {isGroup && <div className="picker-group-header">{baseName}</div>}
                     <div style={{ paddingLeft: isGroup ? '0.25rem' : '0' }}>
-                      {group.map((ex: any) => {
+                      {group.map((ex: import('@/lib/workout/types').Exercise) => {
                         const dName = aliases[ex.id] || ex.name;
                         const shortName = isGroup
                           ? dName.replace(/^[^(]*\(\s*/, '').replace(/\)\s*$/, '')

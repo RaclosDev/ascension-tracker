@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+﻿
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
@@ -32,10 +32,12 @@ export interface SettingsForm {
   startWeight?: string | number;
   goalWeight?: string | number;
   weeklyGoal?: string | number;
+  currentWeight?: number;
+  [key: string]: unknown;
 }
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<any>(null);
+  const [settings, setSettings] = useState<SettingsForm | null>(null);
   const [form, setForm] = useState<SettingsForm>({
     startDate: '',
     macroStrategy: 'BALANCED',
@@ -59,11 +61,11 @@ export default function SettingsPage() {
     isLoading: loading,
     isError,
     refetch: refetchSettings,
-  } = useQuery<any, any>({
+  } = useQuery<Partial<SettingsForm>, Error>({
     queryKey: ['settings'],
     queryFn: () => api.get('/settings').then((res) => res.data),
   });
-  const [openSections, setOpenSections] = useState<any>({
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     personal: false,
     plan: false,
     macros: false,
@@ -79,7 +81,7 @@ export default function SettingsPage() {
   const hiddenEquipments = useWorkoutStore((s) => s.hiddenEquipments) || [];
   const toggleHiddenEquipment = useWorkoutStore((s) => s.toggleHiddenEquipment);
   const { logout } = useAuth();
-  const { data: dashboard } = useQuery<any, any>({
+  const { data: dashboard } = useQuery<{ currentWeight?: number }, Error>({
     queryKey: ['dashboard'],
     queryFn: () => api.get('/weights/dashboard').then((res) => res.data),
   });
@@ -88,7 +90,7 @@ export default function SettingsPage() {
     try {
       const weights = await api.get('/weights').then((res) => res.data);
       let csvContent = 'data:text/csv;charset=utf-8,Date,Weight\n';
-      weights.forEach((row: any) => {
+      weights.forEach((row: { date: string; weight: number }) => {
         csvContent += `${row.date},${row.weight}\n`;
       });
       const encodedUri = encodeURI(csvContent);
@@ -102,7 +104,7 @@ export default function SettingsPage() {
       link.click();
       document.body.removeChild(link);
       toast.success('Datos exportados con éxito');
-    } catch (e: any) {
+    } catch {
       toast.error('Error al exportar datos');
     }
   };
@@ -117,7 +119,7 @@ export default function SettingsPage() {
   };
   useEffect(() => {
     if (location.hash === '#meals') {
-      setOpenSections((prev: any) => ({ ...prev, meals: true }));
+      setOpenSections((prev: Record<string, boolean>) => ({ ...prev, meals: true }));
       setTimeout(() => {
         const el = document.getElementById('meals-section');
         if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -125,7 +127,7 @@ export default function SettingsPage() {
     }
   }, [location.hash]);
 
-  const toggleSection = (key: any, e: any) => {
+  const toggleSection = (key: string, e: React.MouseEvent<HTMLDivElement>) => {
     if (!openSections[key] && e?.currentTarget) {
       const el = e.currentTarget;
       setTimeout(() => {
@@ -137,14 +139,15 @@ export default function SettingsPage() {
         window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
       }, 50);
     }
-    setOpenSections((prev: any) => ({ ...prev, [key]: !prev[key] }));
+    setOpenSections((prev: Record<string, boolean>) => ({ ...prev, [key]: !prev[key] }));
   };
 
   useEffect(() => {
     if (querySettings) {
-      setSettings(querySettings);
+      setSettings(querySettings as SettingsForm);
       setForm({
         ...querySettings,
+        startDate: querySettings.startDate || '',
         macroStrategy: querySettings.macroStrategy || 'BALANCED',
         customProteinPct: querySettings.customProteinPct || 30,
         customFatPct: querySettings.customFatPct || 35,
@@ -161,7 +164,7 @@ export default function SettingsPage() {
     }
   }, [querySettings]);
 
-  const parseSafeFloat = (val: any, fallback = 0) => {
+  const parseSafeFloat = (val: string | number | null | undefined, fallback: number = 0) => {
     if (val === null || val === undefined || val === '') return fallback;
     const normalized = String(val).replace(',', '.').trim();
     const parsed = parseFloat(normalized);
@@ -171,9 +174,9 @@ export default function SettingsPage() {
   const handleSavePersonal = async () => {
     try {
       await api.put('/settings', {
-        startWeight: parseSafeFloat(form.startWeight, settings?.startWeight || 0.0),
-        goalWeight: parseSafeFloat(form.goalWeight, settings?.goalWeight || 0.0),
-        weeklyGoal: parseSafeFloat(form.weeklyGoal, settings?.weeklyGoal || 0.0),
+        startWeight: parseSafeFloat(form.startWeight, Number(settings?.startWeight || 0)),
+        goalWeight: parseSafeFloat(form.goalWeight, Number(settings?.goalWeight || 0)),
+        weeklyGoal: parseSafeFloat(form.weeklyGoal, Number(settings?.weeklyGoal || 0)),
         startDate: form.startDate || settings?.startDate || '',
         age: form.age ? parseInt(String(form.age), 10) : null,
         heightCm: form.heightCm ? parseInt(String(form.heightCm), 10) : null,
@@ -183,9 +186,9 @@ export default function SettingsPage() {
       toast.success('Datos personales guardados');
       refetchSettings();
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error al guardar datos personales:', err);
-      const msg = err.response?.data?.message || err.response?.data?.error || err.message;
+      const e = err as { response?: { data?: { message?: string, error?: string } }, message?: string }; const msg = e.response?.data?.message || e.response?.data?.error || e.message;
       toast.error(msg ? `Error al guardar: ${msg}` : 'Error al guardar datos personales');
     }
   };
@@ -214,9 +217,9 @@ export default function SettingsPage() {
       }
 
       await api.put('/settings', {
-        startWeight: parseSafeFloat(form.startWeight, settings?.startWeight || 0.0),
-        goalWeight: parseSafeFloat(form.goalWeight, settings?.goalWeight || 0.0),
-        weeklyGoal: parseSafeFloat(form.weeklyGoal, settings?.weeklyGoal || 0.0),
+        startWeight: parseSafeFloat(form.startWeight, Number(settings?.startWeight || 0)),
+        goalWeight: parseSafeFloat(form.goalWeight, Number(settings?.goalWeight || 0)),
+        weeklyGoal: parseSafeFloat(form.weeklyGoal, Number(settings?.weeklyGoal || 0)),
         startDate: form.startDate || settings?.startDate || '',
         macroStrategy: strategy,
         kcal: payloadKcal,
@@ -230,7 +233,7 @@ export default function SettingsPage() {
       toast.success('¡Objetivos de macros guardados!');
       refetchSettings();
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error al guardar macros:', err);
       toast.error('Error al guardar objetivos');
     }
@@ -467,8 +470,8 @@ export default function SettingsPage() {
           {openSections.macros && (
             <div className="accordion-content fade-in mt-5 pt-5 border-t border-white/10">
               <MacroConfigurator
-                form={form as any}
-                setForm={setForm as any}
+                form={form}
+                setForm={setForm as unknown as React.Dispatch<React.SetStateAction<import("../components/calculators/MacroConfigurator").MacroForm>>}
                 initialStartWeight={dashboard?.currentWeight || settings?.startWeight}
               />
               <button

@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useState, useEffect } from 'react';
 import FoodSearchModal from '../FoodSearchModal';
 import { Plus, Trash2 } from 'lucide-react';
@@ -12,11 +11,20 @@ interface RecipeForm {
   kcal: string;
 }
 
+export interface RecipeIngredient {
+  product: string;
+  quantity: number;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
 interface RecipeFormModalProps {
   isOpen: boolean;
   onToggle: () => void;
   recipeForm: RecipeForm;
-  updateRecipeForm: (field: any, value?: any) => void;
+  updateRecipeForm: (field: keyof RecipeForm | Partial<RecipeForm>, value?: string | null) => void;
   handleAddRecipe: (e: React.FormEvent) => void;
   editingRecipeId: number | string | null;
   onCancelEdit: () => void;
@@ -34,7 +42,7 @@ export default function RecipeFormModal({
   handleDeleteRecipe,
 }: RecipeFormModalProps) {
   const [searchOpen, setSearchOpen] = useState(false);
-  const [ingredients, setIngredients] = useState<any[]>([]);
+  const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
 
   // Try to parse ingredients from description if we are editing
   useEffect(() => {
@@ -46,7 +54,7 @@ export default function RecipeFormModal({
         } else {
           setIngredients([]);
         }
-      } catch (e: any) {
+      } catch {
         setIngredients([]);
       }
     } else if (!isOpen) {
@@ -94,16 +102,16 @@ export default function RecipeFormModal({
     }
   }, [ingredients]);
 
-  const addIngredient = (food: any) => {
+  const addIngredient = (food: Partial<RecipeIngredient>) => {
     setIngredients([
       ...ingredients,
       {
-        product: food.product,
-        quantity: food.quantity,
-        kcal: food.kcal,
-        protein: food.protein,
-        carbs: food.carbs,
-        fat: food.fat,
+        product: food.product || '',
+        quantity: food.quantity || 100,
+        kcal: food.kcal || 0,
+        protein: food.protein || 0,
+        carbs: food.carbs || 0,
+        fat: food.fat || 0,
       },
     ]);
   };

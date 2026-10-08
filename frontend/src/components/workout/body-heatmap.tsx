@@ -41,7 +41,7 @@ export function BodyHeatmap({
     const now = Date.now();
     const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
     const recentWorkouts =
-      history.length === 1 ? history : history.filter((w: any) => now - w.finishedAt <= oneWeekMs);
+      history.length === 1 ? history : history.filter((w: CompletedWorkout) => now - w.finishedAt <= oneWeekMs);
 
     const data: IExerciseData[] = [];
 
