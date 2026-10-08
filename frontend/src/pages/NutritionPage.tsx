@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { MealIcon } from '../components/MealIcon';
+import { FoodLog, Macros, Meal, UserSettings } from '../types/api';
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 const MyFoodsPage = lazy(() => import('./MyFoodsPage'));
@@ -16,7 +16,14 @@ import { Skeleton } from '../components/ui/skeleton';
 import { SwipeableRow } from '../components/SwipeableRow';
 import MacroSummaryHeader from '../components/nutrition/MacroSummaryHeader';
 
-const getBasePortion = (portionsJson: any) => {
+interface EditingLog extends FoodLog {
+  _kcalPer100: number;
+  _protPer100: number;
+  _carbsPer100: number;
+  _fatPer100: number;
+}
+
+const getBasePortion = (portionsJson: string | null) => {
   if (!portionsJson) return null;
   try {
     const portions = JSON.parse(portionsJson);
@@ -24,7 +31,7 @@ const getBasePortion = (portionsJson: any) => {
     const base = portions.find((p) => typeof p.label === 'string' && p.label.startsWith('1 '));
     if (base) return { label: base.label.replace(/^1\s+/, ''), amount: base.amount };
     return { label: portions[0].label, amount: portions[0].amount };
-  } catch (e: any) {
+  } catch (e: unknown) {
     return null;
   }
 };
@@ -36,11 +43,11 @@ export default function NutritionPage() {
   const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [selectedMealIndex, setSelectedMealIndex] = useState(0);
-  const [editingLog, setEditingLog] = useState<any>(null);
+  const [editingLog, setEditingLog] = useState<EditingLog | null>(null);
   const [editInputMode, setEditInputMode] = useState<'grams' | 'portions'>('grams'); // { id, product, quantity, kcal, protein, carbs, fat }
 
-  const [collapsedMeals, setCollapsedMeals] = useState<any>({});
-  const [dragOverMealIndex, setDragOverMealIndex] = useState<any>(null);
+  const [collapsedMeals, setCollapsedMeals] = useState<Record<number, boolean>>({});
+  const [dragOverMealIndex, setDragOverMealIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'diary' | 'foods'>('diary');
   const [showChart, setShowChart] = useState(false);
 
@@ -49,16 +56,16 @@ export default function NutritionPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  const touchStartRef = useRef<any>(null);
-  const touchEndRef = useRef<any>(null);
+  const touchStartRef = useRef<number | null>(null);
+  const touchEndRef = useRef<number | null>(null);
   const minSwipeDistance = 50;
 
-  const onTouchStart = (e: any) => {
+  const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     touchEndRef.current = null;
     touchStartRef.current = e.targetTouches[0].clientX;
   };
 
-  const onTouchMove = (e: any) => {
+  const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     touchEndRef.current = e.targetTouches[0].clientX;
   };
 
@@ -75,8 +82,8 @@ export default function NutritionPage() {
     touchEndRef.current = null;
   };
 
-  const toggleMealCollapse = (index: any, e: any) => {
-    setCollapsedMeals((prev: any) => {
+  const toggleMealCollapse = (index: number, e?: React.MouseEvent | React.KeyboardEvent) => {
+    setCollapsedMeals((prev: Record<number, boolean>) => {
       const isCurrentlyCollapsed = prev[index] !== false; // default true if undefined
       return {
         ...prev,
@@ -102,7 +109,7 @@ export default function NutritionPage() {
     }
   };
 
-  const handleDragStart = (e: any, log: any) => {
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, log: FoodLog) => {
     e.dataTransfer.setData(
       'application/json',
       JSON.stringify({ ...log, sourceMealIndex: log.mealIndex }),
@@ -111,7 +118,7 @@ export default function NutritionPage() {
   };
 
   let scrollRAF: number | null = null;
-  const handleDrag = (e: any) => {
+  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
     if (e.clientY === 0) return;
     if (!scrollRAF) {
       scrollRAF = requestAnimationFrame(() => {
@@ -129,7 +136,7 @@ export default function NutritionPage() {
     }
   };
 
-  const handleDragOver = (e: any, index: any) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     setDragOverMealIndex(index);
@@ -139,7 +146,7 @@ export default function NutritionPage() {
     setDragOverMealIndex(null);
   };
 
-  const handleDropOnMeal = async (e: any, targetMealIndex: any) => {
+  const handleDropOnMeal = async (e: React.DragEvent<HTMLDivElement>, targetMealIndex: number) => {
     e.preventDefault();
     setDragOverMealIndex(null);
     try {
@@ -166,13 +173,13 @@ export default function NutritionPage() {
     }
   };
 
-  const handleCopyFromYesterday = async (e: any, mealIndex: any) => {
+  const handleCopyFromYesterday = async (e: React.MouseEvent<HTMLButtonElement>, mealIndex: number) => {
     e.stopPropagation();
     const loadingToast = toast.loading('Copiando de ayer...');
     try {
       const yesterday = addDaysToDateString(selectedDate, -1);
       const res = await api.get(`/nutrition/logs?date=${yesterday}`);
-      const logsToCopy = res.data.filter((log: any) => log.mealIndex === mealIndex);
+      const logsToCopy = res.data.filter((log: FoodLog) => log.mealIndex === mealIndex);
 
       if (logsToCopy.length === 0) {
         toast.dismiss(loadingToast);
@@ -201,7 +208,7 @@ export default function NutritionPage() {
       queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
       toast.dismiss(loadingToast);
       toast.success('¡Comida copiada!');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       toast.dismiss(loadingToast);
       toast.error('Error al copiar la comida');
@@ -209,10 +216,10 @@ export default function NutritionPage() {
   };
 
   const {
-    data = {},
+    data,
     isLoading: loading,
     refetch: fetchData,
-  } = useQuery<any, any>({
+  } = useQuery<{ foodLogs: FoodLog[], macros: Macros, meals: Meal[], settings: UserSettings }>({
     queryKey: ['nutritionData', selectedDate],
     queryFn: async () => {
       const [macrosRes, mealsRes, settingsRes, logsRes] = await Promise.all([
@@ -232,19 +239,19 @@ export default function NutritionPage() {
     placeholderData: keepPreviousData,
   });
 
-  const { foodLogs = [], macros, meals = [], settings } = data as any;
+  const { foodLogs = [], macros = null, meals = [], settings = null } = data || {};
 
   useEffect(() => {
     if (meals.length > 0) {
-      const newCollapsed: any = {};
-      meals.forEach((_: any, i: any) => {
+      const newCollapsed: Record<number, boolean> = {};
+      meals.forEach((_: Meal, i: number) => {
         newCollapsed[i] = true;
       });
       setCollapsedMeals(newCollapsed);
     }
   }, [meals.length]); // Only run when meals array length changes, indicating load
 
-  const deleteLogMutation = useMutation({
+  const deleteLogMutation = useMutation<any, Error, number | string>({
     mutationFn: (id) => api.delete(`/nutrition/logs/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
@@ -257,18 +264,18 @@ export default function NutritionPage() {
     },
   });
 
-  const handleDeleteLog = (id: any) => {
+  const handleDeleteLog = (id: number | string) => {
     deleteLogMutation.mutate(id);
   };
 
-  const handleEditLog = (log: any) => {
+  const handleEditLog = (log: FoodLog) => {
     let hasPortions = false;
     try {
       if (log.portionsJson) {
         const p = JSON.parse(log.portionsJson);
         hasPortions = p && p.length > 0;
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
     }
     setEditInputMode(hasPortions ? 'portions' : 'grams');
@@ -291,20 +298,20 @@ export default function NutritionPage() {
     });
   };
 
-  const handleEditQuantityChange = (newQty: any) => {
-    const q = parseFloat(newQty) || 0;
-    setEditingLog((prev: any) => ({
+  const handleEditQuantityChange = (newQty: number | string) => {
+    const q = typeof newQty === 'string' ? parseFloat(newQty) || 0 : newQty;
+    setEditingLog((prev: EditingLog | null) => (prev ? {
       ...prev,
       quantity: q,
       kcal: Math.round(((prev._kcalPer100 * q) / 100) * 10) / 10,
       protein: Math.round(((prev._protPer100 * q) / 100) * 10) / 10,
       carbs: Math.round(((prev._carbsPer100 * q) / 100) * 10) / 10,
       fat: Math.round(((prev._fatPer100 * q) / 100) * 10) / 10,
-    }));
+    } : prev));
   };
 
   const updateLogMutation = useMutation({
-    mutationFn: (data: any) => api.put(`/nutrition/logs/${data.id}`, data),
+    mutationFn: (data: Partial<FoodLog>) => api.put(`/nutrition/logs/${data.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
@@ -335,7 +342,7 @@ export default function NutritionPage() {
 
   const consumed = useMemo(() => {
     return (foodLogs || []).reduce(
-      (acc: any, log: any) => ({
+      (acc: Macros, log: FoodLog) => ({
         kcal: acc.kcal + (Number(log.kcal) || 0),
         protein: acc.protein + (Number(log.protein) || 0),
         carbs: acc.carbs + (Number(log.carbs) || 0),
@@ -528,11 +535,11 @@ export default function NutritionPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
             {/* Daily Food Logs */}
             <div className="nutrition-meals-grid">
-              {meals.map((meal: any, index: any) => {
-                const logs = foodLogs.filter((log: any) => log.mealIndex === index);
+              {meals.map((meal: Meal, index: number) => {
+                const logs = foodLogs.filter((log: FoodLog) => log.mealIndex === index);
 
                 const mealSubtotal = logs.reduce(
-                  (acc: any, log: any) => ({
+                  (acc: Macros, log: FoodLog) => ({
                     kcal: acc.kcal + (Number(log.kcal) || 0),
                     protein: acc.protein + (Number(log.protein) || 0),
                     carbs: acc.carbs + (Number(log.carbs) || 0),
@@ -563,7 +570,7 @@ export default function NutritionPage() {
                     <div
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMealCollapse(index, e as any); } }}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMealCollapse(index, e); } }}
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -657,7 +664,7 @@ export default function NutritionPage() {
                               Sin registrar
                             </div>
                           ) : (
-                            logs.map((log: any) => (
+                            logs.map((log: FoodLog) => (
                               <div
                                 key={log.id}
                                 draggable
@@ -692,7 +699,7 @@ export default function NutritionPage() {
                                       <span>{editingLog.product}</span>
                                     </div>
                                     {(() => {
-                                      const basePortion = getBasePortion(editingLog.portionsJson);
+                                      const basePortion = getBasePortion(editingLog.portionsJson || null);
                                       const hasPortions = !!basePortion;
                                       const multiplier =
                                         hasPortions && editingLog.quantity
@@ -884,7 +891,7 @@ export default function NutritionPage() {
                                   /* VIEW MODE */
                                   <SwipeableRow
                                     onEdit={() => handleEditLog(log)}
-                                    onDelete={() => handleDeleteLog(log.id)}
+                                    onDelete={() => log.id !== undefined && handleDeleteLog(log.id)}
                                   >
                                     <div
                                       style={{
@@ -911,7 +918,7 @@ export default function NutritionPage() {
                                             }}
                                           >
                                             {(() => {
-                                              const basePortion = getBasePortion(log.portionsJson);
+                                              const basePortion = getBasePortion(log.portionsJson || null);
                                               if (basePortion) {
                                                 const count = Number(
                                                   (log.quantity / basePortion.amount).toFixed(1),
@@ -982,7 +989,7 @@ export default function NutritionPage() {
                           borderRadius: 8,
                         }}
                         formatter={(value, name) => {
-                          const total = pieData.reduce((a: any, b: any) => a + b.value, 0);
+                          const total = pieData.reduce((a: number, b: { value: number }) => a + b.value, 0);
                           return [
                             `${Number(value).toFixed(0)} kcal (${((Number(value) / total) * 100).toFixed(1)}%)`,
                             name,

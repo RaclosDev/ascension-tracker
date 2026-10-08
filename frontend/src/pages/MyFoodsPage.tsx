@@ -1,4 +1,4 @@
-﻿
+
 import { useState, useEffect, useRef } from 'react';
 import {
   LayoutGrid,
@@ -126,21 +126,21 @@ export default function MyFoodsPage() {
   const [viewMode, setViewMode] = useState('grid');
   const [macroFilter, setMacroFilter] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
-  const [selectedFoods, setSelectedFoods] = useState<Set<string>>(new Set());
+  const [selectedFoods, setSelectedFoods] = useState<Set<number>>(new Set());
 
   // Meal Selector States
   const [isMealSelectorOpen, setIsMealSelectorOpen] = useState(false);
   const [mealSelectorDate, setMealSelectorDate] = useState(getLocalISODate());
-  const [bulkQuantities, setBulkQuantities] = useState<Record<string, number>>({});
+  const [bulkQuantities, setBulkQuantities] = useState<Record<number, number>>({});
   const [isAddingToMeal, setIsAddingToMeal] = useState(false);
 
   useEffect(() => {
     if (isMealSelectorOpen) {
       const initial: Record<string, number> = {};
       Array.from(selectedFoods).forEach((id) => {
-        const food = savedFoods.find((f: PageFoodItem) => f.id === id);
+        const food = savedFoods.find((f: PageFoodItem) => f.id === (id as any));
         if (food) {
-          initial[id] = food.servingSize > 0 ? food.servingSize : 100;
+          initial[id] = (food.servingSize || 0) > 0 ? (food.servingSize || 100) : 100;
         }
       });
       setBulkQuantities(initial);
@@ -151,7 +151,20 @@ export default function MyFoodsPage() {
   // Scanner State
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isLookingUpCode, setIsLookingUpCode] = useState(false);
-  const [scannedProduct, setScannedProduct] = useState<PageFoodItem | null>(null);
+  type ScannedProductType = {
+    name: string;
+    brand?: string;
+    kcal: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    servingSize?: number | null;
+    servingLabel?: string | null;
+    imageUrl?: string;
+    barcode?: string;
+  };
+
+  const [scannedProduct, setScannedProduct] = useState<ScannedProductType | null>(null);
   const [lookupError, setLookupError] = useState<string | null>(null);
 
   const [expandedSections, setExpandedSections] = useState({
@@ -189,8 +202,8 @@ export default function MyFoodsPage() {
     .sort((a: PageFoodItem, b: PageFoodItem) => {
       if (sortBy === 'name_asc') return (a.name || '').localeCompare(b.name || '');
       if (sortBy === 'recent') {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        const dateA = (a as any).createdAt ? new Date((a as any).createdAt).getTime() : 0;
+        const dateB = (b as any).createdAt ? new Date((b as any).createdAt).getTime() : 0;
         if (dateA !== dateB) return dateB - dateA;
         if (a.id && b.id) {
           if (typeof a.id === 'number' && typeof b.id === 'number') return b.id - a.id;
@@ -249,17 +262,17 @@ export default function MyFoodsPage() {
     setRecipeForm((prev) => {
       let newForm = { ...prev };
       if (typeof field === 'object' && field !== null) {
-        newForm = { ...newForm, ...field };
+        newForm = { ...newForm, ...(field as any) };
       } else {
-        newForm[field as keyof typeof newForm] = value;
+        (newForm as any)[field] = value;
       }
 
       const p = parseFloat(newForm.protein) || 0;
       const c = parseFloat(newForm.carbs) || 0;
       const f = parseFloat(newForm.fat) || 0;
 
-      if (typeof field === 'object' && field.kcal !== undefined) {
-        newForm.kcal = field.kcal;
+      if (typeof field === 'object' && (field as any).kcal !== undefined) {
+        newForm.kcal = (field as any).kcal;
       } else if (typeof field === 'object' || ['protein', 'carbs', 'fat'].includes(field)) {
         const hasAny = [newForm.protein, newForm.carbs, newForm.fat].some(
           (v: unknown) => v !== '' && v !== null && v !== undefined,
@@ -291,7 +304,7 @@ export default function MyFoodsPage() {
         fetchData();
       })
       .catch((err: unknown) => {
-        toast.error(`Error: ${err.response?.data?.error || 'IA'}`);
+        toast.error(`Error: ${(err as any).response?.data?.error || 'IA'}`);
       })
       .finally(() => {
         setPendingAiCount((prev) => Math.max(0, prev - 1));
@@ -343,14 +356,14 @@ export default function MyFoodsPage() {
     setFoodForm({
       name: food.name || '',
       brand: food.brand || '',
-      kcal: toFormVal(food.kcalPer100g),
-      protein: toFormVal(food.proteinPer100g),
-      carbs: toFormVal(food.carbsPer100g),
-      fat: toFormVal(food.fatPer100g),
-      servingSize: toFormVal(food.servingSize),
+      kcal: String(toFormVal(food.kcalPer100g)),
+      protein: String(toFormVal(food.proteinPer100g)),
+      carbs: String(toFormVal(food.carbsPer100g)),
+      fat: String(toFormVal(food.fatPer100g)),
+      servingSize: String(toFormVal(food.servingSize)),
       servingLabel: food.servingLabel || '',
     });
-    setEditingFoodId(food.id);
+    setEditingFoodId(food.id as any);
     setIsFoodFormOpen(true);
   };
 
@@ -385,12 +398,12 @@ export default function MyFoodsPage() {
     setRecipeForm({
       name: recipe.name || '',
       description: recipe.description || '',
-      kcal: toFormVal(recipe.totalKcal),
-      protein: toFormVal(recipe.totalProtein),
-      carbs: toFormVal(recipe.totalCarbs),
-      fat: toFormVal(recipe.totalFat),
+      kcal: String(toFormVal(recipe.totalKcal)),
+      protein: String(toFormVal(recipe.totalProtein)),
+      carbs: String(toFormVal(recipe.totalCarbs)),
+      fat: String(toFormVal(recipe.totalFat)),
     });
-    setEditingRecipeId(recipe.id);
+    setEditingRecipeId(recipe.id as any);
     setIsRecipeFormOpen(true);
   };
 
@@ -408,7 +421,7 @@ export default function MyFoodsPage() {
     }
   };
 
-  const toggleFoodSelection = (id: string) => {
+  const toggleFoodSelection = (id: number) => {
     const next = new Set(selectedFoods);
     if (next.has(id)) next.delete(id);
     else next.add(id);
@@ -419,9 +432,9 @@ export default function MyFoodsPage() {
     if (selectedFoods.size === 0) return;
     setIsAddingToMeal(true);
     try {
-      const foodsToAdd = savedFoods.filter((f: PageFoodItem) => selectedFoods.has(f.id));
+      const foodsToAdd = savedFoods.filter((f: PageFoodItem) => f.id !== undefined && selectedFoods.has(f.id as any));
       const promises = foodsToAdd.map((food: PageFoodItem) => {
-        const qty = bulkQuantities[food.id] || 100;
+        const qty = bulkQuantities[food.id!] || 100;
         const factor = qty / 100.0;
         const logEntry = {
           date: mealSelectorDate,
@@ -470,7 +483,7 @@ export default function MyFoodsPage() {
   };
 
   const handleOcrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
     // Reset the input value so the same file can be uploaded again if needed
@@ -513,7 +526,7 @@ export default function MyFoodsPage() {
       setIsFoodFormOpen(true);
     } catch (err: unknown) {
       toast.dismiss(loadingToast);
-      toast.error('Error al escanear: ' + (err.response?.data?.error || err.message));
+      toast.error('Error al escanear: ' + ((err as any).response?.data?.error || (err as Error).message));
       console.error(err);
     }
   };
@@ -535,14 +548,14 @@ export default function MyFoodsPage() {
           setScannedProduct({
             name: parsed.name,
             brand: parsed.brand || '',
-            kcal: parsed.kcal || parsed.kcalPer100g || 0,
-            protein: parsed.protein || parsed.proteinPer100g || 0,
-            carbs: parsed.carbs || parsed.carbsPer100g || 0,
-            fat: parsed.fat || parsed.fatPer100g || 0,
-            servingSize: parsed.servingSize || null,
-            servingLabel: parsed.servingLabel || null,
+            kcalPer100g: parsed.kcal || parsed.kcalPer100g || 0,
+            proteinPer100g: parsed.protein || parsed.proteinPer100g || 0,
+            carbsPer100g: parsed.carbs || parsed.carbsPer100g || 0,
+            fatPer100g: parsed.fat || parsed.fatPer100g || 0,
+            servingSize: parsed.servingSize || undefined,
+            servingLabel: parsed.servingLabel || undefined,
             barcode: code,
-          });
+          } as any);
           return;
         }
       } catch {}
@@ -575,7 +588,7 @@ export default function MyFoodsPage() {
               ? firstPortion.amount
               : p.serving_quantity
                 ? Number(p.serving_quantity)
-                : null,
+                : undefined,
             servingLabel: firstPortion ? firstPortion.label : p.serving_size || null,
             imageUrl: p.image_front_small_url || p.image_url || null,
             barcode: code,
@@ -624,11 +637,11 @@ export default function MyFoodsPage() {
     setFoodForm({
       name: scannedProduct.name || '',
       brand: scannedProduct.brand || '',
-      kcal: toFormVal(scannedProduct.kcal),
-      protein: toFormVal(scannedProduct.protein),
-      carbs: toFormVal(scannedProduct.carbs),
-      fat: toFormVal(scannedProduct.fat),
-      servingSize: toFormVal(scannedProduct.servingSize),
+      kcal: String(toFormVal((scannedProduct as any).kcalPer100g)),
+      protein: String(toFormVal((scannedProduct as any).proteinPer100g)),
+      carbs: String(toFormVal((scannedProduct as any).carbsPer100g)),
+      fat: String(toFormVal((scannedProduct as any).fatPer100g)),
+      servingSize: String(toFormVal(scannedProduct.servingSize)),
       servingLabel: scannedProduct.servingLabel || '',
     });
     setEditingFoodId(null);
@@ -1258,11 +1271,11 @@ export default function MyFoodsPage() {
                         <FoodCard
                           key={f.id}
                           food={f}
-                          isSelected={selectedFoods.has(f.id)}
-                          onToggleSelect={toggleFoodSelection}
-                          onEdit={handleEditFood}
+                          isSelected={f.id !== undefined && selectedFoods.has(f.id as any)}
+                          onToggleSelect={toggleFoodSelection as any}
+                          onEdit={handleEditFood as any}
                           viewMode="grid"
-                          onDragStart={handleDragStart}
+                          onDragStart={handleDragStart as any}
                         />
                       ))}
                     </div>
@@ -1292,11 +1305,11 @@ export default function MyFoodsPage() {
                         <FoodCard
                           key={f.id}
                           food={f}
-                          isSelected={selectedFoods.has(f.id)}
-                          onToggleSelect={toggleFoodSelection}
-                          onEdit={handleEditFood}
+                          isSelected={f.id !== undefined && selectedFoods.has(f.id as any)}
+                          onToggleSelect={toggleFoodSelection as any}
+                          onEdit={handleEditFood as any}
                           viewMode="list"
-                          onDragStart={handleDragStart}
+                          onDragStart={handleDragStart as any}
                         />
                       ))}
                     </div>
@@ -1381,7 +1394,7 @@ export default function MyFoodsPage() {
                             protein: parseFloat(p),
                             carbs: parseFloat(c),
                             fat: parseFloat(g),
-                          })
+                          } as any)
                         }
                         style={itemStyle(false)}
                       >
@@ -1397,7 +1410,7 @@ export default function MyFoodsPage() {
                           >
                             {f.product}
                           </div>
-                          <div>{macroLine(k, p, c, g)}</div>
+                          <div>{macroLine(Number(k), Number(p), Number(c), Number(g))}</div>
                         </div>
                         {saved ? (
                           <span
@@ -1536,8 +1549,8 @@ export default function MyFoodsPage() {
                       }
                       setIsRecipeFormOpen(!isRecipeFormOpen);
                     }}
-                    recipeForm={recipeForm as unknown as import("../components/my-foods/RecipeFormModal").RecipeForm}
-                    updateRecipeForm={updateRecipeForm}
+                    recipeForm={recipeForm as any}
+                    updateRecipeForm={updateRecipeForm as any}
                     handleAddRecipe={handleAddRecipe}
                     editingRecipeId={editingRecipeId}
                     onCancelEdit={() => {
@@ -1552,7 +1565,7 @@ export default function MyFoodsPage() {
                       });
                       setIsRecipeFormOpen(false);
                     }}
-                    handleDeleteRecipe={handleDeleteRecipe}
+                    handleDeleteRecipe={handleDeleteRecipe as any}
                   />
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
@@ -1589,8 +1602,8 @@ export default function MyFoodsPage() {
           setIsFoodFormOpen(false);
           setEditingFoodId(null);
         }}
-        foodForm={foodForm as unknown as import("../components/my-foods/FoodFormModal").FoodFormState}
-        updateFoodForm={updateFoodForm}
+        foodForm={foodForm as any}
+        updateFoodForm={updateFoodForm as any}
         handleAddSavedFood={handleAddSavedFood}
         editingFoodId={editingFoodId}
       />
