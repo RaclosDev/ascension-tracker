@@ -35,8 +35,13 @@ out.txt
 
 docker-compose.override.yml
 
+# Reglas del Agente y Configuración local (No públicas)
 AGENTS.md
 .agents/
+GEMINI.md
+HOOKS.md
+ANTIGRAVITY_HOOKS.md
+MCP_RECOMMENDATIONS.md
 
 # Evitar subida accidental de scripts temporales
 /*.js
@@ -55,6 +60,3 @@ remove_*.py
 strict_*.py
 *_temp.py
 *_tmp.py
-
-# Reglas del Agente (No públicas)
-GEMINI.md
