@@ -63,9 +63,11 @@ El repositorio está desarrollado en español (comentarios, UI, locale `es`, tim
 
 **Demo en vivo:** [https://ascension.raclos.es](https://ascension.raclos.es)
 
-<!-- Añadir captura real aquí (Dashboard) -->
-<!-- Añadir captura real aquí (Entrenamientos) -->
-<!-- Añadir captura real aquí (Nutrición IA) -->
+### Capturas
+
+| Dashboard | Entrenamiento | Nutrición + IA |
+|-----------|---------------|----------------|
+| <image-card alt="Dashboard" src="docs/screenshots/dashboard.png" ></image-card> | <image-card alt="Workout" src="docs/screenshots/workout.png" ></image-card> | <image-card alt="Nutrition" src="docs/screenshots/nutrition.png" ></image-card> |
 
 ## Arquitectura
 
@@ -99,6 +101,16 @@ graph LR
 - **APIs Externas**: Las peticiones a FatSecret se hacen desde el backend (actúa como proxy) dado que su API usa OAuth 1.0a sin soporte nativo para PKCE en frontend.
 - **CI/CD**: El repositorio incluye pipelines de CI, pero no de despliegue continuo automatizado en este momento.
 - **Cobertura de Tests**: Se priorizan rutas críticas en los tests integrados, pero la cobertura de código (Code Coverage) aún no es del 100%.
+
+## Retos Técnicos
+
+- **Autenticación segura:** Flujo OAuth con Google Sign-In, emitiendo JWT propio (HS256) stateless + rotación segura de Refresh Tokens con hashing en base de datos.
+- **Protección contra abusos:** Rate limiting local optimizado en memoria usando Caffeine (preveniendo OOM y ataques por fuerza bruta de IPs detrás del proxy).
+- **Notificaciones offline:** Implementación de Service Worker para PWA capaz de recibir y procesar notificaciones Web Push (VAPID) en segundo plano (útil para el temporizador de descanso del gimnasio).
+- **Integración externa compleja:** Construcción de un proxy propio en el backend para consumir la API de FatSecret, resolviendo las limitaciones del protocolo OAuth 1.0a (HMAC-SHA1) en clientes frontend.
+- **IA y Resiliencia:** Conexión con la API de Google Gemini implementando sanitización contra inyección de prompts, parseo OCR de imágenes y fallback automático entre distintos modelos Flash.
+- **Contenedores de producción:** Diseño de un Docker multi-stage build optimizado, usando JRE Alpine y usuarios non-root.
+- **Calidad de software:** CI robusto con GitHub Actions (Linting, TypeScript checking y testing con base de datos en memoria).
 
 ## Decisiones Técnicas
 
