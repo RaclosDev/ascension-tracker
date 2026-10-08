@@ -60,3 +60,4 @@ remove_*.py
 strict_*.py
 *_temp.py
 *_tmp.py
+seed_local.py
