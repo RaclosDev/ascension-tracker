@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@org.springframework.context.annotation.Import(com.ascension.TestcontainersConfiguration.class)
 class RateLimitIntegrationTest {
 
     @Autowired
