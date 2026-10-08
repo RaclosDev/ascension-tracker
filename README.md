@@ -16,11 +16,16 @@
   <img alt="PWA" src="https://img.shields.io/badge/PWA-ready-5A0FC8.svg">
 </p>
 
-## Descripción
+## 🚀 El Proyecto (Elevator Pitch)
 
-Ascension es una aplicación PWA (instalable en móvil y escritorio) para llevar el control de tu progreso físico: peso, pasos, entrenamientos de gimnasio y nutrición/macros, todo con sincronización en la nube (Google Sign-In + PostgreSQL) y un asistente de nutrición con IA (Google Gemini) que sugiere comidas según tus macros restantes, a partir de texto, voz o una foto del plato.
+**Ascension** no es otro clásico tracker de fitness; es una **Progressive Web App (PWA) de nivel producción** diseñada para resolver el problema del seguimiento físico unificando entrenamientos, nutrición biométrica y asistencia por Inteligencia Artificial en una sola plataforma.
 
-El repositorio está desarrollado en español (comentarios, UI, locale `es`, timezone `Europe/Madrid`), pensado como proyecto personal / de portafolio.
+Desarrollada íntegramente como proyecto de portafolio, la aplicación demuestra dominio Full-Stack moderno:
+- **Resiliencia Frontend:** Experiencia offline-ready con `Workbox`, caché de datos y notificaciones Web Push nativas.
+- **Robustez Backend:** Arquitectura Spring Boot optimizada (Layered Jars), mitigación DDoS mediante Rate Limiting en memoria (`Caffeine`) e inyección estratégica de índices compuestos en PostgreSQL vía `Flyway`.
+- **Integración de IA y APIS:** Orquestación de la API de Google Gemini (Visión, OCR y Texto) actuando como copiloto nutricional, y proxy seguro (HMAC-SHA1) contra FatSecret Platform.
+
+*(Nota: UI, comentarios y locale configurados en Español `es-ES`).*
 
 ## Funcionalidades reales
 
