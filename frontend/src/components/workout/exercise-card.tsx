@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { Check, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { getExerciseMap } from '@/lib/workout/exercises';
 import { isPrSet, previousSetLabel, formatVariant } from '@/lib/workout/format';
@@ -13,6 +13,8 @@ import {
   type WorkoutSet,
   type CompletedWorkout,
 } from '@/lib/workout/types';
+
+import { useSwipe } from '@/hooks/use-swipe';
 
 function SwipeableSetRow({
   s,
@@ -42,60 +44,8 @@ function SwipeableSetRow({
   const pr = s.completed && isPrSet(row.exerciseId, row.variant, s.weight, recentWorkouts);
   const typeLabel = SET_TYPE_LABEL[s.type] || String(workingIndex + 1);
 
-  // Swipe state
-  const [offsetX, setOffsetX] = useState(0);
-  const [swiped, setSwiped] = useState(false);
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
-  const isDragging = useRef(false);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStart.current = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY,
-    };
-    isDragging.current = false;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStart.current) return;
-    const dx = e.touches[0].clientX - touchStart.current.x;
-    const dy = e.touches[0].clientY - touchStart.current.y;
-
-    // Only start horizontal drag if more horizontal than vertical
-    if (!isDragging.current) {
-      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
-        isDragging.current = true;
-      } else if (Math.abs(dy) > 10) {
-        touchStart.current = null;
-        return;
-      } else {
-        return;
-      }
-    }
-
-    if (isDragging.current) {
-      // Only allow left swipe (negative dx), clamped
-      const clamped = Math.max(-80, Math.min(0, dx));
-      setOffsetX(clamped);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (offsetX < -40) {
-      setOffsetX(-72);
-      setSwiped(true);
-    } else {
-      setOffsetX(0);
-      setSwiped(false);
-    }
-    touchStart.current = null;
-    isDragging.current = false;
-  };
-
-  const closeSwipe = () => {
-    setOffsetX(0);
-    setSwiped(false);
-  };
+  // OptimizaciÃ³n Pro: ExtraÃ­da la lÃ³gica tÃ¡ctil a un hook puro
+  const { offsetX, swiped, isDragging, closeSwipe, touchHandlers } = useSwipe();
 
   return (
     <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px' }}>
@@ -123,9 +73,7 @@ function SwipeableSetRow({
 
       {/* Swipeable row */}
       <div
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        {...touchHandlers}
         onClick={swiped ? closeSwipe : undefined}
         className={`set-row ${s.completed ? 'completed' : ''}`}
         style={{
@@ -185,7 +133,7 @@ function SwipeableSetRow({
         <input
           inputMode="decimal"
           value={isCardio ? s.distance || '' : s.weight || ''}
-          placeholder={prev === '' ? '0' : prev.split('×')[0]?.trim()}
+          placeholder={prev === '' ? '0' : prev.split('Ã—')[0]?.trim()}
           onChange={(e) => {
             if (isCardio) {
               updateSet(row.id, s.id, { distance: e.target.value.replace(',', '.') });
@@ -520,7 +468,7 @@ export function ExerciseCard({
                     fontWeight: 600,
                   }}
                 >
-                  MÁQUINA / VARIANTE
+                  MÃQUINA / VARIANTE
                 </div>
                 <VariantSelector
                   type="machine"
@@ -588,7 +536,7 @@ export function ExerciseCard({
 
             <button onClick={() => addSet(row.id, recentWorkouts)} className="add-set-btn">
               <Plus size={16} />
-              Añadir serie
+              AÃ±adir serie
             </button>
           </div>
         </>
