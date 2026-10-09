@@ -18,6 +18,12 @@ public class AppEnvValidator {
     @Value("${gemini.api.key:CHANGE_ME}")
     private String geminiApiKey;
 
+    @Value("${app.cors.allowed-origins:http://localhost:5173}")
+    private String corsOrigins;
+
+    @Value("${spring.profiles.active:default}")
+    private String activeProfile;
+
     @PostConstruct
     public void validateEnvVariables() {
         if ("CHANGE_ME".equals(googleClientId) || googleClientId == null || googleClientId.trim().isEmpty()) {
@@ -26,10 +32,12 @@ public class AppEnvValidator {
         
         if ("CHANGE_ME".equals(geminiApiKey) || geminiApiKey == null || geminiApiKey.trim().isEmpty()) {
             log.warn("gemini.api.key is missing or has default value. AI features will fail.");
-            // Or throw IllegalStateException if you want to crash on startup:
-            // throw new IllegalStateException("FATAL: gemini.api.key is not configured correctly.");
         }
         
+        if ("prod".equals(activeProfile) && corsOrigins.contains("*")) {
+            throw new IllegalStateException("FATAL: Wildcard CORS ('*') is not allowed in production profile.");
+        }
+
         log.info("Environment variables validation passed.");
     }
 }

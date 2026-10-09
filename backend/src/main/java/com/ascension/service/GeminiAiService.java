@@ -107,6 +107,8 @@ public class GeminiAiService {
         try {
             String responseText;
             if (base64Image != null && !base64Image.isEmpty()) {
+                byte[] decoded = java.util.Base64.getDecoder().decode(base64Image);
+                validateImageSignature(decoded);
                 responseText = apiClient.executePrompt(prompt, base64Image, "image/jpeg");
             } else {
                 responseText = apiClient.executePrompt(prompt);
@@ -228,8 +230,14 @@ public class GeminiAiService {
     public Map<String, Object> processNutritionalLabel(String userEmail, MultipartFile file) {
         
         try {
-            String base64Image = java.util.Base64.getEncoder().encodeToString(file.getBytes());
+            byte[] fileBytes = file.getBytes();
+            validateImageSignature(fileBytes);
+            
+            String base64Image = java.util.Base64.getEncoder().encodeToString(fileBytes);
             String mimeType = file.getContentType();
+            if (mimeType == null || mimeType.isBlank()) {
+                mimeType = "image/jpeg"; // Fallback as it passed signature validation
+            }
 
             String prompt = buildSavedFoodFromImagePrompt();
 
@@ -401,6 +409,8 @@ public class GeminiAiService {
         try {
             String responseText;
             if (base64Image != null && !base64Image.isEmpty()) {
+                byte[] decoded = java.util.Base64.getDecoder().decode(base64Image);
+                validateImageSignature(decoded);
                 responseText = apiClient.executePrompt(prompt, base64Image, "image/jpeg");
             } else {
                 responseText = apiClient.executePrompt(prompt);
@@ -612,5 +622,19 @@ public class GeminiAiService {
                 "If any value is missing or unreadable, default to 0 for macros and null/empty string for text.\n\n" +
                 "OUTPUT STRICTLY THIS JSON (no markdown, no extra text):\n" +
                 "{\"name\": \"Food Name\", \"brand\": \"Brand\", \"kcalPer100g\": 300.5, \"proteinPer100g\": 25.0, \"carbsPer100g\": 30.0, \"fatPer100g\": 10.0, \"servingSize\": 125, \"servingLabel\": \"envase\"}";
+    }
+
+    private void validateImageSignature(byte[] data) {
+        if (data == null || data.length < 12) {
+            throw new IllegalArgumentException("Invalid image file: missing or too small");
+        }
+        boolean isJpeg = data[0] == (byte) 0xFF && data[1] == (byte) 0xD8 && data[2] == (byte) 0xFF;
+        boolean isPng = data[0] == (byte) 0x89 && data[1] == (byte) 0x50 && data[2] == (byte) 0x4E && data[3] == (byte) 0x47;
+        boolean isWebp = data[0] == 'R' && data[1] == 'I' && data[2] == 'F' && data[3] == 'F' &&
+                         data[8] == 'W' && data[9] == 'E' && data[10] == 'B' && data[11] == 'P';
+        
+        if (!isJpeg && !isPng && !isWebp) {
+            throw new IllegalArgumentException("Unsupported image format. Only JPEG, PNG, and WEBP are allowed.");
+        }
     }
 }
