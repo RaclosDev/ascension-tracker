@@ -34,7 +34,7 @@ public class AppEnvValidator {
             log.warn("gemini.api.key is missing or has default value. AI features will fail.");
         }
         
-        if ("prod".equals(activeProfile) && corsOrigins.contains("*")) {
+        if (java.util.Arrays.asList(activeProfile.split(",")).contains("prod") && corsOrigins.contains("*")) {
             throw new IllegalStateException("FATAL: Wildcard CORS ('*') is not allowed in production profile.");
         }
 

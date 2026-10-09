@@ -108,8 +108,8 @@ public class GeminiAiService {
             String responseText;
             if (base64Image != null && !base64Image.isEmpty()) {
                 byte[] decoded = java.util.Base64.getDecoder().decode(base64Image);
-                validateImageSignature(decoded);
-                responseText = apiClient.executePrompt(prompt, base64Image, "image/jpeg");
+                String mimeType = validateAndGetMimeType(decoded);
+                responseText = apiClient.executePrompt(prompt, base64Image, mimeType);
             } else {
                 responseText = apiClient.executePrompt(prompt);
             }
@@ -231,13 +231,8 @@ public class GeminiAiService {
         
         try {
             byte[] fileBytes = file.getBytes();
-            validateImageSignature(fileBytes);
-            
+            String mimeType = validateAndGetMimeType(fileBytes);
             String base64Image = java.util.Base64.getEncoder().encodeToString(fileBytes);
-            String mimeType = file.getContentType();
-            if (mimeType == null || mimeType.isBlank()) {
-                mimeType = "image/jpeg"; // Fallback as it passed signature validation
-            }
 
             String prompt = buildSavedFoodFromImagePrompt();
 
@@ -410,8 +405,8 @@ public class GeminiAiService {
             String responseText;
             if (base64Image != null && !base64Image.isEmpty()) {
                 byte[] decoded = java.util.Base64.getDecoder().decode(base64Image);
-                validateImageSignature(decoded);
-                responseText = apiClient.executePrompt(prompt, base64Image, "image/jpeg");
+                String mimeType = validateAndGetMimeType(decoded);
+                responseText = apiClient.executePrompt(prompt, base64Image, mimeType);
             } else {
                 responseText = apiClient.executePrompt(prompt);
             }
@@ -624,7 +619,7 @@ public class GeminiAiService {
                 "{\"name\": \"Food Name\", \"brand\": \"Brand\", \"kcalPer100g\": 300.5, \"proteinPer100g\": 25.0, \"carbsPer100g\": 30.0, \"fatPer100g\": 10.0, \"servingSize\": 125, \"servingLabel\": \"envase\"}";
     }
 
-    private void validateImageSignature(byte[] data) {
+    private String validateAndGetMimeType(byte[] data) {
         if (data == null || data.length < 12) {
             throw new IllegalArgumentException("Invalid image file: missing or too small");
         }
@@ -636,5 +631,19 @@ public class GeminiAiService {
         if (!isJpeg && !isPng && !isWebp) {
             throw new IllegalArgumentException("Unsupported image format. Only JPEG, PNG, and WEBP are allowed.");
         }
+        
+        if (isJpeg || isPng) {
+            try {
+                java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(data));
+                if (img == null) {
+                    throw new IllegalArgumentException("Corrupt image data: structure is invalid");
+                }
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Corrupt image data: " + e.getMessage());
+            }
+            return isJpeg ? "image/jpeg" : "image/png";
+        }
+        
+        return "image/webp";
     }
 }
