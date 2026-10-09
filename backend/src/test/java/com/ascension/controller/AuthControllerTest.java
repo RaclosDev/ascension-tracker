@@ -46,5 +46,40 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").exists());
     }
+
+    @Test
+    void refresh_WhenTokenReusedWithinGracePeriod_ReturnsOkWithoutCookie() throws Exception {
+        RefreshToken token = new RefreshToken();
+        token.setEmail("test@test.com");
+        token.setExpiryDate(java.time.Instant.now().plusSeconds(3600));
+        // Simulate a token replaced 5 seconds ago (within 15s grace period)
+        token.setReplacedAt(java.time.Instant.now().minusSeconds(5));
+
+        when(refreshTokenService.findByToken(anyString())).thenReturn(Optional.of(token));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .cookie(new jakarta.servlet.http.Cookie("refreshToken", "reused_token")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie().doesNotExist("refreshToken"));
+    }
+
+    @Test
+    void refresh_WhenTokenReusedAfterGracePeriod_ReturnsUnauthorized() throws Exception {
+        RefreshToken token = new RefreshToken();
+        token.setEmail("test@test.com");
+        token.setExpiryDate(java.time.Instant.now().plusSeconds(3600));
+        // Simulate a token replaced 20 seconds ago (outside 15s grace period)
+        token.setReplacedAt(java.time.Instant.now().minusSeconds(20));
+
+        when(refreshTokenService.findByToken(anyString())).thenReturn(Optional.of(token));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .cookie(new jakarta.servlet.http.Cookie("refreshToken", "reused_token")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").exists());
+    }
 }
 
