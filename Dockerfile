@@ -33,7 +33,7 @@ RUN mvn clean package -DskipTests
 RUN java -Djarmode=layertools -jar target/*.jar extract --destination target/extracted
 
 # Etapa 3: Imagen de producción (JRE mínimo Alpine)
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
 # Copiamos las capas en orden inverso de frecuencia de cambio
