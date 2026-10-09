@@ -103,9 +103,9 @@ public class FoodExternalService {
         }
     }
 
-    @Cacheable(value = "foodSearch", key = "#query", unless = "#result == null or #result.contains('error')")
+    @Cacheable(value = "foodSearch", key = "'q:' + #query", unless = "#result == null or #result.contains('error')")
     public String searchOpenFoodFacts(String query) {
-        if (query == null || query.isBlank()) return "{\"products\": []}";
+        if (query == null || query.isBlank() || query.length() > 100) return "{\"products\": []}";
         try {
             com.fasterxml.jackson.databind.node.ArrayNode combinedProducts = objectMapper.createArrayNode();
 
@@ -113,7 +113,13 @@ public class FoodExternalService {
             try {
                 String offUrl = "https://es.openfoodfacts.org/cgi/search.pl?search_terms=" + 
                     java.net.URLEncoder.encode(query.trim(), "UTF-8") + "&search_simple=1&action=process&json=true&page_size=15";
-                ResponseEntity<String> offResponse = restTemplate.exchange(java.net.URI.create(offUrl), HttpMethod.GET, null, String.class);
+                ResponseEntity<String> offResponse;
+                try {
+                    offResponse = restTemplate.exchange(java.net.URI.create(offUrl), HttpMethod.GET, null, String.class);
+                } catch (org.springframework.web.client.RestClientResponseException e) {
+                    log.error("OFF Search Error: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+                    throw new RuntimeException("External API Error");
+                }
                 JsonNode offRoot = objectMapper.readTree(offResponse.getBody());
                 JsonNode offProducts = offRoot.path("products");
                 if (offProducts.isArray()) {
@@ -135,7 +141,13 @@ public class FoodExternalService {
 
                 String signedUrl = getOAuth1Url("https://platform.fatsecret.com/rest/server.api", params);
                 java.net.URI uri = java.net.URI.create(signedUrl);
-                ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, null, String.class);
+                ResponseEntity<String> response;
+                try {
+                    response = restTemplate.exchange(uri, HttpMethod.GET, null, String.class);
+                } catch (org.springframework.web.client.RestClientResponseException e) {
+                    log.error("FS Search Error: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+                    throw new RuntimeException("External API Error");
+                }
                 String fsMapped = mapFatSecretToOpenFoodFacts(objectMapper.readTree(response.getBody()), false);
                 JsonNode fsRoot = objectMapper.readTree(fsMapped);
                 JsonNode fsProducts = fsRoot.path("products");
@@ -156,13 +168,19 @@ public class FoodExternalService {
         }
     }
 
-    @Cacheable(value = "foodSearch", key = "#barcode", unless = "#result == null or #result.contains('error')")
+    @Cacheable(value = "foodSearch", key = "'b:' + #barcode", unless = "#result == null or #result.contains('error')")
     public String searchBarcode(String barcode) {
-        if (barcode == null || barcode.isBlank()) return "{\"product\": null}";
+        if (barcode == null || barcode.isBlank() || !barcode.matches("^\\d{6,14}$")) return "{\"product\": null}";
         try {
             String url = "https://world.openfoodfacts.org/api/v2/product/" + barcode + ".json";
             java.net.URI uri = java.net.URI.create(url);
-            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, null, String.class);
+            ResponseEntity<String> response;
+            try {
+                response = restTemplate.exchange(uri, HttpMethod.GET, null, String.class);
+            } catch (org.springframework.web.client.RestClientResponseException e) {
+                log.error("Barcode Search Error: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+                throw new RuntimeException("External API Error");
+            }
             return response.getBody();
         } catch (Exception e) {
             log.error("Error", e);
@@ -174,9 +192,7 @@ public class FoodExternalService {
         try {
             if (root.has("error")) {
                 String errorMsg = root.path("error").path("message").asText("Unknown");
-                String cSec = clientSecret != null ? clientSecret : "";
-                String debugInfo = errorMsg + " | SecLen: " + cSec.length() + " | Prefix: " + (cSec.length() > 4 ? cSec.substring(0, 4) : "null") + " | Time: " + Instant.now().getEpochSecond();
-                log.error("FatSecret API Error: {}", debugInfo);
+                log.error("FatSecret API Error: {}", errorMsg);
                 return singleProduct ? buildErrorResponse("product", false) : buildErrorResponse("products", true);
             }
             ObjectNode openFoodFactsRoot = objectMapper.createObjectNode();
