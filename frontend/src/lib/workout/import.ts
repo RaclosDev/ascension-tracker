@@ -48,12 +48,20 @@ export function importHevyCSV(
   onComplete: (workouts: CompletedWorkout[], newCustomExercises: Exercise[]) => void,
   onError: (error: Error) => void,
 ) {
+  if (file.size > 5 * 1024 * 1024) {
+    onError(new Error('El archivo CSV excede el límite de 5 MB.'));
+    return;
+  }
+
   Papa.parse(file, {
     header: true,
     skipEmptyLines: true,
     complete: (results) => {
       try {
         const rows = results.data as unknown[];
+        if (rows.length > 10000) {
+          throw new Error('El archivo contiene demasiadas filas (máximo 10,000).');
+        }
 
         // Dictionaries to keep track of workouts and exercises
         const workoutsMap = new Map<string, CompletedWorkout>();
@@ -136,17 +144,17 @@ export function importHevyCSV(
           if (!workoutsMap.has(workoutKey)) {
             workoutsMap.set(workoutKey, {
               id: uid(),
-              name: row.title || 'Entrenamiento importado',
-              startedAt: parseHevyDate(row.start_time),
-              finishedAt: parseHevyDate(row.end_time),
-              notes: row.description || '',
+              name: String(row.title || 'Entrenamiento importado').substring(0, 100),
+              startedAt: parseHevyDate(String(row.start_time)),
+              finishedAt: parseHevyDate(String(row.end_time)),
+              notes: String(row.description || '').substring(0, 500),
               exercises: [],
             });
           }
 
           const workout = workoutsMap.get(workoutKey)!;
-          const exerciseTitle = row.exercise_title || 'Unknown Exercise';
-          const supersetId = row.superset_id || undefined;
+          const exerciseTitle = String(row.exercise_title || 'Unknown Exercise').substring(0, 100);
+          const supersetId = row.superset_id ? String(row.superset_id).substring(0, 50) : undefined;
 
           // Try to find the last exercise block if it matches the current title and supersetId
           let currentExerciseBlock =
@@ -158,7 +166,7 @@ export function importHevyCSV(
             currentExerciseBlock = {
               id: uid(),
               exerciseId,
-              notes: row.exercise_notes || '',
+              notes: String(row.exercise_notes || '').substring(0, 500),
               supersetId: supersetId ? `superset_${supersetId}` : undefined,
               sets: [],
             };
@@ -167,12 +175,14 @@ export function importHevyCSV(
 
           const newSet: WorkoutSet = {
             id: uid(),
-            type: parseSetType(row.set_type),
-            weight: row.weight_kg || '',
-            reps: row.reps || '',
-            distance: row.distance_km || '',
-            duration: row.duration_seconds ? `${row.duration_seconds}s` : '',
-            rpe: row.rpe || '',
+            type: parseSetType(String(row.set_type || '')),
+            weight: String(row.weight_kg || '').substring(0, 20),
+            reps: String(row.reps || '').substring(0, 20),
+            distance: String(row.distance_km || '').substring(0, 20),
+            duration: row.duration_seconds
+              ? `${String(row.duration_seconds).substring(0, 10)}s`
+              : '',
+            rpe: String(row.rpe || '').substring(0, 20),
             completed: true,
           };
 
