@@ -263,6 +263,7 @@ public class GeminiAiService {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, Object> generateMealAssistantResponse(
             String userEmail,
             String promptText,
