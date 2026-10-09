@@ -9,6 +9,7 @@ import java.time.Instant;
 import com.ascension.model.RefreshToken;
 import com.ascension.service.RefreshTokenService;
 import com.ascension.service.AccountDeletionService;
+import com.ascension.service.UserService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -61,14 +62,16 @@ public class AuthController {
     private final JwtEncoder jwtEncoder;
     private final RefreshTokenService refreshTokenService;
     private final AccountDeletionService accountDeletionService;
+    private final UserService userService;
     
     @Value("${google.client-id:CHANGE_ME}")
     private String googleClientId;
 
-    public AuthController(JwtEncoder jwtEncoder, RefreshTokenService refreshTokenService, AccountDeletionService accountDeletionService) {
+    public AuthController(JwtEncoder jwtEncoder, RefreshTokenService refreshTokenService, AccountDeletionService accountDeletionService, UserService userService) {
         this.jwtEncoder = jwtEncoder;
         this.refreshTokenService = refreshTokenService;
         this.accountDeletionService = accountDeletionService;
+        this.userService = userService;
     }
 
     private String generateJwt(String email, String name, String picture) {
@@ -115,6 +118,8 @@ public class AuthController {
             String email = tokenPayload.getEmail();
             String name = (String) tokenPayload.get("name");
             String picture = (String) tokenPayload.get("picture");
+
+            userService.ensureUserExists(email, name, picture);
 
             String customToken = generateJwt(email, name, picture);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(email, name, picture);
