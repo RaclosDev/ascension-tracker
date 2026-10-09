@@ -34,7 +34,7 @@ public class PushController {
     @PostMapping("/subscribe")
     public ResponseEntity<Void> subscribe(
             @AuthenticationPrincipal Jwt jwt,
-            @RequestBody SubscriptionRequest request
+            @Valid @RequestBody SubscriptionRequest request
     ) {
         String email = jwt.getClaimAsString("email");
         Subscription sub = new Subscription(
@@ -62,7 +62,7 @@ public class PushController {
     @PostMapping("/rest-timer")
     public ResponseEntity<Void> scheduleRest(
             @AuthenticationPrincipal Jwt jwt,
-            @RequestBody RestTimerRequest request
+            @Valid @RequestBody RestTimerRequest request
     ) {
         String email = jwt.getClaimAsString("email");
         if (request.delaySec > 0) {
@@ -84,16 +84,33 @@ public class PushController {
     // ---- DTOs ----
 
     public static class SubscriptionRequest {
+        @jakarta.validation.constraints.NotBlank
+        @jakarta.validation.constraints.Size(max = 600)
+        @jakarta.validation.constraints.Pattern(
+                regexp = "^https://(fcm\\.googleapis\\.com|updates\\.push\\.services\\.mozilla\\.com|.*\\.push\\.apple\\.com|.*\\.notify\\.windows\\.com)/.*",
+                message = "Invalid push service endpoint"
+        )
         public String endpoint;
+
+        @jakarta.validation.constraints.NotNull
+        @Valid
         public KeysData keys;
     }
 
     public static class KeysData {
+        @jakarta.validation.constraints.NotBlank
+        @jakarta.validation.constraints.Size(max = 200)
         public String p256dh;
+
+        @jakarta.validation.constraints.NotBlank
+        @jakarta.validation.constraints.Size(max = 200)
         public String auth;
     }
 
     public static class RestTimerRequest {
+        @jakarta.validation.constraints.Min(1)
+        @jakarta.validation.constraints.Max(3600)
         public int delaySec;
     }
 }
+
