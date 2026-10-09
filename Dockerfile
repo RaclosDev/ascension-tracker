@@ -15,7 +15,7 @@ RUN npm run build
 # El resultado queda en /app/frontend/dist
 
 # Etapa 2: Build del Backend (Spring Boot + Maven)
-FROM maven:3.9.6-eclipse-temurin-17 AS backend-build
+FROM maven:3.9-eclipse-temurin-26 AS backend-build
 WORKDIR /app
 
 # Copiamos el pom.xml y descargamos dependencias (caché)
