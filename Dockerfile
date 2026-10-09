@@ -1,5 +1,5 @@
 # Etapa 1: Build del Frontend (React + Vite)
-FROM node:22-alpine AS frontend-build
+FROM node:25-alpine AS frontend-build
 WORKDIR /app/frontend
 
 ARG GOOGLE_CLIENT_ID
