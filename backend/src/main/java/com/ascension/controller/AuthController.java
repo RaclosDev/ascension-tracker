@@ -79,8 +79,8 @@ public class AuthController {
                 .expiresAt(now.plus(15, ChronoUnit.MINUTES)) // JWT expira en 15 minutos
                 .subject(email)
                 .claim("email", email)
-                .claim("name", name)
-                .claim("picture", picture)
+                .claim("name", name != null ? name : "")
+                .claim("picture", picture != null ? picture : "")
                 .build();
 
         org.springframework.security.oauth2.jose.jws.MacAlgorithm alg = org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256;

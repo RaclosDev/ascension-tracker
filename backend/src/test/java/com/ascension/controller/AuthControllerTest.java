@@ -51,6 +51,8 @@ class AuthControllerTest {
     void refresh_WhenTokenReusedWithinGracePeriod_ReturnsOkWithoutCookie() throws Exception {
         RefreshToken token = new RefreshToken();
         token.setEmail("test@test.com");
+        token.setName("Test User");
+        token.setPicture("https://example.com/p.png");
         token.setExpiryDate(java.time.Instant.now().plusSeconds(3600));
         // Simulate a token replaced 5 seconds ago (within 15s grace period)
         token.setReplacedAt(java.time.Instant.now().minusSeconds(5));
