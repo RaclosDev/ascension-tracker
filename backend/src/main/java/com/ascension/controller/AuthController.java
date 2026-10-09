@@ -122,7 +122,7 @@ public class AuthController {
             ResponseCookie springCookie = ResponseCookie.from("refreshToken", refreshToken.getPlainToken())
                     .httpOnly(true)
                     .secure(true) // Should be true in production, works in localhost
-                    .path("/")
+                    .path("/api/auth")
                     .maxAge(30L * 24 * 60 * 60)
                     .sameSite("Strict")
                     .build();
@@ -200,7 +200,7 @@ public class AuthController {
         return ResponseCookie.from("refreshToken", value)
                 .httpOnly(true)
                 .secure(true)
-                .path("/")
+                .path("/api/auth")
                 .maxAge(30L * 24 * 60 * 60)
                 .sameSite("Strict")
                 .build();
@@ -219,7 +219,7 @@ public class AuthController {
         ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true)
-                .path("/")
+                .path("/api/auth")
                 .maxAge(0)
                 .sameSite("Strict")
                 .build();

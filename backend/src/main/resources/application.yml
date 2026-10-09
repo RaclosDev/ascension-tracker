@@ -35,7 +35,10 @@ spring:
 
 server:
   port: ${PORT:8080}
-  forward-headers-strategy: framework
+  forward-headers-strategy: native
+  tomcat:
+    remoteip:
+      internal-proxies: .*
   compression:
     enabled: true
     mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
