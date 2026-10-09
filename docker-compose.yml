@@ -44,8 +44,6 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
     # El frontend (nginx) hace proxy a backend:8080 por la red interna,
     # asi que no hace falta exponerlo publicamente.
-    ports:
-      - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
 
   frontend:
     build:
