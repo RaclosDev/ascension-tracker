@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, FormEvent, ChangeEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent, ChangeEvent, lazy, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import api from '../api/client';
@@ -9,7 +9,7 @@ import { getSanitizedKcal, extractPortions } from '../utils/portionHelper';
 import { GENERIC_FOODS } from '../lib/nutrition/generic-foods';
 import { getSmartFallbackQueries } from '../utils/searchHelper';
 import { SegmentedControl } from './ui/segmented-control';
-import BarcodeScanner from './BarcodeScanner';
+const BarcodeScanner = lazy(() => import('./BarcodeScanner'));
 import ManualFoodForm from './food/ManualFoodForm';
 
 import { Mic, ImageIcon, X, ScanLine, ArrowLeft } from 'lucide-react';
@@ -782,10 +782,12 @@ export default function FoodSearchModal({
           ) : activeOverlay === 'scanner' ? (
             /* VIEW: SCANNER */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <BarcodeScanner
-                onScanSuccess={handleScanSuccess}
-                onScanError={(err: string) => console.error(err)}
-              />
+              <Suspense fallback={<div className="spinner" style={{ margin: 'auto', width: '36px', height: '36px' }}></div>}>
+                <BarcodeScanner
+                  onScanSuccess={handleScanSuccess}
+                  onScanError={(err: string) => console.error(err)}
+                />
+              </Suspense>
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button className="btn btn-secondary" onClick={() => setActiveOverlay('none')}>
                   Cancelar

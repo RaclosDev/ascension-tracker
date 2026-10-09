@@ -53,7 +53,9 @@ export function importHevyCSV(
     return;
   }
 
-  Papa.parse(file, {
+  import('papaparse').then((module) => {
+    const Papa = module.default;
+    Papa.parse(file, {
     header: true,
     skipEmptyLines: true,
     complete: (results) => {
@@ -199,4 +201,5 @@ export function importHevyCSV(
       onError(new Error(error.message));
     },
   });
+  }).catch(err => onError(err));
 }
