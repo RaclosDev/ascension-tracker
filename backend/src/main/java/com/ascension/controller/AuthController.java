@@ -108,6 +108,10 @@ public class AuthController {
             }
 
             GoogleIdToken.Payload tokenPayload = idToken.getPayload();
+            if (!Boolean.TRUE.equals(tokenPayload.getEmailVerified())) {
+                log.warn("Email not verified");
+                return ResponseEntity.status(401).body(Map.of("error", "Email not verified"));
+            }
             String email = tokenPayload.getEmail();
             String name = (String) tokenPayload.get("name");
             String picture = (String) tokenPayload.get("picture");
@@ -168,9 +172,14 @@ public class AuthController {
         }
 
         if (refreshToken.getReplacedAt() != null) {
+            if (java.time.Instant.now().isBefore(refreshToken.getReplacedAt().plusSeconds(15))) {
+                log.warn("Grace period: Refresh token reuse within 15s for user {}. Issuing JWT without new cookie.", refreshToken.getEmail());
+                String token = generateJwt(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture());
+                return ResponseEntity.ok().body(java.util.Map.of("token", token));
+            }
             log.warn("Refresh token REUSE detected for user {}. Invalidating all sessions.", refreshToken.getEmail());
             refreshTokenService.deleteByEmail(refreshToken.getEmail());
-            return ResponseEntity.status(401).body(Map.of("error", "Session expired. Please log in again."));
+            return ResponseEntity.status(401).body(java.util.Map.of("error", "Session expired. Please log in again."));
         }
 
         // Normal rotation: mark old token as replaced, create new one

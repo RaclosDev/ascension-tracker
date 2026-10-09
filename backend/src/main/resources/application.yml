@@ -32,10 +32,6 @@ spring:
       resourceserver:
         jwt:
           jws-algorithm: HS256
-  sql:
-    init:
-      mode: always
-      continue-on-error: true
 
 server:
   port: ${PORT:8080}
