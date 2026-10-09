@@ -48,6 +48,9 @@ export default function FoodFormModal({
     >
       <div
         className="card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="food-form-modal-title"
         style={{
           maxWidth: '450px',
           width: '100%',
@@ -63,6 +66,7 @@ export default function FoodFormModal({
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3
+            id="food-form-modal-title"
             style={{
               fontSize: '1.1rem',
               margin: 0,

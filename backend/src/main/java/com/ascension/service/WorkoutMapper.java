@@ -18,12 +18,14 @@ public interface WorkoutMapper {
     WorkoutDTO toDTO(Workout workout);
 
     @Mapping(target = "userEmail", ignore = true)
+    @Mapping(target = "isNew", ignore = true)
     Workout toEntity(WorkoutDTO dto);
 
     @Mapping(target = "workout", ignore = true)
     @Mapping(target = "orderIndex", ignore = true)
     @Mapping(target = "variantGrip", source = "variant.grip")
     @Mapping(target = "variantMachine", source = "variant.machine")
+    @Mapping(target = "isNew", ignore = true)
     WorkoutExercise toEntity(WorkoutExerciseDTO dto);
     
     @Mapping(target = "variant.grip", source = "variantGrip")

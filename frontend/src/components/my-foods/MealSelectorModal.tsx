@@ -48,6 +48,9 @@ export default function MealSelectorModal({
     >
       <div
         className="card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="meal-selector-modal-title"
         style={{
           maxWidth: '400px',
           width: '100%',
@@ -62,7 +65,7 @@ export default function MealSelectorModal({
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--text-primary)' }}>
+          <h3 id="meal-selector-modal-title" style={{ fontSize: '1.1rem', margin: 0, color: 'var(--text-primary)' }}>
             {' '}
             Añadir al Diario
           </h3>
@@ -138,6 +141,7 @@ export default function MealSelectorModal({
                     type="number"
                     inputMode="decimal"
                     className="form-input"
+                    aria-label={`Cantidad en gramos para ${food.name}`}
                     style={{
                       width: '70px',
                       padding: '0.25rem',
