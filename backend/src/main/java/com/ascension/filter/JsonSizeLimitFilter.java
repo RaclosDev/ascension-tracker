@@ -16,7 +16,7 @@ import java.io.InputStream;
 @Component
 public class JsonSizeLimitFilter extends OncePerRequestFilter {
 
-    private static final long MAX_JSON_PAYLOAD_SIZE = 150 * 1024; // 150 KB
+    private static final long MAX_JSON_PAYLOAD_SIZE = 5 * 1024 * 1024; // 5 MB
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
