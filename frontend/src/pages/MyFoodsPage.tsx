@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import {
   LayoutGrid,
   List,
@@ -22,7 +22,7 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/client';
 import toast from 'react-hot-toast';
-import BarcodeScanner from '../components/BarcodeScanner';
+const BarcodeScanner = lazy(() => import('../components/BarcodeScanner'));
 import { getSanitizedKcal, extractPortions } from '../utils/portionHelper';
 import { useSpeechToText } from '../hooks/useSpeechToText';
 
@@ -1919,10 +1919,12 @@ export default function MyFoodsPage() {
             ) : (
               /* Scanner Active */
               <div>
-                <BarcodeScanner
-                  onScanSuccess={handleScanBarcode}
-                  onScanError={(err: unknown) => console.error(err)}
-                />
+                <Suspense fallback={<div className="spinner" style={{ margin: 'auto', width: '36px', height: '36px' }}></div>}>
+                  <BarcodeScanner
+                    onScanSuccess={handleScanBarcode}
+                    onScanError={(err: unknown) => console.error(err)}
+                  />
+                </Suspense>
               </div>
             )}
           </div>
