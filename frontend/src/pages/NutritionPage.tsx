@@ -1,4 +1,4 @@
-import { MealIcon } from '../components/MealIcon';
+﻿import { MealIcon } from '../components/MealIcon';
 import { FoodLog, Macros, Meal, UserSettings } from '../types/api';
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
@@ -993,7 +993,9 @@ export default function NutritionPage() {
                 }}
               >
                 {showChart ? (
-                  <Suspense fallback={<div className="spinner" style={{ margin: "auto", width: "36px", height: "36px" }}></div>}><NutritionPieChart pieData={pieData} /></Suspense>
+                  <Suspense fallback={<Skeleton className="w-48 h-48 rounded-full mx-auto" />}>
+                    <NutritionPieChart pieData={pieData} />
+                  </Suspense>
                 ) : (
                   <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
                 )}
@@ -1022,4 +1024,3 @@ export default function NutritionPage() {
     </div>
   );
 }
-

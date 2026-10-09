@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, FormEvent, ChangeEvent, lazy, Suspense } from 'react';
+﻿import { useState, useEffect, useRef, FormEvent, ChangeEvent, lazy, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import api from '../api/client';
@@ -13,6 +13,7 @@ const BarcodeScanner = lazy(() => import('./BarcodeScanner'));
 import ManualFoodForm from './food/ManualFoodForm';
 
 import { Mic, ImageIcon, X, ScanLine, ArrowLeft } from 'lucide-react';
+import { Skeleton } from './ui/skeleton';
 import { FoodListsData, FoodLog, Meal, Recipe } from '../types/api';
 
 interface SearchProduct {
@@ -240,7 +241,7 @@ export default function FoodSearchModal({
       setOffResults(allCleanProducts);
 
       if (allCleanProducts.length === 0) {
-        toast('No se encontraron resultados exactos', { icon: 'ℹ️' });
+        toast('No se encontraron resultados exactos', { icon: 'â„¹ï¸' });
       }
     } catch (err) {
       if (currentRequestId !== searchRequestId.current) return;
@@ -281,7 +282,7 @@ export default function FoodSearchModal({
         fat: data.fatPer100g ? data.fatPer100g.toString() : prev.fat,
       }));
 
-      toast.success('¡Macros extraídos correctamente!');
+      toast.success('Â¡Macros extraÃ­dos correctamente!');
     } catch (err: unknown) {
       console.error(err);
       toast.error(
@@ -323,11 +324,11 @@ export default function FoodSearchModal({
           return;
         }
       }
-      toast('Producto no encontrado por código de barras', { icon: '🤔' });
+      toast('Producto no encontrado por cÃ³digo de barras', { icon: 'ðŸ¤”' });
       setOffResults([]);
     } catch (err) {
       console.error(err);
-      toast.error('Error al consultar código de barras');
+      toast.error('Error al consultar cÃ³digo de barras');
     } finally {
       /* ignore */
     }
@@ -413,8 +414,8 @@ export default function FoodSearchModal({
     }
 
     setSelectedProduct({
-      name: food.name + (food.brand && food.brand !== 'Genérico' ? ` (${food.brand})` : ''),
-      category: food.brand === 'Genérico' ? 'Básico' : 'Guardado',
+      name: food.name + (food.brand && food.brand !== 'GenÃ©rico' ? ` (${food.brand})` : ''),
+      category: food.brand === 'GenÃ©rico' ? 'BÃ¡sico' : 'Guardado',
       kcal: food.kcalPer100g ?? food.kcal ?? 0,
       protein: food.proteinPer100g ?? food.protein ?? 0,
       carbs: food.carbsPer100g ?? food.carbs ?? 0,
@@ -431,7 +432,7 @@ export default function FoodSearchModal({
 
   const handleConfirmAdd = async () => {
     if (!selectedProduct || !quantity || quantity <= 0) {
-      toast.error('Indica una cantidad válida en gramos');
+      toast.error('Indica una cantidad vÃ¡lida en gramos');
       return;
     }
 
@@ -460,7 +461,7 @@ export default function FoodSearchModal({
 
     try {
       await api.post('/nutrition/logs', logEntry);
-      toast.success('Alimento añadido correctamente');
+      toast.success('Alimento aÃ±adido correctamente');
       setSelectedProduct(null);
       setQuery('');
       setOffResults([]);
@@ -497,9 +498,9 @@ export default function FoodSearchModal({
       .then((res) => {
         const count = Array.isArray(res.data) ? res.data.length : 1;
         if (selectedMealIndex === -1) {
-          toast.success(`¡${count} alimento(s) repartidos en tus comidas por IA!`);
+          toast.success(`Â¡${count} alimento(s) repartidos en tus comidas por IA!`);
         } else {
-          toast.success(`¡${count} alimento(s) añadidos por IA!`);
+          toast.success(`Â¡${count} alimento(s) aÃ±adidos por IA!`);
         }
         if (onLogAdded) onLogAdded();
       })
@@ -535,9 +536,9 @@ export default function FoodSearchModal({
 
           <div style={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>
             {selectedProduct
-              ? 'Añadir Registro'
+              ? 'AÃ±adir Registro'
               : activeOverlay === 'scanner'
-                ? 'Escanear Código'
+                ? 'Escanear CÃ³digo'
                 : activeOverlay === 'ai'
                   ? 'Asistente IA'
                   : activeOverlay === 'manual'
@@ -613,7 +614,7 @@ export default function FoodSearchModal({
                           <SegmentedControl
                             options={[
                               { label: 'Gramos', value: 'grams' },
-                              { label: 'Porción', value: 'portions' },
+                              { label: 'PorciÃ³n', value: 'portions' },
                             ]}
                             value={inputMode}
                             onChange={(val: string) => setInputMode(val as 'grams' | 'portions')}
@@ -763,7 +764,7 @@ export default function FoodSearchModal({
                 style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }}
                 onClick={handleConfirmAdd}
               >
-                Añadir a mi registro
+                AÃ±adir a mi registro
               </button>
             </div>
           ) : activeOverlay === 'manual' ? (
@@ -782,7 +783,14 @@ export default function FoodSearchModal({
           ) : activeOverlay === 'scanner' ? (
             /* VIEW: SCANNER */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <Suspense fallback={<div className="spinner" style={{ margin: 'auto', width: '36px', height: '36px' }}></div>}>
+              <Suspense
+                fallback={
+                  <Skeleton className="w-full h-64 rounded-lg flex flex-col items-center justify-center border border-border">
+                    <div className="w-12 h-12 border-4 border-muted-foreground/30 rounded-full border-t-muted-foreground animate-spin mb-4"></div>
+                    <span className="text-muted-foreground text-sm">Iniciando cámara...</span>
+                  </Skeleton>
+                }
+              >
                 <BarcodeScanner
                   onScanSuccess={handleScanSuccess}
                   onScanError={(err: string) => console.error(err)}
@@ -969,7 +977,7 @@ export default function FoodSearchModal({
                     border: 'none',
                   }}
                 >
-                  Analizar y Añadir
+                  Analizar y AÃ±adir
                 </button>
               </div>
             </div>
@@ -990,7 +998,7 @@ export default function FoodSearchModal({
                     color: 'var(--text-primary)',
                   }}
                 >
-                  <option value={-1}> Detectar automáticamente (IA)</option>
+                  <option value={-1}> Detectar automÃ¡ticamente (IA)</option>
                   {meals && meals.length > 0 ? (
                     meals.map((m, idx) => (
                       <option key={m.id || idx} value={idx}>
@@ -1081,7 +1089,7 @@ export default function FoodSearchModal({
                       color: 'var(--text-primary)',
                       cursor: 'pointer',
                     }}
-                    title="Código de barras"
+                    title="CÃ³digo de barras"
                   >
                     <ScanLine size={18} />
                   </button>
@@ -1141,7 +1149,7 @@ export default function FoodSearchModal({
                               marginBottom: '0.5rem',
                             }}
                           >
-                            Últimos Alimentos Añadidos
+                            Ãšltimos Alimentos AÃ±adidos
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                             {filteredRecent.map((log: FoodLog) => {
@@ -1242,7 +1250,7 @@ export default function FoodSearchModal({
                               marginBottom: '0.5rem',
                             }}
                           >
-                            Alimentos Básicos
+                            Alimentos BÃ¡sicos
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                             {filteredGeneric.map((food: SavedFoodExtended & { image?: string }) => (
@@ -1304,7 +1312,7 @@ export default function FoodSearchModal({
                         marginTop: '1.5rem',
                       }}
                     >
-                      Resultados de Búsqueda
+                      Resultados de BÃºsqueda
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                       {offResults.map((p, idx) => {
@@ -1369,7 +1377,7 @@ export default function FoodSearchModal({
                     }}
                   >
                     <p style={{ margin: '0 0 0.75rem 0', color: 'var(--text-secondary)' }}>
-                      ¿No encuentras el producto exacto?
+                      Â¿No encuentras el producto exacto?
                     </p>
                     <button
                       className="btn btn-primary btn-sm"
