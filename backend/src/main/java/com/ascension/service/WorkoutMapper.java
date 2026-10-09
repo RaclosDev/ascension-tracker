@@ -34,6 +34,7 @@ public interface WorkoutMapper {
 
     @Mapping(target = "workoutExercise", ignore = true)
     @Mapping(target = "orderIndex", ignore = true)
+    @Mapping(target = "isNew", ignore = true)
     WorkoutSet toEntity(WorkoutSetDTO dto);
 
     WorkoutSetDTO toDTO(WorkoutSet entity);
