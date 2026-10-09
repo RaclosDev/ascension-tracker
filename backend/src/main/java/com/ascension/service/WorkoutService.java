@@ -53,40 +53,7 @@ public class WorkoutService {
                 .exercises(new java.util.LinkedHashSet<>())
                 .build();
 
-        if (dto.getExercises() != null) {
-            int order = 0;
-            for (WorkoutExerciseDTO weDTO : dto.getExercises()) {
-                WorkoutExercise we = WorkoutExercise.builder()
-                        .id(weDTO.getId())
-                        .workout(workout)
-                        .exerciseId(weDTO.getExerciseId())
-                        .notes(weDTO.getNotes())
-                        .supersetId(weDTO.getSupersetId())
-                        .orderIndex(order++)
-                        .sets(new java.util.LinkedHashSet<>())
-                        .build();
-
-                if (weDTO.getSets() != null) {
-                    int setOrder = 0;
-                    for (WorkoutSetDTO setDTO : weDTO.getSets()) {
-                        WorkoutSet set = WorkoutSet.builder()
-                                .id(setDTO.getId())
-                                .workoutExercise(we)
-                                .orderIndex(setOrder++)
-                                .type(setDTO.getType())
-                                .weight(setDTO.getWeight())
-                                .reps(setDTO.getReps())
-                                .distance(setDTO.getDistance())
-                                .duration(setDTO.getDuration())
-                                .rpe(setDTO.getRpe())
-                                .completed(setDTO.getCompleted() != null ? setDTO.getCompleted() : false)
-                                .build();
-                        we.getSets().add(set);
-                    }
-                }
-                workout.getExercises().add(we);
-            }
-        }
+        mapExercisesToWorkout(workout, dto.getExercises());
         return toFullDTO(workoutRepository.save(workout));
     }
 
@@ -102,40 +69,7 @@ public class WorkoutService {
 
         workout.getExercises().clear();
 
-        if (dto.getExercises() != null) {
-            int order = 0;
-            for (WorkoutExerciseDTO weDTO : dto.getExercises()) {
-                WorkoutExercise we = WorkoutExercise.builder()
-                        .id(weDTO.getId())
-                        .workout(workout)
-                        .exerciseId(weDTO.getExerciseId())
-                        .notes(weDTO.getNotes())
-                        .supersetId(weDTO.getSupersetId())
-                        .orderIndex(order++)
-                        .sets(new java.util.LinkedHashSet<>())
-                        .build();
-
-                if (weDTO.getSets() != null) {
-                    int setOrder = 0;
-                    for (WorkoutSetDTO setDTO : weDTO.getSets()) {
-                        WorkoutSet set = WorkoutSet.builder()
-                                .id(setDTO.getId())
-                                .workoutExercise(we)
-                                .orderIndex(setOrder++)
-                                .type(setDTO.getType())
-                                .weight(setDTO.getWeight())
-                                .reps(setDTO.getReps())
-                                .distance(setDTO.getDistance())
-                                .duration(setDTO.getDuration())
-                                .rpe(setDTO.getRpe())
-                                .completed(setDTO.getCompleted() != null ? setDTO.getCompleted() : false)
-                                .build();
-                        we.getSets().add(set);
-                    }
-                }
-                workout.getExercises().add(we);
-            }
-        }
+        mapExercisesToWorkout(workout, dto.getExercises());
 
         return toFullDTO(workoutRepository.save(workout));
     }
@@ -246,5 +180,41 @@ public class WorkoutService {
                 .equipment(ex.getEquipment())
                 .userEmail(ex.getUserEmail())
                 .build();
+    }
+
+    private void mapExercisesToWorkout(Workout workout, List<WorkoutExerciseDTO> exerciseDTOs) {
+        if (exerciseDTOs == null) return;
+        int order = 0;
+        for (WorkoutExerciseDTO weDTO : exerciseDTOs) {
+            WorkoutExercise we = WorkoutExercise.builder()
+                    .id(weDTO.getId())
+                    .workout(workout)
+                    .exerciseId(weDTO.getExerciseId())
+                    .notes(weDTO.getNotes())
+                    .supersetId(weDTO.getSupersetId())
+                    .orderIndex(order++)
+                    .sets(new java.util.LinkedHashSet<>())
+                    .build();
+
+            if (weDTO.getSets() != null) {
+                int setOrder = 0;
+                for (WorkoutSetDTO setDTO : weDTO.getSets()) {
+                    WorkoutSet set = WorkoutSet.builder()
+                            .id(setDTO.getId())
+                            .workoutExercise(we)
+                            .orderIndex(setOrder++)
+                            .type(setDTO.getType())
+                            .weight(setDTO.getWeight())
+                            .reps(setDTO.getReps())
+                            .distance(setDTO.getDistance())
+                            .duration(setDTO.getDuration())
+                            .rpe(setDTO.getRpe())
+                            .completed(setDTO.getCompleted() != null ? setDTO.getCompleted() : false)
+                            .build();
+                    we.getSets().add(set);
+                }
+            }
+            workout.getExercises().add(we);
+        }
     }
 }
