@@ -87,7 +87,7 @@ public class PushController {
         @jakarta.validation.constraints.NotBlank
         @jakarta.validation.constraints.Size(max = 600)
         @jakarta.validation.constraints.Pattern(
-                regexp = "^https://(fcm\\.googleapis\\.com|updates\\.push\\.services\\.mozilla\\.com|.*\\.push\\.apple\\.com|.*\\.notify\\.windows\\.com)/.*",
+                regexp = "^https://(fcm\\.googleapis\\.com|updates\\.push\\.services\\.mozilla\\.com|[a-z0-9-]+(\\.[a-z0-9-]+)*\\.push\\.apple\\.com|[a-z0-9-]+(\\.[a-z0-9-]+)*\\.notify\\.windows\\.com)/\\S*$",
                 message = "Invalid push service endpoint"
         )
         public String endpoint;

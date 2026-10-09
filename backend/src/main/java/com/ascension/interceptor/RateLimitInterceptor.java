@@ -64,6 +64,9 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         if (path.startsWith("/api/food-external")) {
             return "food-external";
         }
+        if (path.startsWith("/api/push")) {
+            return "push";
+        }
         return null;
     }
 

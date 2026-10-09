@@ -116,8 +116,12 @@ public class FoodExternalService {
                 ResponseEntity<String> offResponse;
                 try {
                     offResponse = restTemplate.exchange(java.net.URI.create(offUrl), HttpMethod.GET, null, String.class);
-                } catch (org.springframework.web.client.RestClientResponseException e) {
-                    log.error("OFF Search Error: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+                } catch (org.springframework.web.client.RestClientException e) {
+                    if (e instanceof org.springframework.web.client.RestClientResponseException rcre) {
+                        log.error("OFF Search Error: {} - {}", rcre.getStatusCode(), rcre.getResponseBodyAsString());
+                    } else {
+                        log.error("OFF Search Network Error: {}", e.getMessage());
+                    }
                     throw new RuntimeException("External API Error");
                 }
                 JsonNode offRoot = objectMapper.readTree(offResponse.getBody());
@@ -144,8 +148,12 @@ public class FoodExternalService {
                 ResponseEntity<String> response;
                 try {
                     response = restTemplate.exchange(uri, HttpMethod.GET, null, String.class);
-                } catch (org.springframework.web.client.RestClientResponseException e) {
-                    log.error("FS Search Error: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+                } catch (org.springframework.web.client.RestClientException e) {
+                    if (e instanceof org.springframework.web.client.RestClientResponseException rcre) {
+                        log.error("FS Search Error: {} - {}", rcre.getStatusCode(), rcre.getResponseBodyAsString());
+                    } else {
+                        log.error("FS Search Network Error: {}", e.getMessage().replaceAll("https://platform.fatsecret.com/rest/server.api.*", "https://platform.fatsecret.com/rest/server.api[REDACTED]"));
+                    }
                     throw new RuntimeException("External API Error");
                 }
                 String fsMapped = mapFatSecretToOpenFoodFacts(objectMapper.readTree(response.getBody()), false);
@@ -177,8 +185,12 @@ public class FoodExternalService {
             ResponseEntity<String> response;
             try {
                 response = restTemplate.exchange(uri, HttpMethod.GET, null, String.class);
-            } catch (org.springframework.web.client.RestClientResponseException e) {
-                log.error("Barcode Search Error: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+            } catch (org.springframework.web.client.RestClientException e) {
+                if (e instanceof org.springframework.web.client.RestClientResponseException rcre) {
+                    log.error("Barcode Search Error: {} - {}", rcre.getStatusCode(), rcre.getResponseBodyAsString());
+                } else {
+                    log.error("Barcode Search Network Error: {}", e.getMessage());
+                }
                 throw new RuntimeException("External API Error");
             }
             return response.getBody();

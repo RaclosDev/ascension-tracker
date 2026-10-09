@@ -20,9 +20,6 @@ spring:
 server:
   port: ${PORT:8080}
   forward-headers-strategy: native
-  tomcat:
-    remoteip:
-      internal-proxies: .*
 
 app:
   jwt:
