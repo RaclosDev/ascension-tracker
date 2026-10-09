@@ -131,6 +131,7 @@ public class FoodExternalService {
                 }
             } catch (Exception e) {
                 log.error("OFF Search Error", e);
+                throw new RuntimeException("OFF Search Error: " + e.getMessage(), e);
             }
 
             // 2. FatSecret (Alimentos genricos y restaurantes)
@@ -164,6 +165,7 @@ public class FoodExternalService {
                 }
             } catch (Exception e) {
                 log.error("FS Search Error", e);
+                throw new RuntimeException("FS Search Error: " + e.getMessage(), e);
             }
 
             com.fasterxml.jackson.databind.node.ObjectNode finalRoot = objectMapper.createObjectNode();
@@ -172,7 +174,7 @@ public class FoodExternalService {
 
         } catch (Exception e) {
             log.error("Error", e);
-            return buildErrorResponse("products", true);
+            throw new RuntimeException("External API Error: " + e.getMessage(), e);
         }
     }
 
@@ -196,7 +198,7 @@ public class FoodExternalService {
             return response.getBody();
         } catch (Exception e) {
             log.error("Error", e);
-            return buildErrorResponse("product", false);
+            throw new RuntimeException("External API Error: " + e.getMessage(), e);
         }
     }
 
@@ -205,7 +207,7 @@ public class FoodExternalService {
             if (root.has("error")) {
                 String errorMsg = root.path("error").path("message").asText("Unknown");
                 log.error("FatSecret API Error: {}", errorMsg);
-                return singleProduct ? buildErrorResponse("product", false) : buildErrorResponse("products", true);
+                throw new RuntimeException("FatSecret API Error: " + errorMsg);
             }
             ObjectNode openFoodFactsRoot = objectMapper.createObjectNode();
             
@@ -225,7 +227,10 @@ public class FoodExternalService {
             }
             return objectMapper.writeValueAsString(openFoodFactsRoot);
         } catch (Exception e) {
-            return singleProduct ? "{\"product\": null}" : "{\"products\": []}";
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            }
+            throw new RuntimeException("Error mapping FatSecret response: " + e.getMessage(), e);
         }
     }
 
