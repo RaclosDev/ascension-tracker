@@ -15,8 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.ascension.dto.FoodLogDTO;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -106,7 +104,6 @@ public class NutritionController {
         return ResponseEntity.ok(nutritionLogService.updateFoodLog(jwt.getClaimAsString("email"), dto));
     }
 
-    // --- Saved Foods ---
     @GetMapping("/my-foods")
     public ResponseEntity<List<com.ascension.dto.SavedFoodDTO>> getSavedFoods(@AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(nutritionLogService.getSavedFoods(jwt.getClaimAsString("email")));
@@ -129,7 +126,6 @@ public class NutritionController {
         return ResponseEntity.ok().build();
     }
 
-    // --- Recipes ---
     @GetMapping("/recipes")
     public ResponseEntity<List<com.ascension.dto.RecipeDTO>> getRecipes(@AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(recipeService.getRecipes(jwt.getClaimAsString("email")));
@@ -151,15 +147,11 @@ public class NutritionController {
         recipeService.deleteRecipe(jwt.getClaimAsString("email"), id);
         return ResponseEntity.ok().build();
     }
-    // --- AI ---
+
     @PostMapping("/ai/ocr")
     public ResponseEntity<?> scanNutritionalLabel(
             @RequestParam("image") MultipartFile image,
             @AuthenticationPrincipal Jwt jwt) {
-        if (image != null && image.getSize() > 4 * 1024 * 1024) {
-            return ResponseEntity.status(org.springframework.http.HttpStatus.PAYLOAD_TOO_LARGE)
-                    .body(Map.of("error", "La imagen no puede superar los 4 MB."));
-        }
         try {
             var result = geminiAiService.processNutritionalLabel(jwt.getClaimAsString("email"), image);
             return ResponseEntity.ok().header("X-AI-Model", geminiAiService.getActiveModelName()).body(result);
@@ -178,10 +170,6 @@ public class NutritionController {
             int mealIndex = request.getMealIndex() != null ? request.getMealIndex() : -1;
             LocalDate date = LocalDate.parse(request.getDate());
             String base64Image = request.getBase64Image();
-            if (base64Image != null && base64Image.length() > 4 * 1024 * 1024 * 1.35) {
-                return ResponseEntity.status(org.springframework.http.HttpStatus.PAYLOAD_TOO_LARGE)
-                        .body(Map.of("error", "La imagen no puede superar los 4 MB."));
-            }
             
             var result = geminiAiService.processNaturalLanguageLog(jwt.getClaimAsString("email"), text, base64Image, mealIndex, date);
             return ResponseEntity.ok().header("X-AI-Model", geminiAiService.getActiveModelName()).body(result);
@@ -211,7 +199,6 @@ public class NutritionController {
             @AuthenticationPrincipal Jwt jwt) {
         String userEmail = jwt.getClaimAsString("email");
         LocalDate targetDate = date != null ? LocalDate.parse(date) : LocalDate.now();
-
         return ResponseEntity.ok(macroCalculatorService.getAssistantSummary(userEmail, targetDate));
     }
 
@@ -227,10 +214,6 @@ public class NutritionController {
             Integer mealIndex = request.getMealIndex();
             List<Map<String, String>> chatHistory = request.getChatHistory();
             String base64Image = request.getBase64Image();
-            if (base64Image != null && base64Image.length() > 4 * 1024 * 1024 * 1.35) {
-                return ResponseEntity.status(org.springframework.http.HttpStatus.PAYLOAD_TOO_LARGE)
-                        .body(Map.of("error", "La imagen no puede superar los 4 MB."));
-            }
 
             return ResponseEntity.ok(geminiAiService.generateMealAssistantResponse(userEmail, message, base64Image, date, mealIndex, chatHistory));
         } catch (Exception e) {
@@ -249,7 +232,6 @@ public class NutritionController {
             int mealIndex = request.getMealIndex() != null ? request.getMealIndex() : 2;
 
             List<Map<String, Object>> foods = request.getFoods();
-            
             return ResponseEntity.ok(nutritionLogService.applyAssistantFoods(userEmail, date, mealIndex, foods));
         } catch (Exception e) {
             log.error("Nutrition endpoint error", e);

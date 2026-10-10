@@ -51,6 +51,7 @@ public class RefreshToken {
     public String getToken() { return token; }
     public String getPlainToken() { return plainToken; }
     public void setToken(String token) { this.token = token; }
+    public void setPlainToken(String plainToken) { this.plainToken = plainToken; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getName() { return name; }
