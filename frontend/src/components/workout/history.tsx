@@ -35,7 +35,6 @@ export function HistoryView() {
   const setDetailId = useWorkoutStore((s) => s.setDetailId);
   const settings = useWorkoutStore((s) => s.settings);
   const showRpe = settings?.showRpe ?? false;
-  const customGifs = useWorkoutStore((s) => s.exerciseGifs);
   const catalog = getExerciseMap(customExercises);
   const detail =
     history.find((w: import('@/lib/workout/types').CompletedWorkout) => w.id === detailId) ?? null;
@@ -263,9 +262,9 @@ export function HistoryView() {
                           marginBottom: '1rem',
                         }}
                       >
-                        {(meta && customGifs[meta.id]) || meta?.gifUrl ? (
+                        {meta?.gifUrl ? (
                           <img
-                            src={customGifs[meta.id] || meta.gifUrl}
+                            src={meta.gifUrl}
                             alt=""
                             style={{
                               width: '40px',

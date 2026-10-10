@@ -17,13 +17,13 @@ import static org.mockito.Mockito.when;
 class NutritionServiceTest {
 
     @Mock
-    private MealRepository mealRepository;
-
-    @Mock
     private com.ascension.repository.FoodLogRepository foodLogRepository;
 
+    @Mock
+    private com.ascension.repository.SavedFoodRepository savedFoodRepository;
+
     @InjectMocks
-    private NutritionService nutritionService;
+    private NutritionLogService nutritionLogService;
 
 
 
@@ -50,7 +50,7 @@ class NutritionServiceTest {
             .thenReturn(java.util.Collections.singletonList(row1));
 
         // Act
-        java.util.List<com.ascension.dto.WeekSummaryDTO> result = nutritionService.getWeeklyCalories("test@test.com");
+        java.util.List<com.ascension.dto.WeekSummaryDTO> result = nutritionLogService.getWeeklyCalories("test@test.com");
 
         // Assert
         org.junit.jupiter.api.Assertions.assertFalse(result.isEmpty());

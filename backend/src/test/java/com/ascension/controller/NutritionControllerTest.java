@@ -32,6 +32,15 @@ public class NutritionControllerTest {
     private NutritionService nutritionService;
 
     @MockBean
+    private com.ascension.service.NutritionLogService nutritionLogService;
+
+    @MockBean
+    private com.ascension.service.RecipeService recipeService;
+
+    @MockBean
+    private com.ascension.service.MacroCalculatorService macroCalculatorService;
+
+    @MockBean
     private GeminiAiService geminiAiService;
 
     @Autowired
@@ -67,7 +76,7 @@ public class NutritionControllerTest {
         dto.setDate(LocalDate.now());
         dto.setMealIndex(0);
 
-        when(nutritionService.addFoodLog(eq("test@example.com"), any(FoodLogDTO.class))).thenReturn(dto);
+        when(nutritionLogService.addFoodLog(eq("test@example.com"), any(FoodLogDTO.class))).thenReturn(dto);
 
         mockMvc.perform(post("/api/nutrition/logs")
                 .contentType(MediaType.APPLICATION_JSON)

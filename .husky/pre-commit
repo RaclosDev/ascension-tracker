@@ -6,15 +6,25 @@ npx lint-staged || exit 1
 echo "=== [PRE-COMMIT] Verificando Backend (Compilacion) ==="
 if git diff --cached --name-only | grep -q "^backend/"; then
   echo "Cambios detectados en backend/. Compilando con Maven..."
-  cd backend && ./mvnw clean compile -DskipTests || { echo "❌ ERROR: El backend no compila. Abortando commit."; exit 1; }
-  cd ..
+  (cd backend && ./mvnw clean compile -DskipTests) || { echo "ERROR: El backend no compila. Abortando commit."; exit 1; }
 fi
 
 echo "=== [PRE-COMMIT] Verificando Frontend (Typescript/Build) ==="
 if git diff --cached --name-only | grep -q "^frontend/"; then
   echo "Cambios detectados en frontend/. Verificando build estricto..."
-  cd frontend && npm run typecheck || { echo "❌ ERROR: El frontend no compila. Abortando commit."; exit 1; }
-  cd ..
+  (cd frontend && npm run typecheck) || { echo "ERROR: El frontend no compila. Abortando commit."; exit 1; }
 fi
 
-echo "✅ PRE-COMMIT SUPERADO. Codigo integro."
+echo "=== [PRE-COMMIT] Verificando texto corrupto (mojibake) en archivos staged ==="
+git diff --cached --name-only --diff-filter=ACMR | while IFS= read -r file; do
+  case "$file" in
+    *.md|*.tsx|*.ts|*.java|*.xml|*.json)
+      if git show ":$file" | grep -nE 'Ã[¡-¿]|Â[¡-¿]|�'; then
+        echo "ERROR: Posible texto corrupto (mojibake) en $file"
+        exit 1
+      fi
+      ;;
+  esac
+done || exit 1
+
+echo "PRE-COMMIT SUPERADO. Codigo integro."
