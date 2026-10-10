@@ -95,6 +95,10 @@ public class AuthController {
                 return ResponseEntity.status(401).body(Map.of("error", "Email not verified"));
             }
             String email = tokenPayload.getEmail();
+            if (email == null || email.isBlank()) {
+                log.warn("Email is missing from Google token payload");
+                return ResponseEntity.status(401).body(Map.of("error", "Email is required"));
+            }
             String name = (String) tokenPayload.get("name");
             String picture = (String) tokenPayload.get("picture");
 

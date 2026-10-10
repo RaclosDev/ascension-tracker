@@ -111,7 +111,11 @@ public class FatSecretResponseMapper {
     }
 
     private double extractRegex(String text, String pattern) {
-        Matcher m = Pattern.compile(pattern).matcher(text);
-        return m.find() ? Double.parseDouble(m.group(1)) : 0;
+        try {
+            Matcher m = Pattern.compile(pattern).matcher(text);
+            return m.find() ? Double.parseDouble(m.group(1)) : 0;
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 }

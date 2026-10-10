@@ -54,7 +54,8 @@ public class FatSecretClient {
                 if (e instanceof org.springframework.web.client.RestClientResponseException rcre) {
                     log.error("FS Search Error: {} - {}", rcre.getStatusCode(), rcre.getResponseBodyAsString());
                 } else {
-                    log.error("FS Search Network Error: {}", e.getMessage().replaceAll("https://platform.fatsecret.com/rest/server.api.*", "https://platform.fatsecret.com/rest/server.api[REDACTED]"));
+                    String errorMsg = e.getMessage() != null ? e.getMessage().replaceAll("https://platform.fatsecret.com/rest/server.api.*", "https://platform.fatsecret.com/rest/server.api[REDACTED]") : "Unknown Network Error";
+                    log.error("FS Search Network Error: {}", errorMsg);
                 }
                 throw new RuntimeException("External API Error");
             }
