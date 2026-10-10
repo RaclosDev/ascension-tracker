@@ -8,8 +8,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.time.Instant;
+import java.util.UUID;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -17,60 +17,67 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        String traceId = UUID.randomUUID().toString();
         String errorMessage = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getDefaultMessage())
                 .findFirst()
                 .orElse("Datos invalidos");
-        log.warn("Validation error: {}", errorMessage);
-        return buildErrorResponse(errorMessage, HttpStatus.BAD_REQUEST);
+        log.warn("Validation error: {} [trace_id: {}]", errorMessage, traceId);
+        return buildErrorResponse(errorMessage, HttpStatus.BAD_REQUEST, traceId);
     }
 
     @ExceptionHandler(SecurityException.class)
-    public ResponseEntity<?> handleSecurityException(SecurityException ex) {
-        log.warn("Security exception: {}", ex.getMessage());
-        return buildErrorResponse("Acceso denegado", HttpStatus.FORBIDDEN);
+    public ResponseEntity<ApiErrorResponse> handleSecurityException(SecurityException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Security exception: {} [trace_id: {}]", ex.getMessage(), traceId);
+        return buildErrorResponse("Acceso denegado", HttpStatus.FORBIDDEN, traceId);
     }
 
     @ExceptionHandler(TokenRefreshException.class)
-    public ResponseEntity<?> handleTokenRefreshException(TokenRefreshException ex) {
-        log.warn("Refresh token error: {}", ex.getMessage());
-        return buildErrorResponse("Error de autenticacion", HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<ApiErrorResponse> handleTokenRefreshException(TokenRefreshException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Refresh token error: {} [trace_id: {}]", ex.getMessage(), traceId);
+        return buildErrorResponse("Error de autenticacion", HttpStatus.UNAUTHORIZED, traceId);
     }
 
     @ExceptionHandler(InvalidInputException.class)
-    public ResponseEntity<?> handleInvalidInputException(InvalidInputException ex) {
-        log.warn("Invalid input: {}", ex.getMessage());
-        return buildErrorResponse("Entrada invalida", HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ApiErrorResponse> handleInvalidInputException(InvalidInputException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Invalid input: {} [trace_id: {}]", ex.getMessage(), traceId);
+        return buildErrorResponse("Entrada invalida", HttpStatus.BAD_REQUEST, traceId);
     }
     
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
-        log.warn("Illegal argument: {}", ex.getMessage());
-        return buildErrorResponse("Entrada invalida", HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Illegal argument: {} [trace_id: {}]", ex.getMessage(), traceId);
+        return buildErrorResponse("Entrada invalida", HttpStatus.BAD_REQUEST, traceId);
     }
 
     @ExceptionHandler(AiProcessingException.class)
-    public ResponseEntity<?> handleAiProcessingException(AiProcessingException ex) {
-        log.error("AI processing error: {}", ex.getMessage());
-        return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ApiErrorResponse> handleAiProcessingException(AiProcessingException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.error("AI processing error: {} [trace_id: {}]", ex.getMessage(), traceId);
+        return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, traceId);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<?> handleEntityNotFoundException(EntityNotFoundException ex) {
-        log.warn("Entity not found: {}", ex.getMessage());
-        return buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
+    public ResponseEntity<ApiErrorResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Entity not found: {} [trace_id: {}]", ex.getMessage(), traceId);
+        return buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND, traceId);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleGlobalException(Exception ex) {
-        log.error("Unhandled exception occurred", ex);
-        return buildErrorResponse("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ApiErrorResponse> handleGlobalException(Exception ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.error("Unhandled exception occurred [trace_id: {}]", traceId, ex);
+        return buildErrorResponse("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR, traceId);
     }
 
-    private ResponseEntity<?> buildErrorResponse(String message, HttpStatus status) {
-        Map<String, String> body = new HashMap<>();
-        body.put("error", message);
+    private ResponseEntity<ApiErrorResponse> buildErrorResponse(String message, HttpStatus status, String traceId) {
+        ApiErrorResponse body = new ApiErrorResponse(message, traceId, Instant.now());
         return ResponseEntity.status(status).body(body);
     }
 }

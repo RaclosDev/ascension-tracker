@@ -6,9 +6,15 @@ const api = axios.create({
   withCredentials: true,
 });
 
+export let memoryToken: string | null = null;
+
+export const setMemoryToken = (token: string | null) => {
+  memoryToken = token;
+};
+
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('jwt_token');
+    const token = memoryToken;
     if (token && config.url !== '/auth/refresh' && config.url !== '/auth/logout') {
       config.headers.Authorization = 'Bearer ' + token;
     }
@@ -75,7 +81,7 @@ api.interceptors.response.use(
         }
         const newToken = res.data.token;
 
-        localStorage.setItem('jwt_token', newToken);
+        setMemoryToken(newToken);
 
         api.defaults.headers.common['Authorization'] = 'Bearer ' + newToken;
         originalRequest.headers['Authorization'] = 'Bearer ' + newToken;
@@ -97,7 +103,7 @@ api.interceptors.response.use(
             err.response.status,
             err.response.data,
           );
-          localStorage.removeItem('jwt_token');
+          setMemoryToken(null);
           window.dispatchEvent(new CustomEvent('auth_failed'));
         }
         return Promise.reject(err);

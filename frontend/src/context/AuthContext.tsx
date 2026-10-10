@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-import api from '../api/client';
+import api, { setMemoryToken } from '../api/client';
 
 export interface User {
   email: string;
@@ -20,43 +20,17 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-function isTokenExpired(token: string): boolean {
-  try {
-    const payload = jwtDecode<{ exp?: number }>(token);
-    if (!payload.exp) return true;
-    // Consider expired if less than 60 seconds remaining
-    return payload.exp * 1000 < Date.now() + 60_000;
-  } catch {
-    return true;
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('jwt_token'));
+  const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isReady, setIsReady] = useState(false);
 
-  // On mount: if we have a token but it's expired, try to refresh it silently
+  // On mount: proactively attempt to refresh to get a token if we have a valid cookie
   useEffect(() => {
     let cancelled = false;
 
     async function initAuth() {
-      const stored = localStorage.getItem('jwt_token');
-
-      if (!stored) {
-        // No token at all — not logged in
-        setIsReady(true);
-        return;
-      }
-
-      if (!isTokenExpired(stored)) {
-        // Token is still valid — use it directly
-        setIsReady(true);
-        return;
-      }
-
-      // Token is expired — try to refresh using fetch (bypasses axios interceptors entirely)
-      console.log('[Auth] JWT expired, attempting proactive refresh...');
+      console.log('[Auth] Attempting proactive refresh on mount...');
       try {
         const baseUrl = import.meta.env.VITE_API_URL || '';
         const res = await fetch(`${baseUrl}/api/auth/refresh`, {
@@ -70,21 +44,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const data = await res.json();
           if (data.token && !cancelled) {
             console.log('[Auth] Proactive refresh succeeded');
-            localStorage.setItem('jwt_token', data.token);
+            setMemoryToken(data.token);
             api.defaults.headers.common['Authorization'] = 'Bearer ' + data.token;
             setToken(data.token);
           }
         } else {
-          console.warn('[Auth] Proactive refresh failed:', res.status);
+          console.log('[Auth] Proactive refresh failed or not logged in:', res.status);
           if (!cancelled) {
-            localStorage.removeItem('jwt_token');
+            setMemoryToken(null);
             setToken(null);
           }
         }
       } catch {
         console.warn('[Auth] Proactive refresh network error');
         if (!cancelled) {
-          localStorage.removeItem('jwt_token');
+          setMemoryToken(null);
           setToken(null);
         }
       }
@@ -100,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (token) {
-      localStorage.setItem('jwt_token', token);
+      setMemoryToken(token);
 
       try {
         const payload = jwtDecode<Record<string, unknown>>(token);
@@ -112,10 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         console.error('Invalid token format');
         setToken(null);
-        localStorage.removeItem('jwt_token');
+        setMemoryToken(null);
       }
     } else {
-      localStorage.removeItem('jwt_token');
+      setMemoryToken(null);
       setUser(null);
     }
 
@@ -126,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     const handleAuthFailed = () => {
       setToken(null);
-      localStorage.removeItem('jwt_token');
+      setMemoryToken(null);
     };
     window.addEventListener('token_refresh', handleTokenRefresh);
     window.addEventListener('auth_failed', handleAuthFailed);
