@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, FormEvent, ChangeEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent, ChangeEvent, lazy, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import api from '../api/client';
@@ -9,10 +9,11 @@ import { getSanitizedKcal, extractPortions } from '../utils/portionHelper';
 import { GENERIC_FOODS } from '../lib/nutrition/generic-foods';
 import { getSmartFallbackQueries } from '../utils/searchHelper';
 import { SegmentedControl } from './ui/segmented-control';
-import BarcodeScanner from './BarcodeScanner';
+const BarcodeScanner = lazy(() => import('./BarcodeScanner'));
 import ManualFoodForm from './food/ManualFoodForm';
 
 import { Mic, ImageIcon, X, ScanLine, ArrowLeft } from 'lucide-react';
+import { Skeleton } from './ui/skeleton';
 import { FoodListsData, FoodLog, Meal, Recipe } from '../types/api';
 
 interface SearchProduct {
@@ -240,7 +241,7 @@ export default function FoodSearchModal({
       setOffResults(allCleanProducts);
 
       if (allCleanProducts.length === 0) {
-        toast('No se encontraron resultados exactos', { icon: 'ℹ️' });
+        toast('No se encontraron resultados exactos', { icon: 'â„¹ï¸' });
       }
     } catch (err) {
       if (currentRequestId !== searchRequestId.current) return;
@@ -515,7 +516,7 @@ export default function FoodSearchModal({
   return (
     <>
       <div className="workout-sheet-overlay" onClick={onClose} />
-      <div className="food-search-fullscreen">
+      <div className="food-search-fullscreen" role="dialog" aria-modal="true" aria-labelledby="food-search-title">
         <div className="food-search-header">
           {selectedProduct || activeOverlay !== 'none' ? (
             <button
@@ -533,7 +534,7 @@ export default function FoodSearchModal({
             </button>
           )}
 
-          <div style={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>
+          <div id="food-search-title" style={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>
             {selectedProduct
               ? 'Añadir Registro'
               : activeOverlay === 'scanner'
@@ -782,10 +783,19 @@ export default function FoodSearchModal({
           ) : activeOverlay === 'scanner' ? (
             /* VIEW: SCANNER */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <BarcodeScanner
-                onScanSuccess={handleScanSuccess}
-                onScanError={(err: string) => console.error(err)}
-              />
+              <Suspense
+                fallback={
+                  <Skeleton className="w-full h-64 rounded-lg flex flex-col items-center justify-center border border-border">
+                    <div className="w-12 h-12 border-4 border-muted-foreground/30 rounded-full border-t-muted-foreground animate-spin mb-4"></div>
+                    <span className="text-muted-foreground text-sm">Iniciando cámara...</span>
+                  </Skeleton>
+                }
+              >
+                <BarcodeScanner
+                  onScanSuccess={handleScanSuccess}
+                  onScanError={(err: string) => console.error(err)}
+                />
+              </Suspense>
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button className="btn btn-secondary" onClick={() => setActiveOverlay('none')}>
                   Cancelar

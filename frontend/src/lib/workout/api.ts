@@ -172,3 +172,104 @@ export const useDeleteCustomExercise = () => {
     },
   });
 };
+
+export interface WorkoutPreferences {
+  globalMachines: string[];
+  globalGrips: string[];
+  exerciseAliases: Record<string, string>;
+  exerciseVariants: Record<string, { grips?: string[]; machines?: string[] }>;
+  hiddenEquipments: string[];
+  exerciseGifs: Record<string, string>;
+}
+
+export const useWorkoutPreferences = () => {
+  return useQuery<WorkoutPreferences, Error>({
+    queryKey: ['workoutPreferences'],
+    queryFn: async (): Promise<WorkoutPreferences> => {
+      const { data } = await api.get('/workout-preferences');
+      return {
+        globalMachines: data.globalMachines || [],
+        globalGrips: data.globalGrips || [],
+        exerciseAliases: data.exerciseAliases || {},
+        exerciseVariants: data.exerciseVariants || {},
+        hiddenEquipments: data.hiddenEquipments || [],
+        exerciseGifs: data.exerciseGifs || {},
+      };
+    },
+  });
+};
+
+export const useUpdateWorkoutPreferences = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (prefs: WorkoutPreferences) => {
+      const { data } = await api.put('/workout-preferences', prefs);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workoutPreferences'] });
+    },
+  });
+};
+
+export const useWorkoutPreferencesActions = () => {
+  const { data: prefs } = useWorkoutPreferences();
+  const { mutate: updatePrefs } = useUpdateWorkoutPreferences();
+
+  const addGlobalMachine = (name: string) => {
+    if (!prefs) return;
+    updatePrefs({ ...prefs, globalMachines: Array.from(new Set([...prefs.globalMachines, name])) });
+  };
+
+  const addGlobalGrip = (name: string) => {
+    if (!prefs) return;
+    updatePrefs({ ...prefs, globalGrips: Array.from(new Set([...prefs.globalGrips, name])) });
+  };
+
+  const addExerciseVariant = (id: string, type: string, name: string) => {
+    if (!prefs) return;
+    const ev = prefs.exerciseVariants[id] || {};
+    const key = (type + 's') as 'grips' | 'machines';
+    const list = ev[key] || [];
+    updatePrefs({
+      ...prefs,
+      exerciseVariants: {
+        ...prefs.exerciseVariants,
+        [id]: { ...ev, [key]: Array.from(new Set([...list, name])) },
+      },
+    });
+  };
+
+  const setExerciseAlias = (id: string, name: string) => {
+    if (!prefs) return;
+    updatePrefs({
+      ...prefs,
+      exerciseAliases: { ...prefs.exerciseAliases, [id]: name },
+    });
+  };
+
+  const setExerciseGif = (id: string, gifUrl: string) => {
+    if (!prefs) return;
+    updatePrefs({
+      ...prefs,
+      exerciseGifs: { ...prefs.exerciseGifs, [id]: gifUrl },
+    });
+  };
+
+  const toggleHiddenEquipment = (equip: string) => {
+    if (!prefs) return;
+    const arr = prefs.hiddenEquipments || [];
+    const newArr = arr.includes(equip) ? arr.filter((e) => e !== equip) : [...arr, equip];
+    updatePrefs({ ...prefs, hiddenEquipments: newArr });
+  };
+
+  return {
+    prefs,
+    addGlobalMachine,
+    addGlobalGrip,
+    addExerciseVariant,
+    setExerciseAlias,
+    setExerciseGif,
+    toggleHiddenEquipment,
+  };
+};

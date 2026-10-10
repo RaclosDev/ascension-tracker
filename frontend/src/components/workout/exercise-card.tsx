@@ -5,7 +5,11 @@ import { isPrSet, previousSetLabel, formatVariant } from '@/lib/workout/format';
 import { initAudioAndNotifications } from '@/lib/workout/notifications';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { VariantSelector } from './variant-selector';
-import { useRecentWorkouts, useCustomExercises } from '@/lib/workout/api';
+import {
+  useRecentWorkouts,
+  useCustomExercises,
+  useWorkoutPreferencesActions,
+} from '@/lib/workout/api';
 import {
   MUSCLE_LABEL,
   SET_TYPE_LABEL,
@@ -44,7 +48,7 @@ function SwipeableSetRow({
   const pr = s.completed && isPrSet(row.exerciseId, row.variant, s.weight, recentWorkouts);
   const typeLabel = SET_TYPE_LABEL[s.type] || String(workingIndex + 1);
 
-  // OptimizaciÃ³n Pro: ExtraÃ­da la lÃ³gica tÃ¡ctil a un hook puro
+  // Optimización Pro: Extraída la lógica táctil a un hook puro
   const { offsetX, swiped, isDragging, closeSwipe, touchHandlers } = useSwipe();
 
   return (
@@ -133,7 +137,7 @@ function SwipeableSetRow({
         <input
           inputMode="decimal"
           value={isCardio ? s.distance || '' : s.weight || ''}
-          placeholder={prev === '' ? '0' : prev.split('Ã—')[0]?.trim()}
+          placeholder={prev === '' ? '0' : prev.split('×')[0]?.trim()}
           onChange={(e) => {
             if (isCardio) {
               updateSet(row.id, s.id, { distance: e.target.value.replace(',', '.') });
@@ -204,7 +208,7 @@ export const ExerciseCard = React.memo(function ExerciseCard({
   const restPreset = useWorkoutStore((s) => s.restPreset);
   const setExerciseRestTimer = useWorkoutStore((s) => s.setExerciseRestTimer);
   const updateExerciseVariant = useWorkoutStore((s) => s.updateExerciseVariant);
-  const customGifs = useWorkoutStore((s) => s.exerciseGifs);
+  const customGifs: Record<string, string> = {};
   const [editingVariant, setEditingVariant] = useState(false);
 
   const catalog = getExerciseMap(customExercises);
@@ -241,12 +245,11 @@ export const ExerciseCard = React.memo(function ExerciseCard({
     }
     return Array.from(grips).sort();
   }, [row.exerciseId, recentWorkouts]);
-  const globalMachines = useWorkoutStore((s) => s.globalMachines);
-  const globalGrips = useWorkoutStore((s) => s.globalGrips);
-  const exerciseVariants = useWorkoutStore((s) => s.exerciseVariants);
-  const addGlobalMachine = useWorkoutStore((s) => s.addGlobalMachine);
-  const addGlobalGrip = useWorkoutStore((s) => s.addGlobalGrip);
-  const addExerciseVariant = useWorkoutStore((s) => s.addExerciseVariant);
+  const { prefs, addGlobalMachine, addGlobalGrip, addExerciseVariant } =
+    useWorkoutPreferencesActions();
+  const globalMachines = prefs?.globalMachines || [];
+  const globalGrips = prefs?.globalGrips || [];
+  const exerciseVariants = prefs?.exerciseVariants || {};
 
   const customGripsArray = React.useMemo(() => {
     return exerciseVariants[row.exerciseId]?.grips || [];
@@ -468,7 +471,7 @@ export const ExerciseCard = React.memo(function ExerciseCard({
                     fontWeight: 600,
                   }}
                 >
-                  MÃQUINA / VARIANTE
+                  MÁQUINA / VARIANTE
                 </div>
                 <VariantSelector
                   type="machine"
@@ -536,7 +539,7 @@ export const ExerciseCard = React.memo(function ExerciseCard({
 
             <button onClick={() => addSet(row.id, recentWorkouts)} className="add-set-btn">
               <Plus size={16} />
-              AÃ±adir serie
+              Añadir serie
             </button>
           </div>
         </>

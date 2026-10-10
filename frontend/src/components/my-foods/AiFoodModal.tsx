@@ -47,6 +47,9 @@ export default function AiFoodModal({
     >
       <div
         className="card fade-in-anim"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ai-food-modal-title"
         onClick={(e) => e.stopPropagation()}
         style={{ width: '100%', maxWidth: '500px' }}
       >
@@ -58,7 +61,7 @@ export default function AiFoodModal({
             marginBottom: '1.5rem',
           }}
         >
-          <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)' }}>
+          <h3 id="ai-food-modal-title" style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)' }}>
             Crear con IA
           </h3>
           <button

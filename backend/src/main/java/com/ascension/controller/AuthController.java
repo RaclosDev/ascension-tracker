@@ -9,6 +9,7 @@ import java.time.Instant;
 import com.ascension.model.RefreshToken;
 import com.ascension.service.RefreshTokenService;
 import com.ascension.service.AccountDeletionService;
+import com.ascension.service.UserService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -61,14 +62,16 @@ public class AuthController {
     private final JwtEncoder jwtEncoder;
     private final RefreshTokenService refreshTokenService;
     private final AccountDeletionService accountDeletionService;
+    private final UserService userService;
     
     @Value("${google.client-id:CHANGE_ME}")
     private String googleClientId;
 
-    public AuthController(JwtEncoder jwtEncoder, RefreshTokenService refreshTokenService, AccountDeletionService accountDeletionService) {
+    public AuthController(JwtEncoder jwtEncoder, RefreshTokenService refreshTokenService, AccountDeletionService accountDeletionService, UserService userService) {
         this.jwtEncoder = jwtEncoder;
         this.refreshTokenService = refreshTokenService;
         this.accountDeletionService = accountDeletionService;
+        this.userService = userService;
     }
 
     private String generateJwt(String email, String name, String picture) {
@@ -79,8 +82,8 @@ public class AuthController {
                 .expiresAt(now.plus(15, ChronoUnit.MINUTES)) // JWT expira en 15 minutos
                 .subject(email)
                 .claim("email", email)
-                .claim("name", name)
-                .claim("picture", picture)
+                .claim("name", name != null ? name : "")
+                .claim("picture", picture != null ? picture : "")
                 .build();
 
         org.springframework.security.oauth2.jose.jws.MacAlgorithm alg = org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256;
@@ -108,9 +111,15 @@ public class AuthController {
             }
 
             GoogleIdToken.Payload tokenPayload = idToken.getPayload();
+            if (!Boolean.TRUE.equals(tokenPayload.getEmailVerified())) {
+                log.warn("Email not verified");
+                return ResponseEntity.status(401).body(Map.of("error", "Email not verified"));
+            }
             String email = tokenPayload.getEmail();
             String name = (String) tokenPayload.get("name");
             String picture = (String) tokenPayload.get("picture");
+
+            userService.ensureUserExists(email, name, picture);
 
             String customToken = generateJwt(email, name, picture);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(email, name, picture);
@@ -118,7 +127,7 @@ public class AuthController {
             ResponseCookie springCookie = ResponseCookie.from("refreshToken", refreshToken.getPlainToken())
                     .httpOnly(true)
                     .secure(true) // Should be true in production, works in localhost
-                    .path("/")
+                    .path("/api/auth")
                     .maxAge(30L * 24 * 60 * 60)
                     .sameSite("Strict")
                     .build();
@@ -168,9 +177,14 @@ public class AuthController {
         }
 
         if (refreshToken.getReplacedAt() != null) {
+            if (java.time.Instant.now().isBefore(refreshToken.getReplacedAt().plusSeconds(15))) {
+                log.warn("Grace period: Refresh token reuse within 15s for user {}. Issuing JWT without new cookie.", refreshToken.getEmail());
+                String token = generateJwt(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture());
+                return ResponseEntity.ok().body(java.util.Map.of("token", token));
+            }
             log.warn("Refresh token REUSE detected for user {}. Invalidating all sessions.", refreshToken.getEmail());
             refreshTokenService.deleteByEmail(refreshToken.getEmail());
-            return ResponseEntity.status(401).body(Map.of("error", "Session expired. Please log in again."));
+            return ResponseEntity.status(401).body(java.util.Map.of("error", "Session expired. Please log in again."));
         }
 
         // Normal rotation: mark old token as replaced, create new one
@@ -191,7 +205,7 @@ public class AuthController {
         return ResponseCookie.from("refreshToken", value)
                 .httpOnly(true)
                 .secure(true)
-                .path("/")
+                .path("/api/auth")
                 .maxAge(30L * 24 * 60 * 60)
                 .sameSite("Strict")
                 .build();
@@ -210,7 +224,7 @@ public class AuthController {
         ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true)
-                .path("/")
+                .path("/api/auth")
                 .maxAge(0)
                 .sameSite("Strict")
                 .build();

@@ -39,7 +39,9 @@ public class GeminiAiService {
     private final com.ascension.service.ai.GeminiApiClient apiClient;
 
     private final NutritionService nutritionService;
-    
+    private final NutritionLogService nutritionLogService;
+    private final RecipeService recipeService;
+    private final MacroCalculatorService macroCalculatorService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -71,8 +73,8 @@ public class GeminiAiService {
         
 
         // Fetch user's custom foods, recipes, and meals for context
-        List<SavedFoodDTO> savedFoods = nutritionService.getSavedFoods(userEmail);
-        List<RecipeDTO> recipes = nutritionService.getRecipes(userEmail);
+        List<SavedFoodDTO> savedFoods = nutritionLogService.getSavedFoods(userEmail);
+        List<RecipeDTO> recipes = recipeService.getRecipes(userEmail);
         List<MealDTO> availableMeals = nutritionService.getMeals(userEmail);
 
         StringBuilder mealsContext = new StringBuilder();
@@ -107,7 +109,9 @@ public class GeminiAiService {
         try {
             String responseText;
             if (base64Image != null && !base64Image.isEmpty()) {
-                responseText = apiClient.executePrompt(prompt, base64Image, "image/jpeg");
+                byte[] decoded = java.util.Base64.getDecoder().decode(base64Image);
+                String mimeType = validateAndGetMimeType(decoded);
+                responseText = apiClient.executePrompt(prompt, base64Image, mimeType);
             } else {
                 responseText = apiClient.executePrompt(prompt);
             }
@@ -179,7 +183,7 @@ public class GeminiAiService {
                     }
                     
                     // Add it to the database
-                    FoodLogDTO saved = nutritionService.addFoodLog(userEmail, dto);
+                    FoodLogDTO saved = nutritionLogService.addFoodLog(userEmail, dto);
                     addedLogs.add(saved);
                 }
             }
@@ -217,7 +221,7 @@ public class GeminiAiService {
             }
             
             // Add it to the database
-            return nutritionService.addSavedFood(userEmail, dto);
+            return nutritionLogService.addSavedFood(userEmail, dto);
 
         } catch (Exception e) {
             log.error("Error in GeminiAiService", e);
@@ -228,8 +232,9 @@ public class GeminiAiService {
     public Map<String, Object> processNutritionalLabel(String userEmail, MultipartFile file) {
         
         try {
-            String base64Image = java.util.Base64.getEncoder().encodeToString(file.getBytes());
-            String mimeType = file.getContentType();
+            byte[] fileBytes = file.getBytes();
+            String mimeType = validateAndGetMimeType(fileBytes);
+            String base64Image = java.util.Base64.getEncoder().encodeToString(fileBytes);
 
             String prompt = buildSavedFoodFromImagePrompt();
 
@@ -258,6 +263,7 @@ public class GeminiAiService {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, Object> generateMealAssistantResponse(
             String userEmail,
             String promptText,
@@ -268,14 +274,14 @@ public class GeminiAiService {
         
 
         // 1. Get targets
-        MacrosDTO targetMacros = nutritionService.getMacros(userEmail);
+        MacrosDTO targetMacros = macroCalculatorService.getMacros(userEmail);
         int targetKcal = targetMacros.getKcal() != null ? targetMacros.getKcal() : 2000;
         double targetProtein = targetMacros.getProtein() != null ? targetMacros.getProtein() : 150.0;
         double targetCarbs = targetMacros.getCarbs() != null ? targetMacros.getCarbs() : 200.0;
         double targetFat = targetMacros.getFat() != null ? targetMacros.getFat() : 60.0;
 
         // 2. Get today's consumed
-        List<FoodLogDTO> todayLogs = nutritionService.getFoodLogsByDate(userEmail, date);
+        List<FoodLogDTO> todayLogs = nutritionLogService.getFoodLogsByDate(userEmail, date);
         double consumedKcal = 0, consumedProtein = 0, consumedCarbs = 0, consumedFat = 0;
         for (FoodLogDTO l : todayLogs) {
             consumedKcal += l.getKcal();
@@ -312,8 +318,8 @@ public class GeminiAiService {
         }
 
         // 5. User saved foods and recipes
-        List<SavedFoodDTO> savedFoods = nutritionService.getSavedFoods(userEmail);
-        List<RecipeDTO> recipes = nutritionService.getRecipes(userEmail);
+        List<SavedFoodDTO> savedFoods = nutritionLogService.getSavedFoods(userEmail);
+        List<RecipeDTO> recipes = recipeService.getRecipes(userEmail);
 
         String contextFoods = savedFoods.stream()
                 .map(f -> {
@@ -401,7 +407,9 @@ public class GeminiAiService {
         try {
             String responseText;
             if (base64Image != null && !base64Image.isEmpty()) {
-                responseText = apiClient.executePrompt(prompt, base64Image, "image/jpeg");
+                byte[] decoded = java.util.Base64.getDecoder().decode(base64Image);
+                String mimeType = validateAndGetMimeType(decoded);
+                responseText = apiClient.executePrompt(prompt, base64Image, mimeType);
             } else {
                 responseText = apiClient.executePrompt(prompt);
             }
@@ -612,5 +620,33 @@ public class GeminiAiService {
                 "If any value is missing or unreadable, default to 0 for macros and null/empty string for text.\n\n" +
                 "OUTPUT STRICTLY THIS JSON (no markdown, no extra text):\n" +
                 "{\"name\": \"Food Name\", \"brand\": \"Brand\", \"kcalPer100g\": 300.5, \"proteinPer100g\": 25.0, \"carbsPer100g\": 30.0, \"fatPer100g\": 10.0, \"servingSize\": 125, \"servingLabel\": \"envase\"}";
+    }
+
+    private String validateAndGetMimeType(byte[] data) {
+        if (data == null || data.length < 12) {
+            throw new IllegalArgumentException("Invalid image file: missing or too small");
+        }
+        boolean isJpeg = data[0] == (byte) 0xFF && data[1] == (byte) 0xD8 && data[2] == (byte) 0xFF;
+        boolean isPng = data[0] == (byte) 0x89 && data[1] == (byte) 0x50 && data[2] == (byte) 0x4E && data[3] == (byte) 0x47;
+        boolean isWebp = data[0] == 'R' && data[1] == 'I' && data[2] == 'F' && data[3] == 'F' &&
+                         data[8] == 'W' && data[9] == 'E' && data[10] == 'B' && data[11] == 'P';
+        
+        if (!isJpeg && !isPng && !isWebp) {
+            throw new IllegalArgumentException("Unsupported image format. Only JPEG, PNG, and WEBP are allowed.");
+        }
+        
+        if (isJpeg || isPng) {
+            try {
+                java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(data));
+                if (img == null) {
+                    throw new IllegalArgumentException("Corrupt image data: structure is invalid");
+                }
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Corrupt image data: " + e.getMessage());
+            }
+            return isJpeg ? "image/jpeg" : "image/png";
+        }
+        
+        return "image/webp";
     }
 }

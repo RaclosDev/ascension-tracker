@@ -4,6 +4,9 @@ import com.ascension.dto.MacrosDTO;
 import com.ascension.dto.MealDTO;
 import com.ascension.service.GeminiAiService;
 import com.ascension.service.NutritionService;
+import com.ascension.service.NutritionLogService;
+import com.ascension.service.RecipeService;
+import com.ascension.service.MacroCalculatorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,11 +31,14 @@ import org.springframework.web.multipart.MultipartFile;
 public class NutritionController {
 
     private final NutritionService nutritionService;
+    private final NutritionLogService nutritionLogService;
+    private final RecipeService recipeService;
+    private final MacroCalculatorService macroCalculatorService;
     private final GeminiAiService geminiAiService;
 
     @GetMapping("/macros")
     public ResponseEntity<MacrosDTO> getMacros(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(nutritionService.getMacros(jwt.getClaimAsString("email")));
+        return ResponseEntity.ok(macroCalculatorService.getMacros(jwt.getClaimAsString("email")));
     }
 
     @GetMapping("/meals")
@@ -68,81 +74,81 @@ public class NutritionController {
 
     @GetMapping("/calories/weekly")
     public ResponseEntity<List<com.ascension.dto.WeekSummaryDTO>> getWeeklyCalories(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(nutritionService.getWeeklyCalories(jwt.getClaimAsString("email")));
+        return ResponseEntity.ok(nutritionLogService.getWeeklyCalories(jwt.getClaimAsString("email")));
     }
 
     @GetMapping("/logs")
     public ResponseEntity<List<FoodLogDTO>> getFoodLogs(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(nutritionService.getFoodLogsByDate(jwt.getClaimAsString("email"), date));
+        return ResponseEntity.ok(nutritionLogService.getFoodLogsByDate(jwt.getClaimAsString("email"), date));
     }
 
     @GetMapping("/logs/recent")
     public ResponseEntity<List<FoodLogDTO>> getRecentFoodLogs(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(nutritionService.getRecentDistinctFoods(jwt.getClaimAsString("email")));
+        return ResponseEntity.ok(nutritionLogService.getRecentDistinctFoods(jwt.getClaimAsString("email")));
     }
 
     @PostMapping("/logs")
     public ResponseEntity<FoodLogDTO> addFoodLog(@Valid @RequestBody FoodLogDTO dto, @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(nutritionService.addFoodLog(jwt.getClaimAsString("email"), dto));
+        return ResponseEntity.ok(nutritionLogService.addFoodLog(jwt.getClaimAsString("email"), dto));
     }
 
     @DeleteMapping("/logs/{id}")
     public ResponseEntity<Void> deleteFoodLog(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
-        nutritionService.deleteFoodLog(jwt.getClaimAsString("email"), id);
+        nutritionLogService.deleteFoodLog(jwt.getClaimAsString("email"), id);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/logs/{id}")
     public ResponseEntity<FoodLogDTO> updateFoodLog(@PathVariable Long id, @Valid @RequestBody FoodLogDTO dto, @AuthenticationPrincipal Jwt jwt) {
         dto.setId(id);
-        return ResponseEntity.ok(nutritionService.updateFoodLog(jwt.getClaimAsString("email"), dto));
+        return ResponseEntity.ok(nutritionLogService.updateFoodLog(jwt.getClaimAsString("email"), dto));
     }
 
     // --- Saved Foods ---
     @GetMapping("/my-foods")
     public ResponseEntity<List<com.ascension.dto.SavedFoodDTO>> getSavedFoods(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(nutritionService.getSavedFoods(jwt.getClaimAsString("email")));
+        return ResponseEntity.ok(nutritionLogService.getSavedFoods(jwt.getClaimAsString("email")));
     }
 
     @PostMapping("/my-foods")
     public ResponseEntity<com.ascension.dto.SavedFoodDTO> addSavedFood(@Valid @RequestBody com.ascension.dto.SavedFoodDTO dto, @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(nutritionService.addSavedFood(jwt.getClaimAsString("email"), dto));
+        return ResponseEntity.ok(nutritionLogService.addSavedFood(jwt.getClaimAsString("email"), dto));
     }
 
     @PutMapping("/my-foods/{id}")
     public ResponseEntity<com.ascension.dto.SavedFoodDTO> updateSavedFood(@PathVariable Long id, @Valid @RequestBody com.ascension.dto.SavedFoodDTO dto, @AuthenticationPrincipal Jwt jwt) {
         dto.setId(id);
-        return ResponseEntity.ok(nutritionService.updateSavedFood(jwt.getClaimAsString("email"), dto));
+        return ResponseEntity.ok(nutritionLogService.updateSavedFood(jwt.getClaimAsString("email"), dto));
     }
 
     @DeleteMapping("/my-foods/{id}")
     public ResponseEntity<Void> deleteSavedFood(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
-        nutritionService.deleteSavedFood(jwt.getClaimAsString("email"), id);
+        nutritionLogService.deleteSavedFood(jwt.getClaimAsString("email"), id);
         return ResponseEntity.ok().build();
     }
 
     // --- Recipes ---
     @GetMapping("/recipes")
     public ResponseEntity<List<com.ascension.dto.RecipeDTO>> getRecipes(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(nutritionService.getRecipes(jwt.getClaimAsString("email")));
+        return ResponseEntity.ok(recipeService.getRecipes(jwt.getClaimAsString("email")));
     }
 
     @PostMapping("/recipes")
     public ResponseEntity<com.ascension.dto.RecipeDTO> addRecipe(@Valid @RequestBody com.ascension.dto.RecipeDTO dto, @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(nutritionService.addRecipe(jwt.getClaimAsString("email"), dto));
+        return ResponseEntity.ok(recipeService.addRecipe(jwt.getClaimAsString("email"), dto));
     }
 
     @PutMapping("/recipes/{id}")
     public ResponseEntity<com.ascension.dto.RecipeDTO> updateRecipe(@PathVariable Long id, @Valid @RequestBody com.ascension.dto.RecipeDTO dto, @AuthenticationPrincipal Jwt jwt) {
         dto.setId(id);
-        return ResponseEntity.ok(nutritionService.updateRecipe(jwt.getClaimAsString("email"), dto));
+        return ResponseEntity.ok(recipeService.updateRecipe(jwt.getClaimAsString("email"), dto));
     }
 
     @DeleteMapping("/recipes/{id}")
     public ResponseEntity<Void> deleteRecipe(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
-        nutritionService.deleteRecipe(jwt.getClaimAsString("email"), id);
+        recipeService.deleteRecipe(jwt.getClaimAsString("email"), id);
         return ResponseEntity.ok().build();
     }
     // --- AI ---
@@ -206,7 +212,7 @@ public class NutritionController {
         String userEmail = jwt.getClaimAsString("email");
         LocalDate targetDate = date != null ? LocalDate.parse(date) : LocalDate.now();
 
-        return ResponseEntity.ok(nutritionService.getAssistantSummary(userEmail, targetDate));
+        return ResponseEntity.ok(macroCalculatorService.getAssistantSummary(userEmail, targetDate));
     }
 
     @PostMapping("/ai/assistant-chat")
@@ -244,14 +250,10 @@ public class NutritionController {
 
             List<Map<String, Object>> foods = request.getFoods();
             
-            return ResponseEntity.ok(nutritionService.applyAssistantFoods(userEmail, date, mealIndex, foods));
+            return ResponseEntity.ok(nutritionLogService.applyAssistantFoods(userEmail, date, mealIndex, foods));
         } catch (Exception e) {
             log.error("Nutrition endpoint error", e);
             throw new com.ascension.exception.AiProcessingException("Error guardando alimentos", e);
         }
     }
 }
-
-
-
-

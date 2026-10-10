@@ -59,6 +59,11 @@ public class PushNotificationService {
         }
     }
 
+    @jakarta.annotation.PreDestroy
+    public void shutdown() {
+        scheduler.shutdownNow();
+    }
+
     public String getVapidPublicKey() {
         return vapidPublicKey;
     }

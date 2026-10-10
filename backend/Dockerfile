@@ -13,7 +13,11 @@ USER spring:spring
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
+
+# Perfil prod: desactiva Swagger/OpenAPI (ver application-prod.yml)
+ENV SPRING_PROFILES_ACTIVE=prod
+
 HEALTHCHECK --interval=30s --timeout=3s \
-  CMD wget -q -O - http://localhost:8080/api/auth/config || exit 1
+  CMD wget -q -O - http://localhost:8080/api/version || exit 1
 ENTRYPOINT ["java", "-jar", "app.jar"]
 

@@ -1,4 +1,4 @@
-import { MealIcon } from '../components/MealIcon';
+﻿import { MealIcon } from '../components/MealIcon';
 import { FoodLog, Macros, Meal, UserSettings } from '../types/api';
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
@@ -7,7 +7,7 @@ const FoodSearchModal = lazy(() => import('../components/FoodSearchModal'));
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getLocalDateString, addDaysToDateString, isTodayLocal } from '../utils/dateHelper';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+const NutritionPieChart = lazy(() => import('../components/nutrition/NutritionPieChart'));
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import { ChevronDown, Copy, Loader2 } from 'lucide-react';
@@ -993,40 +993,9 @@ export default function NutritionPage() {
                 }}
               >
                 {showChart ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={70}
-                        outerRadius={100}
-                        paddingAngle={3}
-                        dataKey="value"
-                      >
-                        {pieData.map((entry, i) => (
-                          <Cell key={i} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          background: 'rgba(17, 24, 39, 0.95)',
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          borderRadius: 8,
-                        }}
-                        formatter={(value, name) => {
-                          const total = pieData.reduce(
-                            (a: number, b: { value: number }) => a + b.value,
-                            0,
-                          );
-                          return [
-                            `${Number(value).toFixed(0)} kcal (${((Number(value) / total) * 100).toFixed(1)}%)`,
-                            name,
-                          ];
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <Suspense fallback={<Skeleton className="w-48 h-48 rounded-full mx-auto" />}>
+                    <NutritionPieChart pieData={pieData} />
+                  </Suspense>
                 ) : (
                   <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
                 )}

@@ -14,7 +14,7 @@ import type { Exercise } from '@/lib/workout/types';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import api from '@/api/client';
-import { useWorkoutStore } from '@/lib/workout/store';
+
 import { normalizeString } from '@/lib/workout/format';
 import { MUSCLE_LABEL, type MuscleGroup, type Equipment } from '@/lib/workout/types';
 import { ExerciseDetailsModal } from './exercise-details-modal';
@@ -69,6 +69,8 @@ import {
   useSaveCustomExercise,
   useDeleteCustomExercise,
   useRecentWorkouts,
+  useWorkoutPreferencesActions,
+  useUpdateWorkoutPreferences,
 } from '@/lib/workout/api';
 
 export function ExercisesView() {
@@ -86,16 +88,23 @@ export function ExercisesView() {
     if (ex) saveExerciseMutation.mutate({ ...ex, ...patch });
   };
 
-  const aliases = useWorkoutStore((s) => s.exerciseAliases);
-  const customGifs = useWorkoutStore((s) => s.exerciseGifs);
-  const setExerciseAlias = useWorkoutStore((s) => s.setExerciseAlias);
-  const hiddenEquipments = useWorkoutStore((s) => s.hiddenEquipments) || [];
-  const globalMachines = useWorkoutStore((s) => s.globalMachines);
-  const globalGrips = useWorkoutStore((s) => s.globalGrips);
-  const addGlobalMachine = useWorkoutStore((s) => s.addGlobalMachine);
-  const removeGlobalMachine = useWorkoutStore((s) => s.removeGlobalMachine);
-  const addGlobalGrip = useWorkoutStore((s) => s.addGlobalGrip);
-  const removeGlobalGrip = useWorkoutStore((s) => s.removeGlobalGrip);
+  const { prefs, setExerciseAlias, addGlobalMachine, addGlobalGrip, setExerciseGif } =
+    useWorkoutPreferencesActions();
+  const { mutate: updatePrefs } = useUpdateWorkoutPreferences();
+  const aliases = prefs?.exerciseAliases || {};
+  const customGifs = prefs?.exerciseGifs || {};
+  const hiddenEquipments = prefs?.hiddenEquipments || [];
+  const globalMachines = prefs?.globalMachines || [];
+  const globalGrips = prefs?.globalGrips || [];
+
+  const removeGlobalMachine = (name: string) => {
+    if (!prefs) return;
+    updatePrefs({ ...prefs, globalMachines: prefs.globalMachines.filter((m) => m !== name) });
+  };
+  const removeGlobalGrip = (name: string) => {
+    if (!prefs) return;
+    updatePrefs({ ...prefs, globalGrips: prefs.globalGrips.filter((g) => g !== name) });
+  };
   const [newGrip, setNewGrip] = useState('');
   const [newMachine, setNewMachine] = useState('');
 
@@ -115,7 +124,6 @@ export function ExercisesView() {
   const [mergeConfirmTargetId, setMergeConfirmTargetId] = useState<string | null>(null);
   const [changeGifId, setChangeGifId] = useState<string | null>(null);
   const [changeGifQuery, setChangeGifQuery] = useState('');
-  const setExerciseGif = useWorkoutStore((s) => s.setExerciseGif);
 
   useEffect(() => {
     if (!mergeSourceId) {

@@ -93,7 +93,7 @@ public class GeminiApiClient {
 
         Exception lastException = null;
         for (String modelName : modelCandidates) {
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + apiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent";
             try {
                 String responseText = callApiEndpoint(url, prompt, base64Image, mimeType);
                 cachedWorkingUrl = url;
@@ -120,9 +120,10 @@ public class GeminiApiClient {
         candidates.add("gemini-3.5-flash-lite");
 
         try {
-            String url = "https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models";
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/json");
+            headers.set("x-goog-api-key", apiKey);
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
 
             JsonNode root = objectMapper.readTree(response.getBody());
@@ -174,6 +175,7 @@ public class GeminiApiClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
+        headers.set("x-goog-api-key", geminiApiKey.trim());
 
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);

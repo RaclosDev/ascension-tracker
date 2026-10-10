@@ -59,18 +59,6 @@ interface WorkoutState {
   pickerOpen: boolean;
   detailId: string | null;
   settings: { showRpe: boolean };
-  exerciseAliases: Record<string, string>;
-  exerciseGifs: Record<string, string>;
-  globalMachines: string[];
-  globalGrips: string[];
-  exerciseVariants: Record<string, { grips?: string[]; machines?: string[] }>;
-
-  addGlobalMachine: (name: string) => void;
-  removeGlobalMachine: (name: string) => void;
-  addGlobalGrip: (name: string) => void;
-  removeGlobalGrip: (name: string) => void;
-  addExerciseVariant: (exerciseId: string, type: 'grip' | 'machine', name: string) => void;
-  removeExerciseVariant: (exerciseId: string, type: 'grip' | 'machine', name: string) => void;
   hiddenEquipments: string[];
 
   setTab: (tab: Tab) => void;
@@ -105,8 +93,6 @@ interface WorkoutState {
   discardWorkout: () => void;
   saveAsTemplate: () => Template | null;
 
-  setExerciseAlias: (id: string, name: string) => void;
-  setExerciseGif: (id: string, gifUrl: string) => void;
   toggleHiddenEquipment: (equip: string) => void;
   updateExerciseVariant: (id: string, variant: { grip?: string; machine?: string }) => void;
 }
@@ -134,11 +120,6 @@ export const useWorkoutStore = create<WorkoutState>()(
       pickerOpen: false,
       detailId: null,
       settings: { showRpe: false },
-      exerciseAliases: {},
-      exerciseGifs: {},
-      globalMachines: ['Hammer Strength', 'Technogym', 'Technogym Discos'],
-      globalGrips: [],
-      exerciseVariants: {},
       hiddenEquipments: [],
 
       setTab: (tab) => set({ tab }),
@@ -425,54 +406,6 @@ export const useWorkoutStore = create<WorkoutState>()(
         return record;
       },
 
-      setExerciseAlias: (id, name) => {
-        set((state) => ({
-          exerciseAliases: { ...state.exerciseAliases, [id]: name },
-        }));
-      },
-
-      setExerciseGif: (id, gifUrl) => {
-        set((state) => ({
-          exerciseGifs: { ...state.exerciseGifs, [id]: gifUrl },
-        }));
-      },
-      addGlobalMachine: (name) =>
-        set((s) => ({ globalMachines: Array.from(new Set([...s.globalMachines, name])) })),
-      removeGlobalMachine: (name) =>
-        set((s) => ({ globalMachines: s.globalMachines.filter((m) => m !== name) })),
-      addGlobalGrip: (name) =>
-        set((s) => ({ globalGrips: Array.from(new Set([...s.globalGrips, name])) })),
-      removeGlobalGrip: (name) =>
-        set((s) => ({ globalGrips: s.globalGrips.filter((g) => g !== name) })),
-      addExerciseVariant: (exerciseId, type, name) =>
-        set((s) => {
-          const ev = s.exerciseVariants[exerciseId] || {};
-          const list = ev[(type + 's') as 'grips' | 'machines'] || [];
-          return {
-            exerciseVariants: {
-              ...s.exerciseVariants,
-              [exerciseId]: {
-                ...ev,
-                [type + 's']: Array.from(new Set([...list, name])),
-              },
-            },
-          };
-        }),
-      removeExerciseVariant: (exerciseId, type, name) =>
-        set((s) => {
-          const ev = s.exerciseVariants[exerciseId] || {};
-          const list = ev[(type + 's') as 'grips' | 'machines'] || [];
-          return {
-            exerciseVariants: {
-              ...s.exerciseVariants,
-              [exerciseId]: {
-                ...ev,
-                [type + 's']: list.filter((x) => x !== name),
-              },
-            },
-          };
-        }),
-
       toggleHiddenEquipment: (equip) => {
         set((state) => {
           const arr = state.hiddenEquipments || [];
@@ -515,11 +448,6 @@ export const useWorkoutStore = create<WorkoutState>()(
         tab: s.tab,
         settings: s.settings,
         hiddenEquipments: s.hiddenEquipments,
-        exerciseAliases: s.exerciseAliases,
-        exerciseGifs: s.exerciseGifs,
-        globalMachines: s.globalMachines,
-        globalGrips: s.globalGrips,
-        exerciseVariants: s.exerciseVariants,
       }),
       version: 1,
 

@@ -8,5 +8,5 @@
 - [ ] Si se han creado tablas con FK a `users`, se ha decidido explícitamente el `ON DELETE` y se ha actualizado `AccountDeletionService` para evitar registros huérfanos.
 - [ ] Los tests del `AccountDeletionService` o del borrado de cuenta pasan sin excepciones.
 - [ ] `git diff --stat` coincide exactamente con el alcance pedido (sin archivos temporales, scripts de agentes ni cambios furtivos de formato).
-- [ ] El código fuente no contiene mojibake (`Ã©`, `Ã³`, etc).
+- [ ] El código fuente no contiene texto con errores de codificación (mojibake), por ejemplo `Ã©` en lugar de `é`.
 - [ ] El Frontend no contiene nuevos `any` o `@ts-ignore` furtivos.
