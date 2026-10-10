@@ -1,1036 +1,76 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import {
-  LayoutGrid,
-  List,
-  Clock,
-  ArrowDownAZ,
-  Utensils,
-  Trash2,
-  ScanLine,
-  Pencil,
-  Plus,
-  ChevronDown,
-  ChevronRight,
-  X,
-  Check,
-  Beef,
-  Wheat,
-  Droplet,
-  Apple,
-  ChefHat,
-} from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import api from '../api/client';
-import toast from 'react-hot-toast';
-const BarcodeScanner = lazy(() => import('../components/BarcodeScanner'));
-import { getSanitizedKcal, extractPortions } from '../utils/portionHelper';
-import { useSpeechToText } from '../hooks/useSpeechToText';
+import { useState, lazy, Suspense } from 'react';
+import { Skeleton } from '../components/ui/skeleton';
+import { useMyFoodsData } from '../hooks/my-foods/useMyFoodsData';
+import { useFoodFilters } from '../hooks/my-foods/useFoodFilters';
+import { useFoodForms } from '../hooks/my-foods/useFoodForms';
+import { useScannerAndOCR } from '../hooks/my-foods/useScannerAndOCR';
+import { useAiAssistant } from '../hooks/my-foods/useAiAssistant';
+import { useMealSelection } from '../hooks/my-foods/useMealSelection';
 
-import AiFoodModal from '../components/my-foods/AiFoodModal';
+import { FoodFiltersBar } from '../components/my-foods/FoodFiltersBar';
+import { BulkSelectionToolbar } from '../components/my-foods/BulkSelectionToolbar';
 import FoodFormModal from '../components/my-foods/FoodFormModal';
 import RecipeFormModal from '../components/my-foods/RecipeFormModal';
 import MealSelectorModal from '../components/my-foods/MealSelectorModal';
 import FoodCard from '../components/my-foods/FoodCard';
 import RecipeCard from '../components/my-foods/RecipeCard';
+import AiFoodModal from '../components/my-foods/AiFoodModal';
 
-const getLocalISODate = () => {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().split('T')[0];
-};
-
-import { Skeleton } from '../components/ui/skeleton';
+import { ChevronDown, ChevronRight, ScanLine, Pencil, X } from 'lucide-react';
 import { PageFoodItem } from '../types/myfoods';
-import { SavedFood } from '../types/api';
-import { RecipeForm } from '../components/my-foods/RecipeFormModal';
-import { FoodForm as FoodFormState } from '../components/my-foods/FoodFormModal';
+import { Recipe, FoodLog } from '../types/api';
+const BarcodeScanner = lazy(() => import('../components/BarcodeScanner'));
 
 export default function MyFoodsPage() {
-  const queryClient = useQueryClient();
+  const { recentFoods, savedFoods, recipes, isLoading, fetchData, deleteFoodsBulk, deleteRecipe } =
+    useMyFoodsData();
 
-  const {
-    data = {},
-    isLoading: loadingData,
-    refetch: refetchQuery,
-  } = useQuery<
-    {
-      recentFoods: import('../types/api').FoodLog[];
-      savedFoods: PageFoodItem[];
-      recipes: import('../types/api').Recipe[];
-    },
-    Error
-  >({
-    queryKey: ['myFoodsData'],
-    queryFn: async () => {
-      const [recentRes, savedRes, recipesRes] = await Promise.all([
-        api.get('/nutrition/logs/recent').catch(() => ({ data: [] })),
-        api.get('/nutrition/my-foods').catch(() => ({ data: [] })),
-        api.get('/nutrition/recipes').catch(() => ({ data: [] })),
-      ]);
-      return {
-        recentFoods: recentRes.data,
-        savedFoods: savedRes.data,
-        recipes: recipesRes.data,
-      };
-    },
-  });
+  const [searchFilter, setSearchFilter] = useState('all');
+  const filters = useFoodFilters(recentFoods, savedFoods, recipes);
+  const forms = useFoodForms(fetchData);
 
-  const fetchData = () => {
-    refetchQuery();
-    queryClient.invalidateQueries({ queryKey: ['foodLists'] });
-  };
-
-  const {
-    recentFoods = [],
-    savedFoods = [],
-    recipes = [],
-  } = data as {
-    recentFoods?: PageFoodItem[];
-    savedFoods?: PageFoodItem[];
-    recipes?: import('../types/api').Recipe[];
-  };
-
-  // AI State
-  const [aiQuery, setAiQuery] = useState('');
-  const { isListening, toggleListening, stopListening } = useSpeechToText({
-    onTranscript: (text) => setAiQuery(text),
-    lang: 'es-ES',
-  });
-
-  // Form States
-  const [foodForm, setFoodForm] = useState({
-    name: '',
-    brand: '',
-    protein: '',
-    carbs: '',
-    fat: '',
-    kcal: '',
-    servingSize: '',
-    servingLabel: '',
-  });
-  const [recipeForm, setRecipeForm] = useState({
-    name: '',
-    description: '',
-    protein: '',
-    carbs: '',
-    fat: '',
-    kcal: '',
-  });
-
-  // Edit and Accordion States
-  const [isFoodFormOpen, setIsFoodFormOpen] = useState(false);
-  const [isRecipeFormOpen, setIsRecipeFormOpen] = useState(false);
-  const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
-  const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
-
-  // Unified Create Actions
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const ai = useAiAssistant(fetchData);
 
-  // Drag state
-  const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
-
-  // OCR file input reference
-  const ocrFileRef = useRef<HTMLInputElement>(null);
-
-  // Search & Filter State
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchFilter, setSearchFilter] = useState('all'); // 'all' | 'recent' | 'foods' | 'recipes'
-
-  const [viewMode, setViewMode] = useState('grid');
-  const [macroFilter, setMacroFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('recent');
-  const [selectedFoods, setSelectedFoods] = useState<Set<number>>(new Set());
-
-  // Meal Selector States
-  const [isMealSelectorOpen, setIsMealSelectorOpen] = useState(false);
-  const [mealSelectorDate, setMealSelectorDate] = useState(getLocalISODate());
-  const [bulkQuantities, setBulkQuantities] = useState<Record<number, number>>({});
-  const [isAddingToMeal, setIsAddingToMeal] = useState(false);
-
-  useEffect(() => {
-    if (isMealSelectorOpen) {
-      const initial: Record<string, number> = {};
-      Array.from(selectedFoods).forEach((id) => {
-        const food = savedFoods.find((f: PageFoodItem) => f.id === Number(id));
-        if (food) {
-          initial[id] = (food.servingSize || 0) > 0 ? food.servingSize || 100 : 100;
-        }
-      });
-      setBulkQuantities(initial);
-      setMealSelectorDate(getLocalISODate());
-    }
-  }, [isMealSelectorOpen, selectedFoods, savedFoods]);
-
-  // Scanner State
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [isLookingUpCode, setIsLookingUpCode] = useState(false);
-  type ScannedProductType = {
-    name: string;
-    brand?: string;
-    kcal: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-    servingSize?: number | null;
-    servingLabel?: string | null;
-    imageUrl?: string;
-    barcode?: string;
-  };
-
-  const [scannedProduct, setScannedProduct] = useState<ScannedProductType | null>(null);
-  const [lookupError, setLookupError] = useState<string | null>(null);
-
-  const [expandedSections, setExpandedSections] = useState({
-    recent: window.innerWidth > 768,
-    foods: window.innerWidth > 768,
-    recipes: window.innerWidth > 768,
-  });
-
-  const q = searchQuery.toLowerCase().trim();
-
-  const filteredRecent = recentFoods.filter((f: PageFoodItem) => {
-    if (!q) return true;
-    return (f.product || '').toLowerCase().includes(q);
-  });
-
-  const getPredominantMacro = (f: PageFoodItem) => {
-    const p = f.proteinPer100g || 0;
-    const c = f.carbsPer100g || 0;
-    const fat = f.fatPer100g || 0;
-    if (p >= c && p >= fat) return 'protein';
-    if (c >= p && c >= fat) return 'carbs';
-    return 'fat';
-  };
-
-  const filteredFoods = savedFoods
-    .filter((f: PageFoodItem) => {
-      if (q) {
-        const nameMatch = (f.name || '').toLowerCase().includes(q);
-        const brandMatch = (f.brand || '').toLowerCase().includes(q);
-        if (!nameMatch && !brandMatch) return false;
-      }
-      if (macroFilter !== 'all' && getPredominantMacro(f) !== macroFilter) return false;
-      return true;
-    })
-    .sort((a: PageFoodItem, b: PageFoodItem) => {
-      if (sortBy === 'name_asc') return (a.name || '').localeCompare(b.name || '');
-      if (sortBy === 'recent') {
-        const dateA = Number(a.createdAt) || 0 ? new Date(Number(a.createdAt) || 0).getTime() : 0;
-        const dateB = Number(b.createdAt) || 0 ? new Date(Number(b.createdAt) || 0).getTime() : 0;
-        if (dateA !== dateB) return dateB - dateA;
-        if (a.id && b.id) {
-          if (typeof a.id === 'number' && typeof b.id === 'number') return b.id - a.id;
-          return String(b.id).localeCompare(String(a.id));
-        }
-        return 0;
-      }
-      return 0;
-    });
-
-  const filteredRecipes = recipes.filter((r: import('../types/api').Recipe) => {
-    if (!q) return true;
-    const nameMatch = (r.name || '').toLowerCase().includes(q);
-    const descMatch = (r.description || '').toLowerCase().includes(q);
-    return nameMatch || descMatch;
-  });
-
-  const totalResults = filteredRecent.length + filteredFoods.length + filteredRecipes.length;
-
-  const toggleSection = (
-    sec: keyof typeof expandedSections,
-    e: React.MouseEvent<HTMLDivElement>,
-  ) => {
-    if (!expandedSections[sec] && e?.currentTarget) {
-      const el = e.currentTarget;
-      setTimeout(() => {
-        const offset = 140;
-        const bodyRect = document.body.getBoundingClientRect().top;
-        const elementRect = el.getBoundingClientRect().top;
-        const elementPosition = elementRect - bodyRect;
-        const offsetPosition = elementPosition - offset;
-        window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-      }, 50);
-    }
-    setExpandedSections((prev) => ({ ...prev, [sec]: !prev[sec] }));
-  };
-
-  const toFormVal = (val: string | number | null | undefined) =>
-    val !== null && val !== undefined ? val : '';
-
-  const updateFoodForm = (field: string, value: string | number | null) => {
-    const newForm = { ...foodForm, [field]: value };
-    if (['protein', 'carbs', 'fat'].includes(field)) {
-      const p = parseFloat(newForm.protein) || 0;
-      const c = parseFloat(newForm.carbs) || 0;
-      const f = parseFloat(newForm.fat) || 0;
-      const hasAny = [newForm.protein, newForm.carbs, newForm.fat].some(
-        (v: unknown) => v !== '' && v !== null && v !== undefined,
-      );
-      if (hasAny) {
-        newForm.kcal = String(Math.round((p * 4 + c * 4 + f * 9) * 10) / 10);
-      } else {
-        newForm.kcal = '';
-      }
-    }
-    setFoodForm(newForm);
-  };
-
-  const updateRecipeForm = (field: string, value: string | number | null) => {
-    setRecipeForm((prev) => {
-      let newForm = { ...prev };
-      if (typeof field === 'object' && field !== null) {
-        newForm = { ...newForm, ...(field as Record<string, unknown>) };
-      } else {
-        (newForm as Record<string, unknown>)[field as string] = value;
-      }
-
-      const p = parseFloat(newForm.protein) || 0;
-      const c = parseFloat(newForm.carbs) || 0;
-      const f = parseFloat(newForm.fat) || 0;
-
-      if (typeof field === 'object' && field !== null && 'kcal' in field) {
-        newForm.kcal = String((field as Record<string, unknown>).kcal);
-      } else if (typeof field === 'object' || ['protein', 'carbs', 'fat'].includes(field)) {
-        const hasAny = [newForm.protein, newForm.carbs, newForm.fat].some(
-          (v: unknown) => v !== '' && v !== null && v !== undefined,
-        );
-        if (hasAny) {
-          newForm.kcal = String(Math.round((p * 4 + c * 4 + f * 9) * 10) / 10);
-        } else {
-          newForm.kcal = '';
-        }
-      }
-      return newForm;
-    });
-  };
-
-  const [pendingAiCount, setPendingAiCount] = useState(0);
-
-  const handleAiSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!aiQuery.trim()) return;
-    const queryText = aiQuery.trim();
-    stopListening();
-    setAiQuery('');
-    setPendingAiCount((prev) => prev + 1);
-    toast(`Buscando "${queryText}"...`, { icon: '', duration: 2000 });
-    api
-      .post('/nutrition/ai/food', { text: queryText })
-      .then(() => {
-        toast.success(`"${queryText}" añadido `);
-        fetchData();
-      })
-      .catch((err: unknown) => {
-        toast.error(
-          `Error: ${(err as { response?: { data?: { error?: string } } }).response?.data?.error || 'IA'}`,
-        );
-      })
-      .finally(() => {
-        setPendingAiCount((prev) => Math.max(0, prev - 1));
-      });
-  };
-
-  const handleAddSavedFood = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const dto = {
-      name: foodForm.name,
-      brand: foodForm.brand,
-      kcalPer100g: parseFloat(foodForm.kcal) || 0,
-      proteinPer100g: parseFloat(foodForm.protein) || 0,
-      carbsPer100g: parseFloat(foodForm.carbs) || 0,
-      fatPer100g: parseFloat(foodForm.fat) || 0,
-      servingSize:
-        foodForm.servingSize !== '' && foodForm.servingSize !== null
-          ? parseFloat(foodForm.servingSize)
-          : null,
-      servingLabel: foodForm.servingLabel || null,
-    };
-    try {
-      if (editingFoodId) {
-        await api.put(`/nutrition/my-foods/${editingFoodId}`, dto);
-        toast.success('Actualizado');
-      } else {
-        await api.post('/nutrition/my-foods', dto);
-        toast.success('Guardado');
-      }
-      setFoodForm({
-        name: '',
-        brand: '',
-        protein: '',
-        carbs: '',
-        fat: '',
-        kcal: '',
-        servingSize: '',
-        servingLabel: '',
-      });
-      setEditingFoodId(null);
-      setIsFoodFormOpen(false);
-      fetchData();
-    } catch {
-      toast.error('Error');
-    }
-  };
-
-  const handleEditFood = (food: PageFoodItem) => {
-    setFoodForm({
-      name: food.name || '',
-      brand: food.brand || '',
-      kcal: String(toFormVal(food.kcalPer100g)),
-      protein: String(toFormVal(food.proteinPer100g)),
-      carbs: String(toFormVal(food.carbsPer100g)),
-      fat: String(toFormVal(food.fatPer100g)),
-      servingSize: String(toFormVal(food.servingSize)),
-      servingLabel: food.servingLabel || '',
-    });
-    setEditingFoodId(String(food.id));
-    setIsFoodFormOpen(true);
-  };
-
-  const handleAddRecipe = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const dto = {
-      name: recipeForm.name,
-      description: recipeForm.description,
-      totalKcal: parseFloat(recipeForm.kcal) || 0,
-      totalProtein: parseFloat(recipeForm.protein) || 0,
-      totalCarbs: parseFloat(recipeForm.carbs) || 0,
-      totalFat: parseFloat(recipeForm.fat) || 0,
-    };
-    try {
-      if (editingRecipeId) {
-        await api.put(`/nutrition/recipes/${editingRecipeId}`, dto);
-        toast.success('Actualizada');
-      } else {
-        await api.post('/nutrition/recipes', dto);
-        toast.success('Guardada');
-      }
-      setRecipeForm({ name: '', description: '', protein: '', carbs: '', fat: '', kcal: '' });
-      setEditingRecipeId(null);
-      setIsRecipeFormOpen(false);
-      fetchData();
-    } catch {
-      toast.error('Error');
-    }
-  };
-
-  const handleEditRecipe = (recipe: import('../types/api').Recipe) => {
-    setRecipeForm({
-      name: recipe.name || '',
-      description: recipe.description || '',
-      kcal: String(toFormVal(recipe.totalKcal)),
-      protein: String(toFormVal(recipe.totalProtein)),
-      carbs: String(toFormVal(recipe.totalCarbs)),
-      fat: String(toFormVal(recipe.totalFat)),
-    });
-    setEditingRecipeId(String(recipe.id));
-    setIsRecipeFormOpen(true);
-  };
-
-  const handleBulkDelete = async () => {
-    if (!confirm(`¿Borrar los ${selectedFoods.size} alimentos seleccionados?`)) return;
-    try {
-      await Promise.all(
-        Array.from(selectedFoods).map((id) => api.delete(`/nutrition/my-foods/${id}`)),
-      );
-      toast.success(`${selectedFoods.size} alimentos eliminados`);
-      setSelectedFoods(new Set());
-      fetchData();
-    } catch {
-      toast.error('Error al borrar alimentos');
-    }
-  };
-
-  const toggleFoodSelection = (id: number) => {
-    const next = new Set(selectedFoods);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedFoods(next);
-  };
-
-  const handleBulkAddToMeal = async (mealIndex: number) => {
-    if (selectedFoods.size === 0) return;
-    setIsAddingToMeal(true);
-    try {
-      const foodsToAdd = savedFoods.filter(
-        (f: PageFoodItem) => f.id !== undefined && selectedFoods.has(Number(f.id)),
-      );
-      const promises = foodsToAdd.map((food: PageFoodItem) => {
-        const qty = bulkQuantities[food.id!] || 100;
-        const factor = qty / 100.0;
-        const logEntry = {
-          date: mealSelectorDate,
-          mealIndex: mealIndex,
-          product: food.name + (food.brand ? ` (${food.brand})` : ''),
-          quantity: qty,
-          kcal: Math.round(food.kcalPer100g * factor * 10) / 10,
-          protein: Math.round(food.proteinPer100g * factor * 10) / 10,
-          carbs: Math.round(food.carbsPer100g * factor * 10) / 10,
-          fat: Math.round(food.fatPer100g * factor * 10) / 10,
-        };
-        return api.post('/nutrition/logs', logEntry);
-      });
-      await Promise.all(promises);
-      toast.success(`${selectedFoods.size} alimentos añadidos al diario`);
-      setSelectedFoods(new Set());
-      setIsMealSelectorOpen(false);
-    } catch {
-      toast.error('Error al añadir al diario');
-    } finally {
-      /* ignore */
-      setIsAddingToMeal(false);
-    }
-  };
-
-  //   const deleteSavedFood = async (id: string) => {
-  //     if (!confirm('¿Borrar este alimento?')) return;
-  //     try {
-  //       await api.delete(`/nutrition/my-foods/${id}`);
-  //       toast.success('Eliminado');
-  //       fetchData();
-  //     } catch {
-  //       toast.error('Error');
-  //     }
-  //   };
-
-  const handleDeleteRecipe = async (id: string) => {
-    if (!window.confirm('¿Seguro que quieres eliminar esta receta?')) return;
-    try {
-      await api.delete(`/nutrition/recipes/${id}`);
-      toast.success('Eliminada');
-      fetchData();
-    } catch (err: unknown) {
-      toast.error('Error al eliminar');
-      console.error(err);
-    }
-  };
-
-  const handleOcrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Reset the input value so the same file can be uploaded again if needed
-    e.target.value = '';
-
-    setIsActionMenuOpen(false);
-
-    const loadingToast = toast.loading('Analizando etiqueta nutricional con IA...', {
-      duration: 15000,
-    });
-
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const { data } = await api.post('/nutrition/ai/ocr', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      toast.dismiss(loadingToast);
-      toast.success('¡Datos extraídos correctamente!');
-
-      // Pre-fill the form and open it
-      setEditingFoodId(null);
-      setFoodForm({
-        name: data.name || '',
-        brand: data.brand || '',
-        protein: data.proteinPer100g !== undefined ? String(data.proteinPer100g) : '',
-        carbs: data.carbsPer100g !== undefined ? String(data.carbsPer100g) : '',
-        fat: data.fatPer100g !== undefined ? String(data.fatPer100g) : '',
-        kcal: data.kcalPer100g !== undefined ? String(data.kcalPer100g) : '',
-        servingSize:
-          data.servingSize !== undefined && data.servingSize !== null
-            ? String(data.servingSize)
-            : '',
-        servingLabel: data.servingLabel || '',
-      });
-      setIsFoodFormOpen(true);
-    } catch (err: unknown) {
-      toast.dismiss(loadingToast);
-      toast.error(
-        'Error al escanear: ' +
-          ((err as { response?: { data?: { error?: string } } }).response?.data?.error ||
-            (err as Error).message),
-      );
-      console.error(err);
-    }
-  };
-
-  // QR / Barcode Scan Handlers
-  const handleScanBarcode = async (decodedText: string) => {
-    let code = (decodedText || '').trim();
-    if (!code) return;
-
-    const urlBarcodeMatch = code.match(/\/product\/(\d+)/i) || code.match(/[?&]code=(\d+)/i);
-    if (urlBarcodeMatch) {
-      code = urlBarcodeMatch[1];
-    }
-
-    if (code.startsWith('{') && code.endsWith('}')) {
-      try {
-        const parsed = JSON.parse(code);
-        if (parsed.name) {
-          setScannedProduct({
-            name: parsed.name,
-            brand: parsed.brand || '',
-            kcalPer100g: parsed.kcal || parsed.kcalPer100g || 0,
-            proteinPer100g: parsed.protein || parsed.proteinPer100g || 0,
-            carbsPer100g: parsed.carbs || parsed.carbsPer100g || 0,
-            fatPer100g: parsed.fat || parsed.fatPer100g || 0,
-            servingSize: parsed.servingSize || undefined,
-            servingLabel: parsed.servingLabel || undefined,
-            barcode: code,
-          } as PageFoodItem);
-          return;
-        }
-      } catch {
-        /* ignore */
-      }
-    }
-
-    setIsLookingUpCode(true);
-    setLookupError(null);
-    setScannedProduct(null);
-
-    try {
-      const res = await api.get(`/food-external/barcode?code=${encodeURIComponent(code)}`);
-      if (res.status === 200) {
-        const data = res.data;
-        const p = data.product;
-        if (p && (p.product_name || p.product_name_es)) {
-          const name = p.product_name || p.product_name_es || 'Alimento';
-          const brand = p.brands ? p.brands.split(',')[0].trim() : '';
-          const nut = p.nutriments || {};
-          const portions = extractPortions(p);
-          const firstPortion = portions.length > 0 ? portions[0] : null;
-
-          setScannedProduct({
-            name: name,
-            brand: brand,
-            kcal: getSanitizedKcal(nut),
-            protein: Number(nut['proteins_100g'] ?? nut['proteins'] ?? 0) || 0,
-            carbs: Number(nut['carbohydrates_100g'] ?? nut['carbohydrates'] ?? 0) || 0,
-            fat: Number(nut['fat_100g'] ?? nut['fat'] ?? 0) || 0,
-            servingSize: firstPortion
-              ? firstPortion.amount
-              : p.serving_quantity
-                ? Number(p.serving_quantity)
-                : undefined,
-            servingLabel: firstPortion ? firstPortion.label : p.serving_size || null,
-            imageUrl: p.image_front_small_url || p.image_url || null,
-            barcode: code,
-          });
-          return;
-        }
-      }
-      setLookupError(
-        `No se encontró ningún producto para el código "${code}". Puedes añadirlo manualmente.`,
-      );
-    } catch (err: unknown) {
-      console.error(err);
-      setLookupError('Error al consultar la base de datos de alimentos.');
-    } finally {
-      /* ignore */
-      setIsLookingUpCode(false);
-    }
-  };
-
-  const handleSaveScannedProduct = async () => {
-    if (!scannedProduct) return;
-    const dto = {
-      name: scannedProduct.name,
-      brand: scannedProduct.brand || '',
-      kcalPer100g: Number(scannedProduct.kcal) || 0,
-      proteinPer100g: Number(scannedProduct.protein) || 0,
-      carbsPer100g: Number(scannedProduct.carbs) || 0,
-      fatPer100g: Number(scannedProduct.fat) || 0,
-      servingSize: scannedProduct.servingSize ? Number(scannedProduct.servingSize) : null,
-      servingLabel: scannedProduct.servingLabel || null,
-    };
-
-    try {
-      await api.post('/nutrition/my-foods', dto);
-      toast.success(`"${scannedProduct.name}" añadido a Mis Alimentos `);
-      setIsScannerOpen(false);
-      setScannedProduct(null);
-      setLookupError(null);
-      fetchData();
-    } catch {
-      toast.error('Error al guardar el alimento escaneado');
-    }
-  };
-
-  const handleEditScannedProduct = () => {
-    if (!scannedProduct) return;
-    setFoodForm({
-      name: scannedProduct.name || '',
-      brand: scannedProduct.brand || '',
-      kcal: String(toFormVal(scannedProduct.kcal)),
-      protein: String(toFormVal(scannedProduct.protein)),
-      carbs: String(toFormVal(scannedProduct.carbs)),
-      fat: String(toFormVal(scannedProduct.fat)),
-      servingSize: String(toFormVal(scannedProduct.servingSize)),
-      servingLabel: scannedProduct.servingLabel || '',
-    });
-    setEditingFoodId(null);
-    setIsFoodFormOpen(true);
-    setIsScannerOpen(false);
-    setScannedProduct(null);
-    setLookupError(null);
-  };
-
-  // Drag & Drop
-  const handleDragStart = (e: React.DragEvent, foodData: PageFoodItem) => {
-    e.dataTransfer.setData('application/json', JSON.stringify(foodData));
-    e.dataTransfer.effectAllowed = 'copy';
-  };
-  const handleDragOver = (e: React.DragEvent, target: string) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
-    setDragOverTarget(target);
-  };
-  const handleDragLeave = () => {
-    setDragOverTarget(null);
-  };
-
-  const handleDropOnFoods = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOverTarget(null);
-    try {
-      const data = JSON.parse(e.dataTransfer.getData('application/json'));
-      await api.post('/nutrition/my-foods', {
-        name: data.name,
-        brand: data.brand || '',
-        kcalPer100g: data.kcal,
-        proteinPer100g: data.protein,
-        carbsPer100g: data.carbs,
-        fatPer100g: data.fat,
-      });
-      toast.success(`"${data.name}" → Mis Alimentos`);
-      fetchData();
-    } catch {
-      toast.error('Error');
-    }
-  };
-
-  const handleDropOnRecipes = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOverTarget(null);
-    try {
-      const data = JSON.parse(e.dataTransfer.getData('application/json'));
-      await api.post('/nutrition/recipes', {
-        name: data.name,
-        description: '',
-        totalKcal: data.kcal,
-        totalProtein: data.protein,
-        totalCarbs: data.carbs,
-        totalFat: data.fat,
-      });
-      toast.success(`"${data.name}" → Mis Recetas`);
-      fetchData();
-    } catch {
-      toast.error('Error');
-    }
-  };
-
-  const saveRecentAsFood = async (f: PageFoodItem) => {
-    const q = f.quantity || 100;
-    try {
-      await api.post('/nutrition/my-foods', {
-        name: f.product,
-        brand: '',
-        kcalPer100g: Math.round(((f.kcal || 0) / q) * 100 * 10) / 10,
-        proteinPer100g: Math.round(((f.protein || 0) / q) * 100 * 10) / 10,
-        carbsPer100g: Math.round(((f.carbs || 0) / q) * 100 * 10) / 10,
-        fatPer100g: Math.round(((f.fat || 0) / q) * 100 * 10) / 10,
-      });
-      toast.success(`"${f.product}" → Mis Alimentos`);
-      fetchData();
-    } catch {
-      toast.error('Error');
-    }
-  };
-
-  const isAlreadySaved = (productName: string) => {
-    const n = productName.toLowerCase().trim();
-    return savedFoods.some((s: PageFoodItem) => s.name.toLowerCase().trim() === n);
-  };
-
-  const macroLine = (kcal: number, p: number, c: number, f: number) => (
-    <span className="meal-subtotal-row" style={{ fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
-      <span className="subtotal-val kcal">
-        <strong style={{ color: 'var(--text-primary)' }}>{Math.round(kcal)}</strong> kcal
-      </span>
-      <span className="subtotal-dot">·</span>
-      <span className="subtotal-val">P: {Number(p).toFixed(1)}g</span>
-      <span className="subtotal-dot">·</span>
-      <span className="subtotal-val">C: {Number(c).toFixed(1)}g</span>
-      <span className="subtotal-dot">·</span>
-      <span className="subtotal-val">G: {Number(f).toFixed(1)}g</span>
-    </span>
+  const scanner = useScannerAndOCR(
+    fetchData,
+    setIsActionMenuOpen,
+    forms.setEditingFoodId,
+    forms.setFoodForm,
+    forms.setIsFoodFormOpen,
   );
 
-  const itemStyle = (highlight: boolean) => ({
-    padding: '0.5rem 0.7rem',
-    background: highlight ? 'var(--bg-glass-strong)' : 'var(--bg-secondary)',
-    borderRadius: '10px',
-    border: `1px solid ${highlight ? 'var(--color-success)' : 'var(--border-subtle)'}`,
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: '0.5rem',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
+  const meals = useMealSelection(savedFoods);
+
+  const [expandedSections, setExpandedSections] = useState({
+    recent: true,
+    foods: true,
+    recipes: true,
   });
+  const toggleSection = (sec: keyof typeof expandedSections) =>
+    setExpandedSections((p) => ({ ...p, [sec]: !p[sec] }));
 
-  //   const EditBtn = ({ onClick }: { onClick: () => void }) => (
-  //     <button
-  //       onClick={(e) => {
-  //         e.stopPropagation();
-  //         onClick();
-  //       }}
-  //       className="icon-btn edit-btn"
-  //       style={{ padding: '0.4rem', width: '28px', height: '28px' }}
-  //       title="Editar"
-  //     ></button>
-  //   );
-
-  if (loadingData) {
+  if (isLoading)
     return (
       <div className="fade-in">
-        <div className="card" style={{ marginBottom: '1.25rem', padding: '0.85rem 1rem' }}>
-          <Skeleton className="h-10 w-full mb-3" />
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <Skeleton className="h-8 w-24 rounded-full" />
-            <Skeleton className="h-8 w-24 rounded-full" />
-          </div>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="card" style={{ padding: '1rem' }}>
-              <div
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-              >
-                <div style={{ flex: 1 }}>
-                  <Skeleton className="h-5 w-40 mb-2" />
-                  <Skeleton className="h-3 w-32" />
-                </div>
-                <Skeleton className="h-8 w-8 rounded-full" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <Skeleton className="h-10 w-full mb-3" />
       </div>
     );
-  }
 
   return (
     <div className="fade-in">
-      {/* SEARCH AND FILTER BAR */}
-      <div
-        className="card"
-        style={{
-          marginBottom: '1.25rem',
-          padding: '0.85rem 1rem',
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: '14px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.65rem',
-        }}
-      >
-        <div style={{ position: 'relative', width: '100%' }}>
-          <span
-            style={{
-              position: 'absolute',
-              left: '0.85rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              opacity: 0.5,
-              fontSize: '0.95rem',
-              pointerEvents: 'none',
-            }}
-          ></span>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="Buscar en recientes, alimentos o recetas..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              paddingLeft: '2.4rem',
-              paddingRight: searchQuery ? '2.4rem' : '0.85rem',
-              height: '40px',
-              fontSize: '0.88rem',
-              borderRadius: '10px',
-              background: 'var(--bg-primary)',
-              border: '1px solid var(--border-subtle)',
-            }}
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              style={{
-                position: 'absolute',
-                right: '0.65rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                color: 'var(--text-secondary)',
-                cursor: 'pointer',
-                fontSize: '0.95rem',
-                padding: '0.2rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              title="Limpiar búsqueda"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        <div
-          style={{
-            display: 'flex',
-            gap: '0.5rem',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div
-            className="mobile-scroll-x"
-            style={{
-              display: 'flex',
-              gap: '0.35rem',
-              flexWrap: 'nowrap',
-              alignItems: 'center',
-              overflowX: 'auto',
-              paddingBottom: '2px',
-              flex: 1,
-            }}
-          >
-            {[
-              {
-                id: 'all',
-                icon: LayoutGrid,
-                label: 'Todo',
-                count: q ? totalResults : recentFoods.length + savedFoods.length + recipes.length,
-              },
-              { id: 'recent', icon: Clock, label: 'Recientes', count: filteredRecent.length },
-              { id: 'foods', icon: Apple, label: 'Alimentos', count: filteredFoods.length },
-              { id: 'recipes', icon: ChefHat, label: 'Recetas', count: filteredRecipes.length },
-            ].map((tab) => {
-              const active = searchFilter === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setSearchFilter(tab.id)}
-                  style={{
-                    padding: '0.25rem 0.5rem',
-                    borderRadius: '8px',
-                    fontSize: '0.75rem',
-                    fontWeight: active ? 600 : 400,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    border: active
-                      ? `1px solid var(--text-primary)`
-                      : '1px solid var(--border-subtle)',
-                    background: active ? 'var(--bg-glass-strong)' : 'var(--bg-primary)',
-                    color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.3rem',
-                  }}
-                  title={tab.label}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <tab.icon size={14} style={{ marginRight: '0.15rem' }} />
-                    {active && (
-                      <span style={{ marginLeft: '0.3rem' }} className="fade-in-anim">
-                        {tab.label}
-                      </span>
-                    )}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: '0.65rem',
-                      opacity: 0.8,
-                      background: active ? 'rgba(255,255,255,0.1)' : 'var(--bg-secondary)',
-                      padding: '0.05rem 0.3rem',
-                      borderRadius: '4px',
-                    }}
-                  >
-                    {tab.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          <button
-            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-            className="btn btn-secondary btn-sm"
-            style={{
-              padding: '0.3rem',
-              width: '32px',
-              height: '32px',
-              flexShrink: 0,
-              borderRadius: '8px',
-            }}
-            title="Cambiar Vista"
-          >
-            {viewMode === 'grid' ? (
-              <List className="w-4 h-4" />
-            ) : (
-              <LayoutGrid className="w-4 h-4" />
-            )}
-          </button>
-        </div>
-
-        {searchQuery && (
-          <div
-            style={{
-              fontSize: '0.78rem',
-              color: 'var(--text-secondary)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <span>
-              Resultados para "<strong>{searchQuery}</strong>": {totalResults} coincidencia
-              {totalResults === 1 ? '' : 's'}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery('');
-                setSearchFilter('all');
-              }}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--color-carbs)',
-                cursor: 'pointer',
-                fontSize: '0.78rem',
-                textDecoration: 'underline',
-              }}
-            >
-              Restablecer filtros
-            </button>
-          </div>
-        )}
-      </div>
+      <FoodFiltersBar
+        searchQuery={filters.searchQuery}
+        setSearchQuery={filters.setSearchQuery}
+        searchFilter={searchFilter}
+        setSearchFilter={setSearchFilter}
+        viewMode={filters.viewMode}
+        setViewMode={filters.setViewMode}
+        totalResults={filters.totalResults}
+        filteredRecentCount={filters.filteredRecent.length}
+        filteredFoodsCount={filters.filteredFoods.length}
+        filteredRecipesCount={filters.filteredRecipes.length}
+      />
 
       <div className="flex flex-col lg:flex-row gap-5">
         {/* MAIN CONTENT AREA: MIS ALIMENTOS */}
@@ -1039,1066 +79,230 @@ export default function MyFoodsPage() {
             className={`flex flex-col gap-5 ${searchFilter === 'all' ? 'w-full lg:w-2/3' : 'w-full'}`}
           >
             <div
-              className="card"
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                border: dragOverTarget === 'foods' ? '2px dashed var(--color-carbs)' : undefined,
-                transition: 'border 0.2s',
-              }}
-              onDragOver={(e) => handleDragOver(e, 'foods')}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDropOnFoods}
+              className={`card ${scanner.dragOverTarget === 'foods' ? 'border-2 border-dashed border-[var(--color-carbs)]' : ''}`}
+              onDragOver={(e) => scanner.handleDragOver(e, 'foods')}
+              onDragLeave={scanner.handleDragLeave}
+              onDrop={scanner.handleDropOnFoods}
             >
               <div
-                onClick={(e) => toggleSection('foods', e)}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '1rem',
-                  gap: '0.5rem',
-                  padding: '0.5rem 0.8rem',
-                  background: 'var(--bg-glass)',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                }}
+                onClick={() => toggleSection('foods')}
+                className="flex justify-between items-center bg-white/5 p-2 rounded-lg cursor-pointer"
               >
-                <h2
-                  style={{
-                    fontSize: '1.2rem',
-                    color: 'var(--text-primary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    margin: 0,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  <span></span> Mis Alimentos
-                </h2>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.8rem',
-                    color: 'var(--text-secondary)',
-                  }}
-                >
-                  {(expandedSections.foods || q) && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSortBy((prev) => (prev === 'recent' ? 'name_asc' : 'recent'));
-                      }}
-                      style={{
-                        background: 'var(--bg-secondary)',
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: '6px',
-                        width: '28px',
-                        height: '28px',
-                        flexShrink: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        fontSize: '0.9rem',
-                        color: 'var(--text-primary)',
-                      }}
-                      title={
-                        sortBy === 'recent'
-                          ? 'Ordenado por más recientes. Cambiar a A-Z'
-                          : 'Ordenado de A-Z. Cambiar a más recientes'
-                      }
-                    >
-                      {sortBy === 'recent' ? (
-                        <ArrowDownAZ className="w-4 h-4" />
-                      ) : (
-                        <Clock className="w-4 h-4" />
-                      )}
-                    </button>
-                  )}
-                  <div>
-                    {expandedSections.foods ? (
-                      <ChevronDown className="w-4 h-4" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4" />
-                    )}
-                  </div>
-                </div>
+                <h2 className="text-xl m-0 font-semibold">Mis Alimentos</h2>
+                {expandedSections.foods ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
               </div>
 
-              {/* FILTERS */}
-              <div
-                style={{
-                  display: expandedSections.foods || q ? 'flex' : 'none',
-                  flexDirection: 'column',
-                  gap: '1rem',
-                  flex: 1,
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '0.5rem',
-                    alignItems: 'center',
-                    background: 'var(--bg-secondary)',
-                    padding: '0.5rem',
-                    borderRadius: '10px',
-                  }}
-                >
-                  <div
-                    className="mobile-scroll-x"
-                    style={{
-                      display: 'flex',
-                      gap: '0.3rem',
-                      flex: 1,
-                      minWidth: '0',
-                      overflowX: 'auto',
-                      paddingBottom: '2px',
+              {expandedSections.foods && (
+                <div className="flex flex-col gap-4 mt-4">
+                  <BulkSelectionToolbar
+                    selectedCount={meals.selectedFoods.size}
+                    onBulkDelete={async () => {
+                      if (await deleteFoodsBulk(meals.selectedFoods)) meals.clearSelection();
                     }}
+                    onClearSelection={meals.clearSelection}
+                    onOpenMealSelector={meals.openMealSelector}
+                  />
+
+                  <div
+                    className={
+                      filters.viewMode === 'grid'
+                        ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2'
+                        : 'flex flex-col gap-2'
+                    }
                   >
-                    {[
-                      { id: 'all', label: 'Todos', icon: LayoutGrid },
-                      { id: 'protein', label: 'Pro', icon: Beef },
-                      { id: 'carbs', label: 'Car', icon: Wheat },
-                      { id: 'fat', label: 'Gra', icon: Droplet },
-                    ].map((m) => (
-                      <button
-                        key={m.id}
-                        onClick={() => setMacroFilter(m.id)}
-                        style={{
-                          whiteSpace: 'nowrap',
-                          padding: '0.35rem 0.65rem',
-                          borderRadius: '8px',
-                          border: `1px solid ${macroFilter === m.id ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
-                          background: macroFilter === m.id ? 'var(--accent-glow)' : 'transparent',
-                          color:
-                            macroFilter === m.id
-                              ? 'var(--accent-primary-light)'
-                              : 'var(--text-secondary)',
-                          fontSize: '0.82rem',
-                          fontWeight: macroFilter === m.id ? 600 : 500,
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          flexShrink: 0,
-                        }}
-                      >
-                        {m.icon && <m.icon size={14} />} {m.label}
-                      </button>
+                    {filters.filteredFoods.map((f: PageFoodItem) => (
+                      <FoodCard
+                        key={f.id}
+                        food={f}
+                        isSelected={f.id !== undefined && meals.selectedFoods.has(Number(f.id))}
+                        onToggleSelect={meals.toggleFoodSelection}
+                        onEdit={forms.handleEditFood}
+                        viewMode={filters.viewMode as 'grid' | 'list'}
+                        onDragStart={(e, d) => scanner.handleDragStart(e, d as PageFoodItem)}
+                      />
                     ))}
                   </div>
                 </div>
-
-                {/* BULK ACTIONS */}
-                {selectedFoods.size > 0 && (
-                  <div
-                    className="bulk-action-bar"
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      background: 'var(--color-danger-bg)',
-                      border: '1px solid rgba(239,68,68,0.3)',
-                      padding: '0.75rem 1rem',
-                      borderRadius: '10px',
-                    }}
-                  >
-                    <span
-                      style={{ fontSize: '0.85rem', color: 'var(--color-danger)', fontWeight: 600 }}
-                    >
-                      {selectedFoods.size} seleccionados
-                    </span>
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: '0.5rem',
-                        flexWrap: 'wrap',
-                        justifyContent: 'flex-end',
-                      }}
-                    >
-                      <button
-                        onClick={() => setIsMealSelectorOpen(true)}
-                        style={{
-                          background: 'var(--accent-primary)',
-                          color: 'var(--accent-text, white)',
-                          border: 'none',
-                          padding: '0.4rem 0.8rem',
-                          borderRadius: '6px',
-                          fontSize: '0.85rem',
-                          cursor: 'pointer',
-                          fontWeight: 600,
-                        }}
-                      >
-                        <Utensils className="w-4 h-4" /> Añadir
-                      </button>
-                      <button
-                        onClick={handleBulkDelete}
-                        style={{
-                          background: 'var(--bg-glass)',
-                          color: 'var(--color-danger)',
-                          border: '1px solid rgba(239,68,68,0.3)',
-                          padding: '0.4rem 0.8rem',
-                          borderRadius: '6px',
-                          fontSize: '0.85rem',
-                          cursor: 'pointer',
-                          fontWeight: 600,
-                        }}
-                      >
-                        {' '}
-                        <Trash2 className="w-4 h-4" /> Borrar
-                      </button>
-                      <button
-                        onClick={() => setSelectedFoods(new Set())}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: 'var(--text-secondary)',
-                          cursor: 'pointer',
-                          fontSize: '0.85rem',
-                          padding: '0.4rem 0.5rem',
-                        }}
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
-                  {filteredFoods.length === 0 && (
-                    <p
-                      style={{
-                        fontSize: '0.8rem',
-                        color: 'var(--text-secondary)',
-                        fontStyle: 'italic',
-                        textAlign: 'center',
-                        padding: '2rem 0',
-                      }}
-                    >
-                      {q || macroFilter !== 'all'
-                        ? `No hay alimentos que coincidan con los filtros`
-                        : 'No tienes alimentos guardados'}
-                    </p>
-                  )}
-
-                  {viewMode === 'grid' ? (
-                    /* GRID VIEW */
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-                        gap: '0.5rem',
-                      }}
-                    >
-                      {filteredFoods.map((f: PageFoodItem) => (
-                        <FoodCard
-                          key={f.id}
-                          food={f}
-                          isSelected={f.id !== undefined && selectedFoods.has(Number(f.id))}
-                          onToggleSelect={toggleFoodSelection as (id: number) => void}
-                          onEdit={handleEditFood as (food: SavedFood) => void}
-                          viewMode="grid"
-                          onDragStart={
-                            handleDragStart as (
-                              e: React.DragEvent,
-                              data: import('../components/my-foods/FoodCard').DragFoodData,
-                            ) => void
-                          }
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    /* LIST VIEW */
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          padding: '0.5rem',
-                          borderBottom: '1px solid var(--border-subtle)',
-                          fontSize: '0.7rem',
-                          color: 'var(--text-secondary)',
-                          fontWeight: 600,
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        <div style={{ width: '30px' }}></div>
-                        <div style={{ flex: 2, minWidth: '120px' }}>Nombre</div>
-                        <div style={{ flex: 1, textAlign: 'right' }}>Kcal</div>
-                        <div style={{ flex: 1, textAlign: 'right' }}>Pro</div>
-                        <div style={{ flex: 1, textAlign: 'right' }}>Car</div>
-                        <div style={{ flex: 1, textAlign: 'right' }}>Gra</div>
-                        <div style={{ width: '30px' }}></div>
-                      </div>
-                      {filteredFoods.map((f: PageFoodItem) => (
-                        <FoodCard
-                          key={f.id}
-                          food={f}
-                          isSelected={f.id !== undefined && selectedFoods.has(Number(f.id))}
-                          onToggleSelect={toggleFoodSelection as (id: number) => void}
-                          onEdit={handleEditFood as (food: SavedFood) => void}
-                          viewMode="list"
-                          onDragStart={
-                            handleDragStart as (
-                              e: React.DragEvent,
-                              data: import('../components/my-foods/FoodCard').DragFoodData,
-                            ) => void
-                          }
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* RIGHT SIDEBAR: RECIENTES & RECETAS */}
+        {/* RECIENTES Y RECETAS */}
         {['all', 'recent', 'recipes'].includes(searchFilter) && (
           <div
             className={`flex flex-col gap-5 ${searchFilter === 'all' ? 'w-full lg:w-1/3' : 'w-full'}`}
           >
             {/* RECIENTES */}
             {['all', 'recent'].includes(searchFilter) && (
-              <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div className="card flex flex-col">
                 <div
-                  onClick={(e) => toggleSection('recent', e)}
-                  style={{
-                    cursor: 'pointer',
-                    padding: '0.5rem 0.8rem',
-                    background: 'var(--bg-glass)',
-                    borderRadius: '10px',
-                    marginBottom: '0.75rem',
-                  }}
+                  onClick={() => toggleSection('recent')}
+                  className="flex justify-between items-center bg-white/5 p-2 rounded-lg cursor-pointer mb-3"
                 >
-                  <h2
-                    style={{
-                      fontSize: '1.1rem',
-                      color: 'var(--text-primary)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      margin: 0,
-                    }}
-                  >
-                    <span></span> Recientes
-                    <span
-                      style={{
-                        fontSize: '0.7rem',
-                        fontWeight: 400,
-                        color: 'var(--text-secondary)',
-                        marginLeft: 'auto',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                      }}
-                    >
-                      <span className="hide-on-mobile">Arrastra →</span>
-                      <span className="show-on-mobile" style={{ display: 'none' }}>
-                        {expandedSections.recent || q ? '▼' : '→'}
-                      </span>
-                    </span>
-                  </h2>
+                  <h2 className="text-lg m-0 font-semibold">Recientes</h2>
                 </div>
-                <div
-                  style={{
-                    display: expandedSections.recent || q ? 'flex' : 'none',
-                    flexDirection: 'column',
-                    gap: '0.4rem',
-                    flex: 1,
-                  }}
-                >
-                  {filteredRecent.map((f: PageFoodItem) => {
-                    const qg = f.quantity || 100;
-                    const k = Math.round((f.kcal / qg) * 100),
-                      p = ((f.protein / qg) * 100).toFixed(1),
-                      c = ((f.carbs / qg) * 100).toFixed(1),
-                      g = ((f.fat / qg) * 100).toFixed(1);
-                    const saved = isAlreadySaved(f.product);
-                    return (
+                {expandedSections.recent && (
+                  <div className="flex flex-col gap-2 flex-1">
+                    {filters.filteredRecent.map((f: FoodLog) => (
                       <div
                         key={f.id}
-                        draggable
-                        onDragStart={(e) =>
-                          handleDragStart(e, {
-                            name: f.product,
-                            brand: '',
-                            kcal: k,
-                            protein: parseFloat(p),
-                            carbs: parseFloat(c),
-                            fat: parseFloat(g),
-                          } as PageFoodItem)
-                        }
-                        style={itemStyle(false)}
+                        className="p-2 bg-white/10 rounded-lg flex justify-between items-center"
                       >
-                        <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
-                          <div
-                            style={{
-                              fontWeight: 600,
-                              fontSize: '0.9rem',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
-                          >
-                            {f.product}
-                          </div>
-                          <div>{macroLine(Number(k), Number(p), Number(c), Number(g))}</div>
-                        </div>
-                        {saved ? (
-                          <span
-                            style={{
-                              fontSize: '0.65rem',
-                              color: 'var(--text-primary)',
-                              background: 'rgba(255, 255, 255, 0.05)',
-                              padding: '0.15rem 0.35rem',
-                              borderRadius: '5px',
-                              whiteSpace: 'nowrap',
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Check className="w-3 h-3" />
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => saveRecentAsFood(f)}
-                            style={{
-                              background: 'var(--accent-glow)',
-                              border: '1px solid var(--border-subtle)',
-                              color: 'var(--accent-primary-light)',
-                              cursor: 'pointer',
-                              padding: '0.2rem 0.45rem',
-                              borderRadius: '7px',
-                              fontSize: '1.1rem',
-                              fontWeight: 700,
-                              lineHeight: 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                            }}
-                            title="Añadir a Mis Alimentos"
-                          >
-                            +
-                          </button>
-                        )}
+                        <div className="text-sm font-medium">{f.product}</div>
+                        <button
+                          onClick={() => scanner.saveRecentAsFood(f as unknown as PageFoodItem)}
+                          className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded"
+                        >
+                          Añadir
+                        </button>
                       </div>
-                    );
-                  })}
-                  {filteredRecent.length === 0 && (
-                    <p
-                      style={{
-                        fontSize: '0.85rem',
-                        color: 'var(--text-secondary)',
-                        fontStyle: 'italic',
-                        textAlign: q ? 'center' : 'left',
-                        padding: q ? '1rem 0' : '0',
-                      }}
-                    >
-                      {q
-                        ? `No hay recientes que coincidan con "${searchQuery}"`
-                        : 'No hay recientes'}
-                    </p>
-                  )}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* MIS RECETAS */}
+            {/* RECETAS */}
             {['all', 'recipes'].includes(searchFilter) && (
               <div
-                className="card"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  border:
-                    dragOverTarget === 'recipes' ? '2px dashed var(--color-warning)' : undefined,
-                  transition: 'border 0.2s',
-                }}
-                onDragOver={(e) => handleDragOver(e, 'recipes')}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDropOnRecipes}
+                className={`card ${scanner.dragOverTarget === 'recipes' ? 'border-2 border-dashed border-[var(--color-warning)]' : ''}`}
+                onDragOver={(e) => scanner.handleDragOver(e, 'recipes')}
+                onDragLeave={scanner.handleDragLeave}
+                onDrop={scanner.handleDropOnRecipes}
               >
                 <div
-                  onClick={(e) => toggleSection('recipes', e)}
-                  style={{
-                    cursor: 'pointer',
-                    padding: '0.5rem 0.8rem',
-                    background: 'var(--bg-glass)',
-                    borderRadius: '10px',
-                    marginBottom: '0.75rem',
-                  }}
+                  onClick={() => toggleSection('recipes')}
+                  className="flex justify-between items-center bg-white/5 p-2 rounded-lg cursor-pointer"
                 >
-                  <h2
-                    style={{
-                      fontSize: '1.1rem',
-                      color: 'var(--text-primary)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      margin: 0,
-                    }}
-                  >
-                    <span></span> Mis Recetas
-                    <span
-                      style={{
-                        fontSize: '0.7rem',
-                        fontWeight: 400,
-                        color: 'var(--text-secondary)',
-                        marginLeft: 'auto',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                      }}
-                    >
-                      <span className="show-on-mobile" style={{ display: 'none' }}>
-                        {expandedSections.recipes || q ? '▼' : '→'}
-                      </span>
-                    </span>
-                  </h2>
+                  <h2 className="text-lg m-0 font-semibold">Mis Recetas</h2>
+                  {expandedSections.recipes ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
                 </div>
-
-                <div
-                  style={{
-                    display: expandedSections.recipes || q ? 'flex' : 'none',
-                    flexDirection: 'column',
-                    gap: '0.75rem',
-                    flex: 1,
-                  }}
-                >
-                  <RecipeFormModal
-                    isOpen={isRecipeFormOpen}
-                    onToggle={() => {
-                      if (isRecipeFormOpen && editingRecipeId) {
-                        setEditingRecipeId(null);
-                        setRecipeForm({
-                          name: '',
-                          description: '',
-                          protein: '',
-                          carbs: '',
-                          fat: '',
-                          kcal: '',
-                        });
-                      }
-                      setIsRecipeFormOpen(!isRecipeFormOpen);
-                    }}
-                    recipeForm={recipeForm as unknown as RecipeForm}
-                    updateRecipeForm={
-                      updateRecipeForm as unknown as (
-                        field: Partial<RecipeForm> | keyof RecipeForm,
-                        value?: string | null | undefined,
-                      ) => void
-                    }
-                    handleAddRecipe={handleAddRecipe}
-                    editingRecipeId={editingRecipeId}
-                    onCancelEdit={() => {
-                      setEditingRecipeId(null);
-                      setRecipeForm({
-                        name: '',
-                        description: '',
-                        protein: '',
-                        carbs: '',
-                        fat: '',
-                        kcal: '',
-                      });
-                      setIsRecipeFormOpen(false);
-                    }}
-                    handleDeleteRecipe={handleDeleteRecipe as (id: number | string) => void}
-                  />
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
-                    {filteredRecipes.map((r: import('../types/api').Recipe) => (
-                      <RecipeCard key={r.id} recipe={r} onEdit={handleEditRecipe} />
+                {expandedSections.recipes && (
+                  <div className="flex flex-col gap-2 mt-4">
+                    {filters.filteredRecipes.map((r: Recipe) => (
+                      <RecipeCard key={r.id} recipe={r} onEdit={forms.handleEditRecipe} />
                     ))}
-                    {filteredRecipes.length === 0 && (
-                      <p
-                        style={{
-                          fontSize: '0.8rem',
-                          color: 'var(--text-secondary)',
-                          fontStyle: 'italic',
-                          textAlign: q ? 'center' : 'left',
-                          padding: q ? '1rem 0' : '0',
-                        }}
-                      >
-                        {q
-                          ? `No hay recetas que coincidan con "${searchQuery}"`
-                          : 'Arrastra desde Recientes o añade manualmente'}
-                      </p>
-                    )}
                   </div>
-                </div>
+                )}
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* FOOD FORM MODAL */}
       <FoodFormModal
-        isOpen={isFoodFormOpen}
+        isOpen={forms.isFoodFormOpen}
         onClose={() => {
-          setIsFoodFormOpen(false);
-          setEditingFoodId(null);
+          forms.setIsFoodFormOpen(false);
+          forms.setEditingFoodId(null);
         }}
-        foodForm={foodForm as unknown as FoodFormState}
-        updateFoodForm={updateFoodForm as unknown as (f: string, v: string | number | null) => void}
-        handleAddSavedFood={handleAddSavedFood}
-        editingFoodId={editingFoodId}
+        foodForm={forms.foodForm}
+        updateFoodForm={forms.updateFoodForm}
+        handleAddSavedFood={forms.handleAddSavedFood}
+        editingFoodId={forms.editingFoodId}
+      />
+      <RecipeFormModal
+        isOpen={forms.isRecipeFormOpen}
+        onToggle={() => forms.setIsRecipeFormOpen(!forms.isRecipeFormOpen)}
+        recipeForm={forms.recipeForm}
+        updateRecipeForm={forms.updateRecipeForm}
+        handleAddRecipe={forms.handleAddRecipe}
+        editingRecipeId={forms.editingRecipeId}
+        onCancelEdit={() => forms.setIsRecipeFormOpen(false)}
+        handleDeleteRecipe={deleteRecipe}
       />
 
-      {/* SCANNER MODAL */}
-
-      {isScannerOpen && (
-        <div
-          className="modal-backdrop"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(6px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 50,
-            padding: '1rem',
-          }}
-        >
-          <div
-            className="card"
-            style={{
-              maxWidth: '520px',
-              width: '100%',
-              background: 'var(--bg-primary)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '16px',
-              padding: '1.25rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
-            }}
-          >
-            {/* Modal Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '1.25rem' }}></span>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)' }}>
-                    Escanear Código / QR
-                  </h3>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                    Escanea el código de un envase para guardarlo en Mis Alimentos
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsScannerOpen(false);
-                  setScannedProduct(null);
-                  setLookupError(null);
-                }}
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '50%',
-                  width: '32px',
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: 'var(--text-secondary)',
-                  fontSize: '0.9rem',
-                }}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            {isLookingUpCode ? (
-              <div
-                style={{
-                  padding: '2.5rem 1rem',
-                  textAlign: 'center',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                }}
-              >
-                <div className="spinner" style={{ width: '36px', height: '36px' }}></div>
-                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                  Consultando producto...
-                </p>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  Buscando en Open Food Facts
-                </span>
-              </div>
-            ) : scannedProduct ? (
-              /* Product Found Preview */
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div
-                  style={{
-                    padding: '1rem',
-                    background: 'var(--bg-secondary)',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(16,185,129,0.3)',
-                    display: 'flex',
-                    gap: '0.85rem',
-                    alignItems: 'center',
-                  }}
-                >
-                  {scannedProduct.imageUrl && (
-                    <img
-                      src={scannedProduct.imageUrl}
-                      alt={scannedProduct.name}
-                      style={{
-                        width: '64px',
-                        height: '64px',
-                        objectFit: 'contain',
-                        borderRadius: '8px',
-                        background: 'white',
-                        padding: '2px',
-                        flexShrink: 0,
-                      }}
-                    />
-                  )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        fontSize: '1rem',
-                        color: 'var(--text-primary)',
-                        marginBottom: '0.2rem',
-                      }}
-                    >
-                      {scannedProduct.name}
-                    </div>
-                    {scannedProduct.brand && (
-                      <div
-                        style={{
-                          fontSize: '0.8rem',
-                          color: 'var(--text-secondary)',
-                          marginBottom: '0.4rem',
-                        }}
-                      >
-                        Marca:{' '}
-                        <strong style={{ color: 'var(--text-primary)' }}>
-                          {scannedProduct.brand}
-                        </strong>
-                      </div>
-                    )}
-                    <div>
-                      {macroLine(
-                        scannedProduct.kcal,
-                        scannedProduct.protein,
-                        scannedProduct.carbs,
-                        scannedProduct.fat,
-                      )}
-                    </div>
-                    {scannedProduct.servingSize && (
-                      <div
-                        style={{
-                          marginTop: '0.35rem',
-                          fontSize: '0.75rem',
-                          color: 'var(--text-primary)',
-                        }}
-                      >
-                        Ración detectada: {scannedProduct.servingSize}g{' '}
-                        {scannedProduct.servingLabel ? `(${scannedProduct.servingLabel})` : ''}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={handleSaveScannedProduct}
-                    style={{
-                      padding: '0.6rem',
-                      fontSize: '0.9rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.4rem',
-                    }}
-                  >
-                    <span>
-                      <Check className="w-3 h-3" />
-                    </span>{' '}
-                    Guardar en Mis Alimentos
-                  </button>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={handleEditScannedProduct}
-                      style={{ flex: 1, padding: '0.5rem', fontSize: '0.82rem' }}
-                    >
-                      Editar antes de guardar
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => {
-                        setScannedProduct(null);
-                        setLookupError(null);
-                      }}
-                      style={{ padding: '0.5rem 0.8rem', fontSize: '0.82rem' }}
-                    >
-                      <ScanLine className="w-4 h-4 mr-1" /> Escanear otro
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : lookupError ? (
-              /* Product Not Found */
-              <div
-                style={{
-                  padding: '1.5rem 1rem',
-                  textAlign: 'center',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                }}
-              >
-                <span style={{ fontSize: '2.2rem' }}></span>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: '0.9rem',
-                    color: 'var(--color-fat)',
-                    fontWeight: 600,
-                  }}
-                >
-                  Producto no encontrado
-                </p>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  {lookupError}
-                </p>
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', width: '100%' }}>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setLookupError(null);
-                      setScannedProduct(null);
-                    }}
-                    style={{ flex: 1, padding: '0.5rem' }}
-                  >
-                    Reintentar
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => {
-                      setIsScannerOpen(false);
-                      setLookupError(null);
-                      setIsFoodFormOpen(true);
-                    }}
-                    style={{ flex: 1, padding: '0.5rem' }}
-                  >
-                    <Plus className="w-4 h-4 mr-1" /> Crear manual
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* Scanner Active */
-              <div>
-                <Suspense fallback={<div className="spinner" style={{ margin: 'auto', width: '36px', height: '36px' }}></div>}>
-                  <BarcodeScanner
-                    onScanSuccess={handleScanBarcode}
-                    onScanError={(err: unknown) => console.error(err)}
-                  />
-                </Suspense>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* MEAL SELECTOR MODAL */}
       <MealSelectorModal
-        isOpen={isMealSelectorOpen}
-        onClose={() => setIsMealSelectorOpen(false)}
-        selectedFoods={selectedFoods}
+        isOpen={meals.isMealSelectorOpen}
+        onClose={() => meals.setIsMealSelectorOpen(false)}
+        selectedFoods={meals.selectedFoods}
         savedFoods={savedFoods}
-        bulkQuantities={bulkQuantities}
-        setBulkQuantities={setBulkQuantities}
-        mealSelectorDate={mealSelectorDate}
-        setMealSelectorDate={setMealSelectorDate}
-        isAddingToMeal={isAddingToMeal}
-        handleBulkAddToMeal={handleBulkAddToMeal}
+        bulkQuantities={meals.bulkQuantities}
+        setBulkQuantities={meals.setBulkQuantities}
+        mealSelectorDate={meals.mealSelectorDate}
+        setMealSelectorDate={meals.setMealSelectorDate}
+        isAddingToMeal={meals.isAddingToMeal}
+        handleBulkAddToMeal={meals.handleBulkAddToMeal}
       />
-      {/* CUSTOM FAB FOR CREATION ACTIONS */}
+
+      <AiFoodModal
+        isOpen={ai.isAiModalOpen}
+        onClose={() => ai.setIsAiModalOpen(false)}
+        aiQuery={ai.aiQuery}
+        setAiQuery={ai.setAiQuery}
+        isListening={ai.isListening}
+        toggleListening={ai.toggleListening}
+        stopListening={ai.stopListening}
+        handleAiSubmit={ai.handleAiSubmit}
+        pendingAiCount={ai.pendingAiCount}
+      />
+
       <button
-        className="btn"
+        className="fixed z-50 bottom-[calc(75px+env(safe-area-inset-bottom))] right-5 w-14 h-14 rounded-full flex items-center justify-center text-3xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-none shadow-lg"
         onClick={() => setIsActionMenuOpen(true)}
-        style={{
-          position: 'fixed',
-          bottom: 'calc(75px + env(safe-area-inset-bottom))',
-          right: '20px',
-          zIndex: 90,
-          borderRadius: '50%',
-          width: '56px',
-          height: '56px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '2rem',
-          lineHeight: 1,
-          background: 'var(--gradient-primary)',
-          color: 'var(--accent-text, white)',
-          border: 'none',
-        }}
-        title="Crear o Añadir Alimento"
       >
         +
       </button>
 
-      {/* ACTION MENU MODAL */}
       {isActionMenuOpen && (
         <div
-          className="modal-backdrop"
+          className="fixed inset-0 bg-black/60 z-50 flex flex-col justify-end"
           onClick={() => setIsActionMenuOpen(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.6)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 50,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'flex-end',
-          }}
         >
           <div
-            className="card slide-up-anim"
+            className="w-full max-w-lg mx-auto bg-zinc-900 rounded-t-2xl p-6"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              width: '100%',
-              maxWidth: '500px',
-              margin: '0 auto',
-              borderBottomLeftRadius: 0,
-              borderBottomRightRadius: 0,
-              padding: '1.5rem',
-              paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))',
-            }}
           >
-            <h3
-              style={{
-                marginTop: 0,
-                marginBottom: '1rem',
-                color: 'var(--text-primary)',
-                textAlign: 'center',
-                fontSize: '1.1rem',
-              }}
-            >
-              {' '}
-              Crear Alimento
-            </h3>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <h3 className="mt-0 mb-4 text-center text-white">Crear Alimento</h3>
+            <div className="flex flex-col gap-3">
               <button
-                className="btn btn-secondary"
+                className="btn btn-secondary w-full text-left justify-start"
                 onClick={() => {
                   setIsActionMenuOpen(false);
-                  setIsAiModalOpen(true);
-                }}
-                style={{
-                  padding: '1rem',
-                  justifyContent: 'flex-start',
-                  fontSize: '1rem',
-                  background: 'var(--bg-primary)',
+                  ai.setIsAiModalOpen(true);
                 }}
               >
                 Crear con IA (Texto / Voz)
               </button>
-
               <button
-                className="btn btn-secondary"
+                className="btn btn-secondary w-full text-left justify-start"
                 onClick={() => {
                   setIsActionMenuOpen(false);
-                  setIsScannerOpen(true);
-                  setScannedProduct(null);
-                  setLookupError(null);
-                }}
-                style={{
-                  padding: '1rem',
-                  justifyContent: 'flex-start',
-                  fontSize: '1rem',
-                  background: 'var(--bg-primary)',
+                  scanner.setIsScannerOpen(true);
                 }}
               >
                 Escanear Código (Barras/QR)
               </button>
-
               <button
-                className="btn btn-secondary"
+                className="btn btn-secondary w-full text-left justify-start"
                 onClick={() => {
-                  if (ocrFileRef.current) ocrFileRef.current.click();
-                }}
-                style={{
-                  padding: '1rem',
-                  justifyContent: 'flex-start',
-                  fontSize: '1rem',
-                  background: 'var(--bg-primary)',
+                  if (scanner.ocrFileRef.current) scanner.ocrFileRef.current.click();
                 }}
               >
                 <ScanLine className="w-5 h-5 mr-2" /> Escanear Etiqueta Nutricional
               </button>
-
               <button
-                className="btn btn-secondary"
+                className="btn btn-secondary w-full text-left justify-start"
                 onClick={() => {
                   setIsActionMenuOpen(false);
-                  setEditingFoodId(null);
-                  setFoodForm({
-                    name: '',
-                    brand: '',
-                    protein: '',
-                    carbs: '',
-                    fat: '',
-                    kcal: '',
-                    servingSize: '',
-                    servingLabel: '',
-                  });
-                  setIsFoodFormOpen(true);
-                }}
-                style={{
-                  padding: '1rem',
-                  justifyContent: 'flex-start',
-                  fontSize: '1rem',
-                  background: 'var(--bg-primary)',
+                  forms.openNewFoodForm();
                 }}
               >
                 <Pencil className="w-5 h-5 mr-2" /> Crear Manualmente
               </button>
             </div>
-
             <button
-              className="btn btn-secondary"
+              className="btn btn-secondary w-full mt-6 border-zinc-700"
               onClick={() => setIsActionMenuOpen(false)}
-              style={{
-                width: '100%',
-                marginTop: '1.5rem',
-                background: 'transparent',
-                border: '1px solid var(--border-subtle)',
-              }}
             >
               Cancelar
             </button>
@@ -2106,27 +310,41 @@ export default function MyFoodsPage() {
         </div>
       )}
 
-      {/* AI CREATION MODAL */}
-      <AiFoodModal
-        isOpen={isAiModalOpen}
-        onClose={() => setIsAiModalOpen(false)}
-        aiQuery={aiQuery}
-        setAiQuery={setAiQuery}
-        isListening={isListening}
-        toggleListening={toggleListening}
-        stopListening={stopListening}
-        handleAiSubmit={handleAiSubmit}
-        pendingAiCount={pendingAiCount}
-      />
+      {scanner.isScannerOpen && (
+        <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-zinc-900 p-5 rounded-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="m-0 text-white">Escanear</h3>
+              <button
+                className="text-zinc-400 hover:text-white"
+                onClick={() => scanner.setIsScannerOpen(false)}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <Suspense
+              fallback={
+                <div className="flex justify-center p-8">
+                  <Skeleton className="w-12 h-12 rounded-full" />
+                </div>
+              }
+            >
+              <BarcodeScanner
+                onScanSuccess={scanner.handleScanBarcode}
+                onScanError={console.error}
+              />
+            </Suspense>
+          </div>
+        </div>
+      )}
 
-      {/* Hidden File Input for OCR */}
       <input
         type="file"
         accept="image/*"
         capture="environment"
-        ref={ocrFileRef}
-        style={{ display: 'none' }}
-        onChange={handleOcrUpload}
+        ref={scanner.ocrFileRef}
+        className="hidden"
+        onChange={scanner.handleOcrUpload}
       />
     </div>
   );
