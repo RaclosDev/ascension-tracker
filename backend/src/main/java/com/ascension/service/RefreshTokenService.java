@@ -29,6 +29,42 @@ public class RefreshTokenService {
     }
 
     @Transactional
+    public RefreshToken rotateRefreshToken(String requestRefreshToken) {
+        String hashedToken = RefreshToken.hashToken(requestRefreshToken);
+        var optionalToken = refreshTokenRepository.findByToken(hashedToken);
+        
+        if (optionalToken.isEmpty()) {
+            throw new com.ascension.exception.TokenRefreshException("Refresh token not found");
+        }
+
+        RefreshToken refreshToken = optionalToken.get();
+        
+        if (refreshToken.getExpiryDate().compareTo(Instant.now()) < 0) {
+            refreshTokenRepository.delete(refreshToken);
+            throw new com.ascension.exception.TokenRefreshException("Refresh token expired");
+        }
+
+        if (refreshToken.getReplacedAt() != null) {
+            if (java.time.Instant.now().isBefore(refreshToken.getReplacedAt().plusSeconds(15))) {
+                // Grace period for concurrent requests
+                RefreshToken graceToken = new RefreshToken();
+                graceToken.setEmail(refreshToken.getEmail());
+                graceToken.setName(refreshToken.getName());
+                graceToken.setPicture(refreshToken.getPicture());
+                graceToken.setPlainToken("GRACE");
+                return graceToken;
+            }
+            refreshTokenRepository.deleteByEmail(refreshToken.getEmail());
+            throw new com.ascension.exception.TokenRefreshException("Session expired. Please log in again.");
+        }
+
+        refreshToken.setReplacedAt(Instant.now());
+        refreshTokenRepository.save(refreshToken);
+        
+        return createRefreshToken(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture());
+    }
+
+    @Transactional
     public RefreshToken save(RefreshToken refreshToken) {
         return refreshTokenRepository.save(refreshToken);
     }
@@ -55,4 +91,3 @@ public class RefreshTokenService {
         refreshTokenRepository.delete(token);
     }
 }
-
