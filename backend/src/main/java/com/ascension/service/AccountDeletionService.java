@@ -45,6 +45,11 @@ public class AccountDeletionService {
             }
         }
         
+        int userCount = jdbcTemplate.update("DELETE FROM users WHERE email = ?", email);
+        if (userCount > 0) {
+            log.info("Deleted {} rows from users for user {}", userCount, email);
+        }
+        
         log.warn("Account wipe completed for user: {}", email);
     }
 }

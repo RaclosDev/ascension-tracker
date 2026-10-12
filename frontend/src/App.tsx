@@ -6,7 +6,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import api from './api/client';
 import { applyThemeColor } from './utils/colorHelper';
-import { fetchExerciseCatalog } from './lib/workout/exercises';
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const TrackingPage = lazy(() => import('./pages/TrackingPage'));
@@ -169,8 +168,6 @@ export default function App() {
   );
   const [authError, setAuthError] = useState(false);
   useEffect(() => {
-    fetchExerciseCatalog().catch(console.error);
-
     if (!googleClientId) {
       const baseUrl = import.meta.env.VITE_API_URL || '';
       const controller = new AbortController();
