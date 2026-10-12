@@ -38,6 +38,9 @@ class AuthControllerTest {
     @MockBean
     private com.ascension.service.AccountDeletionService accountDeletionService;
 
+    @MockBean
+    private com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier googleIdTokenVerifier;
+
     @Test
     void refresh_WhenTokenMissing_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/auth/refresh").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
@@ -84,6 +87,18 @@ class AuthControllerTest {
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "reused_token")))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    void securityHeaders_areProperlyConfigured() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh")
+                .secure(true)
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Strict-Transport-Security", org.hamcrest.Matchers.containsString("max-age=31536000")))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Strict-Transport-Security", org.hamcrest.Matchers.containsString("includeSubDomains")))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("X-Frame-Options", "SAMEORIGIN"));
     }
 }
 

@@ -1,4 +1,4 @@
-﻿.env
+.env
 .env.*
 !.env.example
 frontend/.env
@@ -44,3 +44,4 @@ docker-compose.override.yml
 
 # Local AI Context
 ROADMAP.md
+*DIRECTRICES*.md

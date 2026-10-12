@@ -1,7 +1,9 @@
 package com.ascension.controller;
 
 import com.ascension.dto.*;
+import com.ascension.service.CustomExerciseService;
 import com.ascension.service.WorkoutService;
+import com.ascension.service.WorkoutTemplateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,6 +19,8 @@ import java.util.List;
 public class WorkoutController {
 
     private final WorkoutService workoutService;
+    private final WorkoutTemplateService workoutTemplateService;
+    private final CustomExerciseService customExerciseService;
 
     @GetMapping
     public ResponseEntity<org.springframework.data.domain.Page<WorkoutDTO>> getHistory(
@@ -78,42 +82,42 @@ public class WorkoutController {
     // --- Templates ---
     @GetMapping("/templates")
     public ResponseEntity<List<WorkoutTemplateDTO>> getTemplates(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(workoutService.getTemplates(jwt.getClaimAsString("email")));
+        return ResponseEntity.ok(workoutTemplateService.getTemplates(jwt.getClaimAsString("email")));
     }
 
     @PostMapping("/templates")
     public ResponseEntity<WorkoutTemplateDTO> saveTemplate(
             @Valid @RequestBody WorkoutTemplateDTO dto,
             @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(workoutService.saveTemplate(jwt.getClaimAsString("email"), dto));
+        return ResponseEntity.ok(workoutTemplateService.saveTemplate(jwt.getClaimAsString("email"), dto));
     }
 
     @DeleteMapping("/templates/{id}")
     public ResponseEntity<Void> deleteTemplate(
             @PathVariable String id,
             @AuthenticationPrincipal Jwt jwt) {
-        workoutService.deleteTemplate(jwt.getClaimAsString("email"), id);
+        workoutTemplateService.deleteTemplate(jwt.getClaimAsString("email"), id);
         return ResponseEntity.noContent().build();
     }
 
     // --- Custom Exercises ---
     @GetMapping("/custom-exercises")
     public ResponseEntity<List<CustomExerciseDTO>> getCustomExercises(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(workoutService.getCustomExercises(jwt.getClaimAsString("email")));
+        return ResponseEntity.ok(customExerciseService.getCustomExercises(jwt.getClaimAsString("email")));
     }
 
     @PostMapping("/custom-exercises")
     public ResponseEntity<CustomExerciseDTO> saveCustomExercise(
             @Valid @RequestBody CustomExerciseDTO dto,
             @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(workoutService.saveCustomExercise(jwt.getClaimAsString("email"), dto));
+        return ResponseEntity.ok(customExerciseService.saveCustomExercise(jwt.getClaimAsString("email"), dto));
     }
 
     @DeleteMapping("/custom-exercises/{id}")
     public ResponseEntity<Void> deleteCustomExercise(
             @PathVariable String id,
             @AuthenticationPrincipal Jwt jwt) {
-        workoutService.deleteCustomExercise(jwt.getClaimAsString("email"), id);
+        customExerciseService.deleteCustomExercise(jwt.getClaimAsString("email"), id);
         return ResponseEntity.noContent().build();
     }
 }

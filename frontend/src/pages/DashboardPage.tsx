@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { parseSafeWeight } from '../utils/weightHelper';
 import { Skeleton } from '../components/ui/skeleton';
+import { DashboardChartsSkeleton } from '../components/workout/skeletons/DashboardChartsSkeleton';
 
 export default function DashboardPage() {
   const queryClient = useQueryClient();
@@ -62,13 +63,9 @@ export default function DashboardPage() {
     mutationFn: (val: number) => api.post('/weights', { date: todayDateStr, weight: val }),
     onSuccess: (_, val) => {
       toast.success(hasTodayWeight ? `Peso actualizado: ${val} kg` : `Peso registrado: ${val} kg`);
-      // Invalidate queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['weights'] });
-      // Delay invalidation for dashboard and weekly to prevent UI thrashing
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-        queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
-      }, 500);
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
     },
     onError: (err: Error) => {
       console.error('Error al guardar peso:', err);
@@ -129,16 +126,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Skeleton for Charts */}
-        <div className="charts-grid">
-          <div className="chart-card full-width">
-            <Skeleton className="h-5 w-40 mb-4" />
-            <Skeleton className="h-64 w-full" />
-          </div>
-          <div className="chart-card">
-            <Skeleton className="h-5 w-40 mb-4" />
-            <Skeleton className="h-64 w-full" />
-          </div>
-        </div>
+        <DashboardChartsSkeleton />
       </div>
     );
   }
@@ -178,10 +166,15 @@ export default function DashboardPage() {
           <span className="quick-add-date">{todayLabel}</span>
         </div>
         <div className="quick-add-body">
+          <label htmlFor="quick-weight-input" className="sr-only">
+            Peso corporal de hoy
+          </label>
           <input
+            id="quick-weight-input"
             type="text"
             inputMode="decimal"
             pattern="[0-9]*[.,]?[0-9]*"
+            aria-label="Peso corporal de hoy en kilogramos"
             className="quick-add-input"
             value={quickWeight}
             onChange={(e) => setQuickWeight(e.target.value)}
@@ -189,6 +182,9 @@ export default function DashboardPage() {
             placeholder={hasTodayWeight && todayEntry ? todayEntry.weight.toString() : '00.00'}
           />
           <button
+            aria-label={
+              hasTodayWeight ? 'Actualizar peso corporal de hoy' : 'Registrar peso corporal de hoy'
+            }
             className={`btn ${hasTodayWeight ? 'btn-secondary' : 'btn-primary'}`}
             onClick={handleQuickAdd}
           >
@@ -259,14 +255,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts */}
-      <Suspense
-        fallback={
-          <div className="charts-grid">
-            <Skeleton style={{ height: 300, borderRadius: 16 }} />
-            <Skeleton style={{ height: 300, borderRadius: 16 }} />
-          </div>
-        }
-      >
+      <Suspense fallback={<DashboardChartsSkeleton />}>
         <DashboardCharts
           weightChartData={weightChartData}
           deltaData={deltaData}
