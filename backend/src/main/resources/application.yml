@@ -12,6 +12,11 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:ascension}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 8
+      max-lifetime: 600000
+      keepalive-time: 30000
+      connection-timeout: 20000
   jpa:
     open-in-view: false
     hibernate:
@@ -53,6 +58,22 @@ app:
     vapid-public-key: ${VAPID_PUBLIC_KEY}
     vapid-private-key: ${VAPID_PRIVATE_KEY}
     vapid-subject: ${VAPID_SUBJECT:mailto:admin@example.com}
+  external-api:
+    fatsecret:
+      max-attempts: ${FATSECRET_MAX_ATTEMPTS:3}
+      initial-backoff-ms: ${FATSECRET_INITIAL_BACKOFF_MS:100}
+      connect-timeout-ms: ${FATSECRET_CONNECT_TIMEOUT_MS:5000}
+      read-timeout-ms: ${FATSECRET_READ_TIMEOUT_MS:15000}
+    gemini:
+      max-attempts: ${GEMINI_MAX_ATTEMPTS:3}
+      initial-backoff-ms: ${GEMINI_INITIAL_BACKOFF_MS:150}
+      connect-timeout-ms: ${GEMINI_CONNECT_TIMEOUT_MS:5000}
+      read-timeout-ms: ${GEMINI_READ_TIMEOUT_MS:15000}
+    google:
+      max-attempts: ${GOOGLE_MAX_ATTEMPTS:1}
+      initial-backoff-ms: ${GOOGLE_INITIAL_BACKOFF_MS:0}
+      connect-timeout-ms: ${GOOGLE_CONNECT_TIMEOUT_MS:5000}
+      read-timeout-ms: ${GOOGLE_READ_TIMEOUT_MS:5000}
 
 
 google:
