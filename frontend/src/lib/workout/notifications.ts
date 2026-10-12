@@ -1,4 +1,4 @@
-﻿import api from '@/api/client';
+import api from '@/api/client';
 //  Notifications module
 // Handles:
 // 1. Subscribing to Web Push (so the server can send background notifications)
@@ -59,19 +59,61 @@ export function playRestSound() {
   }
 }
 
+export const REST_NOTIFICATION_TAG = 'ascension-rest-timer';
+
+/**
+ * Dismiss any existing rest timer notifications from the system notification tray.
+ */
+export async function dismissRestNotifications() {
+  if (typeof window === 'undefined') return;
+  try {
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.ready;
+      if (reg && 'getNotifications' in reg) {
+        const notifications = await reg.getNotifications({ tag: REST_NOTIFICATION_TAG });
+        notifications.forEach((n) => n.close());
+      }
+    }
+  } catch (e: unknown) {
+    console.warn('Error descartando notificaciones de descanso', e);
+  }
+}
+
 /**
  * Show a local notification (only works when app is in foreground or recently backgrounded).
+ * Replaces any existing notification with the same tag instead of accumulating in the system tray.
  */
-export function notifyRestFinished() {
-  if (!('Notification' in window)) return;
+export async function notifyRestFinished() {
+  if (typeof window === 'undefined' || !('Notification' in window)) return;
 
   if (Notification.permission === 'granted') {
     try {
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.ready;
+        if (reg && 'showNotification' in reg) {
+          // Close previous notification first to ensure clean replacement
+          const existing = await reg.getNotifications({ tag: REST_NOTIFICATION_TAG });
+          existing.forEach((n) => n.close());
+
+          await reg.showNotification('¡Descanso terminado!', {
+            body: 'Es hora de la siguiente serie.',
+            icon: '/icon-192.png',
+            badge: '/icon-192.png',
+            vibrate: [200, 100, 200, 100, 200],
+            tag: REST_NOTIFICATION_TAG,
+            renotify: true,
+            data: { url: '/workout' },
+          } as NotificationOptions);
+          return;
+        }
+      }
+
       new Notification('¡Descanso terminado!', {
         body: 'Es hora de la siguiente serie.',
         icon: '/icon-192.png',
         vibrate: [200, 100, 200, 100, 200],
-        tag: 'rest-finished',
+        tag: REST_NOTIFICATION_TAG,
+        renotify: true,
       } as NotificationOptions);
     } catch {
       // On some devices, local Notification constructor fails; SW push will handle it
