@@ -17,7 +17,9 @@ import { ExercisePicker } from '@/components/workout/exercise-picker';
 import { RestBanner } from '@/components/workout/rest-banner';
 import { EmptyCard } from '@/components/workout/dashboard';
 import { useWorkoutStore } from '@/lib/workout/store';
-import { useShallow } from 'zustand/react/shallow';
+import type { WorkoutExercise } from '@/lib/workout/types';
+
+const EMPTY_EXERCISES: WorkoutExercise[] = [];
 
 export function ActiveWorkout() {
   const hasActive = useWorkoutStore((s) => s.active !== null);
@@ -99,11 +101,7 @@ export function ActiveWorkout() {
 function LiveSession() {
   const navigate = useNavigate();
   const workoutName = useWorkoutStore((s) => s.active?.name?.trim() || 'Entrenamiento');
-  const exercises = useWorkoutStore(
-    useShallow(
-      (s) => s.active?.exercises.map((row) => ({ id: row.id, supersetId: row.supersetId })) ?? [],
-    ),
-  );
+  const exercises = useWorkoutStore((s) => s.active?.exercises ?? EMPTY_EXERCISES);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
