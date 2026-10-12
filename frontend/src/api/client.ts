@@ -73,12 +73,19 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        let res;
+        let res: import('axios').AxiosResponse<{ token: string }>;
         try {
           res = await api.post('/auth/refresh', {}, { withCredentials: true });
-        } catch {
-          // Retry once after 1s (handles Railway cold starts, network hiccups)
-          await new Promise((r) => setTimeout(r, 1000));
+        } catch (firstErr) {
+          const axiosErr = firstErr as import('axios').AxiosError;
+          if (
+            axiosErr.response &&
+            (axiosErr.response.status === 401 || axiosErr.response.status === 403)
+          ) {
+            throw firstErr;
+          }
+          // Retry once after 1.5s for network hiccups or transient errors
+          await new Promise((r) => setTimeout(r, 1500));
           res = await api.post('/auth/refresh', {}, { withCredentials: true });
         }
         const newToken = res.data.token;
