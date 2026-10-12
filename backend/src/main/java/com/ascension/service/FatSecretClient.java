@@ -4,7 +4,6 @@ import com.ascension.config.ExternalApiProperties;
 import com.ascension.exception.ExternalApiException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
@@ -32,16 +31,11 @@ public class FatSecretClient {
     private final ExternalApiProperties properties;
     private RestTemplate restTemplate;
 
-    @Autowired
     public FatSecretClient(RestTemplateBuilder builder, ObjectMapper objectMapper, FatSecretSignatureBuilder signatureBuilder, ExternalApiProperties properties) {
         this.builder = builder;
         this.objectMapper = objectMapper;
         this.signatureBuilder = signatureBuilder;
         this.properties = properties != null ? properties : new ExternalApiProperties();
-    }
-
-    public FatSecretClient(RestTemplateBuilder builder, ObjectMapper objectMapper, FatSecretSignatureBuilder signatureBuilder) {
-        this(builder, objectMapper, signatureBuilder, new ExternalApiProperties());
     }
 
     @PostConstruct

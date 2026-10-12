@@ -33,7 +33,7 @@ class GeminiApiClientTest {
 
     @BeforeEach
     void setUp() {
-        geminiApiClient = new GeminiApiClient(restTemplateBuilder);
+        geminiApiClient = new GeminiApiClient(restTemplateBuilder, new com.ascension.config.ExternalApiProperties());
         geminiApiClient.setRestTemplate(restTemplate);
     }
 

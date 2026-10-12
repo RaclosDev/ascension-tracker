@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
@@ -44,14 +43,9 @@ public class GeminiApiClient {
     private volatile String cachedWorkingUrl = null;
     private volatile List<String> cachedModelCandidates = null;
 
-    @Autowired
     public GeminiApiClient(RestTemplateBuilder builder, ExternalApiProperties properties) {
         this.builder = builder;
         this.properties = properties != null ? properties : new ExternalApiProperties();
-    }
-
-    public GeminiApiClient(RestTemplateBuilder builder) {
-        this(builder, new ExternalApiProperties());
     }
 
     @PostConstruct

@@ -41,7 +41,7 @@ class FatSecretClientTest {
 
     @BeforeEach
     void setUp() {
-        fatSecretClient = new FatSecretClient(restTemplateBuilder, objectMapper, signatureBuilder);
+        fatSecretClient = new FatSecretClient(restTemplateBuilder, objectMapper, signatureBuilder, new com.ascension.config.ExternalApiProperties());
         fatSecretClient.setRestTemplate(restTemplate);
     }
 
