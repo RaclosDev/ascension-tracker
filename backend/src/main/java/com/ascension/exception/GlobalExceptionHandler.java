@@ -9,7 +9,10 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.UUID;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -55,11 +58,33 @@ public class GlobalExceptionHandler {
         return buildErrorResponse("Entrada invalida", HttpStatus.BAD_REQUEST, traceId);
     }
 
+    @ExceptionHandler(DateTimeParseException.class)
+    public ResponseEntity<ApiErrorResponse> handleDateTimeParseException(DateTimeParseException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Date parse error: {} [trace_id: {}]", ex.getMessage(), traceId);
+        return buildErrorResponse("Formato de fecha invalido (esperado YYYY-MM-DD)", HttpStatus.BAD_REQUEST, traceId);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Type mismatch error for param {}: {} [trace_id: {}]", ex.getName(), ex.getMessage(), traceId);
+        return buildErrorResponse("Parametro '" + ex.getName() + "' invalido", HttpStatus.BAD_REQUEST, traceId);
+    }
+
     @ExceptionHandler(AiProcessingException.class)
     public ResponseEntity<ApiErrorResponse> handleAiProcessingException(AiProcessingException ex) {
         String traceId = UUID.randomUUID().toString();
         log.error("AI processing error: {} [trace_id: {}]", ex.getMessage(), traceId);
         return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, traceId);
+    }
+
+    @ExceptionHandler(ExternalApiException.class)
+    public ResponseEntity<ApiErrorResponse> handleExternalApiException(ExternalApiException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.error("External API error in {}: {} (status: {}) [trace_id: {}]",
+                ex.getServiceName(), ex.getMessage(), ex.getStatus(), traceId);
+        return buildErrorResponse(ex.getMessage(), ex.getStatus(), traceId);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
@@ -74,6 +99,13 @@ public class GlobalExceptionHandler {
         String traceId = UUID.randomUUID().toString();
         log.error("Unhandled exception occurred [trace_id: {}]", traceId, ex);
         return buildErrorResponse("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR, traceId);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Max upload size exceeded: {} [trace_id: {}]", ex.getMessage(), traceId);
+        return buildErrorResponse("El archivo supera el tamaño máximo permitido (4MB).", HttpStatus.PAYLOAD_TOO_LARGE, traceId);
     }
 
     private ResponseEntity<ApiErrorResponse> buildErrorResponse(String message, HttpStatus status, String traceId) {

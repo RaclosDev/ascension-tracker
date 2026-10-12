@@ -1,5 +1,5 @@
-﻿import React from 'react';
-import { lazy, Suspense, useEffect } from 'react';
+import React from 'react';
+import { lazy, Suspense } from 'react';
 import { useWorkoutStore } from '../lib/workout/store';
 import { SegmentedControl } from '../components/ui/segmented-control';
 import { Loader2 } from 'lucide-react';
@@ -53,35 +53,33 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-import { fetchExerciseCatalog, EXERCISE_CATALOG } from '../lib/workout/exercises';
-import { Skeleton } from '../components/ui/skeleton';
+import { useExerciseCatalog } from '../lib/workout/exercises';
+import { WorkoutPageSkeleton } from '../components/workout/skeletons/WorkoutPageSkeleton';
 
 export default function WorkoutPage() {
   const tab = useWorkoutStore((s) => s.tab);
+  const { data: exercises, isLoading, isError, refetch } = useExerciseCatalog();
 
-  const [exercisesLoaded, setExercisesLoaded] = React.useState(EXERCISE_CATALOG.length > 0);
+  if (isLoading) {
+    return <WorkoutPageSkeleton />;
+  }
 
-  useEffect(() => {
-    if (!exercisesLoaded) {
-      fetchExerciseCatalog()
-        .then(() => setExercisesLoaded(true))
-        .catch(console.error);
-    }
-  }, [exercisesLoaded]);
-
-  if (!exercisesLoaded) {
+  if (isError || !exercises) {
     return (
       <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem',
-          padding: 'var(--space-md) 0',
-        }}
+        className="p-6 text-center flex flex-col items-center justify-center gap-4 my-8 bg-red-950/20 border border-red-800/40 rounded-2xl"
+        role="alert"
+        aria-live="assertive"
       >
-        <Skeleton style={{ height: '48px', width: '100%', borderRadius: '12px' }} />
-        <Skeleton style={{ height: '160px', width: '100%', borderRadius: '16px' }} />
-        <Skeleton style={{ height: '140px', width: '100%', borderRadius: '16px' }} />
+        <p className="text-red-400 font-medium">No se pudo cargar el catálogo de ejercicios.</p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="btn btn-secondary px-4 py-2 text-sm"
+          aria-label="Reintentar carga del catálogo de ejercicios"
+        >
+          Reintentar
+        </button>
       </div>
     );
   }

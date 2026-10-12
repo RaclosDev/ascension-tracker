@@ -17,8 +17,8 @@ public class WorkoutService {
 
     private final WorkoutRepository workoutRepository;
     private final WorkoutExerciseRepository workoutExerciseRepository;
-    private final WorkoutTemplateRepository workoutTemplateRepository;
-    private final CustomExerciseRepository customExerciseRepository;
+    private final WorkoutTemplateService workoutTemplateService;
+    private final CustomExerciseService customExerciseService;
     private final WorkoutMapper workoutMapper;
 
     @Transactional(readOnly = true)
@@ -98,26 +98,17 @@ public class WorkoutService {
 
     @Transactional(readOnly = true)
     public List<WorkoutTemplateDTO> getTemplates(String userEmail) {
-        return workoutTemplateRepository.findByUserEmail(userEmail)
-                .stream().map(this::toTemplateDTO).collect(Collectors.toList());
+        return workoutTemplateService.getTemplates(userEmail);
     }
 
     @Transactional
     public WorkoutTemplateDTO saveTemplate(String userEmail, WorkoutTemplateDTO dto) {
-        WorkoutTemplate template = WorkoutTemplate.builder()
-                .id(java.util.UUID.randomUUID().toString())
-                .userEmail(userEmail)
-                .name(dto.getName())
-                .exercises(dto.getExercises().stream().map(e -> new com.ascension.model.TemplateExercise(e.getExerciseId(), e.getVariant() != null ? e.getVariant().getGrip() : null, e.getVariant() != null ? e.getVariant().getMachine() : null)).collect(java.util.stream.Collectors.toList()))
-                .build();
-        return toTemplateDTO(workoutTemplateRepository.save(template));
+        return workoutTemplateService.saveTemplate(userEmail, dto);
     }
 
     @Transactional
     public void deleteTemplate(String userEmail, String id) {
-        WorkoutTemplate template = workoutTemplateRepository.findByIdAndUserEmail(id, userEmail)
-                .orElseThrow(() -> new com.ascension.exception.EntityNotFoundException("Plantilla no encontrada"));
-        workoutTemplateRepository.delete(template);
+        workoutTemplateService.deleteTemplate(userEmail, id);
     }
 
     private WorkoutDTO toFullDTO(Workout w) {
@@ -132,54 +123,20 @@ public class WorkoutService {
         return workoutMapper.toDTO(s);
     }
 
-    private WorkoutTemplateDTO toTemplateDTO(WorkoutTemplate t) {
-        return WorkoutTemplateDTO.builder()
-                .id(t.getId())
-                .name(t.getName())
-                .exercises(t.getExercises().stream().map(e -> {
-                    com.ascension.dto.WorkoutExerciseDTO.VariantDTO var = null;
-                    if (e.getVariantGrip() != null || e.getVariantMachine() != null) {
-                        var = new com.ascension.dto.WorkoutExerciseDTO.VariantDTO(e.getVariantGrip(), e.getVariantMachine());
-                    }
-                    return new com.ascension.dto.TemplateExerciseDTO(e.getExerciseId(), var);
-                }).collect(java.util.stream.Collectors.toList()))
-                .build();
-    }
-
     // --- Custom Exercises ---
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public List<CustomExerciseDTO> getCustomExercises(String userEmail) {
-        return customExerciseRepository.findByUserEmail(userEmail).stream()
-                .map(this::toCustomExerciseDTO)
-                .collect(Collectors.toList());
+        return customExerciseService.getCustomExercises(userEmail);
     }
 
     @Transactional
     public CustomExerciseDTO saveCustomExercise(String userEmail, CustomExerciseDTO dto) {
-        CustomExercise ex = CustomExercise.builder()
-                .id(java.util.UUID.randomUUID().toString())
-                .name(dto.getName())
-                .muscle(dto.getMuscle())
-                .equipment(dto.getEquipment())
-                .userEmail(userEmail)
-                .build();
-        ex = customExerciseRepository.save(ex);
-        return toCustomExerciseDTO(ex);
+        return customExerciseService.saveCustomExercise(userEmail, dto);
     }
 
     @Transactional
     public void deleteCustomExercise(String userEmail, String id) {
-        customExerciseRepository.deleteByUserEmailAndId(userEmail, id);
-    }
-
-    private CustomExerciseDTO toCustomExerciseDTO(CustomExercise ex) {
-        return CustomExerciseDTO.builder()
-                .id(ex.getId())
-                .name(ex.getName())
-                .muscle(ex.getMuscle())
-                .equipment(ex.getEquipment())
-                .userEmail(ex.getUserEmail())
-                .build();
+        customExerciseService.deleteCustomExercise(userEmail, id);
     }
 
     private void mapExercisesToWorkout(Workout workout, List<WorkoutExerciseDTO> exerciseDTOs) {

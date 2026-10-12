@@ -1,4 +1,5 @@
 import type { Exercise } from './types';
+export { useExerciseCatalog } from './catalog-query';
 
 export let EXERCISE_CATALOG: Exercise[] = [];
 export let BASE_EXERCISES: Exercise[] = [];

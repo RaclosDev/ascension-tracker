@@ -185,17 +185,10 @@ export default function Layout() {
           <div className="main-content-inner">
             <Suspense
               fallback={
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '1rem',
-                    padding: 'var(--space-md) 0',
-                  }}
-                >
-                  <Skeleton style={{ height: '160px', width: '100%', borderRadius: '16px' }} />
-                  <Skeleton style={{ height: '240px', width: '100%', borderRadius: '16px' }} />
-                  <Skeleton style={{ height: '140px', width: '100%', borderRadius: '16px' }} />
+                <div className="flex flex-col gap-4 py-4">
+                  <Skeleton className="h-40 w-full rounded-2xl" />
+                  <Skeleton className="h-60 w-full rounded-2xl" />
+                  <Skeleton className="h-36 w-full rounded-2xl" />
                 </div>
               }
             >

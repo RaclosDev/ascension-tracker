@@ -57,7 +57,7 @@ Lo que diferencia a Ascension de otras aplicaciones comerciales es su nivel extr
 Esta aplicación ha sido refactorizada repetidamente bajo estrictos estándares de ingeniería de software:
 
 1. **Optimización de Base de Datos (JPA + Flyway):**
-   - 16 migraciones controladas (ej. `V11__migrate_to_base_exercises.sql`) que normalizan el catálogo de ejercicios e inyectan índices compuestos estratégicos en PostgreSQL, asegurando búsquedas en `O(log N)` en historiales de alto volumen.
+   - 18 migraciones controladas (ej. `V18__Add_foreign_key_indexes.sql`) que normalizan el catálogo de ejercicios e inyectan índices compuestos y foráneos estratégicos en PostgreSQL, asegurando búsquedas y uniones relacionales en `O(log N)` en historiales de alto volumen.
    - Entidades UUID mapeadas con `Persistable<String>` y una flag `@Transient isNew` para evitar los costosos `SELECT` previos al `INSERT` masivo de Hibernate.
 
 2. **Seguridad y Rate Limiting:**

@@ -18,6 +18,24 @@ class GeminiAiServiceTest {
     @Mock
     private com.ascension.service.ai.GeminiApiClient apiClient;
 
+    @Mock
+    private com.ascension.service.NutritionService nutritionService;
+
+    @Mock
+    private com.ascension.service.NutritionLogService nutritionLogService;
+
+    @Mock
+    private com.ascension.service.RecipeService recipeService;
+
+    @Mock
+    private com.ascension.service.MacroCalculatorService macroCalculatorService;
+
+    @Mock
+    private com.ascension.service.ai.NutritionPromptBuilder promptBuilder;
+
+    @Mock
+    private com.ascension.service.ai.AiJsonParser jsonParser;
+
     @Test
     void testContextLoads() {
         assertThat(geminiAiService).isNotNull();

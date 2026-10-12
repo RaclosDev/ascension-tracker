@@ -5,6 +5,7 @@ describe('weightHelper', () => {
   it('parses correct weights', () => {
     expect(parseSafeWeight('80.5')).toBe(80.5);
     expect(parseSafeWeight('80,5')).toBe(80.5);
+    expect(parseSafeWeight('70.52')).toBe(70.52);
     expect(parseSafeWeight(80.5)).toBe(80.5);
   });
 

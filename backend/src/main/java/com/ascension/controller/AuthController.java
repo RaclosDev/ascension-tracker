@@ -32,17 +32,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    private GoogleIdTokenVerifier verifier;
-
-    @PostConstruct
-    public void init() {
-        this.verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
-                .setAudience(Collections.singletonList(googleClientId))
-                .build();
-    }
-
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
-    
+
+    private final GoogleIdTokenVerifier verifier;
     private final JwtEncoder jwtEncoder;
     private final RefreshTokenService refreshTokenService;
     private final AccountDeletionService accountDeletionService;
@@ -51,7 +43,13 @@ public class AuthController {
     @Value("${google.client-id:CHANGE_ME}")
     private String googleClientId;
 
-    public AuthController(JwtEncoder jwtEncoder, RefreshTokenService refreshTokenService, AccountDeletionService accountDeletionService, UserService userService) {
+    public AuthController(
+            GoogleIdTokenVerifier verifier,
+            JwtEncoder jwtEncoder,
+            RefreshTokenService refreshTokenService,
+            AccountDeletionService accountDeletionService,
+            UserService userService) {
+        this.verifier = verifier;
         this.jwtEncoder = jwtEncoder;
         this.refreshTokenService = refreshTokenService;
         this.accountDeletionService = accountDeletionService;
