@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Bookmark, Plus, Square, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bookmark, Plus, Square, Check, ChevronDown } from 'lucide-react';
+import { dismissRestNotifications } from '@/lib/workout/notifications';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,13 +17,14 @@ import { ExercisePicker } from '@/components/workout/exercise-picker';
 import { RestBanner } from '@/components/workout/rest-banner';
 import { EmptyCard } from '@/components/workout/dashboard';
 import { useWorkoutStore } from '@/lib/workout/store';
+import { useShallow } from 'zustand/react/shallow';
 
 export function ActiveWorkout() {
-  const active = useWorkoutStore((s) => s.active);
+  const hasActive = useWorkoutStore((s) => s.active !== null);
   const startEmpty = useWorkoutStore((s) => s.startEmpty);
   const setPickerOpen = useWorkoutStore((s) => s.setPickerOpen);
 
-  if (!active) {
+  if (!hasActive) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <header style={{ marginBottom: '1rem' }}>
@@ -94,20 +97,79 @@ export function ActiveWorkout() {
 }
 
 function LiveSession() {
-  const active = useWorkoutStore((s) => s.active)!;
+  const navigate = useNavigate();
+  const workoutName = useWorkoutStore((s) => s.active?.name?.trim() || 'Entrenamiento');
+  const exercises = useWorkoutStore(
+    useShallow(
+      (s) => s.active?.exercises.map((row) => ({ id: row.id, supersetId: row.supersetId })) ?? [],
+    ),
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <header
+        className="live-session-header"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingBottom: '0.25rem',
+        }}
+      >
+        <div>
+          <span
+            style={{
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: 'var(--accent-primary)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+            }}
+          >
+            En curso
+          </span>
+          <h2
+            style={{
+              fontSize: '1.35rem',
+              fontWeight: 700,
+              color: 'var(--text-primary)',
+              margin: '0.1rem 0 0',
+            }}
+          >
+            {workoutName}
+          </h2>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="btn btn-secondary"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            padding: '0.45rem 0.85rem',
+            fontSize: '0.85rem',
+            fontWeight: 500,
+          }}
+          aria-label="Minimizar entrenamiento y navegar por la app"
+          title="Minimizar entrenamiento"
+        >
+          <ChevronDown size={16} />
+          <span>Minimizar</span>
+        </button>
+      </header>
+
       <RestBanner />
 
-      {active.exercises.length === 0 ? (
+      {exercises.length === 0 ? (
         <EmptyCard
           title="Añade el primer ejercicio"
           body="Elige de la biblioteca o crea uno propio. Las series vacías esperan kilos y reps."
         />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {active.exercises.map((row, i) => (
+          {exercises.map((row, i) => (
             <div key={row.id} style={{ display: 'flex', gap: '0.5rem' }}>
               {row.supersetId && (
                 <div
@@ -120,7 +182,7 @@ function LiveSession() {
                 />
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <ExerciseCard row={row} index={i} total={active.exercises.length} />
+                <ExerciseCard rowId={row.id} index={i} total={exercises.length} />
               </div>
             </div>
           ))}
@@ -134,6 +196,7 @@ import { useSaveWorkout, useSaveTemplate } from '@/lib/workout/api';
 
 function FooterActions() {
   const finishWorkout = useWorkoutStore((s) => s.finishWorkout);
+  const clearActiveWorkout = useWorkoutStore((s) => s.clearActiveWorkout);
   const discardWorkout = useWorkoutStore((s) => s.discardWorkout);
   const saveAsTemplate = useWorkoutStore((s) => s.saveAsTemplate);
   const saveWorkoutMutation = useSaveWorkout();
@@ -144,9 +207,11 @@ function FooterActions() {
   const [emptyOpen, setEmptyOpen] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customDuration, setCustomDuration] = useState(0);
-  const active = useWorkoutStore((s) => s.active);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const hasExercises = useWorkoutStore((s) => (s.active?.exercises.length ?? 0) > 0);
 
   function openFinish() {
+    const active = useWorkoutStore.getState().active;
     if (!active) return;
     const hasWork = active.exercises.some((e) => e.sets.some((s) => s.completed));
     if (!hasWork) {
@@ -154,15 +219,31 @@ function FooterActions() {
       return;
     }
 
+    // Cancel rest timer and notifications so bell sound doesn't ring while in finish modal
+    useWorkoutStore.getState().skipRest();
+    dismissRestNotifications();
+
+    setSaveError(null);
     setCustomName(active.name);
     setCustomDuration(Math.round((Date.now() - active.startedAt) / 60000));
     setFinishOpen(true);
   }
 
   function confirmFinish() {
+    setSaveError(null);
     const record = finishWorkout(customName, customDuration * 60000);
-    if (record) saveWorkoutMutation.mutate(record);
-    setFinishOpen(false);
+    if (!record) return;
+    saveWorkoutMutation.mutate(record, {
+      onSuccess: () => {
+        clearActiveWorkout();
+        setFinishOpen(false);
+      },
+      onError: () => {
+        setSaveError(
+          'No se pudo sincronizar con el servidor. Tu entrenamiento sigue protegido y guardado localmente en este dispositivo. Puedes reintentar cuando recuperes conexión.',
+        );
+      },
+    });
   }
 
   function doSaveTemplate() {
@@ -176,11 +257,7 @@ function FooterActions() {
         <Check size={20} />
         Terminar Entrenamiento
       </button>
-      <button
-        className="workout-secondary-btn"
-        onClick={doSaveTemplate}
-        disabled={!active || active.exercises.length === 0}
-      >
+      <button className="workout-secondary-btn" onClick={doSaveTemplate} disabled={!hasExercises}>
         <Bookmark size={16} />
         Guardar como plantilla
       </button>
@@ -337,12 +414,34 @@ function FooterActions() {
                   }}
                 />
               </div>
+              {saveError && (
+                <div
+                  style={{
+                    padding: '0.6rem 0.8rem',
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    border: '1px solid rgba(239, 68, 68, 0.35)',
+                    borderRadius: '8px',
+                    color: '#ef4444',
+                    fontSize: '0.85rem',
+                    lineHeight: '1.4',
+                  }}
+                >
+                  {saveError}
+                </div>
+              )}
             </div>
           </AlertDialogHeader>
           <AlertDialogFooter style={{ marginTop: '1.5rem' }}>
             <AlertDialogCancel className="btn btn-secondary">Cancelar</AlertDialogCancel>
-            <AlertDialogAction className="btn btn-primary" onClick={confirmFinish}>
-              Guardar
+            <AlertDialogAction
+              className="btn btn-primary"
+              onClick={(e) => {
+                e.preventDefault();
+                confirmFinish();
+              }}
+              disabled={saveWorkoutMutation.isPending}
+            >
+              {saveWorkoutMutation.isPending ? 'Guardando...' : 'Guardar'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

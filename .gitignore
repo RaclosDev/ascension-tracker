@@ -1,4 +1,4 @@
-﻿.env
+.env
 .env.*
 !.env.example
 frontend/.env
@@ -41,3 +41,7 @@ docker-compose.override.yml
 /*.py
 
 
+
+# Local AI Context
+ROADMAP.md
+*DIRECTRICES*.md

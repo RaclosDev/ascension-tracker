@@ -1,13 +1,10 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 echo "========================================================="
 echo "🚀 [PRE-PUSH] AUDITORÍA PROFESIONAL DE INTEGRIDAD 🚀"
 echo "========================================================="
 
 # 1. VERIFICACIÓN DEL BACKEND
 echo "⚙️  Construyendo y Verificando el Backend (Maven)..."
-cd backend && ./mvnw clean verify -DskipTests || {
+cd backend && ./mvnw clean verify || {
   echo "❌ ERROR CRÍTICO: El Backend está roto. No puedes hacer push a código que no compila."
   echo "💡 Solución: Revisa los errores de Maven arriba, arréglalos, haz un commit y vuelve a intentar el push."
   exit 1

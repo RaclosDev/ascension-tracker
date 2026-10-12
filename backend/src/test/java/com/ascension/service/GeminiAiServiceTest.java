@@ -18,8 +18,58 @@ class GeminiAiServiceTest {
     @Mock
     private com.ascension.service.ai.GeminiApiClient apiClient;
 
+    @Mock
+    private com.ascension.service.NutritionService nutritionService;
+
+    @Mock
+    private com.ascension.service.NutritionLogService nutritionLogService;
+
+    @Mock
+    private com.ascension.service.RecipeService recipeService;
+
+    @Mock
+    private com.ascension.service.MacroCalculatorService macroCalculatorService;
+
+    @Mock
+    private com.ascension.service.ai.NutritionPromptBuilder promptBuilder;
+
+    @Mock
+    private com.ascension.service.ai.AiJsonParser jsonParser;
+
     @Test
     void testContextLoads() {
         assertThat(geminiAiService).isNotNull();
+    }
+
+    @Test
+    void processNutritionalLabel_WithGarbageBytes_ThrowsException() {
+        // Arrange
+        byte[] garbage = new byte[100];
+        java.util.Arrays.fill(garbage, (byte) 0);
+        org.springframework.mock.web.MockMultipartFile file = new org.springframework.mock.web.MockMultipartFile(
+                "file", "test.jpg", "image/jpeg", garbage);
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () -> geminiAiService.processNutritionalLabel("test@test.com", file)
+        );
+    }
+
+    @Test
+    void processNutritionalLabel_WithFakeJpegHeaderButGarbageBody_ThrowsException() {
+        // Arrange
+        byte[] fakeJpeg = new byte[100];
+        fakeJpeg[0] = (byte) 0xFF;
+        fakeJpeg[1] = (byte) 0xD8;
+        fakeJpeg[2] = (byte) 0xFF;
+        org.springframework.mock.web.MockMultipartFile file = new org.springframework.mock.web.MockMultipartFile(
+                "file", "test.jpg", "image/jpeg", fakeJpeg);
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () -> geminiAiService.processNutritionalLabel("test@test.com", file)
+        );
     }
 }
