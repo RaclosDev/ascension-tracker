@@ -1,371 +1,61 @@
-﻿import { MealIcon } from '../components/MealIcon';
-import { FoodLog, Macros, Meal, UserSettings } from '../types/api';
-import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-const MyFoodsPage = lazy(() => import('./MyFoodsPage'));
-const FoodSearchModal = lazy(() => import('../components/FoodSearchModal'));
-import { format, parseISO } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { getLocalDateString, addDaysToDateString, isTodayLocal } from '../utils/dateHelper';
-const NutritionPieChart = lazy(() => import('../components/nutrition/NutritionPieChart'));
-import api from '../api/client';
-import toast from 'react-hot-toast';
-import { ChevronDown, Copy, Loader2 } from 'lucide-react';
+import { lazy, Suspense } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { FoodLog, Meal } from '../types/api';
+import { Loader2 } from 'lucide-react';
 import { SegmentedControl } from '../components/ui/segmented-control';
 import { Skeleton } from '../components/ui/skeleton';
-import { SwipeableRow } from '../components/SwipeableRow';
 import MacroSummaryHeader from '../components/nutrition/MacroSummaryHeader';
+import { NutritionDateBar } from '../components/nutrition/NutritionDateBar';
+import { MealFoodGroup } from '../components/nutrition/MealFoodGroup';
+import { useNutritionDiary } from '../hooks/nutrition/useNutritionDiary';
 
-interface EditingLog extends FoodLog {
-  _kcalPer100: number;
-  _protPer100: number;
-  _carbsPer100: number;
-  _fatPer100: number;
-}
-
-const getBasePortion = (portionsJson: string | null) => {
-  if (!portionsJson) return null;
-  try {
-    const portions = JSON.parse(portionsJson);
-    if (!portions || !Array.isArray(portions) || portions.length === 0) return null;
-    const base = portions.find((p) => typeof p.label === 'string' && p.label.startsWith('1 '));
-    if (base) return { label: base.label.replace(/^1\s+/, ''), amount: base.amount };
-    return { label: portions[0].label, amount: portions[0].amount };
-  } catch {
-    return null;
-  }
-};
+const MyFoodsPage = lazy(() => import('./MyFoodsPage'));
+const FoodSearchModal = lazy(() => import('../components/FoodSearchModal'));
+const NutritionPieChart = lazy(() => import('../components/nutrition/NutritionPieChart'));
 
 export default function NutritionPage() {
   const queryClient = useQueryClient();
-
-  // Food Logging State
-  const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
-  const [searchModalOpen, setSearchModalOpen] = useState(false);
-  const [selectedMealIndex, setSelectedMealIndex] = useState(0);
-  const [editingLog, setEditingLog] = useState<EditingLog | null>(null);
-  const [editInputMode, setEditInputMode] = useState<'grams' | 'portions'>('grams'); // { id, product, quantity, kcal, protein, carbs, fat }
-
-  const [collapsedMeals, setCollapsedMeals] = useState<Record<number, boolean>>({});
-  const [dragOverMealIndex, setDragOverMealIndex] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'diary' | 'foods'>('diary');
-  const [showChart, setShowChart] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowChart(true), 150);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const touchStartRef = useRef<number | null>(null);
-  const touchEndRef = useRef<number | null>(null);
-  const minSwipeDistance = 50;
-
-  const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    touchEndRef.current = null;
-    touchStartRef.current = e.targetTouches[0].clientX;
-  };
-
-  const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    touchEndRef.current = e.targetTouches[0].clientX;
-  };
-
-  const onTouchEndHandler = () => {
-    if (!touchStartRef.current || !touchEndRef.current) return;
-    const distance = touchStartRef.current - touchEndRef.current;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    if (isLeftSwipe || isRightSwipe) {
-      setSelectedDate((prev) => addDaysToDateString(prev, isLeftSwipe ? 1 : -1));
-    }
-    touchStartRef.current = null;
-    touchEndRef.current = null;
-  };
-
-  const toggleMealCollapse = (index: number, e?: React.MouseEvent | React.KeyboardEvent) => {
-    setCollapsedMeals((prev: Record<number, boolean>) => {
-      const isCurrentlyCollapsed = prev[index] !== false; // default true if undefined
-      return {
-        ...prev,
-        [index]: !isCurrentlyCollapsed,
-      };
-    });
-
-    // Only scroll if we are expanding it
-    if (collapsedMeals[index] !== false && e?.currentTarget) {
-      const el = e.currentTarget;
-      setTimeout(() => {
-        const offset = 140;
-        const bodyRect = document.body.getBoundingClientRect().top;
-        const elementRect = el.getBoundingClientRect().top;
-        const elementPosition = elementRect - bodyRect;
-        const offsetPosition = elementPosition - offset;
-
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth',
-        });
-      }, 100);
-    }
-  };
-
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, log: FoodLog) => {
-    e.dataTransfer.setData(
-      'application/json',
-      JSON.stringify({ ...log, sourceMealIndex: log.mealIndex }),
-    );
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  let scrollRAF: number | null = null;
-  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
-    if (e.clientY === 0) return;
-    if (!scrollRAF) {
-      scrollRAF = requestAnimationFrame(() => {
-        const threshold = 250;
-        if (e.clientY < threshold) {
-          const speed = Math.max(8, 35 - (e.clientY / threshold) * 30);
-          window.scrollBy({ top: -speed, behavior: 'auto' });
-        } else if (window.innerHeight - e.clientY < threshold) {
-          const distFromEdge = window.innerHeight - e.clientY;
-          const speed = Math.max(8, 35 - (distFromEdge / threshold) * 30);
-          window.scrollBy({ top: speed, behavior: 'auto' });
-        }
-        scrollRAF = null;
-      });
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDragOverMealIndex(index);
-  };
-
-  const handleDragLeave = () => {
-    setDragOverMealIndex(null);
-  };
-
-  const handleDropOnMeal = async (e: React.DragEvent<HTMLDivElement>, targetMealIndex: number) => {
-    e.preventDefault();
-    setDragOverMealIndex(null);
-    try {
-      const data = JSON.parse(e.dataTransfer.getData('application/json'));
-      if (data.sourceMealIndex === targetMealIndex) return;
-
-      await api.put(`/nutrition/logs/${data.id}`, {
-        date: data.date || selectedDate,
-        product: data.product,
-        quantity: data.quantity,
-        kcal: data.kcal,
-        protein: data.protein,
-        carbs: data.carbs,
-        fat: data.fat,
-        mealIndex: targetMealIndex,
-        portionsJson: data.portionsJson,
-      });
-      fetchData();
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
-      toast.success('Movido correctamente');
-    } catch {
-      toast.error('Error al mover');
-    }
-  };
-
-  const handleCopyFromYesterday = async (
-    e: React.MouseEvent<HTMLButtonElement>,
-    mealIndex: number,
-  ) => {
-    e.stopPropagation();
-    const loadingToast = toast.loading('Copiando de ayer...');
-    try {
-      const yesterday = addDaysToDateString(selectedDate, -1);
-      const res = await api.get(`/nutrition/logs?date=${yesterday}`);
-      const logsToCopy = res.data.filter((log: FoodLog) => log.mealIndex === mealIndex);
-
-      if (logsToCopy.length === 0) {
-        toast.dismiss(loadingToast);
-        toast.error('No hay alimentos en esta comida ayer');
-        return;
-      }
-
-      for (const log of logsToCopy) {
-        await api.post('/nutrition/logs', {
-          date: selectedDate,
-          mealIndex: mealIndex,
-          product: log.product,
-          quantity: log.quantity,
-          kcal: log.kcal,
-          protein: log.protein,
-          carbs: log.carbs,
-          fat: log.fat,
-          barcode: log.barcode,
-          myFoodId: log.myFoodId,
-          portionsJson: log.portionsJson,
-        });
-      }
-
-      fetchData();
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
-      toast.dismiss(loadingToast);
-      toast.success('¡Comida copiada!');
-    } catch (err: unknown) {
-      console.error(err);
-      toast.dismiss(loadingToast);
-      toast.error('Error al copiar la comida');
-    }
-  };
-
   const {
-    data,
-    isLoading: loading,
-    refetch: fetchData,
-  } = useQuery<{ foodLogs: FoodLog[]; macros: Macros; meals: Meal[]; settings: UserSettings }>({
-    queryKey: ['nutritionData', selectedDate],
-    queryFn: async () => {
-      const [macrosRes, mealsRes, settingsRes, logsRes] = await Promise.all([
-        api.get('/nutrition/macros').catch(() => ({ data: null })),
-        api.get('/nutrition/meals').catch(() => ({ data: [] })),
-        api.get('/settings').catch(() => ({ data: null })),
-        api.get(`/nutrition/logs?date=${selectedDate}`).catch(() => ({ data: [] })),
-      ]);
-
-      return {
-        foodLogs: logsRes.data,
-        macros: macrosRes.data,
-        meals: mealsRes.data,
-        settings: settingsRes.data,
-      };
-    },
-    placeholderData: keepPreviousData,
-  });
-
-  const { foodLogs = [], macros = null, meals = [], settings = null } = data || {};
-
-  useEffect(() => {
-    if (meals.length > 0) {
-      const newCollapsed: Record<number, boolean> = {};
-      meals.forEach((_: Meal, i: number) => {
-        newCollapsed[i] = true;
-      });
-      setCollapsedMeals(newCollapsed);
-    }
-  }, [meals.length]); // Only run when meals array length changes, indicating load
-
-  const deleteLogMutation = useMutation<unknown, Error, number | string>({
-    mutationFn: (id) => api.delete(`/nutrition/logs/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
-      toast.success('Alimento eliminado');
-    },
-    onError: () => {
-      toast.error('Error al eliminar alimento');
-    },
-  });
-
-  const handleDeleteLog = (id: number | string) => {
-    deleteLogMutation.mutate(id);
-  };
-
-  const handleEditLog = (log: FoodLog) => {
-    let hasPortions = false;
-    try {
-      if (log.portionsJson) {
-        const p = JSON.parse(log.portionsJson);
-        hasPortions = p && p.length > 0;
-      }
-    } catch (e: unknown) {
-      console.error(e);
-    }
-    setEditInputMode(hasPortions ? 'portions' : 'grams');
-    setEditingLog({
-      id: log.id,
-      date: log.date,
-      mealIndex: log.mealIndex,
-      product: log.product,
-      quantity: log.quantity,
-      kcal: log.kcal,
-      protein: log.protein,
-      carbs: log.carbs,
-      fat: log.fat,
-      // store per-100g for recalc
-      _kcalPer100: log.quantity > 0 ? (log.kcal / log.quantity) * 100 : 0,
-      _protPer100: log.quantity > 0 ? (log.protein / log.quantity) * 100 : 0,
-      _carbsPer100: log.quantity > 0 ? (log.carbs / log.quantity) * 100 : 0,
-      _fatPer100: log.quantity > 0 ? (log.fat / log.quantity) * 100 : 0,
-      portionsJson: log.portionsJson,
-    });
-  };
-
-  const handleEditQuantityChange = (newQty: number | string) => {
-    const q = typeof newQty === 'string' ? parseFloat(newQty) || 0 : newQty;
-    setEditingLog((prev: EditingLog | null) =>
-      prev
-        ? {
-            ...prev,
-            quantity: q,
-            kcal: Math.round(((prev._kcalPer100 * q) / 100) * 10) / 10,
-            protein: Math.round(((prev._protPer100 * q) / 100) * 10) / 10,
-            carbs: Math.round(((prev._carbsPer100 * q) / 100) * 10) / 10,
-            fat: Math.round(((prev._fatPer100 * q) / 100) * 10) / 10,
-          }
-        : prev,
-    );
-  };
-
-  const updateLogMutation = useMutation({
-    mutationFn: (data: Partial<FoodLog>) => api.put(`/nutrition/logs/${data.id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
-      setEditingLog(null);
-      toast.success('Registro actualizado');
-    },
-    onError: () => {
-      toast.error('Error al actualizar');
-    },
-  });
-
-  const handleUpdateLog = () => {
-    if (!editingLog) return;
-    updateLogMutation.mutate({
-      id: editingLog.id,
-      date: editingLog.date,
-      mealIndex: editingLog.mealIndex,
-      product: editingLog.product,
-      quantity: editingLog.quantity,
-      kcal: editingLog.kcal,
-      protein: editingLog.protein,
-      carbs: editingLog.carbs,
-      fat: editingLog.fat,
-      portionsJson: editingLog.portionsJson,
-    });
-  };
-
-  const consumed = useMemo(() => {
-    return (foodLogs || []).reduce(
-      (acc: Macros, log: FoodLog) => ({
-        kcal: acc.kcal + (Number(log.kcal) || 0),
-        protein: acc.protein + (Number(log.protein) || 0),
-        carbs: acc.carbs + (Number(log.carbs) || 0),
-        fat: acc.fat + (Number(log.fat) || 0),
-      }),
-      { kcal: 0, protein: 0, carbs: 0, fat: 0 },
-    );
-  }, [foodLogs]);
+    selectedDate,
+    setSelectedDate,
+    searchModalOpen,
+    setSearchModalOpen,
+    selectedMealIndex,
+    setSelectedMealIndex,
+    editingLog,
+    editInputMode,
+    setEditInputMode,
+    collapsedMeals,
+    dragOverMealIndex,
+    activeTab,
+    setActiveTab,
+    showChart,
+    foodLogs,
+    macros,
+    meals,
+    settings,
+    loading,
+    fetchData,
+    consumed,
+    pieData,
+    toggleMealCollapse,
+    handleDragStart,
+    handleDrag,
+    handleDragOver,
+    handleDragLeave,
+    handleDropOnMeal,
+    handleCopyFromYesterday,
+    handleDeleteLog,
+    handleEditLog,
+    handleEditQuantityChange,
+    handleUpdateLog,
+    setEditingLog,
+  } = useNutritionDiary();
 
   if (loading) {
     return (
       <div className="fade-in">
-        {/* Segmented Control Skeleton */}
         <Skeleton className="h-10 w-full max-w-sm mx-auto mb-6" />
-
-        {/* Date Navigation Skeleton */}
         <div
           style={{
             display: 'flex',
@@ -380,7 +70,6 @@ export default function NutritionPage() {
           <Skeleton className="h-10 w-10 rounded-full" />
         </div>
 
-        {/* Macros Summary Skeleton */}
         <div className="kpi-grid mb-6">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="kpi-card" style={{ padding: '0.75rem 1rem' }}>
@@ -391,7 +80,6 @@ export default function NutritionPage() {
           ))}
         </div>
 
-        {/* Meals Skeleton */}
         <div
           style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}
         >
@@ -415,24 +103,11 @@ export default function NutritionPage() {
       </div>
     );
   }
+
   if (!macros || !settings) return null;
-
-  const pieData = [
-    { name: 'Proteínas Consumidas', value: consumed.protein * 4, color: 'var(--color-protein)' },
-    { name: 'Hidratos Consumidos', value: consumed.carbs * 4, color: 'var(--color-carbs)' },
-    { name: 'Grasas Consumidas', value: consumed.fat * 9, color: 'var(--color-fat)' },
-    {
-      name: 'Calorías Restantes',
-      value: Math.max(0, macros.kcal - consumed.kcal),
-      color: 'rgba(255,255,255,0.05)',
-    },
-  ];
-
-  //   const totalProtein = macros.protein;
 
   return (
     <div className="fade-in">
-      {/* Segmented Control */}
       <SegmentedControl
         options={[
           { label: 'Diario', value: 'diary' },
@@ -451,65 +126,10 @@ export default function NutritionPage() {
         </Suspense>
       ) : (
         <>
-          {/* Date Navigation */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '1rem',
-              marginBottom: 'var(--space-lg)',
-            }}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEndHandler}
-          >
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={() => setSelectedDate((prev) => addDaysToDateString(prev, -1))}
-              style={{ padding: '0.4rem 1rem', borderRadius: '24px' }}
-            >
-              &larr;
-            </button>
+          <NutritionDateBar selectedDate={selectedDate} onDateChange={setSelectedDate} />
 
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                style={{
-                  position: 'absolute',
-                  opacity: 0,
-                  width: '100%',
-                  height: '100%',
-                  cursor: 'pointer',
-                }}
-              />
-              <div
-                style={{
-                  fontWeight: 600,
-                  fontSize: '1.1rem',
-                  minWidth: '140px',
-                  textAlign: 'center',
-                }}
-              >
-                {isTodayLocal(selectedDate)
-                  ? 'Hoy'
-                  : format(parseISO(selectedDate), 'd MMM yyyy', { locale: es })}
-              </div>
-            </div>
-
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={() => setSelectedDate((prev) => addDaysToDateString(prev, 1))}
-              style={{ padding: '0.4rem 1rem', borderRadius: '24px' }}
-            >
-              &rarr;
-            </button>
-          </div>
-
-          {/* Global Add Button (FAB-style for mobile, fixed for PC) */}
           <button
+            type="button"
             className="btn"
             style={{
               position: 'fixed',
@@ -537,436 +157,46 @@ export default function NutritionPage() {
             +
           </button>
 
-          {/* Macro Summary */}
           <MacroSummaryHeader consumed={consumed} macros={macros} />
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-            {/* Daily Food Logs */}
             <div className="nutrition-meals-grid">
               {meals.map((meal: Meal, index: number) => {
                 const logs = foodLogs.filter((log: FoodLog) => log.mealIndex === index);
-
-                const mealSubtotal = logs.reduce(
-                  (acc: Macros, log: FoodLog) => ({
-                    kcal: acc.kcal + (Number(log.kcal) || 0),
-                    protein: acc.protein + (Number(log.protein) || 0),
-                    carbs: acc.carbs + (Number(log.carbs) || 0),
-                    fat: acc.fat + (Number(log.fat) || 0),
-                  }),
-                  { kcal: 0, protein: 0, carbs: 0, fat: 0 },
-                );
-
                 const isCollapsed = collapsedMeals[index];
 
                 return (
-                  <div
+                  <MealFoodGroup
                     key={meal.id || index}
-                    className="card"
-                    style={{
-                      padding: '1.25rem',
-                      border:
-                        dragOverMealIndex === index ? '2px dashed var(--color-carbs)' : undefined,
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.5rem',
+                    meal={meal}
+                    mealIndex={index}
+                    logs={logs}
+                    isCollapsed={isCollapsed}
+                    isDragOver={dragOverMealIndex === index}
+                    editingLog={editingLog}
+                    editInputMode={editInputMode}
+                    onToggleCollapse={toggleMealCollapse}
+                    onCopyFromYesterday={handleCopyFromYesterday}
+                    onOpenAddFoodModal={(mIdx) => {
+                      setSelectedMealIndex(mIdx);
+                      setSearchModalOpen(true);
                     }}
-                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragStart={handleDragStart}
+                    onDrag={handleDrag}
+                    onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDropOnMeal(e, index)}
-                  >
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          toggleMealCollapse(index, e);
-                        }
-                      }}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: '0.25rem',
-                        cursor: 'pointer',
-                      }}
-                      onClick={(e) => toggleMealCollapse(index, e)}
-                    >
-                      <div
-                        style={{
-                          fontWeight: 600,
-                          fontSize: '1.1rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                        }}
-                      >
-                        <ChevronDown
-                          size={18}
-                          style={{
-                            transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
-                            transition: 'transform 0.2s ease',
-                            color: 'var(--text-secondary)',
-                          }}
-                        />
-                        <span style={{ marginRight: 'var(--space-xs)' }}>
-                          <MealIcon
-                            iconString={meal.icon || meal.name}
-                            className="w-5 h-5 inline-block text-[var(--text-secondary)]"
-                          />
-                        </span>{' '}
-                        {meal.name}
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          style={{
-                            padding: '0.4rem',
-                            borderRadius: '16px',
-                            color: 'var(--text-secondary)',
-                          }}
-                          title="Copiar comida de ayer"
-                          onClick={(e) => handleCopyFromYesterday(e, index)}
-                        >
-                          <Copy size={16} />
-                        </button>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          style={{ padding: '0.4rem 0.8rem', borderRadius: '16px' }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedMealIndex(index);
-                            setSearchModalOpen(true);
-                          }}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-
-                    {logs.length > 0 && (
-                      <div
-                        className="meal-subtotal-row"
-                        style={{ marginBottom: isCollapsed ? '0' : '0.75rem' }}
-                      >
-                        <span className="subtotal-val kcal">
-                          {Math.round(mealSubtotal.kcal)} kcal
-                        </span>
-                        <span className="subtotal-dot"></span>
-                        <span className="subtotal-val">P: {mealSubtotal.protein.toFixed(1)}g</span>
-                        <span className="subtotal-dot"></span>
-                        <span className="subtotal-val">C: {mealSubtotal.carbs.toFixed(1)}g</span>
-                        <span className="subtotal-dot"></span>
-                        <span className="subtotal-val">G: {mealSubtotal.fat.toFixed(1)}g</span>
-                      </div>
-                    )}
-
-                    {!isCollapsed && (
-                      <>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                          {logs.length === 0 ? (
-                            <div
-                              style={{
-                                color: 'var(--text-secondary)',
-                                fontSize: '0.9rem',
-                                fontStyle: 'italic',
-                                marginTop: '0.25rem',
-                              }}
-                            >
-                              Sin registrar
-                            </div>
-                          ) : (
-                            logs.map((log: FoodLog) => (
-                              <div
-                                key={log.id}
-                                draggable
-                                onDragStart={(e) => handleDragStart(e, log)}
-                                onDrag={(e) => handleDrag(e)}
-                                style={{
-                                  background: 'var(--bg-primary)',
-                                  borderRadius: '12px',
-                                  overflow: 'hidden',
-                                  cursor: 'grab',
-                                }}
-                              >
-                                {editingLog && editingLog.id === log.id ? (
-                                  /* EDIT MODE */
-                                  <div
-                                    style={{
-                                      padding: '0.75rem',
-                                      display: 'flex',
-                                      flexDirection: 'column',
-                                      gap: '0.5rem',
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        fontWeight: 500,
-                                        marginBottom: '0.15rem',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                      }}
-                                    >
-                                      <span>{editingLog.product}</span>
-                                    </div>
-                                    {(() => {
-                                      const basePortion = getBasePortion(
-                                        editingLog.portionsJson || null,
-                                      );
-                                      const hasPortions = !!basePortion;
-                                      const multiplier =
-                                        hasPortions && editingLog.quantity
-                                          ? Number(
-                                              (editingLog.quantity / basePortion.amount).toFixed(2),
-                                            )
-                                          : 0;
-                                      const portionLabel = basePortion
-                                        ? basePortion.label.replace(/^1\s*/, '')
-                                        : 'ud';
-
-                                      return (
-                                        <div
-                                          style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: '0.75rem',
-                                            marginBottom: '0.25rem',
-                                          }}
-                                        >
-                                          {hasPortions && (
-                                            <div style={{ width: '100%' }}>
-                                              <SegmentedControl
-                                                options={[
-                                                  { label: 'Gramos', value: 'grams' },
-                                                  { label: 'Porción', value: 'portions' },
-                                                ]}
-                                                value={editInputMode}
-                                                onChange={(val: string) =>
-                                                  setEditInputMode(val as 'grams' | 'portions')
-                                                }
-                                              />
-                                            </div>
-                                          )}
-
-                                          {editInputMode === 'grams' || !hasPortions ? (
-                                            <div
-                                              style={{
-                                                display: 'flex',
-                                                gap: '0.5rem',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                              }}
-                                            >
-                                              <input
-                                                type="number"
-                                                inputMode="decimal"
-                                                className="form-input"
-                                                style={{
-                                                  fontSize: '1.2rem',
-                                                  padding: '0.5rem',
-                                                  fontWeight: 600,
-                                                  width: '100px',
-                                                  textAlign: 'center',
-                                                }}
-                                                value={
-                                                  editingLog.quantity === 0
-                                                    ? ''
-                                                    : editingLog.quantity
-                                                }
-                                                onChange={(e) =>
-                                                  handleEditQuantityChange(e.target.value)
-                                                }
-                                                autoFocus
-                                              />
-                                              <span
-                                                style={{
-                                                  fontSize: '1.1rem',
-                                                  color: 'var(--text-secondary)',
-                                                }}
-                                              >
-                                                g
-                                              </span>
-                                            </div>
-                                          ) : (
-                                            <div
-                                              style={{
-                                                display: 'flex',
-                                                gap: '0.5rem',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                              }}
-                                            >
-                                              <button
-                                                className="btn btn-secondary"
-                                                onClick={() =>
-                                                  handleEditQuantityChange(
-                                                    Math.max(
-                                                      0,
-                                                      (multiplier - 1) * basePortion.amount,
-                                                    ),
-                                                  )
-                                                }
-                                                style={{
-                                                  width: '40px',
-                                                  height: '40px',
-                                                  fontSize: '1.2rem',
-                                                  display: 'flex',
-                                                  alignItems: 'center',
-                                                  justifyContent: 'center',
-                                                  padding: 0,
-                                                }}
-                                              >
-                                                -
-                                              </button>
-                                              <input
-                                                type="number"
-                                                inputMode="decimal"
-                                                className="form-input"
-                                                style={{
-                                                  fontSize: '1.2rem',
-                                                  padding: '0.5rem',
-                                                  fontWeight: 600,
-                                                  width: '80px',
-                                                  textAlign: 'center',
-                                                }}
-                                                value={multiplier === 0 ? '' : multiplier}
-                                                onChange={(e) =>
-                                                  handleEditQuantityChange(
-                                                    Number(e.target.value) * basePortion.amount,
-                                                  )
-                                                }
-                                                autoFocus
-                                              />
-                                              <button
-                                                className="btn btn-secondary"
-                                                onClick={() =>
-                                                  handleEditQuantityChange(
-                                                    (multiplier + 1) * basePortion.amount,
-                                                  )
-                                                }
-                                                style={{
-                                                  width: '40px',
-                                                  height: '40px',
-                                                  fontSize: '1.2rem',
-                                                  display: 'flex',
-                                                  alignItems: 'center',
-                                                  justifyContent: 'center',
-                                                  padding: 0,
-                                                }}
-                                              >
-                                                +
-                                              </button>
-                                              <span
-                                                style={{
-                                                  fontSize: '1.1rem',
-                                                  color: 'var(--text-secondary)',
-                                                }}
-                                              >
-                                                x {portionLabel}
-                                              </span>
-                                            </div>
-                                          )}
-                                        </div>
-                                      );
-                                    })()}
-                                    <div
-                                      style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}
-                                    >
-                                      {Math.round(editingLog.kcal)} kcal | P:{' '}
-                                      {editingLog.protein.toFixed(1)}g | C:{' '}
-                                      {editingLog.carbs.toFixed(1)}g | G:{' '}
-                                      {editingLog.fat.toFixed(1)}g
-                                    </div>
-                                    <div
-                                      style={{
-                                        display: 'flex',
-                                        gap: '0.5rem',
-                                        justifyContent: 'flex-end',
-                                      }}
-                                    >
-                                      <button
-                                        className="btn btn-secondary btn-sm"
-                                        style={{ padding: '0.3rem 0.6rem' }}
-                                        onClick={() => setEditingLog(null)}
-                                      >
-                                        Cancelar
-                                      </button>
-                                      <button
-                                        className="btn btn-primary btn-sm"
-                                        style={{ padding: '0.3rem 0.6rem' }}
-                                        onClick={handleUpdateLog}
-                                      >
-                                        Guardar
-                                      </button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  /* VIEW MODE */
-                                  <SwipeableRow
-                                    onEdit={() => handleEditLog(log)}
-                                    onDelete={() => log.id !== undefined && handleDeleteLog(log.id)}
-                                  >
-                                    <div
-                                      style={{
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        padding: '0.75rem',
-                                      }}
-                                    >
-                                      <div>
-                                        <div style={{ fontWeight: 500, marginBottom: '0.15rem' }}>
-                                          {log.product}
-                                        </div>
-                                        <div
-                                          style={{
-                                            fontSize: '0.8rem',
-                                            color: 'var(--text-secondary)',
-                                          }}
-                                        >
-                                          <span
-                                            style={{
-                                              fontWeight: 500,
-                                              color: 'var(--text-primary)',
-                                            }}
-                                          >
-                                            {(() => {
-                                              const basePortion = getBasePortion(
-                                                log.portionsJson || null,
-                                              );
-                                              if (basePortion) {
-                                                const count = Number(
-                                                  (log.quantity / basePortion.amount).toFixed(1),
-                                                );
-                                                return `${count}x ${basePortion.label} (${log.quantity}g)`;
-                                              }
-                                              return `${log.quantity}g`;
-                                            })()}
-                                          </span>
-                                          {' • '}
-                                          {Math.round(Number(log.kcal) || 0)} kcal | P:{' '}
-                                          {(Number(log.protein) || 0).toFixed(1)}g | C:{' '}
-                                          {(Number(log.carbs) || 0).toFixed(1)}g | G:{' '}
-                                          {(Number(log.fat) || 0).toFixed(1)}g
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </SwipeableRow>
-                                )}
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </div>
+                    onDrop={handleDropOnMeal}
+                    onEditLog={handleEditLog}
+                    onDeleteLog={handleDeleteLog}
+                    onEditInputModeChange={setEditInputMode}
+                    onEditQuantityChange={handleEditQuantityChange}
+                    onUpdateLog={handleUpdateLog}
+                    onCancelEdit={() => setEditingLog(null)}
+                  />
                 );
               })}
             </div>
 
-            {/* Bottom Chart (Moved to bottom) */}
             <div
               className="card"
               style={{
