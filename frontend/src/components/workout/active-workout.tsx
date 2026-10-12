@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Bookmark, Plus, Square, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bookmark, Plus, Square, Check, ChevronDown } from 'lucide-react';
+import { dismissRestNotifications } from '@/lib/workout/notifications';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -95,6 +97,8 @@ export function ActiveWorkout() {
 }
 
 function LiveSession() {
+  const navigate = useNavigate();
+  const workoutName = useWorkoutStore((s) => s.active?.name?.trim() || 'Entrenamiento');
   const exercises = useWorkoutStore(
     useShallow(
       (s) => s.active?.exercises.map((row) => ({ id: row.id, supersetId: row.supersetId })) ?? [],
@@ -103,6 +107,59 @@ function LiveSession() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <header
+        className="live-session-header"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingBottom: '0.25rem',
+        }}
+      >
+        <div>
+          <span
+            style={{
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: 'var(--accent-primary)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+            }}
+          >
+            En curso
+          </span>
+          <h2
+            style={{
+              fontSize: '1.35rem',
+              fontWeight: 700,
+              color: 'var(--text-primary)',
+              margin: '0.1rem 0 0',
+            }}
+          >
+            {workoutName}
+          </h2>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="btn btn-secondary"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            padding: '0.45rem 0.85rem',
+            fontSize: '0.85rem',
+            fontWeight: 500,
+          }}
+          aria-label="Minimizar entrenamiento y navegar por la app"
+          title="Minimizar entrenamiento"
+        >
+          <ChevronDown size={16} />
+          <span>Minimizar</span>
+        </button>
+      </header>
+
       <RestBanner />
 
       {exercises.length === 0 ? (
@@ -161,6 +218,10 @@ function FooterActions() {
       setEmptyOpen(true);
       return;
     }
+
+    // Cancel rest timer and notifications so bell sound doesn't ring while in finish modal
+    useWorkoutStore.getState().skipRest();
+    dismissRestNotifications();
 
     setSaveError(null);
     setCustomName(active.name);

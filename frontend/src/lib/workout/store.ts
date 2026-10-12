@@ -3,7 +3,11 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { get, set, del } from 'idb-keyval';
 import { uid } from '@/lib/utils';
 import { previousFill } from './format';
-import { scheduleServerRestTimer, cancelServerRestTimer } from './notifications';
+import {
+  scheduleServerRestTimer,
+  cancelServerRestTimer,
+  dismissRestNotifications,
+} from './notifications';
 import type {
   ActiveWorkout,
   CompletedWorkout,
@@ -379,6 +383,11 @@ export const useWorkoutStore = create<WorkoutState>()(
         const hasWork = active.exercises.some((e) => e.sets.some((s) => s.completed));
         if (!hasWork) return null;
 
+        // Cancel pending rest timer and notifications immediately upon completing session
+        cancelServerRestTimer();
+        dismissRestNotifications();
+        set({ restUntil: null });
+
         const finalFinishedAt = active.editingFinishedAt || Date.now();
         let finalStartedAt = active.startedAt;
 
@@ -404,6 +413,8 @@ export const useWorkoutStore = create<WorkoutState>()(
 
       clearActiveWorkout: () => {
         const active = get().active;
+        cancelServerRestTimer();
+        dismissRestNotifications();
         set({
           active: null,
           restUntil: null,
@@ -422,6 +433,8 @@ export const useWorkoutStore = create<WorkoutState>()(
 
       discardWorkout: () => {
         const active = get().active;
+        cancelServerRestTimer();
+        dismissRestNotifications();
         set({ active: null, restUntil: null, tab: active?.editingId ? 'history' : 'home' });
       },
 

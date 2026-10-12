@@ -6,6 +6,13 @@ vi.mock('idb-keyval', () => ({
   del: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('../lib/workout/notifications', () => ({
+  scheduleServerRestTimer: vi.fn(),
+  cancelServerRestTimer: vi.fn(),
+  dismissRestNotifications: vi.fn(),
+}));
+
+import { cancelServerRestTimer, dismissRestNotifications } from '../lib/workout/notifications';
 import { useWorkoutStore } from '../lib/workout/store';
 
 describe('WorkoutStore - finishWorkout persistence & resilience', () => {
@@ -76,5 +83,50 @@ describe('WorkoutStore - finishWorkout persistence & resilience', () => {
     const record = useWorkoutStore.getState().finishWorkout();
     expect(record).toBeNull();
     expect(useWorkoutStore.getState().active).not.toBeNull();
+  });
+
+  test('finishWorkout cancels rest timer, dismisses notifications and clears restUntil', () => {
+    vi.clearAllMocks();
+    useWorkoutStore.setState({
+      active: {
+        name: 'Brazo',
+        startedAt: 1000,
+        notes: '',
+        exercises: [
+          {
+            id: 'ex-1',
+            exerciseId: 'curl',
+            notes: '',
+            sets: [{ id: 's-1', type: 'normal', weight: '20', reps: '10', completed: true }],
+          },
+        ],
+      },
+      restUntil: Date.now() + 60000,
+    });
+
+    const record = useWorkoutStore.getState().finishWorkout();
+    expect(record).not.toBeNull();
+    expect(useWorkoutStore.getState().restUntil).toBeNull();
+    expect(cancelServerRestTimer).toHaveBeenCalled();
+    expect(dismissRestNotifications).toHaveBeenCalled();
+  });
+
+  test('clearActiveWorkout and discardWorkout cancel timer and dismiss notifications', () => {
+    vi.clearAllMocks();
+    useWorkoutStore.setState({
+      active: {
+        name: 'Pecho',
+        startedAt: 1000,
+        notes: '',
+        exercises: [],
+      },
+      restUntil: Date.now() + 60000,
+    });
+
+    useWorkoutStore.getState().discardWorkout();
+    expect(useWorkoutStore.getState().restUntil).toBeNull();
+    expect(useWorkoutStore.getState().active).toBeNull();
+    expect(cancelServerRestTimer).toHaveBeenCalled();
+    expect(dismissRestNotifications).toHaveBeenCalled();
   });
 });

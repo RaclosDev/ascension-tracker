@@ -165,4 +165,29 @@ export async function setupAuthMocks(page: Page): Promise<void> {
       json: [],
     });
   });
+
+  // 13. Workout endpoints
+  await page.route('**/api/workouts/recent**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      json: [],
+    });
+  });
+
+  await page.route('**/api/workouts/templates**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      json: [],
+    });
+  });
+
+  await page.route('**/api/workouts/custom-exercises**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      json: [],
+    });
+  });
 }
