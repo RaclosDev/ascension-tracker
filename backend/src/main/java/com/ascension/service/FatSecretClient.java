@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.config.ExternalApiProperties;
 import com.ascension.exception.ExternalApiException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,23 +24,31 @@ import java.util.Map;
 @Component
 public class FatSecretClient {
     private static final Logger log = LoggerFactory.getLogger(FatSecretClient.class);
-    private static final int MAX_ATTEMPTS = 3;
-    private static final long INITIAL_BACKOFF_MS = 100L;
     
     private final RestTemplateBuilder builder;
     private final ObjectMapper objectMapper;
     private final FatSecretSignatureBuilder signatureBuilder;
+    private final ExternalApiProperties properties;
     private RestTemplate restTemplate;
 
-    public FatSecretClient(RestTemplateBuilder builder, ObjectMapper objectMapper, FatSecretSignatureBuilder signatureBuilder) {
+    public FatSecretClient(RestTemplateBuilder builder, ObjectMapper objectMapper, FatSecretSignatureBuilder signatureBuilder, ExternalApiProperties properties) {
         this.builder = builder;
         this.objectMapper = objectMapper;
         this.signatureBuilder = signatureBuilder;
+        this.properties = properties != null ? properties : new ExternalApiProperties();
+    }
+
+    public FatSecretClient(RestTemplateBuilder builder, ObjectMapper objectMapper, FatSecretSignatureBuilder signatureBuilder) {
+        this(builder, objectMapper, signatureBuilder, new ExternalApiProperties());
     }
 
     @PostConstruct
     public void init() {
-        this.restTemplate = builder.setConnectTimeout(Duration.ofSeconds(5)).setReadTimeout(Duration.ofSeconds(15)).build();
+        var cfg = properties.getFatsecret();
+        this.restTemplate = builder
+                .setConnectTimeout(Duration.ofMillis(cfg.getConnectTimeoutMs()))
+                .setReadTimeout(Duration.ofMillis(cfg.getReadTimeoutMs()))
+                .build();
     }
 
     void setRestTemplate(RestTemplate restTemplate) {
@@ -67,7 +76,9 @@ public class FatSecretClient {
         ResponseEntity<String> response = null;
         Exception lastException = null;
 
-        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        int maxAttempts = properties.getFatsecret().getMaxAttempts();
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
                 response = restTemplate.exchange(uri, HttpMethod.GET, null, String.class);
                 lastException = null;
@@ -75,7 +86,7 @@ public class FatSecretClient {
             } catch (RestClientResponseException rcre) {
                 lastException = rcre;
                 int statusCode = rcre.getStatusCode().value();
-                log.error("FS Search Error on attempt {}/{}: status {} - {}", attempt, MAX_ATTEMPTS, statusCode, rcre.getResponseBodyAsString());
+                log.error("FS Search Error on attempt {}/{}: status {} - {}", attempt, maxAttempts, statusCode, rcre.getResponseBodyAsString());
                 
                 // Do not retry 4xx errors except 429 Too Many Requests
                 if (rcre.getStatusCode().is4xxClientError() && statusCode != 429) {
@@ -83,7 +94,7 @@ public class FatSecretClient {
                             "Error en la llamada al servicio externo FatSecret: " + statusCode, rcre);
                 }
 
-                if (attempt < MAX_ATTEMPTS) {
+                if (attempt < maxAttempts) {
                     applyBackoff(attempt);
                 }
             } catch (ResourceAccessException rae) {
@@ -91,15 +102,15 @@ public class FatSecretClient {
                 String errorMsg = rae.getMessage() != null
                         ? rae.getMessage().replaceAll("https://platform.fatsecret.com/rest/server.api.*", "https://platform.fatsecret.com/rest/server.api[REDACTED]")
                         : "Network I/O error";
-                log.error("FS Search Network Error on attempt {}/{}: {}", attempt, MAX_ATTEMPTS, errorMsg);
+                log.error("FS Search Network Error on attempt {}/{}: {}", attempt, maxAttempts, errorMsg);
 
-                if (attempt < MAX_ATTEMPTS) {
+                if (attempt < maxAttempts) {
                     applyBackoff(attempt);
                 }
             } catch (Exception e) {
                 lastException = e;
-                log.error("FS Search unexpected error on attempt {}/{}: {}", attempt, MAX_ATTEMPTS, e.getMessage());
-                if (attempt < MAX_ATTEMPTS) {
+                log.error("FS Search unexpected error on attempt {}/{}: {}", attempt, maxAttempts, e.getMessage());
+                if (attempt < maxAttempts) {
                     applyBackoff(attempt);
                 }
             }
@@ -133,7 +144,8 @@ public class FatSecretClient {
     }
 
     private void applyBackoff(int attempt) {
-        long backoffMs = INITIAL_BACKOFF_MS * (1L << (attempt - 1));
+        long initialBackoff = properties.getFatsecret().getInitialBackoffMs();
+        long backoffMs = initialBackoff * (1L << (attempt - 1));
         try {
             Thread.sleep(backoffMs);
         } catch (InterruptedException ie) {

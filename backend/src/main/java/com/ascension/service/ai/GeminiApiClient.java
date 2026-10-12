@@ -1,9 +1,9 @@
 package com.ascension.service.ai;
 
+import com.ascension.config.ExternalApiProperties;
 import com.ascension.exception.ExternalApiException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,12 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class GeminiApiClient {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiApiClient.class);
-    private static final int MAX_ATTEMPTS = 3;
-    private static final long INITIAL_BACKOFF_MS = 150L;
 
     @Value("${GEMINI_API_KEY:}")
     private String geminiApiKey;
@@ -39,17 +36,28 @@ public class GeminiApiClient {
     private String geminiModel;
 
     private final RestTemplateBuilder builder;
+    private final ExternalApiProperties properties;
     private RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private volatile String cachedWorkingUrl = null;
     private volatile List<String> cachedModelCandidates = null;
 
+    public GeminiApiClient(RestTemplateBuilder builder, ExternalApiProperties properties) {
+        this.builder = builder;
+        this.properties = properties != null ? properties : new ExternalApiProperties();
+    }
+
+    public GeminiApiClient(RestTemplateBuilder builder) {
+        this(builder, new ExternalApiProperties());
+    }
+
     @PostConstruct
     public void init() {
+        var cfg = properties.getGemini();
         org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(5000);
-        factory.setReadTimeout(15000);
+        factory.setConnectTimeout(cfg.getConnectTimeoutMs());
+        factory.setReadTimeout(cfg.getReadTimeoutMs());
         this.restTemplate = builder.requestFactory(() -> factory).build();
     }
 
@@ -181,33 +189,34 @@ public class GeminiApiClient {
 
     private String callApiEndpointWithRetry(String url, String prompt, String base64Image, String mimeType) throws Exception {
         Exception lastException = null;
+        int maxAttempts = properties.getGemini().getMaxAttempts();
 
-        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
                 return callApiEndpoint(url, prompt, base64Image, mimeType);
             } catch (RestClientResponseException rcre) {
                 lastException = rcre;
                 int status = rcre.getStatusCode().value();
-                log.warn("Gemini API error on attempt {}/{}: status {} - {}", attempt, MAX_ATTEMPTS, status, rcre.getResponseBodyAsString());
+                log.warn("Gemini API error on attempt {}/{}: status {} - {}", attempt, maxAttempts, status, rcre.getResponseBodyAsString());
                 
                 // Retry only on 5xx or 429
                 boolean isRetryable = rcre.getStatusCode().is5xxServerError() || status == 429;
                 if (!isRetryable) {
                     throw rcre;
                 }
-                if (attempt < MAX_ATTEMPTS) {
+                if (attempt < maxAttempts) {
                     applyBackoff(attempt);
                 }
             } catch (ResourceAccessException rae) {
                 lastException = rae;
-                log.warn("Gemini API network error on attempt {}/{}: {}", attempt, MAX_ATTEMPTS, rae.getMessage());
-                if (attempt < MAX_ATTEMPTS) {
+                log.warn("Gemini API network error on attempt {}/{}: {}", attempt, maxAttempts, rae.getMessage());
+                if (attempt < maxAttempts) {
                     applyBackoff(attempt);
                 }
             } catch (Exception e) {
                 lastException = e;
-                log.warn("Gemini API call unexpected error on attempt {}/{}: {}", attempt, MAX_ATTEMPTS, e.getMessage());
-                if (attempt < MAX_ATTEMPTS) {
+                log.warn("Gemini API call unexpected error on attempt {}/{}: {}", attempt, maxAttempts, e.getMessage());
+                if (attempt < maxAttempts) {
                     applyBackoff(attempt);
                 }
             }
@@ -265,7 +274,8 @@ public class GeminiApiClient {
     }
 
     private void applyBackoff(int attempt) {
-        long backoffMs = INITIAL_BACKOFF_MS * (1L << (attempt - 1));
+        long initialBackoffMs = properties.getGemini().getInitialBackoffMs();
+        long backoffMs = initialBackoffMs * (1L << (attempt - 1));
         try {
             Thread.sleep(backoffMs);
         } catch (InterruptedException ie) {

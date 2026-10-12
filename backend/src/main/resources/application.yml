@@ -58,6 +58,17 @@ app:
     vapid-public-key: ${VAPID_PUBLIC_KEY}
     vapid-private-key: ${VAPID_PRIVATE_KEY}
     vapid-subject: ${VAPID_SUBJECT:mailto:admin@example.com}
+  external-api:
+    fatsecret:
+      max-attempts: ${FATSECRET_MAX_ATTEMPTS:3}
+      initial-backoff-ms: ${FATSECRET_INITIAL_BACKOFF_MS:100}
+      connect-timeout-ms: ${FATSECRET_CONNECT_TIMEOUT_MS:5000}
+      read-timeout-ms: ${FATSECRET_READ_TIMEOUT_MS:15000}
+    gemini:
+      max-attempts: ${GEMINI_MAX_ATTEMPTS:3}
+      initial-backoff-ms: ${GEMINI_INITIAL_BACKOFF_MS:150}
+      connect-timeout-ms: ${GEMINI_CONNECT_TIMEOUT_MS:5000}
+      read-timeout-ms: ${GEMINI_READ_TIMEOUT_MS:15000}
 
 
 google:
