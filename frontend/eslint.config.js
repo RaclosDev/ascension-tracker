@@ -3,6 +3,7 @@ import react from 'eslint-plugin-react';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
+  { ignores: ['dist/**', 'dist'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   { ignores: ['dist/**', 'node_modules/**', 'dev-dist/**'] },

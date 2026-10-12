@@ -62,13 +62,9 @@ export default function DashboardPage() {
     mutationFn: (val: number) => api.post('/weights', { date: todayDateStr, weight: val }),
     onSuccess: (_, val) => {
       toast.success(hasTodayWeight ? `Peso actualizado: ${val} kg` : `Peso registrado: ${val} kg`);
-      // Invalidate queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['weights'] });
-      // Delay invalidation for dashboard and weekly to prevent UI thrashing
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-        queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
-      }, 500);
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
     },
     onError: (err: Error) => {
       console.error('Error al guardar peso:', err);

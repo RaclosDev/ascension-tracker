@@ -134,6 +134,7 @@ import { useSaveWorkout, useSaveTemplate } from '@/lib/workout/api';
 
 function FooterActions() {
   const finishWorkout = useWorkoutStore((s) => s.finishWorkout);
+  const clearActiveWorkout = useWorkoutStore((s) => s.clearActiveWorkout);
   const discardWorkout = useWorkoutStore((s) => s.discardWorkout);
   const saveAsTemplate = useWorkoutStore((s) => s.saveAsTemplate);
   const saveWorkoutMutation = useSaveWorkout();
@@ -161,8 +162,13 @@ function FooterActions() {
 
   function confirmFinish() {
     const record = finishWorkout(customName, customDuration * 60000);
-    if (record) saveWorkoutMutation.mutate(record);
-    setFinishOpen(false);
+    if (!record) return;
+    saveWorkoutMutation.mutate(record, {
+      onSuccess: () => {
+        clearActiveWorkout();
+        setFinishOpen(false);
+      },
+    });
   }
 
   function doSaveTemplate() {
@@ -341,8 +347,15 @@ function FooterActions() {
           </AlertDialogHeader>
           <AlertDialogFooter style={{ marginTop: '1.5rem' }}>
             <AlertDialogCancel className="btn btn-secondary">Cancelar</AlertDialogCancel>
-            <AlertDialogAction className="btn btn-primary" onClick={confirmFinish}>
-              Guardar
+            <AlertDialogAction
+              className="btn btn-primary"
+              onClick={(e) => {
+                e.preventDefault();
+                confirmFinish();
+              }}
+              disabled={saveWorkoutMutation.isPending}
+            >
+              {saveWorkoutMutation.isPending ? 'Guardando...' : 'Guardar'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

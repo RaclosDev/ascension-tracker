@@ -50,31 +50,10 @@ function SwipeableSetRow({
 
   // Optimización Pro: Extraída la lógica táctil a un hook puro
   const { offsetX, swiped, isDragging, closeSwipe, touchHandlers } = useSwipe();
+  const [deleteFocused, setDeleteFocused] = useState(false);
 
   return (
     <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px' }}>
-      {/* Delete button behind */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: '72px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#ef4444',
-          borderRadius: '0 8px 8px 0',
-          cursor: 'pointer',
-          opacity: offsetX < -10 ? 1 : 0,
-          transition: 'opacity 0.15s ease',
-        }}
-        onClick={() => removeSet(row.id, s.id)}
-      >
-        <Trash2 size={18} color="white" />
-      </div>
-
       {/* Swipeable row */}
       <div
         {...touchHandlers}
@@ -185,6 +164,39 @@ function SwipeableSetRow({
           <Check size={16} strokeWidth={s.completed ? 3 : 2} />
         </button>
       </div>
+
+      {/* Accessible delete button (supports keyboard focus + Enter/Space and swipe reveal) */}
+      <button
+        type="button"
+        aria-label={`Eliminar serie ${i + 1}`}
+        onFocus={() => setDeleteFocused(true)}
+        onBlur={() => setDeleteFocused(false)}
+        onClick={(e) => {
+          e.stopPropagation();
+          removeSet(row.id, s.id);
+        }}
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: '72px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#ef4444',
+          border: 'none',
+          borderRadius: '0 8px 8px 0',
+          cursor: 'pointer',
+          opacity: offsetX < -10 || deleteFocused ? 1 : 0,
+          zIndex: deleteFocused ? 10 : 0,
+          transition: 'opacity 0.15s ease',
+          outline: deleteFocused ? '2px solid var(--accent-primary, #ffffff)' : 'none',
+          outlineOffset: '-2px',
+        }}
+      >
+        <Trash2 size={18} color="white" />
+      </button>
     </div>
   );
 }

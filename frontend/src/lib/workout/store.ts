@@ -90,6 +90,7 @@ interface WorkoutState {
   adjustRest: (deltaSec: number) => void;
 
   finishWorkout: (customName?: string, customDurationMs?: number) => CompletedWorkout | null;
+  clearActiveWorkout: () => void;
   discardWorkout: () => void;
   saveAsTemplate: () => Template | null;
 
@@ -397,13 +398,18 @@ export const useWorkoutStore = create<WorkoutState>()(
           record.notes = active.notes;
         }
 
+        // Active state in IndexedDB/memory is preserved until server confirms save
+        return record;
+      },
+
+      clearActiveWorkout: () => {
+        const active = get().active;
         set({
           active: null,
           restUntil: null,
-          tab: active.editingId ? 'history' : 'home',
+          tab: active?.editingId ? 'history' : 'home',
           detailId: null,
         });
-        return record;
       },
 
       toggleHiddenEquipment: (equip) => {
