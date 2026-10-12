@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 
@@ -89,7 +89,8 @@ export default function LoginPage() {
           <GoogleLogin
             onSuccess={async (credentialResponse) => {
               try {
-                const res = await fetch('/api/auth/login', {
+                const baseUrl = import.meta.env.VITE_API_URL || '';
+                const res = await fetch(`${baseUrl}/api/auth/login`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ token: credentialResponse.credential }),
