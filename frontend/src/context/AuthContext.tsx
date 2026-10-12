@@ -31,35 +31,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function initAuth() {
       console.log('[Auth] Attempting proactive refresh on mount...');
-      try {
-        const baseUrl = import.meta.env.VITE_API_URL || '';
-        const res = await fetch(`${baseUrl}/api/auth/refresh`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: '{}',
-        });
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      const maxRetries = 2;
 
-        if (res.ok) {
-          const data = await res.json();
-          if (data.token && !cancelled) {
-            console.log('[Auth] Proactive refresh succeeded');
-            setMemoryToken(data.token);
-            api.defaults.headers.common['Authorization'] = 'Bearer ' + data.token;
-            setToken(data.token);
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        if (cancelled) return;
+        try {
+          const res = await fetch(`${baseUrl}/api/auth/refresh`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data.token && !cancelled) {
+              console.log('[Auth] Proactive refresh succeeded');
+              setMemoryToken(data.token);
+              api.defaults.headers.common['Authorization'] = 'Bearer ' + data.token;
+              setToken(data.token);
+            }
+            break;
+          } else if (res.status === 401 || res.status === 403) {
+            // Explicitly unauthenticated / session expired — do not retry
+            console.log('[Auth] Not authenticated or session expired:', res.status);
+            if (!cancelled) {
+              setMemoryToken(null);
+              setToken(null);
+            }
+            break;
+          } else {
+            // Server error (500, 502, 503, 504) — retry if attempts remain
+            console.warn(
+              `[Auth] Transient server error ${res.status} on attempt ${attempt + 1}/${maxRetries + 1}`,
+            );
+            if (attempt < maxRetries) {
+              await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
+            } else if (!cancelled) {
+              setMemoryToken(null);
+              setToken(null);
+            }
           }
-        } else {
-          console.log('[Auth] Proactive refresh failed or not logged in:', res.status);
-          if (!cancelled) {
+        } catch (err) {
+          // Network error / connection glitch — retry if attempts remain
+          console.warn(`[Auth] Network error on attempt ${attempt + 1}/${maxRetries + 1}`, err);
+          if (attempt < maxRetries) {
+            await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
+          } else if (!cancelled) {
             setMemoryToken(null);
             setToken(null);
           }
-        }
-      } catch {
-        console.warn('[Auth] Proactive refresh network error');
-        if (!cancelled) {
-          setMemoryToken(null);
-          setToken(null);
         }
       }
 

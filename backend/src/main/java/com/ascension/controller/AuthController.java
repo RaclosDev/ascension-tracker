@@ -43,6 +43,12 @@ public class AuthController {
     @Value("${google.client-id:CHANGE_ME}")
     private String googleClientId;
 
+    @Value("${app.jwt.expiration-ms:86400000}")
+    private long jwtExpirationMs;
+
+    @Value("${app.cookie.same-site:None}")
+    private String cookieSameSite;
+
     public AuthController(
             GoogleIdTokenVerifier verifier,
             JwtEncoder jwtEncoder,
@@ -61,7 +67,7 @@ public class AuthController {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("ascension-backend")
                 .issuedAt(now)
-                .expiresAt(now.plus(15, ChronoUnit.MINUTES))
+                .expiresAt(now.plus(jwtExpirationMs, ChronoUnit.MILLIS))
                 .subject(email)
                 .claim("email", email)
                 .claim("name", name != null ? name : "")
@@ -104,14 +110,7 @@ public class AuthController {
 
             String customToken = generateJwt(email, name, picture);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(email, name, picture);
-            
-            ResponseCookie springCookie = ResponseCookie.from("refreshToken", refreshToken.getPlainToken())
-                    .httpOnly(true)
-                    .secure(true)
-                    .path("/api/auth")
-                    .maxAge(30L * 24 * 60 * 60)
-                    .sameSite("Strict")
-                    .build();
+            ResponseCookie springCookie = buildRefreshCookie(refreshToken.getPlainToken());
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, springCookie.toString())
@@ -137,13 +136,6 @@ public class AuthController {
 
         try {
             RefreshToken newRefreshToken = refreshTokenService.rotateRefreshToken(requestRefreshToken);
-            
-            if ("GRACE".equals(newRefreshToken.getPlainToken())) {
-                log.warn("Grace period: Refresh token reuse within 15s for user {}. Issuing JWT without new cookie.", newRefreshToken.getEmail());
-                String token = generateJwt(newRefreshToken.getEmail(), newRefreshToken.getName(), newRefreshToken.getPicture());
-                return ResponseEntity.ok().body(Map.of("token", token));
-            }
-
             String token = generateJwt(newRefreshToken.getEmail(), newRefreshToken.getName(), newRefreshToken.getPicture());
             log.info("Refresh token rotated successfully for user {}", newRefreshToken.getEmail());
 
@@ -152,7 +144,9 @@ public class AuthController {
                     .body(Map.of("token", token));
 
         } catch (com.ascension.exception.TokenRefreshException e) {
-            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(401)
+                    .header(HttpHeaders.SET_COOKIE, buildDeleteCookie().toString())
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -160,9 +154,19 @@ public class AuthController {
         return ResponseCookie.from("refreshToken", value)
                 .httpOnly(true)
                 .secure(true)
-                .path("/api/auth")
+                .path("/")
                 .maxAge(30L * 24 * 60 * 60)
-                .sameSite("Strict")
+                .sameSite(cookieSameSite)
+                .build();
+    }
+
+    private ResponseCookie buildDeleteCookie() {
+        return ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite(cookieSameSite)
                 .build();
     }
 
@@ -174,16 +178,8 @@ public class AuthController {
             });
         }
         
-        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/api/auth")
-                .maxAge(0)
-                .sameSite("Strict")
-                .build();
-                
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie().toString())
                 .body(Map.of("message", "Log out successful"));
     }
 
