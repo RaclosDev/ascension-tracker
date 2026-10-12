@@ -6,18 +6,22 @@ import { useWorkoutStore } from '@/lib/workout/store';
 import { normalizeString } from '@/lib/workout/format';
 import { MUSCLE_LABEL, type Equipment, type MuscleGroup } from '@/lib/workout/types';
 import { EQUIPMENT_OPTIONS, MUSCLE_OPTIONS } from './exercises-view';
-import { useRecentWorkouts, useCustomExercises, useSaveCustomExercise } from '@/lib/workout/api';
+import {
+  useRecentWorkouts,
+  useCustomExercises,
+  useSaveCustomExercise,
+  useWorkoutPreferencesActions,
+} from '@/lib/workout/api';
 
 export function ExercisePicker() {
   const open = useWorkoutStore((s) => s.pickerOpen);
   const setPickerOpen = useWorkoutStore((s) => s.setPickerOpen);
   const addExercises = useWorkoutStore((s) => s.addExercises);
-  const globalMachines = useWorkoutStore((s) => s.globalMachines);
-  const globalGrips = useWorkoutStore((s) => s.globalGrips);
-  const exerciseVariants = useWorkoutStore((s) => s.exerciseVariants);
-  const addGlobalMachine = useWorkoutStore((s) => s.addGlobalMachine);
-  const addGlobalGrip = useWorkoutStore((s) => s.addGlobalGrip);
-  const addExerciseVariant = useWorkoutStore((s) => s.addExerciseVariant);
+  const { prefs, addGlobalMachine, addGlobalGrip, addExerciseVariant } =
+    useWorkoutPreferencesActions();
+  const globalMachines = prefs?.globalMachines || [];
+  const globalGrips = prefs?.globalGrips || [];
+  const exerciseVariants = prefs?.exerciseVariants || {};
 
   const { data: customExercisesData } = useCustomExercises();
   const customExercises = customExercisesData || [];
@@ -27,9 +31,9 @@ export function ExercisePicker() {
     saveExerciseMutation.mutate({ ...ex, id } as import('@/lib/workout/types').Exercise);
     return id;
   };
-  const aliases = useWorkoutStore((s) => s.exerciseAliases);
-  const customGifs = useWorkoutStore((s) => s.exerciseGifs);
-  const hiddenEquipments = useWorkoutStore((s) => s.hiddenEquipments) || [];
+  const aliases = prefs?.exerciseAliases || {};
+  const customGifs: Record<string, string> = {};
+  const hiddenEquipments = prefs?.hiddenEquipments || [];
   const { data: recentWorkouts = [] } = useRecentWorkouts(180);
   const history = recentWorkouts;
   const active = useWorkoutStore((s) => s.active);

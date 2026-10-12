@@ -24,7 +24,9 @@ public class WorkoutSetDTO {
     @PositiveOrZero(message = "La distancia debe ser 0 o positiva")
     private String distance;
     
+    @Size(max = 20, message = "El valor es demasiado largo")
     private String duration;
+    @Size(max = 20, message = "El valor es demasiado largo")
     private String rpe;
     private Boolean completed;
 }

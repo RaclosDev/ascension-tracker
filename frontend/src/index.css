@@ -5225,3 +5225,165 @@ input[type="range"]:active::-moz-range-thumb {
   transform: scale(1.1);
 }
 
+/* ==========================================================================
+   Active Workout Background Banner
+   ========================================================================== */
+.active-workout-banner {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 0.75rem);
+  z-index: 85;
+  background: var(--bg-glass-strong, rgba(17, 24, 39, 0.95));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-medium, rgba(255, 255, 255, 0.12));
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: transform var(--transition-base, 0.2s ease), border-color var(--transition-base, 0.2s ease);
+  animation: slideUpFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.active-workout-banner:hover {
+  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.active-workout-banner-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1rem;
+  gap: 0.75rem;
+}
+
+.active-workout-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.active-workout-pulse-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  flex-shrink: 0;
+}
+
+.active-workout-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulseDot 1.5s infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.6;
+  }
+}
+
+.active-workout-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.active-workout-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary, #f1f5f9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.active-workout-time {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #10b981;
+  font-variant-numeric: tabular-nums;
+}
+
+.active-workout-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.active-workout-rest-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.active-workout-resume-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base, 0.2s ease);
+}
+
+.active-workout-resume-btn:hover {
+  background: rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
+}
+
+@media (min-width: 769px) {
+  .active-workout-banner {
+    left: auto;
+    right: 2rem;
+    bottom: 2rem;
+    max-width: 380px;
+    width: 100%;
+  }
+}
+
+

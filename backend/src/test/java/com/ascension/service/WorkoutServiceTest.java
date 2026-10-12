@@ -36,10 +36,10 @@ class WorkoutServiceTest {
     private WorkoutMapper workoutMapper = Mappers.getMapper(WorkoutMapper.class);
     
     @Mock
-    private com.ascension.repository.WorkoutTemplateRepository workoutTemplateRepository;
+    private WorkoutTemplateService workoutTemplateService;
     
     @Mock
-    private com.ascension.repository.CustomExerciseRepository customExerciseRepository;
+    private CustomExerciseService customExerciseService;
 
     @InjectMocks
     private WorkoutService workoutService;
@@ -69,23 +69,25 @@ class WorkoutServiceTest {
     }
 
     @Test
-    void saveTemplate_generatesNewIdAndIgnoresClientId() {
+    void saveTemplate_delegatesToWorkoutTemplateService() {
         com.ascension.dto.WorkoutTemplateDTO dto = com.ascension.dto.WorkoutTemplateDTO.builder().id("client-id-template").name("Test").exercises(new ArrayList<>()).build();
-        when(workoutTemplateRepository.save(any())).thenAnswer(i -> {
-            com.ascension.model.WorkoutTemplate t = i.getArgument(0);
-            if (t.getExercises() == null) t.setExercises(new ArrayList<>());
-            return t;
-        });
+        com.ascension.dto.WorkoutTemplateDTO expected = com.ascension.dto.WorkoutTemplateDTO.builder().id("generated-id").name("Test").build();
+        when(workoutTemplateService.saveTemplate("userA@example.com", dto)).thenReturn(expected);
+
         com.ascension.dto.WorkoutTemplateDTO saved = workoutService.saveTemplate("userA@example.com", dto);
-        assertThat(saved.getId()).isNotNull().isNotEqualTo("client-id-template");
+        assertThat(saved.getId()).isEqualTo("generated-id");
+        verify(workoutTemplateService).saveTemplate("userA@example.com", dto);
     }
 
     @Test
-    void saveCustomExercise_generatesNewIdAndIgnoresClientId() {
+    void saveCustomExercise_delegatesToCustomExerciseService() {
         com.ascension.dto.CustomExerciseDTO dto = com.ascension.dto.CustomExerciseDTO.builder().id("client-id-ex").name("Test").build();
-        when(customExerciseRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        com.ascension.dto.CustomExerciseDTO expected = com.ascension.dto.CustomExerciseDTO.builder().id("generated-ex-id").name("Test").build();
+        when(customExerciseService.saveCustomExercise("userA@example.com", dto)).thenReturn(expected);
+
         com.ascension.dto.CustomExerciseDTO saved = workoutService.saveCustomExercise("userA@example.com", dto);
-        assertThat(saved.getId()).isNotNull().isNotEqualTo("client-id-ex");
+        assertThat(saved.getId()).isEqualTo("generated-ex-id");
+        verify(customExerciseService).saveCustomExercise("userA@example.com", dto);
     }
 }
 

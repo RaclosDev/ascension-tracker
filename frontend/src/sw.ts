@@ -1,4 +1,4 @@
-﻿/// <reference lib="webworker" />
+/// <reference lib="webworker" />
 import { precacheAndRoute, PrecacheEntry } from 'workbox-precaching';
 declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (PrecacheEntry | string)[] };
 
@@ -36,7 +36,7 @@ registerRoute(
 
 // Push event — fires even when the app is in the background
 self.addEventListener('push', (event: PushEvent) => {
-  let data = { title: '¡¡Descanso terminado!', body: 'Es hora de la siguiente serie.' };
+  let data = { title: '¡Descanso terminado!', body: 'Es hora de la siguiente serie.' };
 
   try {
     if (event.data) {
@@ -51,9 +51,9 @@ self.addEventListener('push', (event: PushEvent) => {
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     vibrate: [200, 100, 200, 100, 300],
-    tag: 'rest-timer',
+    tag: 'ascension-rest-timer',
     renotify: true,
-    requireInteraction: true,
+    requireInteraction: false,
     data: { url: '/workout' },
     actions: [
       { action: 'open', title: 'Abrir' },
@@ -62,7 +62,10 @@ self.addEventListener('push', (event: PushEvent) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || '¡¡Descanso terminado!', options),
+    self.registration.getNotifications({ tag: 'ascension-rest-timer' }).then((existing) => {
+      existing.forEach((n) => n.close());
+      return self.registration.showNotification(data.title || '¡Descanso terminado!', options);
+    }),
   );
 });
 

@@ -10,8 +10,8 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Dumbbell, Trophy, Activity, Calendar } from 'lucide-react';
-import { useRecentWorkouts } from '@/lib/workout/api';
-import { useWorkoutStore } from '@/lib/workout/store';
+import { useRecentWorkouts, useWorkoutPreferencesActions } from '@/lib/workout/api';
+
 import { MUSCLE_LABEL, type Exercise } from '@/lib/workout/types';
 import { formatKg, formatVariant } from '@/lib/workout/format';
 
@@ -22,13 +22,12 @@ interface Props {
 
 export function ExerciseDetailsModal({ exercise, onClose }: Props) {
   const { data: history = [] } = useRecentWorkouts(365);
-  const globalMachines = useWorkoutStore((s) => s.globalMachines);
-  const globalGrips = useWorkoutStore((s) => s.globalGrips);
-  const exerciseVariants = useWorkoutStore((s) => s.exerciseVariants);
-  const addGlobalMachine = useWorkoutStore((s) => s.addGlobalMachine);
-  const addGlobalGrip = useWorkoutStore((s) => s.addGlobalGrip);
-  const addExerciseVariant = useWorkoutStore((s) => s.addExerciseVariant);
-  const customGifs = useWorkoutStore((s) => s.exerciseGifs);
+  const { prefs, addGlobalMachine, addGlobalGrip, addExerciseVariant } =
+    useWorkoutPreferencesActions();
+  const globalMachines = prefs?.globalMachines || [];
+  const globalGrips = prefs?.globalGrips || [];
+  const exerciseVariants = prefs?.exerciseVariants || {};
+  const customGifs: Record<string, string> = {};
   const [filterGrip, setFilterGrip] = useState<string>('ALL');
   const [filterMachine, setFilterMachine] = useState<string>('ALL');
 

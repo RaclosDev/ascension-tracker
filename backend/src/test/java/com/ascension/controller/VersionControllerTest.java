@@ -17,11 +17,11 @@ class VersionControllerTest {
     private MockMvc mockMvc;
 
     @Test
-    void shouldReturnVersionOrUnauthorizedWithoutToken() throws Exception {
+    void shouldReturnVersionWithNoCacheHeaders() throws Exception {
         mockMvc.perform(get("/api/version"))
-               .andExpect(result -> {
-                   int status = result.getResponse().getStatus();
-                   assertTrue(status == 200 || status == 401 || status == 404);
-               });
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Cache-Control", org.hamcrest.Matchers.containsString("no-cache")))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Cache-Control", org.hamcrest.Matchers.containsString("must-revalidate")))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.version").isNumber());
     }
 }
