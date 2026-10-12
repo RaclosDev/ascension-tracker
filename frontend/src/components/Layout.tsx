@@ -13,7 +13,17 @@ import { formatDuration } from '@/lib/workout/format';
 import OnboardingScreen from './OnboardingScreen';
 
 import { Skeleton } from './ui/skeleton';
-import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings, Plus } from 'lucide-react';
+import {
+  Home,
+  LineChart,
+  Utensils,
+  Dumbbell,
+  Wrench,
+  Settings,
+  Plus,
+  ChevronDown,
+} from 'lucide-react';
+import { ActiveWorkoutBanner } from './workout/ActiveWorkoutBanner';
 
 const navItems = [
   {
@@ -65,7 +75,7 @@ export default function Layout() {
   const navigate = useNavigate();
   const activeWorkout = useWorkoutStore((s) => s.active);
   const hideNav = activeWorkout !== null && location.pathname === '/workout';
-  const now = useNow(hideNav, 500);
+  const now = useNow(activeWorkout !== null, 500);
   const elapsed = activeWorkout ? now - activeWorkout.startedAt : 0;
 
   const { data: settings, isLoading: loadingConfig } = useQuery<UserSettings>({
@@ -138,7 +148,36 @@ export default function Layout() {
         <div className="mobile-top-logo">
           <img src="/ascension-title.png" alt="Ascension" className="mobile-header-title-img" />
         </div>
-        <div style={{ width: '48px' }} />
+        {hideNav ? (
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard')}
+            className="mobile-top-minimize-btn"
+            aria-label="Minimizar entrenamiento y navegar por la app"
+            title="Minimizar entrenamiento"
+            style={{
+              minWidth: '48px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid var(--border-medium)',
+              borderRadius: '8px',
+              color: 'var(--text-secondary)',
+              gap: '4px',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              padding: '0 8px',
+              cursor: 'pointer',
+            }}
+          >
+            <ChevronDown size={14} />
+            <span>Salir</span>
+          </button>
+        ) : (
+          <div style={{ width: '48px' }} />
+        )}
       </header>
 
       {/* Capa de fondo oscurecida para cerrar el menú */}
@@ -197,6 +236,9 @@ export default function Layout() {
           </div>
         </main>
       </div>
+
+      {/* Banner flotante de entrenamiento activo en segundo plano */}
+      <ActiveWorkoutBanner />
 
       {/* Bottom Nav */}
       <nav
