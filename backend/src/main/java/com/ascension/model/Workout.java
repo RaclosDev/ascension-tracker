@@ -32,6 +32,7 @@ public class Workout implements Persistable<String> {
 
     @OneToMany(mappedBy = "workout", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("orderIndex ASC")
+    @org.hibernate.annotations.BatchSize(size = 50)
     @Builder.Default
     private Set<WorkoutExercise> exercises = new java.util.LinkedHashSet<>();
 
