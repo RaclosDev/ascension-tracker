@@ -113,4 +113,13 @@ public class NutritionAiControllerTest {
                 .andExpect(jsonPath("$.error").value("Servicio de Gemini no disponible"))
                 .andExpect(jsonPath("$.trace_id").exists());
     }
+
+    @Test
+    public void getAssistantSummary_WhenInvalidDateFormat_ReturnsBadRequest400() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/nutrition/ai/assistant-summary?date=fecha-invalida")
+                .with(jwt().jwt(builder -> builder.claim("email", "test@example.com"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Formato de fecha invalido (esperado YYYY-MM-DD)"))
+                .andExpect(jsonPath("$.trace_id").exists());
+    }
 }

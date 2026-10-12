@@ -77,8 +77,8 @@ public class FatSecretClient {
                 int statusCode = rcre.getStatusCode().value();
                 log.error("FS Search Error on attempt {}/{}: status {} - {}", attempt, MAX_ATTEMPTS, statusCode, rcre.getResponseBodyAsString());
                 
-                // Do not retry 4xx errors
-                if (rcre.getStatusCode().is4xxClientError()) {
+                // Do not retry 4xx errors except 429 Too Many Requests
+                if (rcre.getStatusCode().is4xxClientError() && statusCode != 429) {
                     throw new ExternalApiException("FatSecret", HttpStatus.BAD_GATEWAY,
                             "Error en la llamada al servicio externo FatSecret: " + statusCode, rcre);
                 }
@@ -110,9 +110,15 @@ public class FatSecretClient {
                 throw new ExternalApiException("FatSecret", HttpStatus.SERVICE_UNAVAILABLE,
                         "Servicio externo FatSecret no disponible o tiempo de espera agotado", lastException);
             }
-            if (lastException instanceof RestClientResponseException rcre && rcre.getStatusCode().is5xxServerError()) {
-                throw new ExternalApiException("FatSecret", HttpStatus.BAD_GATEWAY,
-                        "Servicio externo FatSecret respondió con error 5xx: " + rcre.getStatusCode().value(), lastException);
+            if (lastException instanceof RestClientResponseException rcre) {
+                if (rcre.getStatusCode().value() == 429) {
+                    throw new ExternalApiException("FatSecret", HttpStatus.SERVICE_UNAVAILABLE,
+                            "Límite de cuota excedido en FatSecret (429)", lastException);
+                }
+                if (rcre.getStatusCode().is5xxServerError()) {
+                    throw new ExternalApiException("FatSecret", HttpStatus.BAD_GATEWAY,
+                            "Servicio externo FatSecret respondió con error 5xx: " + rcre.getStatusCode().value(), lastException);
+                }
             }
             throw new ExternalApiException("FatSecret", HttpStatus.BAD_GATEWAY,
                     "Error de comunicación con el servicio externo FatSecret", lastException);

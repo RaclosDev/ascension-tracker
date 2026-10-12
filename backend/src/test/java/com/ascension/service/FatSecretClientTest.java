@@ -83,4 +83,17 @@ class FatSecretClientTest {
         assertThat(ex.getServiceName()).isEqualTo("FatSecret");
         verify(restTemplate, times(3)).exchange(any(URI.class), eq(HttpMethod.GET), isNull(), eq(String.class));
     }
+
+    @Test
+    void searchFatSecret_On429TooManyRequests_RetriesAndThrowsExternalApiException503() {
+        when(signatureBuilder.sign(anyString(), anyMap())).thenReturn("https://platform.fatsecret.com/rest/server.api?signed=true");
+        when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), isNull(), eq(String.class)))
+                .thenThrow(new org.springframework.web.client.HttpClientErrorException(HttpStatus.TOO_MANY_REQUESTS, "Too Many Requests"));
+
+        ExternalApiException ex = assertThrows(ExternalApiException.class, () -> fatSecretClient.searchFatSecret("manzana"));
+
+        assertThat(ex.getStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(ex.getServiceName()).isEqualTo("FatSecret");
+        verify(restTemplate, times(3)).exchange(any(URI.class), eq(HttpMethod.GET), isNull(), eq(String.class));
+    }
 }

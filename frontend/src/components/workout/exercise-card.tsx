@@ -189,6 +189,7 @@ function SwipeableSetRow({
           borderRadius: '0 8px 8px 0',
           cursor: 'pointer',
           opacity: offsetX < -10 || deleteFocused ? 1 : 0,
+          pointerEvents: offsetX < -10 || deleteFocused ? 'auto' : 'none',
           zIndex: deleteFocused ? 10 : 0,
           transition: 'opacity 0.15s ease',
           outline: deleteFocused ? '2px solid var(--accent-primary, #ffffff)' : 'none',

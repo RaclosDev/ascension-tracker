@@ -145,6 +145,7 @@ function FooterActions() {
   const [emptyOpen, setEmptyOpen] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customDuration, setCustomDuration] = useState(0);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const active = useWorkoutStore((s) => s.active);
 
   function openFinish() {
@@ -155,18 +156,25 @@ function FooterActions() {
       return;
     }
 
+    setSaveError(null);
     setCustomName(active.name);
     setCustomDuration(Math.round((Date.now() - active.startedAt) / 60000));
     setFinishOpen(true);
   }
 
   function confirmFinish() {
+    setSaveError(null);
     const record = finishWorkout(customName, customDuration * 60000);
     if (!record) return;
     saveWorkoutMutation.mutate(record, {
       onSuccess: () => {
         clearActiveWorkout();
         setFinishOpen(false);
+      },
+      onError: () => {
+        setSaveError(
+          'No se pudo sincronizar con el servidor. Tu entrenamiento sigue protegido y guardado localmente en este dispositivo. Puedes reintentar cuando recuperes conexión.',
+        );
       },
     });
   }
@@ -343,6 +351,21 @@ function FooterActions() {
                   }}
                 />
               </div>
+              {saveError && (
+                <div
+                  style={{
+                    padding: '0.6rem 0.8rem',
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    border: '1px solid rgba(239, 68, 68, 0.35)',
+                    borderRadius: '8px',
+                    color: '#ef4444',
+                    fontSize: '0.85rem',
+                    lineHeight: '1.4',
+                  }}
+                >
+                  {saveError}
+                </div>
+              )}
             </div>
           </AlertDialogHeader>
           <AlertDialogFooter style={{ marginTop: '1.5rem' }}>

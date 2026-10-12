@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.UUID;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @ControllerAdvice
@@ -54,6 +56,20 @@ public class GlobalExceptionHandler {
         String traceId = UUID.randomUUID().toString();
         log.warn("Illegal argument: {} [trace_id: {}]", ex.getMessage(), traceId);
         return buildErrorResponse("Entrada invalida", HttpStatus.BAD_REQUEST, traceId);
+    }
+
+    @ExceptionHandler(DateTimeParseException.class)
+    public ResponseEntity<ApiErrorResponse> handleDateTimeParseException(DateTimeParseException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Date parse error: {} [trace_id: {}]", ex.getMessage(), traceId);
+        return buildErrorResponse("Formato de fecha invalido (esperado YYYY-MM-DD)", HttpStatus.BAD_REQUEST, traceId);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Type mismatch error for param {}: {} [trace_id: {}]", ex.getName(), ex.getMessage(), traceId);
+        return buildErrorResponse("Parametro '" + ex.getName() + "' invalido", HttpStatus.BAD_REQUEST, traceId);
     }
 
     @ExceptionHandler(AiProcessingException.class)

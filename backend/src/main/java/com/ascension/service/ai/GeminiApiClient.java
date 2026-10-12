@@ -142,6 +142,10 @@ public class GeminiApiClient {
             candidates.add(geminiModel.trim());
         }
         
+        candidates.add("gemini-2.5-flash");
+        candidates.add("gemini-2.0-flash");
+        candidates.add("gemini-1.5-flash");
+        candidates.add("gemini-1.5-flash-8b");
         candidates.add("gemini-3.8-flash");
         candidates.add("gemini-3.7-flash");
         candidates.add("gemini-3.6-flash");
