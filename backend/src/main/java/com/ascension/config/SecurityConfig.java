@@ -23,6 +23,10 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 @EnableWebSecurity
 public class SecurityConfig {
 
+    public static final String CSP_POLICY = "default-src 'self'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://accounts.google.com; frame-src https://accounts.google.com; media-src 'self' data: blob:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+
+    public static final String PERMISSIONS_POLICY = "camera=(self), microphone=(self), geolocation=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()";
+
     @Value("${app.jwt.secret:CHANGE_ME}")
     private String jwtSecret;
 
@@ -60,6 +64,8 @@ public class SecurityConfig {
                 .referrerPolicy(referrer -> referrer
                     .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
                 )
+                .contentSecurityPolicy(csp -> csp.policyDirectives(CSP_POLICY))
+                .permissionsPolicy(permissions -> permissions.policy(PERMISSIONS_POLICY))
             );
         return http.build();
     }
@@ -87,6 +93,8 @@ public class SecurityConfig {
                 .referrerPolicy(referrer -> referrer
                     .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
                 )
+                .contentSecurityPolicy(csp -> csp.policyDirectives(CSP_POLICY))
+                .permissionsPolicy(permissions -> permissions.policy(PERMISSIONS_POLICY))
             );
         
         return http.build();

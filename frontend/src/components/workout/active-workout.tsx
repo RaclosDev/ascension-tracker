@@ -15,13 +15,14 @@ import { ExercisePicker } from '@/components/workout/exercise-picker';
 import { RestBanner } from '@/components/workout/rest-banner';
 import { EmptyCard } from '@/components/workout/dashboard';
 import { useWorkoutStore } from '@/lib/workout/store';
+import { useShallow } from 'zustand/react/shallow';
 
 export function ActiveWorkout() {
-  const active = useWorkoutStore((s) => s.active);
+  const hasActive = useWorkoutStore((s) => s.active !== null);
   const startEmpty = useWorkoutStore((s) => s.startEmpty);
   const setPickerOpen = useWorkoutStore((s) => s.setPickerOpen);
 
-  if (!active) {
+  if (!hasActive) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <header style={{ marginBottom: '1rem' }}>
@@ -94,20 +95,24 @@ export function ActiveWorkout() {
 }
 
 function LiveSession() {
-  const active = useWorkoutStore((s) => s.active)!;
+  const exercises = useWorkoutStore(
+    useShallow(
+      (s) => s.active?.exercises.map((row) => ({ id: row.id, supersetId: row.supersetId })) ?? [],
+    ),
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <RestBanner />
 
-      {active.exercises.length === 0 ? (
+      {exercises.length === 0 ? (
         <EmptyCard
           title="Añade el primer ejercicio"
           body="Elige de la biblioteca o crea uno propio. Las series vacías esperan kilos y reps."
         />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {active.exercises.map((row, i) => (
+          {exercises.map((row, i) => (
             <div key={row.id} style={{ display: 'flex', gap: '0.5rem' }}>
               {row.supersetId && (
                 <div
@@ -120,7 +125,7 @@ function LiveSession() {
                 />
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <ExerciseCard row={row} index={i} total={active.exercises.length} />
+                <ExerciseCard rowId={row.id} index={i} total={exercises.length} />
               </div>
             </div>
           ))}
@@ -146,9 +151,10 @@ function FooterActions() {
   const [customName, setCustomName] = useState('');
   const [customDuration, setCustomDuration] = useState(0);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const active = useWorkoutStore((s) => s.active);
+  const hasExercises = useWorkoutStore((s) => (s.active?.exercises.length ?? 0) > 0);
 
   function openFinish() {
+    const active = useWorkoutStore.getState().active;
     if (!active) return;
     const hasWork = active.exercises.some((e) => e.sets.some((s) => s.completed));
     if (!hasWork) {
@@ -190,11 +196,7 @@ function FooterActions() {
         <Check size={20} />
         Terminar Entrenamiento
       </button>
-      <button
-        className="workout-secondary-btn"
-        onClick={doSaveTemplate}
-        disabled={!active || active.exercises.length === 0}
-      >
+      <button className="workout-secondary-btn" onClick={doSaveTemplate} disabled={!hasExercises}>
         <Bookmark size={16} />
         Guardar como plantilla
       </button>

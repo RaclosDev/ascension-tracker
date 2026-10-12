@@ -38,6 +38,9 @@ class AuthControllerTest {
     @MockBean
     private com.ascension.service.AccountDeletionService accountDeletionService;
 
+    @MockBean
+    private com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier googleIdTokenVerifier;
+
     @Test
     void refresh_WhenTokenMissing_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/auth/refresh").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))

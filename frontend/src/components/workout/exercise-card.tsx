@@ -20,197 +20,250 @@ import {
 
 import { useSwipe } from '@/hooks/use-swipe';
 
-function SwipeableSetRow({
-  s,
-  i,
-  row,
-  showRpe,
-  isCardio,
-  cols,
-  workingIndex,
-  recentWorkouts,
-}: {
-  s: WorkoutSet;
+export interface SwipeableSetRowProps {
+  s?: WorkoutSet;
+  setId?: string;
+  rowId?: string;
+  exerciseId?: string;
+  variant?: WorkoutExercise['variant'];
   i: number;
-  row: WorkoutExercise;
+  workingIndex: number;
   showRpe: boolean;
   isCardio: boolean;
   cols: string;
-  workingIndex: number;
   recentWorkouts: CompletedWorkout[];
-}) {
-  const updateSet = useWorkoutStore((s) => s.updateSet);
-  const cycleSetType = useWorkoutStore((s) => s.cycleSetType);
-  const toggleSet = useWorkoutStore((s) => s.toggleSet);
-  const removeSet = useWorkoutStore((s) => s.removeSet);
+}
 
-  const prev = previousSetLabel(row.exerciseId, row.variant, i, recentWorkouts);
-  const pr = s.completed && isPrSet(row.exerciseId, row.variant, s.weight, recentWorkouts);
-  const typeLabel = SET_TYPE_LABEL[s.type] || String(workingIndex + 1);
+export const SwipeableSetRow = React.memo(
+  function SwipeableSetRow({
+    s: propSet,
+    setId,
+    rowId: propRowId,
+    exerciseId: propExerciseId,
+    variant: propVariant,
+    i,
+    workingIndex,
+    showRpe,
+    isCardio,
+    cols,
+    recentWorkouts,
+  }: SwipeableSetRowProps) {
+    const rowId = propRowId ?? '';
+    const effectiveSetId = setId ?? propSet?.id ?? '';
+    const exerciseId = propExerciseId ?? '';
+    const variant = propVariant;
 
-  // Optimización Pro: Extraída la lógica táctil a un hook puro
-  const { offsetX, swiped, isDragging, closeSwipe, touchHandlers } = useSwipe();
-  const [deleteFocused, setDeleteFocused] = useState(false);
+    // Consumo granular por fila/serie
+    const storeSet = useWorkoutStore((state) =>
+      state.active?.exercises
+        .find((e) => e.id === rowId)
+        ?.sets.find((set) => set.id === effectiveSetId),
+    );
+    const s = storeSet ?? propSet;
 
-  return (
-    <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px' }}>
-      {/* Swipeable row */}
-      <div
-        {...touchHandlers}
-        onClick={swiped ? closeSwipe : undefined}
-        className={`set-row ${s.completed ? 'completed' : ''}`}
-        style={{
-          gridTemplateColumns: cols,
-          transform: `translateX(${offsetX}px)`,
-          transition: isDragging.current ? 'none' : 'transform 0.2s ease',
-          background: s.completed ? 'rgba(0, 133, 255, 0.04)' : 'var(--bg-card)',
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
-        {/* Set number + previous info */}
+    const updateSet = useWorkoutStore((s) => s.updateSet);
+    const cycleSetType = useWorkoutStore((s) => s.cycleSetType);
+    const toggleSet = useWorkoutStore((s) => s.toggleSet);
+    const removeSet = useWorkoutStore((s) => s.removeSet);
+
+    // Optimización Pro: Extraída la lógica táctil a un hook puro
+    const { offsetX, swiped, isDragging, closeSwipe, touchHandlers } = useSwipe();
+    const [deleteFocused, setDeleteFocused] = useState(false);
+
+    if (!s) return null;
+
+    const prev = previousSetLabel(exerciseId, variant, i, recentWorkouts);
+    const pr = s.completed && isPrSet(exerciseId, variant, s.weight, recentWorkouts);
+    const typeLabel = SET_TYPE_LABEL[s.type] || String(workingIndex + 1);
+
+    return (
+      <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px' }}>
+        {/* Swipeable row */}
         <div
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.05rem' }}
+          {...touchHandlers}
+          onClick={swiped ? closeSwipe : undefined}
+          className={`set-row ${s.completed ? 'completed' : ''}`}
+          style={{
+            gridTemplateColumns: cols,
+            transform: `translateX(${offsetX}px)`,
+            transition: isDragging.current ? 'none' : 'transform 0.2s ease',
+            background: s.completed ? 'rgba(0, 133, 255, 0.04)' : 'var(--bg-card)',
+            position: 'relative',
+            zIndex: 1,
+          }}
         >
+          {/* Set number + previous info */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '0.05rem',
+            }}
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                cycleSetType(rowId, s.id);
+              }}
+              title="Cambiar tipo de serie"
+              className={`set-type-btn ${s.type === 'warmup' ? 'warmup' : s.type === 'failure' ? 'failure' : ''}`}
+              style={{ width: '30px', height: '28px', fontSize: '0.7rem' }}
+            >
+              {typeLabel}
+            </button>
+            {prev !== '' && (
+              <span
+                style={{
+                  fontSize: '0.55rem',
+                  color: 'var(--text-muted)',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '48px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  lineHeight: 1,
+                }}
+              >
+                {prev}
+              </span>
+            )}
+            {pr && (
+              <span
+                style={{
+                  fontSize: '0.5rem',
+                  fontWeight: 700,
+                  color: 'var(--accent-primary-light)',
+                  textTransform: 'uppercase',
+                }}
+              >
+                PR
+              </span>
+            )}
+          </div>
+
+          <input
+            inputMode="decimal"
+            value={isCardio ? s.distance || '' : s.weight || ''}
+            placeholder={prev === '' ? '0' : prev.split('×')[0]?.trim()}
+            onChange={(e) => {
+              if (isCardio) {
+                updateSet(rowId, s.id, { distance: e.target.value.replace(',', '.') });
+              } else {
+                updateSet(rowId, s.id, { weight: e.target.value.replace(',', '.') });
+              }
+            }}
+            className={`set-input ${s.completed ? 'completed' : ''}`}
+          />
+          <input
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={isCardio ? s.duration || '' : s.reps || ''}
+            placeholder="0"
+            onChange={(e) => {
+              if (isCardio) {
+                updateSet(rowId, s.id, { duration: e.target.value });
+              } else {
+                updateSet(rowId, s.id, { reps: e.target.value.replace(/[^\d]/g, '') });
+              }
+            }}
+            className={`set-input ${s.completed ? 'completed' : ''}`}
+          />
+
+          {showRpe && (
+            <input
+              inputMode="decimal"
+              value={s.rpe || ''}
+              placeholder=""
+              onChange={(e) => updateSet(rowId, s.id, { rpe: e.target.value.replace(',', '.') })}
+              className={`set-input ${s.completed ? 'completed' : ''}`}
+            />
+          )}
+
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              cycleSetType(row.id, s.id);
+              initAudioAndNotifications();
+              toggleSet(rowId, s.id);
             }}
-            title="Cambiar tipo de serie"
-            className={`set-type-btn ${s.type === 'warmup' ? 'warmup' : s.type === 'failure' ? 'failure' : ''}`}
-            style={{ width: '30px', height: '28px', fontSize: '0.7rem' }}
+            aria-label={s.completed ? 'Desmarcar serie' : 'Completar serie'}
+            className={`set-check-btn ${s.completed ? 'checked' : ''}`}
           >
-            {typeLabel}
+            <Check size={16} strokeWidth={s.completed ? 3 : 2} />
           </button>
-          {prev !== '' && (
-            <span
-              style={{
-                fontSize: '0.55rem',
-                color: 'var(--text-muted)',
-                whiteSpace: 'nowrap',
-                maxWidth: '48px',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                lineHeight: 1,
-              }}
-            >
-              {prev}
-            </span>
-          )}
-          {pr && (
-            <span
-              style={{
-                fontSize: '0.5rem',
-                fontWeight: 700,
-                color: 'var(--accent-primary-light)',
-                textTransform: 'uppercase',
-              }}
-            >
-              PR
-            </span>
-          )}
         </div>
 
-        <input
-          inputMode="decimal"
-          value={isCardio ? s.distance || '' : s.weight || ''}
-          placeholder={prev === '' ? '0' : prev.split('×')[0]?.trim()}
-          onChange={(e) => {
-            if (isCardio) {
-              updateSet(row.id, s.id, { distance: e.target.value.replace(',', '.') });
-            } else {
-              updateSet(row.id, s.id, { weight: e.target.value.replace(',', '.') });
-            }
-          }}
-          className={`set-input ${s.completed ? 'completed' : ''}`}
-        />
-        <input
-          inputMode="numeric"
-          pattern="[0-9]*"
-          value={isCardio ? s.duration || '' : s.reps || ''}
-          placeholder="0"
-          onChange={(e) => {
-            if (isCardio) {
-              updateSet(row.id, s.id, { duration: e.target.value });
-            } else {
-              updateSet(row.id, s.id, { reps: e.target.value.replace(/[^\d]/g, '') });
-            }
-          }}
-          className={`set-input ${s.completed ? 'completed' : ''}`}
-        />
-
-        {showRpe && (
-          <input
-            inputMode="decimal"
-            value={s.rpe || ''}
-            placeholder=""
-            onChange={(e) => updateSet(row.id, s.id, { rpe: e.target.value.replace(',', '.') })}
-            className={`set-input ${s.completed ? 'completed' : ''}`}
-          />
-        )}
-
+        {/* Accessible delete button (supports keyboard focus + Enter/Space and swipe reveal) */}
         <button
           type="button"
+          aria-label={`Eliminar serie ${i + 1}`}
+          onFocus={() => setDeleteFocused(true)}
+          onBlur={() => setDeleteFocused(false)}
           onClick={(e) => {
             e.stopPropagation();
-            initAudioAndNotifications();
-            toggleSet(row.id, s.id);
+            removeSet(rowId, s.id);
           }}
-          aria-label={s.completed ? 'Desmarcar serie' : 'Completar serie'}
-          className={`set-check-btn ${s.completed ? 'checked' : ''}`}
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: '72px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#ef4444',
+            border: 'none',
+            borderRadius: '0 8px 8px 0',
+            cursor: 'pointer',
+            opacity: offsetX < -10 || deleteFocused ? 1 : 0,
+            pointerEvents: offsetX < -10 || deleteFocused ? 'auto' : 'none',
+            zIndex: deleteFocused ? 10 : 0,
+            transition: 'opacity 0.15s ease',
+            outline: deleteFocused ? '2px solid var(--accent-primary, #ffffff)' : 'none',
+            outlineOffset: '-2px',
+          }}
         >
-          <Check size={16} strokeWidth={s.completed ? 3 : 2} />
+          <Trash2 size={18} color="white" />
         </button>
       </div>
+    );
+  },
+  (prev, next) => {
+    return (
+      prev.setId === next.setId &&
+      prev.rowId === next.rowId &&
+      prev.i === next.i &&
+      prev.workingIndex === next.workingIndex &&
+      prev.showRpe === next.showRpe &&
+      prev.isCardio === next.isCardio &&
+      prev.cols === next.cols &&
+      prev.exerciseId === next.exerciseId &&
+      prev.variant?.grip === next.variant?.grip &&
+      prev.variant?.machine === next.variant?.machine &&
+      prev.recentWorkouts === next.recentWorkouts
+    );
+  },
+);
 
-      {/* Accessible delete button (supports keyboard focus + Enter/Space and swipe reveal) */}
-      <button
-        type="button"
-        aria-label={`Eliminar serie ${i + 1}`}
-        onFocus={() => setDeleteFocused(true)}
-        onBlur={() => setDeleteFocused(false)}
-        onClick={(e) => {
-          e.stopPropagation();
-          removeSet(row.id, s.id);
-        }}
-        style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: '72px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#ef4444',
-          border: 'none',
-          borderRadius: '0 8px 8px 0',
-          cursor: 'pointer',
-          opacity: offsetX < -10 || deleteFocused ? 1 : 0,
-          pointerEvents: offsetX < -10 || deleteFocused ? 'auto' : 'none',
-          zIndex: deleteFocused ? 10 : 0,
-          transition: 'opacity 0.15s ease',
-          outline: deleteFocused ? '2px solid var(--accent-primary, #ffffff)' : 'none',
-          outlineOffset: '-2px',
-        }}
-      >
-        <Trash2 size={18} color="white" />
-      </button>
-    </div>
-  );
+export interface ExerciseCardProps {
+  rowId?: string;
+  row?: WorkoutExercise;
+  index: number;
+  total: number;
 }
 
 export const ExerciseCard = React.memo(function ExerciseCard({
-  row,
+  rowId,
+  row: propRow,
   index,
   total,
-}: {
-  row: WorkoutExercise;
-  index: number;
-  total: number;
-}) {
+}: ExerciseCardProps) {
+  const targetId = rowId ?? propRow?.id;
+  const storeRow = useWorkoutStore((s) => s.active?.exercises.find((e) => e.id === targetId));
+  const row = storeRow ?? propRow;
+
   const { data: customExercises = [] } = useCustomExercises();
   const { data: recentWorkouts = [] } = useRecentWorkouts(180);
   const addSet = useWorkoutStore((s) => s.addSet);
@@ -225,7 +278,9 @@ export const ExerciseCard = React.memo(function ExerciseCard({
   const [editingVariant, setEditingVariant] = useState(false);
 
   const catalog = getExerciseMap(customExercises);
-  const meta = catalog.get(row.exerciseId);
+  const meta = row ? catalog.get(row.exerciseId) : undefined;
+
+  if (!row) return null;
   const historicalMachines = React.useMemo(() => {
     const machines = new Set<string>();
     for (const w of recentWorkouts) {
@@ -538,9 +593,12 @@ export const ExerciseCard = React.memo(function ExerciseCard({
                   <SwipeableSetRow
                     key={s.id}
                     s={s}
+                    setId={s.id}
+                    rowId={row.id}
+                    exerciseId={row.exerciseId}
+                    variant={row.variant}
                     i={i}
                     workingIndex={normalCount}
-                    row={row}
                     showRpe={showRpe}
                     isCardio={isCardio}
                     cols={cols}
