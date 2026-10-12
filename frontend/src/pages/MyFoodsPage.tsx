@@ -18,7 +18,7 @@ import AiFoodModal from '../components/my-foods/AiFoodModal';
 
 import { ChevronDown, ChevronRight, ScanLine, Pencil, X } from 'lucide-react';
 import { PageFoodItem } from '../types/myfoods';
-import { Recipe, FoodLog } from '../types/api';
+import { Recipe, FoodLog, SavedFood } from '../types/api';
 const BarcodeScanner = lazy(() => import('../components/BarcodeScanner'));
 
 export default function MyFoodsPage() {
@@ -117,10 +117,10 @@ export default function MyFoodsPage() {
                     {filters.filteredFoods.map((f: PageFoodItem) => (
                       <FoodCard
                         key={f.id}
-                        food={f}
+                        food={f as unknown as SavedFood}
                         isSelected={f.id !== undefined && meals.selectedFoods.has(Number(f.id))}
                         onToggleSelect={meals.toggleFoodSelection}
-                        onEdit={forms.handleEditFood}
+                        onEdit={(food) => forms.handleEditFood(food as unknown as PageFoodItem)}
                         viewMode={filters.viewMode as 'grid' | 'list'}
                         onDragStart={(e, d) => scanner.handleDragStart(e, d as PageFoodItem)}
                       />
