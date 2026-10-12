@@ -50,13 +50,16 @@ export function useFoodForms(fetchData: () => void) {
     setFoodForm(newForm);
   };
 
-  const updateRecipeForm = (field: string, value: string | number | null) => {
+  const updateRecipeForm = (
+    field: keyof typeof recipeForm | Partial<typeof recipeForm>,
+    value?: string | null,
+  ) => {
     setRecipeForm((prev) => {
       let newForm = { ...prev };
       if (typeof field === 'object' && field !== null) {
-        newForm = { ...newForm, ...(field as Record<string, unknown>) };
+        newForm = { ...newForm, ...field };
       } else {
-        (newForm as Record<string, unknown>)[field as string] = value;
+        newForm[field as keyof typeof recipeForm] = value ?? '';
       }
 
       const p = parseFloat(newForm.protein) || 0;
