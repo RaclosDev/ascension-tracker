@@ -190,9 +190,11 @@ public class GeminiAiService {
 
             return addedLogs;
 
+        } catch (com.ascension.exception.ExternalApiException | IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error in GeminiAiService", e);
-            throw new RuntimeException("Failed to process with AI");
+            throw new com.ascension.exception.AiProcessingException("Failed to process with AI", e);
         }
     }
 
@@ -223,9 +225,11 @@ public class GeminiAiService {
             // Add it to the database
             return nutritionLogService.addSavedFood(userEmail, dto);
 
+        } catch (com.ascension.exception.ExternalApiException | IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error in GeminiAiService", e);
-            throw new RuntimeException("Failed to process food with AI");
+            throw new com.ascension.exception.AiProcessingException("Failed to process food with AI", e);
         }
     }
 
@@ -257,9 +261,11 @@ public class GeminiAiService {
             }
 
             return result;
+        } catch (com.ascension.exception.ExternalApiException | IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error in GeminiAiService", e);
-            throw new RuntimeException("Failed to process nutritional label");
+            throw new com.ascension.exception.AiProcessingException("Failed to process nutritional label", e);
         }
     }
 
@@ -548,9 +554,11 @@ public class GeminiAiService {
             ));
 
             return result;
+        } catch (com.ascension.exception.ExternalApiException | IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error in GeminiAiService", e);
-            throw new RuntimeException("Error en asistente de IA");
+            throw new com.ascension.exception.AiProcessingException("Error en asistente de IA", e);
         }
     }
 

@@ -11,7 +11,6 @@ import java.util.Optional;
 @Repository
 public interface WorkoutRepository extends JpaRepository<Workout, String> {
     
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"exercises", "exercises.sets"})
     org.springframework.data.domain.Page<Workout> findByUserEmailOrderByStartedAtDesc(String userEmail, org.springframework.data.domain.Pageable pageable);
     
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"exercises", "exercises.sets"})

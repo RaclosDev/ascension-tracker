@@ -63,6 +63,14 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, traceId);
     }
 
+    @ExceptionHandler(ExternalApiException.class)
+    public ResponseEntity<ApiErrorResponse> handleExternalApiException(ExternalApiException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.error("External API error in {}: {} (status: {}) [trace_id: {}]",
+                ex.getServiceName(), ex.getMessage(), ex.getStatus(), traceId);
+        return buildErrorResponse(ex.getMessage(), ex.getStatus(), traceId);
+    }
+
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
         String traceId = UUID.randomUUID().toString();
