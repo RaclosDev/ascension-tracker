@@ -12,6 +12,11 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:ascension}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 8
+      max-lifetime: 600000
+      keepalive-time: 30000
+      connection-timeout: 20000
   jpa:
     open-in-view: false
     hibernate:
