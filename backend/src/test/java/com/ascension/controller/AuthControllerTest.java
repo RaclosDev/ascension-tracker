@@ -18,10 +18,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@org.springframework.context.annotation.Import(com.ascension.TestcontainersConfiguration.class)
-
+@org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest(AuthController.class)
+@org.springframework.context.annotation.Import(com.ascension.config.SecurityConfig.class)
+@org.springframework.test.context.TestPropertySource(properties = {
+    "app.jwt.secret=this_is_a_very_long_secret_that_is_at_least_32_bytes_long_for_tests",
+    "google.client-id=test-google-client-id"
+})
 class AuthControllerTest {
 
     @Autowired
@@ -33,6 +35,9 @@ class AuthControllerTest {
     @MockBean
     private com.ascension.service.UserService userService;
 
+    @MockBean
+    private com.ascension.service.AccountDeletionService accountDeletionService;
+
     @Test
     void refresh_WhenTokenMissing_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/auth/refresh").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
@@ -41,7 +46,8 @@ class AuthControllerTest {
 
     @Test
     void refresh_WhenTokenNotInDatabase_ReturnsUnauthorized() throws Exception {
-        when(refreshTokenService.findByToken(anyString())).thenReturn(Optional.empty());
+        when(refreshTokenService.rotateRefreshToken(anyString()))
+                .thenThrow(new com.ascension.exception.TokenRefreshException("Refresh token not found"));
 
         mockMvc.perform(post("/api/auth/refresh")
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
@@ -52,15 +58,13 @@ class AuthControllerTest {
 
     @Test
     void refresh_WhenTokenReusedWithinGracePeriod_ReturnsOkWithoutCookie() throws Exception {
-        RefreshToken token = new RefreshToken();
-        token.setEmail("test@test.com");
-        token.setName("Test User");
-        token.setPicture("https://example.com/p.png");
-        token.setExpiryDate(java.time.Instant.now().plusSeconds(3600));
-        // Simulate a token replaced 5 seconds ago (within 15s grace period)
-        token.setReplacedAt(java.time.Instant.now().minusSeconds(5));
+        RefreshToken graceToken = new RefreshToken();
+        graceToken.setEmail("test@test.com");
+        graceToken.setName("Test User");
+        graceToken.setPicture("https://example.com/p.png");
+        graceToken.setPlainToken("GRACE");
 
-        when(refreshTokenService.findByToken(anyString())).thenReturn(Optional.of(token));
+        when(refreshTokenService.rotateRefreshToken(anyString())).thenReturn(graceToken);
 
         mockMvc.perform(post("/api/auth/refresh")
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
@@ -72,13 +76,8 @@ class AuthControllerTest {
 
     @Test
     void refresh_WhenTokenReusedAfterGracePeriod_ReturnsUnauthorized() throws Exception {
-        RefreshToken token = new RefreshToken();
-        token.setEmail("test@test.com");
-        token.setExpiryDate(java.time.Instant.now().plusSeconds(3600));
-        // Simulate a token replaced 20 seconds ago (outside 15s grace period)
-        token.setReplacedAt(java.time.Instant.now().minusSeconds(20));
-
-        when(refreshTokenService.findByToken(anyString())).thenReturn(Optional.of(token));
+        when(refreshTokenService.rotateRefreshToken(anyString()))
+                .thenThrow(new com.ascension.exception.TokenRefreshException("Session expired. Please log in again."));
 
         mockMvc.perform(post("/api/auth/refresh")
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
