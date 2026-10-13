@@ -169,4 +169,27 @@ export const exportUserData = async (): Promise<void> => {
   window.URL.revokeObjectURL(downloadUrl);
 };
 
+export interface UserDataRestoreSummary {
+  mode: 'OVERWRITE' | 'MERGE';
+  workoutsRestored: number;
+  customExercisesRestored: number;
+  workoutTemplatesRestored: number;
+  foodLogsRestored: number;
+  mealsRestored: number;
+  recipesRestored: number;
+  savedFoodsRestored: number;
+  stepsEntriesRestored: number;
+  weightEntriesRestored: number;
+  settingsRestored: boolean;
+  restoredAt: string;
+}
+
+export const restoreUserData = async (
+  backup: unknown,
+  mode: 'OVERWRITE' | 'MERGE' = 'OVERWRITE',
+): Promise<UserDataRestoreSummary> => {
+  const response = await api.post<UserDataRestoreSummary>(`/user/restore?mode=${mode}`, backup);
+  return response.data;
+};
+
 export default api;
