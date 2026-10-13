@@ -10,10 +10,21 @@ const MacroConfigurator = lazy(() => import('../components/calculators/MacroConf
 const MealConfigurator = lazy(() => import('../components/MealConfigurator'));
 import { useWorkoutStore } from '../lib/workout/store';
 import { formatRestFriendly } from '../lib/workout/format';
+import { useCustomExercises } from '../lib/workout/api';
+import { HevyImportModal } from '../components/workout/HevyImportModal';
 import { useAuth } from '../context/AuthContext';
 import { applyThemeColor } from '../utils/colorHelper';
 import { Skeleton } from '../components/ui/skeleton';
-import { Palette, User, Scale, Activity, Dumbbell, Utensils, LogOut } from 'lucide-react';
+import {
+  Palette,
+  User,
+  Scale,
+  Activity,
+  Dumbbell,
+  Utensils,
+  LogOut,
+  UploadCloud,
+} from 'lucide-react';
 
 export interface SettingsForm {
   startDate: string;
@@ -80,6 +91,8 @@ export default function SettingsPage() {
   const setRestPreset = useWorkoutStore((s) => s.setRestPreset);
   const hiddenEquipments = useWorkoutStore((s) => s.hiddenEquipments) || [];
   const toggleHiddenEquipment = useWorkoutStore((s) => s.toggleHiddenEquipment);
+  const [isHevyModalOpen, setIsHevyModalOpen] = useState(false);
+  const { data: customExercises = [] } = useCustomExercises();
   const { logout } = useAuth();
   const { data: dashboard } = useQuery<{ currentWeight?: number }, Error>({
     queryKey: ['dashboard'],
@@ -753,13 +766,28 @@ export default function SettingsPage() {
                   }}
                 >
                   Sube el archivo{' '}
-                  <span style={{ color: 'var(--text-primary)' }}>workout_data.csv</span> exportado
-                  de Hevy.
-                </p>{' '}
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                  La importación de CSV se ha deshabilitado temporalmente debido a la migración a la
-                  nube. Volverá pronto.
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                    workout_data.csv
+                  </span>{' '}
+                  exportado de Hevy para migrar todo tu histórico de entrenamientos.
                 </p>
+                <button
+                  type="button"
+                  onClick={() => setIsHevyModalOpen(true)}
+                  className="btn btn-primary"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.6rem 1.2rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                  }}
+                  aria-label="Abrir modal para importar entrenamientos desde Hevy"
+                >
+                  <UploadCloud size={18} />
+                  Importar CSV de Hevy
+                </button>
               </div>
             </div>
           )}
@@ -831,6 +859,12 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      <HevyImportModal
+        isOpen={isHevyModalOpen}
+        onClose={() => setIsHevyModalOpen(false)}
+        customExercises={customExercises}
+      />
     </div>
   );
 }
