@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import { lazy } from 'react';
-import api from '../api/client';
+import api, { exportUserData } from '../api/client';
 import toast from 'react-hot-toast';
 
 const WeightLossPlan = lazy(() => import('../components/calculators/WeightLossPlan'));
@@ -24,6 +24,7 @@ import {
   Utensils,
   LogOut,
   UploadCloud,
+  Download,
 } from 'lucide-react';
 
 export interface SettingsForm {
@@ -119,6 +120,21 @@ export default function SettingsPage() {
       toast.success('Datos exportados con éxito');
     } catch {
       toast.error('Error al exportar datos');
+    }
+  };
+
+  const [isExportingJson, setIsExportingJson] = useState(false);
+
+  const handleExportJson = async () => {
+    try {
+      setIsExportingJson(true);
+      await exportUserData();
+      toast.success('Copia de seguridad exportada con éxito');
+    } catch (error) {
+      console.error('Error al exportar copia de seguridad:', error);
+      toast.error('Error al exportar la copia de seguridad');
+    } finally {
+      setIsExportingJson(false);
     }
   };
 
@@ -793,7 +809,68 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* 5. Account / Logout */}
+        {/* 5. Backup & Privacy / Copia de Seguridad */}
+        <div
+          className="card accordion-card mb-4"
+          style={{
+            padding: 'var(--space-lg)',
+            transition: 'all 0.25s ease',
+            border: '1px solid var(--border-subtle)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="flex items-center gap-2">
+              <Download size={20} style={{ color: 'var(--color-primary)' }} />
+              <span
+                className="card-title"
+                style={{
+                  margin: 0,
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                }}
+              >
+                Copia de Seguridad y Privacidad
+              </span>
+            </div>
+          </div>
+          <div
+            style={{
+              marginTop: '1.25rem',
+              borderTop: '1px solid rgba(255,255,255,0.06)',
+              paddingTop: '1.25rem',
+            }}
+          >
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+              Descarga una copia de seguridad completa con todos tus entrenamientos, ejercicios personalizados, plantillas, registros de comidas, recetas, alimentos guardados, pasos, peso y ajustes en formato JSON (GDPR).
+            </p>
+            <button
+              className="btn btn-primary"
+              style={{ width: '100%', marginBottom: '1.5rem' }}
+              onClick={handleExportJson}
+              disabled={isExportingJson}
+              aria-label="Exportar copia de seguridad (JSON)"
+            >
+              {isExportingJson ? 'Exportando datos...' : 'Exportar copia de seguridad (JSON)'}
+            </button>
+            <div
+              style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '1.5rem 0' }}
+            />
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+              Descarga todos tus datos de peso registrados en un archivo CSV.
+            </p>
+            <button
+              className="btn btn-secondary"
+              style={{ width: '100%' }}
+              onClick={handleExportData}
+              aria-label="Exportar datos a CSV"
+            >
+              Exportar Datos a CSV
+            </button>
+          </div>
+        </div>
+
+        {/* 6. Account / Logout */}
         <div
           className="card accordion-card"
           style={{
@@ -826,19 +903,6 @@ export default function SettingsPage() {
             }}
           >
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              Descarga todos tus datos de peso registrados en un archivo CSV.
-            </p>
-            <button
-              className="btn btn-secondary"
-              style={{ width: '100%', marginBottom: '1.5rem' }}
-              onClick={handleExportData}
-            >
-              Exportar Datos a CSV
-            </button>
-            <div
-              style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '1.5rem 0' }}
-            />
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
               Cierra tu sesión de forma segura en este dispositivo.
             </p>
             <button
@@ -853,6 +917,7 @@ export default function SettingsPage() {
                 logout();
                 toast.success('Sesión cerrada');
               }}
+              aria-label="Cerrar sesión"
             >
               Cerrar Sesión
             </button>

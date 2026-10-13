@@ -66,6 +66,9 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         if (path.startsWith("/api/push")) {
             return "push";
         }
+        if (path.startsWith("/api/user")) {
+            return "user";
+        }
         return null;
     }
 
