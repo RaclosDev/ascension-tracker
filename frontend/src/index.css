@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tailwindcss/theme" theme(reference);
-@theme { --color-background: var(--bg-main); --color-foreground: var(--text-main); --color-card: var(--bg-card); --color-muted: var(--bg-card-hover); --color-muted-foreground: var(--text-muted); --color-primary: var(--accent-red); --color-primary-foreground: #fff; --color-border: var(--border-color); --color-success: #10b981; }
+@theme { --color-background: var(--bg-main); --color-foreground: var(--text-main); --color-card: var(--bg-card); --color-muted: var(--bg-card-hover); --color-muted-foreground: var(--text-muted); --color-primary: var(--accent-red); --color-primary-foreground: #fff; --color-border: var(--border-color); --color-success: var(--accent-primary); }
 
 :root {
   /* Background */
@@ -1416,6 +1416,7 @@ input[type=number]::-webkit-outer-spin-button {
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-md);
+  pointer-events: auto;
 }
 .mobile-top-logo {
   position: absolute;
@@ -1511,6 +1512,10 @@ input[type=number]::-webkit-outer-spin-button {
   opacity: 0;
   transition: opacity var(--transition-base);
   pointer-events: none;
+}
+
+.live-session-minimize-btn {
+  display: flex;
 }
 
 @media (max-width: 768px) {
@@ -5247,7 +5252,7 @@ input[type="range"]:active::-moz-range-thumb {
 
 .active-workout-banner:hover {
   transform: translateY(-2px);
-  border-color: rgba(16, 185, 129, 0.4);
+  border-color: var(--accent-shadow);
 }
 
 @keyframes slideUpFade {
@@ -5285,8 +5290,8 @@ input[type="range"]:active::-moz-range-thumb {
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-shadow);
   flex-shrink: 0;
 }
 
@@ -5297,8 +5302,8 @@ input[type="range"]:active::-moz-range-thumb {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
+  background: var(--accent-primary);
+  box-shadow: 0 0 8px var(--accent-primary);
   animation: pulseDot 1.5s infinite;
 }
 
@@ -5331,7 +5336,7 @@ input[type="range"]:active::-moz-range-thumb {
 .active-workout-time {
   font-size: 0.78rem;
   font-weight: 500;
-  color: #10b981;
+  color: var(--accent-primary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -5362,9 +5367,9 @@ input[type="range"]:active::-moz-range-thumb {
   gap: 0.3rem;
   padding: 0.35rem 0.75rem;
   border-radius: 8px;
-  background: rgba(16, 185, 129, 0.2);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  color: #34d399;
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-shadow);
+  color: var(--accent-primary-light);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -5372,7 +5377,7 @@ input[type="range"]:active::-moz-range-thumb {
 }
 
 .active-workout-resume-btn:hover {
-  background: rgba(16, 185, 129, 0.3);
+  background: var(--accent-shadow);
   transform: translateY(-1px);
 }
 
