@@ -70,7 +70,7 @@ interface WorkoutState {
   setDetailId: (id: string | null) => void;
   setSettings: (settings: { showRpe: boolean }) => void;
 
-  startEmpty: () => void;
+  startEmpty: (name?: string) => void;
   startFromTemplate: (tpl: Template, history: CompletedWorkout[]) => void;
   startFromHistory: (w: CompletedWorkout) => void;
   editWorkout: (w: CompletedWorkout) => void;
@@ -98,6 +98,7 @@ interface WorkoutState {
   discardWorkout: () => void;
   saveAsTemplate: () => Template | null;
 
+  setHiddenEquipments: (equipments: string[]) => void;
   toggleHiddenEquipment: (equip: string) => void;
   updateExerciseVariant: (id: string, variant: { grip?: string; machine?: string }) => void;
 }
@@ -131,11 +132,12 @@ export const useWorkoutStore = create<WorkoutState>()(
       setPickerOpen: (pickerOpen) => set({ pickerOpen }),
       setDetailId: (detailId) => set({ detailId }),
       setSettings: (settings) => set({ settings }),
+      setHiddenEquipments: (hiddenEquipments) => set({ hiddenEquipments }),
 
-      startEmpty: () => {
+      startEmpty: (name?: string) => {
         set({
           active: {
-            name: 'Entrenamiento',
+            name: name?.trim() || 'Entrenamiento',
             startedAt: Date.now(),
             notes: '',
             exercises: [],
@@ -396,7 +398,7 @@ export const useWorkoutStore = create<WorkoutState>()(
         }
 
         const record: CompletedWorkout = {
-          id: active.editingId || uid(),
+          id: active.editingId || '',
           name: customName?.trim() || active.name.trim() || 'Entrenamiento',
           startedAt: finalStartedAt,
           finishedAt: finalFinishedAt,

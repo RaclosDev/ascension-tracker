@@ -274,18 +274,24 @@ export const ExerciseCard = React.memo(function ExerciseCard({
   const restPreset = useWorkoutStore((s) => s.restPreset);
   const setExerciseRestTimer = useWorkoutStore((s) => s.setExerciseRestTimer);
   const updateExerciseVariant = useWorkoutStore((s) => s.updateExerciseVariant);
-  const customGifs: Record<string, string> = {};
+  const { prefs, addGlobalMachine, addGlobalGrip, addExerciseVariant } =
+    useWorkoutPreferencesActions();
+  const globalMachines = prefs?.globalMachines || [];
+  const globalGrips = prefs?.globalGrips || [];
+  const exerciseVariants = prefs?.exerciseVariants || {};
+  const customGifs = prefs?.exerciseGifs || {};
   const [editingVariant, setEditingVariant] = useState(false);
 
   const catalog = getExerciseMap(customExercises);
   const meta = row ? catalog.get(row.exerciseId) : undefined;
+  const rowExerciseId = row?.exerciseId;
 
-  if (!row) return null;
   const historicalMachines = React.useMemo(() => {
+    if (!rowExerciseId) return [];
     const machines = new Set<string>();
     for (const w of recentWorkouts) {
       for (const ex of w.exercises) {
-        if (ex.exerciseId === row.exerciseId && ex.variant?.machine) {
+        if (ex.exerciseId === rowExerciseId && ex.variant?.machine) {
           machines.add(ex.variant.machine);
         }
       }
@@ -300,32 +306,28 @@ export const ExerciseCard = React.memo(function ExerciseCard({
       return ['Hammer Strength', 'Technogym', 'Technogym Discos'];
     }
     return arr;
-  }, [row.exerciseId, recentWorkouts, meta]);
+  }, [rowExerciseId, recentWorkouts, meta]);
 
   const historicalGrips = React.useMemo(() => {
+    if (!rowExerciseId) return [];
     const grips = new Set<string>();
     for (const w of recentWorkouts) {
       for (const ex of w.exercises) {
-        if (ex.exerciseId === row.exerciseId && ex.variant?.grip) {
+        if (ex.exerciseId === rowExerciseId && ex.variant?.grip) {
           grips.add(ex.variant.grip);
         }
       }
     }
     return Array.from(grips).sort();
-  }, [row.exerciseId, recentWorkouts]);
-  const { prefs, addGlobalMachine, addGlobalGrip, addExerciseVariant } =
-    useWorkoutPreferencesActions();
-  const globalMachines = prefs?.globalMachines || [];
-  const globalGrips = prefs?.globalGrips || [];
-  const exerciseVariants = prefs?.exerciseVariants || {};
+  }, [rowExerciseId, recentWorkouts]);
 
   const customGripsArray = React.useMemo(() => {
-    return exerciseVariants[row.exerciseId]?.grips || [];
-  }, [row.exerciseId, exerciseVariants]);
+    return rowExerciseId ? exerciseVariants[rowExerciseId]?.grips || [] : [];
+  }, [rowExerciseId, exerciseVariants]);
 
   const customMachinesArray = React.useMemo(() => {
-    return exerciseVariants[row.exerciseId]?.machines || [];
-  }, [row.exerciseId, exerciseVariants]);
+    return rowExerciseId ? exerciseVariants[rowExerciseId]?.machines || [] : [];
+  }, [rowExerciseId, exerciseVariants]);
 
   const finalHistoricalGrips = React.useMemo(() => {
     return Array.from(new Set([...historicalGrips, ...customGripsArray]));
@@ -334,15 +336,6 @@ export const ExerciseCard = React.memo(function ExerciseCard({
   const finalHistoricalMachines = React.useMemo(() => {
     return Array.from(new Set([...historicalMachines, ...customMachinesArray]));
   }, [historicalMachines, customMachinesArray]);
-
-  const handleAddGrip = (val: string) => {
-    addGlobalGrip(val);
-    addExerciseVariant(row.exerciseId, 'grip', val);
-  };
-  const handleAddMachine = (val: string) => {
-    addGlobalMachine(val);
-    addExerciseVariant(row.exerciseId, 'machine', val);
-  };
 
   const settings = useWorkoutStore((s) => s.settings);
   const showRpe = settings?.showRpe ?? false;
@@ -355,8 +348,8 @@ export const ExerciseCard = React.memo(function ExerciseCard({
 
   // Collapsible sets
   const [collapsed, setCollapsed] = useState(false);
-  const allDone = row.sets.length > 0 && row.sets.every((s) => s.completed);
-  const doneCount = row.sets.filter((s) => s.completed).length;
+  const allDone = Boolean(row && row.sets.length > 0 && row.sets.every((s) => s.completed));
+  const doneCount = row ? row.sets.filter((s) => s.completed).length : 0;
 
   // Auto-collapse when all sets completed
   const prevAllDone = useRef(allDone);
@@ -366,6 +359,17 @@ export const ExerciseCard = React.memo(function ExerciseCard({
     }
     prevAllDone.current = allDone;
   }, [allDone]);
+
+  if (!row) return null;
+
+  const handleAddGrip = (val: string) => {
+    addGlobalGrip(val);
+    addExerciseVariant(row.exerciseId, 'grip', val);
+  };
+  const handleAddMachine = (val: string) => {
+    addGlobalMachine(val);
+    addExerciseVariant(row.exerciseId, 'machine', val);
+  };
 
   return (
     <article className="card" style={{ padding: 0, overflow: 'hidden' }}>
