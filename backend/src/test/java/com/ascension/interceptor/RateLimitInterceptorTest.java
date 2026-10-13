@@ -75,7 +75,7 @@ class RateLimitInterceptorTest {
     @Test
     void userExportEndpointsAreRateLimited() throws Exception {
         loginAs("charlie@example.com");
-        for (int i = 0; i < RateLimitInterceptor.MAX_REQUESTS_PER_MINUTE; i++) {
+        for (int i = 0; i < RateLimitInterceptor.USER_MAX_REQUESTS_PER_MINUTE; i++) {
             assertThat(hit("/api/user/export", "10.0.0.7")).isEqualTo(200);
         }
         assertThat(hit("/api/user/export", "10.0.0.7")).isEqualTo(429);

@@ -842,14 +842,19 @@ export default function SettingsPage() {
             }}
           >
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              Descarga una copia de seguridad completa con todos tus entrenamientos, ejercicios personalizados, plantillas, registros de comidas, recetas, alimentos guardados, pasos, peso y ajustes en formato JSON (GDPR).
+              Descarga una copia de seguridad completa con todos tus entrenamientos, ejercicios
+              personalizados, plantillas, registros de comidas, recetas, alimentos guardados, pasos,
+              peso y ajustes en formato JSON (GDPR).
             </p>
             <button
               className="btn btn-primary"
               style={{ width: '100%', marginBottom: '1.5rem' }}
               onClick={handleExportJson}
               disabled={isExportingJson}
-              aria-label="Exportar copia de seguridad (JSON)"
+              aria-busy={isExportingJson}
+              aria-label={
+                isExportingJson ? 'Exportando datos en curso' : 'Exportar copia de seguridad (JSON)'
+              }
             >
               {isExportingJson ? 'Exportando datos...' : 'Exportar copia de seguridad (JSON)'}
             </button>

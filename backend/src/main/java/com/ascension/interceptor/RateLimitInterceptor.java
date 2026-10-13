@@ -20,16 +20,18 @@ import java.util.concurrent.TimeUnit;
 public class RateLimitInterceptor implements HandlerInterceptor {
 
     static final int MAX_REQUESTS_PER_MINUTE = 20;
+    static final int USER_MAX_REQUESTS_PER_MINUTE = 10;
 
     private final Cache<String, Bucket> requestBuckets = Caffeine.newBuilder()
             .maximumSize(50_000)
             .expireAfterAccess(1, TimeUnit.MINUTES)
             .build();
 
-    private Bucket createNewBucket() {
+    private Bucket createNewBucket(String group) {
+        int capacity = "user".equals(group) ? USER_MAX_REQUESTS_PER_MINUTE : MAX_REQUESTS_PER_MINUTE;
         Bandwidth limit = Bandwidth.builder()
-                .capacity(MAX_REQUESTS_PER_MINUTE)
-                .refillGreedy(MAX_REQUESTS_PER_MINUTE, Duration.ofMinutes(1))
+                .capacity(capacity)
+                .refillGreedy(capacity, Duration.ofMinutes(1))
                 .build();
         return Bucket.builder().addLimit(limit).build();
     }
@@ -42,7 +44,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         }
 
         String key = group + ":" + clientId(group, request);
-        Bucket bucket = requestBuckets.get(key, k -> createNewBucket());
+        Bucket bucket = requestBuckets.get(key, k -> createNewBucket(group));
 
         if (!bucket.tryConsume(1)) {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
