@@ -84,7 +84,7 @@ public class SecurityConfig {
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
             .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.sameOrigin())
+                .frameOptions(frameOptions -> frameOptions.deny())
                 .httpStrictTransportSecurity(hsts -> hsts
                     .includeSubDomains(true)
                     .maxAgeInSeconds(31536000)

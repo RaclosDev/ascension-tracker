@@ -118,7 +118,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
         String traceId = UUID.randomUUID().toString();
         log.warn("Max upload size exceeded: {} [trace_id: {}]", ex.getMessage(), traceId);
-        return buildErrorResponse("El archivo supera el tamaño máximo permitido (4MB).", HttpStatus.PAYLOAD_TOO_LARGE, traceId);
+        return buildErrorResponse("El archivo supera el tamaño máximo permitido.", HttpStatus.PAYLOAD_TOO_LARGE, traceId);
     }
 
     private ResponseEntity<ApiErrorResponse> buildErrorResponse(String message, HttpStatus status, String traceId) {
