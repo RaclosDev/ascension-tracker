@@ -49,7 +49,8 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         if (!bucket.tryConsume(1)) {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setHeader("Retry-After", "60");
-            response.getWriter().write("Too many requests. Please try again later.");
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"error\":\"Demasiadas peticiones. Por favor, inténtalo de nuevo en unos minutos.\"}");
             return false;
         }
         return true;
@@ -59,7 +60,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         if (path.startsWith("/api/auth")) {
             return "auth";
         }
-        if (path.startsWith("/api/nutrition/ai") || path.startsWith("/api/ai")) {
+        if (path.startsWith("/api/nutrition/ai")) {
             return "ai";
         }
         if (path.startsWith("/api/food-external")) {

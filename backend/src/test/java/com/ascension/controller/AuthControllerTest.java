@@ -13,10 +13,17 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.containsString;
 
 @org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest(AuthController.class)
 @org.springframework.context.annotation.Import(com.ascension.config.SecurityConfig.class)
@@ -139,6 +146,43 @@ class AuthControllerTest {
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("X-Content-Type-Options", "nosniff"))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("X-Frame-Options", "SAMEORIGIN"));
+    }
+
+    @Test
+    void getConfig_isPubliclyAccessibleWithoutAuth() throws Exception {
+        mockMvc.perform(get("/api/auth/config"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.googleClientId").value("test-google-client-id"));
+    }
+
+    @Test
+    void deleteAccount_withEmailClaim_deletesAccountAndClearsCookie() throws Exception {
+        mockMvc.perform(delete("/api/auth/account")
+                .with(jwt().jwt(j -> j.claim("email", "athlete@example.com").subject("ignored-subject")))
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Account deleted successfully"))
+                .andExpect(header().string("Set-Cookie", containsString("Max-Age=0")));
+
+        verify(accountDeletionService).wipeAccountData("athlete@example.com");
+    }
+
+    @Test
+    void deleteAccount_withSubjectFallback_deletesAccountAndClearsCookie() throws Exception {
+        mockMvc.perform(delete("/api/auth/account")
+                .with(jwt().jwt(j -> j.subject("athlete-subject@example.com")))
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Account deleted successfully"))
+                .andExpect(header().string("Set-Cookie", containsString("Max-Age=0")));
+
+        verify(accountDeletionService).wipeAccountData("athlete-subject@example.com");
+    }
+
+    @Test
+    void deleteAccount_unauthenticated_returnsUnauthorized() throws Exception {
+        mockMvc.perform(delete("/api/auth/account").with(csrf()))
+                .andExpect(status().isUnauthorized());
     }
 }
 
