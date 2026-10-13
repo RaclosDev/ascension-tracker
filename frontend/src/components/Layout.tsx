@@ -156,6 +156,7 @@ export default function Layout() {
             aria-label="Minimizar entrenamiento y navegar por la app"
             title="Minimizar entrenamiento"
             style={{
+              pointerEvents: 'auto',
               minWidth: '48px',
               height: '32px',
               display: 'flex',
