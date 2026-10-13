@@ -32,7 +32,7 @@ export function ActiveWorkoutBanner() {
         <div className="active-workout-banner-left">
           <div className="active-workout-pulse-icon" aria-hidden="true">
             <span className="active-workout-dot" />
-            <Dumbbell className="w-4 h-4 text-emerald-400" />
+            <Dumbbell className="w-4 h-4" style={{ color: 'var(--accent-primary-light)' }} />
           </div>
           <div className="active-workout-info">
             <span className="active-workout-title">

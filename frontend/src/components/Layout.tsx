@@ -173,7 +173,7 @@ export default function Layout() {
             }}
           >
             <ChevronDown size={14} />
-            <span>Salir</span>
+            <span>Minimizar</span>
           </button>
         ) : (
           <div style={{ width: '48px' }} />
