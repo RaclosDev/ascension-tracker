@@ -1,8 +1,27 @@
 @import "tailwindcss";
 @import "tailwindcss/theme" theme(reference);
-@theme { --color-background: var(--bg-main); --color-foreground: var(--text-main); --color-card: var(--bg-card); --color-muted: var(--bg-card-hover); --color-muted-foreground: var(--text-muted); --color-primary: var(--accent-red); --color-primary-foreground: #fff; --color-border: var(--border-color); --color-success: var(--accent-primary); }
+@source "./components";
+
+@theme {
+  --font-display: "Oswald", sans-serif;
+  --font-main: "Inter", sans-serif;
+
+  --color-background: var(--bg-main);
+  --color-foreground: var(--text-main);
+  --color-card: var(--bg-card);
+  --color-muted: var(--bg-card-hover);
+  --color-muted-foreground: var(--text-muted);
+  --color-primary: var(--accent-red);
+  --color-primary-foreground: #fff;
+  --color-secondary: var(--bg-card-hover);
+  --color-secondary-foreground: var(--text-main);
+  --color-border: var(--border-color);
+  --color-success: var(--accent-primary);
+}
 
 :root {
+  --font-display: 'Oswald', sans-serif;
+  --font-main: 'Inter', sans-serif;
   /* Background */
   --bg-primary: #000000;
   --bg-secondary: #121212;
@@ -3995,8 +4014,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   scrollbar-width: thin;
   scrollbar-color: var(--border-medium) var(--bg-primary);
 }
-
-/*# sourceMappingURL=index.css.map */
 
 /* Bulk Action Bar Mobile Enhancements */
 .bulk-action-bar {
