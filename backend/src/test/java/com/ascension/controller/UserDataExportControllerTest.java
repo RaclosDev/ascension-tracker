@@ -17,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -31,6 +32,9 @@ class UserDataExportControllerTest {
 
     @MockBean
     private UserDataExportService userDataExportService;
+
+    @MockBean
+    private com.ascension.service.UserDataRestoreService userDataRestoreService;
 
     private static final String TEST_EMAIL = "athlete@example.com";
 
@@ -74,5 +78,45 @@ class UserDataExportControllerTest {
                 .andExpect(jsonPath("$.userEmail").value(TEST_EMAIL));
 
         verify(userDataExportService).exportUserData(TEST_EMAIL);
+    }
+
+    @Test
+    @DisplayName("POST /api/user/restore without JWT should return 401 Unauthorized")
+    void restoreUserData_withoutJwt_returnsUnauthorized() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/user/restore")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"version\":\"1.0\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("POST /api/user/restore with valid JWT should call service and return summary")
+    void restoreUserData_withValidJwt_returnsSummary() throws Exception {
+        com.ascension.dto.UserDataRestoreSummaryDTO summary = com.ascension.dto.UserDataRestoreSummaryDTO.builder()
+                .mode("OVERWRITE")
+                .workoutsRestored(5)
+                .customExercisesRestored(2)
+                .foodLogsRestored(10)
+                .settingsRestored(true)
+                .restoredAt(Instant.now())
+                .build();
+
+        when(userDataRestoreService.restoreUserData(eq(TEST_EMAIL), eq("OVERWRITE"), any(UserDataExportDTO.class)))
+                .thenReturn(summary);
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/user/restore?mode=OVERWRITE")
+                .with(jwt().jwt(builder -> builder.claim("email", TEST_EMAIL)))
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"version\":\"1.0\",\"userEmail\":\"attacker@evil.com\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mode").value("OVERWRITE"))
+                .andExpect(jsonPath("$.workoutsRestored").value(5))
+                .andExpect(jsonPath("$.customExercisesRestored").value(2))
+                .andExpect(jsonPath("$.foodLogsRestored").value(10))
+                .andExpect(jsonPath("$.settingsRestored").value(true));
+
+        verify(userDataRestoreService).restoreUserData(eq(TEST_EMAIL), eq("OVERWRITE"), any(UserDataExportDTO.class));
     }
 }

@@ -12,6 +12,7 @@ import { useWorkoutStore } from '../lib/workout/store';
 import { formatRestFriendly } from '../lib/workout/format';
 import { useCustomExercises } from '../lib/workout/api';
 import { HevyImportModal } from '../components/workout/HevyImportModal';
+import { RestoreBackupModal } from '../components/settings/RestoreBackupModal';
 import { useAuth } from '../context/AuthContext';
 import { applyThemeColor } from '../utils/colorHelper';
 import { Skeleton } from '../components/ui/skeleton';
@@ -93,6 +94,7 @@ export default function SettingsPage() {
   const hiddenEquipments = useWorkoutStore((s) => s.hiddenEquipments) || [];
   const toggleHiddenEquipment = useWorkoutStore((s) => s.toggleHiddenEquipment);
   const [isHevyModalOpen, setIsHevyModalOpen] = useState(false);
+  const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
   const { data: customExercises = [] } = useCustomExercises();
   const { logout } = useAuth();
   const { data: dashboard } = useQuery<{ currentWeight?: number }, Error>({
@@ -846,18 +848,44 @@ export default function SettingsPage() {
               personalizados, plantillas, registros de comidas, recetas, alimentos guardados, pasos,
               peso y ajustes en formato JSON (GDPR).
             </p>
-            <button
-              className="btn btn-primary"
-              style={{ width: '100%', marginBottom: '1.5rem' }}
-              onClick={handleExportJson}
-              disabled={isExportingJson}
-              aria-busy={isExportingJson}
-              aria-label={
-                isExportingJson ? 'Exportando datos en curso' : 'Exportar copia de seguridad (JSON)'
-              }
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem',
+                marginBottom: '1.5rem',
+              }}
             >
-              {isExportingJson ? 'Exportando datos...' : 'Exportar copia de seguridad (JSON)'}
-            </button>
+              <button
+                className="btn btn-primary"
+                style={{ width: '100%' }}
+                onClick={handleExportJson}
+                disabled={isExportingJson}
+                aria-busy={isExportingJson}
+                aria-label={
+                  isExportingJson
+                    ? 'Exportando datos en curso'
+                    : 'Exportar copia de seguridad (JSON)'
+                }
+              >
+                {isExportingJson ? 'Exportando datos...' : 'Exportar copia de seguridad (JSON)'}
+              </button>
+              <button
+                className="btn btn-secondary"
+                style={{
+                  width: '100%',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                }}
+                onClick={() => setIsRestoreModalOpen(true)}
+                aria-label="Abrir modal para restaurar copia de seguridad desde archivo JSON"
+              >
+                <UploadCloud size={18} />
+                Restaurar copia de seguridad (JSON)
+              </button>
+            </div>
             <div
               style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '1.5rem 0' }}
             />
@@ -934,6 +962,10 @@ export default function SettingsPage() {
         isOpen={isHevyModalOpen}
         onClose={() => setIsHevyModalOpen(false)}
         customExercises={customExercises}
+      />
+      <RestoreBackupModal
+        isOpen={isRestoreModalOpen}
+        onClose={() => setIsRestoreModalOpen(false)}
       />
     </div>
   );
