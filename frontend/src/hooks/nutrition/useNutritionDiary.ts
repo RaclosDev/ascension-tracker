@@ -163,7 +163,8 @@ export function useNutritionDiary() {
       });
       fetchData();
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
+      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
+      queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
       toast.success('Movido correctamente');
     } catch {
       toast.error('Error al mover');
@@ -188,25 +189,26 @@ export function useNutritionDiary() {
         return;
       }
 
-      for (const log of logsToCopy) {
-        await api.post('/nutrition/logs', {
-          date: selectedDate,
-          mealIndex: mealIndex,
-          product: log.product,
-          quantity: log.quantity,
-          kcal: log.kcal,
-          protein: log.protein,
-          carbs: log.carbs,
-          fat: log.fat,
-          barcode: log.barcode,
-          myFoodId: log.myFoodId,
-          portionsJson: log.portionsJson,
-        });
-      }
+      await Promise.all(
+        logsToCopy.map((log: FoodLog) =>
+          api.post('/nutrition/logs', {
+            date: selectedDate,
+            mealIndex: mealIndex,
+            product: log.product,
+            quantity: log.quantity,
+            kcal: log.kcal,
+            protein: log.protein,
+            carbs: log.carbs,
+            fat: log.fat,
+            portionsJson: log.portionsJson || null,
+          }),
+        ),
+      );
 
       fetchData();
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
+      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
+      queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
       toast.dismiss(loadingToast);
       toast.success('¡Comida copiada!');
     } catch (err: unknown) {
@@ -222,7 +224,8 @@ export function useNutritionDiary() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
+      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
+      queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
       toast.success('Alimento eliminado');
     },
     onError: () => {
@@ -286,7 +289,8 @@ export function useNutritionDiary() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
+      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
+      queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
       setEditingLog(null);
       toast.success('Registro actualizado');
     },

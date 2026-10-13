@@ -28,6 +28,8 @@ const queryClient = new QueryClient({
 window.addEventListener('workout-migration-complete', () => {
   queryClient.invalidateQueries({ queryKey: ['workouts'] });
   queryClient.invalidateQueries({ queryKey: ['workout-history'] });
+  queryClient.invalidateQueries({ queryKey: ['workoutHistory'] });
+  queryClient.invalidateQueries({ queryKey: ['recentWorkouts'] });
 });
 
 createRoot(document.getElementById('root')!).render(

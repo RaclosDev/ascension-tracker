@@ -20,6 +20,15 @@ interface ManualFoodFormProps {
   date?: string;
   selectedMealIndex: number | string;
   onLogAdded?: () => void;
+  onCustomAdd?: (foodObj: {
+    product: string;
+    quantity: number;
+    kcal: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    [key: string]: unknown;
+  }) => void;
   onClose: () => void;
 }
 
@@ -32,6 +41,7 @@ export default function ManualFoodForm({
   date,
   selectedMealIndex,
   onLogAdded,
+  onCustomAdd,
   onClose,
 }: ManualFoodFormProps) {
   const handleManualSubmit = async (e: React.FormEvent) => {
@@ -51,8 +61,9 @@ export default function ManualFoodForm({
     const productName =
       manualForm.name.trim() + (manualForm.brand.trim() ? ` (${manualForm.brand.trim()})` : '');
 
+    const effectiveDate = date || new Date().toISOString().split('T')[0];
     const logEntry = {
-      date: date,
+      date: effectiveDate,
       mealIndex: Number(selectedMealIndex) || 0,
       product: productName,
       quantity: qty,
@@ -61,6 +72,12 @@ export default function ManualFoodForm({
       carbs: Number((cPer100 * factor).toFixed(1)),
       fat: Number((fPer100 * factor).toFixed(1)),
     };
+
+    if (onCustomAdd) {
+      onCustomAdd(logEntry);
+      onClose();
+      return;
+    }
 
     try {
       await api.post('/nutrition/logs', logEntry);
