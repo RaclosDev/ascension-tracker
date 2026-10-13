@@ -166,5 +166,56 @@ class WorkoutServiceTest {
         assertThat(summary.getCreatedExercises()).isEqualTo(0);
         verify(customExerciseRepository, never()).save(any());
     }
+
+    @Test
+    void importWorkouts_translatesClientExerciseIdToResolvedIdAndPreventsIDOR() {
+        String email = "athlete@example.com";
+        when(customExerciseRepository.findByUserEmail(email)).thenReturn(new java.util.ArrayList<>());
+
+        org.mockito.ArgumentCaptor<com.ascension.model.CustomExercise> customCaptor =
+                org.mockito.ArgumentCaptor.forClass(com.ascension.model.CustomExercise.class);
+        org.mockito.ArgumentCaptor<Workout> workoutCaptor =
+                org.mockito.ArgumentCaptor.forClass(Workout.class);
+
+        when(workoutRepository.save(workoutCaptor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        com.ascension.dto.WorkoutImportRequestDTO request = com.ascension.dto.WorkoutImportRequestDTO.builder()
+                .customExercises(java.util.List.of(
+                        com.ascension.dto.CustomExerciseDTO.builder()
+                                .id("malicious-or-temp-client-id")
+                                .name("Press Inclinado Especial")
+                                .muscle("pecho")
+                                .build()
+                ))
+                .workouts(java.util.List.of(
+                        WorkoutDTO.builder()
+                                .name("Chest Day")
+                                .startedAt(1700000000000L)
+                                .exercises(java.util.List.of(
+                                        com.ascension.dto.WorkoutExerciseDTO.builder()
+                                                .exerciseId("malicious-or-temp-client-id")
+                                                .sets(new java.util.ArrayList<>())
+                                                .build()
+                                ))
+                                .build()
+                ))
+                .build();
+
+        workoutService.importWorkouts(email, request);
+
+        verify(customExerciseRepository).save(customCaptor.capture());
+        com.ascension.model.CustomExercise savedEx = customCaptor.getValue();
+
+        // Assert IDOR is prevented: client ID is ignored and a fresh server-side UUID is generated
+        assertThat(savedEx.getId()).isNotNull();
+        assertThat(savedEx.getId()).isNotEqualTo("malicious-or-temp-client-id");
+        assertThat(savedEx.getUserEmail()).isEqualTo(email);
+
+        // Assert WorkoutExercise ID is translated to the resolved server-side ID
+        Workout savedWorkout = workoutCaptor.getValue();
+        assertThat(savedWorkout.getExercises()).hasSize(1);
+        com.ascension.model.WorkoutExercise savedWe = savedWorkout.getExercises().iterator().next();
+        assertThat(savedWe.getExerciseId()).isEqualTo(savedEx.getId());
+    }
 }
 

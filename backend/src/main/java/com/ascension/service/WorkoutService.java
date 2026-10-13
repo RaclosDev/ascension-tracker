@@ -154,22 +154,33 @@ public class WorkoutService {
             }
         }
 
+        // Map client-side exerciseId -> backend resolved exerciseId
+        java.util.Map<String, String> clientToResolvedId = new java.util.HashMap<>();
+
         if (request.getCustomExercises() != null) {
             for (CustomExerciseDTO exDTO : request.getCustomExercises()) {
                 if (exDTO.getName() == null || exDTO.getName().trim().isEmpty()) continue;
                 String normalizedName = exDTO.getName().trim().toLowerCase();
+                String resolvedId;
                 if (!customExMap.containsKey(normalizedName)) {
-                    String generatedId = exDTO.getId() != null ? exDTO.getId() : java.util.UUID.randomUUID().toString();
+                    // Prevent IDOR: always generate a fresh server-side UUID
+                    resolvedId = java.util.UUID.randomUUID().toString();
                     CustomExercise newEx = CustomExercise.builder()
-                            .id(generatedId)
+                            .id(resolvedId)
                             .name(exDTO.getName().trim())
                             .muscle(exDTO.getMuscle() != null ? exDTO.getMuscle() : "pecho")
                             .equipment(exDTO.getEquipment() != null ? exDTO.getEquipment() : "peso corporal")
                             .userEmail(userEmail)
                             .build();
                     customExerciseRepository.save(newEx);
-                    customExMap.put(normalizedName, generatedId);
+                    customExMap.put(normalizedName, resolvedId);
                     createdExercises++;
+                } else {
+                    resolvedId = customExMap.get(normalizedName);
+                }
+
+                if (exDTO.getId() != null) {
+                    clientToResolvedId.put(exDTO.getId(), resolvedId);
                 }
             }
         }
@@ -188,7 +199,7 @@ public class WorkoutService {
                     .exercises(new java.util.LinkedHashSet<>())
                     .build();
 
-            mapExercisesToWorkout(workout, wDTO.getExercises());
+            mapExercisesToWorkout(workout, wDTO.getExercises(), clientToResolvedId);
             workoutRepository.save(workout);
             importedWorkouts++;
             if (wDTO.getExercises() != null) {
@@ -208,13 +219,25 @@ public class WorkoutService {
     }
 
     private void mapExercisesToWorkout(Workout workout, List<WorkoutExerciseDTO> exerciseDTOs) {
+        mapExercisesToWorkout(workout, exerciseDTOs, java.util.Collections.emptyMap());
+    }
+
+    private void mapExercisesToWorkout(
+            Workout workout,
+            List<WorkoutExerciseDTO> exerciseDTOs,
+            java.util.Map<String, String> idTranslationMap) {
         if (exerciseDTOs == null) return;
         int order = 0;
         for (WorkoutExerciseDTO weDTO : exerciseDTOs) {
+            String rawExId = weDTO.getExerciseId();
+            String resolvedExId = (idTranslationMap != null && rawExId != null)
+                    ? idTranslationMap.getOrDefault(rawExId, rawExId)
+                    : rawExId;
+
             WorkoutExercise we = WorkoutExercise.builder()
-                    .id(weDTO.getId() != null ? weDTO.getId() : java.util.UUID.randomUUID().toString())
+                    .id(java.util.UUID.randomUUID().toString())
                     .workout(workout)
-                    .exerciseId(weDTO.getExerciseId())
+                    .exerciseId(resolvedExId)
                     .notes(weDTO.getNotes())
                     .variantGrip(weDTO.getVariant() != null ? weDTO.getVariant().getGrip() : null)
                     .variantMachine(weDTO.getVariant() != null ? weDTO.getVariant().getMachine() : null)
@@ -227,7 +250,7 @@ public class WorkoutService {
                 int setOrder = 0;
                 for (WorkoutSetDTO setDTO : weDTO.getSets()) {
                     WorkoutSet set = WorkoutSet.builder()
-                            .id(setDTO.getId() != null ? setDTO.getId() : java.util.UUID.randomUUID().toString())
+                            .id(java.util.UUID.randomUUID().toString())
                             .workoutExercise(we)
                             .orderIndex(setOrder++)
                             .type(setDTO.getType())

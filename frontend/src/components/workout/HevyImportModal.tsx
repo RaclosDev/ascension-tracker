@@ -32,22 +32,53 @@ export function HevyImportModal({ isOpen, onClose, customExercises = [] }: HevyI
   const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isOpen) {
       setParsedData(null);
       setFileName(null);
       setError(null);
+      return;
     }
-  }, [isOpen]);
 
-  // Handle ESC key to close
-  useEffect(() => {
+    // Autofocus first focusable element on open
+    const focusables = modalRef.current?.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    if (focusables && focusables.length > 0) {
+      focusables[0].focus();
+    }
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen && !importMutation.isPending) {
+      if (e.key === 'Escape' && !importMutation.isPending) {
         onClose();
+        return;
+      }
+
+      if (e.key === 'Tab' && modalRef.current) {
+        const currentFocusables = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+        if (!currentFocusables || currentFocusables.length === 0) return;
+
+        const first = currentFocusables[0];
+        const last = currentFocusables[currentFocusables.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            last.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === last) {
+            first.focus();
+            e.preventDefault();
+          }
+        }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, importMutation.isPending, onClose]);
@@ -134,6 +165,7 @@ export function HevyImportModal({ isOpen, onClose, customExercises = [] }: HevyI
       }}
     >
       <div
+        ref={modalRef}
         style={{
           width: '100%',
           maxWidth: '540px',

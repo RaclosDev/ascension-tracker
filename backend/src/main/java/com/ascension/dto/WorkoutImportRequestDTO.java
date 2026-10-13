@@ -14,6 +14,7 @@ import java.util.List;
 @Builder
 public class WorkoutImportRequestDTO {
 
+    @Size(max = 500, message = "No se pueden importar más de 500 ejercicios personalizados por lote")
     private List<@Valid CustomExerciseDTO> customExercises;
 
     @NotNull(message = "La lista de entrenamientos a importar no puede ser nula")
