@@ -20,6 +20,9 @@ public interface WorkoutRepository extends JpaRepository<Workout, String> {
     Optional<Workout> findByIdAndUserEmail(String id, String userEmail);
     long countByUserEmail(String userEmail);
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"exercises", "exercises.sets"})
+    List<Workout> findAllByUserEmailOrderByStartedAtDesc(String userEmail);
+
     @Query("SELECT COUNT(w) FROM Workout w WHERE w.userEmail = :userEmail")
     long customCount(String userEmail); // Just in case
 }
