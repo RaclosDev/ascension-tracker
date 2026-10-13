@@ -45,16 +45,11 @@ public class RefreshTokenService {
         }
 
         if (refreshToken.getReplacedAt() != null) {
-            if (java.time.Instant.now().isBefore(refreshToken.getReplacedAt().plusSeconds(15))) {
-                // Grace period for concurrent requests
-                RefreshToken graceToken = new RefreshToken();
-                graceToken.setEmail(refreshToken.getEmail());
-                graceToken.setName(refreshToken.getName());
-                graceToken.setPicture(refreshToken.getPicture());
-                graceToken.setPlainToken("GRACE");
-                return graceToken;
+            if (java.time.Instant.now().isBefore(refreshToken.getReplacedAt().plusSeconds(60))) {
+                // Grace period for concurrent requests and network retries: return fresh valid token
+                return createRefreshToken(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture());
             }
-            refreshTokenRepository.deleteByEmail(refreshToken.getEmail());
+            refreshTokenRepository.delete(refreshToken);
             throw new com.ascension.exception.TokenRefreshException("Session expired. Please log in again.");
         }
 

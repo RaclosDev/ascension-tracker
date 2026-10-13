@@ -43,6 +43,12 @@ public class AuthController {
     @Value("${google.client-id:CHANGE_ME}")
     private String googleClientId;
 
+    @Value("${app.jwt.expiration-ms:86400000}")
+    private long jwtExpirationMs;
+
+    @Value("${app.cookie.same-site:None}")
+    private String cookieSameSite;
+
     public AuthController(
             GoogleIdTokenVerifier verifier,
             JwtEncoder jwtEncoder,
@@ -61,7 +67,7 @@ public class AuthController {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("ascension-backend")
                 .issuedAt(now)
-                .expiresAt(now.plus(15, ChronoUnit.MINUTES))
+                .expiresAt(now.plus(jwtExpirationMs, ChronoUnit.MILLIS))
                 .subject(email)
                 .claim("email", email)
                 .claim("name", name != null ? name : "")
@@ -104,18 +110,11 @@ public class AuthController {
 
             String customToken = generateJwt(email, name, picture);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(email, name, picture);
-            
-            ResponseCookie springCookie = ResponseCookie.from("refreshToken", refreshToken.getPlainToken())
-                    .httpOnly(true)
-                    .secure(true)
-                    .path("/api/auth")
-                    .maxAge(30L * 24 * 60 * 60)
-                    .sameSite("Strict")
-                    .build();
+            ResponseCookie springCookie = buildRefreshCookie(refreshToken.getPlainToken());
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, springCookie.toString())
-                    .body(Map.of("token", customToken));
+                    .body(Map.of("token", customToken, "refreshToken", refreshToken.getPlainToken()));
 
         } catch (Exception e) {
             log.error("Failed to validate Google token", e);
@@ -125,34 +124,40 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshtoken(
-            @CookieValue(name = "refreshToken", required = false) String requestRefreshToken,
+            @CookieValue(name = "refreshToken", required = false) String requestCookieRefreshToken,
+            @RequestHeader(name = "X-Refresh-Token", required = false) String requestHeaderRefreshToken,
+            @RequestBody(required = false) Map<String, String> body,
             HttpServletRequest request) {
 
-        log.info("Refresh request received, cookie present: {}", requestRefreshToken != null);
+        String requestRefreshToken = requestCookieRefreshToken;
+        if (requestRefreshToken == null || requestRefreshToken.isBlank()) {
+            if (body != null && body.get("refreshToken") != null && !body.get("refreshToken").isBlank()) {
+                requestRefreshToken = body.get("refreshToken");
+            } else if (requestHeaderRefreshToken != null && !requestHeaderRefreshToken.isBlank()) {
+                requestRefreshToken = requestHeaderRefreshToken;
+            }
+        }
+
+        log.info("Refresh request received, token present: {}", requestRefreshToken != null);
         
         if (requestRefreshToken == null || requestRefreshToken.isBlank()) {
-            log.warn("Refresh token missing or blank from cookies");
-            return ResponseEntity.status(401).body(Map.of("error", "Refresh token is missing from cookies"));
+            log.warn("Refresh token missing from cookie, header, and body");
+            return ResponseEntity.status(401).body(Map.of("error", "Refresh token is missing"));
         }
 
         try {
             RefreshToken newRefreshToken = refreshTokenService.rotateRefreshToken(requestRefreshToken);
-            
-            if ("GRACE".equals(newRefreshToken.getPlainToken())) {
-                log.warn("Grace period: Refresh token reuse within 15s for user {}. Issuing JWT without new cookie.", newRefreshToken.getEmail());
-                String token = generateJwt(newRefreshToken.getEmail(), newRefreshToken.getName(), newRefreshToken.getPicture());
-                return ResponseEntity.ok().body(Map.of("token", token));
-            }
-
             String token = generateJwt(newRefreshToken.getEmail(), newRefreshToken.getName(), newRefreshToken.getPicture());
             log.info("Refresh token rotated successfully for user {}", newRefreshToken.getEmail());
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(newRefreshToken.getPlainToken()).toString())
-                    .body(Map.of("token", token));
+                    .body(Map.of("token", token, "refreshToken", newRefreshToken.getPlainToken()));
 
         } catch (com.ascension.exception.TokenRefreshException e) {
-            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(401)
+                    .header(HttpHeaders.SET_COOKIE, buildDeleteCookie().toString())
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -160,30 +165,43 @@ public class AuthController {
         return ResponseCookie.from("refreshToken", value)
                 .httpOnly(true)
                 .secure(true)
-                .path("/api/auth")
+                .path("/")
                 .maxAge(30L * 24 * 60 * 60)
-                .sameSite("Strict")
+                .sameSite(cookieSameSite)
+                .build();
+    }
+
+    private ResponseCookie buildDeleteCookie() {
+        return ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite(cookieSameSite)
                 .build();
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@CookieValue(name = "refreshToken", required = false) String requestRefreshToken) {
-        if (requestRefreshToken != null) {
-            refreshTokenService.findByToken(RefreshToken.hashToken(requestRefreshToken)).ifPresent(token -> {
+    public ResponseEntity<?> logout(
+            @CookieValue(name = "refreshToken", required = false) String requestCookieRefreshToken,
+            @RequestHeader(name = "X-Refresh-Token", required = false) String requestHeaderRefreshToken,
+            @RequestBody(required = false) Map<String, String> body) {
+        String tokenToDelete = requestCookieRefreshToken;
+        if (tokenToDelete == null || tokenToDelete.isBlank()) {
+            if (body != null && body.get("refreshToken") != null && !body.get("refreshToken").isBlank()) {
+                tokenToDelete = body.get("refreshToken");
+            } else if (requestHeaderRefreshToken != null && !requestHeaderRefreshToken.isBlank()) {
+                tokenToDelete = requestHeaderRefreshToken;
+            }
+        }
+        if (tokenToDelete != null) {
+            refreshTokenService.findByToken(RefreshToken.hashToken(tokenToDelete)).ifPresent(token -> {
                 refreshTokenService.delete(token);
             });
         }
         
-        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/api/auth")
-                .maxAge(0)
-                .sameSite("Strict")
-                .build();
-                
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie().toString())
                 .body(Map.of("message", "Log out successful"));
     }
 

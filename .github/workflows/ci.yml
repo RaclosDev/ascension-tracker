@@ -1,7 +1,6 @@
 name: CI/CD Pipeline
 
 on:
-  workflow_dispatch:
   push:
     branches: [ "main" ]
   pull_request:
@@ -55,14 +54,6 @@ jobs:
       - name: Run E2E Tests
         working-directory: frontend
         run: npx playwright test
-
-      - name: Allow Testcontainers Docker API
-        run: |
-          sudo mkdir -p /etc/systemd/system/docker.service.d
-          echo '[Service]' | sudo tee /etc/systemd/system/docker.service.d/min-api.conf
-          echo 'Environment=DOCKER_MIN_API_VERSION=1.24' | sudo tee -a /etc/systemd/system/docker.service.d/min-api.conf
-          sudo systemctl daemon-reload
-          sudo systemctl restart docker
 
       - name: Run Backend Tests
         working-directory: backend

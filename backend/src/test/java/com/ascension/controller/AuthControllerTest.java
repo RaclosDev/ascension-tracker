@@ -56,16 +56,17 @@ class AuthControllerTest {
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "invalid_token")))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").exists());
+                .andExpect(jsonPath("$.error").exists())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Set-Cookie", org.hamcrest.Matchers.containsString("Max-Age=0")));
     }
 
     @Test
-    void refresh_WhenTokenReusedWithinGracePeriod_ReturnsOkWithoutCookie() throws Exception {
+    void refresh_WhenTokenReusedWithinGracePeriod_ReturnsOkWithNewCookie() throws Exception {
         RefreshToken graceToken = new RefreshToken();
         graceToken.setEmail("test@test.com");
         graceToken.setName("Test User");
         graceToken.setPicture("https://example.com/p.png");
-        graceToken.setPlainToken("GRACE");
+        graceToken.setPlainToken("valid_new_grace_token");
 
         when(refreshTokenService.rotateRefreshToken(anyString())).thenReturn(graceToken);
 
@@ -74,7 +75,45 @@ class AuthControllerTest {
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "reused_token")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").exists())
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie().doesNotExist("refreshToken"));
+                .andExpect(jsonPath("$.refreshToken").value("valid_new_grace_token"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie().exists("refreshToken"));
+    }
+
+    @Test
+    void refresh_WhenTokenProvidedViaHeader_ReturnsOk() throws Exception {
+        RefreshToken graceToken = new RefreshToken();
+        graceToken.setEmail("test@test.com");
+        graceToken.setName("Test User");
+        graceToken.setPicture("https://example.com/p.png");
+        graceToken.setPlainToken("valid_new_grace_token");
+
+        when(refreshTokenService.rotateRefreshToken("header_token")).thenReturn(graceToken);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .header("X-Refresh-Token", "header_token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists())
+                .andExpect(jsonPath("$.refreshToken").value("valid_new_grace_token"));
+    }
+
+    @Test
+    void refresh_WhenTokenProvidedViaBody_ReturnsOk() throws Exception {
+        RefreshToken graceToken = new RefreshToken();
+        graceToken.setEmail("test@test.com");
+        graceToken.setName("Test User");
+        graceToken.setPicture("https://example.com/p.png");
+        graceToken.setPlainToken("valid_new_grace_token");
+
+        when(refreshTokenService.rotateRefreshToken("body_token")).thenReturn(graceToken);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"refreshToken\":\"body_token\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists())
+                .andExpect(jsonPath("$.refreshToken").value("valid_new_grace_token"));
     }
 
     @Test
@@ -86,7 +125,8 @@ class AuthControllerTest {
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "reused_token")))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").exists());
+                .andExpect(jsonPath("$.error").exists())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Set-Cookie", org.hamcrest.Matchers.containsString("Max-Age=0")));
     }
 
     @Test
