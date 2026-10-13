@@ -1,6 +1,7 @@
 import React from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
+import api from '../api/client';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -89,17 +90,19 @@ export default function LoginPage() {
           <GoogleLogin
             onSuccess={async (credentialResponse) => {
               try {
-                const baseUrl = import.meta.env.VITE_API_URL || '';
-                const res = await fetch(`${baseUrl}/api/auth/login`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ token: credentialResponse.credential }),
-                });
-                const data = await res.json();
-                if (data.token) {
-                  login(data.token);
+                const res = await api.post<{ token?: string; refreshToken?: string }>(
+                  '/auth/login',
+                  {
+                    token: credentialResponse.credential,
+                  },
+                );
+                if (res.data?.token) {
+                  if (res.data.refreshToken) {
+                    localStorage.setItem('ascension_refresh_token', res.data.refreshToken);
+                  }
+                  login(res.data.token);
                 } else {
-                  console.error('Login failed on backend', data);
+                  console.error('Login failed on backend', res.data);
                 }
               } catch (e: unknown) {
                 console.error('Login error', e);
