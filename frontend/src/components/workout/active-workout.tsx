@@ -141,9 +141,8 @@ function LiveSession() {
         <button
           type="button"
           onClick={() => navigate('/dashboard')}
-          className="btn btn-secondary"
+          className="btn btn-secondary live-session-minimize-btn"
           style={{
-            display: 'flex',
             alignItems: 'center',
             gap: '0.35rem',
             padding: '0.45rem 0.85rem',

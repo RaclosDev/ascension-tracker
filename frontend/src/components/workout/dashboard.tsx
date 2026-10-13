@@ -264,7 +264,7 @@ export function Dashboard() {
                 fontWeight: 600,
                 textTransform: 'uppercase',
                 letterSpacing: '0.14em',
-                color: 'var(--color-success)',
+                color: 'var(--accent-primary)',
               }}
             >
               En curso
