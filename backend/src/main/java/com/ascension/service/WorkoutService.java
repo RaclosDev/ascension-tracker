@@ -19,6 +19,7 @@ public class WorkoutService {
     private final WorkoutExerciseRepository workoutExerciseRepository;
     private final WorkoutTemplateService workoutTemplateService;
     private final CustomExerciseService customExerciseService;
+    private final CustomExerciseRepository customExerciseRepository;
     private final WorkoutMapper workoutMapper;
 
     @Transactional(readOnly = true)
@@ -139,15 +140,84 @@ public class WorkoutService {
         customExerciseService.deleteCustomExercise(userEmail, id);
     }
 
+    @Transactional
+    public WorkoutImportSummaryDTO importWorkouts(String userEmail, WorkoutImportRequestDTO request) {
+        if (request == null || request.getWorkouts() == null) {
+            return WorkoutImportSummaryDTO.builder().build();
+        }
+
+        int createdExercises = 0;
+        java.util.Map<String, String> customExMap = new java.util.HashMap<>();
+        for (CustomExercise ex : customExerciseRepository.findByUserEmail(userEmail)) {
+            if (ex.getName() != null) {
+                customExMap.put(ex.getName().trim().toLowerCase(), ex.getId());
+            }
+        }
+
+        if (request.getCustomExercises() != null) {
+            for (CustomExerciseDTO exDTO : request.getCustomExercises()) {
+                if (exDTO.getName() == null || exDTO.getName().trim().isEmpty()) continue;
+                String normalizedName = exDTO.getName().trim().toLowerCase();
+                if (!customExMap.containsKey(normalizedName)) {
+                    String generatedId = exDTO.getId() != null ? exDTO.getId() : java.util.UUID.randomUUID().toString();
+                    CustomExercise newEx = CustomExercise.builder()
+                            .id(generatedId)
+                            .name(exDTO.getName().trim())
+                            .muscle(exDTO.getMuscle() != null ? exDTO.getMuscle() : "pecho")
+                            .equipment(exDTO.getEquipment() != null ? exDTO.getEquipment() : "peso corporal")
+                            .userEmail(userEmail)
+                            .build();
+                    customExerciseRepository.save(newEx);
+                    customExMap.put(normalizedName, generatedId);
+                    createdExercises++;
+                }
+            }
+        }
+
+        int importedWorkouts = 0;
+        int totalSets = 0;
+
+        for (WorkoutDTO wDTO : request.getWorkouts()) {
+            Workout workout = Workout.builder()
+                    .id(java.util.UUID.randomUUID().toString())
+                    .userEmail(userEmail)
+                    .name(wDTO.getName() != null ? wDTO.getName() : "Entrenamiento importado")
+                    .startedAt(wDTO.getStartedAt())
+                    .finishedAt(wDTO.getFinishedAt())
+                    .notes(wDTO.getNotes())
+                    .exercises(new java.util.LinkedHashSet<>())
+                    .build();
+
+            mapExercisesToWorkout(workout, wDTO.getExercises());
+            workoutRepository.save(workout);
+            importedWorkouts++;
+            if (wDTO.getExercises() != null) {
+                for (WorkoutExerciseDTO we : wDTO.getExercises()) {
+                    if (we.getSets() != null) {
+                        totalSets += we.getSets().size();
+                    }
+                }
+            }
+        }
+
+        return WorkoutImportSummaryDTO.builder()
+                .importedWorkouts(importedWorkouts)
+                .createdExercises(createdExercises)
+                .totalSets(totalSets)
+                .build();
+    }
+
     private void mapExercisesToWorkout(Workout workout, List<WorkoutExerciseDTO> exerciseDTOs) {
         if (exerciseDTOs == null) return;
         int order = 0;
         for (WorkoutExerciseDTO weDTO : exerciseDTOs) {
             WorkoutExercise we = WorkoutExercise.builder()
-                    .id(weDTO.getId())
+                    .id(weDTO.getId() != null ? weDTO.getId() : java.util.UUID.randomUUID().toString())
                     .workout(workout)
                     .exerciseId(weDTO.getExerciseId())
                     .notes(weDTO.getNotes())
+                    .variantGrip(weDTO.getVariant() != null ? weDTO.getVariant().getGrip() : null)
+                    .variantMachine(weDTO.getVariant() != null ? weDTO.getVariant().getMachine() : null)
                     .supersetId(weDTO.getSupersetId())
                     .orderIndex(order++)
                     .sets(new java.util.LinkedHashSet<>())
@@ -157,7 +227,7 @@ public class WorkoutService {
                 int setOrder = 0;
                 for (WorkoutSetDTO setDTO : weDTO.getSets()) {
                     WorkoutSet set = WorkoutSet.builder()
-                            .id(setDTO.getId())
+                            .id(setDTO.getId() != null ? setDTO.getId() : java.util.UUID.randomUUID().toString())
                             .workoutExercise(we)
                             .orderIndex(setOrder++)
                             .type(setDTO.getType())

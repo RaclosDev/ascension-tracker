@@ -273,3 +273,34 @@ export const useWorkoutPreferencesActions = () => {
     toggleHiddenEquipment,
   };
 };
+
+export const useImportWorkouts = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { customExercises?: Exercise[]; workouts: CompletedWorkout[] }) => {
+      const { data } = await api.post('/workouts/import', payload);
+      return data;
+    },
+    onSuccess: (data: {
+      importedWorkouts: number;
+      createdExercises: number;
+      totalSets: number;
+    }) => {
+      queryClient.invalidateQueries({ queryKey: ['recentWorkouts'] });
+      queryClient.invalidateQueries({ queryKey: ['workoutHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['customExercises'] });
+      queryClient.invalidateQueries({ queryKey: ['workoutStats'] });
+      toast.success(
+        `Importados con éxito ${data.importedWorkouts} entrenamientos (${data.totalSets} series).`,
+      );
+    },
+    onError: (err: unknown) => {
+      const axiosError = err as { response?: { data?: { message?: string } }; message?: string };
+      const msg =
+        axiosError.response?.data?.message ||
+        axiosError.message ||
+        'Error al importar entrenamientos';
+      toast.error(msg);
+    },
+  });
+};
