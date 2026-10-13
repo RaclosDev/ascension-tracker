@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import { lazy } from 'react';
@@ -9,6 +9,7 @@ const WeightLossPlan = lazy(() => import('../components/calculators/WeightLossPl
 const MacroConfigurator = lazy(() => import('../components/calculators/MacroConfigurator'));
 const MealConfigurator = lazy(() => import('../components/MealConfigurator'));
 import { useWorkoutStore } from '../lib/workout/store';
+import { formatRestFriendly } from '../lib/workout/format';
 import { useAuth } from '../context/AuthContext';
 import { applyThemeColor } from '../utils/colorHelper';
 import { Skeleton } from '../components/ui/skeleton';
@@ -637,16 +638,29 @@ export default function SettingsPage() {
                     uno específico.
                   </div>
                 </div>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  className="form-input"
-                  style={{ width: '80px', textAlign: 'center', fontWeight: 600 }}
-                  value={restPreset}
-                  onChange={(e) => setRestPreset(Number(e.target.value) || 90)}
-                  min="0"
-                  step="15"
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    className="form-input"
+                    style={{ width: '80px', textAlign: 'center', fontWeight: 600 }}
+                    value={restPreset}
+                    onChange={(e) => setRestPreset(Number(e.target.value) || 90)}
+                    min="0"
+                    step="15"
+                    aria-label="Descanso base en segundos"
+                  />
+                  <span
+                    style={{
+                      fontSize: '0.85rem',
+                      color: 'var(--text-muted)',
+                      fontWeight: 500,
+                      minWidth: '45px',
+                    }}
+                  >
+                    ({formatRestFriendly(restPreset)})
+                  </span>
+                </div>
               </div>
 
               <div
