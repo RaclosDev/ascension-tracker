@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Check, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { getExerciseMap } from '@/lib/workout/exercises';
-import { isPrSet, previousSetLabel, formatVariant } from '@/lib/workout/format';
+import { isPrSet, previousSetLabel, formatVariant, formatRestFriendly } from '@/lib/workout/format';
 import { initAudioAndNotifications } from '@/lib/workout/notifications';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { VariantSelector } from './variant-selector';
@@ -429,10 +429,11 @@ export const ExerciseCard = React.memo(function ExerciseCard({
                   }}
                   onClick={(e) => e.stopPropagation()}
                   className="exercise-card-rest-select"
+                  aria-label="Tiempo de descanso para este ejercicio"
                 >
                   {[30, 60, 90, 120, 150, 180, 240, 300].map((s) => (
                     <option key={s} value={s}>
-                      {s}s
+                      {formatRestFriendly(s)}
                     </option>
                   ))}
                 </select>
