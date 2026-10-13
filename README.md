@@ -29,6 +29,21 @@ Desarrollada íntegramente como proyecto de portafolio, la aplicación demuestra
 
 ---
 
+## 📸 Capturas de Pantalla
+
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="32%">
+  <img src="docs/screenshots/workout.png" alt="Entrenamientos" width="32%">
+  <img src="docs/screenshots/nutrition.png" alt="Nutrición" width="32%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/foods.png" alt="Catálogo de Alimentos" width="32%">
+  <img src="docs/screenshots/tracking.png" alt="Seguimiento Biométrico" width="32%">
+  <img src="docs/screenshots/ai.png" alt="Asistente de IA" width="32%">
+</p>
+
+---
+
 ## ✨ Funcionalidades Avanzadas (Core)
 
 Lo que diferencia a Ascension de otras aplicaciones comerciales es su nivel extremo de detalle paramétrico y su UX orientada a atletas avanzados:
@@ -38,7 +53,6 @@ Lo que diferencia a Ascension de otras aplicaciones comerciales es su nivel extr
 - **Tipos de Serie Complejos:** Soporte nativo para series de *Calentamiento* (ignoradas en el volumen total), *Dropsets*, *Al Fallo* y series cardiovasculares (Distancia y Duración).
 - **Temporizador Background Push:** El Service Worker dispara notificaciones Web Push de "Descanso Terminado" (con vibración rítmica) que despiertan tu móvil incluso si está bloqueado o estás navegando en otra app.
 - **Gestión Visual:** Reordenamiento mediante *Drag & Drop* (`@hello-pangea/dnd`), creación de plantillas personalizadas y mapa de calor interactivo (`react-body-highlighter`) para visualizar el desgaste muscular acumulado.
-- **Migración de Datos:** Parseador de CSV integrado (`papaparse`) para importar historiales antiguos desde apps como Hevy.
 
 ### 🍎 Nutrición Asistida (FoodAI Copilot)
 - **Análisis Multi-modal con IA:** Sácale una foto a una etiqueta nutricional o al plato de comida; Gemini Vision procesará la imagen mediante OCR e inferencia, calculará las porciones y las añadirá automáticamente a tus macros del día.
@@ -67,7 +81,7 @@ Esta aplicación ha sido refactorizada repetidamente bajo estrictos estándares 
 3. **Infraestructura CI/CD y Testing:**
    - **GitHub Actions:** Pipeline completo que verifica el *build*, el linter y los tests en cada PR a `main`. Emplea un sistema de caché avanzado (`actions/cache@v4`) para retener dependencias de Maven y los binarios del navegador de Playwright.
    - **Integración con Testcontainers:** Levanta una base de datos PostgreSQL real efímera dentro de Docker durante el paso de Testing (`mvn test`) para garantizar que las queries nativas son 100% compatibles.
-   - **Docker Layered Jars:** El `Dockerfile` utiliza el extractor `layertools` nativo de Spring Boot 3.3. Separa las dependencias de Maven del código fuente en capas distintas, logrando despliegues ultrarrápidos.
+   - **Docker Contenedores Desacoplados:** Arquitectura modular de contenedores independientes para Backend (Spring Boot JRE Alpine) y Frontend (Nginx unprivileged), orquestados con Docker Compose y probados en CI.
 
 4. **Calidad Frontend:**
    - **TypeScript Strict Mode:** `"noImplicitAny": true` habilitado tras una inyección de tipos en todo el AST del proyecto. Cero vulnerabilidades de tipado en variables de estado.
