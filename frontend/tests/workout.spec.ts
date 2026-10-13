@@ -84,4 +84,64 @@ test.describe('Workout Page', () => {
     await expect(page).toHaveURL(/.*workout.*/, { timeout: 10000 });
     await expect(page.getByText('En curso')).toBeVisible({ timeout: 10000 });
   });
+
+  test('active workout with exercises renders without React error #185 loop', async ({ page }) => {
+    await setupAuthMocks(page);
+
+    await page.route('**/exercises.json**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        json: [
+          {
+            id: 'bench-press',
+            name: 'Press de Banca',
+            muscle: 'pecho',
+            equipment: 'barra',
+          },
+        ],
+      });
+    });
+    await page.route('**/exercises-base.json**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        json: [
+          {
+            id: 'base-pecho-press-de-pecho-plano-barra',
+            name: 'Press de Pecho Plano con Barra',
+            muscle: 'pecho',
+            equipment: 'barra',
+          },
+        ],
+      });
+    });
+
+    await page.goto('/workout');
+
+    // Iniciar entrenamiento vacío
+    const startWorkoutBtn = page.getByRole('button', { name: /Empezar Entrenamiento/i });
+    await expect(startWorkoutBtn).toBeVisible({ timeout: 15000 });
+    await startWorkoutBtn.click();
+
+    const startEmptyOption = page.locator('.start-workout-option').first();
+    await expect(startEmptyOption).toBeVisible({ timeout: 10000 });
+    await startEmptyOption.click();
+
+    // En el selector, desplegar el primer ejercicio disponible y añadirlo a la sesión
+    const exerciseItem = page.locator('.picker-exercise-item').first();
+    await expect(exerciseItem).toBeVisible({ timeout: 10000 });
+    await exerciseItem.click();
+
+    const addBtn = page.getByRole('button', { name: /Añadir al entreno/i });
+    await expect(addBtn).toBeVisible({ timeout: 5000 });
+    await addBtn.click();
+
+    // Verificar que la tarjeta de ejercicio se ha montado y la app no crashea con #185
+    await expect(page.locator('.exercise-card-header').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Algo salió mal')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Minimizar/i }).first()).toBeVisible({
+      timeout: 10000,
+    });
+  });
 });
