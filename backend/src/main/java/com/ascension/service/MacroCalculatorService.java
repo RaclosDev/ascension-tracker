@@ -6,7 +6,6 @@ import com.ascension.dto.UserSettingsDTO;
 import com.ascension.model.WeightEntry;
 import com.ascension.repository.WeightEntryRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,10 +32,19 @@ public class MacroCalculatorService {
 
     public MacrosDTO getMacros(String userEmail) {
         UserSettingsDTO settings = settingsService.getSettings(userEmail);
+        if (settings == null) {
+            settings = UserSettingsDTO.builder()
+                    .kcal(2000)
+                    .macroStrategy("BALANCED")
+                    .startWeight(80.0)
+                    .goalWeight(75.0)
+                    .weeklyGoal(0.5)
+                    .build();
+        }
         Double currentWeight = getCurrentWeight(userEmail);
         if (currentWeight == null) currentWeight = DEFAULT_WEIGHT_KG; // fallback to avoid NPE
         
-        int kcal = settings.getKcal();
+        int kcal = settings.getKcal() != null ? settings.getKcal() : 2000;
         double protein = 0;
         double fat = 0;
         double carbs = 0;
@@ -71,6 +79,7 @@ public class MacroCalculatorService {
                 .build();
     }
 
+    @Transactional
     public Map<String, Object> getAssistantSummary(String userEmail, LocalDate targetDate) {
         MacrosDTO targetMacros = getMacros(userEmail);
         List<FoodLogDTO> logs = nutritionLogService.getFoodLogsByDate(userEmail, targetDate);

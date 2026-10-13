@@ -143,7 +143,7 @@ public class PushNotificationService {
         } catch (Exception e) {
             log.error("Failed to send push to {}", userEmail, e);
             if (e.getMessage() != null && e.getMessage().contains("410")) {
-                removeSubscription(userEmail);
+                subscriptionRepo.findByUserEmail(userEmail).ifPresent(subscriptionRepo::delete);
             }
         }
     }

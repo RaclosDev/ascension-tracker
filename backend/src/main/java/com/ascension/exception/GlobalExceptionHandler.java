@@ -48,14 +48,27 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleInvalidInputException(InvalidInputException ex) {
         String traceId = UUID.randomUUID().toString();
         log.warn("Invalid input: {} [trace_id: {}]", ex.getMessage(), traceId);
-        return buildErrorResponse("Entrada invalida", HttpStatus.BAD_REQUEST, traceId);
+        String msg = (ex.getMessage() != null && !ex.getMessage().isBlank()) ? ex.getMessage() : "Entrada invalida";
+        return buildErrorResponse(msg, HttpStatus.BAD_REQUEST, traceId);
     }
     
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
         String traceId = UUID.randomUUID().toString();
         log.warn("Illegal argument: {} [trace_id: {}]", ex.getMessage(), traceId);
-        return buildErrorResponse("Entrada invalida", HttpStatus.BAD_REQUEST, traceId);
+        String msg = (ex.getMessage() != null && !ex.getMessage().isBlank()) ? ex.getMessage() : "Entrada invalida";
+        return buildErrorResponse(msg, HttpStatus.BAD_REQUEST, traceId);
+    }
+
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Message not readable: {} [trace_id: {}]", ex.getMessage(), traceId);
+        Throwable rootCause = ex.getMostSpecificCause();
+        if (rootCause != null && rootCause.getMessage() != null && rootCause.getMessage().contains("JSON payload exceeded maximum size limit")) {
+            return buildErrorResponse("El payload supera el tamaño máximo permitido (5MB)", HttpStatus.PAYLOAD_TOO_LARGE, traceId);
+        }
+        return buildErrorResponse("Entrada invalida o cuerpo de peticion malformado", HttpStatus.BAD_REQUEST, traceId);
     }
 
     @ExceptionHandler(DateTimeParseException.class)
