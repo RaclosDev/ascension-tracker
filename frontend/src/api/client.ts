@@ -143,4 +143,30 @@ api.interceptors.response.use(
   },
 );
 
+export const exportUserData = async (): Promise<void> => {
+  const response = await api.get<Blob>('/user/export', {
+    responseType: 'blob',
+  });
+
+  const contentDisposition = response.headers['content-disposition'] as string | undefined;
+  let filename = `ascension-backup-${new Date().toISOString().split('T')[0]}.json`;
+
+  if (contentDisposition) {
+    const filenameMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+    if (filenameMatch && filenameMatch[1]) {
+      filename = filenameMatch[1].trim();
+    }
+  }
+
+  const blob = new Blob([response.data], { type: 'application/json' });
+  const downloadUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = downloadUrl;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(downloadUrl);
+};
+
 export default api;
