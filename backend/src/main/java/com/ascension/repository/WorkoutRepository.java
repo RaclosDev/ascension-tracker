@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface WorkoutRepository extends JpaRepository<Workout, String> {
     
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"exercises", "exercises.sets"})
     org.springframework.data.domain.Page<Workout> findByUserEmailOrderByStartedAtDesc(String userEmail, org.springframework.data.domain.Pageable pageable);
     
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"exercises", "exercises.sets"})
@@ -22,7 +23,4 @@ public interface WorkoutRepository extends JpaRepository<Workout, String> {
 
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"exercises", "exercises.sets"})
     List<Workout> findAllByUserEmailOrderByStartedAtDesc(String userEmail);
-
-    @Query("SELECT COUNT(w) FROM Workout w WHERE w.userEmail = :userEmail")
-    long customCount(String userEmail); // Just in case
 }

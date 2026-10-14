@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
+import { del } from 'idb-keyval';
+import { useQueryClient } from '@tanstack/react-query';
 import api, { setMemoryToken } from '../api/client';
 
 export interface User {
@@ -21,6 +23,7 @@ export interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const getInitialSession = (): { token: string | null; user: User | null } => {
     try {
       const cached = localStorage.getItem('ascension_token');
@@ -217,6 +220,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const theme = localStorage.getItem('ascension_custom_color');
     localStorage.clear();
     if (theme) localStorage.setItem('ascension_custom_color', theme);
+
+    try {
+      await del('forja-v1');
+    } catch (e) {
+      console.error('Error clearing IndexedDB on logout:', e);
+    }
+    queryClient.clear();
 
     window.location.href = '/login';
   };

@@ -25,6 +25,9 @@ public class FoodExternalService {
         try {
             com.fasterxml.jackson.databind.node.ArrayNode combinedProducts = objectMapper.createArrayNode();
 
+            boolean offFailed = false;
+            boolean fsFailed = false;
+
             // 1. OpenFoodFacts
             try {
                 JsonNode offRoot = offClient.searchOpenFoodFacts(query);
@@ -33,6 +36,7 @@ public class FoodExternalService {
                     combinedProducts.addAll((com.fasterxml.jackson.databind.node.ArrayNode) offProducts);
                 }
             } catch (Exception e) {
+                offFailed = true;
                 log.warn("OFF Search Failed: {}", e.getMessage());
             }
 
@@ -46,7 +50,12 @@ public class FoodExternalService {
                     combinedProducts.addAll((com.fasterxml.jackson.databind.node.ArrayNode) fsProducts);
                 }
             } catch (Exception e) {
+                fsFailed = true;
                 log.warn("FatSecret Search Failed: {}", e.getMessage());
+            }
+
+            if (offFailed && fsFailed) {
+                throw new com.ascension.exception.ExternalApiException("ExternalFoodApis", org.springframework.http.HttpStatus.BAD_GATEWAY, "Both external food APIs failed");
             }
 
             com.fasterxml.jackson.databind.node.ObjectNode finalRoot = objectMapper.createObjectNode();

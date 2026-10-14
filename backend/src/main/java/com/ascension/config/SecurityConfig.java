@@ -48,14 +48,14 @@ public class SecurityConfig {
     @org.springframework.core.annotation.Order(1)
     public SecurityFilterChain authFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/api/auth/login", "/api/auth/refresh", "/api/auth/logout")
+            .securityMatcher("/api/auth/login", "/api/auth/refresh", "/api/auth/logout", "/api/auth/config")
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
             .sessionManagement(session -> session.sessionCreationPolicy(
                 org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
             .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.sameOrigin())
+                .frameOptions(frameOptions -> frameOptions.deny())
                 .httpStrictTransportSecurity(hsts -> hsts
                     .includeSubDomains(true)
                     .maxAgeInSeconds(31536000)
@@ -78,13 +78,13 @@ public class SecurityConfig {
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/version").permitAll()
+                .requestMatchers("/api/version", "/api/auth/config").permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
             .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.sameOrigin())
+                .frameOptions(frameOptions -> frameOptions.deny())
                 .httpStrictTransportSecurity(hsts -> hsts
                     .includeSubDomains(true)
                     .maxAgeInSeconds(31536000)
@@ -120,12 +120,15 @@ public class SecurityConfig {
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        String[] origins = allowedOrigins.split(",");
+        java.util.List<String> origins = java.util.Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
         
-        if (origins.length == 1 && "*".equals(origins[0].trim())) {
+        if (origins.size() == 1 && "*".equals(origins.get(0))) {
             configuration.addAllowedOriginPattern("*");
         } else {
-            configuration.setAllowedOrigins(java.util.Arrays.asList(origins));
+            configuration.setAllowedOrigins(origins);
             configuration.setAllowCredentials(true);
         }
         

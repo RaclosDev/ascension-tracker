@@ -25,7 +25,9 @@ registerRoute(
 );
 
 registerRoute(
-  ({ url }) => url.pathname.startsWith('/api/foods/search'),
+  ({ url }) =>
+    url.pathname.startsWith('/api/food-external/search') ||
+    url.pathname.startsWith('/api/foods/search'),
   new StaleWhileRevalidate({
     cacheName: 'food-search-cache',
     plugins: [new ExpirationPlugin({ maxEntries: 100 })],

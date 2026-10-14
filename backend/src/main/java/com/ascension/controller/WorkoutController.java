@@ -120,6 +120,14 @@ public class WorkoutController {
         return ResponseEntity.ok(customExerciseService.saveCustomExercise(jwt.getClaimAsString("email"), dto));
     }
 
+    @PutMapping("/custom-exercises/{id}")
+    public ResponseEntity<CustomExerciseDTO> updateCustomExercise(
+            @PathVariable String id,
+            @Valid @RequestBody CustomExerciseDTO dto,
+            @AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.ok(customExerciseService.updateCustomExercise(jwt.getClaimAsString("email"), id, dto));
+    }
+
     @DeleteMapping("/custom-exercises/{id}")
     public ResponseEntity<Void> deleteCustomExercise(
             @PathVariable String id,

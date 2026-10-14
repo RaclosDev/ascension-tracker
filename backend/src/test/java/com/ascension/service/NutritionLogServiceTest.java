@@ -268,4 +268,35 @@ class NutritionLogServiceTest {
         nutritionLogService.deleteSavedFood(USER_EMAIL, 1L);
         verify(savedFoodRepository).deleteByIdAndUserEmail(1L, USER_EMAIL);
     }
+
+    @Test
+    @DisplayName("applyAssistantFoods parses numbers safely from strings, numbers and handles nulls")
+    void applyAssistantFoods_parsesNumbersSafely() {
+        Map<String, Object> foodItem = new HashMap<>();
+        foodItem.put("mealIndex", "1");
+        foodItem.put("product", "Avena");
+        foodItem.put("quantity", "100.5");
+        foodItem.put("kcal", 380);
+        foodItem.put("protein", "13.5");
+        foodItem.put("carbs", 65.0);
+        foodItem.put("fat", null);
+
+        when(foodLogRepository.save(any(FoodLog.class))).thenAnswer(inv -> {
+            FoodLog fl = inv.getArgument(0);
+            fl.setId(99L);
+            return fl;
+        });
+
+        List<FoodLogDTO> result = nutritionLogService.applyAssistantFoods(USER_EMAIL, LocalDate.now(), 0, List.of(foodItem));
+
+        assertThat(result).hasSize(1);
+        FoodLogDTO dto = result.get(0);
+        assertThat(dto.getProduct()).isEqualTo("Avena");
+        assertThat(dto.getMealIndex()).isEqualTo(1);
+        assertThat(dto.getQuantity()).isEqualTo(100.5);
+        assertThat(dto.getKcal()).isEqualTo(380.0);
+        assertThat(dto.getProtein()).isEqualTo(13.5);
+        assertThat(dto.getCarbs()).isEqualTo(65.0);
+        assertThat(dto.getFat()).isEqualTo(0.0);
+    }
 }

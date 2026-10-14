@@ -10,7 +10,7 @@ const MacroConfigurator = lazy(() => import('../components/calculators/MacroConf
 const MealConfigurator = lazy(() => import('../components/MealConfigurator'));
 import { useWorkoutStore } from '../lib/workout/store';
 import { formatRestFriendly } from '../lib/workout/format';
-import { useCustomExercises } from '../lib/workout/api';
+import { useCustomExercises, useWorkoutPreferencesActions } from '../lib/workout/api';
 import { HevyImportModal } from '../components/workout/HevyImportModal';
 import { RestoreBackupModal } from '../components/settings/RestoreBackupModal';
 import { useAuth } from '../context/AuthContext';
@@ -26,6 +26,7 @@ import {
   LogOut,
   UploadCloud,
   Download,
+  ChevronDown,
 } from 'lucide-react';
 
 export interface SettingsForm {
@@ -93,6 +94,16 @@ export default function SettingsPage() {
   const setRestPreset = useWorkoutStore((s) => s.setRestPreset);
   const hiddenEquipments = useWorkoutStore((s) => s.hiddenEquipments) || [];
   const toggleHiddenEquipment = useWorkoutStore((s) => s.toggleHiddenEquipment);
+  const setHiddenEquipments = useWorkoutStore((s) => s.setHiddenEquipments);
+  const { prefs: workoutPrefs, toggleHiddenEquipment: togglePrefHiddenEquipment } =
+    useWorkoutPreferencesActions();
+
+  useEffect(() => {
+    if (workoutPrefs?.hiddenEquipments) {
+      setHiddenEquipments(workoutPrefs.hiddenEquipments);
+    }
+  }, [workoutPrefs?.hiddenEquipments, setHiddenEquipments]);
+
   const [isHevyModalOpen, setIsHevyModalOpen] = useState(false);
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
   const { data: customExercises = [] } = useCustomExercises();
@@ -270,7 +281,12 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     } catch (err: unknown) {
       console.error('Error al guardar macros:', err);
-      toast.error('Error al guardar objetivos');
+      const e = err as {
+        response?: { data?: { message?: string; error?: string } };
+        message?: string;
+      };
+      const msg = e.response?.data?.message || e.response?.data?.error || e.message;
+      toast.error(msg ? `Error al guardar: ${msg}` : 'Error al guardar objetivos');
     }
   };
 
@@ -330,7 +346,7 @@ export default function SettingsPage() {
             <span
               className={`text-xs text-muted transition-transform duration-300 ${openSections.personal ? 'rotate-180' : 'rotate-0'}`}
             >
-              ?
+              <ChevronDown size={18} />
             </span>
           </div>
           {openSections.personal && (
@@ -457,7 +473,7 @@ export default function SettingsPage() {
             <span
               className={`text-xs text-muted transition-transform duration-300 ${openSections.plan ? 'rotate-180' : 'rotate-0'}`}
             >
-              ?
+              <ChevronDown size={18} />
             </span>
           </div>
           {openSections.plan && (
@@ -499,7 +515,7 @@ export default function SettingsPage() {
             <span
               className={`text-xs text-muted transition-transform duration-300 ${openSections.macros ? 'rotate-180' : 'rotate-0'}`}
             >
-              ?
+              <ChevronDown size={18} />
             </span>
           </div>
           {openSections.macros && (
@@ -542,7 +558,7 @@ export default function SettingsPage() {
             <span
               className={`text-xs text-muted transition-transform duration-300 ${openSections.meals ? 'rotate-180' : 'rotate-0'}`}
             >
-              ?
+              <ChevronDown size={18} />
             </span>
           </div>
           {openSections.meals && (
@@ -567,7 +583,7 @@ export default function SettingsPage() {
             <span
               className={`text-xs text-muted transition-transform duration-300 ${openSections.theme ? 'rotate-180' : 'rotate-0'}`}
             >
-              ?
+              <ChevronDown size={18} />
             </span>
           </div>
           {openSections.theme && (
@@ -645,7 +661,7 @@ export default function SettingsPage() {
             <span
               className={`text-xs text-muted transition-transform duration-300 ${openSections.workout ? 'rotate-180' : 'rotate-0'}`}
             >
-              ?
+              <ChevronDown size={18} />
             </span>
           </div>
           {openSections.workout && (
@@ -759,7 +775,10 @@ export default function SettingsPage() {
                         <input
                           type="checkbox"
                           checked={isHidden}
-                          onChange={() => toggleHiddenEquipment(eq)}
+                          onChange={() => {
+                            toggleHiddenEquipment(eq);
+                            togglePrefHiddenEquipment(eq);
+                          }}
                         />
                         {eq === 'multipower' ? 'Multipower (Smith)' : eq}
                       </label>

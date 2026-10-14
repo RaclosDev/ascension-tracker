@@ -38,6 +38,17 @@ public class CustomExerciseService {
     }
 
     @Transactional
+    public CustomExerciseDTO updateCustomExercise(String userEmail, String id, CustomExerciseDTO dto) {
+        CustomExercise ex = customExerciseRepository.findByUserEmailAndId(userEmail, id)
+                .orElseThrow(() -> new com.ascension.exception.EntityNotFoundException("Custom exercise not found with id: " + id));
+        ex.setName(dto.getName());
+        ex.setMuscle(dto.getMuscle());
+        ex.setEquipment(dto.getEquipment());
+        ex = customExerciseRepository.save(ex);
+        return toCustomExerciseDTO(ex);
+    }
+
+    @Transactional
     public void deleteCustomExercise(String userEmail, String id) {
         customExerciseRepository.deleteByUserEmailAndId(userEmail, id);
     }
