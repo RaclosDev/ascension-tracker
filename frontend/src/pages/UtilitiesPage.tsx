@@ -55,23 +55,33 @@ export default function UtilitiesPage() {
   });
 
   return (
-    <div className="fade-in max-w-2xl mx-auto px-4 pb-20 pt-2 sm:pt-4">
+    <div className="fade-in max-w-2xl mx-auto px-4 pt-2 sm:pt-4" style={{ paddingBottom: '7rem' }}>
       {/* HEADER */}
-      <header className="mb-6">
+      <header className="mb-6 pb-2 border-b border-white/5">
         <h1 className="text-2xl font-black text-white tracking-tight">Utilidades y Calculadoras</h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">
+        <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
           Herramientas biomecánicas, gasto calórico y nutrición deportiva.
         </p>
       </header>
 
       {/* 1. ASISTENTE INTELIGENTE */}
-      <section className="mb-7">
-        <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2.5 px-1">
+      <section style={{ marginBottom: '1.75rem', marginTop: '1.25rem' }}>
+        <div
+          style={{
+            fontSize: '0.72rem',
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            color: '#9CA3AF',
+            marginBottom: '0.65rem',
+            paddingLeft: '0.25rem',
+            textTransform: 'uppercase',
+          }}
+        >
           Asistente Inteligente
         </div>
         <CalculatorCard
           title="Estratega Nutricional IA"
-          subtitle="Diseña platos y recetas inteligentes según tus macros"
+          subtitle="Platos y recetas según tus macros de hoy"
           icon={<Bot size={18} />}
           defaultOpen={false}
         >
@@ -80,24 +90,34 @@ export default function UtilitiesPage() {
       </section>
 
       {/* 2. CALCULADORAS BIOMECÁNICAS */}
-      <section className="mb-7">
-        <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2.5 px-1">
+      <section style={{ marginBottom: '1.75rem' }}>
+        <div
+          style={{
+            fontSize: '0.72rem',
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            color: '#9CA3AF',
+            marginBottom: '0.65rem',
+            paddingLeft: '0.25rem',
+            textTransform: 'uppercase',
+          }}
+        >
           Calculadoras Biomecánicas
         </div>
-        <div className="flex flex-col gap-3.5">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           {/* Calculator 1: Steps */}
           <CalculatorCard
             title="Gasto por Pasos"
             subtitle="Modelo de coste mecánico según Weyand"
             icon={<Footprints size={18} />}
-            defaultOpen={true}
+            defaultOpen={false}
           >
-            <p className="text-xs text-[var(--text-secondary)] mb-4">
+            <p className="text-xs text-[var(--text-secondary)] mb-3">
               Estima la energía mecánica usada en cada impacto según la biomecánica de Weyand.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="form-group">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" htmlFor="calc-weight-steps">
                   Peso Corporal (kg)
                 </label>
@@ -113,7 +133,7 @@ export default function UtilitiesPage() {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" htmlFor="calc-steps-total">
                   Pasos Totales
                 </label>
@@ -132,11 +152,11 @@ export default function UtilitiesPage() {
             <div
               role="status"
               aria-live="polite"
-              className="kpi-card accent mt-4"
+              className="kpi-card accent mt-3"
               style={{
                 textAlign: 'center',
-                padding: '1.5rem',
-                borderRadius: '16px',
+                padding: '1.15rem',
+                borderRadius: '14px',
                 background: 'rgba(0, 133, 255, 0.05)',
                 border: '1px solid rgba(0, 133, 255, 0.2)',
               }}
@@ -144,10 +164,10 @@ export default function UtilitiesPage() {
               <div className="kpi-label">Calorías Quemadas</div>
               <div
                 className="kpi-value accent"
-                style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent-primary)' }}
+                style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-primary)' }}
               >
                 {calc1Result > 0 ? calc1Result.toFixed(2) : '0.00'}{' '}
-                <span style={{ fontSize: '1.2rem', fontWeight: 500 }}>kcal</span>
+                <span style={{ fontSize: '1.1rem', fontWeight: 500 }}>kcal</span>
               </div>
             </div>
           </CalculatorCard>
@@ -157,15 +177,15 @@ export default function UtilitiesPage() {
             title="Gasto Metabólico por Tiempo"
             subtitle="VO2 y gasto calórico según ritmo y distancia"
             icon={<Activity size={18} />}
-            defaultOpen={true}
+            defaultOpen={false}
           >
-            <p className="text-xs text-[var(--text-secondary)] mb-4">
+            <p className="text-xs text-[var(--text-secondary)] mb-3">
               Calcula el VO2 y gasto calórico avanzado de una sesión de carrera/caminata
               considerando tu biometría.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
-              <div className="form-group">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" htmlFor="calc-metabolic-weight">
                   Peso (kg)
                 </label>
@@ -180,7 +200,7 @@ export default function UtilitiesPage() {
                   step="0.1"
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" htmlFor="calc-metabolic-height">
                   Altura (m)
                 </label>
@@ -197,7 +217,7 @@ export default function UtilitiesPage() {
               </div>
             </div>
 
-            <div className="form-group mb-3">
+            <div className="form-group mb-3" style={{ marginBottom: '0.75rem' }}>
               <label className="form-label" htmlFor="calc-metabolic-distance">
                 Distancia (metros)
               </label>
@@ -212,8 +232,8 @@ export default function UtilitiesPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="form-group">
+            <div className="grid grid-cols-2 gap-3 mb-2">
+              <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" htmlFor="calc-metabolic-minutes">
                   Tiempo (min)
                 </label>
@@ -227,7 +247,7 @@ export default function UtilitiesPage() {
                   placeholder="0"
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" htmlFor="calc-metabolic-seconds">
                   Tiempo (seg)
                 </label>
@@ -246,11 +266,11 @@ export default function UtilitiesPage() {
             <div
               role="status"
               aria-live="polite"
-              className="kpi-card success mt-4"
+              className="kpi-card success mt-3"
               style={{
                 textAlign: 'center',
-                padding: '1.5rem',
-                borderRadius: '16px',
+                padding: '1.15rem',
+                borderRadius: '14px',
                 background: 'rgba(16, 185, 129, 0.05)',
                 border: '1px solid rgba(16, 185, 129, 0.2)',
               }}
@@ -259,13 +279,13 @@ export default function UtilitiesPage() {
               <div
                 className="kpi-value success"
                 style={{
-                  fontSize: '2.5rem',
+                  fontSize: '2rem',
                   fontWeight: 800,
                   color: 'var(--color-success, #10b981)',
                 }}
               >
                 {metabolicResult.kcal > 0 ? metabolicResult.kcal.toFixed(2) : '0.00'}{' '}
-                <span style={{ fontSize: '1.2rem', fontWeight: 500 }}>kcal</span>
+                <span style={{ fontSize: '1.1rem', fontWeight: 500 }}>kcal</span>
               </div>
               {metabolicResult.vo2 > 0 && (
                 <div className="text-xs text-gray-400 mt-2">
@@ -278,8 +298,18 @@ export default function UtilitiesPage() {
       </section>
 
       {/* 3. CALCULADORAS DE NUTRICIÓN */}
-      <section className="mb-7">
-        <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2.5 px-1">
+      <section style={{ marginBottom: '1.75rem' }}>
+        <div
+          style={{
+            fontSize: '0.72rem',
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            color: '#9CA3AF',
+            marginBottom: '0.65rem',
+            paddingLeft: '0.25rem',
+            textTransform: 'uppercase',
+          }}
+        >
           Calculadoras de Nutrición
         </div>
         <NutritionCalculators />
