@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Bot, Footprints, Activity } from 'lucide-react';
 import api from '../api/client';
 import CalculatorCard from '../components/calculators/CalculatorCard';
 import NutritionCalculators from '../components/calculators/NutritionCalculators';
@@ -54,29 +55,43 @@ export default function UtilitiesPage() {
   });
 
   return (
-    <div className="fade-in max-w-4xl mx-auto px-4 pb-16 pt-4">
+    <div className="fade-in max-w-2xl mx-auto px-4 pb-20 pt-2 sm:pt-4">
+      {/* HEADER */}
       <header className="mb-6">
-        <h1 className="text-2xl font-extrabold text-white tracking-tight">
-          Utilidades y Calculadoras
-        </h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <h1 className="text-2xl font-black text-white tracking-tight">Utilidades y Calculadoras</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           Herramientas biomecánicas, gasto calórico y nutrición deportiva.
         </p>
       </header>
 
-      {/* --- ESTRATEGA NUTRICIONAL IA --- */}
-      <section className="mb-6">
-        <CalculatorCard title="Estratega Nutricional IA" defaultOpen={false}>
+      {/* 1. ASISTENTE INTELIGENTE */}
+      <section className="mb-7">
+        <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2.5 px-1">
+          Asistente Inteligente
+        </div>
+        <CalculatorCard
+          title="Estratega Nutricional IA"
+          subtitle="Diseña platos y recetas inteligentes según tus macros"
+          icon={<Bot size={18} />}
+          defaultOpen={false}
+        >
           <AiNutritionChef />
         </CalculatorCard>
       </section>
 
-      {/* --- CALCULADORAS BIOMECÁNICAS --- */}
-      <section className="mb-6">
-        <h2 className="text-lg font-bold text-white mb-4">Calculadoras Biomecánicas</h2>
-        <div className="flex flex-col gap-6">
+      {/* 2. CALCULADORAS BIOMECÁNICAS */}
+      <section className="mb-7">
+        <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2.5 px-1">
+          Calculadoras Biomecánicas
+        </div>
+        <div className="flex flex-col gap-3.5">
           {/* Calculator 1: Steps */}
-          <CalculatorCard title="Gasto por Pasos" defaultOpen={true}>
+          <CalculatorCard
+            title="Gasto por Pasos"
+            subtitle="Modelo de coste mecánico según Weyand"
+            icon={<Footprints size={18} />}
+            defaultOpen={true}
+          >
             <p className="text-xs text-[var(--text-secondary)] mb-4">
               Estima la energía mecánica usada en cada impacto según la biomecánica de Weyand.
             </p>
@@ -138,7 +153,12 @@ export default function UtilitiesPage() {
           </CalculatorCard>
 
           {/* Calculator 2: Metabolic */}
-          <CalculatorCard title="Gasto Metabólico por Tiempo" defaultOpen={true}>
+          <CalculatorCard
+            title="Gasto Metabólico por Tiempo"
+            subtitle="VO2 y gasto calórico según ritmo y distancia"
+            icon={<Activity size={18} />}
+            defaultOpen={true}
+          >
             <p className="text-xs text-[var(--text-secondary)] mb-4">
               Calcula el VO2 y gasto calórico avanzado de una sesión de carrera/caminata
               considerando tu biometría.
@@ -257,10 +277,19 @@ export default function UtilitiesPage() {
         </div>
       </section>
 
-      {/* --- CALCULADORAS DE NUTRICIÓN --- */}
-      <section>
+      {/* 3. CALCULADORAS DE NUTRICIÓN */}
+      <section className="mb-7">
+        <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2.5 px-1">
+          Calculadoras de Nutrición
+        </div>
         <NutritionCalculators />
       </section>
+
+      {/* DISCLAIMER */}
+      <p className="text-xs text-[var(--text-secondary)] text-center mt-10 mb-4 px-4 opacity-75">
+        Las calculadoras proporcionan estimaciones orientativas basadas en fórmulas estándar. No
+        sustituyen el consejo de un profesional médico o nutricionista.
+      </p>
     </div>
   );
 }

@@ -57,7 +57,7 @@ export default function AiNutritionChef() {
               alignItems: 'flex-start',
             }}
           >
-            <span style={{ color: 'var(--accent-primary, #e11d48)', fontWeight: 700 }}>•</span>
+            <span style={{ color: 'var(--accent-primary, #0085FF)', fontWeight: 700 }}>•</span>
             <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bulletText) }} />
           </div>
         );
@@ -74,25 +74,10 @@ export default function AiNutritionChef() {
   };
 
   return (
-    <div className="card accordion-card p-4 sm:p-6 space-y-4">
-      {/* HEADER */}
-      <div className="flex items-center gap-3 pb-2 border-b border-white/10">
-        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white flex-shrink-0">
-          <Bot size={22} color="var(--accent-primary, #e11d48)" />
-        </div>
-        <div>
-          <h2 className="text-lg font-extrabold text-white tracking-tight">
-            Estratega Nutricional &amp; Chef Asistente IA
-          </h2>
-          <p className="text-xs text-gray-400">
-            Diseña platos y recetas inteligentes a medida con tus macros disponibles de hoy.
-          </p>
-        </div>
-      </div>
-
+    <div className="space-y-4">
       {/* REMAINING MACROS BAR */}
-      <div className="p-4 rounded-xl bg-gradient-to-r from-red-950/20 via-black to-slate-900/40 border border-white/10 shadow-sm">
-        <div className="flex justify-between items-center mb-3">
+      <div className="p-3.5 sm:p-4 rounded-xl bg-white/[0.03] border border-white/10 shadow-sm">
+        <div className="flex justify-between items-center mb-2.5">
           <span className="text-xs font-bold text-gray-200 tracking-wider uppercase">
             Tus Macros Restantes de Hoy
           </span>
@@ -106,17 +91,17 @@ export default function AiNutritionChef() {
             <div className="text-[10px] text-gray-400 uppercase font-semibold">Kcal</div>
           </div>
           <div className="bg-white/5 p-2 rounded-lg border border-white/5">
-            <div className="text-base sm:text-lg font-black text-rose-400">
+            <div className="text-base sm:text-lg font-black text-[var(--accent-primary-light,#339cff)]">
               {remaining.protein}g
             </div>
             <div className="text-[10px] text-gray-400 uppercase font-semibold">Prot</div>
           </div>
           <div className="bg-white/5 p-2 rounded-lg border border-white/5">
-            <div className="text-base sm:text-lg font-black text-sky-400">{remaining.carbs}g</div>
+            <div className="text-base sm:text-lg font-black text-gray-200">{remaining.carbs}g</div>
             <div className="text-[10px] text-gray-400 uppercase font-semibold">Carbs</div>
           </div>
           <div className="bg-white/5 p-2 rounded-lg border border-white/5">
-            <div className="text-base sm:text-lg font-black text-amber-400">{remaining.fat}g</div>
+            <div className="text-base sm:text-lg font-black text-gray-300">{remaining.fat}g</div>
             <div className="text-[10px] text-gray-400 uppercase font-semibold">Grasa</div>
           </div>
         </div>
@@ -142,7 +127,7 @@ export default function AiNutritionChef() {
                 {isUser ? (
                   <User size={18} />
                 ) : (
-                  <Bot size={18} color="var(--accent-primary, #e11d48)" />
+                  <Bot size={18} color="var(--accent-primary, #0085FF)" />
                 )}
               </div>
               <div className={`chat-bubble ${isUser ? 'user-bubble' : 'ai-bubble'}`}>
@@ -375,7 +360,7 @@ export default function AiNutritionChef() {
         {sending && (
           <div className="chat-msg-row">
             <div className="chat-avatar">
-              <Bot size={18} color="var(--accent-primary, #e11d48)" />
+              <Bot size={18} color="var(--accent-primary, #0085FF)" />
             </div>
             <div className="chat-bubble ai-bubble flex items-center gap-2 text-gray-400 text-xs">
               <span className="spinner w-4 h-4 border-2" />
@@ -476,7 +461,7 @@ export default function AiNutritionChef() {
           id="ai-chef-user-input"
           type="text"
           aria-label="Mensaje o petición para el chef nutricional IA"
-          className="flex-1 min-h-[42px] px-3.5 rounded-xl bg-[#1C1C1E] border border-white/10 text-white text-xs placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+          className="flex-1 min-h-[42px] px-3.5 rounded-xl bg-[#1C1C1E] border border-white/10 text-white text-xs placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#0085FF)]"
           placeholder="Ej: Tengo huevos, atún y verduras en la nevera, ¿qué me recomiendas?"
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
@@ -496,7 +481,7 @@ export default function AiNutritionChef() {
           className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
             (!userInput.trim() && !selectedImage) || sending
               ? 'bg-white/5 text-gray-500 cursor-not-allowed'
-              : 'bg-[var(--accent-primary,#e11d48)] text-white hover:opacity-90 cursor-pointer shadow-md'
+              : 'bg-[var(--accent-primary,#0085FF)] text-white hover:opacity-90 cursor-pointer shadow-md'
           }`}
           title="Enviar mensaje"
         >
