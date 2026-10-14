@@ -42,15 +42,18 @@ export default function OneRepMaxCalculator({
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-gray-300 leading-relaxed">
+      <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
         Calcula tu repetición máxima (1RM) teórica a partir de una serie submáxima y genera la tabla
-        de intensidades y zonas de entrenamiento.
+        de intensidades y zonas de entrenamiento biomecánico.
       </p>
 
       {/* FORM INPUTS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label htmlFor={weightId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+          <label
+            htmlFor={weightId}
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider"
+          >
             Peso levantado ({unit})
           </label>
           <input
@@ -59,7 +62,7 @@ export default function OneRepMaxCalculator({
             inputMode="decimal"
             step="0.5"
             min="0"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-medium text-sm placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
             placeholder="Ej: 100"
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
@@ -67,7 +70,10 @@ export default function OneRepMaxCalculator({
         </div>
 
         <div>
-          <label htmlFor={repsId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+          <label
+            htmlFor={repsId}
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider"
+          >
             Repeticiones logradas
           </label>
           <input
@@ -76,7 +82,7 @@ export default function OneRepMaxCalculator({
             inputMode="numeric"
             min="1"
             max="36"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-medium text-sm placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
             placeholder="Ej: 5"
             value={reps}
             onChange={(e) => setReps(e.target.value)}
@@ -84,12 +90,15 @@ export default function OneRepMaxCalculator({
         </div>
 
         <div>
-          <label htmlFor={formulaId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+          <label
+            htmlFor={formulaId}
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider"
+          >
             Fórmula matemática
           </label>
           <select
             id={formulaId}
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-medium text-sm focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all cursor-pointer"
             value={formula}
             onChange={(e) => setFormula(e.target.value as OneRepMaxFormula)}
           >
@@ -102,12 +111,15 @@ export default function OneRepMaxCalculator({
         </div>
 
         <div>
-          <label htmlFor={roundId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+          <label
+            htmlFor={roundId}
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider"
+          >
             Redondeo de barra
           </label>
           <select
             id={roundId}
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-medium text-sm focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all cursor-pointer"
             value={roundStep}
             onChange={(e) => setRoundStep(parseFloat(e.target.value))}
           >
@@ -123,15 +135,15 @@ export default function OneRepMaxCalculator({
       <div
         role="status"
         aria-live="polite"
-        className="p-5 rounded-2xl bg-gradient-to-br from-rose-950/40 via-red-950/20 to-black/40 border border-red-500/20 flex flex-col sm:flex-row items-center justify-between gap-4"
+        className="p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_0_20px_var(--accent-glow)]"
       >
         <div>
-          <span className="text-xs font-bold tracking-wider uppercase text-red-400">
+          <span className="text-xs font-bold tracking-wider uppercase text-[var(--accent-primary)]">
             1RM Estimado ({formula.toUpperCase()})
           </span>
-          <div className="text-4xl font-extrabold text-white mt-1">
+          <div className="text-4xl font-extrabold text-white mt-1 font-display tracking-tight">
             {result.oneRepMax > 0 ? result.oneRepMax : '0.0'}{' '}
-            <span className="text-lg font-normal text-gray-400">{unit}</span>
+            <span className="text-lg font-normal text-[var(--text-secondary)]">{unit}</span>
           </div>
           {numReps > 10 && formula === 'brzycki' && (
             <p className="text-xs text-amber-400 mt-1">
@@ -143,27 +155,27 @@ export default function OneRepMaxCalculator({
         {/* COMPARISON PILLS */}
         {result.oneRepMax > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center w-full sm:w-auto">
-            <div className="p-2 rounded-lg bg-white/5 border border-white/5">
-              <span className="text-[10px] text-gray-400 block">Epley</span>
-              <span className="text-xs font-bold text-gray-200">
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/5">
+              <span className="text-[10px] text-[var(--text-secondary)] block">Epley</span>
+              <span className="text-xs font-bold text-white font-display">
                 {result.formulaResults.epley} {unit}
               </span>
             </div>
-            <div className="p-2 rounded-lg bg-white/5 border border-white/5">
-              <span className="text-[10px] text-gray-400 block">Brzycki</span>
-              <span className="text-xs font-bold text-gray-200">
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/5">
+              <span className="text-[10px] text-[var(--text-secondary)] block">Brzycki</span>
+              <span className="text-xs font-bold text-white font-display">
                 {result.formulaResults.brzycki} {unit}
               </span>
             </div>
-            <div className="p-2 rounded-lg bg-white/5 border border-white/5">
-              <span className="text-[10px] text-gray-400 block">Lombardi</span>
-              <span className="text-xs font-bold text-gray-200">
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/5">
+              <span className="text-[10px] text-[var(--text-secondary)] block">Lombardi</span>
+              <span className="text-xs font-bold text-white font-display">
                 {result.formulaResults.lombardi} {unit}
               </span>
             </div>
-            <div className="p-2 rounded-lg bg-white/5 border border-white/5">
-              <span className="text-[10px] text-gray-400 block">O&apos;Conner</span>
-              <span className="text-xs font-bold text-gray-200">
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/5">
+              <span className="text-[10px] text-[var(--text-secondary)] block">O&apos;Conner</span>
+              <span className="text-xs font-bold text-white font-display">
                 {result.formulaResults.oconner} {unit}
               </span>
             </div>
@@ -174,12 +186,12 @@ export default function OneRepMaxCalculator({
       {/* PERCENTAGE BREAKDOWN TABLE */}
       {result.oneRepMax > 0 && (
         <div className="space-y-3">
-          <h4 className="text-sm font-bold text-white tracking-wide">
+          <h4 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
             Tabla de Zonas de Carga e Intensidad
           </h4>
-          <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#161618]">
+          <div className="overflow-x-auto rounded-xl border border-white/10 bg-black/30">
             <table className="w-full text-left text-xs">
-              <thead className="bg-white/5 text-gray-400 border-b border-white/10">
+              <thead className="bg-white/5 text-[var(--text-secondary)] border-b border-white/10">
                 <tr>
                   <th scope="col" className="py-2.5 px-3 font-semibold">
                     Intensidad
@@ -199,19 +211,21 @@ export default function OneRepMaxCalculator({
                 {result.percentages.map((p) => (
                   <tr
                     key={p.percentage}
-                    className={`transition-colors hover:bg-white/[0.03] ${
+                    className={`transition-colors hover:bg-white/[0.04] ${
                       p.percentage === 100
-                        ? 'bg-red-500/10 font-bold text-red-200'
+                        ? 'bg-[var(--accent-glow)] font-bold text-white'
                         : 'text-gray-300'
                     }`}
                   >
                     <td className="py-2.5 px-3 font-medium text-white">{p.percentage}%</td>
-                    <td className="py-2.5 px-3 font-bold text-white">
+                    <td className="py-2.5 px-3 font-bold text-white font-display">
                       {p.weight} {unit}
                     </td>
-                    <td className="py-2.5 px-3 text-gray-300">{p.repsEstimate} reps</td>
+                    <td className="py-2.5 px-3 text-[var(--text-secondary)]">
+                      {p.repsEstimate} reps
+                    </td>
                     <td className="py-2.5 px-3">
-                      <span className="inline-block px-2 py-0.5 rounded-full text-[11px] bg-white/5 text-gray-300 border border-white/10">
+                      <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] bg-white/5 text-[var(--text-secondary)] border border-white/10 font-medium">
                         {p.intensityZone}
                       </span>
                     </td>

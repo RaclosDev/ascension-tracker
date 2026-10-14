@@ -50,7 +50,7 @@ export default function PlateLoaderCalculator({
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-gray-300 leading-relaxed">
+      <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
         Distribuye de forma óptima los discos en la barra olímpica por lado utilizando el código
         oficial de colores de la IWF (Federación Internacional de Halterofilia).
       </p>
@@ -58,7 +58,10 @@ export default function PlateLoaderCalculator({
       {/* FORM INPUTS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label htmlFor={targetId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+          <label
+            htmlFor={targetId}
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider"
+          >
             Peso total objetivo ({unit})
           </label>
           <input
@@ -67,7 +70,7 @@ export default function PlateLoaderCalculator({
             inputMode="decimal"
             step="0.5"
             min="0"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-medium text-sm placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
             placeholder={unit === 'kg' ? 'Ej: 100' : 'Ej: 225'}
             value={targetWeight}
             onChange={(e) => setTargetWeight(e.target.value)}
@@ -75,12 +78,15 @@ export default function PlateLoaderCalculator({
         </div>
 
         <div>
-          <label htmlFor={barId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+          <label
+            htmlFor={barId}
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider"
+          >
             Tipo de Barra ({unit})
           </label>
           <select
             id={barId}
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-medium text-sm focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all cursor-pointer"
             value={barWeight}
             onChange={(e) => setBarWeight(parseFloat(e.target.value))}
           >
@@ -103,12 +109,15 @@ export default function PlateLoaderCalculator({
         </div>
 
         <div>
-          <label htmlFor={unitId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+          <label
+            htmlFor={unitId}
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider"
+          >
             Sistema de Unidades
           </label>
           <select
             id={unitId}
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-medium text-sm focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all cursor-pointer"
             value={unit}
             onChange={(e) => {
               const newUnit = e.target.value as 'kg' | 'lbs';
@@ -124,16 +133,16 @@ export default function PlateLoaderCalculator({
         <div className="flex flex-col justify-end">
           <label
             htmlFor={collarsId}
-            className="flex items-center gap-2 px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white cursor-pointer select-none"
+            className="flex items-center gap-2.5 px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white cursor-pointer select-none transition-all hover:border-white/20"
           >
             <input
               id={collarsId}
               type="checkbox"
-              className="accent-[var(--accent-primary,#e11d48)] w-4 h-4 rounded"
+              className="accent-[var(--accent-primary)] w-4 h-4 rounded cursor-pointer"
               checked={includeCollars}
               onChange={(e) => setIncludeCollars(e.target.checked)}
             />
-            <span className="text-xs font-medium">
+            <span className="text-xs font-medium text-[var(--text-secondary)]">
               Incluir collares ({unit === 'kg' ? '2.5 kg par' : '5 lbs par'})
             </span>
           </label>
@@ -144,16 +153,17 @@ export default function PlateLoaderCalculator({
       <div
         role="status"
         aria-live="polite"
-        className="p-5 rounded-2xl bg-gradient-to-br from-blue-950/40 via-sky-950/20 to-black/40 border border-sky-500/20 flex flex-col sm:flex-row items-center justify-between gap-4"
+        className="p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_0_20px_var(--accent-glow)]"
       >
         <div>
-          <span className="text-xs font-bold tracking-wider uppercase text-sky-400">
+          <span className="text-xs font-bold tracking-wider uppercase text-[var(--accent-primary)]">
             Carga por cada lado
           </span>
-          <div className="text-4xl font-extrabold text-white mt-1">
-            {result.weightPerSide} <span className="text-lg font-normal text-gray-400">{unit}</span>
+          <div className="text-4xl font-extrabold text-white mt-1 font-display tracking-tight">
+            {result.weightPerSide}{' '}
+            <span className="text-lg font-normal text-[var(--text-secondary)]">{unit}</span>
           </div>
-          <div className="text-xs text-gray-300 mt-1 flex items-center gap-2">
+          <div className="text-xs text-[var(--text-secondary)] mt-1.5 flex items-center gap-2">
             <span>
               Total barra + discos:{' '}
               <strong className="text-white">
@@ -175,48 +185,66 @@ export default function PlateLoaderCalculator({
         {/* Quick summary per side badge list */}
         <div className="flex flex-wrap gap-1.5 justify-center sm:justify-end">
           {result.platesPerSide.length === 0 ? (
-            <span className="text-xs text-gray-400 italic">Solo la barra sin discos</span>
+            <span className="text-xs text-[var(--text-secondary)] italic">
+              Solo la barra sin discos
+            </span>
           ) : (
             result.platesPerSide.map((p: PlateCount) => (
               <span
                 key={p.plate.weight}
+                className="px-2.5 py-1 rounded-lg text-xs font-bold border border-white/10 shadow-sm"
                 style={{
                   backgroundColor: p.plate.color,
                   color: p.plate.textColor || '#FFFFFF',
-                  borderColor: p.plate.border || 'transparent',
                 }}
-                className="px-2.5 py-1 rounded-lg text-xs font-bold border shadow-sm"
               >
-                {p.countPerSide}× {p.plate.label}
+                {p.countPerSide} × {p.plate.label}
               </span>
             ))
           )}
         </div>
       </div>
 
-      {/* SVG BARBELL VISUALIZER */}
-      <div className="p-4 rounded-xl border border-white/10 bg-[#121214] flex flex-col items-center overflow-x-auto">
-        <span className="text-xs font-semibold text-gray-400 mb-2 self-start">
-          Esquema visual de la manga (Carga por lado)
-        </span>
+      {/* SVG OLYMPIC BARBELL VISUALIZER */}
+      <div className="p-5 rounded-2xl bg-black/40 border border-white/10 flex flex-col items-center justify-center overflow-x-auto">
         <svg
           viewBox="0 0 460 120"
-          className="w-full max-w-lg h-32 select-none"
-          role="img"
-          aria-label="Visualización gráfica de los discos cargados en la barra olímpica"
+          className="w-full max-w-xl h-28"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
         >
-          {/* Eje central de la barra (acero) */}
-          <rect x="0" y="54" width="460" height="12" fill="#4B5563" rx="2" />
+          {/* Barra central (lado izquierdo) */}
+          <rect x="0" y="52" width="50" height="16" fill="#4B5563" rx="2" />
+          <line
+            x1="10"
+            y1="52"
+            x2="10"
+            y2="68"
+            stroke="#9CA3AF"
+            strokeDasharray="2,2"
+            strokeWidth="1"
+          />
 
-          {/* Tope / Collar interior de la manga */}
+          {/* Collar interior (tope de la manga) */}
           <rect
             x="50"
-            y="35"
+            y="36"
             width="14"
-            height="50"
-            fill="#9CA3AF"
-            rx="2"
+            height="48"
+            fill="#D1D5DB"
             stroke="#374151"
+            strokeWidth="1.5"
+            rx="2"
+          />
+
+          {/* Manga olímpica (50mm de diámetro) */}
+          <rect
+            x="64"
+            y="46"
+            width="390"
+            height="28"
+            fill="#374151"
+            stroke="#1F2937"
             strokeWidth="1"
           />
           <rect x="64" y="48" width="390" height="24" fill="#6B7280" rx="1" />
@@ -289,11 +317,11 @@ export default function PlateLoaderCalculator({
 
       {/* DETAILED LIST BREAKDOWN */}
       <div className="space-y-2">
-        <h4 className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+        <h4 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
           Desglose para montar por cada extremo:
         </h4>
         {result.platesPerSide.length === 0 ? (
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-[var(--text-secondary)]">
             No se requieren discos adicionales. El peso deseado corresponde únicamente a la barra.
           </p>
         ) : (
@@ -301,19 +329,19 @@ export default function PlateLoaderCalculator({
             {result.platesPerSide.map((p: PlateCount) => (
               <li
                 key={p.plate.weight}
-                className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5"
+                className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5"
               >
                 <div className="flex items-center gap-2.5">
                   <span
-                    className="w-3.5 h-3.5 rounded-full border border-black/20 flex-shrink-0"
+                    className="w-3.5 h-3.5 rounded-full border border-black/20 flex-shrink-0 shadow-sm"
                     style={{ backgroundColor: p.plate.color }}
                   />
                   <span className="font-semibold text-white">
                     {p.countPerSide} × disco de {p.plate.label}
                   </span>
                 </div>
-                <span className="text-gray-400">
-                  Total lado: {p.countPerSide * p.plate.weight} {unit}
+                <span className="text-[var(--text-secondary)] font-medium">
+                  {p.countPerSide * p.plate.weight} {unit}
                 </span>
               </li>
             ))}

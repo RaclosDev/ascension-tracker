@@ -1,68 +1,65 @@
 import React, { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 interface Props {
   title: string;
+  icon?: React.ReactNode;
+  description?: string;
   defaultOpen?: boolean;
   children: React.ReactNode;
 }
 
-export default function CalculatorCard({ title, defaultOpen = false, children }: Props) {
+export default function CalculatorCard({
+  title,
+  icon,
+  description,
+  defaultOpen = false,
+  children,
+}: Props) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   const toggle = () => setIsOpen(!isOpen);
 
-  //   const handleKeyDown = (e: React.KeyboardEvent) => {
-  //     if (e.key === 'Enter' || e.key === ' ') {
-  //       e.preventDefault();
-  //       toggle();
-  //     }
-  //   };
-  //
   return (
     <div
-      className="card accordion-card"
-      style={{ padding: isOpen ? 'var(--space-lg)' : '1rem 1.25rem', transition: 'all 0.25s ease' }}
+      className={`card accordion-card transition-all duration-300 ease-out ${
+        isOpen ? 'p-5 sm:p-6' : 'px-5 py-4'
+      }`}
     >
       <button
-        className="accordion-header"
+        type="button"
+        className="accordion-header flex justify-between items-center w-full cursor-pointer select-none border-none bg-transparent text-left p-0"
         onClick={toggle}
         aria-expanded={isOpen}
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          cursor: 'pointer',
-          userSelect: 'none',
-          border: 'none',
-          background: 'none',
-          textAlign: 'left',
-          width: '100%',
-          padding: 0,
-        }}
       >
-        <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>
-          {title}
-        </span>
-        <span
-          style={{
-            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.25s ease',
-            fontSize: '0.8rem',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          ▾
-        </span>
+        <div className="flex items-center gap-3">
+          {icon && (
+            <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 text-primary flex items-center justify-center shrink-0">
+              {icon}
+            </div>
+          )}
+          <div>
+            <h2 className="card-title m-0 text-base font-semibold text-white tracking-tight">
+              {title}
+            </h2>
+            {description && (
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5 font-normal">
+                {description}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <ChevronDown
+          size={18}
+          className={`text-muted-foreground transition-transform duration-300 shrink-0 ml-2 ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+        />
       </button>
+
       {isOpen && (
-        <div
-          className="accordion-content fade-in"
-          style={{
-            marginTop: '1.25rem',
-            borderTop: '1px solid var(--border-subtle)',
-            paddingTop: '1.25rem',
-          }}
-        >
+        <div className="accordion-content fade-in mt-5 pt-5 border-t border-[var(--border-subtle)]">
           {children}
         </div>
       )}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Dumbbell, Disc, Flame, PieChart, Percent, ArrowRightLeft } from 'lucide-react';
 import { SegmentedControl } from '../components/ui/segmented-control';
 import OneRepMaxCalculator from '../components/utilities/OneRepMaxCalculator';
 import PlateLoaderCalculator from '../components/utilities/PlateLoaderCalculator';
@@ -44,11 +45,18 @@ export default function UtilitiesPage() {
       <main role="region" aria-live="polite">
         {activeTab === 'training' && (
           <div className="flex flex-col gap-6">
-            <CalculatorCard title="Calculadora de 1RM y Porcentajes de Fuerza" defaultOpen={true}>
+            <CalculatorCard
+              title="Calculadora de 1RM y Porcentajes de Fuerza"
+              icon={<Dumbbell className="text-[var(--accent-primary)]" size={20} />}
+              description="Calcula tu repetición máxima teórica y zonas de entrenamiento de fuerza."
+              defaultOpen={true}
+            >
               <OneRepMaxCalculator />
             </CalculatorCard>
             <CalculatorCard
               title="Distribución de Discos en Barra (Plate Loader)"
+              icon={<Disc className="text-[var(--accent-primary)]" size={20} />}
+              description="Distribución óptima de discos por cada lado para barra olímpica."
               defaultOpen={true}
             >
               <PlateLoaderCalculator />
@@ -58,13 +66,28 @@ export default function UtilitiesPage() {
 
         {activeTab === 'nutrition' && (
           <div className="flex flex-col gap-6">
-            <CalculatorCard title="Gasto Energético (BMR y TDEE)" defaultOpen={true}>
+            <CalculatorCard
+              title="Gasto Energético (BMR y TDEE)"
+              icon={<Flame className="text-[var(--accent-primary)]" size={20} />}
+              description="Calcula tu tasa metabólica basal y gasto calórico diario total."
+              defaultOpen={true}
+            >
               <TdeeCalculator />
             </CalculatorCard>
-            <CalculatorCard title="Reparto de Macronutrientes por Comidas" defaultOpen={true}>
+            <CalculatorCard
+              title="Reparto de Macronutrientes por Comidas"
+              icon={<PieChart className="text-[var(--accent-primary)]" size={20} />}
+              description="Planifica gramos y porcentajes de macronutrientes distribuidos por plato."
+              defaultOpen={true}
+            >
               <MacroDistributionCalculator />
             </CalculatorCard>
-            <CalculatorCard title="Composición Corporal y Grasa Marina (Navy)" defaultOpen={false}>
+            <CalculatorCard
+              title="Composición Corporal y Grasa Marina (Navy)"
+              icon={<Percent className="text-[var(--accent-primary)]" size={20} />}
+              description="Estimación de porcentaje graso y masa magra según el método US Navy."
+              defaultOpen={false}
+            >
               <NutritionCalculators />
             </CalculatorCard>
           </div>
@@ -72,7 +95,12 @@ export default function UtilitiesPage() {
 
         {activeTab === 'tools' && (
           <div className="flex flex-col gap-6">
-            <CalculatorCard title="Conversor de Unidades Fitness" defaultOpen={true}>
+            <CalculatorCard
+              title="Conversor de Unidades Fitness"
+              icon={<ArrowRightLeft className="text-[var(--accent-primary)]" size={20} />}
+              description="Conversión rápida entre unidades métricas e imperiales de peso, talla y distancia."
+              defaultOpen={true}
+            >
               <UnitConverter />
             </CalculatorCard>
           </div>

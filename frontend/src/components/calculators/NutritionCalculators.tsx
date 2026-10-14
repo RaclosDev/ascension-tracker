@@ -1,23 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api/client';
-import CalculatorCard from './CalculatorCard';
 import {
   parseNumber,
-  calcBmr,
-  calcTdee,
   calcBodyFatNavy,
   calcBodyComposition,
 } from '../../utils/nutritionCalculators';
 
 export default function NutritionCalculators() {
   const [sex, setSex] = useState<'M' | 'F'>('M');
-  const [age, setAge] = useState<string>('');
   const [heightCm, setHeightCm] = useState<string>('');
   const [weightKg, setWeightKg] = useState<string>('');
-  const [activityFactor, setActivityFactor] = useState<string>('1.2');
 
-  // Body fat inputs
+  // Medidas antropométricas
   const [waistCm, setWaistCm] = useState<string>('');
   const [neckCm, setNeckCm] = useState<string>('');
   const [hipCm, setHipCm] = useState<string>('');
@@ -26,48 +21,44 @@ export default function NutritionCalculators() {
     currentWeight?: number;
   }
   interface SettingsData {
-    age?: number;
     heightCm?: number;
     sex?: 'M' | 'F';
-    activityFactor?: number;
   }
 
-  const { data: dashboardData, isError: dashboardError } = useQuery<DashboardData>({
+  const { data: dashboardData } = useQuery<DashboardData>({
     queryKey: ['dashboard'],
-    queryFn: () => api.get('/weights/dashboard').then((res) => res.data),
+    queryFn: () =>
+      api
+        .get('/weights/dashboard')
+        .then((res) => res.data)
+        .catch(() => null),
   });
-  const { data: settingsData, isError: settingsError } = useQuery<SettingsData>({
+
+  const { data: settingsData } = useQuery<SettingsData>({
     queryKey: ['settings'],
-    queryFn: () => api.get('/settings').then((res) => res.data),
+    queryFn: () =>
+      api
+        .get('/settings')
+        .then((res) => res.data)
+        .catch(() => null),
   });
 
   useEffect(() => {
-    if (dashboardData?.currentWeight) {
+    if (dashboardData?.currentWeight && !weightKg) {
       setWeightKg(String(dashboardData.currentWeight));
     }
     if (settingsData) {
-      const s = settingsData;
-      if (s.age) setAge(String(s.age));
-      if (s.heightCm) setHeightCm(String(s.heightCm));
-      if (s.sex) setSex(s.sex);
-      if (s.activityFactor) setActivityFactor(String(s.activityFactor));
+      if (settingsData.heightCm && !heightCm) setHeightCm(String(settingsData.heightCm));
+      if (settingsData.sex) setSex(settingsData.sex);
     }
   }, [dashboardData, settingsData]);
 
-  if (dashboardError || settingsError)
-    return <div className="text-red-500">Error cargando datos...</div>;
-
-  // Base calculations
-  const pAge = parseNumber(age);
+  // Cálculos
   const pHeight = parseNumber(heightCm);
   const pWeight = parseNumber(weightKg);
-  const pAct = parseNumber(activityFactor) || 1.2;
   const pWaist = parseNumber(waistCm);
   const pNeck = parseNumber(neckCm);
   const pHip = parseNumber(hipCm);
-
-  const bmr = pWeight && pHeight && pAge ? calcBmr(sex, pWeight, pHeight, pAge) : null;
-  const tdee = bmr ? calcTdee(bmr, pAct) : null;
 
   const bfPct = calcBodyFatNavy({
     sex,
@@ -76,145 +67,193 @@ export default function NutritionCalculators() {
     neckCm: pNeck || 0,
     hipCm: pHip || 0,
   });
+
   const bodyComp = bfPct && pWeight ? calcBodyComposition(pWeight, bfPct) : null;
 
   return (
-    <div style={{ marginTop: '2rem' }}>
-      <h3
-        style={{
-          fontSize: '1.25rem',
-          fontWeight: 800,
-          color: 'var(--text-primary)',
-          marginBottom: '1.5rem',
-          letterSpacing: '-0.02em',
-        }}
-      >
-        Calculadoras de Nutrición
-      </h3>
+    <div className="space-y-6">
+      <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+        Estima tu porcentaje de grasa corporal y masa magra mediante el método biométrico de la
+        Marina de EE.UU. (US Navy Body Fat Formula).
+      </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        {/* TDEE Card */}
-        <CalculatorCard title="Gasto de mantenimiento (TDEE)">
-          {tdee && bmr ? (
-            <div>
-              <div className="kpi-card" style={{ textAlign: 'center', padding: '24px' }}>
-                <div
-                  className="kpi-value"
-                  style={{ color: 'var(--accent-primary)', fontSize: '2.5rem' }}
-                >
-                  {Math.round(tdee)} kcal
-                </div>
-                <div className="kpi-detail">Gasto Energético Diario (TDEE)</div>
-                <div
-                  style={{ marginTop: '8px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}
-                >
-                  Tu metabolismo basal (BMR) es de {Math.round(bmr)} kcal.
-                </div>
-              </div>
-            </div>
-          ) : (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Rellena tu sexo, edad, altura, peso y nivel de actividad en Ajustes.
-            </p>
-          )}
-        </CalculatorCard>
-
-        {/* Body fat Card */}
-        <CalculatorCard title="% de grasa corporal (método Marina)">
-          <div className="utilities-grid" style={{ marginBottom: '16px' }}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="calc-bf-waist">
-                Cintura (cm)
-              </label>
-              <input
-                id="calc-bf-waist"
-                type="number"
-                className="form-input"
-                value={waistCm}
-                onChange={(e) => setWaistCm(e.target.value)}
-                placeholder="A la altura del ombligo"
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label" htmlFor="calc-bf-neck">
-                Cuello (cm)
-              </label>
-              <input
-                id="calc-bf-neck"
-                type="number"
-                className="form-input"
-                value={neckCm}
-                onChange={(e) => setNeckCm(e.target.value)}
-                placeholder="Por debajo de la nuez"
-              />
-            </div>
-            {sex === 'F' && (
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label" htmlFor="calc-bf-hip">
-                  Cadera (cm)
-                </label>
-                <input
-                  id="calc-bf-hip"
-                  type="number"
-                  className="form-input"
-                  value={hipCm}
-                  onChange={(e) => setHipCm(e.target.value)}
-                  placeholder="Parte más ancha"
-                />
-              </div>
-            )}
-          </div>
-
-          {bfPct ? (
-            <div>
-              <div
-                className="kpi-card"
-                style={{ marginBottom: '16px', textAlign: 'center', padding: '24px' }}
-              >
-                <div
-                  className="kpi-value"
-                  style={{ color: 'var(--accent-primary)', fontSize: '2.5rem' }}
-                >
-                  {bfPct.toFixed(1)}%
-                </div>
-                <div className="kpi-detail">Grasa Corporal Estimada</div>
-              </div>
-              {bodyComp && (
-                <div className="utilities-grid">
-                  <div className="kpi-card">
-                    <div className="kpi-value">{bodyComp.fatKg.toFixed(1)} kg</div>
-                    <div className="kpi-detail">Masa Grasa</div>
-                  </div>
-                  <div className="kpi-card">
-                    <div className="kpi-value">{bodyComp.leanKg.toFixed(1)} kg</div>
-                    <div className="kpi-detail">Masa Magra</div>
-                  </div>
-                </div>
-              )}
-              <p style={{ marginTop: '16px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                Nota: Este método tiene un margen de error de ±3-4%. Para mayor precisión usa
-                plicómetros (calipers) o DEXA.
-              </p>
-            </div>
-          ) : (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Faltan medidas para calcular (o los valores no son válidos).
-            </p>
-          )}
-        </CalculatorCard>
+      {/* Selector de Sexo */}
+      <div>
+        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2 uppercase tracking-wider">
+          Sexo Biológico
+        </label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setSex('M')}
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all border ${
+              sex === 'M'
+                ? 'bg-white/10 text-white border-[var(--accent-primary)] shadow-[0_0_12px_var(--accent-glow)]'
+                : 'bg-white/5 text-[var(--text-secondary)] border-white/5 hover:border-white/20'
+            }`}
+          >
+            Hombre
+          </button>
+          <button
+            type="button"
+            onClick={() => setSex('F')}
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all border ${
+              sex === 'F'
+                ? 'bg-white/10 text-white border-[var(--accent-primary)] shadow-[0_0_12px_var(--accent-glow)]'
+                : 'bg-white/5 text-[var(--text-secondary)] border-white/5 hover:border-white/20'
+            }`}
+          >
+            Mujer
+          </button>
+        </div>
       </div>
 
-      <p
-        style={{
-          marginTop: '24px',
-          fontSize: '0.8rem',
-          color: 'var(--text-secondary)',
-          textAlign: 'center',
-        }}
-      >
-        Las calculadoras proporcionan estimaciones orientativas basadas en fórmulas estándar. No
-        sustituyen el consejo de un profesional médico o nutricionista.
-      </p>
+      {/* Grid de Inputs Base */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label
+            htmlFor="calc-bf-height"
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5"
+          >
+            Altura (cm)
+          </label>
+          <input
+            id="calc-bf-height"
+            type="number"
+            inputMode="decimal"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
+            value={heightCm}
+            onChange={(e) => setHeightCm(e.target.value)}
+            placeholder="Ej: 175"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="calc-bf-weight"
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5"
+          >
+            Peso actual (kg)
+          </label>
+          <input
+            id="calc-bf-weight"
+            type="number"
+            inputMode="decimal"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
+            value={weightKg}
+            onChange={(e) => setWeightKg(e.target.value)}
+            placeholder="Ej: 75.0"
+          />
+        </div>
+      </div>
+
+      {/* Grid de Medidas Antropométricas */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div>
+          <label
+            htmlFor="calc-bf-waist"
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5"
+          >
+            Cintura (cm)
+          </label>
+          <input
+            id="calc-bf-waist"
+            type="number"
+            inputMode="decimal"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
+            value={waistCm}
+            onChange={(e) => setWaistCm(e.target.value)}
+            placeholder="A nivel del ombligo"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="calc-bf-neck"
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5"
+          >
+            Cuello (cm)
+          </label>
+          <input
+            id="calc-bf-neck"
+            type="number"
+            inputMode="decimal"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
+            value={neckCm}
+            onChange={(e) => setNeckCm(e.target.value)}
+            placeholder="Debajo de la laringe"
+          />
+        </div>
+
+        {sex === 'F' && (
+          <div>
+            <label
+              htmlFor="calc-bf-hip"
+              className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5"
+            >
+              Cadera (cm)
+            </label>
+            <input
+              id="calc-bf-hip"
+              type="number"
+              inputMode="decimal"
+              className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
+              value={hipCm}
+              onChange={(e) => setHipCm(e.target.value)}
+              placeholder="Zona más ancha"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Resultados KPI */}
+      {bfPct ? (
+        <div className="space-y-4 pt-2">
+          <div className="p-5 rounded-2xl bg-white/5 border border-white/10 text-center">
+            <span className="text-xs uppercase font-bold text-[var(--text-secondary)] tracking-wider">
+              Grasa Corporal Estimada
+            </span>
+            <div className="text-4xl font-extrabold text-[var(--accent-primary)] my-1 tracking-tight font-display">
+              {bfPct.toFixed(1)}%
+            </div>
+            <p className="text-xs text-[var(--text-secondary)]">
+              Fórmula US Navy para {sex === 'M' ? 'hombres' : 'mujeres'}
+            </p>
+          </div>
+
+          {bodyComp && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
+                <span className="text-xs font-semibold text-[var(--text-secondary)]">
+                  Masa Grasa
+                </span>
+                <div className="text-2xl font-bold text-white mt-0.5 font-display">
+                  {bodyComp.fatKg.toFixed(1)}{' '}
+                  <span className="text-xs font-normal text-[var(--text-secondary)]">kg</span>
+                </div>
+              </div>
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
+                <span className="text-xs font-semibold text-[var(--text-secondary)]">
+                  Masa Magra
+                </span>
+                <div className="text-2xl font-bold text-white mt-0.5 font-display">
+                  {bodyComp.leanKg.toFixed(1)}{' '}
+                  <span className="text-xs font-normal text-[var(--text-secondary)]">kg</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <p className="text-xs text-gray-500 text-center pt-1">
+            * Margen de error estimado: ±3-4%. Para calibración exacta deportiva se recomienda
+            caliperometría de 7 pliegues o escaneo DEXA.
+          </p>
+        </div>
+      ) : (
+        <div className="p-4 rounded-xl bg-white/5 border border-dashed border-white/10 text-center text-xs text-[var(--text-secondary)]">
+          Introduce las medidas de altura, cintura y cuello{sex === 'F' ? ' y cadera' : ''} para
+          calcular tu porcentaje de grasa y composición magra.
+        </div>
+      )}
     </div>
   );
 }

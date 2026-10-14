@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Check, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Plus, Trash2, Timer } from 'lucide-react';
 import { getExerciseMap } from '@/lib/workout/exercises';
 import { isPrSet, previousSetLabel, formatVariant, formatRestFriendly } from '@/lib/workout/format';
 import { initAudioAndNotifications } from '@/lib/workout/notifications';
@@ -423,15 +423,19 @@ export const ExerciseCard = React.memo(function ExerciseCard({
             </h3>
             <div className="exercise-card-meta">
               <span>{meta ? MUSCLE_LABEL[meta.muscle] : ''}</span>
-              <span style={{ color: 'var(--border-medium)' }}>|</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <span className="exercise-card-meta-dot">•</span>
+              <div
+                className="exercise-card-rest-pill"
+                onClick={(e) => e.stopPropagation()}
+                title="Tiempo de descanso"
+              >
+                <Timer size={12} className="text-primary opacity-80" />
                 <select
                   value={restTimers[row.exerciseId] ?? restPreset}
                   onChange={(e) => {
                     e.stopPropagation();
                     setExerciseRestTimer(row.exerciseId, Number(e.target.value));
                   }}
-                  onClick={(e) => e.stopPropagation()}
                   className="exercise-card-rest-select"
                   aria-label="Tiempo de descanso para este ejercicio"
                 >
@@ -441,7 +445,8 @@ export const ExerciseCard = React.memo(function ExerciseCard({
                     </option>
                   ))}
                 </select>
-              </span>
+                <ChevronDown size={10} className="exercise-card-rest-chevron opacity-60" />
+              </div>
             </div>
           </div>
         </div>
