@@ -1,7 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Check, ChevronDown, ChevronUp, Plus, Trash2, Timer } from 'lucide-react';
 import { getExerciseMap } from '@/lib/workout/exercises';
-import { isPrSet, previousSetLabel, formatVariant, formatRestFriendly } from '@/lib/workout/format';
+import {
+  isPrSet,
+  previousSetLabel,
+  formatVariant,
+  formatRestFriendly,
+  matchVariant,
+} from '@/lib/workout/format';
 import { initAudioAndNotifications } from '@/lib/workout/notifications';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { VariantSelector } from './variant-selector';
@@ -240,8 +246,7 @@ export const SwipeableSetRow = React.memo(
       prev.isCardio === next.isCardio &&
       prev.cols === next.cols &&
       prev.exerciseId === next.exerciseId &&
-      prev.variant?.grip === next.variant?.grip &&
-      prev.variant?.machine === next.variant?.machine &&
+      matchVariant(prev.variant, next.variant) &&
       prev.recentWorkouts === next.recentWorkouts
     );
   },
@@ -420,8 +425,12 @@ export const ExerciseCard = React.memo(function ExerciseCard({
               }
             </h3>
             <div className="exercise-card-meta">
-              <span>{meta ? MUSCLE_LABEL[meta.muscle] : ''}</span>
-              <span className="exercise-card-meta-dot">•</span>
+              {meta?.muscle && (
+                <>
+                  <span>{MUSCLE_LABEL[meta.muscle]}</span>
+                  <span className="exercise-card-meta-dot">•</span>
+                </>
+              )}
               <div
                 className="exercise-card-rest-pill"
                 onClick={(e) => e.stopPropagation()}

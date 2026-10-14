@@ -232,7 +232,7 @@ export const useWorkoutStore = create<WorkoutState>()(
       syncFromPreferences: (prefs) => {
         if (!prefs) return;
         set((state) => ({
-          restTimers: { ...prefs.restTimers, ...state.restTimers },
+          restTimers: { ...state.restTimers, ...prefs.restTimers },
           restPreset: prefs.restPreset ?? state.restPreset,
         }));
       },
