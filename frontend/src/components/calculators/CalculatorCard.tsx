@@ -22,13 +22,12 @@ export default function CalculatorCard({
 
   return (
     <div
-      className={`card accordion-card transition-all duration-300 ease-out ${
-        isOpen ? 'p-4 sm:p-5' : 'px-4 py-3.5 sm:px-5 sm:py-4'
-      }`}
+      className={`card accordion-card transition-all duration-300 ease-out ${isOpen ? 'open' : ''}`}
       style={{
         background: 'var(--bg-card, #1C1C1E)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
         borderRadius: '16px',
+        padding: isOpen ? '1.15rem 1.25rem' : '0.875rem 1.15rem',
       }}
     >
       <button
@@ -61,7 +60,14 @@ export default function CalculatorCard({
         </span>
       </button>
       {isOpen && (
-        <div className="accordion-content fade-in mt-4 pt-4 border-t border-white/10">
+        <div
+          className="accordion-content fade-in"
+          style={{
+            marginTop: '0.85rem',
+            paddingTop: '0.85rem',
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          }}
+        >
           {children}
         </div>
       )}

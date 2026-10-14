@@ -26,6 +26,11 @@ test.describe('Utilities & Biomechanical Calculators Flows', () => {
     await page.goto('/utilities');
     await expect(page).toHaveURL(/.*utilities.*/, { timeout: 15000 });
 
+    // Desplegar acordeón de Gasto por Pasos
+    const stepsButton = page.getByRole('button', { name: /gasto por pasos/i });
+    await expect(stepsButton).toBeVisible({ timeout: 15000 });
+    await stepsButton.click();
+
     const weightInput = page.getByLabel(/peso corporal \(kg\)/i);
     const stepsInput = page.getByLabel(/pasos totales/i);
 
@@ -49,6 +54,11 @@ test.describe('Utilities & Biomechanical Calculators Flows', () => {
 
     await page.goto('/utilities');
     await expect(page).toHaveURL(/.*utilities.*/, { timeout: 15000 });
+
+    // Desplegar acordeón de Gasto Metabólico
+    const metabolicButton = page.getByRole('button', { name: /gasto metabólico por tiempo/i });
+    await expect(metabolicButton).toBeVisible({ timeout: 15000 });
+    await metabolicButton.click();
 
     const weightInput = page.getByLabel(/^peso \(kg\)$/i);
     const heightInput = page.getByLabel(/altura \(m\)/i);
@@ -100,12 +110,12 @@ test.describe('Utilities & Biomechanical Calculators Flows', () => {
 
     // Verificar presencia de tarjetas de nutrición
     await expect(page.getByText('Gasto de mantenimiento (TDEE)')).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('% de grasa corporal (método Marina)')).toBeVisible({
+    await expect(page.getByText(/% Grasa Corporal \(Marina\)/i)).toBeVisible({
       timeout: 15000,
     });
 
     // Abrir acordeón de grasa corporal
-    const bfHeader = page.getByRole('button', { name: /% de grasa corporal/i });
+    const bfHeader = page.getByRole('button', { name: /grasa corporal/i });
     await expect(bfHeader).toBeVisible({ timeout: 15000 });
     await bfHeader.click();
 
@@ -131,6 +141,8 @@ test.describe('Utilities & Biomechanical Calculators Flows', () => {
     await aiHeader.click();
 
     // Comprobar que se expande el contenedor del asistente
-    await expect(page.getByText(/tus macros restantes/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Tus Macros Restantes de Hoy', { exact: true })).toBeVisible({
+      timeout: 15000,
+    });
   });
 });
