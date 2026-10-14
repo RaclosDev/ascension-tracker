@@ -1,4 +1,4 @@
-﻿export type PageFoodItem = import('./api').SavedFood &
+export type PageFoodItem = import('./api').SavedFood &
   import('./api').FoodLog & {
     quantity?: number;
     product?: string;
