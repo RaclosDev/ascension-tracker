@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 interface Props {
   title: string;
@@ -11,17 +12,16 @@ export default function CalculatorCard({ title, defaultOpen = false, children }:
 
   const toggle = () => setIsOpen(!isOpen);
 
-  //   const handleKeyDown = (e: React.KeyboardEvent) => {
-  //     if (e.key === 'Enter' || e.key === ' ') {
-  //       e.preventDefault();
-  //       toggle();
-  //     }
-  //   };
-  //
   return (
     <div
       className="card accordion-card"
-      style={{ padding: isOpen ? 'var(--space-lg)' : '1rem 1.25rem', transition: 'all 0.25s ease' }}
+      style={{
+        padding: '1.25rem 1.5rem',
+        borderRadius: '20px',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-medium)',
+        transition: 'all 0.25s ease',
+      }}
     >
       <button
         className="accordion-header"
@@ -40,19 +40,26 @@ export default function CalculatorCard({ title, defaultOpen = false, children }:
           padding: 0,
         }}
       >
-        <span className="card-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>
-          {title}
-        </span>
         <span
+          className="card-title"
           style={{
-            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.25s ease',
-            fontSize: '0.8rem',
-            color: 'var(--text-secondary)',
+            margin: 0,
+            fontSize: '1.05rem',
+            fontWeight: 700,
+            color: 'var(--text-primary)',
           }}
         >
-          ▾
+          {title}
         </span>
+        <ChevronDown
+          size={18}
+          style={{
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+            color: 'var(--text-secondary)',
+            flexShrink: 0,
+          }}
+        />
       </button>
       {isOpen && (
         <div

@@ -118,15 +118,21 @@ export default function UtilitiesPage() {
               role="status"
               aria-live="polite"
               className="kpi-card accent mt-4"
-              style={{ textAlign: 'center', padding: '1.25rem' }}
+              style={{
+                textAlign: 'center',
+                padding: '1.5rem',
+                borderRadius: '16px',
+                background: 'rgba(0, 133, 255, 0.05)',
+                border: '1px solid rgba(0, 133, 255, 0.2)',
+              }}
             >
               <div className="kpi-label">Calorías Quemadas</div>
               <div
                 className="kpi-value accent"
-                style={{ fontSize: '2rem', color: 'var(--accent-primary)' }}
+                style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent-primary)' }}
               >
                 {calc1Result > 0 ? calc1Result.toFixed(2) : '0.00'}{' '}
-                <span className="text-base font-normal">kcal</span>
+                <span style={{ fontSize: '1.2rem', fontWeight: 500 }}>kcal</span>
               </div>
             </div>
           </CalculatorCard>
@@ -221,18 +227,28 @@ export default function UtilitiesPage() {
               role="status"
               aria-live="polite"
               className="kpi-card success mt-4"
-              style={{ textAlign: 'center', padding: '1.25rem' }}
+              style={{
+                textAlign: 'center',
+                padding: '1.5rem',
+                borderRadius: '16px',
+                background: 'rgba(16, 185, 129, 0.05)',
+                border: '1px solid rgba(16, 185, 129, 0.2)',
+              }}
             >
               <div className="kpi-label">Gasto Metabólico Total</div>
               <div
                 className="kpi-value success"
-                style={{ fontSize: '2rem', color: 'var(--color-success, #10b981)' }}
+                style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 800,
+                  color: 'var(--color-success, #10b981)',
+                }}
               >
                 {metabolicResult.kcal > 0 ? metabolicResult.kcal.toFixed(2) : '0.00'}{' '}
-                <span className="text-base font-normal">kcal</span>
+                <span style={{ fontSize: '1.2rem', fontWeight: 500 }}>kcal</span>
               </div>
               {metabolicResult.vo2 > 0 && (
-                <div className="text-xs text-gray-400 mt-1">
+                <div className="text-xs text-gray-400 mt-2">
                   VO2 Consumido: {metabolicResult.vo2.toFixed(2)} ml/kg/min
                 </div>
               )}

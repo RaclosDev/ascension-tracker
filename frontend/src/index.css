@@ -4781,7 +4781,62 @@ button, a, input, select, textarea, [role=button], [onclick] {
   align-items: center;
   gap: 0.5rem;
 }
+.exercise-card-variant-badge {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+.exercise-card-variant-badge:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+}
+.exercise-card-meta-dot {
+  color: var(--border-medium);
+  font-size: 0.75rem;
+  line-height: 1;
+  user-select: none;
+  opacity: 0.6;
+}
+.exercise-card-rest-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  padding: 0.2rem 0.55rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  line-height: 1.2;
+}
+.exercise-card-rest-pill:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px var(--accent-glow, rgba(0, 133, 255, 0.2));
+}
+.exercise-card-rest-pill:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-glow, rgba(0, 133, 255, 0.25));
+}
+.exercise-card-rest-icon {
+  color: var(--accent-primary-light, #339cff);
+  opacity: 0.85;
+  flex-shrink: 0;
+}
 .exercise-card-rest-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   background: transparent;
   border: none;
   font-size: 0.72rem;
@@ -4791,9 +4846,23 @@ button, a, input, select, textarea, [role=button], [onclick] {
   cursor: pointer;
   padding: 0;
   font-family: var(--font-main);
+  line-height: 1.2;
 }
 .exercise-card-rest-select option {
-  background: var(--bg-primary);
+  background: #1C1C1E;
+  color: #FFFFFF;
+  padding: 0.5rem;
+}
+.exercise-card-rest-chevron {
+  pointer-events: none;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  opacity: 0.7;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+.exercise-card-rest-pill:hover .exercise-card-rest-chevron {
+  color: var(--text-primary);
+  opacity: 1;
 }
 .exercise-card-actions {
   display: flex;

@@ -79,32 +79,34 @@ export default function NutritionCalculators() {
   const bodyComp = bfPct && pWeight ? calcBodyComposition(pWeight, bfPct) : null;
 
   return (
-    <div style={{ marginTop: '2rem' }}>
-      <h3
-        style={{
-          fontSize: '1.25rem',
-          fontWeight: 800,
-          color: 'var(--text-primary)',
-          marginBottom: '1.5rem',
-          letterSpacing: '-0.02em',
-        }}
-      >
-        Calculadoras de Nutrición
-      </h3>
+    <div style={{ marginTop: '1.5rem' }}>
+      <h2 className="text-lg font-bold text-white mb-4">Calculadoras de Nutrición</h2>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {/* TDEE Card */}
         <CalculatorCard title="Gasto de mantenimiento (TDEE)">
           {tdee && bmr ? (
             <div>
-              <div className="kpi-card" style={{ textAlign: 'center', padding: '24px' }}>
+              <div
+                className="kpi-card accent"
+                style={{
+                  textAlign: 'center',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  background: 'rgba(0, 133, 255, 0.05)',
+                  border: '1px solid rgba(0, 133, 255, 0.2)',
+                }}
+              >
                 <div
-                  className="kpi-value"
-                  style={{ color: 'var(--accent-primary)', fontSize: '2.5rem' }}
+                  className="kpi-value accent"
+                  style={{ color: 'var(--accent-primary)', fontSize: '2.5rem', fontWeight: 800 }}
                 >
-                  {Math.round(tdee)} kcal
+                  {Math.round(tdee)}{' '}
+                  <span style={{ fontSize: '1.2rem', fontWeight: 500 }}>kcal</span>
                 </div>
-                <div className="kpi-detail">Gasto Energético Diario (TDEE)</div>
+                <div className="kpi-label" style={{ marginTop: '4px' }}>
+                  Gasto Energético Diario (TDEE)
+                </div>
                 <div
                   style={{ marginTop: '8px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}
                 >
@@ -168,26 +170,59 @@ export default function NutritionCalculators() {
           {bfPct ? (
             <div>
               <div
-                className="kpi-card"
-                style={{ marginBottom: '16px', textAlign: 'center', padding: '24px' }}
+                className="kpi-card accent"
+                style={{
+                  marginBottom: '16px',
+                  textAlign: 'center',
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  background: 'rgba(0, 133, 255, 0.05)',
+                  border: '1px solid rgba(0, 133, 255, 0.2)',
+                }}
               >
                 <div
-                  className="kpi-value"
-                  style={{ color: 'var(--accent-primary)', fontSize: '2.5rem' }}
+                  className="kpi-value accent"
+                  style={{ color: 'var(--accent-primary)', fontSize: '2.5rem', fontWeight: 800 }}
                 >
                   {bfPct.toFixed(1)}%
                 </div>
-                <div className="kpi-detail">Grasa Corporal Estimada</div>
+                <div className="kpi-label" style={{ marginTop: '4px' }}>
+                  Grasa Corporal Estimada
+                </div>
               </div>
               {bodyComp && (
-                <div className="utilities-grid">
-                  <div className="kpi-card">
-                    <div className="kpi-value">{bodyComp.fatKg.toFixed(1)} kg</div>
-                    <div className="kpi-detail">Masa Grasa</div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div
+                    className="kpi-card"
+                    style={{
+                      textAlign: 'center',
+                      padding: '1rem',
+                      borderRadius: '14px',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid var(--border-subtle)',
+                    }}
+                  >
+                    <div className="kpi-value" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+                      {bodyComp.fatKg.toFixed(1)}{' '}
+                      <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>kg</span>
+                    </div>
+                    <div className="kpi-label">Masa Grasa</div>
                   </div>
-                  <div className="kpi-card">
-                    <div className="kpi-value">{bodyComp.leanKg.toFixed(1)} kg</div>
-                    <div className="kpi-detail">Masa Magra</div>
+                  <div
+                    className="kpi-card"
+                    style={{
+                      textAlign: 'center',
+                      padding: '1rem',
+                      borderRadius: '14px',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid var(--border-subtle)',
+                    }}
+                  >
+                    <div className="kpi-value" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+                      {bodyComp.leanKg.toFixed(1)}{' '}
+                      <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>kg</span>
+                    </div>
+                    <div className="kpi-label">Masa Magra</div>
                   </div>
                 </div>
               )}
