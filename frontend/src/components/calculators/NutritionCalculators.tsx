@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import api from '../../api/client';
 import CalculatorCard from './CalculatorCard';
 import {
   parseNumber,
@@ -34,12 +33,13 @@ export default function NutritionCalculators() {
 
   const { data: dashboardData, isError: dashboardError } = useQuery<DashboardData>({
     queryKey: ['dashboard'],
-    queryFn: () => api.get('/weights/dashboard').then((res) => res.data),
   });
   const { data: settingsData, isError: settingsError } = useQuery<SettingsData>({
     queryKey: ['settings'],
-    queryFn: () => api.get('/settings').then((res) => res.data),
   });
+
+  if (dashboardError || settingsError)
+    return <div className="text-red-500">Error cargando datos...</div>;
 
   useEffect(() => {
     if (dashboardData?.currentWeight) {
@@ -53,9 +53,6 @@ export default function NutritionCalculators() {
       if (s.activityFactor) setActivityFactor(String(s.activityFactor));
     }
   }, [dashboardData, settingsData]);
-
-  if (dashboardError || settingsError)
-    return <div className="text-red-500">Error cargando datos...</div>;
 
   // Base calculations
   const pAge = parseNumber(age);

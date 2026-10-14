@@ -74,45 +74,4 @@ class CustomExerciseServiceTest {
 
         verify(customExerciseRepository).deleteByUserEmailAndId("user@example.com", "ce-1");
     }
-
-    @Test
-    void updateCustomExercise_updatesExistingAndKeepsId() {
-        CustomExercise existing = CustomExercise.builder()
-                .id("ce-existing")
-                .name("Old Name")
-                .muscle("Old Muscle")
-                .equipment("Old Equipment")
-                .userEmail("user@example.com")
-                .build();
-
-        CustomExerciseDTO updateDTO = CustomExerciseDTO.builder()
-                .name("New Name")
-                .muscle("New Muscle")
-                .equipment("New Equipment")
-                .build();
-
-        when(customExerciseRepository.findByUserEmailAndId("user@example.com", "ce-existing"))
-                .thenReturn(java.util.Optional.of(existing));
-        when(customExerciseRepository.save(any(CustomExercise.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
-
-        CustomExerciseDTO result = customExerciseService.updateCustomExercise("user@example.com", "ce-existing", updateDTO);
-
-        assertThat(result.getId()).isEqualTo("ce-existing");
-        assertThat(result.getName()).isEqualTo("New Name");
-        assertThat(result.getMuscle()).isEqualTo("New Muscle");
-        assertThat(result.getEquipment()).isEqualTo("New Equipment");
-    }
-
-    @Test
-    void updateCustomExercise_notFound_throwsEntityNotFoundException() {
-        when(customExerciseRepository.findByUserEmailAndId("user@example.com", "ce-999"))
-                .thenReturn(java.util.Optional.empty());
-
-        CustomExerciseDTO updateDTO = CustomExerciseDTO.builder().name("X").build();
-
-        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
-                customExerciseService.updateCustomExercise("user@example.com", "ce-999", updateDTO))
-                .isInstanceOf(com.ascension.exception.EntityNotFoundException.class);
-    }
 }

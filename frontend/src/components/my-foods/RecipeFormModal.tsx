@@ -320,8 +320,6 @@ export default function RecipeFormModal({
                     cursor: 'pointer',
                   }}
                   onClick={() => handleDeleteRecipe(editingRecipeId)}
-                  aria-label="Eliminar receta"
-                  title="Eliminar receta"
                 >
                   <Trash2 size={16} />
                 </button>

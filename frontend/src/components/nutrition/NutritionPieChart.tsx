@@ -32,9 +32,8 @@ export default function NutritionPieChart({ pieData }: NutritionPieChartProps) {
               (a: number, b: { value: number }) => a + b.value,
               0,
             );
-            const percentage = total > 0 ? ((Number(value) / total) * 100).toFixed(1) : '0.0';
             return [
-              `${Number(value).toFixed(0)} kcal (${percentage}%)`,
+              `${Number(value).toFixed(0)} kcal (${((Number(value) / total) * 100).toFixed(1)}%)`,
               name,
             ];
           }}

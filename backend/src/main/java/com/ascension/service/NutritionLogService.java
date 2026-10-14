@@ -159,40 +159,21 @@ public class NutritionLogService {
             for (Map<String, Object> f : foods) {
                 FoodLogDTO dto = new FoodLogDTO();
                 dto.setDate(date);
-                dto.setMealIndex(parseIntSafe(f.get("mealIndex"), defaultMealIndex));
-                dto.setProduct(f.get("product") != null ? f.get("product").toString() : "");
-                dto.setQuantity(parseDoubleSafe(f.get("quantity"), 0.0));
-                dto.setKcal(parseDoubleSafe(f.get("kcal"), 0.0));
-                dto.setProtein(parseDoubleSafe(f.get("protein"), 0.0));
-                dto.setCarbs(parseDoubleSafe(f.get("carbs"), 0.0));
-                dto.setFat(parseDoubleSafe(f.get("fat"), 0.0));
+                Number fMeal = (Number) f.get("mealIndex");
+                dto.setMealIndex(fMeal != null ? fMeal.intValue() : defaultMealIndex);
+                dto.setProduct((String) f.get("product"));
+                dto.setQuantity(((Number) f.get("quantity")).doubleValue());
+                dto.setKcal(((Number) f.get("kcal")).doubleValue());
+                dto.setProtein(((Number) f.get("protein")).doubleValue());
+                dto.setCarbs(((Number) f.get("carbs")).doubleValue());
+                dto.setFat(((Number) f.get("fat")).doubleValue());
                 if (f.containsKey("portionsJson") && f.get("portionsJson") != null) {
-                    dto.setPortionsJson(f.get("portionsJson").toString());
+                    dto.setPortionsJson((String) f.get("portionsJson"));
                 }
                 added.add(addFoodLog(userEmail, dto));
             }
         }
         return added;
-    }
-
-    private double parseDoubleSafe(Object val, double defaultVal) {
-        if (val == null) return defaultVal;
-        if (val instanceof Number n) return n.doubleValue();
-        try {
-            return Double.parseDouble(val.toString().trim());
-        } catch (Exception e) {
-            return defaultVal;
-        }
-    }
-
-    private int parseIntSafe(Object val, int defaultVal) {
-        if (val == null) return defaultVal;
-        if (val instanceof Number n) return n.intValue();
-        try {
-            return Integer.parseInt(val.toString().trim());
-        } catch (Exception e) {
-            return defaultVal;
-        }
     }
 
     private FoodLogDTO toFoodLogDTO(FoodLog log) {

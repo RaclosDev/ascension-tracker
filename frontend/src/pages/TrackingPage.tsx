@@ -127,8 +127,6 @@ export default function TrackingPage() {
         await fetchData();
         queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
         queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-        queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
-        queryClient.invalidateQueries({ queryKey: ['weights'] });
       }
       setModalData(null);
     } catch (err: unknown) {
@@ -147,8 +145,6 @@ export default function TrackingPage() {
       await fetchData();
       queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
-      queryClient.invalidateQueries({ queryKey: ['weights'] });
       toast.success('Registros eliminados');
       setModalData(null);
     } catch (err: unknown) {

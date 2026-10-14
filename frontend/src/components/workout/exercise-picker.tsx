@@ -32,7 +32,7 @@ export function ExercisePicker() {
     return id;
   };
   const aliases = prefs?.exerciseAliases || {};
-  const customGifs = prefs?.exerciseGifs || {};
+  const customGifs: Record<string, string> = {};
   const hiddenEquipments = prefs?.hiddenEquipments || [];
   const { data: recentWorkouts = [] } = useRecentWorkouts(180);
   const history = recentWorkouts;

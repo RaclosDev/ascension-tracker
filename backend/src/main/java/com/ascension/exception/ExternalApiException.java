@@ -22,14 +22,6 @@ public class ExternalApiException extends RuntimeException {
         return status;
     }
 
-    public ExternalApiException(String message) {
-        this("ExternalService", HttpStatus.BAD_GATEWAY, message);
-    }
-
-    public ExternalApiException(String message, Throwable cause) {
-        this("ExternalService", HttpStatus.BAD_GATEWAY, message, cause);
-    }
-
     public String getServiceName() {
         return serviceName;
     }

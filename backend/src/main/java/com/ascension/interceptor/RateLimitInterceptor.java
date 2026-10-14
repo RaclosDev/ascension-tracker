@@ -20,18 +20,16 @@ import java.util.concurrent.TimeUnit;
 public class RateLimitInterceptor implements HandlerInterceptor {
 
     static final int MAX_REQUESTS_PER_MINUTE = 20;
-    static final int USER_MAX_REQUESTS_PER_MINUTE = 10;
 
     private final Cache<String, Bucket> requestBuckets = Caffeine.newBuilder()
             .maximumSize(50_000)
             .expireAfterAccess(1, TimeUnit.MINUTES)
             .build();
 
-    private Bucket createNewBucket(String group) {
-        int capacity = "user".equals(group) ? USER_MAX_REQUESTS_PER_MINUTE : MAX_REQUESTS_PER_MINUTE;
+    private Bucket createNewBucket() {
         Bandwidth limit = Bandwidth.builder()
-                .capacity(capacity)
-                .refillGreedy(capacity, Duration.ofMinutes(1))
+                .capacity(MAX_REQUESTS_PER_MINUTE)
+                .refillGreedy(MAX_REQUESTS_PER_MINUTE, Duration.ofMinutes(1))
                 .build();
         return Bucket.builder().addLimit(limit).build();
     }
@@ -44,13 +42,12 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         }
 
         String key = group + ":" + clientId(group, request);
-        Bucket bucket = requestBuckets.get(key, k -> createNewBucket(group));
+        Bucket bucket = requestBuckets.get(key, k -> createNewBucket());
 
         if (!bucket.tryConsume(1)) {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setHeader("Retry-After", "60");
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"error\":\"Demasiadas peticiones. Por favor, inténtalo de nuevo en unos minutos.\"}");
+            response.getWriter().write("Too many requests. Please try again later.");
             return false;
         }
         return true;
@@ -60,7 +57,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         if (path.startsWith("/api/auth")) {
             return "auth";
         }
-        if (path.startsWith("/api/nutrition/ai")) {
+        if (path.startsWith("/api/nutrition/ai") || path.startsWith("/api/ai")) {
             return "ai";
         }
         if (path.startsWith("/api/food-external")) {
@@ -68,9 +65,6 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         }
         if (path.startsWith("/api/push")) {
             return "push";
-        }
-        if (path.startsWith("/api/user")) {
-            return "user";
         }
         return null;
     }

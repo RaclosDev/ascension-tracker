@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Skeleton } from '../components/ui/skeleton';
 import { useMyFoodsData } from '../hooks/my-foods/useMyFoodsData';
 import { useFoodFilters } from '../hooks/my-foods/useFoodFilters';
@@ -16,22 +16,14 @@ import FoodCard from '../components/my-foods/FoodCard';
 import RecipeCard from '../components/my-foods/RecipeCard';
 import AiFoodModal from '../components/my-foods/AiFoodModal';
 
-import { ChevronDown, ChevronRight, ScanLine, Pencil, X, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, ScanLine, Pencil, X } from 'lucide-react';
 import { PageFoodItem } from '../types/myfoods';
 import { Recipe, FoodLog, SavedFood } from '../types/api';
 const BarcodeScanner = lazy(() => import('../components/BarcodeScanner'));
 
 export default function MyFoodsPage() {
-  const {
-    recentFoods,
-    savedFoods,
-    recipes,
-    isLoading,
-    fetchData,
-    deleteFoodsBulk,
-    deleteRecipe,
-    deleteSavedFood,
-  } = useMyFoodsData();
+  const { recentFoods, savedFoods, recipes, isLoading, fetchData, deleteFoodsBulk, deleteRecipe } =
+    useMyFoodsData();
 
   const [searchFilter, setSearchFilter] = useState('all');
   const filters = useFoodFilters(recentFoods, savedFoods, recipes);
@@ -49,14 +41,6 @@ export default function MyFoodsPage() {
   );
 
   const meals = useMealSelection(savedFoods);
-
-  useEffect(() => {
-    (window as unknown as { __testScanBarcode?: (code: string) => void }).__testScanBarcode =
-      scanner.handleScanBarcode;
-    return () => {
-      delete (window as unknown as { __testScanBarcode?: unknown }).__testScanBarcode;
-    };
-  }, [scanner.handleScanBarcode]);
 
   const [expandedSections, setExpandedSections] = useState({
     recent: true,
@@ -86,10 +70,6 @@ export default function MyFoodsPage() {
         filteredRecentCount={filters.filteredRecent.length}
         filteredFoodsCount={filters.filteredFoods.length}
         filteredRecipesCount={filters.filteredRecipes.length}
-        macroFilter={filters.macroFilter}
-        setMacroFilter={filters.setMacroFilter}
-        sortBy={filters.sortBy}
-        setSortBy={filters.setSortBy}
       />
 
       <div className="flex flex-col lg:flex-row gap-5">
@@ -141,7 +121,6 @@ export default function MyFoodsPage() {
                         isSelected={f.id !== undefined && meals.selectedFoods.has(Number(f.id))}
                         onToggleSelect={meals.toggleFoodSelection}
                         onEdit={(food) => forms.handleEditFood(food as unknown as PageFoodItem)}
-                        onDelete={deleteSavedFood}
                         viewMode={filters.viewMode as 'grid' | 'list'}
                         onDragStart={(e, d) => scanner.handleDragStart(e, d as PageFoodItem)}
                       />
@@ -230,7 +209,6 @@ export default function MyFoodsPage() {
         updateFoodForm={forms.updateFoodForm}
         handleAddSavedFood={forms.handleAddSavedFood}
         editingFoodId={forms.editingFoodId}
-        handleDeleteFood={deleteSavedFood}
       />
       <RecipeFormModal
         isOpen={forms.isRecipeFormOpen}
@@ -277,7 +255,7 @@ export default function MyFoodsPage() {
 
       {isActionMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-[1050] flex flex-col justify-end"
+          className="fixed inset-0 bg-black/60 z-50 flex flex-col justify-end"
           onClick={() => setIsActionMenuOpen(false)}
         >
           <div
@@ -333,7 +311,7 @@ export default function MyFoodsPage() {
       )}
 
       {scanner.isScannerOpen && (
-        <div className="fixed inset-0 bg-black/75 z-[1050] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-zinc-900 p-5 rounded-2xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="m-0 text-white">Escanear</h3>
@@ -344,94 +322,18 @@ export default function MyFoodsPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-
-            {scanner.lookupError && (
-              <div className="p-3 mb-4 bg-red-500/20 border border-red-500/40 rounded-xl text-red-300 text-sm">
-                {scanner.lookupError}
-              </div>
-            )}
-
-            {scanner.isLookingUpCode ? (
-              <div className="flex flex-col items-center justify-center py-10 gap-3">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-                <p className="text-zinc-300 text-sm m-0">Buscando producto...</p>
-              </div>
-            ) : scanner.scannedProduct ? (
-              <div className="flex flex-col gap-4 p-4 bg-zinc-800/80 rounded-xl border border-zinc-700">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className="text-white font-semibold text-lg m-0">
-                      {scanner.scannedProduct.name}
-                    </h4>
-                    {scanner.scannedProduct.brand && (
-                      <p className="text-zinc-400 text-sm m-0">{scanner.scannedProduct.brand}</p>
-                    )}
-                  </div>
-                  {scanner.scannedProduct.imageUrl && (
-                    <img
-                      src={scanner.scannedProduct.imageUrl}
-                      alt={scanner.scannedProduct.name}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                  )}
+            <Suspense
+              fallback={
+                <div className="flex justify-center p-8">
+                  <Skeleton className="w-12 h-12 rounded-full" />
                 </div>
-
-                <div className="grid grid-cols-4 gap-2 text-center py-2 bg-zinc-900/60 rounded-lg">
-                  <div>
-                    <span className="block text-xs text-zinc-400">Kcal</span>
-                    <span className="text-sm font-semibold text-white">
-                      {scanner.scannedProduct.kcal}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="block text-xs text-zinc-400">Prot</span>
-                    <span className="text-sm font-semibold text-emerald-400">
-                      {scanner.scannedProduct.protein}g
-                    </span>
-                  </div>
-                  <div>
-                    <span className="block text-xs text-zinc-400">Carbs</span>
-                    <span className="text-sm font-semibold text-amber-400">
-                      {scanner.scannedProduct.carbs}g
-                    </span>
-                  </div>
-                  <div>
-                    <span className="block text-xs text-zinc-400">Grasa</span>
-                    <span className="text-sm font-semibold text-rose-400">
-                      {scanner.scannedProduct.fat}g
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-2">
-                  <button
-                    className="btn btn-primary flex-1 py-2 text-sm font-medium"
-                    onClick={scanner.handleSaveScannedProduct}
-                  >
-                    Guardar
-                  </button>
-                  <button
-                    className="btn btn-secondary flex-1 py-2 text-sm font-medium"
-                    onClick={scanner.handleEditScannedProduct}
-                  >
-                    Editar
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <Suspense
-                fallback={
-                  <div className="flex justify-center p-8">
-                    <Skeleton className="w-12 h-12 rounded-full" />
-                  </div>
-                }
-              >
-                <BarcodeScanner
-                  onScanSuccess={scanner.handleScanBarcode}
-                  onScanError={console.error}
-                />
-              </Suspense>
-            )}
+              }
+            >
+              <BarcodeScanner
+                onScanSuccess={scanner.handleScanBarcode}
+                onScanError={console.error}
+              />
+            </Suspense>
           </div>
         </div>
       )}

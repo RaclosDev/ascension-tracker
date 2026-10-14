@@ -46,7 +46,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
     queryKey: ['settings'],
     queryFn: () =>
       api
-        .get('/settings')
+        .get('/users/settings')
         .then((r) => r.data)
         .catch(() => null),
   });

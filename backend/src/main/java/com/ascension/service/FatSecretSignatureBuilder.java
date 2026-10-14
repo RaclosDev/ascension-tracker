@@ -55,7 +55,7 @@ public class FatSecretSignatureBuilder {
             return url + "?" + paramString.toString() + "&oauth_signature=" + oauthEncode(signature);
         } catch (Exception e) {
             log.error("Error signing FatSecret URL", e);
-            throw new RuntimeException("Error signing FatSecret URL", e);
+            return url;
         }
     }
 

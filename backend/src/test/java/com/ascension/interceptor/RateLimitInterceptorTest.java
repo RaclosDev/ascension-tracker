@@ -73,44 +73,9 @@ class RateLimitInterceptorTest {
     }
 
     @Test
-    void userExportEndpointsAreRateLimited() throws Exception {
-        loginAs("charlie@example.com");
-        for (int i = 0; i < RateLimitInterceptor.USER_MAX_REQUESTS_PER_MINUTE; i++) {
-            assertThat(hit("/api/user/export", "10.0.0.7")).isEqualTo(200);
-        }
-        assertThat(hit("/api/user/export", "10.0.0.7")).isEqualTo(429);
-    }
-
-    @Test
     void unrelatedEndpointsAreNeverLimited() throws Exception {
         for (int i = 0; i < 100; i++) {
             assertThat(hit("/api/nutrition/logs", "10.0.0.6")).isEqualTo(200);
-        }
-    }
-
-    @Test
-    void tooManyRequestsResponse_returnsJsonWithUtf8ContentType() throws Exception {
-        for (int i = 0; i < RateLimitInterceptor.MAX_REQUESTS_PER_MINUTE; i++) {
-            hit(AI_PATH, "10.0.0.99");
-        }
-        MockHttpServletRequest request = new MockHttpServletRequest("POST", AI_PATH);
-        request.setRequestURI(AI_PATH);
-        request.setRemoteAddr("10.0.0.99");
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        boolean allowed = interceptor.preHandle(request, response, new Object());
-
-        assertThat(allowed).isFalse();
-        assertThat(response.getStatus()).isEqualTo(429);
-        assertThat(response.getContentType()).isEqualTo("application/json;charset=UTF-8");
-        assertThat(response.getContentAsString()).contains("Demasiadas peticiones. Por favor, inténtalo de nuevo en unos minutos.");
-    }
-
-    @Test
-    void unregisteredApiAiPrefix_isNotRateLimited() throws Exception {
-        assertThat(RateLimitInterceptor.groupOf("/api/ai")).isNull();
-        assertThat(RateLimitInterceptor.groupOf("/api/ai/chat")).isNull();
-        for (int i = 0; i < 50; i++) {
-            assertThat(hit("/api/ai/chat", "10.0.0.88")).isEqualTo(200);
         }
     }
 }

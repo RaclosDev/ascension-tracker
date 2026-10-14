@@ -25,19 +25,6 @@ export function formatRest(sec: number) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-export function formatRestFriendly(sec: number): string {
-  if (sec <= 0) return '0s';
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  if (m > 0 && s > 0) {
-    return `${m}m ${s}s`;
-  }
-  if (m > 0) {
-    return `${m}m`;
-  }
-  return `${s}s`;
-}
-
 export function formatDay(ts: number) {
   return format(ts, 'EEE d MMM', { locale: es });
 }

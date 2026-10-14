@@ -1,33 +1,18 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import { lazy } from 'react';
-import api, { exportUserData } from '../api/client';
+import api from '../api/client';
 import toast from 'react-hot-toast';
 
 const WeightLossPlan = lazy(() => import('../components/calculators/WeightLossPlan'));
 const MacroConfigurator = lazy(() => import('../components/calculators/MacroConfigurator'));
 const MealConfigurator = lazy(() => import('../components/MealConfigurator'));
 import { useWorkoutStore } from '../lib/workout/store';
-import { formatRestFriendly } from '../lib/workout/format';
-import { useCustomExercises, useWorkoutPreferencesActions } from '../lib/workout/api';
-import { HevyImportModal } from '../components/workout/HevyImportModal';
-import { RestoreBackupModal } from '../components/settings/RestoreBackupModal';
 import { useAuth } from '../context/AuthContext';
 import { applyThemeColor } from '../utils/colorHelper';
 import { Skeleton } from '../components/ui/skeleton';
-import {
-  Palette,
-  User,
-  Scale,
-  Activity,
-  Dumbbell,
-  Utensils,
-  LogOut,
-  UploadCloud,
-  Download,
-  ChevronDown,
-} from 'lucide-react';
+import { Palette, User, Scale, Activity, Dumbbell, Utensils, LogOut } from 'lucide-react';
 
 export interface SettingsForm {
   startDate: string;
@@ -94,19 +79,6 @@ export default function SettingsPage() {
   const setRestPreset = useWorkoutStore((s) => s.setRestPreset);
   const hiddenEquipments = useWorkoutStore((s) => s.hiddenEquipments) || [];
   const toggleHiddenEquipment = useWorkoutStore((s) => s.toggleHiddenEquipment);
-  const setHiddenEquipments = useWorkoutStore((s) => s.setHiddenEquipments);
-  const { prefs: workoutPrefs, toggleHiddenEquipment: togglePrefHiddenEquipment } =
-    useWorkoutPreferencesActions();
-
-  useEffect(() => {
-    if (workoutPrefs?.hiddenEquipments) {
-      setHiddenEquipments(workoutPrefs.hiddenEquipments);
-    }
-  }, [workoutPrefs?.hiddenEquipments, setHiddenEquipments]);
-
-  const [isHevyModalOpen, setIsHevyModalOpen] = useState(false);
-  const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
-  const { data: customExercises = [] } = useCustomExercises();
   const { logout } = useAuth();
   const { data: dashboard } = useQuery<{ currentWeight?: number }, Error>({
     queryKey: ['dashboard'],
@@ -133,21 +105,6 @@ export default function SettingsPage() {
       toast.success('Datos exportados con éxito');
     } catch {
       toast.error('Error al exportar datos');
-    }
-  };
-
-  const [isExportingJson, setIsExportingJson] = useState(false);
-
-  const handleExportJson = async () => {
-    try {
-      setIsExportingJson(true);
-      await exportUserData();
-      toast.success('Copia de seguridad exportada con éxito');
-    } catch (error) {
-      console.error('Error al exportar copia de seguridad:', error);
-      toast.error('Error al exportar la copia de seguridad');
-    } finally {
-      setIsExportingJson(false);
     }
   };
 
@@ -281,12 +238,7 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     } catch (err: unknown) {
       console.error('Error al guardar macros:', err);
-      const e = err as {
-        response?: { data?: { message?: string; error?: string } };
-        message?: string;
-      };
-      const msg = e.response?.data?.message || e.response?.data?.error || e.message;
-      toast.error(msg ? `Error al guardar: ${msg}` : 'Error al guardar objetivos');
+      toast.error('Error al guardar objetivos');
     }
   };
 
@@ -346,7 +298,7 @@ export default function SettingsPage() {
             <span
               className={`text-xs text-muted transition-transform duration-300 ${openSections.personal ? 'rotate-180' : 'rotate-0'}`}
             >
-              <ChevronDown size={18} />
+              ?
             </span>
           </div>
           {openSections.personal && (
@@ -473,7 +425,7 @@ export default function SettingsPage() {
             <span
               className={`text-xs text-muted transition-transform duration-300 ${openSections.plan ? 'rotate-180' : 'rotate-0'}`}
             >
-              <ChevronDown size={18} />
+              ?
             </span>
           </div>
           {openSections.plan && (
@@ -515,7 +467,7 @@ export default function SettingsPage() {
             <span
               className={`text-xs text-muted transition-transform duration-300 ${openSections.macros ? 'rotate-180' : 'rotate-0'}`}
             >
-              <ChevronDown size={18} />
+              ?
             </span>
           </div>
           {openSections.macros && (
@@ -558,7 +510,7 @@ export default function SettingsPage() {
             <span
               className={`text-xs text-muted transition-transform duration-300 ${openSections.meals ? 'rotate-180' : 'rotate-0'}`}
             >
-              <ChevronDown size={18} />
+              ?
             </span>
           </div>
           {openSections.meals && (
@@ -583,7 +535,7 @@ export default function SettingsPage() {
             <span
               className={`text-xs text-muted transition-transform duration-300 ${openSections.theme ? 'rotate-180' : 'rotate-0'}`}
             >
-              <ChevronDown size={18} />
+              ?
             </span>
           </div>
           {openSections.theme && (
@@ -661,7 +613,7 @@ export default function SettingsPage() {
             <span
               className={`text-xs text-muted transition-transform duration-300 ${openSections.workout ? 'rotate-180' : 'rotate-0'}`}
             >
-              <ChevronDown size={18} />
+              ?
             </span>
           </div>
           {openSections.workout && (
@@ -685,29 +637,16 @@ export default function SettingsPage() {
                     uno específico.
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    className="form-input"
-                    style={{ width: '80px', textAlign: 'center', fontWeight: 600 }}
-                    value={restPreset}
-                    onChange={(e) => setRestPreset(Number(e.target.value) || 90)}
-                    min="0"
-                    step="15"
-                    aria-label="Descanso base en segundos"
-                  />
-                  <span
-                    style={{
-                      fontSize: '0.85rem',
-                      color: 'var(--text-muted)',
-                      fontWeight: 500,
-                      minWidth: '45px',
-                    }}
-                  >
-                    ({formatRestFriendly(restPreset)})
-                  </span>
-                </div>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  className="form-input"
+                  style={{ width: '80px', textAlign: 'center', fontWeight: 600 }}
+                  value={restPreset}
+                  onChange={(e) => setRestPreset(Number(e.target.value) || 90)}
+                  min="0"
+                  step="15"
+                />
               </div>
 
               <div
@@ -775,10 +714,7 @@ export default function SettingsPage() {
                         <input
                           type="checkbox"
                           checked={isHidden}
-                          onChange={() => {
-                            toggleHiddenEquipment(eq);
-                            togglePrefHiddenEquipment(eq);
-                          }}
+                          onChange={() => toggleHiddenEquipment(eq)}
                         />
                         {eq === 'multipower' ? 'Multipower (Smith)' : eq}
                       </label>
@@ -803,126 +739,19 @@ export default function SettingsPage() {
                   }}
                 >
                   Sube el archivo{' '}
-                  <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                    workout_data.csv
-                  </span>{' '}
-                  exportado de Hevy para migrar todo tu histórico de entrenamientos.
+                  <span style={{ color: 'var(--text-primary)' }}>workout_data.csv</span> exportado
+                  de Hevy.
+                </p>{' '}
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                  La importación de CSV se ha deshabilitado temporalmente debido a la migración a la
+                  nube. Volverá pronto.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setIsHevyModalOpen(true)}
-                  className="btn btn-primary"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.6rem 1.2rem',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                  }}
-                  aria-label="Abrir modal para importar entrenamientos desde Hevy"
-                >
-                  <UploadCloud size={18} />
-                  Importar CSV de Hevy
-                </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* 5. Backup & Privacy / Copia de Seguridad */}
-        <div
-          className="card accordion-card mb-4"
-          style={{
-            padding: 'var(--space-lg)',
-            transition: 'all 0.25s ease',
-            border: '1px solid var(--border-subtle)',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div className="flex items-center gap-2">
-              <Download size={20} style={{ color: 'var(--color-primary)' }} />
-              <span
-                className="card-title"
-                style={{
-                  margin: 0,
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  color: 'var(--text-primary)',
-                }}
-              >
-                Copia de Seguridad y Privacidad
-              </span>
-            </div>
-          </div>
-          <div
-            style={{
-              marginTop: '1.25rem',
-              borderTop: '1px solid rgba(255,255,255,0.06)',
-              paddingTop: '1.25rem',
-            }}
-          >
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              Descarga una copia de seguridad completa con todos tus entrenamientos, ejercicios
-              personalizados, plantillas, registros de comidas, recetas, alimentos guardados, pasos,
-              peso y ajustes en formato JSON (GDPR).
-            </p>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.75rem',
-                marginBottom: '1.5rem',
-              }}
-            >
-              <button
-                className="btn btn-primary"
-                style={{ width: '100%' }}
-                onClick={handleExportJson}
-                disabled={isExportingJson}
-                aria-busy={isExportingJson}
-                aria-label={
-                  isExportingJson
-                    ? 'Exportando datos en curso'
-                    : 'Exportar copia de seguridad (JSON)'
-                }
-              >
-                {isExportingJson ? 'Exportando datos...' : 'Exportar copia de seguridad (JSON)'}
-              </button>
-              <button
-                className="btn btn-secondary"
-                style={{
-                  width: '100%',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                }}
-                onClick={() => setIsRestoreModalOpen(true)}
-                aria-label="Abrir modal para restaurar copia de seguridad desde archivo JSON"
-              >
-                <UploadCloud size={18} />
-                Restaurar copia de seguridad (JSON)
-              </button>
-            </div>
-            <div
-              style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '1.5rem 0' }}
-            />
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              Descarga todos tus datos de peso registrados en un archivo CSV.
-            </p>
-            <button
-              className="btn btn-secondary"
-              style={{ width: '100%' }}
-              onClick={handleExportData}
-              aria-label="Exportar datos a CSV"
-            >
-              Exportar Datos a CSV
-            </button>
-          </div>
-        </div>
-
-        {/* 6. Account / Logout */}
+        {/* 5. Account / Logout */}
         <div
           className="card accordion-card"
           style={{
@@ -955,6 +784,19 @@ export default function SettingsPage() {
             }}
           >
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+              Descarga todos tus datos de peso registrados en un archivo CSV.
+            </p>
+            <button
+              className="btn btn-secondary"
+              style={{ width: '100%', marginBottom: '1.5rem' }}
+              onClick={handleExportData}
+            >
+              Exportar Datos a CSV
+            </button>
+            <div
+              style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '1.5rem 0' }}
+            />
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
               Cierra tu sesión de forma segura en este dispositivo.
             </p>
             <button
@@ -969,23 +811,12 @@ export default function SettingsPage() {
                 logout();
                 toast.success('Sesión cerrada');
               }}
-              aria-label="Cerrar sesión"
             >
               Cerrar Sesión
             </button>
           </div>
         </div>
       </div>
-
-      <HevyImportModal
-        isOpen={isHevyModalOpen}
-        onClose={() => setIsHevyModalOpen(false)}
-        customExercises={customExercises}
-      />
-      <RestoreBackupModal
-        isOpen={isRestoreModalOpen}
-        onClose={() => setIsRestoreModalOpen(false)}
-      />
     </div>
   );
 }

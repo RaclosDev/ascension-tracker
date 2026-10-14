@@ -5,6 +5,9 @@ import com.ascension.model.UserSettings;
 import com.ascension.model.WeightEntry;
 import com.ascension.repository.UserSettingsRepository;
 import com.ascension.repository.WeightEntryRepository;
+import com.ascension.repository.MealRepository;
+import com.ascension.repository.FoodLogRepository;
+import com.ascension.repository.StepsEntryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,9 @@ public class SettingsService {
 
     private final UserSettingsRepository settingsRepository;
     private final WeightEntryRepository weightEntryRepository;
+    private final MealRepository mealRepository;
+    private final FoodLogRepository foodLogRepository;
+    private final StepsEntryRepository stepsEntryRepository;
 
     public UserSettingsDTO getSettings(String userEmail) {
         return settingsRepository.findSettings(userEmail)

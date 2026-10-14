@@ -11,10 +11,6 @@ interface FoodFiltersBarProps {
   filteredRecentCount: number;
   filteredFoodsCount: number;
   filteredRecipesCount: number;
-  macroFilter?: string;
-  setMacroFilter?: (val: string) => void;
-  sortBy?: string;
-  setSortBy?: (val: string) => void;
 }
 
 export function FoodFiltersBar({
@@ -28,10 +24,6 @@ export function FoodFiltersBar({
   filteredRecentCount,
   filteredFoodsCount,
   filteredRecipesCount,
-  macroFilter,
-  setMacroFilter,
-  sortBy,
-  setSortBy,
 }: FoodFiltersBarProps) {
   return (
     <div
@@ -167,77 +159,6 @@ export function FoodFiltersBar({
           {viewMode === 'grid' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
         </button>
       </div>
-
-      {((macroFilter && setMacroFilter) || (sortBy && setSortBy)) && (
-        <div
-          style={{
-            display: 'flex',
-            gap: '0.75rem',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            paddingTop: '0.35rem',
-            borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-          }}
-        >
-          {macroFilter && setMacroFilter && (
-            <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Macro:</span>
-              {[
-                { id: 'all', label: 'Todos' },
-                { id: 'protein', label: 'Proteína' },
-                { id: 'carbs', label: 'Carbos' },
-                { id: 'fat', label: 'Grasa' },
-              ].map((m) => {
-                const active = macroFilter === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setMacroFilter(m.id)}
-                    style={{
-                      padding: '0.2rem 0.45rem',
-                      borderRadius: '6px',
-                      fontSize: '0.7rem',
-                      fontWeight: active ? 600 : 400,
-                      border: active
-                        ? '1px solid var(--text-primary)'
-                        : '1px solid var(--border-subtle)',
-                      background: active ? 'var(--bg-glass-strong)' : 'transparent',
-                      color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {m.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {sortBy && setSortBy && (
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="form-input"
-              aria-label="Ordenar alimentos"
-              style={{
-                padding: '0.2rem 0.5rem',
-                height: '28px',
-                fontSize: '0.72rem',
-                width: 'auto',
-                borderRadius: '6px',
-                background: 'var(--bg-primary)',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-secondary)',
-              }}
-            >
-              <option value="recent">Más recientes</option>
-              <option value="name_asc">Nombre (A-Z)</option>
-            </select>
-          )}
-        </div>
-      )}
       {searchQuery && (
         <div
           style={{

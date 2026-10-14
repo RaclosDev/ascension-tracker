@@ -49,7 +49,7 @@ public class StepsService {
         LocalDate currentMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
         Map<LocalDate, Integer> entryMap = allEntries.stream()
-                .collect(Collectors.toMap(StepsEntry::getDate, StepsEntry::getSteps, (v1, v2) -> v2));
+                .collect(Collectors.toMap(StepsEntry::getDate, StepsEntry::getSteps));
 
         List<WeekSummaryDTO> summaries = new ArrayList<>();
         Double previousAvg = null;

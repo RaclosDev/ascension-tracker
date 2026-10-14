@@ -17,9 +17,7 @@ import { ExercisePicker } from '@/components/workout/exercise-picker';
 import { RestBanner } from '@/components/workout/rest-banner';
 import { EmptyCard } from '@/components/workout/dashboard';
 import { useWorkoutStore } from '@/lib/workout/store';
-import type { WorkoutExercise } from '@/lib/workout/types';
-
-const EMPTY_EXERCISES: WorkoutExercise[] = [];
+import { useShallow } from 'zustand/react/shallow';
 
 export function ActiveWorkout() {
   const hasActive = useWorkoutStore((s) => s.active !== null);
@@ -51,7 +49,7 @@ export function ActiveWorkout() {
         />
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
           <button
-            onClick={() => startEmpty()}
+            onClick={startEmpty}
             className="btn btn-primary"
             style={{
               flex: 1,
@@ -101,7 +99,11 @@ export function ActiveWorkout() {
 function LiveSession() {
   const navigate = useNavigate();
   const workoutName = useWorkoutStore((s) => s.active?.name?.trim() || 'Entrenamiento');
-  const exercises = useWorkoutStore((s) => s.active?.exercises ?? EMPTY_EXERCISES);
+  const exercises = useWorkoutStore(
+    useShallow(
+      (s) => s.active?.exercises.map((row) => ({ id: row.id, supersetId: row.supersetId })) ?? [],
+    ),
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -141,8 +143,9 @@ function LiveSession() {
         <button
           type="button"
           onClick={() => navigate('/dashboard')}
-          className="btn btn-secondary live-session-minimize-btn"
+          className="btn btn-secondary"
           style={{
+            display: 'flex',
             alignItems: 'center',
             gap: '0.35rem',
             padding: '0.45rem 0.85rem',
