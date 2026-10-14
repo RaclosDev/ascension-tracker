@@ -9,6 +9,7 @@ const WeightLossPlan = lazy(() => import('../components/calculators/WeightLossPl
 const MacroConfigurator = lazy(() => import('../components/calculators/MacroConfigurator'));
 const MealConfigurator = lazy(() => import('../components/MealConfigurator'));
 import { useWorkoutStore } from '../lib/workout/store';
+import { formatRestFriendly } from '../lib/workout/format';
 import { useCustomExercises, useWorkoutPreferencesActions } from '../lib/workout/api';
 import { HevyImportModal } from '../components/workout/HevyImportModal';
 import { RestoreBackupModal } from '../components/settings/RestoreBackupModal';
@@ -703,6 +704,15 @@ export default function SettingsPage() {
                     step="15"
                     aria-label="Descanso base en segundos"
                   />
+                  <span
+                    style={{
+                      fontSize: '0.85rem',
+                      color: 'var(--text-secondary)',
+                      fontWeight: 600,
+                    }}
+                  >
+                    seg ({formatRestFriendly(restPreset)})
+                  </span>
                 </div>
               </div>
 
