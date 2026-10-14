@@ -98,8 +98,8 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
   const numWeight = parseFloat(weightKg) || 0;
   const numHeight = parseFloat(heightCm) || 0;
   const numAge = parseInt(age, 10) || 0;
-  const numFactor = parseFloat(activityFactor) || 1.2;
-  const numBodyFat = bodyFat ? parseFloat(bodyFat) : undefined;
+  const numAct = parseFloat(activityFactor) || 1.55;
+  const numBf = bodyFat ? parseFloat(bodyFat) : undefined;
 
   const tdeeResult = useMemo(() => {
     return calculateTdee({
@@ -107,48 +107,54 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
       weightKg: numWeight,
       heightCm: numHeight,
       age: numAge,
-      activityFactor: numFactor,
-      bodyFatPercentage: numBodyFat,
+      activityFactor: numAct,
+      bodyFatPercentage: numBf,
       formula,
     });
-  }, [sex, numWeight, numHeight, numAge, numFactor, numBodyFat, formula]);
+  }, [sex, numWeight, numHeight, numAge, numAct, numBf, formula]);
 
   // Weyand calculations
-  const weyandStepsKcal = useMemo(() => {
-    const s = parseInt(weyandSteps, 10) || 0;
-    return calculateWeyandSteps({ weightKg: numWeight, steps: s });
-  }, [numWeight, weyandSteps]);
+  const numSteps = parseInt(weyandSteps, 10) || 0;
+  const weyandStepsResult = useMemo(() => {
+    return calculateWeyandSteps({
+      weightKg: numWeight > 0 ? numWeight : 75,
+      steps: numSteps,
+    });
+  }, [numWeight, numSteps]);
+
+  const numDistance = parseFloat(metabolicDistance) || 0;
+  const numMins = parseInt(metabolicMinutes, 10) || 0;
+  const numSecs = parseInt(metabolicSeconds, 10) || 0;
+  const totalSeconds = numMins * 60 + numSecs;
 
   const weyandMetabolicResult = useMemo(() => {
-    const d = parseFloat(metabolicDistance) || 0;
-    const m = parseInt(metabolicMinutes, 10) || 0;
-    const s = parseInt(metabolicSeconds, 10) || 0;
-    const totalSec = m * 60 + s;
-    const heightM = numHeight / 100;
     return calculateWeyandMetabolic({
-      weightKg: numWeight,
-      heightM,
-      distanceM: d,
-      totalSeconds: totalSec,
+      weightKg: numWeight > 0 ? numWeight : 75,
+      heightM: numHeight > 0 ? numHeight / 100 : 1.75,
+      distanceM: numDistance,
+      totalSeconds,
     });
-  }, [numWeight, numHeight, metabolicDistance, metabolicMinutes, metabolicSeconds]);
+  }, [numWeight, numHeight, numDistance, totalSeconds]);
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-gray-300 leading-relaxed">
-        Calcula tu Metabolismo Basal (BMR), Gasto Energético Diario Total (TDEE) y objetivos
+      <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+        Calcula tu Tasa Metabólica Basal (BMR), Gasto Energético Diario Total (TDEE) y objetivos
         calóricos para pérdida de grasa, mantenimiento o ganancia muscular.
       </p>
 
       {/* FORM INPUTS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
-          <label htmlFor={sexId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+          <label
+            htmlFor={sexId}
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider"
+          >
             Sexo Biológico
           </label>
           <select
             id={sexId}
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-medium text-sm focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all cursor-pointer"
             value={sex}
             onChange={(e) => setSex(e.target.value as Sex)}
           >
@@ -158,7 +164,10 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
         </div>
 
         <div>
-          <label htmlFor={weightId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+          <label
+            htmlFor={weightId}
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider"
+          >
             Peso corporal (kg)
           </label>
           <input
@@ -166,7 +175,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
             type="number"
             inputMode="decimal"
             step="0.1"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-medium text-sm placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
             placeholder="75.0"
             value={weightKg}
             onChange={(e) => setWeightKg(e.target.value)}
@@ -174,7 +183,10 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
         </div>
 
         <div>
-          <label htmlFor={heightId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+          <label
+            htmlFor={heightId}
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider"
+          >
             Altura (cm)
           </label>
           <input
@@ -182,7 +194,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
             type="number"
             inputMode="decimal"
             step="0.5"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-medium text-sm placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
             placeholder="175"
             value={heightCm}
             onChange={(e) => setHeightCm(e.target.value)}
@@ -190,7 +202,10 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
         </div>
 
         <div>
-          <label htmlFor={ageId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+          <label
+            htmlFor={ageId}
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider"
+          >
             Edad (años)
           </label>
           <input
@@ -199,7 +214,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
             inputMode="numeric"
             min="10"
             max="120"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-medium text-sm placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
             placeholder="28"
             value={age}
             onChange={(e) => setAge(e.target.value)}
@@ -207,12 +222,15 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
         </div>
 
         <div>
-          <label htmlFor={activityId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+          <label
+            htmlFor={activityId}
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider"
+          >
             Nivel de Actividad Diaria
           </label>
           <select
             id={activityId}
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-medium text-sm focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all cursor-pointer"
             value={activityFactor}
             onChange={(e) => setActivityFactor(e.target.value)}
           >
@@ -225,7 +243,10 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
         </div>
 
         <div>
-          <label htmlFor={bodyFatId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+          <label
+            htmlFor={bodyFatId}
+            className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider"
+          >
             % Grasa Corporal (Opcional)
           </label>
           <input
@@ -235,7 +256,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
             step="0.5"
             min="3"
             max="60"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-medium text-sm placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
             placeholder="Ej: 15 (Para Katch-McArdle)"
             value={bodyFat}
             onChange={(e) => setBodyFat(e.target.value)}
@@ -243,13 +264,19 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <label htmlFor={formulaId} className="text-xs font-semibold text-gray-300">
-          Fórmula metabólica:
-        </label>
+      {/* FORMULA TOGGLE ROW */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+        <div>
+          <span className="text-xs font-bold text-white block">
+            Fórmula de Cálculo de Metabolismo Basal
+          </span>
+          <span className="text-xs text-[var(--text-secondary)]">
+            Ajusta el método según tus datos antropométricos disponibles.
+          </span>
+        </div>
         <select
           id={formulaId}
-          className="text-xs px-2.5 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white"
+          className="text-xs px-3 py-2 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-medium focus:outline-none focus:border-[var(--accent-primary)] transition-all cursor-pointer"
           value={formula}
           onChange={(e) => setFormula(e.target.value as BmrFormulaType)}
         >
@@ -261,26 +288,28 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
 
       {/* KPI METRICS */}
       <div role="status" aria-live="polite" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-black/40 border border-purple-500/20">
-          <span className="text-xs font-bold tracking-wider uppercase text-purple-400">
+        <div className="p-5 rounded-2xl bg-white/5 border border-white/10 shadow-[0_0_20px_var(--accent-glow)]">
+          <span className="text-xs font-bold tracking-wider uppercase text-[var(--accent-primary)]">
             Tasa Metabólica Basal (BMR)
           </span>
-          <div className="text-4xl font-extrabold text-white mt-1">
-            {tdeeResult.bmr} <span className="text-lg font-normal text-gray-400">kcal/día</span>
+          <div className="text-4xl font-extrabold text-white mt-1 font-display tracking-tight">
+            {tdeeResult.bmr}{' '}
+            <span className="text-lg font-normal text-[var(--text-secondary)]">kcal/día</span>
           </div>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-[var(--text-secondary)] mt-1.5">
             Energía consumida en reposo absoluto ({tdeeResult.formulaUsed}).
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-teal-950/20 to-black/40 border border-emerald-500/20">
-          <span className="text-xs font-bold tracking-wider uppercase text-emerald-400">
+        <div className="p-5 rounded-2xl bg-white/5 border border-white/10 shadow-[0_0_20px_var(--accent-glow)]">
+          <span className="text-xs font-bold tracking-wider uppercase text-[var(--accent-primary)]">
             Gasto Energético Total (TDEE)
           </span>
-          <div className="text-4xl font-extrabold text-white mt-1">
-            {tdeeResult.tdee} <span className="text-lg font-normal text-gray-400">kcal/día</span>
+          <div className="text-4xl font-extrabold text-white mt-1 font-display tracking-tight">
+            {tdeeResult.tdee}{' '}
+            <span className="text-lg font-normal text-[var(--text-secondary)]">kcal/día</span>
           </div>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-[var(--text-secondary)] mt-1.5">
             Calorías necesarias para mantener tu peso actual.
           </p>
         </div>
@@ -288,7 +317,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
 
       {/* CALORIC GOALS SELECTOR & SUMMARY */}
       <div className="space-y-3">
-        <h4 className="text-sm font-bold text-white tracking-wide">
+        <h4 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
           Objetivos y Estrategias Calóricas
         </h4>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
@@ -302,12 +331,12 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                 onClick={() => setSelectedGoal(goalKey)}
                 className={`p-3 rounded-xl border text-left transition-all ${
                   isSelected
-                    ? 'bg-rose-500/20 border-rose-500 text-white shadow-md'
+                    ? 'bg-white/10 border-[var(--accent-primary)] text-white shadow-[0_0_12px_var(--accent-glow)]'
                     : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
                 }`}
               >
                 <div className="text-xs font-semibold truncate">{goal.label}</div>
-                <div className="text-base font-extrabold text-white mt-1">
+                <div className="text-base font-extrabold text-white mt-1 font-display">
                   {goal.kcal} <span className="text-[10px] font-normal text-gray-400">kcal</span>
                 </div>
                 <div
@@ -332,10 +361,12 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
         <button
           type="button"
           onClick={() => setShowWeyand(!showWeyand)}
-          className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-300 hover:text-white transition-colors"
+          className="flex items-center justify-between w-full text-left text-sm font-semibold text-[var(--text-secondary)] hover:text-white transition-colors py-1"
         >
           <span>Biomecánica Avanzada de Weyand (Pasos y Gasto Metabólico)</span>
-          <span className="text-xs text-gray-400">{showWeyand ? '▲ Ocultar' : '▼ Expandir'}</span>
+          <span className="text-xs text-[var(--text-secondary)]">
+            {showWeyand ? '▲ Ocultar' : '▼ Expandir'}
+          </span>
         </button>
 
         {showWeyand && (
@@ -345,11 +376,14 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
               <h5 className="text-xs font-bold text-white uppercase tracking-wider">
                 Gasto por Pasos (Weyand)
               </h5>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-[var(--text-secondary)]">
                 Estima la energía mecánica usada en cada impacto según la biomecánica de Weyand.
               </p>
               <div>
-                <label htmlFor="weyand-steps" className="block text-[11px] text-gray-300 mb-1">
+                <label
+                  htmlFor="weyand-steps"
+                  className="block text-[11px] text-[var(--text-secondary)] mb-1"
+                >
                   Pasos Totales
                 </label>
                 <input
@@ -357,78 +391,99 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                   aria-label="Pasos totales para cálculo Weyand"
                   type="number"
                   inputMode="numeric"
-                  className="w-full px-3 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
+                  className="w-full px-3 py-2 bg-[#2C2C2E] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[var(--accent-primary)] font-medium"
                   value={weyandSteps}
                   onChange={(e) => setWeyandSteps(e.target.value)}
                 />
               </div>
-              <div className="p-3 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between">
-                <span className="text-xs text-gray-400">Calorías quemadas:</span>
-                <span className="text-base font-bold text-rose-400">
-                  {weyandStepsKcal.toFixed(2)} kcal
-                </span>
+              <div className="p-3 rounded-xl bg-black/40 border border-white/5 flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-[var(--text-secondary)] block">
+                    Pasos procesados:
+                  </span>
+                  <span className="text-xs font-semibold text-[var(--accent-primary)] font-display">
+                    {numSteps.toLocaleString()} pasos
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-[var(--text-secondary)] block">
+                    Gasto estimado:
+                  </span>
+                  <span className="text-base font-bold text-emerald-400 font-display">
+                    {weyandStepsResult.toFixed(1)} kcal
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Gasto Metabólico por Tiempo */}
+            {/* Gasto por Carrera/Tiempo */}
             <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
               <h5 className="text-xs font-bold text-white uppercase tracking-wider">
-                Gasto Metabólico por Carrera/Marcha
+                Coste Energético de Carrera
               </h5>
+              <p className="text-xs text-[var(--text-secondary)]">
+                Calcula el consumo de oxígeno (VO2) y coste calórico neto en distancia.
+              </p>
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label htmlFor="weyand-dist" className="block text-[11px] text-gray-300 mb-1">
-                    Distancia (m)
+                  <label
+                    htmlFor="weyand-dist"
+                    className="block text-[11px] text-[var(--text-secondary)] mb-1"
+                  >
+                    Metros
                   </label>
                   <input
                     id="weyand-dist"
-                    aria-label="Distancia en metros para gasto metabólico"
+                    aria-label="Distancia en metros para cálculo Weyand"
                     type="number"
-                    inputMode="decimal"
-                    className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
+                    className="w-full px-3 py-2 bg-[#2C2C2E] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[var(--accent-primary)] font-medium"
                     value={metabolicDistance}
                     onChange={(e) => setMetabolicDistance(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label htmlFor="weyand-min" className="block text-[11px] text-gray-300 mb-1">
+                  <label
+                    htmlFor="weyand-min"
+                    className="block text-[11px] text-[var(--text-secondary)] mb-1"
+                  >
                     Minutos
                   </label>
                   <input
                     id="weyand-min"
-                    aria-label="Minutos de duración"
+                    aria-label="Minutos de tiempo para cálculo Weyand"
                     type="number"
-                    inputMode="numeric"
-                    className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
+                    className="w-full px-3 py-2 bg-[#2C2C2E] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[var(--accent-primary)] font-medium"
                     value={metabolicMinutes}
                     onChange={(e) => setMetabolicMinutes(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label htmlFor="weyand-sec" className="block text-[11px] text-gray-300 mb-1">
+                  <label
+                    htmlFor="weyand-sec"
+                    className="block text-[11px] text-[var(--text-secondary)] mb-1"
+                  >
                     Segundos
                   </label>
                   <input
                     id="weyand-sec"
-                    aria-label="Segundos de duración"
+                    aria-label="Segundos de tiempo para cálculo Weyand"
                     type="number"
-                    inputMode="numeric"
-                    className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
+                    className="w-full px-3 py-2 bg-[#2C2C2E] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[var(--accent-primary)] font-medium"
                     value={metabolicSeconds}
                     onChange={(e) => setMetabolicSeconds(e.target.value)}
                   />
                 </div>
               </div>
-              <div className="p-3 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-black/40 border border-white/5 flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-gray-400 block">VO2 Consumido:</span>
-                  <span className="text-xs font-semibold text-sky-400">
+                  <span className="text-xs text-[var(--text-secondary)] block">VO2 Consumido:</span>
+                  <span className="text-xs font-semibold text-[var(--accent-primary)] font-display">
                     {weyandMetabolicResult.vo2.toFixed(2)} ml/kg/min
                   </span>
                 </div>
                 <div>
-                  <span className="text-xs text-gray-400 block">Gasto Total:</span>
-                  <span className="text-base font-bold text-emerald-400">
+                  <span className="text-xs text-[var(--text-secondary)] block">Gasto Total:</span>
+                  <span className="text-base font-bold text-emerald-400 font-display">
                     {weyandMetabolicResult.kcal.toFixed(2)} kcal
                   </span>
                 </div>

@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import api from '@/api/client';
 import { CompletedWorkout, Template, Exercise } from './types';
+import { useWorkoutStore } from './store';
 import toast from 'react-hot-toast';
 
 export const useWorkoutHistory = () => {
@@ -188,6 +189,8 @@ export interface WorkoutPreferences {
   exerciseVariants: Record<string, { grips?: string[]; machines?: string[] }>;
   hiddenEquipments: string[];
   exerciseGifs: Record<string, string>;
+  restTimers?: Record<string, number>;
+  restPreset?: number;
 }
 
 export const useWorkoutPreferences = () => {
@@ -202,6 +205,8 @@ export const useWorkoutPreferences = () => {
         exerciseVariants: data.exerciseVariants || {},
         hiddenEquipments: data.hiddenEquipments || [],
         exerciseGifs: data.exerciseGifs || {},
+        restTimers: data.restTimers || {},
+        restPreset: data.restPreset ?? 90,
       };
     },
   });
@@ -223,6 +228,16 @@ export const useUpdateWorkoutPreferences = () => {
 export const useWorkoutPreferencesActions = () => {
   const { data: prefs } = useWorkoutPreferences();
   const { mutate: updatePrefs } = useUpdateWorkoutPreferences();
+  const syncFromPreferences = useWorkoutStore((s) => s.syncFromPreferences);
+
+  useEffect(() => {
+    if (prefs) {
+      syncFromPreferences({
+        restTimers: prefs.restTimers,
+        restPreset: prefs.restPreset,
+      });
+    }
+  }, [prefs, syncFromPreferences]);
 
   const addGlobalMachine = (name: string) => {
     if (!prefs) return;
@@ -245,6 +260,58 @@ export const useWorkoutPreferencesActions = () => {
         ...prefs.exerciseVariants,
         [id]: { ...ev, [key]: Array.from(new Set([...list, name])) },
       },
+    });
+  };
+
+  // Atomic update: avoids double-PUT race conditions between global and exercise-specific variants
+  const addGripOption = (exerciseId: string, name: string) => {
+    if (!prefs) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const ev = prefs.exerciseVariants[exerciseId] || {};
+    const list = ev.grips || [];
+    updatePrefs({
+      ...prefs,
+      globalGrips: Array.from(new Set([...prefs.globalGrips, trimmed])),
+      exerciseVariants: {
+        ...prefs.exerciseVariants,
+        [exerciseId]: { ...ev, grips: Array.from(new Set([...list, trimmed])) },
+      },
+    });
+  };
+
+  const addMachineOption = (exerciseId: string, name: string) => {
+    if (!prefs) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const ev = prefs.exerciseVariants[exerciseId] || {};
+    const list = ev.machines || [];
+    updatePrefs({
+      ...prefs,
+      globalMachines: Array.from(new Set([...prefs.globalMachines, trimmed])),
+      exerciseVariants: {
+        ...prefs.exerciseVariants,
+        [exerciseId]: { ...ev, machines: Array.from(new Set([...list, trimmed])) },
+      },
+    });
+  };
+
+  const setExerciseRestTimerPref = (exerciseId: string, seconds: number) => {
+    if (!prefs) return;
+    updatePrefs({
+      ...prefs,
+      restTimers: {
+        ...(prefs.restTimers || {}),
+        [exerciseId]: seconds,
+      },
+    });
+  };
+
+  const setRestPresetPref = (seconds: number) => {
+    if (!prefs) return;
+    updatePrefs({
+      ...prefs,
+      restPreset: seconds,
     });
   };
 
@@ -276,6 +343,10 @@ export const useWorkoutPreferencesActions = () => {
     addGlobalMachine,
     addGlobalGrip,
     addExerciseVariant,
+    addGripOption,
+    addMachineOption,
+    setExerciseRestTimerPref,
+    setRestPresetPref,
     setExerciseAlias,
     setExerciseGif,
     toggleHiddenEquipment,

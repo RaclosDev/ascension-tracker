@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { formatRestFriendly, formatRest, formatDuration, formatKg } from './format';
+import {
+  formatRestFriendly,
+  formatRest,
+  formatDuration,
+  formatKg,
+  matchVariant,
+  previousSetLabel,
+  previousFill,
+} from './format';
 
 describe('formatRestFriendly', () => {
   it('formats 0 or negative values as 0s', () => {
@@ -52,5 +60,71 @@ describe('formatKg', () => {
   it('formats numbers with kg suffix', () => {
     expect(formatKg(50)).toContain('50');
     expect(formatKg(50)).toContain('kg');
+  });
+});
+
+describe('matchVariant', () => {
+  it('returns true when both variants are undefined or empty', () => {
+    expect(matchVariant(undefined, undefined)).toBe(true);
+    expect(matchVariant({}, {})).toBe(true);
+    expect(matchVariant(undefined, { grip: '', machine: '' })).toBe(true);
+    expect(
+      matchVariant(
+        { grip: null as unknown as string, machine: null as unknown as string },
+        undefined,
+      ),
+    ).toBe(true);
+  });
+
+  it('matches regardless of case or surrounding whitespace', () => {
+    expect(matchVariant({ grip: '  Prono  ' }, { grip: 'prono' })).toBe(true);
+    expect(matchVariant({ machine: 'Hammer Strength' }, { machine: 'hammer strength' })).toBe(true);
+  });
+
+  it('matches backend DTO null values against frontend undefined/missing values', () => {
+    const backendVariant = { grip: 'neutro', machine: null as unknown as string };
+    const frontendVariant = { grip: 'Neutro' };
+    expect(matchVariant(backendVariant, frontendVariant)).toBe(true);
+  });
+
+  it('returns false when grips or machines differ', () => {
+    expect(matchVariant({ grip: 'prono' }, { grip: 'supino' })).toBe(false);
+    expect(matchVariant({ machine: 'M1' }, { machine: 'M2' })).toBe(false);
+  });
+});
+
+describe('previousSetLabel and previousFill with variants', () => {
+  const history = [
+    {
+      id: 'w1',
+      name: 'Torso',
+      startedAt: 1000,
+      finishedAt: 2000,
+      exercises: [
+        {
+          id: 'ex1',
+          exerciseId: 'bench-press',
+          variant: { grip: 'neutro', machine: null as unknown as string },
+          notes: '',
+          sets: [
+            { id: 's1', type: 'normal' as const, weight: '80', reps: '10', completed: true },
+            { id: 's2', type: 'normal' as const, weight: '85', reps: '8', completed: true },
+          ],
+        },
+      ],
+    },
+  ];
+
+  it('correctly matches previous sets when backend returned null for machine', () => {
+    const label = previousSetLabel('bench-press', { grip: 'Neutro' }, 0, history);
+    expect(label).toBe('80 × 10');
+
+    const fill = previousFill('bench-press', { grip: 'Neutro' }, 1, history);
+    expect(fill).toEqual({ weight: '85', reps: '8' });
+  });
+
+  it('returns empty when variant does not match', () => {
+    const label = previousSetLabel('bench-press', { grip: 'Prono' }, 0, history);
+    expect(label).toBe('');
   });
 });

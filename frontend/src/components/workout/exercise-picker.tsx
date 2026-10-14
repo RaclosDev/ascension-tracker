@@ -17,8 +17,7 @@ export function ExercisePicker() {
   const open = useWorkoutStore((s) => s.pickerOpen);
   const setPickerOpen = useWorkoutStore((s) => s.setPickerOpen);
   const addExercises = useWorkoutStore((s) => s.addExercises);
-  const { prefs, addGlobalMachine, addGlobalGrip, addExerciseVariant } =
-    useWorkoutPreferencesActions();
+  const { prefs, addGripOption, addMachineOption } = useWorkoutPreferencesActions();
   const globalMachines = prefs?.globalMachines || [];
   const globalGrips = prefs?.globalGrips || [];
   const exerciseVariants = prefs?.exerciseVariants || {};
@@ -97,21 +96,24 @@ export function ExercisePicker() {
 
   const handleAddGrip = (val: string) => {
     if (!expandedId) return;
-    addGlobalGrip(val);
-    addExerciseVariant(expandedId, 'grip', val);
+    addGripOption(expandedId, val);
   };
   const handleAddMachine = (val: string) => {
     if (!expandedId) return;
-    addGlobalMachine(val);
-    addExerciseVariant(expandedId, 'machine', val);
+    addMachineOption(expandedId, val);
+  };
+
+  const getVariantKey = (
+    exerciseId: string,
+    variant?: { grip?: string | null; machine?: string | null },
+  ) => {
+    const g = (variant?.grip || '').trim().toLowerCase();
+    const m = (variant?.machine || '').trim().toLowerCase();
+    return `${exerciseId}::${g}::${m}`;
   };
 
   const alreadyStrs = useMemo(
-    () =>
-      new Set(
-        active?.exercises.map((e) => JSON.stringify({ id: e.exerciseId, variant: e.variant })) ??
-          [],
-      ),
+    () => new Set(active?.exercises.map((e) => getVariantKey(e.exerciseId, e.variant)) ?? []),
     [active],
   );
 
@@ -136,7 +138,7 @@ export function ExercisePicker() {
         if (!baseEx) continue;
         if (hiddenEquipments.includes(baseEx.equipment)) continue;
 
-        const strKey = JSON.stringify({ id: ex.exerciseId, variant: ex.variant });
+        const strKey = getVariantKey(ex.exerciseId, ex.variant);
         if (alreadyStrs.has(strKey)) continue;
 
         const current = l.get(strKey)?.timestamp || 0;

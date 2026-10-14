@@ -4781,7 +4781,42 @@ button, a, input, select, textarea, [role=button], [onclick] {
   align-items: center;
   gap: 0.5rem;
 }
+.exercise-card-meta-dot {
+  color: var(--border-medium);
+  font-size: 0.65rem;
+  user-select: none;
+  opacity: 0.7;
+}
+
+.exercise-card-rest-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  padding: 0.15rem 0.5rem 0.15rem 0.45rem;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.exercise-card-rest-pill:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px var(--accent-glow, rgba(0, 133, 255, 0.2));
+}
+
+.exercise-card-rest-pill:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-glow, rgba(0, 133, 255, 0.25));
+}
+
 .exercise-card-rest-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   background: transparent;
   border: none;
   font-size: 0.72rem;
@@ -4789,11 +4824,26 @@ button, a, input, select, textarea, [role=button], [onclick] {
   color: var(--text-primary);
   outline: none;
   cursor: pointer;
-  padding: 0;
+  padding: 0 0.1rem 0 0;
   font-family: var(--font-main);
+  line-height: 1;
 }
+
 .exercise-card-rest-select option {
-  background: var(--bg-primary);
+  background: #1C1C1E;
+  color: #FFFFFF;
+  padding: 0.5rem;
+}
+
+.exercise-card-rest-chevron {
+  pointer-events: none;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.exercise-card-rest-pill:hover .exercise-card-rest-chevron {
+  color: var(--text-secondary);
 }
 .exercise-card-actions {
   display: flex;

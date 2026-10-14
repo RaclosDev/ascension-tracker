@@ -72,14 +72,14 @@ export default function MacroDistributionCalculator({
       </p>
 
       {/* STRATEGY TOGGLE */}
-      <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10 max-w-md">
+      <div className="flex gap-2 p-1 bg-white/[0.04] rounded-xl border border-white/10 max-w-md">
         <button
           type="button"
           onClick={() => setStrategy('bodyweight')}
-          className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+          className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
             strategy === 'bodyweight'
-              ? 'bg-[var(--accent-primary,#e11d48)] text-white shadow'
-              : 'text-gray-400 hover:text-white'
+              ? 'bg-[var(--accent-primary)] text-white shadow-md'
+              : 'text-gray-400 hover:text-white hover:bg-white/5'
           }`}
         >
           Por Peso Corporal (g/kg - Atletas)
@@ -87,10 +87,10 @@ export default function MacroDistributionCalculator({
         <button
           type="button"
           onClick={() => setStrategy('percentage')}
-          className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+          className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
             strategy === 'percentage'
-              ? 'bg-[var(--accent-primary,#e11d48)] text-white shadow'
-              : 'text-gray-400 hover:text-white'
+              ? 'bg-[var(--accent-primary)] text-white shadow-md'
+              : 'text-gray-400 hover:text-white hover:bg-white/5'
           }`}
         >
           Por Porcentajes (%)
@@ -108,7 +108,7 @@ export default function MacroDistributionCalculator({
             type="number"
             inputMode="numeric"
             step="50"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition-all"
             placeholder="2200"
             value={targetKcal}
             onChange={(e) => setTargetKcal(e.target.value)}
@@ -125,7 +125,7 @@ export default function MacroDistributionCalculator({
               type="number"
               inputMode="decimal"
               step="0.5"
-              className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+              className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition-all"
               placeholder="75.0"
               value={weightKg}
               onChange={(e) => setWeightKg(e.target.value)}
@@ -139,7 +139,7 @@ export default function MacroDistributionCalculator({
           </label>
           <select
             id={mealsId}
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition-all"
             value={mealsCount}
             onChange={(e) => setMealsCount(parseInt(e.target.value, 10))}
           >
@@ -154,9 +154,9 @@ export default function MacroDistributionCalculator({
 
       {/* STRATEGY-SPECIFIC CONTROLS */}
       {strategy === 'bodyweight' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/10">
           <div>
-            <div className="flex justify-between text-xs mb-1">
+            <div className="flex justify-between text-xs mb-1.5">
               <span className="font-semibold text-rose-300">Proteína: {proteinGPerKg} g/kg</span>
               <span className="text-gray-400">Recomendado: 1.6 - 2.4 g/kg</span>
             </div>
@@ -173,7 +173,7 @@ export default function MacroDistributionCalculator({
           </div>
 
           <div>
-            <div className="flex justify-between text-xs mb-1">
+            <div className="flex justify-between text-xs mb-1.5">
               <span className="font-semibold text-amber-300">Grasas: {fatGPerKg} g/kg</span>
               <span className="text-gray-400">Recomendado: 0.7 - 1.2 g/kg</span>
             </div>
@@ -190,34 +190,34 @@ export default function MacroDistributionCalculator({
           </div>
         </div>
       ) : (
-        <div className="space-y-3 p-4 rounded-xl bg-white/5 border border-white/10">
+        <div className="space-y-3 p-4 rounded-2xl bg-white/[0.03] border border-white/10">
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="text-gray-400 self-center">Presets populares:</span>
             <button
               type="button"
               onClick={() => applyPreset(30, 40, 30)}
-              className="px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white font-medium"
+              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/15 text-white font-medium transition-all"
             >
               Balanceado (30P / 40C / 30G)
             </button>
             <button
               type="button"
               onClick={() => applyPreset(35, 25, 40)}
-              className="px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white font-medium"
+              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/15 text-white font-medium transition-all"
             >
               Definición (35P / 25C / 40G)
             </button>
             <button
               type="button"
               onClick={() => applyPreset(25, 5, 70)}
-              className="px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white font-medium"
+              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/15 text-white font-medium transition-all"
             >
               Keto / Cetogénica (25P / 5C / 70G)
             </button>
             <button
               type="button"
               onClick={() => applyPreset(20, 60, 20)}
-              className="px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white font-medium"
+              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/15 text-white font-medium transition-all"
             >
               Resistencia (20P / 60C / 20G)
             </button>
@@ -240,7 +240,7 @@ export default function MacroDistributionCalculator({
                 value={proteinPct}
                 onChange={(e) => setProteinPct(parseInt(e.target.value, 10) || 0)}
                 aria-label="Porcentaje de proteína"
-                className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
+                className="w-full px-3 py-2 bg-[#2C2C2E] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition-all"
               />
             </div>
             <div>
@@ -259,7 +259,7 @@ export default function MacroDistributionCalculator({
                 value={carbsPct}
                 onChange={(e) => setCarbsPct(parseInt(e.target.value, 10) || 0)}
                 aria-label="Porcentaje de carbohidratos"
-                className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
+                className="w-full px-3 py-2 bg-[#2C2C2E] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition-all"
               />
             </div>
             <div>
@@ -278,7 +278,7 @@ export default function MacroDistributionCalculator({
                 value={fatPct}
                 onChange={(e) => setFatPct(parseInt(e.target.value, 10) || 0)}
                 aria-label="Porcentaje de grasas"
-                className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
+                className="w-full px-3 py-2 bg-[#2C2C2E] border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition-all"
               />
             </div>
           </div>
@@ -287,9 +287,12 @@ export default function MacroDistributionCalculator({
 
       {/* WARNING NOTIFICATION */}
       {result.warnings && result.warnings.length > 0 && (
-        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
+        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex flex-col gap-1">
           {result.warnings.map((w, idx) => (
-            <div key={idx}>⚠ {w}</div>
+            <div key={idx} className="flex items-center gap-1.5">
+              <span>⚠</span>
+              <span>{w}</span>
+            </div>
           ))}
         </div>
       )}
@@ -297,36 +300,42 @@ export default function MacroDistributionCalculator({
       {/* KPI MACRO CARDS */}
       <div role="status" aria-live="polite" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Proteína */}
-        <div className="p-4 rounded-xl bg-gradient-to-br from-rose-950/40 to-black/40 border border-rose-500/20">
-          <div className="flex justify-between items-center text-xs text-rose-400 font-bold uppercase">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-rose-950/30 to-black/40 border border-rose-500/20 backdrop-blur-sm">
+          <div className="flex justify-between items-center text-xs text-rose-400 font-bold uppercase tracking-wider">
             <span>Proteína</span>
-            <span>{result.protein.percentage}%</span>
+            <span className="px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20">
+              {result.protein.percentage}%
+            </span>
           </div>
-          <div className="text-3xl font-extrabold text-white mt-1">
+          <div className="text-3xl font-extrabold text-white mt-2">
             {result.protein.grams} <span className="text-sm font-normal text-gray-400">g</span>
           </div>
           <div className="text-xs text-gray-400 mt-1">{result.protein.kcal} kcal (4 kcal/g)</div>
         </div>
 
         {/* Carbohidratos */}
-        <div className="p-4 rounded-xl bg-gradient-to-br from-sky-950/40 to-black/40 border border-sky-500/20">
-          <div className="flex justify-between items-center text-xs text-sky-400 font-bold uppercase">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-sky-950/30 to-black/40 border border-sky-500/20 backdrop-blur-sm">
+          <div className="flex justify-between items-center text-xs text-sky-400 font-bold uppercase tracking-wider">
             <span>Carbohidratos</span>
-            <span>{result.carbs.percentage}%</span>
+            <span className="px-2 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/20">
+              {result.carbs.percentage}%
+            </span>
           </div>
-          <div className="text-3xl font-extrabold text-white mt-1">
+          <div className="text-3xl font-extrabold text-white mt-2">
             {result.carbs.grams} <span className="text-sm font-normal text-gray-400">g</span>
           </div>
           <div className="text-xs text-gray-400 mt-1">{result.carbs.kcal} kcal (4 kcal/g)</div>
         </div>
 
         {/* Grasas */}
-        <div className="p-4 rounded-xl bg-gradient-to-br from-amber-950/40 to-black/40 border border-amber-500/20">
-          <div className="flex justify-between items-center text-xs text-amber-400 font-bold uppercase">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-950/30 to-black/40 border border-amber-500/20 backdrop-blur-sm">
+          <div className="flex justify-between items-center text-xs text-amber-400 font-bold uppercase tracking-wider">
             <span>Grasas Saludables</span>
-            <span>{result.fat.percentage}%</span>
+            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+              {result.fat.percentage}%
+            </span>
           </div>
-          <div className="text-3xl font-extrabold text-white mt-1">
+          <div className="text-3xl font-extrabold text-white mt-2">
             {result.fat.grams} <span className="text-sm font-normal text-gray-400">g</span>
           </div>
           <div className="text-xs text-gray-400 mt-1">{result.fat.kcal} kcal (9 kcal/g)</div>
@@ -335,31 +344,31 @@ export default function MacroDistributionCalculator({
 
       {/* PER-MEAL BREAKDOWN */}
       {result.perMeal && (
-        <div className="p-4 rounded-xl bg-[#161618] border border-white/10 space-y-2">
+        <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 backdrop-blur-sm">
           <h4 className="text-xs font-bold text-gray-300 uppercase tracking-wider">
             Reparto recomendado por plato ({result.perMeal.mealCount} comidas):
           </h4>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-            <div className="p-2.5 rounded-lg bg-white/5 border border-white/5">
-              <span className="text-[11px] text-gray-400 block">Calorías por plato</span>
+            <div className="p-3 rounded-xl bg-white/[0.04] border border-white/5">
+              <span className="text-[11px] text-gray-400 block mb-0.5">Calorías por plato</span>
               <span className="text-base font-extrabold text-white">
                 {result.perMeal.kcal} kcal
               </span>
             </div>
-            <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20">
-              <span className="text-[11px] text-rose-300 block">Proteína por plato</span>
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
+              <span className="text-[11px] text-rose-300 block mb-0.5">Proteína por plato</span>
               <span className="text-base font-extrabold text-white">
                 {result.perMeal.proteinGrams} g
               </span>
             </div>
-            <div className="p-2.5 rounded-lg bg-sky-500/10 border border-sky-500/20">
-              <span className="text-[11px] text-sky-300 block">Carbos por plato</span>
+            <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/20">
+              <span className="text-[11px] text-sky-300 block mb-0.5">Carbos por plato</span>
               <span className="text-base font-extrabold text-white">
                 {result.perMeal.carbsGrams} g
               </span>
             </div>
-            <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <span className="text-[11px] text-amber-300 block">Grasas por plato</span>
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <span className="text-[11px] text-amber-300 block mb-0.5">Grasas por plato</span>
               <span className="text-base font-extrabold text-white">
                 {result.perMeal.fatGrams} g
               </span>

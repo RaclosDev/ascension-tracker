@@ -56,6 +56,8 @@ public class WorkoutPreferencesService {
                 .exerciseVariants(new HashMap<>())
                 .hiddenEquipments(new ArrayList<>())
                 .exerciseGifs(new HashMap<>())
+                .restTimers(new HashMap<>())
+                .restPreset(90)
                 .build();
     }
 
@@ -66,6 +68,8 @@ public class WorkoutPreferencesService {
         if (dto.getExerciseVariants() == null) dto.setExerciseVariants(new HashMap<>());
         if (dto.getHiddenEquipments() == null) dto.setHiddenEquipments(new ArrayList<>());
         if (dto.getExerciseGifs() == null) dto.setExerciseGifs(new HashMap<>());
+        if (dto.getRestTimers() == null) dto.setRestTimers(new HashMap<>());
+        if (dto.getRestPreset() == null) dto.setRestPreset(90);
         return dto;
     }
 }
