@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Check, ChevronDown, ChevronUp, Plus, Trash2, Timer } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Plus, Trash2, Timer, MoreVertical } from 'lucide-react';
 import { getExerciseMap } from '@/lib/workout/exercises';
 import {
   isPrSet,
@@ -9,6 +9,7 @@ import {
   formatRestFriendly,
 } from '@/lib/workout/format';
 import { initAudioAndNotifications } from '@/lib/workout/notifications';
+import { haptics } from '@/lib/haptics';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { VariantSelector } from './variant-selector';
 import {
@@ -112,10 +113,10 @@ export const SwipeableSetRow = React.memo(
               onClick={(e) => {
                 e.stopPropagation();
                 cycleSetType(rowId, s.id);
+                haptics.light();
               }}
               title="Cambiar tipo de serie"
               className={`set-type-btn ${s.type === 'warmup' ? 'warmup' : s.type === 'failure' ? 'failure' : ''}`}
-              style={{ width: '30px', height: '28px', fontSize: '0.7rem' }}
             >
               {typeLabel}
             </button>
@@ -165,7 +166,9 @@ export const SwipeableSetRow = React.memo(
             inputMode="numeric"
             pattern="[0-9]*"
             value={isCardio ? s.duration || '' : s.reps || ''}
-            placeholder="0"
+            placeholder={
+              prev === '' ? '0' : prev.split('×')[1]?.replace(/[^\d]/g, '')?.trim() || '0'
+            }
             onChange={(e) => {
               if (isCardio) {
                 updateSet(rowId, s.id, { duration: e.target.value });
@@ -192,6 +195,11 @@ export const SwipeableSetRow = React.memo(
               e.stopPropagation();
               initAudioAndNotifications();
               toggleSet(rowId, s.id);
+              if (!s.completed) {
+                haptics.success();
+              } else {
+                haptics.light();
+              }
             }}
             aria-label={s.completed ? 'Desmarcar serie' : 'Completar serie'}
             className={`set-check-btn ${s.completed ? 'checked' : ''}`}
@@ -286,6 +294,7 @@ export const ExerciseCard = React.memo(function ExerciseCard({
   const exerciseVariants = prefs?.exerciseVariants || {};
   const customGifs = prefs?.exerciseGifs || {};
   const [editingVariant, setEditingVariant] = useState(false);
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
 
   const catalog = getExerciseMap(customExercises);
   const meta = row ? catalog.get(row.exerciseId) : undefined;
@@ -443,47 +452,83 @@ export const ExerciseCard = React.memo(function ExerciseCard({
             </div>
           </div>
         </div>
-        <div className="exercise-card-actions">
-          <ChevronDown
-            size={18}
-            style={{
-              color: 'var(--text-muted)',
-              transform: collapsed ? 'rotate(-90deg)' : 'none',
-              transition: 'transform 0.2s ease',
-            }}
-          />
+        <div className="exercise-card-actions" onClick={(e) => e.stopPropagation()}>
           <button
-            disabled={index === 0}
-            aria-label="Subir"
-            onClick={(e) => {
-              e.stopPropagation();
-              moveExercise(row.id, -1);
+            type="button"
+            aria-label="Opciones del ejercicio"
+            onClick={() => {
+              haptics.light();
+              setShowActionsMenu(!showActionsMenu);
+            }}
+            className="exercise-card-action-btn"
+            title="Opciones del ejercicio"
+          >
+            <MoreVertical size={18} />
+          </button>
+          <button
+            type="button"
+            aria-label={collapsed ? 'Expandir ejercicio' : 'Colapsar ejercicio'}
+            onClick={() => {
+              haptics.medium();
+              setCollapsed(!collapsed);
             }}
             className="exercise-card-action-btn"
           >
-            <ChevronUp size={20} />
+            <ChevronDown
+              size={18}
+              style={{
+                color: 'var(--text-muted)',
+                transform: collapsed ? 'rotate(-90deg)' : 'none',
+                transition: 'transform 0.2s ease',
+              }}
+            />
           </button>
-          <button
-            disabled={index === total - 1}
-            aria-label="Bajar"
-            onClick={(e) => {
-              e.stopPropagation();
-              moveExercise(row.id, 1);
-            }}
-            className="exercise-card-action-btn"
-          >
-            <ChevronDown size={20} />
-          </button>
-          <button
-            aria-label="Quitar ejercicio"
-            onClick={(e) => {
-              e.stopPropagation();
-              removeExercise(row.id);
-            }}
-            className="exercise-card-action-btn danger"
-          >
-            <Trash2 size={18} />
-          </button>
+
+          {showActionsMenu && (
+            <div className="exercise-card-menu-dropdown fade-in">
+              <button
+                type="button"
+                disabled={index === 0}
+                aria-label="Subir"
+                onClick={() => {
+                  haptics.light();
+                  moveExercise(row.id, -1);
+                  setShowActionsMenu(false);
+                }}
+                className="exercise-card-menu-item"
+              >
+                <ChevronUp size={16} />
+                <span>Mover arriba</span>
+              </button>
+              <button
+                type="button"
+                disabled={index === total - 1}
+                aria-label="Bajar"
+                onClick={() => {
+                  haptics.light();
+                  moveExercise(row.id, 1);
+                  setShowActionsMenu(false);
+                }}
+                className="exercise-card-menu-item"
+              >
+                <ChevronDown size={16} />
+                <span>Mover abajo</span>
+              </button>
+              <button
+                type="button"
+                aria-label="Quitar ejercicio"
+                onClick={() => {
+                  haptics.warning();
+                  removeExercise(row.id);
+                  setShowActionsMenu(false);
+                }}
+                className="exercise-card-menu-item danger"
+              >
+                <Trash2 size={16} />
+                <span>Quitar ejercicio</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

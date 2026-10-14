@@ -16,8 +16,9 @@ import { ExerciseCard } from '@/components/workout/exercise-card';
 import { ExercisePicker } from '@/components/workout/exercise-picker';
 import { RestBanner } from '@/components/workout/rest-banner';
 import { EmptyCard } from '@/components/workout/dashboard';
+import { WorkoutCelebrationModal } from '@/components/workout/WorkoutCelebrationModal';
 import { useWorkoutStore } from '@/lib/workout/store';
-import type { WorkoutExercise } from '@/lib/workout/types';
+import type { CompletedWorkout, WorkoutExercise } from '@/lib/workout/types';
 
 const EMPTY_EXERCISES: WorkoutExercise[] = [];
 
@@ -25,6 +26,8 @@ export function ActiveWorkout() {
   const hasActive = useWorkoutStore((s) => s.active !== null);
   const startEmpty = useWorkoutStore((s) => s.startEmpty);
   const setPickerOpen = useWorkoutStore((s) => s.setPickerOpen);
+  const clearActiveWorkout = useWorkoutStore((s) => s.clearActiveWorkout);
+  const [completedSummary, setCompletedSummary] = useState<CompletedWorkout | null>(null);
 
   if (!hasActive) {
     return (
@@ -93,7 +96,15 @@ export function ActiveWorkout() {
         <Plus size={18} />
         Añadir ejercicio
       </button>
-      <FooterActions />
+      <FooterActions onWorkoutSaved={(w) => setCompletedSummary(w)} />
+      <WorkoutCelebrationModal
+        open={completedSummary !== null}
+        onClose={() => {
+          setCompletedSummary(null);
+          clearActiveWorkout();
+        }}
+        workout={completedSummary}
+      />
     </>
   );
 }
@@ -102,6 +113,12 @@ function LiveSession() {
   const navigate = useNavigate();
   const workoutName = useWorkoutStore((s) => s.active?.name?.trim() || 'Entrenamiento');
   const exercises = useWorkoutStore((s) => s.active?.exercises ?? EMPTY_EXERCISES);
+
+  const totalSetsCount = exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
+  const completedSetsCount = exercises.reduce(
+    (acc, ex) => acc + ex.sets.filter((s) => s.completed).length,
+    0,
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -138,23 +155,42 @@ function LiveSession() {
           </h2>
         </div>
 
-        <button
-          type="button"
-          onClick={() => navigate('/dashboard')}
-          className="btn btn-secondary live-session-minimize-btn"
-          style={{
-            alignItems: 'center',
-            gap: '0.35rem',
-            padding: '0.45rem 0.85rem',
-            fontSize: '0.85rem',
-            fontWeight: 500,
-          }}
-          aria-label="Minimizar entrenamiento y navegar por la app"
-          title="Minimizar entrenamiento"
-        >
-          <ChevronDown size={16} />
-          <span>Minimizar</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {totalSetsCount > 0 && (
+            <span
+              style={{
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                padding: '0.35rem 0.65rem',
+                borderRadius: '9999px',
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                color: 'var(--text-primary)',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {completedSetsCount}/{totalSetsCount} series
+            </span>
+          )}
+
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard')}
+            className="btn btn-secondary live-session-minimize-btn"
+            style={{
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.45rem 0.85rem',
+              fontSize: '0.85rem',
+              fontWeight: 500,
+            }}
+            aria-label="Minimizar entrenamiento y navegar por la app"
+            title="Minimizar entrenamiento"
+          >
+            <ChevronDown size={16} />
+            <span>Minimizar</span>
+          </button>
+        </div>
       </header>
 
       <RestBanner />
@@ -191,7 +227,11 @@ function LiveSession() {
 
 import { useSaveWorkout, useSaveTemplate } from '@/lib/workout/api';
 
-function FooterActions() {
+interface FooterActionsProps {
+  onWorkoutSaved?: (workout: CompletedWorkout) => void;
+}
+
+function FooterActions({ onWorkoutSaved }: FooterActionsProps) {
   const finishWorkout = useWorkoutStore((s) => s.finishWorkout);
   const clearActiveWorkout = useWorkoutStore((s) => s.clearActiveWorkout);
   const discardWorkout = useWorkoutStore((s) => s.discardWorkout);
@@ -232,8 +272,12 @@ function FooterActions() {
     if (!record) return;
     saveWorkoutMutation.mutate(record, {
       onSuccess: () => {
-        clearActiveWorkout();
         setFinishOpen(false);
+        if (onWorkoutSaved) {
+          onWorkoutSaved(record);
+        } else {
+          clearActiveWorkout();
+        }
       },
       onError: () => {
         setSaveError(
