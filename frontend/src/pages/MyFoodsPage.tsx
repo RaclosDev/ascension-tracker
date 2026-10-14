@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Skeleton } from '../components/ui/skeleton';
 import { useMyFoodsData } from '../hooks/my-foods/useMyFoodsData';
 import { useFoodFilters } from '../hooks/my-foods/useFoodFilters';
@@ -49,6 +49,14 @@ export default function MyFoodsPage() {
   );
 
   const meals = useMealSelection(savedFoods);
+
+  useEffect(() => {
+    (window as unknown as { __testScanBarcode?: (code: string) => void }).__testScanBarcode =
+      scanner.handleScanBarcode;
+    return () => {
+      delete (window as unknown as { __testScanBarcode?: unknown }).__testScanBarcode;
+    };
+  }, [scanner.handleScanBarcode]);
 
   const [expandedSections, setExpandedSections] = useState({
     recent: true,
@@ -269,7 +277,7 @@ export default function MyFoodsPage() {
 
       {isActionMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-50 flex flex-col justify-end"
+          className="fixed inset-0 bg-black/60 z-[1050] flex flex-col justify-end"
           onClick={() => setIsActionMenuOpen(false)}
         >
           <div
@@ -325,7 +333,7 @@ export default function MyFoodsPage() {
       )}
 
       {scanner.isScannerOpen && (
-        <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/75 z-[1050] flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-zinc-900 p-5 rounded-2xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="m-0 text-white">Escanear</h3>
@@ -356,9 +364,7 @@ export default function MyFoodsPage() {
                       {scanner.scannedProduct.name}
                     </h4>
                     {scanner.scannedProduct.brand && (
-                      <p className="text-zinc-400 text-sm m-0">
-                        {scanner.scannedProduct.brand}
-                      </p>
+                      <p className="text-zinc-400 text-sm m-0">{scanner.scannedProduct.brand}</p>
                     )}
                   </div>
                   {scanner.scannedProduct.imageUrl && (
