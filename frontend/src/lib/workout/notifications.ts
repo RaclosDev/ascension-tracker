@@ -1,4 +1,5 @@
 import api from '@/api/client';
+import { haptics } from '@/lib/haptics';
 //  Notifications module
 // Handles:
 // 1. Subscribing to Web Push (so the server can send background notifications)
@@ -50,6 +51,7 @@ export async function initAudioAndNotifications() {
  * Play the bell sound (only works when app is in foreground).
  */
 export function playRestSound() {
+  haptics.alarm();
   if (!audio) return;
   try {
     audio.currentTime = 0;

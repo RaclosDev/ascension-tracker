@@ -491,24 +491,24 @@ export default function AiNutritionChef() {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           aria-label="Adjuntar foto de comida"
-          className="w-10 h-10 rounded-full bg-[#1C1C1E] border border-white/10 text-white flex items-center justify-center flex-shrink-0 hover:bg-white/10 transition-colors"
+          className="w-11 h-11 rounded-full bg-[#1C1C1E] border border-white/10 text-white flex items-center justify-center flex-shrink-0 hover:bg-white/10 transition-colors"
           title="Adjuntar foto de comida"
         >
-          <Camera size={16} />
+          <Camera size={18} />
         </button>
 
         <button
           type="button"
           onClick={() => toggleListening(userInput)}
           aria-label={isListening ? 'Detener dictado por voz' : 'Dictar por voz'}
-          className={`w-10 h-10 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
+          className={`w-11 h-11 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
             isListening
               ? 'bg-red-500/20 text-red-500 border-red-500 animate-pulse'
               : 'bg-[#1C1C1E] border-white/10 text-white hover:bg-white/10'
           }`}
           title={isListening ? 'Detener dictado' : 'Dictar por voz'}
         >
-          {isListening ? <Square size={16} /> : <Mic size={16} />}
+          {isListening ? <Square size={18} /> : <Mic size={18} />}
         </button>
 
         <label htmlFor="ai-chef-user-input" className="sr-only">

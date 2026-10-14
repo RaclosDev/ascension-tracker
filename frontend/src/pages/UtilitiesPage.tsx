@@ -55,7 +55,10 @@ export default function UtilitiesPage() {
   });
 
   return (
-    <div className="fade-in max-w-2xl mx-auto px-4 pt-2 sm:pt-4" style={{ paddingBottom: '7rem' }}>
+    <div
+      className="fade-in max-w-2xl mx-auto px-4 pt-2 sm:pt-4"
+      style={{ paddingBottom: 'calc(110px + env(safe-area-inset-bottom, 24px))' }}
+    >
       {/* HEADER */}
       <header className="mb-6 pb-2 border-b border-white/5">
         <h1 className="text-2xl font-black text-white tracking-tight">Utilidades y Calculadoras</h1>
