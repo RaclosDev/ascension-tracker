@@ -72,11 +72,6 @@ export default function NutritionCalculators() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-        Estima tu porcentaje de grasa corporal y masa magra mediante el método biométrico de la
-        Marina de EE.UU. (US Navy Body Fat Formula).
-      </p>
-
       {/* Selector de Sexo */}
       <div>
         <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2 uppercase tracking-wider">
@@ -121,7 +116,7 @@ export default function NutritionCalculators() {
             id="calc-bf-height"
             type="number"
             inputMode="decimal"
-            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
+            className="w-full px-3.5 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
             value={heightCm}
             onChange={(e) => setHeightCm(e.target.value)}
             placeholder="Ej: 175"
@@ -138,7 +133,7 @@ export default function NutritionCalculators() {
             id="calc-bf-weight"
             type="number"
             inputMode="decimal"
-            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
+            className="w-full px-3.5 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
             value={weightKg}
             onChange={(e) => setWeightKg(e.target.value)}
             placeholder="Ej: 75.0"
@@ -159,7 +154,7 @@ export default function NutritionCalculators() {
             id="calc-bf-waist"
             type="number"
             inputMode="decimal"
-            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
+            className="w-full px-3.5 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
             value={waistCm}
             onChange={(e) => setWaistCm(e.target.value)}
             placeholder="A nivel del ombligo"
@@ -177,7 +172,7 @@ export default function NutritionCalculators() {
             id="calc-bf-neck"
             type="number"
             inputMode="decimal"
-            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
+            className="w-full px-3.5 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
             value={neckCm}
             onChange={(e) => setNeckCm(e.target.value)}
             placeholder="Debajo de la laringe"
@@ -196,7 +191,7 @@ export default function NutritionCalculators() {
               id="calc-bf-hip"
               type="number"
               inputMode="decimal"
-              className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
+              className="w-full px-3.5 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-medium text-sm"
               value={hipCm}
               onChange={(e) => setHipCm(e.target.value)}
               placeholder="Zona más ancha"

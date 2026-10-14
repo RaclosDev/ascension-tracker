@@ -193,11 +193,6 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-        Conversión bidireccional instantánea de unidades biométricas entre el sistema métrico
-        internacional y el sistema imperial/británico.
-      </p>
-
       {/* CATEGORY TABS */}
       <div className="flex flex-wrap gap-2 p-1 bg-white/5 rounded-2xl border border-white/10">
         {CATEGORIES.map((cat) => {
@@ -239,7 +234,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   type="number"
                   inputMode="decimal"
                   step="0.1"
-                  className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-lg focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
+                  className="w-full px-3.5 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-lg focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
                   value={kgVal}
                   onChange={(e) => handleKgChange(e.target.value)}
                 />
@@ -267,7 +262,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   type="number"
                   inputMode="decimal"
                   step="0.1"
-                  className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-lg focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
+                  className="w-full px-3.5 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-lg focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
                   value={lbsVal}
                   onChange={(e) => handleLbsChange(e.target.value)}
                 />
@@ -299,7 +294,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     type="number"
                     inputMode="numeric"
                     aria-label="Piedras (stones)"
-                    className="w-full px-3 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-base focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
+                    className="w-full px-3 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-base focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
                     value={stonesVal}
                     onChange={(e) => handleStoneChange(e.target.value, stoneLbsVal)}
                   />
@@ -317,7 +312,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     inputMode="decimal"
                     step="0.1"
                     aria-label="Libras adicionales (st)"
-                    className="w-full px-3 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-base focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
+                    className="w-full px-3 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-base focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
                     value={stoneLbsVal}
                     onChange={(e) => handleStoneChange(stonesVal, e.target.value)}
                   />
@@ -342,7 +337,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   type="number"
                   inputMode="decimal"
                   step="0.5"
-                  className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-lg focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
+                  className="w-full px-3.5 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-lg focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
                   value={cmVal}
                   onChange={(e) => handleCmChange(e.target.value)}
                 />
@@ -370,7 +365,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   type="number"
                   inputMode="decimal"
                   step="0.1"
-                  className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-lg focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
+                  className="w-full px-3.5 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-lg focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
                   value={inVal}
                   onChange={(e) => handleInchesChange(e.target.value)}
                 />
@@ -402,7 +397,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     type="number"
                     inputMode="numeric"
                     aria-label="Pies (ft)"
-                    className="w-full px-3 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-base focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
+                    className="w-full px-3 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-base focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
                     value={feetVal}
                     onChange={(e) => handleFeetInchesChange(e.target.value, feetInVal)}
                   />
@@ -420,7 +415,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     inputMode="decimal"
                     step="0.1"
                     aria-label="Pulgadas adicionales (in)"
-                    className="w-full px-3 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-base focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
+                    className="w-full px-3 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-base focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
                     value={feetInVal}
                     onChange={(e) => handleFeetInchesChange(feetVal, e.target.value)}
                   />
@@ -445,7 +440,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   type="number"
                   inputMode="decimal"
                   step="0.1"
-                  className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-lg focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
+                  className="w-full px-3.5 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-lg focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
                   value={kmVal}
                   onChange={(e) => handleKmChange(e.target.value)}
                 />
@@ -473,7 +468,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   type="number"
                   inputMode="decimal"
                   step="0.1"
-                  className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-lg focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
+                  className="w-full px-3.5 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-lg focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
                   value={miVal}
                   onChange={(e) => handleMilesChange(e.target.value)}
                 />
@@ -509,7 +504,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     type="number"
                     inputMode="numeric"
                     aria-label="Minutos por kilómetro"
-                    className="w-full px-3 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-base focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
+                    className="w-full px-3 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-base focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
                     value={paceMin}
                     onChange={(e) => handlePaceKmChange(e.target.value, paceSec)}
                   />
@@ -527,7 +522,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     inputMode="numeric"
                     max="59"
                     aria-label="Segundos por kilómetro"
-                    className="w-full px-3 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-base focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
+                    className="w-full px-3 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-base focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
                     value={paceSec}
                     onChange={(e) => handlePaceKmChange(paceMin, e.target.value)}
                   />
@@ -555,7 +550,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     type="number"
                     inputMode="numeric"
                     aria-label="Minutos por milla (calculado)"
-                    className="w-full px-3 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-base opacity-90"
+                    className="w-full px-3 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-base opacity-90"
                     value={paceMiMin}
                     readOnly
                   />
@@ -572,7 +567,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     type="number"
                     inputMode="numeric"
                     aria-label="Segundos por milla (calculado)"
-                    className="w-full px-3 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-base opacity-90"
+                    className="w-full px-3 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-base opacity-90"
                     value={paceMiSec}
                     readOnly
                   />
@@ -596,7 +591,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                 type="number"
                 inputMode="decimal"
                 step="0.1"
-                className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-lg focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
+                className="w-full px-3.5 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-lg focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
                 value={speedKmhVal}
                 onChange={(e) => handleSpeedKmhChange(e.target.value)}
               />
@@ -614,7 +609,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                 type="number"
                 inputMode="decimal"
                 step="0.1"
-                className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white font-display font-bold text-lg opacity-90"
+                className="w-full px-3.5 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-xl text-white font-display font-bold text-lg opacity-90"
                 value={speedMphVal}
                 readOnly
               />
