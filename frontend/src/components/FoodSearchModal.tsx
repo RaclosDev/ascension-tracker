@@ -241,7 +241,7 @@ export default function FoodSearchModal({
       setOffResults(allCleanProducts);
 
       if (allCleanProducts.length === 0) {
-        toast('No se encontraron resultados exactos', { icon: 'â„¹ï¸' });
+        toast('No se encontraron resultados exactos', { icon: 'ℹ️' });
       }
     } catch (err) {
       if (currentRequestId !== searchRequestId.current) return;
@@ -518,7 +518,12 @@ export default function FoodSearchModal({
   return (
     <>
       <div className="workout-sheet-overlay" onClick={onClose} />
-      <div className="food-search-fullscreen" role="dialog" aria-modal="true" aria-labelledby="food-search-title">
+      <div
+        className="food-search-fullscreen"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="food-search-title"
+      >
         <div className="food-search-header">
           {selectedProduct || activeOverlay !== 'none' ? (
             <button

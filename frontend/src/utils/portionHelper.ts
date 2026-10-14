@@ -1,4 +1,4 @@
-﻿export function getSanitizedKcal(nutriments: Record<string, unknown> | undefined) {
+export function getSanitizedKcal(nutriments: Record<string, unknown> | undefined) {
   if (!nutriments) return 0;
 
   const kcal = Number(nutriments['energy-kcal_100g'] ?? nutriments['energy-kcal'] ?? 0);
