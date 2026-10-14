@@ -22,8 +22,8 @@ export default function CalculatorCard({
 
   return (
     <div
-      className={`card accordion-card transition-all duration-300 ease-out ${
-        isOpen ? 'p-5 sm:p-6' : 'px-5 py-4'
+      className={`card accordion-card rounded-3xl backdrop-blur-2xl bg-gradient-to-b from-white/[0.06] via-white/[0.02] to-transparent border border-white/10 hover:border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.12)] transition-all duration-300 ease-out ${
+        isOpen ? 'p-5 sm:p-7' : 'px-5 py-4 sm:px-6'
       }`}
     >
       <button

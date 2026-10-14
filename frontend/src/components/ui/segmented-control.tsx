@@ -1,4 +1,3 @@
-import React from 'react';
 import { cn } from '../../lib/utils';
 
 export interface SegmentedControlOption {
@@ -16,15 +15,10 @@ export interface SegmentedControlProps {
 export function SegmentedControl({ options, value, onChange, className }: SegmentedControlProps) {
   return (
     <div
-      className={cn(className)}
-      style={{
-        display: 'flex',
-        background: 'rgba(255, 255, 255, 0.05)',
-        padding: '0.35rem',
-        borderRadius: '20px',
-        position: 'relative',
-        width: '100%',
-      }}
+      className={cn(
+        'flex w-full p-1.5 rounded-2xl bg-black/40 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_8px_24px_rgba(0,0,0,0.5)] gap-1',
+        className,
+      )}
     >
       {options.map((option) => {
         const isActive = value === option.value;
@@ -33,20 +27,12 @@ export function SegmentedControl({ options, value, onChange, className }: Segmen
             key={option.value}
             type="button"
             onClick={() => onChange(option.value)}
-            style={{
-              flex: 1,
-              padding: '0.65rem',
-              borderRadius: '16px',
-              background: isActive ? 'var(--bg-card)' : 'transparent',
-              color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-              fontWeight: isActive ? 600 : 500,
-              boxShadow: isActive ? '0 4px 16px rgba(0,0,0,0.4)' : 'none',
-              border: isActive ? '1px solid var(--border-medium)' : '1px solid transparent',
-              transition: 'all 0.25s ease',
-              cursor: 'pointer',
-              fontSize: '0.9rem',
-              textAlign: 'center',
-            }}
+            className={cn(
+              'flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer text-center truncate',
+              isActive
+                ? 'backdrop-blur-xl bg-gradient-to-b from-white/15 to-white/5 text-white font-bold border border-white/20 shadow-[0_4px_16px_rgba(0,0,0,0.5),0_0_15px_var(--accent-glow)]'
+                : 'text-gray-400 hover:text-white hover:bg-white/[0.05] border border-transparent',
+            )}
           >
             {option.label}
           </button>

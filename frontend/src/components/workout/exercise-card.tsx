@@ -1,16 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Check, ChevronDown, ChevronUp, Plus, Trash2, Timer } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { getExerciseMap } from '@/lib/workout/exercises';
-import {
-  isPrSet,
-  previousSetLabel,
-  formatVariant,
-  formatRestFriendly,
-  matchVariant,
-} from '@/lib/workout/format';
+import { isPrSet, previousSetLabel, formatVariant, matchVariant } from '@/lib/workout/format';
 import { initAudioAndNotifications } from '@/lib/workout/notifications';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { VariantSelector } from './variant-selector';
+import { RestTimerSelect } from './RestTimerSelect';
 import {
   useRecentWorkouts,
   useCustomExercises,
@@ -431,31 +426,13 @@ export const ExerciseCard = React.memo(function ExerciseCard({
                   <span className="exercise-card-meta-dot">•</span>
                 </>
               )}
-              <div
-                className="exercise-card-rest-pill"
-                onClick={(e) => e.stopPropagation()}
-                title="Tiempo de descanso"
-              >
-                <Timer size={12} className="text-primary opacity-80" />
-                <select
-                  value={restTimers[row.exerciseId] ?? restPreset}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    const val = Number(e.target.value);
-                    setExerciseRestTimer(row.exerciseId, val);
-                    setExerciseRestTimerPref(row.exerciseId, val);
-                  }}
-                  className="exercise-card-rest-select"
-                  aria-label="Tiempo de descanso para este ejercicio"
-                >
-                  {[30, 60, 90, 120, 150, 180, 240, 300].map((s) => (
-                    <option key={s} value={s}>
-                      {formatRestFriendly(s)}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={10} className="exercise-card-rest-chevron opacity-60" />
-              </div>
+              <RestTimerSelect
+                value={restTimers[row.exerciseId] ?? restPreset}
+                onChange={(val) => {
+                  setExerciseRestTimer(row.exerciseId, val);
+                  setExerciseRestTimerPref(row.exerciseId, val);
+                }}
+              />
             </div>
           </div>
         </div>

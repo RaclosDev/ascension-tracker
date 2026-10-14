@@ -1,4 +1,5 @@
 import { useState, useId, useMemo } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { calculateMacroDistribution, MacroStrategy } from '../../utils/fitnessCalculators';
 
 interface MacroDistributionCalculatorProps {
@@ -66,19 +67,14 @@ export default function MacroDistributionCalculator({
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-gray-300 leading-relaxed">
-        Distribuye tus macronutrientes diarios (proteínas, carbohidratos y grasas) y calcula las
-        raciones exactas por plato según tu número de comidas.
-      </p>
-
       {/* STRATEGY TOGGLE */}
-      <div className="flex gap-2 p-1 bg-white/[0.04] rounded-xl border border-white/10 max-w-md">
+      <div className="flex gap-2 p-1.5 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 max-w-md shadow-inner">
         <button
           type="button"
           onClick={() => setStrategy('bodyweight')}
-          className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+          className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
             strategy === 'bodyweight'
-              ? 'bg-[var(--accent-primary)] text-white shadow-md'
+              ? 'bg-[var(--accent-primary)] text-white shadow-[0_0_15px_var(--accent-glow)]'
               : 'text-gray-400 hover:text-white hover:bg-white/5'
           }`}
         >
@@ -87,9 +83,9 @@ export default function MacroDistributionCalculator({
         <button
           type="button"
           onClick={() => setStrategy('percentage')}
-          className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+          className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
             strategy === 'percentage'
-              ? 'bg-[var(--accent-primary)] text-white shadow-md'
+              ? 'bg-[var(--accent-primary)] text-white shadow-[0_0_15px_var(--accent-glow)]'
               : 'text-gray-400 hover:text-white hover:bg-white/5'
           }`}
         >
@@ -99,56 +95,88 @@ export default function MacroDistributionCalculator({
 
       {/* TARGET INPUTS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label htmlFor={kcalId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+        <div className="relative rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 focus-within:border-[var(--accent-primary)] focus-within:ring-2 focus-within:ring-[var(--accent-primary)]/20 transition-all p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
+          <label
+            htmlFor={kcalId}
+            className="block text-[11px] font-semibold text-gray-400 mb-1 uppercase tracking-wider"
+          >
             Calorías Objetivo Diarias (kcal)
           </label>
-          <input
-            id={kcalId}
-            type="number"
-            inputMode="numeric"
-            step="50"
-            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition-all"
-            placeholder="2200"
-            value={targetKcal}
-            onChange={(e) => setTargetKcal(e.target.value)}
-          />
+          <div className="flex items-center justify-between">
+            <input
+              id={kcalId}
+              type="number"
+              inputMode="numeric"
+              step="50"
+              className="w-full bg-transparent text-white font-bold text-lg focus:outline-none placeholder:text-gray-600"
+              placeholder="2200"
+              value={targetKcal}
+              onChange={(e) => setTargetKcal(e.target.value)}
+            />
+            <span className="text-xs font-semibold text-gray-400 shrink-0 ml-2 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+              kcal
+            </span>
+          </div>
         </div>
 
         {strategy === 'bodyweight' && (
-          <div>
-            <label htmlFor={weightId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+          <div className="relative rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 focus-within:border-[var(--accent-primary)] focus-within:ring-2 focus-within:ring-[var(--accent-primary)]/20 transition-all p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
+            <label
+              htmlFor={weightId}
+              className="block text-[11px] font-semibold text-gray-400 mb-1 uppercase tracking-wider"
+            >
               Peso Corporal (kg)
             </label>
-            <input
-              id={weightId}
-              type="number"
-              inputMode="decimal"
-              step="0.5"
-              className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition-all"
-              placeholder="75.0"
-              value={weightKg}
-              onChange={(e) => setWeightKg(e.target.value)}
-            />
+            <div className="flex items-center justify-between">
+              <input
+                id={weightId}
+                type="number"
+                inputMode="decimal"
+                step="0.5"
+                className="w-full bg-transparent text-white font-bold text-lg focus:outline-none placeholder:text-gray-600"
+                placeholder="75.0"
+                value={weightKg}
+                onChange={(e) => setWeightKg(e.target.value)}
+              />
+              <span className="text-xs font-semibold text-gray-400 shrink-0 ml-2 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+                kg
+              </span>
+            </div>
           </div>
         )}
 
-        <div>
-          <label htmlFor={mealsId} className="block text-xs font-semibold text-gray-200 mb-1.5">
+        <div className="relative rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 focus-within:border-[var(--accent-primary)] focus-within:ring-2 focus-within:ring-[var(--accent-primary)]/20 transition-all p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
+          <label
+            htmlFor={mealsId}
+            className="block text-[11px] font-semibold text-gray-400 mb-1 uppercase tracking-wider"
+          >
             Comidas por día
           </label>
-          <select
-            id={mealsId}
-            className="w-full px-3.5 py-2.5 bg-[#2C2C2E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition-all"
-            value={mealsCount}
-            onChange={(e) => setMealsCount(parseInt(e.target.value, 10))}
-          >
-            <option value="2">2 comidas (Ayuno / 16:8)</option>
-            <option value="3">3 comidas (Desayuno, Almuerzo, Cena)</option>
-            <option value="4">4 comidas (+ Merienda)</option>
-            <option value="5">5 comidas (+ Media mañana)</option>
-            <option value="6">6 comidas (Atleta alto rendimiento)</option>
-          </select>
+          <div className="relative flex items-center">
+            <select
+              id={mealsId}
+              className="w-full bg-transparent text-white font-medium text-sm focus:outline-none appearance-none cursor-pointer pr-6 truncate"
+              value={mealsCount}
+              onChange={(e) => setMealsCount(parseInt(e.target.value, 10))}
+            >
+              <option value="2" className="bg-[#14141e] text-white">
+                2 comidas (Ayuno / 16:8)
+              </option>
+              <option value="3" className="bg-[#14141e] text-white">
+                3 comidas (Desayuno, Almuerzo, Cena)
+              </option>
+              <option value="4" className="bg-[#14141e] text-white">
+                4 comidas (+ Merienda)
+              </option>
+              <option value="5" className="bg-[#14141e] text-white">
+                5 comidas (+ Media mañana)
+              </option>
+              <option value="6" className="bg-[#14141e] text-white">
+                6 comidas (Atleta alto rendimiento)
+              </option>
+            </select>
+            <ChevronDown size={14} className="text-gray-400 absolute right-0 pointer-events-none" />
+          </div>
         </div>
       </div>
 
