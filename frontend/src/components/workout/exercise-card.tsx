@@ -274,7 +274,7 @@ export const ExerciseCard = React.memo(function ExerciseCard({
   const restPreset = useWorkoutStore((s) => s.restPreset);
   const setExerciseRestTimer = useWorkoutStore((s) => s.setExerciseRestTimer);
   const updateExerciseVariant = useWorkoutStore((s) => s.updateExerciseVariant);
-  const { prefs, addGlobalMachine, addGlobalGrip, addExerciseVariant } =
+  const { prefs, addGripOption, addMachineOption, setExerciseRestTimerPref } =
     useWorkoutPreferencesActions();
   const globalMachines = prefs?.globalMachines || [];
   const globalGrips = prefs?.globalGrips || [];
@@ -363,12 +363,10 @@ export const ExerciseCard = React.memo(function ExerciseCard({
   if (!row) return null;
 
   const handleAddGrip = (val: string) => {
-    addGlobalGrip(val);
-    addExerciseVariant(row.exerciseId, 'grip', val);
+    addGripOption(row.exerciseId, val);
   };
   const handleAddMachine = (val: string) => {
-    addGlobalMachine(val);
-    addExerciseVariant(row.exerciseId, 'machine', val);
+    addMachineOption(row.exerciseId, val);
   };
 
   return (
@@ -434,7 +432,9 @@ export const ExerciseCard = React.memo(function ExerciseCard({
                   value={restTimers[row.exerciseId] ?? restPreset}
                   onChange={(e) => {
                     e.stopPropagation();
-                    setExerciseRestTimer(row.exerciseId, Number(e.target.value));
+                    const val = Number(e.target.value);
+                    setExerciseRestTimer(row.exerciseId, val);
+                    setExerciseRestTimerPref(row.exerciseId, val);
                   }}
                   className="exercise-card-rest-select"
                   aria-label="Tiempo de descanso para este ejercicio"
