@@ -1,7 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Check, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Plus, Trash2, Timer } from 'lucide-react';
 import { getExerciseMap } from '@/lib/workout/exercises';
-import { isPrSet, previousSetLabel, formatVariant, formatRestFriendly } from '@/lib/workout/format';
+import {
+  isPrSet,
+  previousSetLabel,
+  formatVariant,
+  matchVariant,
+  formatRestFriendly,
+} from '@/lib/workout/format';
 import { initAudioAndNotifications } from '@/lib/workout/notifications';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { VariantSelector } from './variant-selector';
@@ -240,8 +246,7 @@ export const SwipeableSetRow = React.memo(
       prev.isCardio === next.isCardio &&
       prev.cols === next.cols &&
       prev.exerciseId === next.exerciseId &&
-      prev.variant?.grip === next.variant?.grip &&
-      prev.variant?.machine === next.variant?.machine &&
+      matchVariant(prev.variant, next.variant) &&
       prev.recentWorkouts === next.recentWorkouts
     );
   },
@@ -274,7 +279,7 @@ export const ExerciseCard = React.memo(function ExerciseCard({
   const restPreset = useWorkoutStore((s) => s.restPreset);
   const setExerciseRestTimer = useWorkoutStore((s) => s.setExerciseRestTimer);
   const updateExerciseVariant = useWorkoutStore((s) => s.updateExerciseVariant);
-  const { prefs, addGlobalMachine, addGlobalGrip, addExerciseVariant } =
+  const { prefs, addGripOption, addMachineOption, setExerciseRestTimerPref } =
     useWorkoutPreferencesActions();
   const globalMachines = prefs?.globalMachines || [];
   const globalGrips = prefs?.globalGrips || [];
@@ -363,12 +368,10 @@ export const ExerciseCard = React.memo(function ExerciseCard({
   if (!row) return null;
 
   const handleAddGrip = (val: string) => {
-    addGlobalGrip(val);
-    addExerciseVariant(row.exerciseId, 'grip', val);
+    addGripOption(row.exerciseId, val);
   };
   const handleAddMachine = (val: string) => {
-    addGlobalMachine(val);
-    addExerciseVariant(row.exerciseId, 'machine', val);
+    addMachineOption(row.exerciseId, val);
   };
 
   return (
@@ -396,42 +399,36 @@ export const ExerciseCard = React.memo(function ExerciseCard({
               style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}
             >
               <span>{meta?.name ?? 'Ejercicio'}</span>
-              {
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingVariant(!editingVariant);
-                  }}
-                  style={{
-                    background: 'var(--bg-elevated)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: '12px',
-                    padding: '0.1rem 0.5rem',
-                    fontSize: '0.65rem',
-                    color: 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  {row.variant && (row.variant.grip || row.variant.machine)
-                    ? formatVariant(row.variant)
-                    : '+ Variante'}
-                </button>
-              }
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingVariant(!editingVariant);
+                }}
+                className="exercise-card-variant-badge"
+              >
+                {row.variant && (row.variant.grip || row.variant.machine)
+                  ? formatVariant(row.variant)
+                  : '+ Variante'}
+              </button>
             </h3>
             <div className="exercise-card-meta">
               <span>{meta ? MUSCLE_LABEL[meta.muscle] : ''}</span>
-              <span style={{ color: 'var(--border-medium)' }}>|</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <span className="exercise-card-meta-dot">•</span>
+              <div
+                className="exercise-card-rest-pill"
+                onClick={(e) => e.stopPropagation()}
+                title="Tiempo de descanso"
+              >
+                <Timer size={12} className="exercise-card-rest-icon" />
                 <select
                   value={restTimers[row.exerciseId] ?? restPreset}
                   onChange={(e) => {
                     e.stopPropagation();
-                    setExerciseRestTimer(row.exerciseId, Number(e.target.value));
+                    const val = Number(e.target.value);
+                    setExerciseRestTimer(row.exerciseId, val);
+                    setExerciseRestTimerPref(row.exerciseId, val);
                   }}
-                  onClick={(e) => e.stopPropagation()}
                   className="exercise-card-rest-select"
                   aria-label="Tiempo de descanso para este ejercicio"
                 >
@@ -441,7 +438,8 @@ export const ExerciseCard = React.memo(function ExerciseCard({
                     </option>
                   ))}
                 </select>
-              </span>
+                <ChevronDown size={11} className="exercise-card-rest-chevron" />
+              </div>
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { get, set, del } from 'idb-keyval';
 import { uid } from '@/lib/utils';
-import { previousFill } from './format';
+import { previousFill, matchVariant } from './format';
 import {
   scheduleServerRestTimer,
   cancelServerRestTimer,
@@ -101,6 +101,10 @@ interface WorkoutState {
   setHiddenEquipments: (equipments: string[]) => void;
   toggleHiddenEquipment: (equip: string) => void;
   updateExerciseVariant: (id: string, variant: { grip?: string; machine?: string }) => void;
+  syncFromPreferences: (prefs: {
+    restTimers?: Record<string, number>;
+    restPreset?: number;
+  }) => void;
 }
 
 function patchActive(
@@ -225,6 +229,14 @@ export const useWorkoutStore = create<WorkoutState>()(
         }));
       },
 
+      syncFromPreferences: (prefs) => {
+        if (!prefs) return;
+        set((state) => ({
+          restTimers: { ...state.restTimers, ...prefs.restTimers },
+          restPreset: prefs.restPreset ?? state.restPreset,
+        }));
+      },
+
       addExercises: (selections, history) => {
         const active = get().active;
         if (!active) return;
@@ -233,10 +245,7 @@ export const useWorkoutStore = create<WorkoutState>()(
         const isDuplicate = (s: ExerciseSelection | string) => {
           const sel = typeof s === 'string' ? { exerciseId: s } : s;
           return active.exercises.some(
-            (e) =>
-              e.exerciseId === sel.exerciseId &&
-              e.variant?.grip === sel.variant?.grip &&
-              e.variant?.machine === sel.variant?.machine,
+            (e) => e.exerciseId === sel.exerciseId && matchVariant(e.variant, sel.variant),
           );
         };
 
