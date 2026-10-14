@@ -5,7 +5,6 @@ import { isPrSet, previousSetLabel, formatVariant, matchVariant } from '@/lib/wo
 import { initAudioAndNotifications } from '@/lib/workout/notifications';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { VariantSelector } from './variant-selector';
-import { RestTimerSelect } from './RestTimerSelect';
 import {
   useRecentWorkouts,
   useCustomExercises,
@@ -420,19 +419,28 @@ export const ExerciseCard = React.memo(function ExerciseCard({
               }
             </h3>
             <div className="exercise-card-meta">
-              {meta?.muscle && (
-                <>
-                  <span>{MUSCLE_LABEL[meta.muscle]}</span>
-                  <span className="exercise-card-meta-dot">•</span>
-                </>
-              )}
-              <RestTimerSelect
-                value={restTimers[row.exerciseId] ?? restPreset}
-                onChange={(val) => {
-                  setExerciseRestTimer(row.exerciseId, val);
-                  setExerciseRestTimerPref(row.exerciseId, val);
-                }}
-              />
+              <span>{meta ? MUSCLE_LABEL[meta.muscle] : ''}</span>
+              <span style={{ color: 'var(--border-medium)' }}>|</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <select
+                  value={restTimers[row.exerciseId] ?? restPreset}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    const val = Number(e.target.value);
+                    setExerciseRestTimer(row.exerciseId, val);
+                    setExerciseRestTimerPref(row.exerciseId, val);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="exercise-card-rest-select"
+                  aria-label="Tiempo de descanso para este ejercicio"
+                >
+                  {[30, 60, 90, 120, 150, 180, 240, 300].map((s) => (
+                    <option key={s} value={s}>
+                      {s}s
+                    </option>
+                  ))}
+                </select>
+              </span>
             </div>
           </div>
         </div>

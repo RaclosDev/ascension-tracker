@@ -1,6 +1,5 @@
 import { useState, useId, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Flame, Activity, ChevronDown, Sparkles, HeartPulse } from 'lucide-react';
 import api from '../../api/client';
 import {
   calculateTdee,
@@ -67,7 +66,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
   const [formula, setFormula] = useState<BmrFormulaType>('mifflin');
   const [selectedGoal, setSelectedGoal] = useState<CaloricGoal>('maintenance');
 
-  // Estado para sub-calculadoras Weyand
+  // Estado para sub-calculadoras Weyand (Retrocompatibilidad total)
   const [showWeyand, setShowWeyand] = useState(false);
   const [weyandSteps, setWeyandSteps] = useState('10000');
   const [metabolicDistance, setMetabolicDistance] = useState('400');
@@ -89,9 +88,9 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
   }, [dashboardData, settingsData, userDefaults]);
 
   const sexId = useId();
-  const weightId = useId();
-  const heightId = useId();
   const ageId = useId();
+  const heightId = useId();
+  const weightId = useId();
   const activityId = useId();
   const bodyFatId = useId();
   const formulaId = useId();
@@ -99,273 +98,189 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
   const numWeight = parseFloat(weightKg) || 0;
   const numHeight = parseFloat(heightCm) || 0;
   const numAge = parseInt(age, 10) || 0;
-  const numActivity = parseFloat(activityFactor) || 1.55;
+  const numFactor = parseFloat(activityFactor) || 1.2;
   const numBodyFat = bodyFat ? parseFloat(bodyFat) : undefined;
 
   const tdeeResult = useMemo(() => {
     return calculateTdee({
+      sex,
       weightKg: numWeight,
       heightCm: numHeight,
       age: numAge,
-      sex,
-      activityFactor: numActivity,
+      activityFactor: numFactor,
       bodyFatPercentage: numBodyFat,
       formula,
     });
-  }, [numWeight, numHeight, numAge, sex, numActivity, numBodyFat, formula]);
+  }, [sex, numWeight, numHeight, numAge, numFactor, numBodyFat, formula]);
 
-  const numSteps = parseInt(weyandSteps, 10) || 0;
-  const weyandStepsResult = useMemo(() => {
-    return calculateWeyandSteps({
-      weightKg: numWeight > 0 ? numWeight : 75,
-      steps: numSteps,
-    });
-  }, [numWeight, numSteps]);
-
-  const numDistance = parseFloat(metabolicDistance) || 0;
-  const numMins = parseInt(metabolicMinutes, 10) || 0;
-  const numSecs = parseInt(metabolicSeconds, 10) || 0;
-  const totalSeconds = numMins * 60 + numSecs;
+  // Weyand calculations
+  const weyandStepsKcal = useMemo(() => {
+    const s = parseInt(weyandSteps, 10) || 0;
+    return calculateWeyandSteps({ weightKg: numWeight, steps: s });
+  }, [numWeight, weyandSteps]);
 
   const weyandMetabolicResult = useMemo(() => {
+    const d = parseFloat(metabolicDistance) || 0;
+    const m = parseInt(metabolicMinutes, 10) || 0;
+    const s = parseInt(metabolicSeconds, 10) || 0;
+    const totalSec = m * 60 + s;
+    const heightM = numHeight / 100;
     return calculateWeyandMetabolic({
-      weightKg: numWeight > 0 ? numWeight : 75,
-      heightM: numHeight > 0 ? numHeight / 100 : 1.75,
-      distanceM: numDistance,
-      totalSeconds,
+      weightKg: numWeight,
+      heightM,
+      distanceM: d,
+      totalSeconds: totalSec,
     });
-  }, [numWeight, numHeight, numDistance, totalSeconds]);
+  }, [numWeight, numHeight, metabolicDistance, metabolicMinutes, metabolicSeconds]);
 
   return (
     <div className="space-y-6">
-      {/* FORM INPUTS - LIQUID GLASS GRID */}
+      <p className="text-sm text-gray-300 leading-relaxed">
+        Calcula tu Metabolismo Basal (BMR), Gasto Energético Diario Total (TDEE) y objetivos
+        calóricos para pérdida de grasa, mantenimiento o ganancia muscular.
+      </p>
+
+      {/* FORM INPUTS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Sexo */}
-        <div className="relative rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 focus-within:border-[var(--accent-primary)] focus-within:ring-2 focus-within:ring-[var(--accent-primary)]/20 transition-all p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
-          <label
-            htmlFor={sexId}
-            className="block text-[11px] font-semibold text-gray-400 mb-1 uppercase tracking-wider"
-          >
+        <div>
+          <label htmlFor={sexId} className="block text-xs font-semibold text-gray-200 mb-1.5">
             Sexo Biológico
           </label>
-          <div className="relative flex items-center">
-            <select
-              id={sexId}
-              className="w-full bg-transparent text-white font-medium text-sm focus:outline-none appearance-none cursor-pointer pr-6 truncate"
-              value={sex}
-              onChange={(e) => setSex(e.target.value as Sex)}
-            >
-              <option value="M" className="bg-[#14141e] text-white">
-                Hombre
-              </option>
-              <option value="F" className="bg-[#14141e] text-white">
-                Mujer
-              </option>
-            </select>
-            <ChevronDown size={14} className="text-gray-400 absolute right-0 pointer-events-none" />
-          </div>
+          <select
+            id={sexId}
+            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            value={sex}
+            onChange={(e) => setSex(e.target.value as Sex)}
+          >
+            <option value="M">Hombre</option>
+            <option value="F">Mujer</option>
+          </select>
         </div>
 
-        {/* Peso corporal */}
-        <div className="relative rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 focus-within:border-[var(--accent-primary)] focus-within:ring-2 focus-within:ring-[var(--accent-primary)]/20 transition-all p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
-          <label
-            htmlFor={weightId}
-            className="block text-[11px] font-semibold text-gray-400 mb-1 uppercase tracking-wider"
-          >
+        <div>
+          <label htmlFor={weightId} className="block text-xs font-semibold text-gray-200 mb-1.5">
             Peso corporal (kg)
           </label>
-          <div className="flex items-center justify-between">
-            <input
-              id={weightId}
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-              className="w-full bg-transparent text-white font-bold text-lg focus:outline-none placeholder:text-gray-600"
-              placeholder="75.0"
-              value={weightKg}
-              onChange={(e) => setWeightKg(e.target.value)}
-            />
-            <span className="text-xs font-semibold text-gray-400 shrink-0 ml-2 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
-              kg
-            </span>
-          </div>
+          <input
+            id={weightId}
+            type="number"
+            inputMode="decimal"
+            step="0.1"
+            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            placeholder="75.0"
+            value={weightKg}
+            onChange={(e) => setWeightKg(e.target.value)}
+          />
         </div>
 
-        {/* Altura */}
-        <div className="relative rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 focus-within:border-[var(--accent-primary)] focus-within:ring-2 focus-within:ring-[var(--accent-primary)]/20 transition-all p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
-          <label
-            htmlFor={heightId}
-            className="block text-[11px] font-semibold text-gray-400 mb-1 uppercase tracking-wider"
-          >
+        <div>
+          <label htmlFor={heightId} className="block text-xs font-semibold text-gray-200 mb-1.5">
             Altura (cm)
           </label>
-          <div className="flex items-center justify-between">
-            <input
-              id={heightId}
-              type="number"
-              inputMode="decimal"
-              step="0.5"
-              className="w-full bg-transparent text-white font-bold text-lg focus:outline-none placeholder:text-gray-600"
-              placeholder="175"
-              value={heightCm}
-              onChange={(e) => setHeightCm(e.target.value)}
-            />
-            <span className="text-xs font-semibold text-gray-400 shrink-0 ml-2 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
-              cm
-            </span>
-          </div>
+          <input
+            id={heightId}
+            type="number"
+            inputMode="decimal"
+            step="0.5"
+            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            placeholder="175"
+            value={heightCm}
+            onChange={(e) => setHeightCm(e.target.value)}
+          />
         </div>
 
-        {/* Edad */}
-        <div className="relative rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 focus-within:border-[var(--accent-primary)] focus-within:ring-2 focus-within:ring-[var(--accent-primary)]/20 transition-all p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
-          <label
-            htmlFor={ageId}
-            className="block text-[11px] font-semibold text-gray-400 mb-1 uppercase tracking-wider"
-          >
+        <div>
+          <label htmlFor={ageId} className="block text-xs font-semibold text-gray-200 mb-1.5">
             Edad (años)
           </label>
-          <div className="flex items-center justify-between">
-            <input
-              id={ageId}
-              type="number"
-              inputMode="numeric"
-              min="10"
-              max="120"
-              className="w-full bg-transparent text-white font-bold text-lg focus:outline-none placeholder:text-gray-600"
-              placeholder="28"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-            />
-            <span className="text-xs font-semibold text-gray-400 shrink-0 ml-2 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
-              años
-            </span>
-          </div>
+          <input
+            id={ageId}
+            type="number"
+            inputMode="numeric"
+            min="10"
+            max="120"
+            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            placeholder="28"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+          />
         </div>
 
-        {/* Nivel de Actividad */}
-        <div className="relative rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 focus-within:border-[var(--accent-primary)] focus-within:ring-2 focus-within:ring-[var(--accent-primary)]/20 transition-all p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
-          <label
-            htmlFor={activityId}
-            className="block text-[11px] font-semibold text-gray-400 mb-1 uppercase tracking-wider"
-          >
+        <div>
+          <label htmlFor={activityId} className="block text-xs font-semibold text-gray-200 mb-1.5">
             Nivel de Actividad Diaria
           </label>
-          <div className="relative flex items-center">
-            <select
-              id={activityId}
-              className="w-full bg-transparent text-white font-medium text-sm focus:outline-none appearance-none cursor-pointer pr-6 truncate"
-              value={activityFactor}
-              onChange={(e) => setActivityFactor(e.target.value)}
-            >
-              <option value="1.2" className="bg-[#14141e] text-white">
-                Sedentario (Oficina, poco ejercicio)
-              </option>
-              <option value="1.375" className="bg-[#14141e] text-white">
-                Ligero (1-3 días/sem)
-              </option>
-              <option value="1.55" className="bg-[#14141e] text-white">
-                Moderado (3-5 días/sem)
-              </option>
-              <option value="1.725" className="bg-[#14141e] text-white">
-                Muy Activo (6-7 días/sem)
-              </option>
-              <option value="1.9" className="bg-[#14141e] text-white">
-                Extremo (Atleta profesional)
-              </option>
-            </select>
-            <ChevronDown size={14} className="text-gray-400 absolute right-0 pointer-events-none" />
-          </div>
+          <select
+            id={activityId}
+            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            value={activityFactor}
+            onChange={(e) => setActivityFactor(e.target.value)}
+          >
+            <option value="1.2">Sedentario (Trabajo de oficina, poco ejercicio)</option>
+            <option value="1.375">Ligero (Ejercicio 1-3 días/sem)</option>
+            <option value="1.55">Moderado (Entrenamiento 3-5 días/sem)</option>
+            <option value="1.725">Muy Activo (Entrenamiento intenso 6-7 días/sem)</option>
+            <option value="1.9">Extremo (Atleta profesional / Doble sesión)</option>
+          </select>
         </div>
 
-        {/* % Grasa Corporal */}
-        <div className="relative rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:border-white/20 focus-within:border-[var(--accent-primary)] focus-within:ring-2 focus-within:ring-[var(--accent-primary)]/20 transition-all p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
-          <label
-            htmlFor={bodyFatId}
-            className="block text-[11px] font-semibold text-gray-400 mb-1 uppercase tracking-wider"
-          >
+        <div>
+          <label htmlFor={bodyFatId} className="block text-xs font-semibold text-gray-200 mb-1.5">
             % Grasa Corporal (Opcional)
           </label>
-          <div className="flex items-center justify-between">
-            <input
-              id={bodyFatId}
-              type="number"
-              inputMode="decimal"
-              step="0.5"
-              min="3"
-              max="60"
-              className="w-full bg-transparent text-white font-bold text-lg focus:outline-none placeholder:text-gray-600"
-              placeholder="Ej: 15"
-              value={bodyFat}
-              onChange={(e) => setBodyFat(e.target.value)}
-            />
-            <span className="text-xs font-semibold text-gray-400 shrink-0 ml-2 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
-              %
-            </span>
-          </div>
+          <input
+            id={bodyFatId}
+            type="number"
+            inputMode="decimal"
+            step="0.5"
+            min="3"
+            max="60"
+            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            placeholder="Ej: 15 (Para Katch-McArdle)"
+            value={bodyFat}
+            onChange={(e) => setBodyFat(e.target.value)}
+          />
         </div>
       </div>
 
-      {/* FORMULA TOGGLE ROW */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white/[0.04] backdrop-blur-md border border-white/10">
-        <div>
-          <span className="text-xs font-bold text-white block">Fórmula de Metabolismo Basal</span>
-          <span className="text-xs text-gray-400">
-            Ajusta el método según tus datos antropométricos disponibles.
-          </span>
-        </div>
-        <div className="relative flex items-center">
-          <select
-            id={formulaId}
-            className="text-xs px-3.5 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-medium focus:outline-none focus:border-[var(--accent-primary)] transition-all appearance-none cursor-pointer pr-7"
-            value={formula}
-            onChange={(e) => setFormula(e.target.value as BmrFormulaType)}
-          >
-            <option value="mifflin" className="bg-[#14141e] text-white">
-              Mifflin-St Jeor (Clínica moderna)
-            </option>
-            <option value="katch" className="bg-[#14141e] text-white">
-              Katch-McArdle (Basada en Masa Magra)
-            </option>
-            <option value="harris" className="bg-[#14141e] text-white">
-              Harris-Benedict revisado
-            </option>
-          </select>
-          <ChevronDown size={13} className="text-gray-400 absolute right-2.5 pointer-events-none" />
-        </div>
+      <div className="flex items-center gap-3">
+        <label htmlFor={formulaId} className="text-xs font-semibold text-gray-300">
+          Fórmula metabólica:
+        </label>
+        <select
+          id={formulaId}
+          className="text-xs px-2.5 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white"
+          value={formula}
+          onChange={(e) => setFormula(e.target.value as BmrFormulaType)}
+        >
+          <option value="mifflin">Mifflin-St Jeor (Clínica moderna recomendada)</option>
+          <option value="katch">Katch-McArdle (Basada en Masa Magra LBM)</option>
+          <option value="harris">Harris-Benedict revisado</option>
+        </select>
       </div>
 
-      {/* KPI METRICS - DUAL GLOW HERO CARDS */}
+      {/* KPI METRICS */}
       <div role="status" aria-live="polite" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Card BMR */}
-        <div className="relative overflow-hidden rounded-3xl p-6 backdrop-blur-2xl bg-gradient-to-br from-white/[0.06] via-white/[0.02] to-black/60 border border-white/10 shadow-[0_12px_36px_rgba(0,0,0,0.6)]">
-          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-rose-400 mb-2">
-            <HeartPulse size={13} />
+        <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-black/40 border border-purple-500/20">
+          <span className="text-xs font-bold tracking-wider uppercase text-purple-400">
             Tasa Metabólica Basal (BMR)
+          </span>
+          <div className="text-4xl font-extrabold text-white mt-1">
+            {tdeeResult.bmr} <span className="text-lg font-normal text-gray-400">kcal/día</span>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl sm:text-5xl font-black text-white font-display tracking-tight">
-              {tdeeResult.bmr}
-            </span>
-            <span className="text-sm font-semibold text-gray-400">kcal/día</span>
-          </div>
-          <p className="text-xs text-gray-400 mt-2">
+          <p className="text-xs text-gray-400 mt-1">
             Energía consumida en reposo absoluto ({tdeeResult.formulaUsed}).
           </p>
         </div>
 
-        {/* Card TDEE */}
-        <div className="relative overflow-hidden rounded-3xl p-6 backdrop-blur-2xl bg-gradient-to-br from-[var(--accent-primary)]/20 via-white/[0.04] to-black/60 border border-[var(--accent-primary)]/30 shadow-[0_12px_36px_rgba(0,0,0,0.6),0_0_20px_var(--accent-glow)]">
-          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[var(--accent-primary)] mb-2">
-            <Flame size={13} />
+        <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-teal-950/20 to-black/40 border border-emerald-500/20">
+          <span className="text-xs font-bold tracking-wider uppercase text-emerald-400">
             Gasto Energético Total (TDEE)
+          </span>
+          <div className="text-4xl font-extrabold text-white mt-1">
+            {tdeeResult.tdee} <span className="text-lg font-normal text-gray-400">kcal/día</span>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl sm:text-5xl font-black text-white font-display tracking-tight drop-shadow-[0_2px_15px_rgba(0,133,255,0.35)]">
-              {tdeeResult.tdee}
-            </span>
-            <span className="text-sm font-semibold text-gray-400">kcal/día</span>
-          </div>
-          <p className="text-xs text-gray-300 mt-2">
+          <p className="text-xs text-gray-400 mt-1">
             Calorías necesarias para mantener tu peso actual.
           </p>
         </div>
@@ -373,11 +288,10 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
 
       {/* CALORIC GOALS SELECTOR & SUMMARY */}
       <div className="space-y-3">
-        <h4 className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2">
-          <Activity size={14} className="text-[var(--accent-primary)]" />
+        <h4 className="text-sm font-bold text-white tracking-wide">
           Objetivos y Estrategias Calóricas
         </h4>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
           {(Object.keys(tdeeResult.goals) as CaloricGoal[]).map((goalKey) => {
             const goal = tdeeResult.goals[goalKey];
             const isSelected = selectedGoal === goalKey;
@@ -386,18 +300,18 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                 key={goalKey}
                 type="button"
                 onClick={() => setSelectedGoal(goalKey)}
-                className={`p-3.5 rounded-2xl border text-left transition-all duration-200 backdrop-blur-md cursor-pointer ${
+                className={`p-3 rounded-xl border text-left transition-all ${
                   isSelected
-                    ? 'bg-gradient-to-b from-[var(--accent-primary)]/25 to-[var(--accent-primary)]/10 border-[var(--accent-primary)] text-white shadow-[0_0_15px_var(--accent-glow)] scale-[1.02]'
-                    : 'bg-white/[0.03] hover:bg-white/[0.08] border-white/10 text-gray-300'
+                    ? 'bg-rose-500/20 border-rose-500 text-white shadow-md'
+                    : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
                 }`}
               >
-                <div className="text-xs font-bold truncate">{goal.label}</div>
-                <div className="text-lg font-black text-white mt-1 font-display">
+                <div className="text-xs font-semibold truncate">{goal.label}</div>
+                <div className="text-base font-extrabold text-white mt-1">
                   {goal.kcal} <span className="text-[10px] font-normal text-gray-400">kcal</span>
                 </div>
                 <div
-                  className={`text-[10px] font-bold mt-1 ${
+                  className={`text-[10px] font-medium mt-0.5 ${
                     goal.difference > 0
                       ? 'text-emerald-400'
                       : goal.difference < 0
@@ -413,29 +327,21 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
         </div>
       </div>
 
-      {/* WEYAND ADVANCED BIOMECHANICS */}
+      {/* RETROCOMPATIBILIDAD CON CALCULADORAS BIOMECÁNICAS WEYAND */}
       <div className="pt-4 border-t border-white/10">
         <button
           type="button"
           onClick={() => setShowWeyand(!showWeyand)}
-          className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-300 hover:text-white transition-colors py-2 cursor-pointer"
+          className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-300 hover:text-white transition-colors"
         >
-          <span className="flex items-center gap-2">
-            <Sparkles size={14} className="text-[var(--accent-primary)]" />
-            Biomecánica Avanzada de Weyand (Pasos y Gasto Metabólico)
-          </span>
-          <ChevronDown
-            size={16}
-            className={`text-gray-400 transition-transform duration-200 ${
-              showWeyand ? 'rotate-180 text-[var(--accent-primary)]' : ''
-            }`}
-          />
+          <span>Biomecánica Avanzada de Weyand (Pasos y Gasto Metabólico)</span>
+          <span className="text-xs text-gray-400">{showWeyand ? '▲ Ocultar' : '▼ Expandir'}</span>
         </button>
 
         {showWeyand && (
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 fade-in">
             {/* Gasto por Pasos */}
-            <div className="p-5 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/10 space-y-3">
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
               <h5 className="text-xs font-bold text-white uppercase tracking-wider">
                 Gasto por Pasos (Weyand)
               </h5>
@@ -443,10 +349,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                 Estima la energía mecánica usada en cada impacto según la biomecánica de Weyand.
               </p>
               <div>
-                <label
-                  htmlFor="weyand-steps"
-                  className="block text-[11px] font-semibold text-gray-400 mb-1"
-                >
+                <label htmlFor="weyand-steps" className="block text-[11px] text-gray-300 mb-1">
                   Pasos Totales
                 </label>
                 <input
@@ -454,95 +357,78 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                   aria-label="Pasos totales para cálculo Weyand"
                   type="number"
                   inputMode="numeric"
-                  className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[var(--accent-primary)] font-medium"
+                  className="w-full px-3 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
                   value={weyandSteps}
                   onChange={(e) => setWeyandSteps(e.target.value)}
                 />
               </div>
-              <div className="p-3.5 rounded-xl bg-black/50 border border-white/5 flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] text-gray-400 block">Pasos procesados:</span>
-                  <span className="text-sm font-bold text-[var(--accent-primary)] font-display">
-                    {numSteps.toLocaleString()} pasos
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-gray-400 block">Gasto estimado:</span>
-                  <span className="text-lg font-black text-emerald-400 font-display">
-                    {weyandStepsResult.toFixed(1)} kcal
-                  </span>
-                </div>
+              <div className="p-3 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between">
+                <span className="text-xs text-gray-400">Calorías quemadas:</span>
+                <span className="text-base font-bold text-rose-400">
+                  {weyandStepsKcal.toFixed(2)} kcal
+                </span>
               </div>
             </div>
 
-            {/* Gasto por Carrera/Tiempo */}
-            <div className="p-5 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/10 space-y-3">
+            {/* Gasto Metabólico por Tiempo */}
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
               <h5 className="text-xs font-bold text-white uppercase tracking-wider">
-                Coste Energético de Carrera
+                Gasto Metabólico por Carrera/Marcha
               </h5>
-              <p className="text-xs text-gray-400">
-                Calcula el consumo de oxígeno (VO2) y coste calórico neto en distancia.
-              </p>
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label
-                    htmlFor="weyand-dist"
-                    className="block text-[11px] font-semibold text-gray-400 mb-1"
-                  >
-                    Metros
+                  <label htmlFor="weyand-dist" className="block text-[11px] text-gray-300 mb-1">
+                    Distancia (m)
                   </label>
                   <input
                     id="weyand-dist"
-                    aria-label="Distancia en metros para cálculo Weyand"
+                    aria-label="Distancia en metros para gasto metabólico"
                     type="number"
-                    className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[var(--accent-primary)] font-medium"
+                    inputMode="decimal"
+                    className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
                     value={metabolicDistance}
                     onChange={(e) => setMetabolicDistance(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor="weyand-min"
-                    className="block text-[11px] font-semibold text-gray-400 mb-1"
-                  >
+                  <label htmlFor="weyand-min" className="block text-[11px] text-gray-300 mb-1">
                     Minutos
                   </label>
                   <input
                     id="weyand-min"
-                    aria-label="Minutos de tiempo para cálculo Weyand"
+                    aria-label="Minutos de duración"
                     type="number"
-                    className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[var(--accent-primary)] font-medium"
+                    inputMode="numeric"
+                    className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
                     value={metabolicMinutes}
                     onChange={(e) => setMetabolicMinutes(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor="weyand-sec"
-                    className="block text-[11px] font-semibold text-gray-400 mb-1"
-                  >
+                  <label htmlFor="weyand-sec" className="block text-[11px] text-gray-300 mb-1">
                     Segundos
                   </label>
                   <input
                     id="weyand-sec"
-                    aria-label="Segundos de tiempo para cálculo Weyand"
+                    aria-label="Segundos de duración"
                     type="number"
-                    className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-white text-xs focus:outline-none focus:border-[var(--accent-primary)] font-medium"
+                    inputMode="numeric"
+                    className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
                     value={metabolicSeconds}
                     onChange={(e) => setMetabolicSeconds(e.target.value)}
                   />
                 </div>
               </div>
-              <div className="p-3.5 rounded-xl bg-black/50 border border-white/5 flex items-center justify-between">
+              <div className="p-3 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] text-gray-400 block">VO2 Consumido:</span>
-                  <span className="text-sm font-bold text-[var(--accent-primary)] font-display">
+                  <span className="text-xs text-gray-400 block">VO2 Consumido:</span>
+                  <span className="text-xs font-semibold text-sky-400">
                     {weyandMetabolicResult.vo2.toFixed(2)} ml/kg/min
                   </span>
                 </div>
                 <div>
-                  <span className="text-[11px] text-gray-400 block">Gasto Total:</span>
-                  <span className="text-lg font-black text-emerald-400 font-display">
+                  <span className="text-xs text-gray-400 block">Gasto Total:</span>
+                  <span className="text-base font-bold text-emerald-400">
                     {weyandMetabolicResult.kcal.toFixed(2)} kcal
                   </span>
                 </div>
