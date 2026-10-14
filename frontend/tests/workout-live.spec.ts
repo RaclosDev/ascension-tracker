@@ -179,11 +179,11 @@ test.describe('Sesión de Entrenamiento en Vivo (Workout Live)', () => {
   test('3. Temporizador de descanso con formato amigable y controles', async ({ page }) => {
     await startWorkoutWithExercise(page);
 
-    // Verificar selector de descanso con formato amigable en la tarjeta ('1m', '1m 30s', etc.)
+    // Verificar selector de descanso en la tarjeta ('60s', '90s', etc.)
     const restSelect = page.locator('.exercise-card-rest-select');
     await expect(restSelect).toBeVisible({ timeout: 5000 });
-    await expect(restSelect.locator('option', { hasText: '1m 30s' })).toBeAttached();
-    await expect(restSelect.locator('option', { hasText: /^1m$/ })).toBeAttached();
+    await expect(restSelect.locator('option', { hasText: '90s' })).toBeAttached();
+    await expect(restSelect.locator('option', { hasText: /^60s$/ })).toBeAttached();
 
     // Al completar serie, se activa el RestBanner flotante
     const checkBtn = page
