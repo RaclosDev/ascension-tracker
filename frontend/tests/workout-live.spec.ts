@@ -182,8 +182,8 @@ test.describe('Sesión de Entrenamiento en Vivo (Workout Live)', () => {
     // Verificar selector de descanso en la tarjeta ('60s', '90s', etc.)
     const restSelect = page.locator('.exercise-card-rest-select');
     await expect(restSelect).toBeVisible({ timeout: 5000 });
-    await expect(restSelect.locator('option', { hasText: '90s' })).toBeAttached();
-    await expect(restSelect.locator('option', { hasText: /^60s$/ })).toBeAttached();
+    await expect(restSelect.locator('option', { hasText: '1m 30s' })).toBeAttached();
+    await expect(restSelect.locator('option', { hasText: /^1m$/ })).toBeAttached();
 
     // Al completar serie, se activa el RestBanner flotante
     const checkBtn = page
