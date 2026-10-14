@@ -190,26 +190,4 @@ export async function setupAuthMocks(page: Page): Promise<void> {
       json: [],
     });
   });
-
-  await page.route('**/api/workout-preferences**', async (route) => {
-    if (route.request().method() === 'GET') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        json: {
-          defaultRestSeconds: 90,
-          showRpe: false,
-          hiddenEquipments: [],
-          exerciseGifs: {},
-          restTimers: {},
-        },
-      });
-    } else {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        json: route.request().postDataJSON() || {},
-      });
-    }
-  });
 }

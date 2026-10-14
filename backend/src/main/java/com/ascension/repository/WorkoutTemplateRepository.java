@@ -9,7 +9,6 @@ import java.util.Optional;
 
 @Repository
 public interface WorkoutTemplateRepository extends JpaRepository<WorkoutTemplate, String> {
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"exercises"})
     List<WorkoutTemplate> findByUserEmail(String userEmail);
     Optional<WorkoutTemplate> findByIdAndUserEmail(String id, String userEmail);
 }

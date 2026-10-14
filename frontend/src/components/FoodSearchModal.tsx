@@ -241,7 +241,7 @@ export default function FoodSearchModal({
       setOffResults(allCleanProducts);
 
       if (allCleanProducts.length === 0) {
-        toast('No se encontraron resultados exactos', { icon: 'ℹ️' });
+        toast('No se encontraron resultados exactos', { icon: 'â„¹ï¸' });
       }
     } catch (err) {
       if (currentRequestId !== searchRequestId.current) return;
@@ -487,9 +487,7 @@ export default function FoodSearchModal({
       date,
     };
     if (selectedImage) {
-      const rawImage = typeof selectedImage === 'string' ? selectedImage : '';
-      const cleanBase64 = rawImage.includes(',') ? rawImage.split(',')[1] : rawImage;
-      payload.base64Image = cleanBase64;
+      payload.base64Image = selectedImage;
     }
 
     setSelectedImage(null);
@@ -518,12 +516,7 @@ export default function FoodSearchModal({
   return (
     <>
       <div className="workout-sheet-overlay" onClick={onClose} />
-      <div
-        className="food-search-fullscreen"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="food-search-title"
-      >
+      <div className="food-search-fullscreen" role="dialog" aria-modal="true" aria-labelledby="food-search-title">
         <div className="food-search-header">
           {selectedProduct || activeOverlay !== 'none' ? (
             <button
@@ -785,11 +778,7 @@ export default function FoodSearchModal({
               date={date}
               selectedMealIndex={selectedMealIndex}
               onLogAdded={onLogAdded}
-              onCustomAdd={onCustomAdd}
-              onClose={() => {
-                setActiveOverlay('none');
-                if (onCustomAdd && onClose) onClose();
-              }}
+              onClose={() => setActiveOverlay('none')}
             />
           ) : activeOverlay === 'scanner' ? (
             /* VIEW: SCANNER */

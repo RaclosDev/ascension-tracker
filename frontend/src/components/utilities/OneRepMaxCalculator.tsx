@@ -1,4 +1,4 @@
-import { useState, useId, useMemo, useEffect } from 'react';
+import { useState, useId, useMemo } from 'react';
 import { calculateOneRepMax, OneRepMaxFormula } from '../../utils/fitnessCalculators';
 
 interface OneRepMaxCalculatorProps {
@@ -26,19 +26,17 @@ export default function OneRepMaxCalculator({
   const numReps = parseInt(reps, 10) || 0;
 
   const result = useMemo(() => {
-    return calculateOneRepMax({
+    const calc = calculateOneRepMax({
       weight: numWeight,
       reps: numReps,
       formula,
       roundStep: roundStep > 0 ? roundStep : undefined,
     });
-  }, [numWeight, numReps, formula, roundStep]);
-
-  useEffect(() => {
-    if (result.oneRepMax > 0 && onCalculated) {
-      onCalculated(result.oneRepMax);
+    if (calc.oneRepMax > 0 && onCalculated) {
+      onCalculated(calc.oneRepMax);
     }
-  }, [result.oneRepMax, onCalculated]);
+    return calc;
+  }, [numWeight, numReps, formula, roundStep, onCalculated]);
 
   return (
     <div className="space-y-6">

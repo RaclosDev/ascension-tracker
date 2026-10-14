@@ -167,10 +167,7 @@ export function useAiNutritionChef() {
       };
 
       if (selectedImage) {
-        const cleanBase64 = selectedImage.includes(',')
-          ? selectedImage.split(',')[1]
-          : selectedImage;
-        payload.base64Image = cleanBase64;
+        payload.base64Image = selectedImage;
       }
 
       const res = await api.post('/nutrition/ai/assistant-chat', payload);

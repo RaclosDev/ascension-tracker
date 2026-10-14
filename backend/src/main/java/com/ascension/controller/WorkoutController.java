@@ -51,13 +51,6 @@ public class WorkoutController {
         return ResponseEntity.ok(workoutService.saveWorkout(jwt.getClaimAsString("email"), dto));
     }
 
-    @PostMapping("/import")
-    public ResponseEntity<WorkoutImportSummaryDTO> importWorkouts(
-            @Valid @RequestBody WorkoutImportRequestDTO request,
-            @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(workoutService.importWorkouts(jwt.getClaimAsString("email"), request));
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<WorkoutDTO> updateWorkout(
             @PathVariable String id,
@@ -118,14 +111,6 @@ public class WorkoutController {
             @Valid @RequestBody CustomExerciseDTO dto,
             @AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(customExerciseService.saveCustomExercise(jwt.getClaimAsString("email"), dto));
-    }
-
-    @PutMapping("/custom-exercises/{id}")
-    public ResponseEntity<CustomExerciseDTO> updateCustomExercise(
-            @PathVariable String id,
-            @Valid @RequestBody CustomExerciseDTO dto,
-            @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(customExerciseService.updateCustomExercise(jwt.getClaimAsString("email"), id, dto));
     }
 
     @DeleteMapping("/custom-exercises/{id}")

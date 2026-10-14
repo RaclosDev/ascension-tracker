@@ -44,10 +44,19 @@ export const useSaveWorkout = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (workout: CompletedWorkout) => {
-      // If it's an existing workout with a valid id, use PUT
-      if (workout.id && !workout.id.startsWith('temp') && workout.id.trim() !== '') {
-        const { data } = await api.put(`/workouts/${workout.id}`, workout);
-        return data;
+      // If it's an existing workout (not a temp uid), use PUT
+      if (workout.id && !workout.id.includes('-') && workout.id.length > 20) {
+        // Assume UUIDs are > 20 chars. Our local uids are short like 'cl...'.
+        // Actually our uid() might generate something else. Let's just check if it's already an existing length.
+        // Or better yet, we can check if it exists in the history!
+        // But for safety, let's just try PUT if we explicitly passed editingId.
+        // Wait, in useSaveWorkout we can just use PUT if id doesn't start with 'temp' or whatever uid() produces.
+        // Actually, our uid() produces base36 strings `Date.now().toString(36) + Math.random().toString(36)`.
+        // The backend UUIDs have hyphens and are 36 chars long!
+        if (workout.id.includes('-')) {
+          const { data } = await api.put(`/workouts/${workout.id}`, workout);
+          return data;
+        }
       }
       // New workout
       const { data } = await api.post('/workouts', workout);
@@ -56,7 +65,6 @@ export const useSaveWorkout = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workoutHistory'] });
       queryClient.invalidateQueries({ queryKey: ['recentWorkouts'] });
-      queryClient.invalidateQueries({ queryKey: ['workouts'] });
       toast.success('Entrenamiento guardado');
     },
     onError: () => {
@@ -74,8 +82,6 @@ export const useDeleteWorkout = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workoutHistory'] });
       queryClient.invalidateQueries({ queryKey: ['recentWorkouts'] });
-      queryClient.invalidateQueries({ queryKey: ['workouts'] });
-      queryClient.invalidateQueries({ queryKey: ['workoutStats'] });
       toast.success('Entrenamiento eliminado');
     },
   });
@@ -150,20 +156,6 @@ export const useSaveCustomExercise = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customExercises'] });
       toast.success('Ejercicio guardado');
-    },
-  });
-};
-
-export const useUpdateCustomExercise = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (exercise: Exercise) => {
-      const { data } = await api.put(`/workouts/custom-exercises/${exercise.id}`, exercise);
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customExercises'] });
-      toast.success('Ejercicio actualizado');
     },
   });
 };
@@ -280,40 +272,4 @@ export const useWorkoutPreferencesActions = () => {
     setExerciseGif,
     toggleHiddenEquipment,
   };
-};
-
-export const useImportWorkouts = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload: { customExercises?: Exercise[]; workouts: CompletedWorkout[] }) => {
-      const { data } = await api.post('/workouts/import', payload);
-      return data;
-    },
-    onSuccess: (data: {
-      importedWorkouts: number;
-      createdExercises: number;
-      totalSets: number;
-    }) => {
-      queryClient.invalidateQueries({ queryKey: ['recentWorkouts'] });
-      queryClient.invalidateQueries({ queryKey: ['workoutHistory'] });
-      queryClient.invalidateQueries({ queryKey: ['workouts'] });
-      queryClient.invalidateQueries({ queryKey: ['customExercises'] });
-      queryClient.invalidateQueries({ queryKey: ['workoutStats'] });
-      toast.success(
-        `Importados con éxito ${data.importedWorkouts} entrenamientos (${data.totalSets} series).`,
-      );
-    },
-    onError: (err: unknown) => {
-      const axiosError = err as {
-        response?: { data?: { error?: string; message?: string } };
-        message?: string;
-      };
-      const msg =
-        axiosError.response?.data?.error ||
-        axiosError.response?.data?.message ||
-        axiosError.message ||
-        'Error al importar entrenamientos';
-      toast.error(msg);
-    },
-  });
 };

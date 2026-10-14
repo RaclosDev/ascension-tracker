@@ -13,8 +13,6 @@ public interface SavedFoodRepository extends JpaRepository<SavedFood, Long> {
     @Query("SELECT s FROM SavedFood s WHERE s.userEmail = :userEmail ORDER BY s.lastUsedAt DESC NULLS LAST, s.id DESC")
     List<SavedFood> findRecentByUserEmail(@Param("userEmail") String userEmail, org.springframework.data.domain.Pageable pageable);
 
-    List<SavedFood> findAllByUserEmailOrderByNameAsc(String userEmail);
-
     Optional<SavedFood> findFirstByUserEmailAndName(String userEmail, String name);
     void deleteByIdAndUserEmail(Long id, String userEmail);
     Optional<SavedFood> findByIdAndUserEmail(Long id, String userEmail);

@@ -264,7 +264,7 @@ export function Dashboard() {
                 fontWeight: 600,
                 textTransform: 'uppercase',
                 letterSpacing: '0.14em',
-                color: 'var(--accent-primary)',
+                color: 'var(--color-success)',
               }}
             >
               En curso
@@ -408,7 +408,7 @@ export function Dashboard() {
                         }}
                       >
                         {names.join(' · ')}
-                        {w.exercises.length > 4 ? '...' : ''}
+                        {w.exercises.length > 4 ? '' : ''}
                       </p>
                     </button>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>

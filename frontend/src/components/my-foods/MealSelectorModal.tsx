@@ -1,8 +1,6 @@
 import React, { useMemo } from 'react';
-import { Utensils, X } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import api from '../../api/client';
-import { Meal, SavedFood } from '../../types/api';
+import { Sunrise, Utensils, Moon, Apple, X } from 'lucide-react';
+import { SavedFood } from '../../types/api';
 
 interface MealSelectorModalProps {
   isOpen: boolean;
@@ -30,27 +28,6 @@ export default function MealSelectorModal({
   handleBulkAddToMeal,
 }: MealSelectorModalProps) {
   const foodMap = useMemo(() => new Map(savedFoods.map((f) => [f.id, f])), [savedFoods]);
-
-  const { data: userMeals = [] } = useQuery<Meal[]>({
-    queryKey: ['userMeals'],
-    queryFn: async () => {
-      const res = await api.get('/nutrition/meals');
-      return (res.data || []).sort(
-        (a: Meal, b: Meal) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
-      );
-    },
-    enabled: isOpen,
-  });
-
-  const mealsToDisplay: Array<{ name: string; sortOrder?: number; id?: number }> =
-    userMeals.length > 0
-      ? userMeals
-      : [
-          { name: 'Desayuno', sortOrder: 0 },
-          { name: 'Comida', sortOrder: 1 },
-          { name: 'Cena', sortOrder: 2 },
-          { name: 'Snack', sortOrder: 3 },
-        ];
 
   if (!isOpen) return null;
 
@@ -186,24 +163,34 @@ export default function MealSelectorModal({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <label className="form-label">¿A qué comida?</label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-            {mealsToDisplay.map((m, idx) => (
-              <button
-                key={m.id || idx}
-                onClick={() => handleBulkAddToMeal(idx)}
-                disabled={isAddingToMeal}
-                className="btn btn-secondary flex items-center justify-center gap-2"
-                style={{
-                  padding: '0.5rem 0.75rem',
-                  fontSize: '0.875rem',
-                  textOverflow: 'ellipsis',
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <Utensils className="w-4 h-4 shrink-0" />
-                <span className="truncate">{m.name}</span>
-              </button>
-            ))}
+            <button
+              onClick={() => handleBulkAddToMeal(0)}
+              disabled={isAddingToMeal}
+              className="btn btn-secondary flex items-center justify-center gap-2"
+            >
+              <Sunrise className="w-4 h-4" /> Desayuno
+            </button>
+            <button
+              onClick={() => handleBulkAddToMeal(1)}
+              disabled={isAddingToMeal}
+              className="btn btn-secondary flex items-center justify-center gap-2"
+            >
+              <Utensils className="w-4 h-4" /> Comida
+            </button>
+            <button
+              onClick={() => handleBulkAddToMeal(2)}
+              disabled={isAddingToMeal}
+              className="btn btn-secondary flex items-center justify-center gap-2"
+            >
+              <Moon className="w-4 h-4" /> Cena
+            </button>
+            <button
+              onClick={() => handleBulkAddToMeal(3)}
+              disabled={isAddingToMeal}
+              className="btn btn-secondary flex items-center justify-center gap-2"
+            >
+              <Apple className="w-4 h-4" /> Snack
+            </button>
           </div>
         </div>
       </div>

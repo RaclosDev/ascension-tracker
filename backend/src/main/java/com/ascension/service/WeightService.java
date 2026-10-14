@@ -48,26 +48,14 @@ public class WeightService {
 
     public DashboardDTO getDashboard(String userEmail) {
         UserSettingsDTO settings = settingsService.getSettings(userEmail);
-        if (settings == null) {
-            settings = UserSettingsDTO.builder()
-                    .kcal(2000)
-                    .macroStrategy("BALANCED")
-                    .startWeight(80.0)
-                    .goalWeight(75.0)
-                    .weeklyGoal(0.5)
-                    .build();
-        }
         List<WeightEntry> allEntries = weightEntryRepository.findAllByUserEmailOrderByDateAsc(userEmail);
-
-        Double startWeight = settings.getStartWeight() != null ? settings.getStartWeight() : 80.0;
-        Double goalWeight = settings.getGoalWeight() != null ? settings.getGoalWeight() : 75.0;
 
         if (allEntries.isEmpty()) {
             return DashboardDTO.builder()
-                    .currentWeight(startWeight)
-                    .currentWeeklyAverage(startWeight)
+                    .currentWeight(settings.getStartWeight())
+                    .currentWeeklyAverage(settings.getStartWeight())
                     .totalLost(0.0)
-                    .remaining(startWeight - goalWeight)
+                    .remaining(settings.getStartWeight() - settings.getGoalWeight())
                     .progress(0.0)
                     .estimatedDate("--")
                     .avgWeeklyChange(0.0)
@@ -87,20 +75,16 @@ public class WeightService {
         // Current weekly average = average of last week with data
         Double currentWeeklyAverage = getCurrentWeight(weeks);
         
-        Double totalLost = currentWeight - startWeight;
-        Double remaining = currentWeight - goalWeight;
-        double totalToLose = startWeight - goalWeight;
-        Double progress = 0.0;
-        if (Math.abs(totalToLose) > 0.0001) {
-            progress = Math.min(100.0, Math.max(0.0,
-                    ((startWeight - currentWeight) / totalToLose) * 100.0));
-        }
+        Double totalLost = currentWeight - settings.getStartWeight();
+        Double remaining = currentWeight - settings.getGoalWeight();
+        Double progress = Math.min(100.0, Math.max(0.0,
+                ((settings.getStartWeight() - currentWeight) / (settings.getStartWeight() - settings.getGoalWeight())) * 100.0));
 
         // Avg weekly change
         Double avgWeeklyChange = getAvgWeeklyChange(weeks);
 
         // Estimated date
-        String estimatedDate = calculateEstimatedDate(currentWeight, goalWeight, avgWeeklyChange, settings.getWeeklyGoal());
+        String estimatedDate = calculateEstimatedDate(currentWeight, settings.getGoalWeight(), avgWeeklyChange, settings.getWeeklyGoal());
 
         // Best week
         double bestDelta = 0;
@@ -109,7 +93,7 @@ public class WeightService {
             double delta = weeks.get(i).average - weeks.get(i - 1).average;
             if (delta < bestDelta) {
                 bestDelta = delta;
-                bestWeekDate = weeks.get(i).mondayDate.format(DateTimeFormatter.ofPattern("d MMM", Locale.forLanguageTag("es-ES")));
+                bestWeekDate = weeks.get(i).mondayDate.format(DateTimeFormatter.ofPattern("d MMM", new Locale("es", "ES")));
             }
         }
 
@@ -144,7 +128,7 @@ public class WeightService {
 
         // Build a map for quick lookup
         Map<LocalDate, Double> entryMap = allEntries.stream()
-                .collect(Collectors.toMap(WeightEntry::getDate, WeightEntry::getWeight, (v1, v2) -> v2));
+                .collect(Collectors.toMap(WeightEntry::getDate, WeightEntry::getWeight));
 
         List<WeekSummaryDTO> summaries = new ArrayList<>();
         Double previousAvg = null;
@@ -213,17 +197,15 @@ public class WeightService {
     }
 
     private String calculateEstimatedDate(Double current, Double goal, Double avgWeekly, Double weeklyGoal) {
-        if (current == null || goal == null) return "--";
         double remaining = current - goal;
-        if (remaining <= 0) return LocalDate.now().format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-ES")));
-        double weeklyLoss = Math.abs(avgWeekly != null ? avgWeekly : 0.0);
-        double effectiveWeeklyGoal = (weeklyGoal != null && weeklyGoal > 0) ? weeklyGoal : 0.5;
+        if (remaining <= 0) return LocalDate.now().format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", new Locale("es", "ES")));
+        double weeklyLoss = Math.abs(avgWeekly);
         if (weeklyLoss < 0.01) {
-            long days = Math.round((remaining / effectiveWeeklyGoal) * 7);
-            return LocalDate.now().plusDays(days).format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-ES")));
+            long days = Math.round(remaining / weeklyGoal * 7);
+            return LocalDate.now().plusDays(days).format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", new Locale("es", "ES")));
         }
         long days = Math.round((remaining / weeklyLoss) * 7);
-        return LocalDate.now().plusDays(days).format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-ES")));
+        return LocalDate.now().plusDays(days).format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", new Locale("es", "ES")));
     }
 
     private int calculateStreak(List<WeightEntry> entries) {
@@ -236,9 +218,13 @@ public class WeightService {
             check = check.minusDays(1);
         }
 
-        while (dateSet.contains(check)) {
-            streak++;
-            check = check.minusDays(1);
+        for (int i = 0; i < 365; i++) {
+            if (dateSet.contains(check)) {
+                streak++;
+                check = check.minusDays(1);
+            } else {
+                break;
+            }
         }
         return streak;
     }
