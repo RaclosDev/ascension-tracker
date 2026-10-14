@@ -54,4 +54,30 @@ class WorkoutDTOTest {
         Set<ConstraintViolation<WorkoutExerciseDTO>> violations = validator.validate(dto);
         assertThat(violations).anyMatch(v -> v.getMessage().contains("No se permiten más de 100 series"));
     }
+
+    @Test
+    void testWorkoutSetWithValidNumericStrings_PassesValidationWithoutUnexpectedTypeException() {
+        WorkoutSetDTO set = WorkoutSetDTO.builder()
+                .type("normal")
+                .weight("82.5")
+                .reps("12")
+                .distance("400")
+                .build();
+
+        Set<ConstraintViolation<WorkoutSetDTO>> violations = validator.validate(set);
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
+    void testWorkoutSetWithInvalidNonNumericString_FailsValidation() {
+        WorkoutSetDTO set = WorkoutSetDTO.builder()
+                .type("normal")
+                .weight("abc")
+                .reps("-5")
+                .build();
+
+        Set<ConstraintViolation<WorkoutSetDTO>> violations = validator.validate(set);
+        assertThat(violations).isNotEmpty();
+        assertThat(violations).anyMatch(v -> v.getMessage().contains("El valor debe ser un número válido 0 o positivo"));
+    }
 }

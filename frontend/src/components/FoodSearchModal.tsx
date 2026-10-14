@@ -487,7 +487,9 @@ export default function FoodSearchModal({
       date,
     };
     if (selectedImage) {
-      payload.base64Image = selectedImage;
+      const rawImage = typeof selectedImage === 'string' ? selectedImage : '';
+      const cleanBase64 = rawImage.includes(',') ? rawImage.split(',')[1] : rawImage;
+      payload.base64Image = cleanBase64;
     }
 
     setSelectedImage(null);
@@ -778,7 +780,11 @@ export default function FoodSearchModal({
               date={date}
               selectedMealIndex={selectedMealIndex}
               onLogAdded={onLogAdded}
-              onClose={() => setActiveOverlay('none')}
+              onCustomAdd={onCustomAdd}
+              onClose={() => {
+                setActiveOverlay('none');
+                if (onCustomAdd && onClose) onClose();
+              }}
             />
           ) : activeOverlay === 'scanner' ? (
             /* VIEW: SCANNER */

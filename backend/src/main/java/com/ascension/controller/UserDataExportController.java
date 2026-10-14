@@ -4,6 +4,7 @@ import com.ascension.dto.UserDataExportDTO;
 import com.ascension.dto.UserDataRestoreSummaryDTO;
 import com.ascension.service.UserDataExportService;
 import com.ascension.service.UserDataRestoreService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -45,7 +46,7 @@ public class UserDataExportController {
     public ResponseEntity<UserDataRestoreSummaryDTO> restoreUserData(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam(defaultValue = "OVERWRITE") String mode,
-            @RequestBody UserDataExportDTO backup) {
+            @Valid @RequestBody UserDataExportDTO backup) {
         if (jwt == null || jwt.getClaimAsString("email") == null) {
             return ResponseEntity.status(401).build();
         }

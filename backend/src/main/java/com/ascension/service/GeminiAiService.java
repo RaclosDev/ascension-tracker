@@ -76,9 +76,10 @@ public class GeminiAiService {
         try {
             String responseText;
             if (base64Image != null && !base64Image.isEmpty()) {
-                byte[] decoded = Base64.getDecoder().decode(base64Image);
+                String cleanBase64 = base64Image.contains(",") ? base64Image.substring(base64Image.indexOf(",") + 1) : base64Image;
+                byte[] decoded = Base64.getDecoder().decode(cleanBase64);
                 String mimeType = validateAndGetMimeType(decoded);
-                responseText = apiClient.executePrompt(prompt, base64Image, mimeType);
+                responseText = apiClient.executePrompt(prompt, cleanBase64, mimeType);
             } else {
                 responseText = apiClient.executePrompt(prompt);
             }
@@ -233,9 +234,10 @@ public class GeminiAiService {
         try {
             String responseText;
             if (base64Image != null && !base64Image.isEmpty()) {
-                byte[] decoded = Base64.getDecoder().decode(base64Image);
+                String cleanBase64 = base64Image.contains(",") ? base64Image.substring(base64Image.indexOf(",") + 1) : base64Image;
+                byte[] decoded = Base64.getDecoder().decode(cleanBase64);
                 String mimeType = validateAndGetMimeType(decoded);
-                responseText = apiClient.executePrompt(prompt, base64Image, mimeType);
+                responseText = apiClient.executePrompt(prompt, cleanBase64, mimeType);
             } else {
                 responseText = apiClient.executePrompt(prompt);
             }

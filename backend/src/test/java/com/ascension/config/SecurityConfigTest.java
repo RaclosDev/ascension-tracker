@@ -15,4 +15,38 @@ class SecurityConfigTest {
 
         assertDoesNotThrow(config::validateSecret);
     }
+
+    @Test
+    void corsConfigurationSource_trimsOriginsProperly() {
+        SecurityConfig config = new SecurityConfig();
+        ReflectionTestUtils.setField(config, "allowedOrigins", "http://localhost:5173 , https://ascension.raclos.es  ");
+
+        org.springframework.web.cors.CorsConfigurationSource source = config.corsConfigurationSource();
+        org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
+        request.setRequestURI("/api/version");
+        org.springframework.web.cors.CorsConfiguration corsConfig = source.getCorsConfiguration(request);
+
+        org.junit.jupiter.api.Assertions.assertNotNull(corsConfig);
+        org.junit.jupiter.api.Assertions.assertEquals(
+                java.util.List.of("http://localhost:5173", "https://ascension.raclos.es"),
+                corsConfig.getAllowedOrigins()
+        );
+    }
+
+    @Test
+    void corsConfigurationSource_handlesWildcardProperly() {
+        SecurityConfig config = new SecurityConfig();
+        ReflectionTestUtils.setField(config, "allowedOrigins", " * ");
+
+        org.springframework.web.cors.CorsConfigurationSource source = config.corsConfigurationSource();
+        org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
+        request.setRequestURI("/api/version");
+        org.springframework.web.cors.CorsConfiguration corsConfig = source.getCorsConfiguration(request);
+
+        org.junit.jupiter.api.Assertions.assertNotNull(corsConfig);
+        org.junit.jupiter.api.Assertions.assertEquals(
+                java.util.List.of("*"),
+                corsConfig.getAllowedOriginPatterns()
+        );
+    }
 }

@@ -19,10 +19,12 @@ public class NutritionService {
 
     @Transactional
     public List<MealDTO> getMeals(String userEmail) {
-        if (mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail).isEmpty()) {
+        List<Meal> meals = mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail);
+        if (meals.isEmpty()) {
             seedDefaultMeals(userEmail);
+            meals = mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail);
         }
-        return mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail).stream()
+        return meals.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -75,7 +77,8 @@ public class NutritionService {
     @Transactional
     public void deleteMeal(Long id, String userEmail) {
         mealRepository.deleteByIdAndUserEmail(id, userEmail);
-        if (mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail).isEmpty()) {
+        List<Meal> remaining = mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail);
+        if (remaining.isEmpty()) {
             seedDefaultMeals(userEmail);
         }
     }

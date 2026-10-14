@@ -1,5 +1,5 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 
 export interface FoodForm {
   name: string;
@@ -19,6 +19,7 @@ interface FoodFormModalProps {
   updateFoodForm: (field: string, value: string) => void;
   handleAddSavedFood: (e: React.FormEvent) => void;
   editingFoodId: number | string | null;
+  handleDeleteFood?: (id: number | string) => void;
 }
 
 export default function FoodFormModal({
@@ -28,6 +29,7 @@ export default function FoodFormModal({
   updateFoodForm,
   handleAddSavedFood,
   editingFoodId,
+  handleDeleteFood,
 }: FoodFormModalProps) {
   if (!isOpen) return null;
 
@@ -187,6 +189,31 @@ export default function FoodFormModal({
           </div>
 
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+            {editingFoodId && handleDeleteFood && (
+              <button
+                type="button"
+                style={{
+                  padding: '0.4rem 0.6rem',
+                  fontSize: '0.85rem',
+                  background: 'rgba(239,68,68,0.1)',
+                  border: '1px solid rgba(239,68,68,0.3)',
+                  color: 'var(--color-danger)',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                onClick={() => {
+                  handleDeleteFood(editingFoodId);
+                  onClose();
+                }}
+                title="Eliminar alimento"
+                aria-label="Eliminar alimento"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
             <button
               type="button"
               className="btn btn-secondary"

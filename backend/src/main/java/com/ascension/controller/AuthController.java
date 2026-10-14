@@ -205,14 +205,27 @@ public class AuthController {
                 .body(Map.of("message", "Log out successful"));
     }
 
+    private String extractEmail(Jwt jwt) {
+        if (jwt == null) {
+            return null;
+        }
+        String email = jwt.getClaimAsString("email");
+        if (email != null && !email.isBlank()) {
+            return email;
+        }
+        return jwt.getSubject();
+    }
+
     @DeleteMapping("/account")
     public ResponseEntity<Map<String, String>> deleteAccount(@AuthenticationPrincipal Jwt jwt) {
-        if (jwt == null) {
+        String email = extractEmail(jwt);
+        if (email == null || email.isBlank()) {
             return ResponseEntity.status(401).build();
         }
-        String email = jwt.getSubject();
         accountDeletionService.wipeAccountData(email);
-        return ResponseEntity.ok(Collections.singletonMap("message", "Account deleted successfully"));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie().toString())
+                .body(Collections.singletonMap("message", "Account deleted successfully"));
     }
 
     @GetMapping("/config")
