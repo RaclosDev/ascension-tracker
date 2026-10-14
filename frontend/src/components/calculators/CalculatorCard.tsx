@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { haptics } from '@/lib/haptics';
 
 interface Props {
   title: string;
@@ -18,7 +19,10 @@ export default function CalculatorCard({
 }: Props) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
-  const toggle = () => setIsOpen(!isOpen);
+  const toggle = () => {
+    haptics.medium();
+    setIsOpen(!isOpen);
+  };
 
   return (
     <div
@@ -59,18 +63,27 @@ export default function CalculatorCard({
           <ChevronDown size={18} />
         </span>
       </button>
-      {isOpen && (
-        <div
-          className="accordion-content fade-in"
-          style={{
-            marginTop: '0.85rem',
-            paddingTop: '0.85rem',
-            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-          }}
-        >
-          {children}
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateRows: isOpen ? '1fr' : '0fr',
+          transition: 'grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      >
+        <div style={{ overflow: 'hidden' }}>
+          <div
+            className="accordion-content"
+            style={{
+              marginTop: '0.85rem',
+              paddingTop: '0.85rem',
+              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            }}
+          >
+            {children}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

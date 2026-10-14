@@ -329,7 +329,17 @@ export default function SettingsPage() {
   if (!settings) return null;
 
   return (
-    <div className="fade-in">
+    <div
+      className="fade-in max-w-2xl mx-auto px-4 pt-2 sm:pt-4"
+      style={{ paddingBottom: 'calc(110px + env(safe-area-inset-bottom, 24px))' }}
+    >
+      <header className="mb-6 pb-2 border-b border-white/5">
+        <h1 className="text-2xl font-black text-white tracking-tight">Ajustes y Preferencias</h1>
+        <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
+          Configuración personal, macros, entrenamiento y privacidad.
+        </p>
+      </header>
+
       <div
         className="settings-accordion-container"
         style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
@@ -347,7 +357,7 @@ export default function SettingsPage() {
               <span className="card-title m-0 text-base font-semibold">Datos Personales</span>
             </div>
             <span
-              className={`text-xs text-muted transition-transform duration-300 ${openSections.personal ? 'rotate-180' : 'rotate-0'}`}
+              className={`text-xs text-gray-400 transition-transform duration-300 ${openSections.personal ? 'rotate-180' : 'rotate-0'}`}
             >
               <ChevronDown size={18} />
             </span>
@@ -474,7 +484,7 @@ export default function SettingsPage() {
               <span className="card-title m-0 text-base font-semibold">Plan de Adelgazamiento</span>
             </div>
             <span
-              className={`text-xs text-muted transition-transform duration-300 ${openSections.plan ? 'rotate-180' : 'rotate-0'}`}
+              className={`text-xs text-gray-400 transition-transform duration-300 ${openSections.plan ? 'rotate-180' : 'rotate-0'}`}
             >
               <ChevronDown size={18} />
             </span>
@@ -516,7 +526,7 @@ export default function SettingsPage() {
               <span className="card-title m-0 text-base font-semibold">Estrategia de Macros</span>
             </div>
             <span
-              className={`text-xs text-muted transition-transform duration-300 ${openSections.macros ? 'rotate-180' : 'rotate-0'}`}
+              className={`text-xs text-gray-400 transition-transform duration-300 ${openSections.macros ? 'rotate-180' : 'rotate-0'}`}
             >
               <ChevronDown size={18} />
             </span>
@@ -559,7 +569,7 @@ export default function SettingsPage() {
               <span className="card-title m-0 text-base font-semibold">Configurar Comidas</span>
             </div>
             <span
-              className={`text-xs text-muted transition-transform duration-300 ${openSections.meals ? 'rotate-180' : 'rotate-0'}`}
+              className={`text-xs text-gray-400 transition-transform duration-300 ${openSections.meals ? 'rotate-180' : 'rotate-0'}`}
             >
               <ChevronDown size={18} />
             </span>
@@ -584,7 +594,7 @@ export default function SettingsPage() {
               <span className="card-title m-0 text-base font-semibold">Tema y Apariencia</span>
             </div>
             <span
-              className={`text-xs text-muted transition-transform duration-300 ${openSections.theme ? 'rotate-180' : 'rotate-0'}`}
+              className={`text-xs text-gray-400 transition-transform duration-300 ${openSections.theme ? 'rotate-180' : 'rotate-0'}`}
             >
               <ChevronDown size={18} />
             </span>
@@ -662,7 +672,7 @@ export default function SettingsPage() {
               <span className="card-title m-0 text-base font-semibold">Entrenamiento</span>
             </div>
             <span
-              className={`text-xs text-muted transition-transform duration-300 ${openSections.workout ? 'rotate-180' : 'rotate-0'}`}
+              className={`text-xs text-gray-400 transition-transform duration-300 ${openSections.workout ? 'rotate-180' : 'rotate-0'}`}
             >
               <ChevronDown size={18} />
             </span>

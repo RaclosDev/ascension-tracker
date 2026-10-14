@@ -12,7 +12,9 @@ test.describe('Utilities & Biomechanical Calculators Flows', () => {
     });
 
     // Secciones principales visibles
-    await expect(page.getByText('Estratega Nutricional IA')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('button', { name: /Estratega Nutricional IA/i })).toBeVisible({
+      timeout: 15000,
+    });
     await expect(page.getByText('Gasto por Pasos')).toBeVisible({ timeout: 15000 });
     await expect(page.getByText('Gasto Metabólico por Tiempo')).toBeVisible({ timeout: 15000 });
     await expect(page.getByText('Calculadoras de Nutrición')).toBeVisible({ timeout: 15000 });
