@@ -67,9 +67,20 @@ export function totalSets(exercises: WorkoutExercise[]) {
   return exercises.reduce((n, ex) => n + ex.sets.length, 0);
 }
 
+export function matchVariant(
+  v1?: { grip?: string | null; machine?: string | null },
+  v2?: { grip?: string | null; machine?: string | null },
+): boolean {
+  const g1 = (v1?.grip || '').trim().toLowerCase();
+  const g2 = (v2?.grip || '').trim().toLowerCase();
+  const m1 = (v1?.machine || '').trim().toLowerCase();
+  const m2 = (v2?.machine || '').trim().toLowerCase();
+  return g1 === g2 && m1 === m2;
+}
+
 export function isPrSet(
   exerciseId: string,
-  variant: { grip?: string; machine?: string } | undefined,
+  variant: { grip?: string | null; machine?: string | null } | undefined,
   weight: string,
   history: CompletedWorkout[],
   excludeWorkoutId?: string,
@@ -81,7 +92,7 @@ export function isPrSet(
     if (excludeWorkoutId && session.id === excludeWorkoutId) continue;
     for (const ex of session.exercises) {
       if (ex.exerciseId !== exerciseId) continue;
-      if (ex.variant?.grip !== variant?.grip || ex.variant?.machine !== variant?.machine) continue;
+      if (!matchVariant(ex.variant, variant)) continue;
       for (const set of ex.sets) {
         if (!set.completed) continue;
         const sw = Number.parseFloat(set.weight);
@@ -94,16 +105,13 @@ export function isPrSet(
 
 export function previousSetLabel(
   exerciseId: string,
-  variant: { grip?: string; machine?: string } | undefined,
+  variant: { grip?: string | null; machine?: string | null } | undefined,
   setIndex: number,
   history: CompletedWorkout[],
 ) {
   for (const session of history) {
     const ex = session.exercises.find(
-      (e) =>
-        e.exerciseId === exerciseId &&
-        e.variant?.grip === variant?.grip &&
-        e.variant?.machine === variant?.machine,
+      (e) => e.exerciseId === exerciseId && matchVariant(e.variant, variant),
     );
     if (!ex) continue;
     const set = ex.sets.filter((s) => s.type !== 'warmup')[setIndex] ?? ex.sets[setIndex];
@@ -116,16 +124,13 @@ export function previousSetLabel(
 
 export function previousFill(
   exerciseId: string,
-  variant: { grip?: string; machine?: string } | undefined,
+  variant: { grip?: string | null; machine?: string | null } | undefined,
   setIndex: number,
   history: CompletedWorkout[],
 ) {
   for (const session of history) {
     const ex = session.exercises.find(
-      (e) =>
-        e.exerciseId === exerciseId &&
-        e.variant?.grip === variant?.grip &&
-        e.variant?.machine === variant?.machine,
+      (e) => e.exerciseId === exerciseId && matchVariant(e.variant, variant),
     );
     if (!ex) continue;
     const working = ex.sets.filter((s) => s.type !== 'warmup');

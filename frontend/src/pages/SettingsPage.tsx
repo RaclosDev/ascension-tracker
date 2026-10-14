@@ -95,8 +95,11 @@ export default function SettingsPage() {
   const hiddenEquipments = useWorkoutStore((s) => s.hiddenEquipments) || [];
   const toggleHiddenEquipment = useWorkoutStore((s) => s.toggleHiddenEquipment);
   const setHiddenEquipments = useWorkoutStore((s) => s.setHiddenEquipments);
-  const { prefs: workoutPrefs, toggleHiddenEquipment: togglePrefHiddenEquipment } =
-    useWorkoutPreferencesActions();
+  const {
+    prefs: workoutPrefs,
+    toggleHiddenEquipment: togglePrefHiddenEquipment,
+    setRestPresetPref,
+  } = useWorkoutPreferencesActions();
 
   useEffect(() => {
     if (workoutPrefs?.hiddenEquipments) {
@@ -692,7 +695,11 @@ export default function SettingsPage() {
                     className="form-input"
                     style={{ width: '80px', textAlign: 'center', fontWeight: 600 }}
                     value={restPreset}
-                    onChange={(e) => setRestPreset(Number(e.target.value) || 90)}
+                    onChange={(e) => {
+                      const val = Number(e.target.value) || 90;
+                      setRestPreset(val);
+                      setRestPresetPref(val);
+                    }}
                     min="0"
                     step="15"
                     aria-label="Descanso base en segundos"
@@ -700,12 +707,11 @@ export default function SettingsPage() {
                   <span
                     style={{
                       fontSize: '0.85rem',
-                      color: 'var(--text-muted)',
-                      fontWeight: 500,
-                      minWidth: '45px',
+                      color: 'var(--text-secondary)',
+                      fontWeight: 600,
                     }}
                   >
-                    ({formatRestFriendly(restPreset)})
+                    seg ({formatRestFriendly(restPreset)})
                   </span>
                 </div>
               </div>
