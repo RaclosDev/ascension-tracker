@@ -114,7 +114,7 @@ public class AuthController {
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, springCookie.toString())
-                    .body(Map.of("token", customToken, "refreshToken", refreshToken.getPlainToken()));
+                    .body(Map.of("token", customToken));
 
         } catch (Exception e) {
             log.error("Failed to validate Google token", e);
@@ -125,34 +125,23 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshtoken(
             @CookieValue(name = "refreshToken", required = false) String requestCookieRefreshToken,
-            @RequestHeader(name = "X-Refresh-Token", required = false) String requestHeaderRefreshToken,
-            @RequestBody(required = false) Map<String, String> body,
             HttpServletRequest request) {
 
-        String requestRefreshToken = requestCookieRefreshToken;
-        if (requestRefreshToken == null || requestRefreshToken.isBlank()) {
-            if (body != null && body.get("refreshToken") != null && !body.get("refreshToken").isBlank()) {
-                requestRefreshToken = body.get("refreshToken");
-            } else if (requestHeaderRefreshToken != null && !requestHeaderRefreshToken.isBlank()) {
-                requestRefreshToken = requestHeaderRefreshToken;
-            }
-        }
-
-        log.info("Refresh request received, token present: {}", requestRefreshToken != null);
+        log.info("Refresh request received, token present in cookie: {}", requestCookieRefreshToken != null);
         
-        if (requestRefreshToken == null || requestRefreshToken.isBlank()) {
-            log.warn("Refresh token missing from cookie, header, and body");
+        if (requestCookieRefreshToken == null || requestCookieRefreshToken.isBlank()) {
+            log.warn("Refresh token missing from cookie");
             return ResponseEntity.status(401).body(Map.of("error", "Refresh token is missing"));
         }
 
         try {
-            RefreshToken newRefreshToken = refreshTokenService.rotateRefreshToken(requestRefreshToken);
+            RefreshToken newRefreshToken = refreshTokenService.rotateRefreshToken(requestCookieRefreshToken);
             String token = generateJwt(newRefreshToken.getEmail(), newRefreshToken.getName(), newRefreshToken.getPicture());
             log.info("Refresh token rotated successfully for user {}", newRefreshToken.getEmail());
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(newRefreshToken.getPlainToken()).toString())
-                    .body(Map.of("token", token, "refreshToken", newRefreshToken.getPlainToken()));
+                    .body(Map.of("token", token));
 
         } catch (com.ascension.exception.TokenRefreshException e) {
             return ResponseEntity.status(401)
@@ -183,19 +172,9 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(
-            @CookieValue(name = "refreshToken", required = false) String requestCookieRefreshToken,
-            @RequestHeader(name = "X-Refresh-Token", required = false) String requestHeaderRefreshToken,
-            @RequestBody(required = false) Map<String, String> body) {
-        String tokenToDelete = requestCookieRefreshToken;
-        if (tokenToDelete == null || tokenToDelete.isBlank()) {
-            if (body != null && body.get("refreshToken") != null && !body.get("refreshToken").isBlank()) {
-                tokenToDelete = body.get("refreshToken");
-            } else if (requestHeaderRefreshToken != null && !requestHeaderRefreshToken.isBlank()) {
-                tokenToDelete = requestHeaderRefreshToken;
-            }
-        }
-        if (tokenToDelete != null) {
-            refreshTokenService.findByToken(RefreshToken.hashToken(tokenToDelete)).ifPresent(token -> {
+            @CookieValue(name = "refreshToken", required = false) String requestCookieRefreshToken) {
+        if (requestCookieRefreshToken != null && !requestCookieRefreshToken.isBlank()) {
+            refreshTokenService.findByToken(RefreshToken.hashToken(requestCookieRefreshToken)).ifPresent(token -> {
                 refreshTokenService.delete(token);
             });
         }

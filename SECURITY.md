@@ -14,12 +14,17 @@ Intentaremos responder a tu informe en un plazo de 48 horas con una evaluación 
 
 ## Modelo de Autenticación
 
-Ascension Tracker NO gestiona contraseñas propias. 
-El flujo de seguridad funciona de la siguiente manera:
-1. El usuario se autentica usando Google Sign-In.
-2. El frontend envía el ID Token de Google al backend.
-3. El backend verifica la autenticidad del ID Token contra los servidores de Google usando el `google-api-client`.
-4. Si es válido, el backend emite su propio JSON Web Token (JWT) firmado en HS256 y un Refresh Token almacenado de forma segura (hasheado).
-5. El Refresh Token se almacena en una cookie `HttpOnly` en el cliente para mitigar ataques XSS.
+Ascension Tracker no gestiona contraseñas propias. El flujo de seguridad sigue estrictamente los principios de menor privilegio y defensa en profundidad:
+
+1. **Autenticación Federada:** El usuario se autentica mediante Google Sign-In en el frontend.
+2. **Verificación Servidor:** El backend valida criptográficamente el ID Token de Google contra los servidores de Google usando `google-api-client`.
+3. **Emisión de Tokens:**
+   - **Access Token (JWT):** Firmado en HMAC-SHA256. Reside **estrictamente en memoria del navegador** (estado de React / módulo JS). Nunca se persiste en `localStorage` ni `sessionStorage` para neutralizar ataques XSS de extracción de credenciales.
+   - **Refresh Token:** Se almacena hasheado en base de datos (SHA-256) y se entrega al cliente **únicamente a través de una cookie `HttpOnly`, `Secure` y `SameSite`**.
+4. **Flujo de Refresco y Cierre de Sesión:**
+   - Ni `/api/auth/login` ni `/api/auth/refresh` exponen jamás el refresh token en el cuerpo JSON de la respuesta.
+   - Los endpoints `/api/auth/refresh` y `/api/auth/logout` leen el token de refresco **exclusivamente de la cookie `HttpOnly`**, ignorando cualquier cuerpo JSON o cabecera personalizada (`X-Refresh-Token`).
+5. **CORS Sanitizado:**
+   - La configuración de CORS no expone cabeceras sensibles como `Authorization` o `X-Refresh-Token`.
 
 Cualquier vulnerabilidad reportada en relación con el bypass de este flujo o fugas de tokens en logs será tratada con máxima prioridad.
