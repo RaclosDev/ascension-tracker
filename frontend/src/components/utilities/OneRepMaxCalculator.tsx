@@ -123,10 +123,10 @@ export default function OneRepMaxCalculator({
       <div
         role="status"
         aria-live="polite"
-        className="p-5 rounded-2xl bg-gradient-to-br from-rose-950/40 via-red-950/20 to-black/40 border border-red-500/20 flex flex-col sm:flex-row items-center justify-between gap-4"
+        className="p-5 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex flex-col sm:flex-row items-center justify-between gap-4"
       >
         <div>
-          <span className="text-xs font-bold tracking-wider uppercase text-red-400">
+          <span className="text-xs font-bold tracking-wider uppercase text-blue-400">
             1RM Estimado ({formula.toUpperCase()})
           </span>
           <div className="text-4xl font-extrabold text-white mt-1">

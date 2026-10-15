@@ -297,10 +297,10 @@ export default function MacroDistributionCalculator({
       {/* KPI MACRO CARDS */}
       <div role="status" aria-live="polite" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Proteína */}
-        <div className="p-4 rounded-xl bg-gradient-to-br from-rose-950/40 to-black/40 border border-rose-500/20">
-          <div className="flex justify-between items-center text-xs text-rose-400 font-bold uppercase">
+        <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5">
+          <div className="flex justify-between items-center text-xs text-blue-300 font-bold uppercase">
             <span>Proteína</span>
-            <span>{result.protein.percentage}%</span>
+            <span className="text-zinc-400 font-mono">{result.protein.percentage}%</span>
           </div>
           <div className="text-3xl font-extrabold text-white mt-1">
             {result.protein.grams} <span className="text-sm font-normal text-gray-400">g</span>
@@ -309,10 +309,10 @@ export default function MacroDistributionCalculator({
         </div>
 
         {/* Carbohidratos */}
-        <div className="p-4 rounded-xl bg-gradient-to-br from-sky-950/40 to-black/40 border border-sky-500/20">
-          <div className="flex justify-between items-center text-xs text-sky-400 font-bold uppercase">
+        <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5">
+          <div className="flex justify-between items-center text-xs text-blue-400 font-bold uppercase">
             <span>Carbohidratos</span>
-            <span>{result.carbs.percentage}%</span>
+            <span className="text-zinc-400 font-mono">{result.carbs.percentage}%</span>
           </div>
           <div className="text-3xl font-extrabold text-white mt-1">
             {result.carbs.grams} <span className="text-sm font-normal text-gray-400">g</span>
@@ -321,10 +321,10 @@ export default function MacroDistributionCalculator({
         </div>
 
         {/* Grasas */}
-        <div className="p-4 rounded-xl bg-gradient-to-br from-amber-950/40 to-black/40 border border-amber-500/20">
-          <div className="flex justify-between items-center text-xs text-amber-400 font-bold uppercase">
-            <span>Grasas Saludables</span>
-            <span>{result.fat.percentage}%</span>
+        <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5">
+          <div className="flex justify-between items-center text-xs text-blue-500 font-bold uppercase">
+            <span>Grasas</span>
+            <span className="text-zinc-400 font-mono">{result.fat.percentage}%</span>
           </div>
           <div className="text-3xl font-extrabold text-white mt-1">
             {result.fat.grams} <span className="text-sm font-normal text-gray-400">g</span>

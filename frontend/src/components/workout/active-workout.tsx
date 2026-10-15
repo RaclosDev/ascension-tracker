@@ -18,7 +18,7 @@ import { RestBanner } from '@/components/workout/rest-banner';
 import { EmptyCard } from '@/components/workout/dashboard';
 import { WorkoutCelebrationModal } from '@/components/workout/WorkoutCelebrationModal';
 import { useWorkoutStore } from '@/lib/workout/store';
-import type { CompletedWorkout, WorkoutExercise } from '@/lib/workout/types';
+import type { WorkoutExercise } from '@/lib/workout/types';
 
 const EMPTY_EXERCISES: WorkoutExercise[] = [];
 
@@ -26,8 +26,6 @@ export function ActiveWorkout() {
   const hasActive = useWorkoutStore((s) => s.active !== null);
   const startEmpty = useWorkoutStore((s) => s.startEmpty);
   const setPickerOpen = useWorkoutStore((s) => s.setPickerOpen);
-  const clearActiveWorkout = useWorkoutStore((s) => s.clearActiveWorkout);
-  const [completedSummary, setCompletedSummary] = useState<CompletedWorkout | null>(null);
 
   if (!hasActive) {
     return (
@@ -96,15 +94,7 @@ export function ActiveWorkout() {
         <Plus size={18} />
         Añadir ejercicio
       </button>
-      <FooterActions onWorkoutSaved={(w) => setCompletedSummary(w)} />
-      <WorkoutCelebrationModal
-        open={completedSummary !== null}
-        onClose={() => {
-          setCompletedSummary(null);
-          clearActiveWorkout();
-        }}
-        workout={completedSummary}
-      />
+      <FooterActions />
     </>
   );
 }
@@ -227,11 +217,7 @@ function LiveSession() {
 
 import { useSaveWorkout, useSaveTemplate } from '@/lib/workout/api';
 
-interface FooterActionsProps {
-  onWorkoutSaved?: (workout: CompletedWorkout) => void;
-}
-
-function FooterActions({ onWorkoutSaved }: FooterActionsProps) {
+function FooterActions() {
   const finishWorkout = useWorkoutStore((s) => s.finishWorkout);
   const clearActiveWorkout = useWorkoutStore((s) => s.clearActiveWorkout);
   const discardWorkout = useWorkoutStore((s) => s.discardWorkout);
@@ -242,8 +228,6 @@ function FooterActions({ onWorkoutSaved }: FooterActionsProps) {
   const [finishOpen, setFinishOpen] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
   const [emptyOpen, setEmptyOpen] = useState(false);
-  const [customName, setCustomName] = useState('');
-  const [customDuration, setCustomDuration] = useState(0);
   const [saveError, setSaveError] = useState<string | null>(null);
   const hasExercises = useWorkoutStore((s) => (s.active?.exercises.length ?? 0) > 0);
 
@@ -261,30 +245,7 @@ function FooterActions({ onWorkoutSaved }: FooterActionsProps) {
     dismissRestNotifications();
 
     setSaveError(null);
-    setCustomName(active.name);
-    setCustomDuration(Math.round((Date.now() - active.startedAt) / 60000));
     setFinishOpen(true);
-  }
-
-  function confirmFinish() {
-    setSaveError(null);
-    const record = finishWorkout(customName, customDuration * 60000);
-    if (!record) return;
-    saveWorkoutMutation.mutate(record, {
-      onSuccess: () => {
-        setFinishOpen(false);
-        if (onWorkoutSaved) {
-          onWorkoutSaved(record);
-        } else {
-          clearActiveWorkout();
-        }
-      },
-      onError: () => {
-        setSaveError(
-          'No se pudo sincronizar con el servidor. Tu entrenamiento sigue protegido y guardado localmente en este dispositivo. Puedes reintentar cuando recuperes conexión.',
-        );
-      },
-    });
   }
 
   function doSaveTemplate() {
@@ -372,121 +333,30 @@ function FooterActions({ onWorkoutSaved }: FooterActionsProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={finishOpen} onOpenChange={setFinishOpen}>
-        <AlertDialogContent
-          className="card"
-          style={{
-            padding: '1.5rem',
-            background: 'var(--bg-primary)',
-            border: '1px solid var(--border-color)',
-            width: '95vw',
-            maxWidth: '400px',
-            maxHeight: '85dvh',
-            overflowY: 'auto',
-          }}
-        >
-          <AlertDialogHeader>
-            <AlertDialogTitle
-              style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}
-            >
-              Finalizar Sesión
-            </AlertDialogTitle>
-            <div
-              style={{
-                marginTop: '1rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem',
-                textAlign: 'left',
-              }}
-            >
-              <div>
-                <label
-                  className="form-label"
-                  style={{
-                    fontSize: '0.85rem',
-                    color: 'var(--text-secondary)',
-                    marginBottom: '0.4rem',
-                    display: 'block',
-                  }}
-                >
-                  Nombre del entrenamiento
-                </label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={customName}
-                  onChange={(e) => setCustomName(e.target.value)}
-                  style={{
-                    width: '100%',
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-medium)',
-                    color: 'var(--text-primary)',
-                    borderRadius: '8px',
-                    padding: '0.5rem',
-                  }}
-                />
-              </div>
-              <div>
-                <label
-                  className="form-label"
-                  style={{
-                    fontSize: '0.85rem',
-                    color: 'var(--text-secondary)',
-                    marginBottom: '0.4rem',
-                    display: 'block',
-                  }}
-                >
-                  Duración (minutos)
-                </label>
-                <input
-                  type="number"
-                  className="form-input"
-                  value={customDuration}
-                  onChange={(e) => setCustomDuration(Number(e.target.value))}
-                  min="1"
-                  style={{
-                    width: '100%',
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-medium)',
-                    color: 'var(--text-primary)',
-                    borderRadius: '8px',
-                    padding: '0.5rem',
-                  }}
-                />
-              </div>
-              {saveError && (
-                <div
-                  style={{
-                    padding: '0.6rem 0.8rem',
-                    background: 'rgba(239, 68, 68, 0.12)',
-                    border: '1px solid rgba(239, 68, 68, 0.35)',
-                    borderRadius: '8px',
-                    color: '#ef4444',
-                    fontSize: '0.85rem',
-                    lineHeight: '1.4',
-                  }}
-                >
-                  {saveError}
-                </div>
-              )}
-            </div>
-          </AlertDialogHeader>
-          <AlertDialogFooter style={{ marginTop: '1.5rem' }}>
-            <AlertDialogCancel className="btn btn-secondary">Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="btn btn-primary"
-              onClick={(e) => {
-                e.preventDefault();
-                confirmFinish();
-              }}
-              disabled={saveWorkoutMutation.isPending}
-            >
-              {saveWorkoutMutation.isPending ? 'Guardando...' : 'Guardar'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <WorkoutCelebrationModal
+        open={finishOpen}
+        onClose={() => setFinishOpen(false)}
+        activeWorkout={useWorkoutStore.getState().active}
+        onSave={async (name, durationMin, notes) => {
+          setSaveError(null);
+          const record = finishWorkout(name, durationMin * 60000);
+          if (!record) return;
+          if (notes) record.notes = notes;
+          saveWorkoutMutation.mutate(record, {
+            onSuccess: () => {
+              setFinishOpen(false);
+              clearActiveWorkout();
+            },
+            onError: () => {
+              setSaveError(
+                'No se pudo sincronizar con el servidor. Tu entrenamiento sigue protegido y guardado localmente en este dispositivo. Puedes reintentar cuando recuperes conexión.',
+              );
+            },
+          });
+        }}
+        isSaving={saveWorkoutMutation.isPending}
+        saveError={saveError}
+      />
     </div>
   );
 }
