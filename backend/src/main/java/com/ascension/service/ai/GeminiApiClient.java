@@ -4,6 +4,7 @@ import com.ascension.config.ExternalApiProperties;
 import com.ascension.exception.ExternalApiException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,9 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
-import jakarta.annotation.PostConstruct;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,12 +29,18 @@ import java.util.Map;
 public class GeminiApiClient {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiApiClient.class);
+    public static final long TOTAL_REQUEST_DEADLINE_MS = 20_000L;
+    public static final long MODEL_CACHE_TTL_MS = 3600_000L; // 1 hour TTL
+    public static final int MAX_MODELS_PER_REQUEST = 2;
 
     @Value("${GEMINI_API_KEY:}")
     private String geminiApiKey;
 
     @Value("${GEMINI_MODEL:}")
     private String geminiModel;
+
+    @Value("${app.gemini.fallback-models:gemini-2.5-flash,gemini-2.0-flash}")
+    private String fallbackModels = "gemini-2.5-flash,gemini-2.0-flash";
 
     private final RestTemplateBuilder builder;
     private final ExternalApiProperties properties;
@@ -42,6 +49,7 @@ public class GeminiApiClient {
 
     private volatile String cachedWorkingUrl = null;
     private volatile List<String> cachedModelCandidates = null;
+    private volatile long modelCacheExpiresAt = 0L;
 
     public GeminiApiClient(RestTemplateBuilder builder, ExternalApiProperties properties) {
         this.builder = builder;
@@ -63,6 +71,16 @@ public class GeminiApiClient {
 
     void setGeminiApiKey(String geminiApiKey) {
         this.geminiApiKey = geminiApiKey;
+    }
+
+    void setFallbackModels(String fallbackModels) {
+        this.fallbackModels = fallbackModels;
+    }
+
+    void invalidateModelCache() {
+        this.cachedModelCandidates = null;
+        this.modelCacheExpiresAt = 0L;
+        this.cachedWorkingUrl = null;
     }
 
     public String executePrompt(String prompt) {
@@ -88,32 +106,39 @@ public class GeminiApiClient {
         }
 
         String apiKey = geminiApiKey.trim();
+        long deadline = System.currentTimeMillis() + TOTAL_REQUEST_DEADLINE_MS;
 
         if (cachedWorkingUrl != null) {
             try {
-                return cleanJsonResponse(callApiEndpointWithRetry(cachedWorkingUrl, prompt, base64Image, mimeType));
+                checkDeadline(deadline);
+                return cleanJsonResponse(callApiEndpointWithRetry(cachedWorkingUrl, prompt, base64Image, mimeType, deadline));
             } catch (Exception e) {
                 log.warn("Cached Gemini model failed, invalidating cache and discovering models: {}", e.getMessage());
-                cachedWorkingUrl = null; 
+                cachedWorkingUrl = null;
             }
         }
 
+        long now = System.currentTimeMillis();
         List<String> modelCandidates = cachedModelCandidates;
-        if (modelCandidates == null) {
+        if (modelCandidates == null || now > modelCacheExpiresAt) {
             synchronized (this) {
                 modelCandidates = cachedModelCandidates;
-                if (modelCandidates == null) {
+                if (modelCandidates == null || System.currentTimeMillis() > modelCacheExpiresAt) {
                     modelCandidates = discoverModels(apiKey);
                     cachedModelCandidates = modelCandidates;
+                    modelCacheExpiresAt = System.currentTimeMillis() + MODEL_CACHE_TTL_MS;
                 }
             }
         }
 
+        List<String> modelsToTry = modelCandidates.stream().limit(MAX_MODELS_PER_REQUEST).toList();
         Exception lastException = null;
-        for (String modelName : modelCandidates) {
+
+        for (String modelName : modelsToTry) {
+            checkDeadline(deadline);
             String url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent";
             try {
-                String responseText = callApiEndpointWithRetry(url, prompt, base64Image, mimeType);
+                String responseText = callApiEndpointWithRetry(url, prompt, base64Image, mimeType, deadline);
                 cachedWorkingUrl = url;
                 return cleanJsonResponse(responseText);
             } catch (Exception e) {
@@ -122,6 +147,9 @@ public class GeminiApiClient {
             }
         }
 
+        if (lastException instanceof ExternalApiException eae) {
+            throw eae;
+        }
         if (lastException instanceof ResourceAccessException) {
             throw new ExternalApiException("Gemini", HttpStatus.SERVICE_UNAVAILABLE,
                     "Servicio de IA de Gemini no disponible o tiempo de espera agotado", lastException);
@@ -140,16 +168,18 @@ public class GeminiApiClient {
                 "Todos los modelos de Gemini fallaron. Último error: " + (lastException != null ? lastException.getMessage() : "desconocido"), lastException);
     }
 
+    private void checkDeadline(long deadline) {
+        if (System.currentTimeMillis() >= deadline) {
+            throw new ExternalApiException("Gemini", HttpStatus.GATEWAY_TIMEOUT,
+                    "Deadline de petición excedido (20s) para Gemini API");
+        }
+    }
+
     private List<String> discoverModels(String apiKey) {
         List<String> candidates = new ArrayList<>();
         if (geminiModel != null && !geminiModel.trim().isEmpty()) {
             candidates.add(geminiModel.trim());
         }
-        
-        candidates.add("gemini-2.5-flash");
-        candidates.add("gemini-2.0-flash");
-        candidates.add("gemini-1.5-flash");
-        candidates.add("gemini-1.5-flash-8b");
 
         try {
             String url = "https://generativelanguage.googleapis.com/v1beta/models";
@@ -162,52 +192,74 @@ public class GeminiApiClient {
             JsonNode models = root.path("models");
             if (models.isArray()) {
                 for (JsonNode model : models) {
-                    String name = model.path("name").asText();
-                    if (name.startsWith("models/")) {
-                        name = name.substring(7);
+                    boolean supportsGenerateContent = false;
+                    JsonNode supportedMethods = model.path("supportedGenerationMethods");
+                    if (supportedMethods.isArray()) {
+                        for (JsonNode method : supportedMethods) {
+                            if ("generateContent".equalsIgnoreCase(method.asText())) {
+                                supportsGenerateContent = true;
+                                break;
+                            }
+                        }
                     }
-                    if (name.contains("gemini") && !candidates.contains(name)) {
-                        candidates.add(name);
+
+                    if (supportsGenerateContent) {
+                        String name = model.path("name").asText();
+                        if (name.startsWith("models/")) {
+                            name = name.substring(7);
+                        }
+                        if (name.contains("gemini") && !candidates.contains(name)) {
+                            candidates.add(name);
+                        }
                     }
                 }
             }
         } catch (Exception e) {
-            log.warn("Failed to discover models, falling back to static list. Error: {}", e.getMessage());
+            log.warn("Failed to discover models, falling back to configured fallback list. Error: {}", e.getMessage());
         }
+
+        // Add configurable fallback models (no hardcoded retired models)
+        if (fallbackModels != null && !fallbackModels.isBlank()) {
+            Arrays.stream(fallbackModels.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty() && !candidates.contains(s))
+                    .forEach(candidates::add);
+        }
+
         return candidates;
     }
 
-    private String callApiEndpointWithRetry(String url, String prompt, String base64Image, String mimeType) throws Exception {
+    private String callApiEndpointWithRetry(String url, String prompt, String base64Image, String mimeType, long deadline) throws Exception {
         Exception lastException = null;
         int maxAttempts = properties.getGemini().getMaxAttempts();
 
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            checkDeadline(deadline);
             try {
                 return callApiEndpoint(url, prompt, base64Image, mimeType);
             } catch (RestClientResponseException rcre) {
                 lastException = rcre;
                 int status = rcre.getStatusCode().value();
                 log.warn("Gemini API error on attempt {}/{}: status {} - {}", attempt, maxAttempts, status, rcre.getResponseBodyAsString());
-                
-                // Retry only on 5xx or 429
+
                 boolean isRetryable = rcre.getStatusCode().is5xxServerError() || status == 429;
                 if (!isRetryable) {
                     throw rcre;
                 }
                 if (attempt < maxAttempts) {
-                    applyBackoff(attempt);
+                    applyBackoff(attempt, deadline);
                 }
             } catch (ResourceAccessException rae) {
                 lastException = rae;
                 log.warn("Gemini API network error on attempt {}/{}: {}", attempt, maxAttempts, rae.getMessage());
                 if (attempt < maxAttempts) {
-                    applyBackoff(attempt);
+                    applyBackoff(attempt, deadline);
                 }
             } catch (Exception e) {
                 lastException = e;
                 log.warn("Gemini API call unexpected error on attempt {}/{}: {}", attempt, maxAttempts, e.getMessage());
                 if (attempt < maxAttempts) {
-                    applyBackoff(attempt);
+                    applyBackoff(attempt, deadline);
                 }
             }
         }
@@ -263,9 +315,13 @@ public class GeminiApiClient {
         throw new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY, "Estructura de respuesta inesperada de Gemini: " + response.getBody());
     }
 
-    private void applyBackoff(int attempt) {
+    private void applyBackoff(int attempt, long deadline) {
         long initialBackoffMs = properties.getGemini().getInitialBackoffMs();
         long backoffMs = initialBackoffMs * (1L << (attempt - 1));
+        if (System.currentTimeMillis() + backoffMs >= deadline) {
+            throw new ExternalApiException("Gemini", HttpStatus.GATEWAY_TIMEOUT,
+                    "Deadline de petición excedido (20s) para Gemini API antes de reintento");
+        }
         try {
             Thread.sleep(backoffMs);
         } catch (InterruptedException ie) {
@@ -276,10 +332,10 @@ public class GeminiApiClient {
 
     private String cleanJsonResponse(String response) {
         if (response == null) return "{}";
-        
+
         int firstBrace = response.indexOf('{');
         int firstBracket = response.indexOf('[');
-        
+
         int start = -1;
         if (firstBrace != -1 && firstBracket != -1) {
             start = Math.min(firstBrace, firstBracket);
@@ -288,12 +344,12 @@ public class GeminiApiClient {
         } else if (firstBracket != -1) {
             start = firstBracket;
         }
-        
+
         if (start == -1) return response.trim();
-        
+
         int lastBrace = response.lastIndexOf('}');
         int lastBracket = response.lastIndexOf(']');
-        
+
         int end = -1;
         if (lastBrace != -1 && lastBracket != -1) {
             end = Math.max(lastBrace, lastBracket);
@@ -302,11 +358,11 @@ public class GeminiApiClient {
         } else if (lastBracket != -1) {
             end = lastBracket;
         }
-        
+
         if (end != -1 && end >= start) {
             return response.substring(start, end + 1);
         }
-        
+
         return response.trim();
     }
 }

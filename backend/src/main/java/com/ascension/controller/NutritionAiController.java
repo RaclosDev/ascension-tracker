@@ -78,7 +78,7 @@ public class NutritionAiController {
         String dateStr = request.getDate();
         LocalDate date = dateStr != null ? LocalDate.parse(dateStr) : LocalDate.now();
         Integer mealIndex = request.getMealIndex();
-        List<Map<String, String>> chatHistory = request.getChatHistory();
+        List<AiChatRequestDTO.ChatMessageDTO> chatHistory = request.getChatHistory();
         String base64Image = request.getBase64Image();
 
         return ResponseEntity.ok(geminiAiService.generateMealAssistantResponse(userEmail, message, base64Image, date, mealIndex, chatHistory));
