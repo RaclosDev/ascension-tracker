@@ -35,12 +35,39 @@ public class SecurityConfig {
 
     @jakarta.annotation.PostConstruct
     public void validateSecret() {
-        if ("CHANGE_ME".equals(jwtSecret)) {
-            throw new IllegalStateException("FATAL: JWT_SECRET must not be the default value 'CHANGE_ME'. Please set a real secret.");
+        if (jwtSecret == null || jwtSecret.trim().isEmpty()) {
+            throw new IllegalStateException("FATAL: JWT_SECRET must be set and cannot be blank.");
         }
-        if (jwtSecret == null || jwtSecret.getBytes(StandardCharsets.UTF_8).length < 32) {
+        if (jwtSecret.getBytes(StandardCharsets.UTF_8).length < 32) {
             throw new IllegalStateException("FATAL: JWT_SECRET must be at least 32 bytes long for HS256.");
         }
+        String lower = jwtSecret.toLowerCase(java.util.Locale.ROOT);
+        if (lower.contains("change_me")) {
+            throw new IllegalStateException("FATAL: JWT_SECRET must not be or contain the placeholder 'CHANGE_ME'.");
+        }
+        if (lower.contains("super_secret") || lower.contains("your_") || lower.contains("testing") || lower.contains("example")) {
+            throw new IllegalStateException("FATAL: JWT_SECRET contains an insecure template or test keyword ('super_secret', 'your_', 'testing', 'example').");
+        }
+        if (jwtSecret.chars().distinct().count() < 4 || calculateEntropy(jwtSecret) < 2.5) {
+            throw new IllegalStateException("FATAL: JWT_SECRET has low entropy or repetitive characters. Use a cryptographically secure random key.");
+        }
+    }
+
+    private static double calculateEntropy(String s) {
+        if (s == null || s.isEmpty()) {
+            return 0.0;
+        }
+        java.util.Map<Character, Integer> freqMap = new java.util.HashMap<>();
+        for (char c : s.toCharArray()) {
+            freqMap.put(c, freqMap.getOrDefault(c, 0) + 1);
+        }
+        double entropy = 0.0;
+        double len = s.length();
+        for (int count : freqMap.values()) {
+            double p = count / len;
+            entropy -= p * (Math.log(p) / Math.log(2));
+        }
+        return entropy;
     }
 
     // Auth endpoints: NO JWT filter at all — pure cookie-based refresh
