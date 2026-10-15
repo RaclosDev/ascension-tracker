@@ -51,24 +51,28 @@ export interface SettingsForm {
 }
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<SettingsForm | null>(null);
-  const [form, setForm] = useState<SettingsForm>({
-    startDate: '',
-    macroStrategy: 'BALANCED',
-    customProteinPct: '',
-    customFatPct: '',
-    customCarbsPct: '',
-    customProteinGrams: '',
-    customFatGrams: '',
-    customCarbsGrams: '',
-    kcal: '',
-    age: '',
-    heightCm: '',
-    sex: 'M',
-    activityFactor: '1.2',
-  });
   const location = useLocation();
   const queryClient = useQueryClient();
+  const cachedSettings = queryClient.getQueryData<Partial<SettingsForm>>(['settings']);
+
+  const [settings, setSettings] = useState<SettingsForm | null>(
+    () => (cachedSettings as SettingsForm) || null,
+  );
+  const [form, setForm] = useState<SettingsForm>(() => ({
+    startDate: cachedSettings?.startDate || '',
+    macroStrategy: cachedSettings?.macroStrategy || 'BALANCED',
+    customProteinPct: cachedSettings?.customProteinPct ?? '',
+    customFatPct: cachedSettings?.customFatPct ?? '',
+    customCarbsPct: cachedSettings?.customCarbsPct ?? '',
+    customProteinGrams: cachedSettings?.customProteinGrams ?? '',
+    customFatGrams: cachedSettings?.customFatGrams ?? '',
+    customCarbsGrams: cachedSettings?.customCarbsGrams ?? '',
+    kcal: cachedSettings?.kcal ?? '',
+    age: cachedSettings?.age ?? '',
+    heightCm: cachedSettings?.heightCm ?? '',
+    sex: cachedSettings?.sex || 'M',
+    activityFactor: cachedSettings?.activityFactor ? String(cachedSettings.activityFactor) : '1.2',
+  }));
 
   const {
     data: querySettings,
@@ -79,6 +83,9 @@ export default function SettingsPage() {
     queryKey: ['settings'],
     queryFn: () => api.get('/settings').then((res) => res.data),
   });
+
+  const effectiveSettings =
+    settings || (querySettings as SettingsForm) || (cachedSettings as SettingsForm) || null;
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     personal: false,
     plan: false,
@@ -219,10 +226,10 @@ export default function SettingsPage() {
   const handleSavePersonal = async () => {
     try {
       await api.put('/settings', {
-        startWeight: parseSafeFloat(form.startWeight, Number(settings?.startWeight || 0)),
-        goalWeight: parseSafeFloat(form.goalWeight, Number(settings?.goalWeight || 0)),
-        weeklyGoal: parseSafeFloat(form.weeklyGoal, Number(settings?.weeklyGoal || 0)),
-        startDate: form.startDate || settings?.startDate || '',
+        startWeight: parseSafeFloat(form.startWeight, Number(effectiveSettings?.startWeight || 0)),
+        goalWeight: parseSafeFloat(form.goalWeight, Number(effectiveSettings?.goalWeight || 0)),
+        weeklyGoal: parseSafeFloat(form.weeklyGoal, Number(effectiveSettings?.weeklyGoal || 0)),
+        startDate: form.startDate || effectiveSettings?.startDate || '',
         age: form.age ? parseInt(String(form.age), 10) : null,
         heightCm: form.heightCm ? parseInt(String(form.heightCm), 10) : null,
         sex: form.sex,
@@ -266,10 +273,10 @@ export default function SettingsPage() {
       }
 
       await api.put('/settings', {
-        startWeight: parseSafeFloat(form.startWeight, Number(settings?.startWeight || 0)),
-        goalWeight: parseSafeFloat(form.goalWeight, Number(settings?.goalWeight || 0)),
-        weeklyGoal: parseSafeFloat(form.weeklyGoal, Number(settings?.weeklyGoal || 0)),
-        startDate: form.startDate || settings?.startDate || '',
+        startWeight: parseSafeFloat(form.startWeight, Number(effectiveSettings?.startWeight || 0)),
+        goalWeight: parseSafeFloat(form.goalWeight, Number(effectiveSettings?.goalWeight || 0)),
+        weeklyGoal: parseSafeFloat(form.weeklyGoal, Number(effectiveSettings?.weeklyGoal || 0)),
+        startDate: form.startDate || effectiveSettings?.startDate || '',
         macroStrategy: strategy,
         kcal: payloadKcal,
         customProteinGrams: pG,
@@ -304,7 +311,7 @@ export default function SettingsPage() {
     );
   }
 
-  if (loading) {
+  if (loading && !effectiveSettings) {
     return (
       <div className="fade-in">
         <div
@@ -326,7 +333,7 @@ export default function SettingsPage() {
       </div>
     );
   }
-  if (!settings) return null;
+  if (!effectiveSettings) return null;
 
   return (
     <div
@@ -494,8 +501,8 @@ export default function SettingsPage() {
               <WeightLossPlan
                 initialWeightKg={String(
                   dashboard?.currentWeight ||
-                    settings?.currentWeight ||
-                    settings?.startWeight ||
+                    effectiveSettings?.currentWeight ||
+                    effectiveSettings?.startWeight ||
                     '',
                 )}
                 initialGoalWeight={String(form.goalWeight || '')}
@@ -542,7 +549,7 @@ export default function SettingsPage() {
                     >
                   >
                 }
-                initialStartWeight={dashboard?.currentWeight || settings?.startWeight}
+                initialStartWeight={dashboard?.currentWeight || effectiveSettings?.startWeight}
               />
               <button
                 className="btn btn-primary"

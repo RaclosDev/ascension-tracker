@@ -1,8 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, Suspense, startTransition } from 'react';
 import { UserSettings } from '../types/api';
-import { useRef } from 'react';
-import { useEffect } from 'react';
-import { Suspense } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import BottomSheet from './BottomSheet';
@@ -11,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNow } from '@/hooks/use-now';
 import { formatDuration } from '@/lib/workout/format';
 import OnboardingScreen from './OnboardingScreen';
+import { preloadRoute } from '../utils/routePreload';
 
 import { Skeleton } from './ui/skeleton';
 import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings, Plus } from 'lucide-react';
@@ -98,6 +96,14 @@ export default function Layout() {
     return () => document.removeEventListener('pointerdown', handleClick);
   }, [moreMenuOpen]);
 
+  const navigateTo = (path: string) => {
+    if (location.pathname !== path) {
+      startTransition(() => {
+        navigate(path);
+      });
+    }
+  };
+
   // Interceptar cualquier enlace de navegación interna en modo PWA standalone
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
@@ -108,7 +114,7 @@ export default function Layout() {
       if (href && href.startsWith('/') && !href.startsWith('//') && anchor.target !== '_blank') {
         e.preventDefault();
         e.stopPropagation();
-        navigate(href);
+        navigateTo(href);
       }
     };
     document.addEventListener('click', handleGlobalClick, { capture: true });
@@ -162,11 +168,13 @@ export default function Layout() {
                   key={item.path}
                   type="button"
                   className={`nav-item ${isActive ? 'active' : ''}`}
+                  onMouseEnter={() => preloadRoute(item.path)}
+                  onTouchStart={() => preloadRoute(item.path)}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     closeSidebar();
-                    if (location.pathname !== item.path) navigate(item.path);
+                    navigateTo(item.path);
                   }}
                   style={{ width: '100%', display: 'flex', alignItems: 'center' }}
                 >
@@ -216,11 +224,13 @@ export default function Layout() {
                 key={item.path}
                 type="button"
                 className={`mobile-bottom-item ${isActive ? 'active' : ''}`}
+                onMouseEnter={() => preloadRoute(item.path)}
+                onTouchStart={() => preloadRoute(item.path)}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   setMoreMenuOpen(false);
-                  if (location.pathname !== item.path) navigate(item.path);
+                  navigateTo(item.path);
                 }}
                 aria-label={item.label}
                 aria-current={isActive ? 'page' : undefined}
@@ -249,9 +259,19 @@ export default function Layout() {
         <button
           type="button"
           className={`mobile-bottom-item ${isMoreActive ? 'active' : ''}`}
+          onMouseEnter={() => {
+            preloadRoute('/utilities');
+            preloadRoute('/settings');
+          }}
+          onTouchStart={() => {
+            preloadRoute('/utilities');
+            preloadRoute('/settings');
+          }}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            preloadRoute('/utilities');
+            preloadRoute('/settings');
             setMoreMenuOpen(!moreMenuOpen);
           }}
           aria-label="Más opciones"
@@ -292,11 +312,13 @@ export default function Layout() {
                   key={item.path}
                   type="button"
                   className={`bottom-sheet-item ${isActive ? 'active' : ''}`}
+                  onMouseEnter={() => preloadRoute(item.path)}
+                  onTouchStart={() => preloadRoute(item.path)}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     setMoreMenuOpen(false);
-                    if (location.pathname !== item.path) navigate(item.path);
+                    navigateTo(item.path);
                   }}
                   style={{ width: '100%', display: 'flex', alignItems: 'center' }}
                 >

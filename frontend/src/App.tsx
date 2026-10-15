@@ -17,6 +17,7 @@ import LoginPage from './pages/LoginPage';
 
 import { PageLoader } from './components/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
+import { preloadAllRoutes } from './utils/routePreload';
 
 let currentAppVersion: string | null = null;
 
@@ -25,6 +26,7 @@ function AppContent() {
 
   useEffect(() => {
     if (token) {
+      preloadAllRoutes();
       api
         .get('/version')
         .then((res) => {
