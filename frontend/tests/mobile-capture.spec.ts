@@ -271,36 +271,38 @@ test.describe('Visual Screenshots Capture Suite', () => {
       await page.waitForLoadState('networkidle');
 
       const startBtn = page.getByRole('button', { name: /empezar entrenamiento/i });
-      if (await startBtn.isVisible()) {
-        await startBtn.click();
-        const emptyOption = page.locator('.start-workout-option').first();
-        if (await emptyOption.isVisible()) {
-          await emptyOption.click();
-          const exerciseItem = page.locator('.picker-exercise-item').first();
-          if (await exerciseItem.isVisible()) {
-            await exerciseItem.click();
-            const addBtn = page.getByRole('button', { name: /a[ñn]adir al entreno/i });
-            if (await addBtn.isVisible()) {
-              await addBtn.click();
-              const weightInput = page.locator('.set-input').first();
-              await weightInput.fill('90');
-              const repsInput = page.locator('.set-input').nth(1);
-              await repsInput.fill('10');
-              const checkBtn = page.locator('.set-check-btn').first();
-              await checkBtn.click();
-              await page.waitForTimeout(400);
+      await expect(startBtn).toBeVisible({ timeout: 10000 });
+      await startBtn.click();
 
-              const finishBtn = page.getByRole('button', { name: /terminar entrenamiento/i });
-              await finishBtn.click();
-              await page.waitForTimeout(600);
+      const emptyOption = page
+        .locator('.start-workout-option')
+        .filter({ hasText: /entrenamiento vac[ií]o/i });
+      await expect(emptyOption).toBeVisible({ timeout: 5000 });
+      await emptyOption.click();
 
-              await page.screenshot({
-                path: path.join(SCREENSHOT_DIR, '09_workout_finish_summary_desktop.png'),
-              });
-            }
-          }
-        }
-      }
+      const exerciseItem = page.locator('.picker-exercise-item').first();
+      await expect(exerciseItem).toBeVisible({ timeout: 5000 });
+      await exerciseItem.click();
+
+      const addBtn = page.getByRole('button', { name: /a[ñn]adir al entreno/i });
+      await expect(addBtn).toBeVisible({ timeout: 5000 });
+      await addBtn.click();
+
+      const weightInput = page.locator('.set-input').first();
+      await weightInput.fill('90');
+      const repsInput = page.locator('.set-input').nth(1);
+      await repsInput.fill('10');
+      const checkBtn = page.locator('.set-check-btn').first();
+      await checkBtn.click();
+      await page.waitForTimeout(400);
+
+      const finishBtn = page.getByRole('button', { name: /terminar entrenamiento/i });
+      await finishBtn.click();
+      await page.waitForTimeout(600);
+
+      await page.screenshot({
+        path: path.join(SCREENSHOT_DIR, '09_workout_finish_summary_desktop.png'),
+      });
 
       await page.goto('/nutrition');
       await page.waitForLoadState('networkidle');

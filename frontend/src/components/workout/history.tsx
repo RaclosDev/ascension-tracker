@@ -398,7 +398,7 @@ export function HistoryView() {
                                     history,
                                     detail.id,
                                   ) ? (
-                                    <span className="text-[0.65rem] font-bold text-[var(--color-success)] bg-emerald-500/15 px-1.5 py-1 rounded-sm">
+                                    <span className="text-[0.65rem] font-bold text-blue-300 bg-blue-500/20 border border-blue-500/30 px-1.5 py-0.5 rounded-full">
                                       PR
                                     </span>
                                   ) : null}
