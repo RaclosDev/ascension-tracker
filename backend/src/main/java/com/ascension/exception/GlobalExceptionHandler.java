@@ -92,19 +92,32 @@ public class GlobalExceptionHandler {
         return buildErrorResponse("El parametro '" + ex.getParameterName() + "' es obligatorio", HttpStatus.BAD_REQUEST, traceId);
     }
 
+    @ExceptionHandler(AiQuotaExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleAiQuotaExceededException(AiQuotaExceededException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("AI quota / circuit breaker exceeded: {} [trace_id: {}]", ex.getMessage(), traceId);
+        return buildErrorResponse(ex.getMessage(), HttpStatus.TOO_MANY_REQUESTS, traceId);
+    }
+
     @ExceptionHandler(AiProcessingException.class)
     public ResponseEntity<ApiErrorResponse> handleAiProcessingException(AiProcessingException ex) {
         String traceId = UUID.randomUUID().toString();
-        log.error("AI processing error: {} [trace_id: {}]", ex.getMessage(), traceId);
-        return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, traceId);
+        log.error("AI processing error: {} [trace_id: {}]", ex.getMessage(), traceId, ex);
+        return buildErrorResponse("No se pudo procesar la solicitud con el servicio de IA.", HttpStatus.BAD_REQUEST, traceId);
     }
 
     @ExceptionHandler(ExternalApiException.class)
     public ResponseEntity<ApiErrorResponse> handleExternalApiException(ExternalApiException ex) {
         String traceId = UUID.randomUUID().toString();
         log.error("External API error in {}: {} (status: {}) [trace_id: {}]",
-                ex.getServiceName(), ex.getMessage(), ex.getStatus(), traceId);
-        return buildErrorResponse(ex.getMessage(), ex.getStatus(), traceId);
+                ex.getServiceName(), ex.getMessage(), ex.getStatus(), traceId, ex);
+        String clientMsg;
+        if (ex.getStatus() == HttpStatus.TOO_MANY_REQUESTS) {
+            clientMsg = "Límite de peticiones alcanzado en el servicio externo. Por favor, inténtalo más tarde.";
+        } else {
+            clientMsg = "El servicio externo no está disponible temporalmente. Por favor, inténtalo más tarde.";
+        }
+        return buildErrorResponse(clientMsg, ex.getStatus(), traceId);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
