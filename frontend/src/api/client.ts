@@ -16,15 +16,8 @@ export const setMemoryToken = (token: string | null) => {
 
 api.interceptors.request.use(
   (config) => {
-    let token = memoryToken;
-    if (!token) {
-      token = localStorage.getItem('ascension_token');
-      if (token) {
-        setMemoryToken(token);
-      }
-    }
-    if (token && config.url !== '/auth/refresh' && config.url !== '/auth/logout') {
-      config.headers.Authorization = 'Bearer ' + token;
+    if (memoryToken && config.url !== '/auth/refresh' && config.url !== '/auth/logout') {
+      config.headers.Authorization = 'Bearer ' + memoryToken;
     }
     return config;
   },
@@ -79,16 +72,10 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        let res: import('axios').AxiosResponse<{ token: string; refreshToken?: string }>;
-        const storedRefreshToken = localStorage.getItem('ascension_refresh_token');
-        const headers: Record<string, string> = {};
-        if (storedRefreshToken) {
-          headers['X-Refresh-Token'] = storedRefreshToken;
-        }
-        const refreshPayload = { refreshToken: storedRefreshToken || '' };
+        let res: import('axios').AxiosResponse<{ token: string }>;
 
         try {
-          res = await api.post('/auth/refresh', refreshPayload, { withCredentials: true, headers });
+          res = await api.post('/auth/refresh', {}, { withCredentials: true });
         } catch (firstErr) {
           const axiosErr = firstErr as import('axios').AxiosError;
           if (
@@ -99,16 +86,11 @@ api.interceptors.response.use(
           }
           // Retry once after 1.5s for network hiccups or transient errors
           await new Promise((r) => setTimeout(r, 1500));
-          res = await api.post('/auth/refresh', refreshPayload, { withCredentials: true, headers });
+          res = await api.post('/auth/refresh', {}, { withCredentials: true });
         }
         const newToken = res.data.token;
 
         setMemoryToken(newToken);
-        localStorage.setItem('ascension_token', newToken);
-        if (res.data.refreshToken) {
-          localStorage.setItem('ascension_refresh_token', res.data.refreshToken);
-        }
-
         api.defaults.headers.common['Authorization'] = 'Bearer ' + newToken;
         originalRequest.headers['Authorization'] = 'Bearer ' + newToken;
 
@@ -124,14 +106,8 @@ api.interceptors.response.use(
             err.response.status === 401 ||
             err.response.status === 403)
         ) {
-          console.error(
-            'Refresh token failed with status:',
-            err.response.status,
-            err.response.data,
-          );
           setMemoryToken(null);
-          localStorage.removeItem('ascension_token');
-          localStorage.removeItem('ascension_refresh_token');
+          delete api.defaults.headers.common['Authorization'];
           window.dispatchEvent(new CustomEvent('auth_failed'));
         }
         return Promise.reject(err);

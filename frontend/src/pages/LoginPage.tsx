@@ -92,16 +92,10 @@ export default function LoginPage() {
           <GoogleLogin
             onSuccess={async (credentialResponse) => {
               try {
-                const res = await api.post<{ token?: string; refreshToken?: string }>(
-                  '/auth/login',
-                  {
-                    token: credentialResponse.credential,
-                  },
-                );
+                const res = await api.post<{ token?: string }>('/auth/login', {
+                  token: credentialResponse.credential,
+                });
                 if (res.data?.token) {
-                  if (res.data.refreshToken) {
-                    localStorage.setItem('ascension_refresh_token', res.data.refreshToken);
-                  }
                   login(res.data.token);
                 } else {
                   console.error('Login failed on backend', res.data);

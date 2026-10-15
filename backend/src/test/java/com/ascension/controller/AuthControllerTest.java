@@ -68,7 +68,35 @@ class AuthControllerTest {
     }
 
     @Test
-    void refresh_WhenTokenReusedWithinGracePeriod_ReturnsOkWithNewCookie() throws Exception {
+    void login_WhenSuccessful_ReturnsTokenAndSetsCookieWithoutRefreshTokenInBody() throws Exception {
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
+        payload.setEmailVerified(true);
+        payload.setEmail("athlete@example.com");
+        payload.set("name", "Athlete Test");
+        payload.set("picture", "https://example.com/pic.png");
+        when(idToken.getPayload()).thenReturn(payload);
+        when(googleIdTokenVerifier.verify("valid-google-token")).thenReturn(idToken);
+
+        RefreshToken rt = new RefreshToken();
+        rt.setEmail("athlete@example.com");
+        rt.setName("Athlete Test");
+        rt.setPicture("https://example.com/pic.png");
+        rt.setPlainToken("plain-refresh-token");
+        when(refreshTokenService.createRefreshToken(anyString(), anyString(), anyString())).thenReturn(rt);
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"valid-google-token\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists())
+                .andExpect(jsonPath("$.refreshToken").doesNotExist())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie().exists("refreshToken"));
+    }
+
+    @Test
+    void refresh_WhenTokenReusedWithinGracePeriod_ReturnsOkWithNewCookieAndNoRefreshTokenInBody() throws Exception {
         RefreshToken graceToken = new RefreshToken();
         graceToken.setEmail("test@test.com");
         graceToken.setName("Test User");
@@ -82,45 +110,40 @@ class AuthControllerTest {
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "reused_token")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").exists())
-                .andExpect(jsonPath("$.refreshToken").value("valid_new_grace_token"))
+                .andExpect(jsonPath("$.refreshToken").doesNotExist())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie().exists("refreshToken"));
     }
 
     @Test
-    void refresh_WhenTokenProvidedViaHeader_ReturnsOk() throws Exception {
-        RefreshToken graceToken = new RefreshToken();
-        graceToken.setEmail("test@test.com");
-        graceToken.setName("Test User");
-        graceToken.setPicture("https://example.com/p.png");
-        graceToken.setPlainToken("valid_new_grace_token");
-
-        when(refreshTokenService.rotateRefreshToken("header_token")).thenReturn(graceToken);
-
+    void refresh_WhenTokenProvidedViaHeader_IsIgnoredAndReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/auth/refresh")
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
                 .header("X-Refresh-Token", "header_token"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").exists())
-                .andExpect(jsonPath("$.refreshToken").value("valid_new_grace_token"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Refresh token is missing"));
     }
 
     @Test
-    void refresh_WhenTokenProvidedViaBody_ReturnsOk() throws Exception {
-        RefreshToken graceToken = new RefreshToken();
-        graceToken.setEmail("test@test.com");
-        graceToken.setName("Test User");
-        graceToken.setPicture("https://example.com/p.png");
-        graceToken.setPlainToken("valid_new_grace_token");
-
-        when(refreshTokenService.rotateRefreshToken("body_token")).thenReturn(graceToken);
-
+    void refresh_WhenTokenProvidedViaBody_IsIgnoredAndReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/auth/refresh")
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"refreshToken\":\"body_token\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Refresh token is missing"));
+    }
+
+    @Test
+    void logout_WhenNoCookieProvided_DoesNotCallDeleteEvenIfHeaderOrBodyPresent() throws Exception {
+        mockMvc.perform(post("/api/auth/logout")
+                .with(csrf())
+                .header("X-Refresh-Token", "header_token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"refreshToken\":\"body_token\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").exists())
-                .andExpect(jsonPath("$.refreshToken").value("valid_new_grace_token"));
+                .andExpect(header().string("Set-Cookie", containsString("Max-Age=0")));
+
+        org.mockito.Mockito.verifyNoInteractions(refreshTokenService);
     }
 
     @Test
