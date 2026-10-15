@@ -278,4 +278,50 @@ class UserDataRestoreServiceTest {
         assertThatThrownBy(() -> service.restoreUserData(AUTH_USER, "OVERWRITE", null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void restoreUserData_overwriteEmptyBackupWithoutConfirmEmpty_throwsExceptionAndNeverWipes() {
+        UserDataExportDTO emptyBackup = UserDataExportDTO.builder()
+                .version("1.0")
+                .workouts(Collections.emptyList())
+                .customExercises(Collections.emptyList())
+                .workoutTemplates(Collections.emptyList())
+                .foodLogs(Collections.emptyList())
+                .meals(Collections.emptyList())
+                .recipes(Collections.emptyList())
+                .savedFoods(Collections.emptyList())
+                .stepsEntries(Collections.emptyList())
+                .weightEntries(Collections.emptyList())
+                .userSettings(null)
+                .build();
+
+        assertThatThrownBy(() -> service.restoreUserData(AUTH_USER, RestoreMode.OVERWRITE, false, emptyBackup))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("confirmEmpty=true");
+
+        verify(jdbcTemplate, never()).update(startsWith("DELETE FROM "), any(String.class));
+    }
+
+    @Test
+    void restoreUserData_overwriteEmptyBackupWithConfirmEmpty_wipesAndSucceeds() {
+        UserDataExportDTO emptyBackup = UserDataExportDTO.builder()
+                .version("1.0")
+                .workouts(Collections.emptyList())
+                .customExercises(Collections.emptyList())
+                .workoutTemplates(Collections.emptyList())
+                .foodLogs(Collections.emptyList())
+                .meals(Collections.emptyList())
+                .recipes(Collections.emptyList())
+                .savedFoods(Collections.emptyList())
+                .stepsEntries(Collections.emptyList())
+                .weightEntries(Collections.emptyList())
+                .userSettings(null)
+                .build();
+
+        UserDataRestoreSummaryDTO summary = service.restoreUserData(AUTH_USER, RestoreMode.OVERWRITE, true, emptyBackup);
+
+        verify(jdbcTemplate, atLeastOnce()).update(startsWith("DELETE FROM "), any(String.class));
+        assertThat(summary.getMode()).isEqualTo("OVERWRITE");
+        assertThat(summary.getWorkoutsRestored()).isEqualTo(0);
+    }
 }

@@ -85,6 +85,13 @@ public class GlobalExceptionHandler {
         return buildErrorResponse("Parametro '" + ex.getName() + "' invalido", HttpStatus.BAD_REQUEST, traceId);
     }
 
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiErrorResponse> handleMissingServletRequestParameter(org.springframework.web.bind.MissingServletRequestParameterException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Missing required parameter {}: {} [trace_id: {}]", ex.getParameterName(), ex.getMessage(), traceId);
+        return buildErrorResponse("El parametro '" + ex.getParameterName() + "' es obligatorio", HttpStatus.BAD_REQUEST, traceId);
+    }
+
     @ExceptionHandler(AiProcessingException.class)
     public ResponseEntity<ApiErrorResponse> handleAiProcessingException(AiProcessingException ex) {
         String traceId = UUID.randomUUID().toString();

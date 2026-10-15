@@ -278,9 +278,17 @@ export interface UserDataRestoreSummary {
 
 export const restoreUserData = async (
   backup: unknown,
-  mode: 'OVERWRITE' | 'MERGE' = 'OVERWRITE',
+  mode: 'OVERWRITE' | 'MERGE' = 'MERGE',
+  confirmEmpty = false,
 ): Promise<UserDataRestoreSummary> => {
-  const response = await api.post<UserDataRestoreSummary>(`/user/restore?mode=${mode}`, backup);
+  const query = new URLSearchParams({ mode });
+  if (confirmEmpty) {
+    query.set('confirmEmpty', 'true');
+  }
+  const response = await api.post<UserDataRestoreSummary>(
+    `/user/restore?${query.toString()}`,
+    backup,
+  );
   return response.data;
 };
 
