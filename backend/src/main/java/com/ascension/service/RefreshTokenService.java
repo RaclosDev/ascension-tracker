@@ -21,17 +21,23 @@ public class RefreshTokenService {
 
     @Transactional
     public RefreshToken createRefreshToken(String email, String name, String picture) {
+        return createRefreshToken(email, name, picture, null);
+    }
+
+    @Transactional
+    public RefreshToken createRefreshToken(String email, String name, String picture, String familyId) {
         RefreshToken refreshToken = new RefreshToken(
                 email, name, picture,
-                Instant.now().plus(REFRESH_TOKEN_EXPIRATION_DAYS, ChronoUnit.DAYS)
+                Instant.now().plus(REFRESH_TOKEN_EXPIRATION_DAYS, ChronoUnit.DAYS),
+                familyId
         );
         return refreshTokenRepository.save(refreshToken);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = com.ascension.exception.TokenRefreshException.class)
     public RefreshToken rotateRefreshToken(String requestRefreshToken) {
         String hashedToken = RefreshToken.hashToken(requestRefreshToken);
-        var optionalToken = refreshTokenRepository.findByToken(hashedToken);
+        var optionalToken = refreshTokenRepository.findByTokenForUpdate(hashedToken);
         
         if (optionalToken.isEmpty()) {
             throw new com.ascension.exception.TokenRefreshException("Refresh token not found");
@@ -45,18 +51,22 @@ public class RefreshTokenService {
         }
 
         if (refreshToken.getReplacedAt() != null) {
-            if (java.time.Instant.now().isBefore(refreshToken.getReplacedAt().plusSeconds(60))) {
-                // Grace period for concurrent requests and network retries: return fresh valid token
-                return createRefreshToken(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture());
+            Instant graceThreshold = refreshToken.getReplacedAt().plusSeconds(10);
+            if (Instant.now().isBefore(graceThreshold) && !refreshToken.isGraceUsed()) {
+                // Grace period: allow at most ONE additional emission
+                refreshToken.setGraceUsed(true);
+                refreshTokenRepository.save(refreshToken);
+                return createRefreshToken(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture(), refreshToken.getFamilyId());
             }
-            refreshTokenRepository.deleteByUserEmail(refreshToken.getEmail());
+            // Outside grace period or grace already consumed: reuse detected -> revoke whole family
+            refreshTokenRepository.deleteByFamilyId(refreshToken.getFamilyId());
             throw new com.ascension.exception.TokenRefreshException("Session expired. Please log in again.");
         }
 
         refreshToken.setReplacedAt(Instant.now());
         refreshTokenRepository.save(refreshToken);
         
-        return createRefreshToken(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture());
+        return createRefreshToken(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture(), refreshToken.getFamilyId());
     }
 
     @Transactional

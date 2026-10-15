@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 const baseUrl = import.meta.env.VITE_API_URL || '';
 
@@ -13,6 +14,31 @@ export let memoryToken: string | null = null;
 export const setMemoryToken = (token: string | null) => {
   memoryToken = token;
 };
+
+export const isTokenValid = (token: string | null): boolean => {
+  if (!token) return false;
+  try {
+    const payload = jwtDecode<{ exp?: number }>(token);
+    if (!payload.exp) return true;
+    // Valid if it will not expire in the next 10 seconds
+    return payload.exp * 1000 > Date.now() + 10_000;
+  } catch {
+    return false;
+  }
+};
+
+const authBroadcast =
+  typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('ascension_auth') : null;
+
+if (authBroadcast) {
+  authBroadcast.onmessage = (event: MessageEvent) => {
+    if (event.data?.type === 'TOKEN_REFRESHED' && event.data.token) {
+      setMemoryToken(event.data.token);
+      api.defaults.headers.common['Authorization'] = 'Bearer ' + event.data.token;
+      window.dispatchEvent(new CustomEvent('token_refresh', { detail: event.data.token }));
+    }
+  };
+}
 
 api.interceptors.request.use(
   (config) => {
@@ -43,6 +69,59 @@ const processQueue = (error: Error | null, token: string | null = null) => {
   failedQueue = [];
 };
 
+export const refreshAccessToken = async (): Promise<string | null> => {
+  if (isTokenValid(memoryToken)) {
+    return memoryToken;
+  }
+
+  const performRefresh = async (): Promise<string | null> => {
+    if (isTokenValid(memoryToken)) {
+      return memoryToken;
+    }
+
+    try {
+      const res = await api.post<{ token: string }>('/auth/refresh', {}, { withCredentials: true });
+      const newToken = res.data.token;
+      setMemoryToken(newToken);
+      api.defaults.headers.common['Authorization'] = 'Bearer ' + newToken;
+
+      if (authBroadcast) {
+        try {
+          authBroadcast.postMessage({ type: 'TOKEN_REFRESHED', token: newToken });
+        } catch {
+          // Ignore broadcast errors
+        }
+      }
+
+      window.dispatchEvent(new CustomEvent('token_refresh', { detail: newToken }));
+      return newToken;
+    } catch (err) {
+      const axiosErr = err as import('axios').AxiosError;
+      if (
+        axiosErr.response &&
+        (axiosErr.response.status === 400 ||
+          axiosErr.response.status === 401 ||
+          axiosErr.response.status === 403)
+      ) {
+        setMemoryToken(null);
+        delete api.defaults.headers.common['Authorization'];
+        window.dispatchEvent(new CustomEvent('auth_failed'));
+        return null;
+      }
+      throw err;
+    }
+  };
+
+  if (
+    typeof navigator !== 'undefined' &&
+    navigator.locks &&
+    typeof navigator.locks.request === 'function'
+  ) {
+    return await navigator.locks.request('ascension_token_refresh', performRefresh);
+  }
+  return await performRefresh();
+};
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -53,8 +132,17 @@ api.interceptors.response.use(
       error.response.status === 401 &&
       !originalRequest._retry &&
       originalRequest.url !== '/auth/refresh' &&
+      originalRequest.url !== '/auth/logout' &&
       window.location.pathname !== '/login'
     ) {
+      originalRequest._retry = true;
+
+      // If already valid in memory (refreshed by another tab or parallel call), do not rotate again
+      if (isTokenValid(memoryToken)) {
+        originalRequest.headers['Authorization'] = 'Bearer ' + memoryToken;
+        return api(originalRequest);
+      }
+
       if (isRefreshing) {
         return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
@@ -68,12 +156,14 @@ api.interceptors.response.use(
           });
       }
 
-      originalRequest._retry = true;
       isRefreshing = true;
 
-      try {
-        let res: import('axios').AxiosResponse<{ token: string }>;
+      const performTabLockedRefresh = async (): Promise<string> => {
+        if (isTokenValid(memoryToken)) {
+          return memoryToken!;
+        }
 
+        let res: import('axios').AxiosResponse<{ token: string }>;
         try {
           res = await api.post('/auth/refresh', {}, { withCredentials: true });
         } catch (firstErr) {
@@ -88,13 +178,39 @@ api.interceptors.response.use(
           await new Promise((r) => setTimeout(r, 1500));
           res = await api.post('/auth/refresh', {}, { withCredentials: true });
         }
-        const newToken = res.data.token;
 
+        const newToken = res.data.token;
         setMemoryToken(newToken);
         api.defaults.headers.common['Authorization'] = 'Bearer ' + newToken;
-        originalRequest.headers['Authorization'] = 'Bearer ' + newToken;
+
+        if (authBroadcast) {
+          try {
+            authBroadcast.postMessage({ type: 'TOKEN_REFRESHED', token: newToken });
+          } catch {
+            // Ignore broadcast errors
+          }
+        }
 
         window.dispatchEvent(new CustomEvent('token_refresh', { detail: newToken }));
+        return newToken;
+      };
+
+      try {
+        let newToken: string;
+        if (
+          typeof navigator !== 'undefined' &&
+          navigator.locks &&
+          typeof navigator.locks.request === 'function'
+        ) {
+          newToken = await navigator.locks.request(
+            'ascension_token_refresh',
+            performTabLockedRefresh,
+          );
+        } else {
+          newToken = await performTabLockedRefresh();
+        }
+
+        originalRequest.headers['Authorization'] = 'Bearer ' + newToken;
         processQueue(null, newToken);
         return api(originalRequest);
       } catch (error) {

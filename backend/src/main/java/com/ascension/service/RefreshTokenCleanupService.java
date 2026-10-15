@@ -28,8 +28,9 @@ public class RefreshTokenCleanupService {
     @Transactional
     public void cleanupExpiredTokens() {
         Instant now = Instant.now();
-        log.info("Starting cleanup of expired refresh tokens...");
+        log.info("Starting cleanup of expired and rotated refresh tokens...");
         refreshTokenRepository.deleteByExpiryDateBefore(now);
-        log.info("Expired refresh tokens cleanup completed");
+        refreshTokenRepository.deleteByReplacedAtBefore(now.minusSeconds(10));
+        log.info("Expired and rotated refresh tokens cleanup completed");
     }
 }

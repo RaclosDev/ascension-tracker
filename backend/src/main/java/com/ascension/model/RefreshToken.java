@@ -35,14 +35,26 @@ public class RefreshToken {
     @Column(name = "replaced_at")
     private Instant replacedAt;
 
+    @Column(name = "family_id", nullable = false, length = 64)
+    private String familyId;
+
+    @Column(name = "grace_used", nullable = false)
+    private boolean graceUsed = false;
+
     public RefreshToken() {
     }
 
     public RefreshToken(String email, String name, String picture, Instant expiryDate) {
+        this(email, name, picture, expiryDate, UUID.randomUUID().toString());
+    }
+
+    public RefreshToken(String email, String name, String picture, Instant expiryDate, String familyId) {
         this.email = email;
         this.name = name;
         this.picture = picture;
         this.expiryDate = expiryDate;
+        this.familyId = familyId != null ? familyId : UUID.randomUUID().toString();
+        this.graceUsed = false;
         this.plainToken = UUID.randomUUID().toString();
         this.token = hashToken(this.plainToken);
     }
@@ -62,6 +74,10 @@ public class RefreshToken {
     public void setExpiryDate(Instant expiryDate) { this.expiryDate = expiryDate; }
     public Instant getReplacedAt() { return replacedAt; }
     public void setReplacedAt(Instant replacedAt) { this.replacedAt = replacedAt; }
+    public String getFamilyId() { return familyId; }
+    public void setFamilyId(String familyId) { this.familyId = familyId; }
+    public boolean isGraceUsed() { return graceUsed; }
+    public void setGraceUsed(boolean graceUsed) { this.graceUsed = graceUsed; }
 
     public static String hashToken(String plain) {
         try {
