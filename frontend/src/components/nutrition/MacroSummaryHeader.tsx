@@ -80,17 +80,16 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-4 pt-1">
+      <div className="grid grid-cols-3 gap-3 sm:gap-6 pt-3 border-t border-white/[0.08]">
         {/* Protein */}
-        <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-          <div className="flex items-center justify-between mb-1.5 text-xs">
-            <span className="font-semibold text-gray-300">Proteínas</span>
-            <span
-              className="text-gray-400 font-mono text-[0.7rem]"
-              style={{ fontVariantNumeric: 'tabular-nums' }}
-            >
+        <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
+            <span className="font-semibold text-gray-300 text-[0.75rem] sm:text-xs">Proteínas</span>
+            <span className="text-gray-400 font-mono text-[0.72rem] sm:text-xs tabular-nums">
               {proteinConsumed}
-              {proteinTarget > 0 ? `/${proteinTarget}g` : 'g'}
+              <span className="text-gray-500 text-[0.65rem] sm:text-[0.7rem]">
+                {proteinTarget > 0 ? `/${proteinTarget}g` : 'g'}
+              </span>
             </span>
           </div>
           <div className="w-full h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
@@ -102,15 +101,14 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
         </div>
 
         {/* Carbs */}
-        <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-          <div className="flex items-center justify-between mb-1.5 text-xs">
-            <span className="font-semibold text-gray-300">Hidratos</span>
-            <span
-              className="text-gray-400 font-mono text-[0.7rem]"
-              style={{ fontVariantNumeric: 'tabular-nums' }}
-            >
+        <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
+            <span className="font-semibold text-gray-300 text-[0.75rem] sm:text-xs">Hidratos</span>
+            <span className="text-gray-400 font-mono text-[0.72rem] sm:text-xs tabular-nums">
               {carbsConsumed}
-              {carbsTarget > 0 ? `/${carbsTarget}g` : 'g'}
+              <span className="text-gray-500 text-[0.65rem] sm:text-[0.7rem]">
+                {carbsTarget > 0 ? `/${carbsTarget}g` : 'g'}
+              </span>
             </span>
           </div>
           <div className="w-full h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
@@ -122,15 +120,14 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
         </div>
 
         {/* Fat */}
-        <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-          <div className="flex items-center justify-between mb-1.5 text-xs">
-            <span className="font-semibold text-gray-300">Grasas</span>
-            <span
-              className="text-gray-400 font-mono text-[0.7rem]"
-              style={{ fontVariantNumeric: 'tabular-nums' }}
-            >
+        <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
+            <span className="font-semibold text-gray-300 text-[0.75rem] sm:text-xs">Grasas</span>
+            <span className="text-gray-400 font-mono text-[0.72rem] sm:text-xs tabular-nums">
               {fatConsumed}
-              {fatTarget > 0 ? `/${fatTarget}g` : 'g'}
+              <span className="text-gray-500 text-[0.65rem] sm:text-[0.7rem]">
+                {fatTarget > 0 ? `/${fatTarget}g` : 'g'}
+              </span>
             </span>
           </div>
           <div className="w-full h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
