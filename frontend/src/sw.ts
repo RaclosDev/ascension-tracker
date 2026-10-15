@@ -3,31 +3,15 @@ import { precacheAndRoute, PrecacheEntry } from 'workbox-precaching';
 declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (PrecacheEntry | string)[] };
 
 import { registerRoute } from 'workbox-routing';
-import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
+import { StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 
 // Precache resources injected by VitePWA
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Cache API requests for offline support
+// Cache public external food search results only (non-sensitive)
 registerRoute(
-  ({ url }) =>
-    url.pathname.startsWith('/api/workouts') || url.pathname.startsWith('/api/nutrition'),
-  new NetworkFirst({
-    cacheName: 'api-cache',
-    plugins: [
-      new ExpirationPlugin({
-        maxEntries: 50,
-        maxAgeSeconds: 24 * 60 * 60, // 24 hours
-      }),
-    ],
-  }),
-);
-
-registerRoute(
-  ({ url }) =>
-    url.pathname.startsWith('/api/food-external/search') ||
-    url.pathname.startsWith('/api/foods/search'),
+  ({ url }) => url.pathname.startsWith('/api/food-external/search'),
   new StaleWhileRevalidate({
     cacheName: 'food-search-cache',
     plugins: [new ExpirationPlugin({ maxEntries: 100 })],
