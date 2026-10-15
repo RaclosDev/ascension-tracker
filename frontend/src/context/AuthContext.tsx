@@ -22,6 +22,17 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+export const purgeAllCaches = async () => {
+  if (typeof window !== 'undefined' && 'caches' in window && window.caches) {
+    try {
+      const cacheNames = await window.caches.keys();
+      await Promise.all(cacheNames.map((name) => window.caches.delete(name)));
+    } catch {
+      // ignore
+    }
+  }
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [token, setToken] = useState<string | null>(null);
@@ -124,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token]);
 
   const login = (jwtToken: string) => {
+    void purgeAllCaches();
     setToken(jwtToken);
   };
 
@@ -138,6 +150,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setMemoryToken(null);
     delete api.defaults.headers.common['Authorization'];
+
+    await purgeAllCaches();
 
     // Save custom theme, clear local storage to prevent data leaks between accounts, and reload
     const theme = localStorage.getItem('ascension_custom_color');
