@@ -16,7 +16,7 @@ import FoodCard from '../components/my-foods/FoodCard';
 import RecipeCard from '../components/my-foods/RecipeCard';
 import AiFoodModal from '../components/my-foods/AiFoodModal';
 
-import { ChevronDown, ChevronRight, ScanLine, Pencil, X, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, ScanLine, Pencil, X, Loader2, Plus, Sparkles } from 'lucide-react';
 import { PageFoodItem } from '../types/myfoods';
 import { Recipe, FoodLog, SavedFood } from '../types/api';
 const BarcodeScanner = lazy(() => import('../components/BarcodeScanner'));
@@ -269,66 +269,131 @@ export default function MyFoodsPage() {
       />
 
       <button
-        className="fixed z-50 bottom-[calc(75px+env(safe-area-inset-bottom))] right-5 w-14 h-14 rounded-full flex items-center justify-center text-3xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-none shadow-lg"
+        type="button"
+        aria-label="Crear alimento"
+        aria-haspopup="dialog"
+        aria-expanded={isActionMenuOpen}
+        className="fixed z-50 right-5 bottom-[calc(84px+env(safe-area-inset-bottom,0px))] flex size-14 items-center justify-center rounded-full border border-white/15 bg-[var(--accent-primary,#0085FF)] text-white shadow-[0_8px_28px_rgba(0,133,255,0.35)] transition-transform duration-150 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary,#0085FF)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         onClick={() => setIsActionMenuOpen(true)}
       >
-        +
+        <Plus className="size-7" strokeWidth={2.25} />
       </button>
 
       {isActionMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-[1050] flex flex-col justify-end"
+          className="fixed inset-0 z-[1050] flex items-end justify-center bg-black/65 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           onClick={() => setIsActionMenuOpen(false)}
         >
-          <div
-            className="w-full max-w-lg mx-auto bg-zinc-900 rounded-t-2xl p-6"
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-food-sheet-title"
+            className="w-full max-w-lg overflow-y-auto rounded-t-[28px] border border-white/10 bg-[var(--bg-glass-strong,rgba(17,24,39,0.98))] px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] pt-3 shadow-[0_-12px_48px_rgba(0,0,0,0.4)] sm:rounded-2xl sm:pb-5"
+            style={{ maxHeight: 'min(82dvh, 640px)' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="mt-0 mb-4 text-center text-white">Crear Alimento</h3>
-            <div className="flex flex-col gap-3">
+            <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-white/20 sm:hidden" />
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h3 id="create-food-sheet-title" className="m-0 text-lg font-semibold text-[var(--text-primary,#fff)]">
+                  Crear alimento
+                </h3>
+                <p className="mb-0 mt-1 text-sm text-[var(--text-secondary,#a1a1aa)]">
+                  Elige cómo quieres añadirlo a tu biblioteca.
+                </p>
+              </div>
               <button
-                className="btn btn-secondary w-full text-left justify-start"
+                type="button"
+                aria-label="Cerrar menú de creación"
+                className="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/70 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary,#0085FF)]"
+                onClick={() => setIsActionMenuOpen(false)}
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                className="group flex min-h-[68px] w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3.5 text-left transition-colors hover:border-[var(--accent-primary,#0085FF)]/40 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary,#0085FF)]"
                 onClick={() => {
                   setIsActionMenuOpen(false);
                   ai.setIsAiModalOpen(true);
                 }}
               >
-                Crear con IA (Texto / Voz)
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-[var(--accent-primary,#0085FF)]/25 bg-[var(--accent-primary,#0085FF)]/10 text-[var(--accent-primary,#0085FF)]">
+                  <Sparkles className="size-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium text-[var(--text-primary,#fff)]">Crear con IA</span>
+                  <span className="mt-0.5 block text-sm text-[var(--text-secondary,#a1a1aa)]">Describe el alimento por texto o voz</span>
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-white/35 transition-transform group-hover:translate-x-0.5" />
               </button>
+
               <button
-                className="btn btn-secondary w-full text-left justify-start"
+                type="button"
+                className="group flex min-h-[68px] w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3.5 text-left transition-colors hover:border-[var(--accent-primary,#0085FF)]/40 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary,#0085FF)]"
                 onClick={() => {
                   setIsActionMenuOpen(false);
                   scanner.setIsScannerOpen(true);
                 }}
               >
-                Escanear Código (Barras/QR)
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-white/80">
+                  <ScanLine className="size-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium text-[var(--text-primary,#fff)]">Escanear código</span>
+                  <span className="mt-0.5 block text-sm text-[var(--text-secondary,#a1a1aa)]">Código de barras o QR</span>
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-white/35 transition-transform group-hover:translate-x-0.5" />
               </button>
+
               <button
-                className="btn btn-secondary w-full text-left justify-start"
+                type="button"
+                className="group flex min-h-[68px] w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3.5 text-left transition-colors hover:border-[var(--accent-primary,#0085FF)]/40 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary,#0085FF)]"
                 onClick={() => {
-                  if (scanner.ocrFileRef.current) scanner.ocrFileRef.current.click();
+                  setIsActionMenuOpen(false);
+                  scanner.ocrFileRef.current?.click();
                 }}
               >
-                <ScanLine className="w-5 h-5 mr-2" /> Escanear Etiqueta Nutricional
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-white/80">
+                  <ScanLine className="size-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium text-[var(--text-primary,#fff)]">Leer etiqueta nutricional</span>
+                  <span className="mt-0.5 block text-sm text-[var(--text-secondary,#a1a1aa)]">Extrae los valores de una foto</span>
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-white/35 transition-transform group-hover:translate-x-0.5" />
               </button>
+
               <button
-                className="btn btn-secondary w-full text-left justify-start"
+                type="button"
+                className="group flex min-h-[68px] w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3.5 text-left transition-colors hover:border-[var(--accent-primary,#0085FF)]/40 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary,#0085FF)]"
                 onClick={() => {
                   setIsActionMenuOpen(false);
                   forms.openNewFoodForm();
                 }}
               >
-                <Pencil className="w-5 h-5 mr-2" /> Crear Manualmente
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-white/80">
+                  <Pencil className="size-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium text-[var(--text-primary,#fff)]">Crear manualmente</span>
+                  <span className="mt-0.5 block text-sm text-[var(--text-secondary,#a1a1aa)]">Introduce los macros tú mismo</span>
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-white/35 transition-transform group-hover:translate-x-0.5" />
               </button>
             </div>
+
             <button
-              className="btn btn-secondary w-full mt-6 border-zinc-700"
+              type="button"
+              className="mt-4 min-h-11 w-full rounded-xl border border-white/10 bg-white/[0.025] px-4 font-medium text-[var(--text-secondary,#a1a1aa)] transition-colors hover:bg-white/[0.07] hover:text-[var(--text-primary,#fff)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary,#0085FF)]"
               onClick={() => setIsActionMenuOpen(false)}
             >
               Cancelar
             </button>
-          </div>
+          </section>
         </div>
       )}
 
