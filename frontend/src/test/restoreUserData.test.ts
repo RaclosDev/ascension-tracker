@@ -6,9 +6,9 @@ describe('restoreUserData', () => {
     vi.restoreAllMocks();
   });
 
-  it('posts backup to /user/restore with default OVERWRITE mode and returns summary', async () => {
+  it('posts backup to /user/restore with default MERGE mode and returns summary', async () => {
     const mockSummary: UserDataRestoreSummary = {
-      mode: 'OVERWRITE',
+      mode: 'MERGE',
       workoutsRestored: 8,
       customExercisesRestored: 3,
       workoutTemplatesRestored: 2,
@@ -29,15 +29,15 @@ describe('restoreUserData', () => {
     const payload = { version: '1.0', workouts: [] };
     const result = await restoreUserData(payload);
 
-    expect(postSpy).toHaveBeenCalledWith('/user/restore?mode=OVERWRITE', payload);
+    expect(postSpy).toHaveBeenCalledWith('/user/restore?mode=MERGE', payload);
     expect(result).toEqual(mockSummary);
     expect(result.workoutsRestored).toBe(8);
-    expect(result.mode).toBe('OVERWRITE');
+    expect(result.mode).toBe('MERGE');
   });
 
-  it('posts backup to /user/restore with MERGE mode when requested', async () => {
+  it('posts backup to /user/restore with explicit OVERWRITE mode and confirmEmpty flag', async () => {
     const mockSummary: UserDataRestoreSummary = {
-      mode: 'MERGE',
+      mode: 'OVERWRITE',
       workoutsRestored: 2,
       customExercisesRestored: 0,
       workoutTemplatesRestored: 1,
@@ -56,10 +56,10 @@ describe('restoreUserData', () => {
     });
 
     const payload = { version: '1.0', workouts: [] };
-    const result = await restoreUserData(payload, 'MERGE');
+    const result = await restoreUserData(payload, 'OVERWRITE', true);
 
-    expect(postSpy).toHaveBeenCalledWith('/user/restore?mode=MERGE', payload);
+    expect(postSpy).toHaveBeenCalledWith('/user/restore?mode=OVERWRITE&confirmEmpty=true', payload);
     expect(result).toEqual(mockSummary);
-    expect(result.mode).toBe('MERGE');
+    expect(result.mode).toBe('OVERWRITE');
   });
 });

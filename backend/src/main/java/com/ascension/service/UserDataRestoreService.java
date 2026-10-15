@@ -30,9 +30,12 @@ public class UserDataRestoreService {
     private final UserSettingsRepository userSettingsRepository;
 
     @Transactional
-    public UserDataRestoreSummaryDTO restoreUserData(String userEmail, String mode, UserDataExportDTO backup) {
+    public UserDataRestoreSummaryDTO restoreUserData(String userEmail, RestoreMode mode, boolean confirmEmpty, UserDataExportDTO backup) {
         if (userEmail == null || userEmail.trim().isEmpty()) {
             throw new IllegalArgumentException("El email de usuario autenticado es obligatorio");
+        }
+        if (mode == null) {
+            throw new IllegalArgumentException("El modo de restauración es obligatorio (MERGE o OVERWRITE)");
         }
         if (backup == null) {
             throw new IllegalArgumentException("El archivo de copia de seguridad no puede ser nulo");
@@ -41,8 +44,12 @@ public class UserDataRestoreService {
             throw new IllegalArgumentException("Versión de copia de seguridad incompatible: " + backup.getVersion());
         }
 
-        boolean isOverwrite = !"MERGE".equalsIgnoreCase(mode);
-        String appliedMode = isOverwrite ? "OVERWRITE" : "MERGE";
+        boolean isOverwrite = (mode == RestoreMode.OVERWRITE);
+        String appliedMode = mode.name();
+
+        if (isOverwrite && isBackupEmpty(backup) && !confirmEmpty) {
+            throw new IllegalArgumentException("No se puede realizar OVERWRITE con un backup completamente vacío sin confirmación explícita (confirmEmpty=true).");
+        }
 
         log.info("Iniciando restauración de datos en modo {} para usuario: {}", appliedMode, userEmail);
 
@@ -98,6 +105,35 @@ public class UserDataRestoreService {
                 .settingsRestored(settingsRestored)
                 .restoredAt(Instant.now())
                 .build();
+    }
+
+    @Transactional
+    public UserDataRestoreSummaryDTO restoreUserData(String userEmail, String mode, UserDataExportDTO backup) {
+        if (mode == null || mode.trim().isEmpty()) {
+            throw new IllegalArgumentException("El modo de restauración es obligatorio (MERGE o OVERWRITE)");
+        }
+        RestoreMode restoreMode;
+        try {
+            restoreMode = RestoreMode.valueOf(mode.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Modo de restauración inválido: " + mode);
+        }
+        return restoreUserData(userEmail, restoreMode, false, backup);
+    }
+
+    public boolean isBackupEmpty(UserDataExportDTO backup) {
+        if (backup == null) return true;
+        boolean hasWorkouts = backup.getWorkouts() != null && !backup.getWorkouts().isEmpty();
+        boolean hasExercises = backup.getCustomExercises() != null && !backup.getCustomExercises().isEmpty();
+        boolean hasTemplates = backup.getWorkoutTemplates() != null && !backup.getWorkoutTemplates().isEmpty();
+        boolean hasFoodLogs = backup.getFoodLogs() != null && !backup.getFoodLogs().isEmpty();
+        boolean hasMeals = backup.getMeals() != null && !backup.getMeals().isEmpty();
+        boolean hasRecipes = backup.getRecipes() != null && !backup.getRecipes().isEmpty();
+        boolean hasSavedFoods = backup.getSavedFoods() != null && !backup.getSavedFoods().isEmpty();
+        boolean hasSteps = backup.getStepsEntries() != null && !backup.getStepsEntries().isEmpty();
+        boolean hasWeights = backup.getWeightEntries() != null && !backup.getWeightEntries().isEmpty();
+        boolean hasSettings = backup.getUserSettings() != null;
+        return !(hasWorkouts || hasExercises || hasTemplates || hasFoodLogs || hasMeals || hasRecipes || hasSavedFoods || hasSteps || hasWeights || hasSettings);
     }
 
     private void wipeUserData(String userEmail) {
