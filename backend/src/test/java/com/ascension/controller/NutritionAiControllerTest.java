@@ -208,4 +208,95 @@ public class NutritionAiControllerTest {
                 .andExpect(jsonPath("$.error").value("Formato de fecha invalido (esperado YYYY-MM-DD)"))
                 .andExpect(jsonPath("$.trace_id").exists());
     }
+
+    @Test
+    public void applyAssistantFoods_WhenNegativeValues_ReturnsBadRequest400() throws Exception {
+        String json = "{\"date\":\"2026-10-16\",\"mealIndex\":1,\"foods\":[{\"product\":\"Pollo\",\"quantity\":-10,\"kcal\":100,\"protein\":20,\"carbs\":0,\"fat\":2}]}";
+
+        mockMvc.perform(post("/api/nutrition/ai/assistant-apply")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json)
+                .with(jwt().jwt(builder -> builder.claim("email", "test@example.com")))
+                .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("La cantidad no puede ser negativa"));
+    }
+
+    @Test
+    public void applyAssistantFoods_WhenProductExceeds255Chars_ReturnsBadRequest400() throws Exception {
+        String longProduct = "P".repeat(256);
+        String json = "{\"date\":\"2026-10-16\",\"mealIndex\":1,\"foods\":[{\"product\":\"" + longProduct + "\",\"quantity\":100,\"kcal\":100,\"protein\":20,\"carbs\":0,\"fat\":2}]}";
+
+        mockMvc.perform(post("/api/nutrition/ai/assistant-apply")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json)
+                .with(jwt().jwt(builder -> builder.claim("email", "test@example.com")))
+                .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("El nombre del producto no puede superar los 255 caracteres"));
+    }
+
+    @Test
+    public void applyAssistantFoods_WhenListExceeds50Items_ReturnsBadRequest400() throws Exception {
+        com.ascension.dto.AiApplyRequestDTO request = new com.ascension.dto.AiApplyRequestDTO();
+        request.setDate("2026-10-16");
+        request.setMealIndex(1);
+        List<com.ascension.dto.AiApplyRequestDTO.AppliedFoodItemDTO> list = new ArrayList<>();
+        for (int i = 0; i < 51; i++) {
+            list.add(com.ascension.dto.AiApplyRequestDTO.AppliedFoodItemDTO.builder()
+                    .product("Item " + i)
+                    .quantity(100.0)
+                    .kcal(100.0)
+                    .protein(10.0)
+                    .carbs(10.0)
+                    .fat(1.0)
+                    .build());
+        }
+        request.setFoods(list);
+
+        mockMvc.perform(post("/api/nutrition/ai/assistant-apply")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(jwt().jwt(builder -> builder.claim("email", "test@example.com")))
+                .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("No se pueden añadir más de 50 alimentos a la vez"));
+    }
+
+    @Test
+    public void applyAssistantFoods_WhenNaNInJson_ReturnsBadRequest400() throws Exception {
+        String json = "{\"date\":\"2026-10-16\",\"mealIndex\":1,\"foods\":[{\"product\":\"Pollo\",\"quantity\":\"NaN\",\"kcal\":100,\"protein\":20,\"carbs\":0,\"fat\":2}]}";
+
+        mockMvc.perform(post("/api/nutrition/ai/assistant-apply")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json)
+                .with(jwt().jwt(builder -> builder.claim("email", "test@example.com")))
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void applyAssistantFoods_WhenValid_ReturnsOk200() throws Exception {
+        com.ascension.dto.AiApplyRequestDTO request = new com.ascension.dto.AiApplyRequestDTO();
+        request.setDate("2026-10-16");
+        request.setMealIndex(1);
+        request.setFoods(List.of(com.ascension.dto.AiApplyRequestDTO.AppliedFoodItemDTO.builder()
+                .product("Tortilla francesa")
+                .quantity(120.0)
+                .kcal(180.0)
+                .protein(14.0)
+                .carbs(1.0)
+                .fat(13.0)
+                .build()));
+
+        when(nutritionLogService.applyAssistantFoods(eq("test@example.com"), any(), eq(1), any()))
+                .thenReturn(List.of(new com.ascension.dto.FoodLogDTO()));
+
+        mockMvc.perform(post("/api/nutrition/ai/assistant-apply")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(jwt().jwt(builder -> builder.claim("email", "test@example.com")))
+                .with(csrf()))
+                .andExpect(status().isOk());
+    }
 }

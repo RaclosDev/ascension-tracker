@@ -92,7 +92,7 @@ public class NutritionAiController {
         LocalDate date = LocalDate.parse(request.getDate());
         int mealIndex = request.getMealIndex() != null ? request.getMealIndex() : 2;
 
-        List<Map<String, Object>> foods = request.getFoods();
+        List<AiApplyRequestDTO.AppliedFoodItemDTO> foods = request.getFoods();
         return ResponseEntity.ok(nutritionLogService.applyAssistantFoods(userEmail, date, mealIndex, foods));
     }
 }
