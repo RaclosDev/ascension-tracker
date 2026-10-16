@@ -36,6 +36,7 @@ public class AuthController {
 
     private final GoogleIdTokenVerifier verifier;
     private final JwtEncoder jwtEncoder;
+    private final org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder;
     private final RefreshTokenService refreshTokenService;
     private final AccountDeletionService accountDeletionService;
     private final UserService userService;
@@ -43,7 +44,7 @@ public class AuthController {
     @Value("${google.client-id:CHANGE_ME}")
     private String googleClientId;
 
-    @Value("${app.jwt.expiration-ms:86400000}")
+    @Value("${app.jwt.expiration-ms:900000}")
     private long jwtExpirationMs;
 
     @Value("${app.cookie.same-site:None}")
@@ -52,11 +53,13 @@ public class AuthController {
     public AuthController(
             GoogleIdTokenVerifier verifier,
             JwtEncoder jwtEncoder,
+            org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder,
             RefreshTokenService refreshTokenService,
             AccountDeletionService accountDeletionService,
             UserService userService) {
         this.verifier = verifier;
         this.jwtEncoder = jwtEncoder;
+        this.jwtDecoder = jwtDecoder;
         this.refreshTokenService = refreshTokenService;
         this.accountDeletionService = accountDeletionService;
         this.userService = userService;
@@ -103,10 +106,43 @@ public class AuthController {
                 log.warn("Email is missing from Google token payload");
                 return ResponseEntity.status(401).body(Map.of("error", "Email is required"));
             }
+            String googleSub = tokenPayload.getSubject();
+            if (googleSub == null || googleSub.isBlank()) {
+                log.warn("Google sub is missing from token payload");
+                return ResponseEntity.status(401).body(Map.of("error", "Google sub is required"));
+            }
+
+            // Identity verification: enforce google sub uniqueness and detect recycled emails
+            // 1. If an existing user has this email, verify google_sub matches
+            java.util.Optional<com.ascension.service.UserService.User> userByEmail = userService.findByEmail(email);
+            if (userByEmail.isPresent()) {
+                String existingSub = userByEmail.get().googleSub();
+                if (existingSub != null && !existingSub.equals(googleSub)) {
+                    log.error("SECURITY ALERT: Identity mismatch for email '{}'. Stored google_sub='{}', incoming google_sub='{}'. Possible recycled email or account takeover attempt.",
+                            email, existingSub, googleSub);
+                    return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
+                }
+            }
+
+            // 2. If an existing user has this google_sub, verify email matches
+            java.util.Optional<com.ascension.service.UserService.User> userBySub = userService.findByGoogleSub(googleSub);
+            if (userBySub.isPresent()) {
+                String existingEmail = userBySub.get().email();
+                if (existingEmail != null && !existingEmail.equalsIgnoreCase(email)) {
+                    log.error("SECURITY ALERT: Identity mismatch for google_sub '{}'. Already assigned to email '{}', incoming email='{}'. Rejecting login.",
+                            googleSub, existingEmail, email);
+                    return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
+                }
+            }
+
             String name = (String) tokenPayload.get("name");
             String picture = (String) tokenPayload.get("picture");
 
-            userService.ensureUserExists(email, name, picture);
+            // NOTE: Future architectural roadmap:
+            // Currently user tables link via email as primary key. Migrating user-referencing tables
+            // to a surrogate UUID (or UUID v7) primary key is planned as future architectural work
+            // to decouple internal database foreign keys from mutable email addresses and OAuth subject identifiers.
+            userService.ensureUserExists(email, name, picture, googleSub);
 
             String customToken = generateJwt(email, name, picture);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(email, name, picture);
@@ -172,11 +208,32 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(
-            @CookieValue(name = "refreshToken", required = false) String requestCookieRefreshToken) {
+            @CookieValue(name = "refreshToken", required = false) String requestCookieRefreshToken,
+            @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @AuthenticationPrincipal Jwt principalJwt) {
+        if (principalJwt != null) {
+            String email = extractEmail(principalJwt);
+            if (email != null && !email.isBlank()) {
+                userService.updateTokensValidAfter(email, Instant.now());
+            }
+        }
         if (requestCookieRefreshToken != null && !requestCookieRefreshToken.isBlank()) {
             refreshTokenService.findByToken(RefreshToken.hashToken(requestCookieRefreshToken)).ifPresent(token -> {
+                userService.updateTokensValidAfter(token.getEmail(), Instant.now());
                 refreshTokenService.delete(token);
             });
+        }
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String tokenValue = authHeader.substring(7).trim();
+            try {
+                Jwt decoded = jwtDecoder.decode(tokenValue);
+                String email = extractEmail(decoded);
+                if (email != null && !email.isBlank()) {
+                    userService.updateTokensValidAfter(email, Instant.now());
+                }
+            } catch (Exception e) {
+                log.debug("Bearer token could not be decoded during logout: {}", e.getMessage());
+            }
         }
         
         return ResponseEntity.ok()
@@ -195,13 +252,15 @@ public class AuthController {
         return jwt.getSubject();
     }
 
-    @DeleteMapping("/account")
+    @DeleteMapping({"/account", "/users/account"})
     public ResponseEntity<Map<String, String>> deleteAccount(@AuthenticationPrincipal Jwt jwt) {
         String email = extractEmail(jwt);
         if (email == null || email.isBlank()) {
             return ResponseEntity.status(401).build();
         }
+        userService.updateTokensValidAfter(email, Instant.now());
         accountDeletionService.wipeAccountData(email);
+        userService.evictUser(email);
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, buildDeleteCookie().toString())
                 .body(Collections.singletonMap("message", "Account deleted successfully"));

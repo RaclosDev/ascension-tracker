@@ -36,6 +36,9 @@ class AuthControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private org.springframework.security.oauth2.jwt.JwtEncoder jwtEncoder;
+
     @MockBean
     private RefreshTokenService refreshTokenService;
 
@@ -73,6 +76,7 @@ class AuthControllerTest {
         com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
         payload.setEmailVerified(true);
         payload.setEmail("athlete@example.com");
+        payload.setSubject("google-sub-athlete-123");
         payload.set("name", "Athlete Test");
         payload.set("picture", "https://example.com/pic.png");
         when(idToken.getPayload()).thenReturn(payload);
@@ -187,7 +191,9 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message").value("Account deleted successfully"))
                 .andExpect(header().string("Set-Cookie", containsString("Max-Age=0")));
 
+        verify(userService).updateTokensValidAfter(org.mockito.ArgumentMatchers.eq("athlete@example.com"), org.mockito.ArgumentMatchers.any());
         verify(accountDeletionService).wipeAccountData("athlete@example.com");
+        verify(userService).evictUser("athlete@example.com");
     }
 
     @Test
@@ -199,13 +205,133 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message").value("Account deleted successfully"))
                 .andExpect(header().string("Set-Cookie", containsString("Max-Age=0")));
 
+        verify(userService).updateTokensValidAfter(org.mockito.ArgumentMatchers.eq("athlete-subject@example.com"), org.mockito.ArgumentMatchers.any());
         verify(accountDeletionService).wipeAccountData("athlete-subject@example.com");
+        verify(userService).evictUser("athlete-subject@example.com");
+    }
+
+    @Test
+    void login_WhenRecycledEmailWithDifferentSub_ReturnsUnauthorized() throws Exception {
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
+        payload.setEmailVerified(true);
+        payload.setEmail("recycled@example.com");
+        payload.setSubject("attacker-sub");
+        when(idToken.getPayload()).thenReturn(payload);
+        when(googleIdTokenVerifier.verify("token-recycled")).thenReturn(idToken);
+
+        when(userService.findByEmail("recycled@example.com")).thenReturn(Optional.of(
+                new com.ascension.service.UserService.User("recycled@example.com", "Original Name", null, "original-sub", null)
+        ));
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"token-recycled\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    void login_WhenSubAlreadyBoundToDifferentEmail_ReturnsUnauthorized() throws Exception {
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
+        payload.setEmailVerified(true);
+        payload.setEmail("attacker@example.com");
+        payload.setSubject("victim-sub");
+        when(idToken.getPayload()).thenReturn(payload);
+        when(googleIdTokenVerifier.verify("token-sub-stolen")).thenReturn(idToken);
+
+        when(userService.findByEmail("attacker@example.com")).thenReturn(Optional.empty());
+        when(userService.findByGoogleSub("victim-sub")).thenReturn(Optional.of(
+                new com.ascension.service.UserService.User("victim@example.com", "Victim Name", null, "victim-sub", null)
+        ));
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"token-sub-stolen\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    void logout_WhenCookieProvided_UpdatesTokensValidAfterAndDeletesToken() throws Exception {
+        RefreshToken rt = new RefreshToken();
+        rt.setEmail("user@example.com");
+        when(refreshTokenService.findByToken(anyString())).thenReturn(Optional.of(rt));
+
+        mockMvc.perform(post("/api/auth/logout")
+                .with(csrf())
+                .cookie(new jakarta.servlet.http.Cookie("refreshToken", "my_refresh_cookie")))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Set-Cookie", containsString("Max-Age=0")));
+
+        verify(userService).updateTokensValidAfter(org.mockito.ArgumentMatchers.eq("user@example.com"), org.mockito.ArgumentMatchers.any());
+        verify(refreshTokenService).delete(rt);
     }
 
     @Test
     void deleteAccount_unauthenticated_returnsUnauthorized() throws Exception {
         mockMvc.perform(delete("/api/auth/account").with(csrf()))
                 .andExpect(status().isUnauthorized());
+    }
+
+    private String createSignedJwt(String email, java.time.Instant issuedAt) {
+        java.time.Instant expiresAt = issuedAt.plusSeconds(900);
+        org.springframework.security.oauth2.jwt.JwtClaimsSet claims = org.springframework.security.oauth2.jwt.JwtClaimsSet.builder()
+                .issuer("ascension-backend")
+                .issuedAt(issuedAt)
+                .expiresAt(expiresAt)
+                .subject(email)
+                .claim("email", email)
+                .build();
+        org.springframework.security.oauth2.jose.jws.MacAlgorithm alg = org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256;
+        org.springframework.security.oauth2.jwt.JwsHeader jwsHeader = org.springframework.security.oauth2.jwt.JwsHeader.with(alg).build();
+        return jwtEncoder.encode(org.springframework.security.oauth2.jwt.JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
+    }
+
+    @Test
+    void requestWithToken_whenTokenIssuedBeforeLogout_isRejectedWith401() throws Exception {
+        java.time.Instant tokenIssuedAt = java.time.Instant.now().minusSeconds(30);
+        java.time.Instant logoutTime = java.time.Instant.now().minusSeconds(5);
+        String token = createSignedJwt("user@example.com", tokenIssuedAt);
+
+        when(userService.getUserSecurityState("user@example.com"))
+                .thenReturn(new com.ascension.service.UserService.UserSecurityState(true, logoutTime));
+
+        mockMvc.perform(delete("/api/auth/account")
+                .header(org.springframework.http.HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void requestWithToken_whenAccountDeleted_isRejectedWith401() throws Exception {
+        String token = createSignedJwt("deleted@example.com", java.time.Instant.now().minusSeconds(10));
+
+        when(userService.getUserSecurityState("deleted@example.com"))
+                .thenReturn(new com.ascension.service.UserService.UserSecurityState(false, null));
+
+        mockMvc.perform(delete("/api/auth/account")
+                .header(org.springframework.http.HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void requestWithToken_whenTokenIssuedAfterTokensValidAfter_isAccepted() throws Exception {
+        java.time.Instant validAfter = java.time.Instant.now().minusSeconds(60);
+        java.time.Instant tokenIssuedAt = java.time.Instant.now().minusSeconds(10);
+        String token = createSignedJwt("active@example.com", tokenIssuedAt);
+
+        when(userService.getUserSecurityState("active@example.com"))
+                .thenReturn(new com.ascension.service.UserService.UserSecurityState(true, validAfter));
+
+        mockMvc.perform(delete("/api/auth/account")
+                .header(org.springframework.http.HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .with(csrf()))
+                .andExpect(status().isOk());
     }
 }
 
