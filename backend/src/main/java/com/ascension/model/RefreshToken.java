@@ -23,12 +23,6 @@ public class RefreshToken {
     @Column(nullable = false)
     private String email;
 
-    @Column
-    private String name;
-
-    @Column
-    private String picture;
-
     @Column(nullable = false)
     private Instant expiryDate;
 
@@ -44,19 +38,27 @@ public class RefreshToken {
     public RefreshToken() {
     }
 
-    public RefreshToken(String email, String name, String picture, Instant expiryDate) {
-        this(email, name, picture, expiryDate, UUID.randomUUID().toString());
+    public RefreshToken(String email, Instant expiryDate) {
+        this(email, expiryDate, UUID.randomUUID().toString());
     }
 
-    public RefreshToken(String email, String name, String picture, Instant expiryDate, String familyId) {
+    public RefreshToken(String email, Instant expiryDate, String familyId) {
         this.email = email;
-        this.name = name;
-        this.picture = picture;
         this.expiryDate = expiryDate;
         this.familyId = familyId != null ? familyId : UUID.randomUUID().toString();
         this.graceUsed = false;
         this.plainToken = UUID.randomUUID().toString();
         this.token = hashToken(this.plainToken);
+    }
+
+    @Deprecated
+    public RefreshToken(String email, String name, String picture, Instant expiryDate) {
+        this(email, expiryDate, UUID.randomUUID().toString());
+    }
+
+    @Deprecated
+    public RefreshToken(String email, String name, String picture, Instant expiryDate, String familyId) {
+        this(email, expiryDate, familyId);
     }
 
     public Long getId() { return id; }
@@ -66,10 +68,6 @@ public class RefreshToken {
     public void setPlainToken(String plainToken) { this.plainToken = plainToken; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getPicture() { return picture; }
-    public void setPicture(String picture) { this.picture = picture; }
     public Instant getExpiryDate() { return expiryDate; }
     public void setExpiryDate(Instant expiryDate) { this.expiryDate = expiryDate; }
     public Instant getReplacedAt() { return replacedAt; }
@@ -95,5 +93,3 @@ public class RefreshToken {
         }
     }
 }
-
-

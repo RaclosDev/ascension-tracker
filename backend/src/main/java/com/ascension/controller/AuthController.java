@@ -92,73 +92,77 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Missing token"));
         }
 
+        GoogleIdToken idToken;
         try {
-            GoogleIdToken idToken = verifier.verify(googleToken);
-            if (idToken == null) {
-                log.warn("Invalid Google token received");
-                return ResponseEntity.status(401).body(Map.of("error", "Invalid Google token"));
-            }
-
-            GoogleIdToken.Payload tokenPayload = idToken.getPayload();
-            if (!Boolean.TRUE.equals(tokenPayload.getEmailVerified())) {
-                log.warn("Email not verified");
-                return ResponseEntity.status(401).body(Map.of("error", "Email not verified"));
-            }
-            String email = tokenPayload.getEmail();
-            if (email == null || email.isBlank()) {
-                log.warn("Email is missing from Google token payload");
-                return ResponseEntity.status(401).body(Map.of("error", "Email is required"));
-            }
-            String googleSub = tokenPayload.getSubject();
-            if (googleSub == null || googleSub.isBlank()) {
-                log.warn("Google sub is missing from token payload");
-                return ResponseEntity.status(401).body(Map.of("error", "Google sub is required"));
-            }
-
-            // Identity verification: enforce google sub uniqueness and detect recycled emails
-            // 1. If an existing user has this email, verify google_sub matches
-            java.util.Optional<com.ascension.service.UserService.User> userByEmail = userService.findByEmail(email);
-            if (userByEmail.isPresent()) {
-                String existingSub = userByEmail.get().googleSub();
-                if (existingSub != null && !existingSub.equals(googleSub)) {
-                    log.error("SECURITY ALERT: Identity mismatch for email '{}'. Stored google_sub='{}', incoming google_sub='{}'. Possible recycled email or account takeover attempt.",
-                            email, existingSub, googleSub);
-                    return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
-                }
-            }
-
-            // 2. If an existing user has this google_sub, verify email matches
-            java.util.Optional<com.ascension.service.UserService.User> userBySub = userService.findByGoogleSub(googleSub);
-            if (userBySub.isPresent()) {
-                String existingEmail = userBySub.get().email();
-                if (existingEmail != null && !existingEmail.equalsIgnoreCase(email)) {
-                    log.error("SECURITY ALERT: Identity mismatch for google_sub '{}'. Already assigned to email '{}', incoming email='{}'. Rejecting login.",
-                            googleSub, existingEmail, email);
-                    return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
-                }
-            }
-
-            String name = (String) tokenPayload.get("name");
-            String picture = (String) tokenPayload.get("picture");
-
-            // NOTE: Future architectural roadmap:
-            // Currently user tables link via email as primary key. Migrating user-referencing tables
-            // to a surrogate UUID (or UUID v7) primary key is planned as future architectural work
-            // to decouple internal database foreign keys from mutable email addresses and OAuth subject identifiers.
-            userService.ensureUserExists(email, name, picture, googleSub);
-
-            String customToken = generateJwt(email, name, picture);
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(email, name, picture);
-            ResponseCookie springCookie = buildRefreshCookie(refreshToken.getPlainToken());
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, springCookie.toString())
-                    .body(Map.of("token", customToken));
-
-        } catch (Exception e) {
-            log.error("Failed to validate Google token", e);
+            idToken = verifier.verify(googleToken);
+        } catch (java.security.GeneralSecurityException | IllegalArgumentException e) {
+            log.warn("Google token verification failed", e);
             return ResponseEntity.status(401).body(Map.of("error", "Failed to validate token"));
+        } catch (java.io.IOException e) {
+            log.error("I/O exception while verifying Google token", e);
+            throw new RuntimeException("I/O error during token verification", e);
         }
+
+        if (idToken == null) {
+            log.warn("Invalid Google token received");
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid Google token"));
+        }
+
+        GoogleIdToken.Payload tokenPayload = idToken.getPayload();
+        if (!Boolean.TRUE.equals(tokenPayload.getEmailVerified())) {
+            log.warn("Email not verified");
+            return ResponseEntity.status(401).body(Map.of("error", "Email not verified"));
+        }
+        String email = tokenPayload.getEmail();
+        if (email == null || email.isBlank()) {
+            log.warn("Email is missing from Google token payload");
+            return ResponseEntity.status(401).body(Map.of("error", "Email is required"));
+        }
+        String googleSub = tokenPayload.getSubject();
+        if (googleSub == null || googleSub.isBlank()) {
+            log.warn("Google sub is missing from token payload");
+            return ResponseEntity.status(401).body(Map.of("error", "Google sub is required"));
+        }
+
+        // Identity verification: enforce google sub uniqueness and detect recycled emails
+        // 1. If an existing user has this email, verify google_sub matches
+        java.util.Optional<com.ascension.service.UserService.User> userByEmail = userService.findByEmail(email);
+        if (userByEmail.isPresent()) {
+            String existingSub = userByEmail.get().googleSub();
+            if (existingSub != null && !existingSub.equals(googleSub)) {
+                log.error("SECURITY ALERT: Identity mismatch for email '{}'. Stored google_sub='{}', incoming google_sub='{}'. Possible recycled email or account takeover attempt.",
+                        email, existingSub, googleSub);
+                return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
+            }
+        }
+
+        // 2. If an existing user has this google_sub, verify email matches
+        java.util.Optional<com.ascension.service.UserService.User> userBySub = userService.findByGoogleSub(googleSub);
+        if (userBySub.isPresent()) {
+            String existingEmail = userBySub.get().email();
+            if (existingEmail != null && !existingEmail.equalsIgnoreCase(email)) {
+                log.error("SECURITY ALERT: Identity mismatch for google_sub '{}'. Already assigned to email '{}', incoming email='{}'. Rejecting login.",
+                        googleSub, existingEmail, email);
+                return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
+            }
+        }
+
+        String name = (String) tokenPayload.get("name");
+        String picture = (String) tokenPayload.get("picture");
+
+        // NOTE: Future architectural roadmap:
+        // Currently user tables link via email as primary key. Migrating user-referencing tables
+        // to a surrogate UUID (or UUID v7) primary key is planned as future architectural work
+        // to decouple internal database foreign keys from mutable email addresses and OAuth subject identifiers.
+        userService.ensureUserExists(email, name, picture, googleSub);
+
+        String customToken = generateJwt(email, name, picture);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(email);
+        ResponseCookie springCookie = buildRefreshCookie(refreshToken.getPlainToken());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, springCookie.toString())
+                .body(Map.of("token", customToken));
     }
 
     private String getEffectiveSameSite() {
@@ -217,8 +221,19 @@ public class AuthController {
 
         try {
             RefreshToken newRefreshToken = refreshTokenService.rotateRefreshToken(requestCookieRefreshToken);
-            String token = generateJwt(newRefreshToken.getEmail(), newRefreshToken.getName(), newRefreshToken.getPicture());
-            log.info("Refresh token rotated successfully for user {}", newRefreshToken.getEmail());
+            String email = newRefreshToken.getEmail();
+
+            // Read latest profile data from users table
+            String name = "";
+            String picture = "";
+            java.util.Optional<com.ascension.service.UserService.User> userOpt = userService.findByEmail(email);
+            if (userOpt.isPresent()) {
+                name = userOpt.get().name() != null ? userOpt.get().name() : "";
+                picture = userOpt.get().picture() != null ? userOpt.get().picture() : "";
+            }
+
+            String token = generateJwt(email, name, picture);
+            log.info("Refresh token rotated successfully for user {}", email);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(newRefreshToken.getPlainToken()).toString())
