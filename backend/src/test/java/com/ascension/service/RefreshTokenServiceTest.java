@@ -24,6 +24,9 @@ class RefreshTokenServiceTest {
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private RefreshTokenService refreshTokenService;
 
@@ -90,22 +93,25 @@ class RefreshTokenServiceTest {
     }
 
     @Test
-    void rotateRefreshToken_withinGracePeriod_secondAttempt_failsAndRevokesFamily() {
-        // Token was replaced 5 seconds ago, but grace was already used
+    void rotateRefreshToken_withinGracePeriod_multipleConcurrentAttempts_allowedWithoutRevokingFamily() {
+        // Token was replaced 5 seconds ago, and grace was already flagged by another concurrent thread
         activeToken.setReplacedAt(Instant.now().minusSeconds(5));
         activeToken.setGraceUsed(true);
         when(refreshTokenRepository.findByTokenForUpdate(hashedToken)).thenReturn(Optional.of(activeToken));
+        when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        TokenRefreshException ex = assertThrows(TokenRefreshException.class, () ->
-                refreshTokenService.rotateRefreshToken(plainToken)
-        );
+        RefreshToken concurrentResult = refreshTokenService.rotateRefreshToken(plainToken);
 
-        assertTrue(ex.getMessage().contains("Session expired"));
-        verify(refreshTokenRepository).deleteByFamilyId(activeToken.getFamilyId());
+        assertNotNull(concurrentResult);
+        assertEquals("user@example.com", concurrentResult.getEmail());
+        assertEquals(activeToken.getFamilyId(), concurrentResult.getFamilyId());
+        verify(refreshTokenRepository, never()).delete(any(RefreshToken.class));
+        verify(refreshTokenRepository, never()).deleteByFamilyId(anyString());
+        verify(userService, never()).updateTokensValidAfter(anyString(), any(Instant.class));
     }
 
     @Test
-    void rotateRefreshToken_afterGracePeriod_revokesTokenFamilyAndThrows() {
+    void rotateRefreshToken_afterGracePeriod_revokesTokenFamilyAndAccessTokensAndThrows() {
         // Token was replaced 15 seconds ago (past 10s grace period)
         activeToken.setReplacedAt(Instant.now().minusSeconds(15));
         when(refreshTokenRepository.findByTokenForUpdate(hashedToken)).thenReturn(Optional.of(activeToken));
@@ -116,6 +122,7 @@ class RefreshTokenServiceTest {
 
         assertTrue(ex.getMessage().contains("Session expired"));
         verify(refreshTokenRepository).deleteByFamilyId(activeToken.getFamilyId());
+        verify(userService).updateTokensValidAfter(eq(activeToken.getEmail()), any(Instant.class));
     }
 
     @Test

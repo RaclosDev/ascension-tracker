@@ -13,10 +13,12 @@ import java.util.Optional;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserService userService;
     private final long REFRESH_TOKEN_EXPIRATION_DAYS = 30;
 
-    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository) {
+    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, UserService userService) {
         this.refreshTokenRepository = refreshTokenRepository;
+        this.userService = userService;
     }
 
     @Transactional
@@ -64,13 +66,16 @@ public class RefreshTokenService {
 
         if (refreshToken.getReplacedAt() != null) {
             Instant graceThreshold = refreshToken.getReplacedAt().plusSeconds(10);
-            if (Instant.now().isBefore(graceThreshold) && !refreshToken.isGraceUsed()) {
-                // Grace period: allow at most ONE additional emission
+            if (Instant.now().isBefore(graceThreshold)) {
+                // Grace period: allow concurrent cluster/tab refresh without deleting the family
                 refreshToken.setGraceUsed(true);
                 refreshTokenRepository.save(refreshToken);
                 return createRefreshToken(refreshToken.getEmail(), refreshToken.getFamilyId());
             }
-            // Outside grace period or grace already consumed: reuse detected -> revoke whole family
+            // Outside grace period (10s elapsed): true token reuse attack detected -> revoke family and access tokens
+            if (userService != null) {
+                userService.updateTokensValidAfter(refreshToken.getEmail(), Instant.now());
+            }
             refreshTokenRepository.deleteByFamilyId(refreshToken.getFamilyId());
             throw new com.ascension.exception.TokenRefreshException("Session expired. Please log in again.");
         }

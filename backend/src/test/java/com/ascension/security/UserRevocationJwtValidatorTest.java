@@ -118,4 +118,23 @@ class UserRevocationJwtValidatorTest {
         assertThat(result.hasErrors()).isTrue();
         assertThat(result.getErrors()).anyMatch(e -> e.getDescription().contains("missing"));
     }
+
+    @Test
+    void validate_whenIssuedAtIsNull_returnsFailure() {
+        Jwt jwt = new Jwt(
+                "token-value",
+                null,
+                Instant.now().plusSeconds(900),
+                Map.of("alg", "HS256"),
+                Map.of("email", "valid@example.com", "sub", "valid@example.com")
+        );
+
+        when(userService.getUserSecurityState("valid@example.com"))
+                .thenReturn(new UserSecurityState(true, null));
+
+        OAuth2TokenValidatorResult result = validator.validate(jwt);
+
+        assertThat(result.hasErrors()).isTrue();
+        assertThat(result.getErrors()).anyMatch(e -> e.getDescription().contains("missing"));
+    }
 }

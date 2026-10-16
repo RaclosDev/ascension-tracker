@@ -45,6 +45,15 @@ export const MONTH_MAP: Record<string, number> = {
   december: 11,
 };
 
+export function sanitizeCsvFormula(str: string): string {
+  if (!str) return '';
+  const trimmed = str.trim();
+  if (/^[=+\-@\t\r]/.test(trimmed)) {
+    return `'${trimmed}`;
+  }
+  return trimmed;
+}
+
 export function parseCsvRows(text: string): string[][] {
   const rows: string[][] = [];
   let currentRow: string[] = [];
@@ -393,10 +402,10 @@ export function parseHevyCsv(
     if (!workout) {
       workout = {
         id: uid(),
-        name: title.substring(0, 100),
+        name: sanitizeCsvFormula(title).substring(0, 100),
         startedAt,
         finishedAt,
-        notes: description.substring(0, 500),
+        notes: sanitizeCsvFormula(description).substring(0, 500),
         exercises: [],
       };
       workoutsMap.set(workoutKey, workout);
@@ -411,7 +420,7 @@ export function parseHevyCsv(
       currentExerciseBlock = {
         id: uid(),
         exerciseId,
-        notes: exerciseNotes.substring(0, 500),
+        notes: sanitizeCsvFormula(exerciseNotes).substring(0, 500),
         supersetId: supersetId ? `superset_${supersetId}` : undefined,
         sets: [],
       };

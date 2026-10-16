@@ -52,6 +52,9 @@ class UserDataQuotaServiceTest {
     @Mock
     private StepsEntryRepository stepsEntryRepository;
 
+    @Mock
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     @Spy
     private UserDataQuotaProperties quotaProperties = new UserDataQuotaProperties();
 

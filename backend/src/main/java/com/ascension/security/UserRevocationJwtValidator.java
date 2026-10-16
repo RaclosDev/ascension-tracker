@@ -48,8 +48,13 @@ public class UserRevocationJwtValidator implements OAuth2TokenValidator<Jwt> {
         }
 
         Instant issuedAt = jwt.getIssuedAt();
+        if (issuedAt == null) {
+            log.warn("JWT rejected: missing issued-at (iat) claim for '{}'", com.ascension.util.PiiMasker.maskEmail(email));
+            return OAuth2TokenValidatorResult.failure(ERROR_INVALID_CLAIMS);
+        }
+
         Instant tokensValidAfter = state.tokensValidAfter();
-        if (issuedAt != null && tokensValidAfter != null && issuedAt.getEpochSecond() < tokensValidAfter.getEpochSecond()) {
+        if (tokensValidAfter != null && issuedAt.getEpochSecond() < tokensValidAfter.getEpochSecond()) {
             log.warn("JWT rejected: token for '{}' issued at {} is prior to tokens_valid_after {}",
                     com.ascension.util.PiiMasker.maskEmail(email), issuedAt, tokensValidAfter);
             return OAuth2TokenValidatorResult.failure(ERROR_TOKEN_REVOKED);

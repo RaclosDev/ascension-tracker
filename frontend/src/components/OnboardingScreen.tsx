@@ -85,7 +85,10 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
       onComplete();
     } catch (err) {
       toast.error('Error al guardar configuración inicial');
-      console.error(err);
+      console.error(
+        'Error al guardar configuración inicial:',
+        err instanceof Error ? err.message : String(err),
+      );
       setLoading(false);
     }
   };
