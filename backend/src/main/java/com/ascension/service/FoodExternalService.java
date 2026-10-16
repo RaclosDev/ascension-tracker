@@ -62,6 +62,8 @@ public class FoodExternalService {
             finalRoot.set("products", combinedProducts);
             return objectMapper.writeValueAsString(finalRoot);
 
+        } catch (com.ascension.exception.ExternalApiException eae) {
+            throw eae;
         } catch (Exception e) {
             log.error("Error combining external APIs", e);
             throw new RuntimeException("External API Error: " + e.getMessage(), e);

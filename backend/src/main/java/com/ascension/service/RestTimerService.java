@@ -44,7 +44,9 @@ public class RestTimerService {
 
     @Transactional
     public List<RestTimer> claimDueTimers(Instant now, int limit) {
-        List<RestTimer> due = restTimerRepository.findDueTimersForUpdateSkipLocked(now, limit);
+        Instant minFireAt = now.minus(java.time.Duration.ofMinutes(15));
+        restTimerRepository.cancelStalePendingTimers(minFireAt, RestTimerStatus.PENDING, RestTimerStatus.CANCELLED);
+        List<RestTimer> due = restTimerRepository.findDueTimersForUpdateSkipLocked(now, minFireAt, limit);
         if (due.isEmpty()) {
             return Collections.emptyList();
         }
