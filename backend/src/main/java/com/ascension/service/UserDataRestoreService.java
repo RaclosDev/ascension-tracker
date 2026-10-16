@@ -3,6 +3,7 @@ package com.ascension.service;
 import com.ascension.dto.*;
 import com.ascension.model.*;
 import com.ascension.repository.*;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -29,6 +30,41 @@ public class UserDataRestoreService {
     private final WeightEntryRepository weightEntryRepository;
     private final UserSettingsRepository userSettingsRepository;
     private final UserDataQuotaService userDataQuotaService;
+    private final EntityManager entityManager;
+
+    public UserDataRestoreService(
+            JdbcTemplate jdbcTemplate,
+            WorkoutRepository workoutRepository,
+            CustomExerciseRepository customExerciseRepository,
+            WorkoutTemplateRepository workoutTemplateRepository,
+            FoodLogRepository foodLogRepository,
+            MealRepository mealRepository,
+            RecipeRepository recipeRepository,
+            SavedFoodRepository savedFoodRepository,
+            StepsEntryRepository stepsEntryRepository,
+            WeightEntryRepository weightEntryRepository,
+            UserSettingsRepository userSettingsRepository,
+            UserDataQuotaService userDataQuotaService
+    ) {
+        this(jdbcTemplate, workoutRepository, customExerciseRepository, workoutTemplateRepository,
+                foodLogRepository, mealRepository, recipeRepository, savedFoodRepository,
+                stepsEntryRepository, weightEntryRepository, userSettingsRepository,
+                userDataQuotaService, null);
+    }
+
+    private void flushAndClearBatch(int count) {
+        if (entityManager != null && count % 100 == 0) {
+            entityManager.flush();
+            entityManager.clear();
+        }
+    }
+
+    private void finalFlushAndClear() {
+        if (entityManager != null) {
+            entityManager.flush();
+            entityManager.clear();
+        }
+    }
 
     @Transactional
     public UserDataRestoreSummaryDTO restoreUserData(String userEmail, RestoreMode mode, boolean confirmEmpty, UserDataExportDTO backup) {
@@ -284,7 +320,9 @@ public class UserDataRestoreService {
                 existingStartTimes.add(dto.getStartedAt());
             }
             count++;
+            flushAndClearBatch(count);
         }
+        finalFlushAndClear();
         return count;
     }
 
@@ -369,7 +407,9 @@ public class UserDataRestoreService {
             foodLogRepository.save(logEntry);
             existingKeys.add(key);
             count++;
+            flushAndClearBatch(count);
         }
+        finalFlushAndClear();
         return count;
     }
 
@@ -484,7 +524,9 @@ public class UserDataRestoreService {
             savedFoodRepository.save(savedFood);
             existingKeys.add(key);
             count++;
+            flushAndClearBatch(count);
         }
+        finalFlushAndClear();
         return count;
     }
 
@@ -515,7 +557,9 @@ public class UserDataRestoreService {
             stepsEntryRepository.save(entry);
             existingDates.add(dto.getDate());
             count++;
+            flushAndClearBatch(count);
         }
+        finalFlushAndClear();
         return count;
     }
 
@@ -547,7 +591,9 @@ public class UserDataRestoreService {
             weightEntryRepository.save(entry);
             existingDates.add(dto.getDate());
             count++;
+            flushAndClearBatch(count);
         }
+        finalFlushAndClear();
         return count;
     }
 

@@ -14,6 +14,10 @@ public class UserSettings {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     @Column(name = "user_email", nullable = false, unique = true)
     private String userEmail;
 

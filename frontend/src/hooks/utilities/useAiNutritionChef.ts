@@ -245,7 +245,10 @@ export function useAiNutritionChef() {
       fetchSummary(todayStr);
     } catch (err: unknown) {
       toast.error('Error al añadir la comida al diario');
-      console.error(err);
+      console.error(
+        'Error al añadir la comida al diario:',
+        err instanceof Error ? err.message : String(err),
+      );
     } finally {
       setApplyingOptionKey(null);
     }

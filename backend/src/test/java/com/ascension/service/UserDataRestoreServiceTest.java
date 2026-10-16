@@ -60,6 +60,9 @@ class UserDataRestoreServiceTest {
     @Mock
     private UserDataQuotaService userDataQuotaService;
 
+    @Mock
+    private jakarta.persistence.EntityManager entityManager;
+
     @InjectMocks
     private UserDataRestoreService service;
 

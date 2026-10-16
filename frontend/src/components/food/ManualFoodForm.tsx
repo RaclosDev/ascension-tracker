@@ -100,7 +100,10 @@ export default function ManualFoodForm({
       if (onLogAdded) onLogAdded();
       onClose();
     } catch (err: unknown) {
-      console.error(err);
+      console.error(
+        'Error al guardar el alimento manualmente:',
+        err instanceof Error ? err.message : String(err),
+      );
       const errorMessage =
         (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data
           ?.message ||

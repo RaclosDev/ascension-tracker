@@ -17,6 +17,9 @@ export const setMemoryToken = (token: string | null) => {
 
 export const isTokenValid = (token: string | null): boolean => {
   if (!token) return false;
+  if (token === 'offline-session') {
+    return typeof navigator !== 'undefined' && !navigator.onLine;
+  }
   try {
     const payload = jwtDecode<{ exp?: number }>(token);
     if (!payload.exp) return true;
@@ -42,7 +45,12 @@ if (authBroadcast) {
 
 api.interceptors.request.use(
   (config) => {
-    if (memoryToken && config.url !== '/auth/refresh' && config.url !== '/auth/logout') {
+    if (
+      memoryToken &&
+      memoryToken !== 'offline-session' &&
+      config.url !== '/auth/refresh' &&
+      config.url !== '/auth/logout'
+    ) {
       config.headers.Authorization = 'Bearer ' + memoryToken;
     }
     return config;

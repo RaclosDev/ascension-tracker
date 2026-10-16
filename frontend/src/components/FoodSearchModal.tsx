@@ -220,7 +220,10 @@ export default function FoodSearchModal({
       }
     } catch (err) {
       if (currentRequestId !== searchRequestId.current) return;
-      console.error(err);
+      console.error(
+        'Error al consultar base de datos de alimentos:',
+        err instanceof Error ? err.message : String(err),
+      );
       toast.error('Error al consultar base de datos');
     } finally {
       /* ignore */
@@ -259,7 +262,10 @@ export default function FoodSearchModal({
 
       toast.success('¡Macros extraídos correctamente!');
     } catch (err: unknown) {
-      console.error(err);
+      console.error(
+        'Error al analizar etiqueta OCR:',
+        err instanceof Error ? err.message : String(err),
+      );
       toast.error(
         (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
           'Error al analizar la etiqueta.',
@@ -302,7 +308,10 @@ export default function FoodSearchModal({
       toast('Producto no encontrado por código de barras', { icon: '🤔' });
       setOffResults([]);
     } catch (err) {
-      console.error(err);
+      console.error(
+        'Error al consultar código de barras:',
+        err instanceof Error ? err.message : String(err),
+      );
       toast.error('Error al consultar código de barras');
     } finally {
       /* ignore */
@@ -443,7 +452,10 @@ export default function FoodSearchModal({
       if (onLogAdded) onLogAdded();
       if (onClose) onClose();
     } catch (err) {
-      console.error(err);
+      console.error(
+        'Error al guardar el alimento:',
+        err instanceof Error ? err.message : String(err),
+      );
       toast.error('Error al guardar el alimento');
     }
   };
@@ -486,7 +498,7 @@ export default function FoodSearchModal({
           (e as { response?: { data?: { error?: string } } }).response?.data?.error ||
           'Error procesando texto con IA';
         toast.error(msg);
-        console.error(e);
+        console.error('Error procesando texto con IA:', e instanceof Error ? e.message : String(e));
       });
   };
 
@@ -571,7 +583,7 @@ export default function FoodSearchModal({
               >
                 <BarcodeScanner
                   onScanSuccess={handleScanSuccess}
-                  onScanError={(err: string) => console.error(err)}
+                  onScanError={(err: string) => console.warn('Barcode scan:', err)}
                 />
               </Suspense>
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

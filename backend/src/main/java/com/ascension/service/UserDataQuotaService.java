@@ -6,6 +6,7 @@ import com.ascension.exception.UserDataQuotaExceededException;
 import com.ascension.model.RestoreMode;
 import com.ascension.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,9 +22,21 @@ public class UserDataQuotaService {
     private final SavedFoodRepository savedFoodRepository;
     private final WeightEntryRepository weightEntryRepository;
     private final StepsEntryRepository stepsEntryRepository;
+    private final JdbcTemplate jdbcTemplate;
+
+    public void acquireUserQuotaLock(String userEmail) {
+        if (userEmail != null && !userEmail.isBlank() && jdbcTemplate != null) {
+            try {
+                jdbcTemplate.queryForObject("SELECT pg_advisory_xact_lock(hashtext(?))", Void.class, userEmail.trim().toLowerCase());
+            } catch (Exception ignored) {
+                // Graceful fallback for non-Postgres test databases
+            }
+        }
+    }
 
     public void checkWorkoutQuota(String userEmail, int countToAdd) {
         if (countToAdd <= 0) return;
+        acquireUserQuotaLock(userEmail);
         long current = workoutRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxWorkouts()) {
             throw new UserDataQuotaExceededException(
@@ -35,6 +48,7 @@ public class UserDataQuotaService {
 
     public void checkFoodLogQuota(String userEmail, int countToAdd) {
         if (countToAdd <= 0) return;
+        acquireUserQuotaLock(userEmail);
         long current = foodLogRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxFoodLogs()) {
             throw new UserDataQuotaExceededException(
@@ -46,6 +60,7 @@ public class UserDataQuotaService {
 
     public void checkRecipeQuota(String userEmail, int countToAdd) {
         if (countToAdd <= 0) return;
+        acquireUserQuotaLock(userEmail);
         long current = recipeRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxRecipes()) {
             throw new UserDataQuotaExceededException(
@@ -57,6 +72,7 @@ public class UserDataQuotaService {
 
     public void checkCustomExerciseQuota(String userEmail, int countToAdd) {
         if (countToAdd <= 0) return;
+        acquireUserQuotaLock(userEmail);
         long current = customExerciseRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxCustomExercises()) {
             throw new UserDataQuotaExceededException(
@@ -68,6 +84,7 @@ public class UserDataQuotaService {
 
     public void checkWorkoutTemplateQuota(String userEmail, int countToAdd) {
         if (countToAdd <= 0) return;
+        acquireUserQuotaLock(userEmail);
         long current = workoutTemplateRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxWorkoutTemplates()) {
             throw new UserDataQuotaExceededException(
@@ -79,6 +96,7 @@ public class UserDataQuotaService {
 
     public void checkSavedFoodQuota(String userEmail, int countToAdd) {
         if (countToAdd <= 0) return;
+        acquireUserQuotaLock(userEmail);
         long current = savedFoodRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxSavedFoods()) {
             throw new UserDataQuotaExceededException(
@@ -90,6 +108,7 @@ public class UserDataQuotaService {
 
     public void checkWeightEntryQuota(String userEmail, int countToAdd) {
         if (countToAdd <= 0) return;
+        acquireUserQuotaLock(userEmail);
         long current = weightEntryRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxWeightEntries()) {
             throw new UserDataQuotaExceededException(
@@ -101,6 +120,7 @@ public class UserDataQuotaService {
 
     public void checkStepsEntryQuota(String userEmail, int countToAdd) {
         if (countToAdd <= 0) return;
+        acquireUserQuotaLock(userEmail);
         long current = stepsEntryRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxStepsEntries()) {
             throw new UserDataQuotaExceededException(
@@ -112,6 +132,7 @@ public class UserDataQuotaService {
 
     public void checkRestoreQuotas(String userEmail, RestoreMode mode, UserDataExportDTO backup) {
         if (backup == null) return;
+        acquireUserQuotaLock(userEmail);
         boolean isOverwrite = (mode == RestoreMode.OVERWRITE);
 
         int incomingWorkouts = backup.getWorkouts() != null ? backup.getWorkouts().size() : 0;
