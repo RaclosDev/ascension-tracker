@@ -8,6 +8,7 @@ import com.ascension.dto.RecipeDTO;
 import com.ascension.dto.SavedFoodDTO;
 import com.ascension.exception.AiProcessingException;
 import com.ascension.exception.ExternalApiException;
+import com.ascension.exception.UserDataQuotaExceededException;
 import com.ascension.service.ai.AiJsonParser;
 import com.ascension.service.ai.GeminiApiClient;
 import com.ascension.service.ai.GeminiQuotaService;
@@ -15,6 +16,7 @@ import com.ascension.service.ai.NutritionPromptBuilder;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,6 +24,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -50,7 +53,24 @@ public class GeminiAiService {
         return apiClient.getActiveModelName();
     }
 
+    private boolean isUpstreamInfrastructureFailure(ExternalApiException e) {
+        if (e == null || e.getStatus() == null) return false;
+        return e.getStatus().is5xxServerError()
+                || e.getStatus() == HttpStatus.TOO_MANY_REQUESTS
+                || e.getStatus() == HttpStatus.GATEWAY_TIMEOUT
+                || e.getStatus() == HttpStatus.REQUEST_TIMEOUT;
+    }
+
     public List<FoodLogDTO> processNaturalLanguageLog(String userEmail, String text, String base64Image, int defaultMealIndex, LocalDate date) {
+        // Validate user inputs and base64 image BEFORE reserving quota or making external calls
+        String cleanBase64 = null;
+        String mimeType = null;
+        if (base64Image != null && !base64Image.isEmpty()) {
+            cleanBase64 = base64Image.contains(",") ? base64Image.substring(base64Image.indexOf(",") + 1) : base64Image;
+            byte[] decoded = Base64.getDecoder().decode(cleanBase64);
+            mimeType = validateAndGetMimeType(decoded);
+        }
+
         // Check data quota before calling external AI API to avoid unbilled calls
         userDataQuotaService.checkFoodLogQuota(userEmail, 1);
         quotaService.checkAndReserveQuota(userEmail);
@@ -99,10 +119,7 @@ public class GeminiAiService {
 
         String responseText;
         try {
-            if (base64Image != null && !base64Image.isEmpty()) {
-                String cleanBase64 = base64Image.contains(",") ? base64Image.substring(base64Image.indexOf(",") + 1) : base64Image;
-                byte[] decoded = Base64.getDecoder().decode(cleanBase64);
-                String mimeType = validateAndGetMimeType(decoded);
+            if (cleanBase64 != null && mimeType != null) {
                 responseText = apiClient.executePrompt(prompt, cleanBase64, mimeType);
             } else {
                 responseText = apiClient.executePrompt(prompt);
@@ -112,8 +129,10 @@ public class GeminiAiService {
             log.warn("Validation error in natural language log processing: {}", e.getMessage());
             throw e;
         } catch (ExternalApiException e) {
-            quotaService.releaseQuota(userEmail);
-            quotaService.recordFailure(e);
+            if (isUpstreamInfrastructureFailure(e)) {
+                quotaService.releaseQuota(userEmail);
+                quotaService.recordFailure(e);
+            }
             throw e;
         } catch (Exception e) {
             quotaService.releaseQuota(userEmail);
@@ -132,7 +151,7 @@ public class GeminiAiService {
                 addedLogs.add(saved);
             }
             return addedLogs;
-        } catch (com.ascension.exception.UserDataQuotaExceededException e) {
+        } catch (UserDataQuotaExceededException e) {
             log.warn("User data quota exceeded when saving parsed AI logs: {}", e.getMessage());
             throw e;
         } catch (IllegalArgumentException e) {
@@ -145,7 +164,8 @@ public class GeminiAiService {
     }
 
     public SavedFoodDTO processNaturalLanguageFood(String userEmail, String text) {
-        quotaService.checkQuotaAndCircuit(userEmail);
+        userDataQuotaService.checkSavedFoodQuota(userEmail, 1);
+        quotaService.checkAndReserveQuota(userEmail);
         String prompt = promptBuilder.buildSavedFoodPrompt(text);
 
         String responseText;
@@ -156,8 +176,10 @@ public class GeminiAiService {
             log.warn("Validation error in natural language food processing: {}", e.getMessage());
             throw e;
         } catch (ExternalApiException e) {
-            quotaService.releaseQuota(userEmail);
-            quotaService.recordFailure(e);
+            if (isUpstreamInfrastructureFailure(e)) {
+                quotaService.releaseQuota(userEmail);
+                quotaService.recordFailure(e);
+            }
             throw e;
         } catch (Exception e) {
             quotaService.releaseQuota(userEmail);
@@ -169,7 +191,7 @@ public class GeminiAiService {
         try {
             SavedFoodDTO dto = jsonParser.parseSavedFood(responseText);
             return nutritionLogService.addSavedFood(userEmail, dto);
-        } catch (com.ascension.exception.UserDataQuotaExceededException e) {
+        } catch (UserDataQuotaExceededException e) {
             log.warn("User data quota exceeded when saving parsed AI food: {}", e.getMessage());
             throw e;
         } catch (IllegalArgumentException e) {
@@ -182,22 +204,34 @@ public class GeminiAiService {
     }
 
     public Map<String, Object> processNutritionalLabel(String userEmail, MultipartFile file) {
-        quotaService.checkQuotaAndCircuit(userEmail);
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("No image file provided");
+        }
+        byte[] fileBytes;
+        try {
+            fileBytes = file.getBytes();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not read uploaded image file", e);
+        }
+        String mimeType = validateAndGetMimeType(fileBytes);
+        String base64Image = Base64.getEncoder().encodeToString(fileBytes);
+
+        userDataQuotaService.checkSavedFoodQuota(userEmail, 1);
+        quotaService.checkAndReserveQuota(userEmail);
+
+        String prompt = promptBuilder.buildSavedFoodFromImagePrompt();
         String responseText;
         try {
-            byte[] fileBytes = file.getBytes();
-            String mimeType = validateAndGetMimeType(fileBytes);
-            String base64Image = Base64.getEncoder().encodeToString(fileBytes);
-
-            String prompt = promptBuilder.buildSavedFoodFromImagePrompt();
             responseText = apiClient.executePrompt(prompt, base64Image, mimeType);
             quotaService.recordSuccess(userEmail);
         } catch (IllegalArgumentException e) {
             log.warn("Validation error in nutritional label processing: {}", e.getMessage());
             throw e;
         } catch (ExternalApiException e) {
-            quotaService.releaseQuota(userEmail);
-            quotaService.recordFailure(e);
+            if (isUpstreamInfrastructureFailure(e)) {
+                quotaService.releaseQuota(userEmail);
+                quotaService.recordFailure(e);
+            }
             throw e;
         } catch (Exception e) {
             quotaService.releaseQuota(userEmail);
@@ -225,7 +259,15 @@ public class GeminiAiService {
             Integer targetMealIndex,
             List<AiChatRequestDTO.ChatMessageDTO> chatHistory) {
 
-        quotaService.checkQuotaAndCircuit(userEmail);
+        String cleanBase64 = null;
+        String mimeType = null;
+        if (base64Image != null && !base64Image.isEmpty()) {
+            cleanBase64 = base64Image.contains(",") ? base64Image.substring(base64Image.indexOf(",") + 1) : base64Image;
+            byte[] decoded = Base64.getDecoder().decode(cleanBase64);
+            mimeType = validateAndGetMimeType(decoded);
+        }
+
+        quotaService.checkAndReserveQuota(userEmail);
 
         // 1. Get targets
         MacrosDTO targetMacros = macroCalculatorService.getMacros(userEmail);
@@ -283,19 +325,24 @@ public class GeminiAiService {
                         String sLabel = f.getServingLabel() != null ? promptBuilder.sanitizeUserInput(f.getServingLabel()) : "unidad";
                         serving = ", serving=" + f.getServingSize() + "g/" + sLabel;
                     }
-                    String safeBrand = f.getBrand() != null && !f.getBrand().isEmpty() ? " (" + promptBuilder.sanitizeUserInput(f.getBrand()) + ")" : "";
-                    return "\"" + promptBuilder.sanitizeUserInput(f.getName()) + "\"" + safeBrand +
-                            " [" + f.getKcalPer100g() + " kcal, " + f.getProteinPer100g() + "g P, " + f.getCarbsPer100g() + "g C, " + f.getFatPer100g() + "g F per 100g" + serving + "]";
+                    String safeBrand = f.getBrand() != null && !f.getBrand().equalsIgnoreCase("Genérico") && !f.getBrand().equalsIgnoreCase("Generico") && !f.getBrand().isEmpty()
+                            ? " (" + promptBuilder.sanitizeUserInput(f.getBrand()) + ")"
+                            : "";
+                    String exactName = promptBuilder.sanitizeUserInput(f.getName()) + safeBrand;
+                    return "[EXACT_NAME: \"" + exactName + "\"] -> [" + f.getKcalPer100g() + " kcal, " + f.getProteinPer100g() + "g P, " + f.getCarbsPer100g() + "g C, " + f.getFatPer100g() + "g F per 100g" + serving + "]";
                 })
-                .reduce((a, b) -> a + "; " + b)
+                .reduce((a, b) -> a + ";\n" + b)
                 .orElse("None");
 
         String contextRecipes = recipes.stream()
-                .map(r -> "\"" + promptBuilder.sanitizeUserInput(r.getName()) + "\" [" + r.getTotalKcal() + " kcal, " + r.getTotalProtein() + "g P, " + r.getTotalCarbs() + "g C, " + r.getTotalFat() + "g F total]")
-                .reduce((a, b) -> a + "; " + b)
+                .map(r -> {
+                    String safeRecipeName = promptBuilder.sanitizeUserInput(r.getName());
+                    return "[EXACT_NAME: \"" + safeRecipeName + " (Receta)\"] -> [" + r.getTotalKcal() + " kcal, " + r.getTotalProtein() + "g P, " + r.getTotalCarbs() + "g C, " + r.getTotalFat() + "g F total]";
+                })
+                .reduce((a, b) -> a + ";\n" + b)
                 .orElse("None");
 
-        // 6. Chat History (if any) with structural data tags
+        // 6. Build history context
         StringBuilder historyContext = new StringBuilder();
         if (chatHistory != null && !chatHistory.isEmpty()) {
             historyContext.append("<chat_history>\n");
@@ -324,10 +371,7 @@ public class GeminiAiService {
 
         String responseText;
         try {
-            if (base64Image != null && !base64Image.isEmpty()) {
-                String cleanBase64 = base64Image.contains(",") ? base64Image.substring(base64Image.indexOf(",") + 1) : base64Image;
-                byte[] decoded = Base64.getDecoder().decode(cleanBase64);
-                String mimeType = validateAndGetMimeType(decoded);
+            if (cleanBase64 != null && mimeType != null) {
                 responseText = apiClient.executePrompt(prompt, cleanBase64, mimeType);
             } else {
                 responseText = apiClient.executePrompt(prompt);
@@ -337,8 +381,10 @@ public class GeminiAiService {
             log.warn("Validation error in meal assistant processing: {}", e.getMessage());
             throw e;
         } catch (ExternalApiException e) {
-            quotaService.releaseQuota(userEmail);
-            quotaService.recordFailure(e);
+            if (isUpstreamInfrastructureFailure(e)) {
+                quotaService.releaseQuota(userEmail);
+                quotaService.recordFailure(e);
+            }
             throw e;
         } catch (Exception e) {
             quotaService.releaseQuota(userEmail);
@@ -365,39 +411,47 @@ public class GeminiAiService {
 
     public String validateAndGetMimeType(byte[] data) {
         if (data == null || data.length < 12) {
-            throw new IllegalArgumentException("Invalid image file: missing or too small");
+            throw new IllegalArgumentException("Corrupt image data: No image data present to read");
         }
-        boolean isJpeg = data[0] == (byte) 0xFF && data[1] == (byte) 0xD8 && data[2] == (byte) 0xFF;
-        boolean isPng = data[0] == (byte) 0x89 && data[1] == (byte) 0x50 && data[2] == (byte) 0x4E && data[3] == (byte) 0x47;
-        boolean isWebp = data[0] == 'R' && data[1] == 'I' && data[2] == 'F' && data[3] == 'F' &&
-                         data[8] == 'W' && data[9] == 'E' && data[10] == 'B' && data[11] == 'P';
+        String mimeType = null;
+        if (data[0] == (byte) 0xFF && data[1] == (byte) 0xD8) {
+            mimeType = "image/jpeg";
+        } else if (data[0] == (byte) 0x89 && data[1] == (byte) 0x50 && data[2] == (byte) 0x4E && data[3] == (byte) 0x47) {
+            mimeType = "image/png";
+        } else if (data[0] == (byte) 'R' && data[1] == (byte) 'I' && data[2] == (byte) 'F' && data[3] == (byte) 'F' &&
+                data[8] == (byte) 'W' && data[9] == (byte) 'E' && data[10] == (byte) 'B' && data[11] == (byte) 'P') {
+            mimeType = "image/webp";
+        }
 
-        if (!isJpeg && !isPng && !isWebp) {
+        if (mimeType == null) {
             throw new IllegalArgumentException("Unsupported image format. Only JPEG, PNG, and WEBP are allowed.");
         }
 
-        try (ImageInputStream in = ImageIO.createImageInputStream(new ByteArrayInputStream(data))) {
-            if (in == null) {
-                throw new IllegalArgumentException("Corrupt image data: cannot create image stream");
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(data);
+             ImageInputStream iis = ImageIO.createImageInputStream(bais)) {
+
+            if (iis == null) {
+                throw new IllegalArgumentException("Corrupt image data: Unable to read stream");
             }
-            Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
+
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
             if (!readers.hasNext()) {
-                if (isWebp) {
-                    return "image/webp";
-                }
-                throw new IllegalArgumentException("Corrupt image data: no suitable reader found");
+                throw new IllegalArgumentException("Corrupt image data: No image reader found");
             }
+
             ImageReader reader = readers.next();
             try {
-                reader.setInput(in, true, true);
+                reader.setInput(iis, true, true);
                 int width = reader.getWidth(0);
                 int height = reader.getHeight(0);
+
                 if (width <= 0 || height <= 0) {
-                    throw new IllegalArgumentException("Corrupt image data: invalid image dimensions");
+                    throw new IllegalArgumentException("Corrupt image data: Invalid dimensions (" + width + "x" + height + ")");
                 }
+
                 long pixelCount = (long) width * (long) height;
                 if (pixelCount > MAX_PIXEL_COUNT) {
-                    throw new IllegalArgumentException("Image dimensions too large: " + width + "x" + height + " (" + pixelCount + " px exceeds max limit of " + MAX_PIXEL_COUNT + " px)");
+                    throw new IllegalArgumentException("Image resolution exceeds maximum allowed limit of 25 megapixels: " + width + "x" + height);
                 }
             } finally {
                 reader.dispose();
@@ -405,11 +459,9 @@ public class GeminiAiService {
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
-            throw new IllegalArgumentException("Corrupt image data: " + e.getMessage(), e);
+            throw new IllegalArgumentException("Corrupt image data: Failed to read image metadata", e);
         }
 
-        if (isJpeg) return "image/jpeg";
-        if (isPng) return "image/png";
-        return "image/webp";
+        return mimeType;
     }
 }

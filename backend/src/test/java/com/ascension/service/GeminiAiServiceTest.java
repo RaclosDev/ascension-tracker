@@ -1,19 +1,24 @@
 package com.ascension.service;
 
+import com.ascension.dto.FoodLogDTO;
+import com.ascension.exception.ExternalApiException;
+import com.ascension.exception.UserDataQuotaExceededException;
+import com.ascension.service.ai.AiJsonParser;
 import com.ascension.service.ai.GeminiApiClient;
 import com.ascension.service.ai.GeminiQuotaService;
 import com.ascension.service.ai.NutritionPromptBuilder;
-import com.ascension.service.ai.AiJsonParser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
@@ -71,7 +76,7 @@ class GeminiAiServiceTest {
                 IllegalArgumentException.class,
                 () -> geminiAiService.processNutritionalLabel("test@test.com", file)
         );
-        verify(quotaService).checkQuotaAndCircuit("test@test.com");
+        verify(quotaService, never()).checkAndReserveQuota(any());
         verify(quotaService, never()).recordFailure(any());
     }
 
@@ -87,13 +92,12 @@ class GeminiAiServiceTest {
                 IllegalArgumentException.class,
                 () -> geminiAiService.processNutritionalLabel("test@test.com", file)
         );
-        verify(quotaService).checkQuotaAndCircuit("test@test.com");
+        verify(quotaService, never()).checkAndReserveQuota(any());
         verify(quotaService, never()).recordFailure(any());
     }
 
     @Test
     void validateAndGetMimeType_WhenDimensionsExceed25MP_ThrowsIllegalArgumentException() throws Exception {
-        // Create an image of 6000 x 5000 = 30,000,000 pixels (> 25 MP limit)
         BufferedImage hugeImage = new BufferedImage(6000, 5000, BufferedImage.TYPE_BYTE_GRAY);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(hugeImage, "png", baos);
@@ -104,7 +108,7 @@ class GeminiAiServiceTest {
                 () -> geminiAiService.validateAndGetMimeType(hugeImageBytes)
         );
 
-        assertThat(ex.getMessage()).contains("exceeds max limit");
+        assertThat(ex.getMessage()).contains("25 megapixels");
     }
 
     @Test
@@ -144,7 +148,7 @@ class GeminiAiServiceTest {
         when(apiClient.executePrompt(eq("mock prompt"), eq(rawBase64), eq("image/png")))
                 .thenReturn("[]");
 
-        geminiAiService.processNaturalLanguageLog(email, "1 manzana", dataUrl, 0, java.time.LocalDate.now());
+        geminiAiService.processNaturalLanguageLog(email, "1 manzana", dataUrl, 0, LocalDate.now());
 
         verify(userDataQuotaService).checkFoodLogQuota(email, 1);
         verify(quotaService).checkAndReserveQuota(email);
@@ -153,14 +157,27 @@ class GeminiAiServiceTest {
     }
 
     @Test
+    void processNaturalLanguageLog_withMalformedBase64_throwsIllegalArgumentExceptionBeforeReservingQuota() {
+        String email = "test@test.com";
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> geminiAiService.processNaturalLanguageLog(email, "1 manzana", "invalid!!base64", 0, LocalDate.now())
+        );
+
+        verify(quotaService, never()).checkAndReserveQuota(any());
+        verify(apiClient, never()).executePrompt(any(), any(), any());
+        verify(quotaService, never()).releaseQuota(any());
+    }
+
+    @Test
     void processNaturalLanguageLog_whenFoodLogQuotaExceeded_throwsUserDataQuotaExceededBeforeGemini() {
         String email = "test@test.com";
-        doThrow(new com.ascension.exception.UserDataQuotaExceededException("Limite de alimentos alcanzado"))
+        doThrow(new UserDataQuotaExceededException("Limite de alimentos alcanzado"))
                 .when(userDataQuotaService).checkFoodLogQuota(email, 1);
 
         assertThrows(
-                com.ascension.exception.UserDataQuotaExceededException.class,
-                () -> geminiAiService.processNaturalLanguageLog(email, "1 manzana", null, 0, java.time.LocalDate.now())
+                UserDataQuotaExceededException.class,
+                () -> geminiAiService.processNaturalLanguageLog(email, "1 manzana", null, 0, LocalDate.now())
         );
 
         verify(userDataQuotaService).checkFoodLogQuota(email, 1);
@@ -179,19 +196,61 @@ class GeminiAiServiceTest {
                 .thenReturn("mock prompt");
         when(apiClient.executePrompt(eq("mock prompt"))).thenReturn("[{\"product\":\"Apple\"}]");
 
-        com.ascension.dto.FoodLogDTO parsedDto = com.ascension.dto.FoodLogDTO.builder().product("Apple").build();
+        FoodLogDTO parsedDto = FoodLogDTO.builder().product("Apple").build();
         when(jsonParser.parseFoodLogs(eq("[{\"product\":\"Apple\"}]"), anyInt(), anyInt(), any(), any()))
                 .thenReturn(List.of(parsedDto));
-        doThrow(new com.ascension.exception.UserDataQuotaExceededException("Quota exceeded on save"))
+        doThrow(new UserDataQuotaExceededException("Quota exceeded on save"))
                 .when(nutritionLogService).addFoodLog(eq(email), any());
 
         assertThrows(
-                com.ascension.exception.UserDataQuotaExceededException.class,
-                () -> geminiAiService.processNaturalLanguageLog(email, "1 manzana", null, 0, java.time.LocalDate.now())
+                UserDataQuotaExceededException.class,
+                () -> geminiAiService.processNaturalLanguageLog(email, "1 manzana", null, 0, LocalDate.now())
         );
 
         verify(quotaService).recordSuccess(email);
         verify(quotaService, never()).releaseQuota(any());
         verify(quotaService, never()).recordFailure(any());
+    }
+
+    @Test
+    void processNaturalLanguageLog_whenGeminiReturns400ClientError_doesNotReleaseQuotaAndDoesNotTripCircuit() {
+        String email = "test@test.com";
+        when(nutritionService.getMeals(email)).thenReturn(List.of());
+        when(nutritionLogService.getSavedFoods(email)).thenReturn(List.of());
+        when(recipeService.getRecipes(email)).thenReturn(List.of());
+        when(promptBuilder.buildFoodLogPrompt(any(), any(), any(StringBuilder.class), any(), any(), any(), anyInt()))
+                .thenReturn("mock prompt");
+        doThrow(new ExternalApiException("Gemini", HttpStatus.BAD_REQUEST, "Corrupt body"))
+                .when(apiClient).executePrompt(eq("mock prompt"));
+
+        assertThrows(
+                ExternalApiException.class,
+                () -> geminiAiService.processNaturalLanguageLog(email, "1 manzana", null, 0, LocalDate.now())
+        );
+
+        verify(quotaService).checkAndReserveQuota(email);
+        verify(quotaService, never()).releaseQuota(any());
+        verify(quotaService, never()).recordFailure(any());
+    }
+
+    @Test
+    void processNaturalLanguageLog_whenGeminiReturns502ServerError_releasesQuotaAndRecordsFailure() {
+        String email = "test@test.com";
+        when(nutritionService.getMeals(email)).thenReturn(List.of());
+        when(nutritionLogService.getSavedFoods(email)).thenReturn(List.of());
+        when(recipeService.getRecipes(email)).thenReturn(List.of());
+        when(promptBuilder.buildFoodLogPrompt(any(), any(), any(StringBuilder.class), any(), any(), any(), anyInt()))
+                .thenReturn("mock prompt");
+        doThrow(new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY, "502 Bad Gateway"))
+                .when(apiClient).executePrompt(eq("mock prompt"));
+
+        assertThrows(
+                ExternalApiException.class,
+                () -> geminiAiService.processNaturalLanguageLog(email, "1 manzana", null, 0, LocalDate.now())
+        );
+
+        verify(quotaService).checkAndReserveQuota(email);
+        verify(quotaService).releaseQuota(email);
+        verify(quotaService).recordFailure(any());
     }
 }

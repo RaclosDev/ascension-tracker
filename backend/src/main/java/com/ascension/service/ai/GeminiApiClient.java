@@ -113,6 +113,10 @@ public class GeminiApiClient {
                 checkDeadline(deadline);
                 return cleanJsonResponse(callApiEndpointWithRetry(cachedWorkingUrl, prompt, base64Image, mimeType, deadline));
             } catch (Exception e) {
+                if (isUnrecoverableClientError(e)) {
+                    log.warn("Gemini rejected cached request with non-retryable client error: {}", e.getMessage());
+                    throw toExternalApiException(e);
+                }
                 log.warn("Cached Gemini model failed, invalidating cache and discovering models: {}", e.getMessage());
                 cachedWorkingUrl = null;
             }
@@ -143,32 +147,48 @@ public class GeminiApiClient {
                 return cleanJsonResponse(responseText);
             } catch (Exception e) {
                 lastException = e;
+                if (isUnrecoverableClientError(e)) {
+                    log.warn("Gemini model {} rejected request with non-retryable client error: {}", modelName, e.getMessage());
+                    throw toExternalApiException(e);
+                }
                 log.warn("Gemini model {} failed: {}", modelName, e.getMessage());
             }
         }
 
+        throw toExternalApiException(lastException);
+    }
+
+    private boolean isUnrecoverableClientError(Exception e) {
+        if (e instanceof RestClientResponseException rcre) {
+            int code = rcre.getStatusCode().value();
+            return rcre.getStatusCode().is4xxClientError() && code != 429 && code != 404;
+        }
+        return false;
+    }
+
+    private ExternalApiException toExternalApiException(Exception lastException) {
         if (lastException instanceof ExternalApiException eae) {
-            throw eae;
+            return eae;
         }
         if (lastException instanceof ResourceAccessException) {
-            throw new ExternalApiException("Gemini", HttpStatus.SERVICE_UNAVAILABLE,
+            return new ExternalApiException("Gemini", HttpStatus.SERVICE_UNAVAILABLE,
                     "Servicio de IA de Gemini no disponible o tiempo de espera agotado", lastException);
         }
         if (lastException instanceof RestClientResponseException rcre) {
             if (rcre.getStatusCode().value() == 429) {
-                throw new ExternalApiException("Gemini", HttpStatus.SERVICE_UNAVAILABLE,
+                return new ExternalApiException("Gemini", HttpStatus.SERVICE_UNAVAILABLE,
                         "Límite de cuota o tasa excedido en Gemini API (429)", lastException);
             }
             if (rcre.getStatusCode().is5xxServerError()) {
-                throw new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY,
+                return new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY,
                         "Servicio de IA de Gemini respondió con error 5xx: " + rcre.getStatusCode().value(), lastException);
             }
             if (rcre.getStatusCode().is4xxClientError()) {
-                throw new ExternalApiException("Gemini", HttpStatus.valueOf(rcre.getStatusCode().value()),
+                return new ExternalApiException("Gemini", HttpStatus.valueOf(rcre.getStatusCode().value()),
                         "Gemini API rechazó la petición (" + rcre.getStatusCode().value() + "): " + rcre.getStatusText(), lastException);
             }
         }
-        throw new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY,
+        return new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY,
                 "Todos los modelos de Gemini fallaron. Último error: " + (lastException != null ? lastException.getMessage() : "desconocido"), lastException);
     }
 

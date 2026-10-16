@@ -8,11 +8,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+
+import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -110,5 +114,26 @@ class GeminiApiClientTest {
 
         assertThat(ex.getStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
         assertThat(ex.getServiceName()).isEqualTo("Gemini");
+    }
+
+    @Test
+    void executePrompt_WhenClientError400_ThrowsImmediatelyWithoutTryingFallbackModels() {
+        geminiApiClient.setGeminiApiKey("dummy-key");
+        geminiApiClient.setFallbackModels("model-one,model-two");
+
+        when(restTemplate.exchange(contains("/models"), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+                .thenThrow(new RuntimeException("Discovery failed"));
+
+        HttpClientErrorException badRequestException = HttpClientErrorException.create(
+                HttpStatus.BAD_REQUEST, "Bad Request", HttpHeaders.EMPTY, "{\"error\":\"invalid image\"}".getBytes(StandardCharsets.UTF_8), null
+        );
+        when(restTemplate.exchange(contains("model-one:generateContent"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
+                .thenThrow(badRequestException);
+
+        ExternalApiException ex = assertThrows(ExternalApiException.class, () -> geminiApiClient.executePrompt("Test prompt"));
+
+        assertThat(ex.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+        // model-two was never called because 400 is an unrecoverable client error
+        verify(restTemplate, times(0)).exchange(contains("model-two:generateContent"), any(), any(), eq(String.class));
     }
 }
