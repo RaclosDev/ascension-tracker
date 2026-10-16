@@ -153,9 +153,21 @@ public class PushNotificationService {
                 try {
                     sendPush(timer.getUserEmail(), "¡Descanso terminado!", "Es hora de la siguiente serie. 💪");
                 } catch (Exception e) {
-                    log.error("Failed to deliver rest timer push notification for user {}", timer.getUserEmail(), e);
+                    log.error("Failed to deliver rest timer push notification for user {}", com.ascension.util.PiiMasker.maskEmail(timer.getUserEmail()), e);
                 }
             });
+        }
+    }
+
+    /**
+     * Purges expired rest timers older than 24 hours daily at 03:00 AM.
+     */
+    @Scheduled(cron = "${app.push.timer-cleanup-cron:0 0 3 * * *}")
+    public void cleanupOldRestTimers() {
+        try {
+            restTimerService.purgeOldTimers(Instant.now().minus(1, java.time.temporal.ChronoUnit.DAYS));
+        } catch (Exception e) {
+            log.error("Failed to execute rest timer cleanup job", e);
         }
     }
 

@@ -22,7 +22,7 @@ class PiiMaskerTest {
         assertThat(masked).doesNotContain("@");
         assertThat(masked).doesNotContain("athlete");
         assertThat(masked).doesNotContain("example");
-        assertThat(masked).hasSize("usr_".length() + 8); // 8 hex chars prefix
+        assertThat(masked).hasSize("usr_".length() + 16); // 16 hex chars (64 bits) prefix
     }
 
     @Test

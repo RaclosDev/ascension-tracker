@@ -200,7 +200,7 @@ class PiiLogVerificationTest {
         assertThat(Files.exists(sourceDir)).isTrue();
 
         Pattern vulnerableLogCall = Pattern.compile(
-                "log\\.(?:info|warn|error|debug|trace)\\([^;]*(?:(?<!maskEmail\\()\\b(?:userEmail|email|newRefreshToken\\.getEmail\\(\\)))\\b[^;]*\\)"
+                "log\\.(?:info|warn|error|debug|trace)\\([^;]*(?:(?<!maskEmail\\()\\b(?:userEmail|email|normalizedEmail|timer\\.getUserEmail\\(\\)|newRefreshToken\\.getEmail\\(\\)))\\b[^;]*\\)"
         );
 
         try (Stream<Path> paths = Files.walk(sourceDir)) {

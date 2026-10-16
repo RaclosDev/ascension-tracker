@@ -54,4 +54,13 @@ public class RestTimerService {
         restTimerRepository.saveAll(due);
         return due;
     }
+
+    @Transactional
+    public int purgeOldTimers(Instant cutoff) {
+        int deleted = restTimerRepository.deleteTimersOlderThan(cutoff);
+        if (deleted > 0) {
+            log.info("Purged {} expired rest timers older than {}", deleted, cutoff);
+        }
+        return deleted;
+    }
 }

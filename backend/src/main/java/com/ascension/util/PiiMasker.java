@@ -13,11 +13,14 @@ import java.security.NoSuchAlgorithmException;
  */
 public final class PiiMasker {
 
+    private static final byte[] LOG_SALT = "ascension-log-pseudonym-v1-salt".getBytes(StandardCharsets.UTF_8);
+
     private PiiMasker() {}
 
     /**
-     * Returns a deterministic, truncated SHA-256 hash prefix for the provided email.
-     * Example: "athlete@example.com" -> "usr_3a9f1b2c"
+     * Returns a salted, deterministic 64-bit truncated SHA-256 pseudonym for the provided email.
+     * Salting prevents rainbow-table / precomputed dictionary attacks against logs.
+     * Example: "athlete@example.com" -> "usr_3a9f1b2c4d5e6f7a"
      *
      * @param email raw email string
      * @return masked pseudonym, or "[anonymous]" if null/empty
@@ -28,9 +31,10 @@ public final class PiiMasker {
         }
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(LOG_SALT);
             byte[] digest = md.digest(email.trim().toLowerCase().getBytes(StandardCharsets.UTF_8));
             StringBuilder sb = new StringBuilder("usr_");
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 8; i++) {
                 sb.append(String.format("%02x", digest[i]));
             }
             return sb.toString();

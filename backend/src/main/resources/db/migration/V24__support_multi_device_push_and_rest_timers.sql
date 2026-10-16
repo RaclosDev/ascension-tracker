@@ -7,6 +7,11 @@ DROP INDEX IF EXISTS push_subscriptions_user_email_key;
 -- Ensure an index exists on user_email for efficient lookup across multiple devices
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_email ON push_subscriptions (user_email);
 
+-- Deduplicate any pre-existing duplicate endpoints before enforcing unique constraint
+DELETE FROM push_subscriptions a
+USING push_subscriptions b
+WHERE a.endpoint = b.endpoint AND a.id < b.id;
+
 -- Enforce uniqueness on endpoint
 DO $$
 BEGIN
