@@ -10,11 +10,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 
+import com.ascension.support.DisabledIfDockerUnavailable;
+
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@DisabledIfDockerUnavailable
 @Import(TestcontainersConfiguration.class)
 @TestPropertySource(properties = {
     "spring.flyway.baseline-on-migrate=false",
