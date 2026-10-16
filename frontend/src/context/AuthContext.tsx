@@ -26,7 +26,9 @@ export const purgeAllCaches = async () => {
   if (typeof window !== 'undefined' && 'caches' in window && window.caches) {
     try {
       const cacheNames = await window.caches.keys();
-      await Promise.all(cacheNames.map((name) => window.caches.delete(name)));
+      // Preserve workbox precache to keep PWA offline app shell intact
+      const runtimeCaches = cacheNames.filter((name) => !name.startsWith('workbox-precache'));
+      await Promise.all(runtimeCaches.map((name) => window.caches.delete(name)));
     } catch {
       // ignore
     }

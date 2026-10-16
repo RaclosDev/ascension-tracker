@@ -137,8 +137,14 @@ api.interceptors.response.use(
     ) {
       originalRequest._retry = true;
 
-      // If already valid in memory (refreshed by another tab or parallel call), do not rotate again
-      if (isTokenValid(memoryToken)) {
+      const sentAuth =
+        originalRequest.headers?.['Authorization'] || originalRequest.headers?.['authorization'];
+      const alreadyUsedCurrentMemoryToken = Boolean(
+        memoryToken && sentAuth === 'Bearer ' + memoryToken,
+      );
+
+      // If already valid in memory and was NOT the token that failed, another tab refreshed it
+      if (isTokenValid(memoryToken) && !alreadyUsedCurrentMemoryToken) {
         originalRequest.headers['Authorization'] = 'Bearer ' + memoryToken;
         return api(originalRequest);
       }
@@ -159,7 +165,10 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       const performTabLockedRefresh = async (): Promise<string> => {
-        if (isTokenValid(memoryToken)) {
+        const currentSent =
+          originalRequest.headers?.['Authorization'] || originalRequest.headers?.['authorization'];
+        const currentlyUsed = Boolean(memoryToken && currentSent === 'Bearer ' + memoryToken);
+        if (isTokenValid(memoryToken) && !currentlyUsed) {
           return memoryToken!;
         }
 
