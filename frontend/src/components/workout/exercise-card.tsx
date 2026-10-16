@@ -160,6 +160,22 @@ export const SwipeableSetRow = React.memo(
                 updateSet(rowId, s.id, { weight: e.target.value.replace(',', '.') });
               }
             }}
+            onBlur={(e) => {
+              const val = e.target.value.replace(',', '.').trim();
+              if (val) {
+                const num = parseFloat(val);
+                if (!Number.isNaN(num) && Number.isFinite(num)) {
+                  const rounded = (Math.round(num * 100) / 100).toString();
+                  if (rounded !== val) {
+                    if (isCardio) {
+                      updateSet(rowId, s.id, { distance: rounded });
+                    } else {
+                      updateSet(rowId, s.id, { weight: rounded });
+                    }
+                  }
+                }
+              }
+            }}
             className={`set-input ${s.completed ? 'completed' : ''}`}
           />
           <input

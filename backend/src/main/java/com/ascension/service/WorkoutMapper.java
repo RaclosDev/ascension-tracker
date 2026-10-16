@@ -49,7 +49,7 @@ public interface WorkoutMapper {
             return null;
         }
         try {
-            return new java.math.BigDecimal(value.trim());
+            return new java.math.BigDecimal(value.trim()).setScale(2, java.math.RoundingMode.HALF_UP);
         } catch (NumberFormatException e) {
             return null;
         }
