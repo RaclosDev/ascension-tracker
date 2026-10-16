@@ -141,7 +141,7 @@ public class PushNotificationService {
             );
             pushService.send(notification);
         } catch (Exception e) {
-            log.error("Failed to send push to {}", userEmail, e);
+            log.error("Failed to send push to {}", com.ascension.util.PiiMasker.maskEmail(userEmail), e);
             if (e.getMessage() != null && e.getMessage().contains("410")) {
                 subscriptionRepo.findByUserEmail(userEmail).ifPresent(subscriptionRepo::delete);
             }

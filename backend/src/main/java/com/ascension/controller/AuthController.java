@@ -130,8 +130,8 @@ public class AuthController {
         if (userByEmail.isPresent()) {
             String existingSub = userByEmail.get().googleSub();
             if (existingSub != null && !existingSub.equals(googleSub)) {
-                log.error("SECURITY ALERT: Identity mismatch for email '{}'. Stored google_sub='{}', incoming google_sub='{}'. Possible recycled email or account takeover attempt.",
-                        email, existingSub, googleSub);
+                log.error("SECURITY ALERT: Identity mismatch for account '{}'. Stored google_sub='{}', incoming google_sub='{}'. Possible account takeover attempt.",
+                        com.ascension.util.PiiMasker.maskEmail(email), existingSub, googleSub);
                 return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
             }
         }
@@ -141,8 +141,8 @@ public class AuthController {
         if (userBySub.isPresent()) {
             String existingEmail = userBySub.get().email();
             if (existingEmail != null && !existingEmail.equalsIgnoreCase(email)) {
-                log.error("SECURITY ALERT: Identity mismatch for google_sub '{}'. Already assigned to email '{}', incoming email='{}'. Rejecting login.",
-                        googleSub, existingEmail, email);
+                log.error("SECURITY ALERT: Identity mismatch for google_sub '{}'. Already assigned to account '{}', incoming account='{}'. Rejecting login.",
+                        googleSub, com.ascension.util.PiiMasker.maskEmail(existingEmail), com.ascension.util.PiiMasker.maskEmail(email));
                 return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
             }
         }
@@ -233,7 +233,7 @@ public class AuthController {
             }
 
             String token = generateJwt(email, name, picture);
-            log.info("Refresh token rotated successfully for user {}", email);
+            log.info("Refresh token rotated successfully for user {}", com.ascension.util.PiiMasker.maskEmail(email));
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(newRefreshToken.getPlainToken()).toString())
