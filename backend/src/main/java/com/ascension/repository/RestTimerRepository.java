@@ -33,4 +33,9 @@ public interface RestTimerRepository extends JpaRepository<RestTimer, Long> {
             @Param("pendingStatus") RestTimerStatus pendingStatus,
             @Param("cancelledStatus") RestTimerStatus cancelledStatus
     );
+
+    @Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM RestTimer t WHERE t.fireAt < :cutoff")
+    int deleteTimersOlderThan(@Param("cutoff") Instant cutoff);
 }
