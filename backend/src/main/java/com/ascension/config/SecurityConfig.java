@@ -128,12 +128,17 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder() {
+    public com.ascension.security.UserRevocationJwtValidator userRevocationJwtValidator(com.ascension.service.UserService userService) {
+        return new com.ascension.security.UserRevocationJwtValidator(userService);
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder(com.ascension.security.UserRevocationJwtValidator userRevocationJwtValidator) {
         SecretKey key = new SecretKeySpec(jwtSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(key).build();
         org.springframework.security.oauth2.core.OAuth2TokenValidator<org.springframework.security.oauth2.jwt.Jwt> withIssuer = 
             org.springframework.security.oauth2.jwt.JwtValidators.createDefaultWithIssuer("ascension-backend");
-        decoder.setJwtValidator(withIssuer);
+        decoder.setJwtValidator(new org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator<>(withIssuer, userRevocationJwtValidator));
         return decoder;
     }
 

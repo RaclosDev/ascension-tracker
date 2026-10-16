@@ -76,7 +76,7 @@ Esta aplicación ha sido refactorizada repetidamente bajo estrictos estándares 
 
 2. **Seguridad y Rate Limiting:**
    - La API pública está protegida por un interceptor de `Caffeine` configurado con un límite estricto de tamaño (`maximumSize(10_000)`) para prevenir ataques de agotamiento de RAM (OOM) por escaneo de IPs.
-   - Autenticación delegada en Google (OAuth2 ID Tokens) verificada criptográficamente en backend. Emisión de JWT propios (HS256) de vida corta junto con refresh tokens hasheados.
+   - Autenticación delegada en Google (OAuth2 ID Tokens) verificada criptográficamente en backend. Emisión de JWT propios (HS256) de vida corta (15 min por defecto, configurable con `JWT_EXPIRATION_MS`) junto con refresh tokens hasheados.
 
 3. **Infraestructura CI/CD y Testing:**
    - **GitHub Actions:** Pipeline completo que verifica el *build*, el linter y los tests en cada PR a `main`. Emplea un sistema de caché avanzado (`actions/cache@v4`) para retener dependencias de Maven y los binarios del navegador de Playwright.
