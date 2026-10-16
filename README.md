@@ -91,7 +91,8 @@ Esta aplicación ha sido refactorizada repetidamente bajo estrictos estándares 
 
 3. **Infraestructura CI/CD y Testing:**
    - **GitHub Actions:** Pipeline completo que verifica el *build*, el linter y los tests en cada PR a `main`. Emplea un sistema de caché avanzado (`actions/cache@v4`) para retener dependencias de Maven y los binarios del navegador de Playwright.
-   - **Integración con Testcontainers:** Levanta una base de datos PostgreSQL real efímera dentro de Docker durante el paso de Testing (`mvn test`) para garantizar que las queries nativas son 100% compatibles.
+   - **Integración con Testcontainers y Zero-Base Migrations:** Levanta una base de datos PostgreSQL real efímera dentro de Docker durante el paso de Testing (`mvn test`) para garantizar que las queries nativas y la secuencia completa de migraciones Flyway (`V1`..`V24`) aplican limpiamente desde cero sin dependencias de H2 ni bases de datos locales no controladas (`baseline-on-migrate=false`).
+   - **Playwright E2E y Backend Stub:** Los tests E2E del frontend emplean una arquitectura stub/mock hermética (`setupAuthMocks`) para interceptar todas las peticiones a la API y Google OAuth. Esto permite ejecutar la suite E2E en CI de manera determinista, aislada y sin dependencias de red externa ni credenciales reales.
    - **Docker Contenedores Desacoplados:** Arquitectura modular de contenedores independientes para Backend (Spring Boot JRE Alpine) y Frontend (Nginx unprivileged), orquestados con Docker Compose y probados en CI.
 
 4. **Calidad Frontend:**
@@ -118,12 +119,12 @@ Esta aplicación ha sido refactorizada repetidamente bajo estrictos estándares 
 | Capa | Tecnología |
 |---|---|
 | **Core** | Java 17 + Spring Boot 3.3 |
-| **Persistencia** | PostgreSQL 16 / H2 (Dev) + Spring Data JPA + Hibernate + Flyway |
+| **Persistencia** | PostgreSQL 16 + Testcontainers (Testing) + Spring Data JPA + Hibernate + Flyway |
 | **Seguridad** | Spring Security, OAuth2 Resource Server, `google-api-client` |
 | **Rendimiento** | Caché en memoria con `Caffeine`, Compresión GZIP nativa, `MapStruct` |
 | **IA & Proxies** | Google Gemini API (Visión/Chat), FatSecret Platform (OAuth 1.0a proxy) |
 | **Notificaciones** | Web Push (`web-push`) + BouncyCastle Cryptography (`bcprov-jdk18on`) |
-| **Testing** | JUnit 5 + Testcontainers |
+| **Testing** | JUnit 5 + Mockito + Testcontainers (PostgreSQL) + Playwright (E2E con backend mocks) |
 
 ---
 
