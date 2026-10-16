@@ -36,6 +36,9 @@ class GeminiAiServiceTest {
     private GeminiQuotaService quotaService;
 
     @Mock
+    private UserDataQuotaService userDataQuotaService;
+
+    @Mock
     private NutritionService nutritionService;
 
     @Mock
@@ -143,8 +146,52 @@ class GeminiAiServiceTest {
 
         geminiAiService.processNaturalLanguageLog(email, "1 manzana", dataUrl, 0, java.time.LocalDate.now());
 
-        verify(quotaService).checkQuotaAndCircuit(email);
+        verify(userDataQuotaService).checkFoodLogQuota(email, 1);
+        verify(quotaService).checkAndReserveQuota(email);
         verify(quotaService).recordSuccess(email);
         verify(apiClient).executePrompt(eq("mock prompt"), eq(rawBase64), eq("image/png"));
+    }
+
+    @Test
+    void processNaturalLanguageLog_whenFoodLogQuotaExceeded_throwsUserDataQuotaExceededBeforeGemini() {
+        String email = "test@test.com";
+        doThrow(new com.ascension.exception.UserDataQuotaExceededException("Limite de alimentos alcanzado"))
+                .when(userDataQuotaService).checkFoodLogQuota(email, 1);
+
+        assertThrows(
+                com.ascension.exception.UserDataQuotaExceededException.class,
+                () -> geminiAiService.processNaturalLanguageLog(email, "1 manzana", null, 0, java.time.LocalDate.now())
+        );
+
+        verify(userDataQuotaService).checkFoodLogQuota(email, 1);
+        verify(quotaService, never()).checkAndReserveQuota(any());
+        verify(apiClient, never()).executePrompt(any());
+        verify(quotaService, never()).releaseQuota(any());
+    }
+
+    @Test
+    void processNaturalLanguageLog_whenGeminiSucceedsButDbFails_doesNotReleaseQuota() throws Exception {
+        String email = "test@test.com";
+        when(nutritionService.getMeals(email)).thenReturn(List.of());
+        when(nutritionLogService.getSavedFoods(email)).thenReturn(List.of());
+        when(recipeService.getRecipes(email)).thenReturn(List.of());
+        when(promptBuilder.buildFoodLogPrompt(any(), any(), any(StringBuilder.class), any(), any(), any(), anyInt()))
+                .thenReturn("mock prompt");
+        when(apiClient.executePrompt(eq("mock prompt"))).thenReturn("[{\"product\":\"Apple\"}]");
+
+        com.ascension.dto.FoodLogDTO parsedDto = com.ascension.dto.FoodLogDTO.builder().product("Apple").build();
+        when(jsonParser.parseFoodLogs(eq("[{\"product\":\"Apple\"}]"), anyInt(), anyInt(), any(), any()))
+                .thenReturn(List.of(parsedDto));
+        doThrow(new com.ascension.exception.UserDataQuotaExceededException("Quota exceeded on save"))
+                .when(nutritionLogService).addFoodLog(eq(email), any());
+
+        assertThrows(
+                com.ascension.exception.UserDataQuotaExceededException.class,
+                () -> geminiAiService.processNaturalLanguageLog(email, "1 manzana", null, 0, java.time.LocalDate.now())
+        );
+
+        verify(quotaService).recordSuccess(email);
+        verify(quotaService, never()).releaseQuota(any());
+        verify(quotaService, never()).recordFailure(any());
     }
 }

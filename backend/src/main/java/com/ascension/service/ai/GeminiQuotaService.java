@@ -83,16 +83,40 @@ public class GeminiQuotaService {
     }
 
     public void recordFailure(Throwable t) {
-        if (t instanceof IllegalArgumentException) {
-            log.debug("Ignoring client validation error for circuit breaker: {}", t.getMessage());
+        if (!isCircuitBreakerFailure(t)) {
+            log.debug("Ignoring non-upstream failure for circuit breaker: {}", t != null ? t.getMessage() : "null");
             return;
         }
         int failures = consecutiveFailures.incrementAndGet();
-        log.warn("Gemini call failed (consecutive: {}): {}", failures, t.getMessage());
+        log.warn("Gemini upstream call failed (consecutive: {}): {}", failures, t.getMessage());
         if (failures >= consecutiveFailuresThreshold) {
             circuitOpenUntil = System.currentTimeMillis() + circuitCooldownMs;
             log.error("Gemini Circuit Breaker TRIPPED OPEN for {}ms after {} consecutive failures", circuitCooldownMs, failures);
         }
+    }
+
+    private boolean isCircuitBreakerFailure(Throwable t) {
+        if (t == null) return false;
+        if (t instanceof IllegalArgumentException) {
+            return false;
+        }
+        if (t instanceof com.ascension.exception.ExternalApiException eae) {
+            org.springframework.http.HttpStatus status = eae.getStatus();
+            if (status == null) return false;
+            return status.is5xxServerError() || status == org.springframework.http.HttpStatus.TOO_MANY_REQUESTS
+                    || status == org.springframework.http.HttpStatus.GATEWAY_TIMEOUT
+                    || status == org.springframework.http.HttpStatus.REQUEST_TIMEOUT;
+        }
+        if (t instanceof org.springframework.web.client.ResourceAccessException) {
+            return true;
+        }
+        if (t instanceof java.util.concurrent.TimeoutException || t instanceof java.io.InterruptedIOException) {
+            return true;
+        }
+        if (t.getCause() != null && t.getCause() != t) {
+            return isCircuitBreakerFailure(t.getCause());
+        }
+        return false;
     }
 
     private synchronized void checkAndResetDailyQuotas() {
