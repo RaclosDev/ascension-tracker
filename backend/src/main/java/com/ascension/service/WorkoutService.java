@@ -25,14 +25,17 @@ public class WorkoutService {
 
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<WorkoutDTO> getWorkoutHistory(String userEmail, int page, int size) {
-        org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(page, size);
+        int boundedPage = Math.max(0, page);
+        int boundedSize = Math.min(Math.max(1, size), 100);
+        org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(boundedPage, boundedSize);
         org.springframework.data.domain.Page<Workout> w = workoutRepository.findByUserEmailOrderByStartedAtDesc(userEmail, pageRequest);
         return w.map(this::toFullDTO);
     }
 
     @Transactional(readOnly = true)
     public List<WorkoutDTO> getRecentWorkouts(String userEmail, Long since) {
-        List<Workout> w = workoutRepository.findByUserEmailAndStartedAtGreaterThanEqualOrderByStartedAtDesc(userEmail, since);
+        Long boundedSince = (since != null && since >= 0) ? since : 0L;
+        List<Workout> w = workoutRepository.findByUserEmailAndStartedAtGreaterThanEqualOrderByStartedAtDesc(userEmail, boundedSince);
         return w.stream().map(this::toFullDTO).collect(Collectors.toList());
     }
 
@@ -86,48 +89,22 @@ public class WorkoutService {
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public WorkoutStatsDTO getStats(String userEmail) {
-        List<Workout> workouts = workoutRepository.findAllByUserEmailOrderByStartedAtDesc(userEmail);
-        long totalWorkouts = workouts.size();
-        long totalDurationSeconds = 0;
-        double totalVolume = 0.0;
-        long totalSets = 0;
-
-        for (Workout w : workouts) {
-            if (w.getStartedAt() != null && w.getFinishedAt() != null && w.getFinishedAt() > w.getStartedAt()) {
-                long diff = w.getFinishedAt() - w.getStartedAt();
-                if (w.getStartedAt() > 100_000_000_000L) { // Epoch in milliseconds
-                    totalDurationSeconds += (diff / 1000);
-                } else {
-                    totalDurationSeconds += diff;
-                }
-            }
-
-            if (w.getExercises() != null) {
-                for (WorkoutExercise ex : w.getExercises()) {
-                    if (ex.getSets() != null) {
-                        totalSets += ex.getSets().size();
-                        for (WorkoutSet s : ex.getSets()) {
-                            try {
-                                if (s.getWeight() != null && s.getReps() != null) {
-                                    double weight = Double.parseDouble(s.getWeight().trim());
-                                    double reps = Double.parseDouble(s.getReps().trim());
-                                    if (weight > 0 && reps > 0) {
-                                        totalVolume += (weight * reps);
-                                    }
-                                }
-                            } catch (Exception ignored) {
-                            }
-                        }
-                    }
-                }
-            }
+        WorkoutStatsProjection p = workoutRepository.getWorkoutStats(userEmail);
+        if (p == null) {
+            return WorkoutStatsDTO.builder()
+                    .totalWorkouts(0)
+                    .totalDurationSeconds(0)
+                    .totalVolume(0.0)
+                    .totalSets(0)
+                    .build();
         }
 
+        double volume = p.getTotalVolume() != null ? p.getTotalVolume().doubleValue() : 0.0;
         return WorkoutStatsDTO.builder()
-                .totalWorkouts(totalWorkouts)
-                .totalDurationSeconds(totalDurationSeconds)
-                .totalVolume(Math.round(totalVolume * 100.0) / 100.0)
-                .totalSets(totalSets)
+                .totalWorkouts(p.getTotalWorkouts())
+                .totalDurationSeconds(p.getTotalDurationSeconds())
+                .totalVolume(Math.round(volume * 100.0) / 100.0)
+                .totalSets(p.getTotalSets())
                 .build();
     }
 
@@ -300,8 +277,8 @@ public class WorkoutService {
                             .workoutExercise(we)
                             .orderIndex(setOrder++)
                             .type(setDTO.getType())
-                            .weight(setDTO.getWeight())
-                            .reps(setDTO.getReps())
+                            .weight(workoutMapper.stringToBigDecimal(setDTO.getWeight()))
+                            .reps(workoutMapper.stringToBigDecimal(setDTO.getReps()))
                             .distance(setDTO.getDistance())
                             .duration(setDTO.getDuration())
                             .rpe(setDTO.getRpe())

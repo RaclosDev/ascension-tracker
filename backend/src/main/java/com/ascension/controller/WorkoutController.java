@@ -9,10 +9,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/api/workouts")
 @RequiredArgsConstructor
@@ -25,15 +29,15 @@ public class WorkoutController {
     @GetMapping
     public ResponseEntity<org.springframework.data.domain.Page<WorkoutDTO>> getHistory(
             @AuthenticationPrincipal Jwt jwt,
-            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
-            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "La página debe ser mayor o igual a 0") int page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "El tamaño de página debe ser al menos 1") @Max(value = 100, message = "El tamaño de página no puede exceder 100") int size) {
         return ResponseEntity.ok(workoutService.getWorkoutHistory(jwt.getClaimAsString("email"), page, size));
     }
 
     @GetMapping("/recent")
     public ResponseEntity<List<WorkoutDTO>> getRecent(
             @AuthenticationPrincipal Jwt jwt,
-            @org.springframework.web.bind.annotation.RequestParam Long since) {
+            @RequestParam @Min(value = 0, message = "El parámetro 'since' no puede ser negativo") Long since) {
         return ResponseEntity.ok(workoutService.getRecentWorkouts(jwt.getClaimAsString("email"), since));
     }
 

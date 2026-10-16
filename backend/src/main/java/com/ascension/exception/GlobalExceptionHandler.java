@@ -30,6 +30,30 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(errorMessage, HttpStatus.BAD_REQUEST, traceId);
     }
 
+    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleConstraintViolationException(jakarta.validation.ConstraintViolationException ex) {
+        String traceId = UUID.randomUUID().toString();
+        String errorMessage = ex.getConstraintViolations().stream()
+                .map(jakarta.validation.ConstraintViolation::getMessage)
+                .findFirst()
+                .orElse("Parametro invalido");
+        log.warn("Constraint violation: {} [trace_id: {}]", errorMessage, traceId);
+        return buildErrorResponse(errorMessage, HttpStatus.BAD_REQUEST, traceId);
+    }
+
+    @ExceptionHandler(org.springframework.web.method.annotation.HandlerMethodValidationException.class)
+    public ResponseEntity<ApiErrorResponse> handleHandlerMethodValidationException(org.springframework.web.method.annotation.HandlerMethodValidationException ex) {
+        String traceId = UUID.randomUUID().toString();
+        String errorMessage = ex.getAllValidationResults().stream()
+                .flatMap(r -> r.getResolvableErrors().stream())
+                .map(org.springframework.context.MessageSourceResolvable::getDefaultMessage)
+                .filter(java.util.Objects::nonNull)
+                .findFirst()
+                .orElse("Parametro invalido");
+        log.warn("Handler method validation error: {} [trace_id: {}]", errorMessage, traceId);
+        return buildErrorResponse(errorMessage, HttpStatus.BAD_REQUEST, traceId);
+    }
+
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<ApiErrorResponse> handleSecurityException(SecurityException ex) {
         String traceId = UUID.randomUUID().toString();
