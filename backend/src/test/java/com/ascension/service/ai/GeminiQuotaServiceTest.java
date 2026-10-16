@@ -29,22 +29,37 @@ class GeminiQuotaServiceTest {
 
     @Test
     void checkQuota_WhenUserReachesDailyLimit_ThrowsAiQuotaExceededException() {
-        quotaService.recordSuccess("user@example.com");
-        quotaService.recordSuccess("user@example.com");
+        quotaService.checkAndReserveQuota("user@example.com");
+        quotaService.checkAndReserveQuota("user@example.com");
 
         AiQuotaExceededException ex = assertThrows(
                 AiQuotaExceededException.class,
                 () -> quotaService.checkQuotaAndCircuit("user@example.com")
         );
 
-        assertThat(ex.getMessage()).contains("Has alcanzado tu límite diario");
+        assertThat(ex.getMessage()).contains("limite diario");
+    }
+
+    @Test
+    void releaseQuota_RefundsUserAndGlobalSlotsOnUpstreamFailure() {
+        quotaService.checkAndReserveQuota("user@example.com");
+        quotaService.checkAndReserveQuota("user@example.com");
+
+        // Limit reached
+        assertThrows(AiQuotaExceededException.class, () -> quotaService.checkQuotaAndCircuit("user@example.com"));
+
+        // Release one slot
+        quotaService.releaseQuota("user@example.com");
+
+        // Now can reserve again
+        assertDoesNotThrow(() -> quotaService.checkAndReserveQuota("user@example.com"));
     }
 
     @Test
     void checkQuota_WhenGlobalLimitReached_ThrowsAiQuotaExceededException() {
         quotaService.setUserDailyLimit(100);
         for (int i = 0; i < 5; i++) {
-            quotaService.recordSuccess("user" + i + "@example.com");
+            quotaService.checkAndReserveQuota("user" + i + "@example.com");
         }
 
         AiQuotaExceededException ex = assertThrows(
@@ -52,7 +67,16 @@ class GeminiQuotaServiceTest {
                 () -> quotaService.checkQuotaAndCircuit("another_user@example.com")
         );
 
-        assertThat(ex.getMessage()).contains("Se ha alcanzado el límite diario global");
+        assertThat(ex.getMessage()).contains("limite diario global");
+    }
+
+    @Test
+    void circuitBreaker_IgnoresClientValidationErrors() {
+        for (int i = 0; i < 10; i++) {
+            quotaService.recordFailure(new IllegalArgumentException("Invalid base64 image or bad dimension"));
+        }
+        assertThat(quotaService.getConsecutiveFailures()).isEqualTo(0);
+        assertThat(quotaService.isCircuitOpen()).isFalse();
     }
 
     @Test
@@ -70,7 +94,7 @@ class GeminiQuotaServiceTest {
                 AiQuotaExceededException.class,
                 () -> quotaService.checkQuotaAndCircuit("user@example.com")
         );
-        assertThat(ex.getMessage()).contains("degradado tras múltiples fallos consecutivos");
+        assertThat(ex.getMessage()).contains("multiples fallos consecutivos");
     }
 
     @Test

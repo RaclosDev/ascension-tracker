@@ -59,21 +59,21 @@ class GeminiAiServiceTest {
     }
 
     @Test
-    void processNutritionalLabel_WithGarbageBytes_ThrowsException() {
+    void processNutritionalLabel_WithGarbageBytes_ThrowsExceptionAndDoesNotRecordCircuitBreakerFailure() {
         byte[] garbage = new byte[100];
         Arrays.fill(garbage, (byte) 0);
         MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", garbage);
 
         assertThrows(
-                RuntimeException.class,
+                IllegalArgumentException.class,
                 () -> geminiAiService.processNutritionalLabel("test@test.com", file)
         );
         verify(quotaService).checkQuotaAndCircuit("test@test.com");
-        verify(quotaService).recordFailure(any());
+        verify(quotaService, never()).recordFailure(any());
     }
 
     @Test
-    void processNutritionalLabel_WithFakeJpegHeaderButGarbageBody_ThrowsException() {
+    void processNutritionalLabel_WithFakeJpegHeaderButGarbageBody_ThrowsExceptionAndDoesNotRecordCircuitBreakerFailure() {
         byte[] fakeJpeg = new byte[100];
         fakeJpeg[0] = (byte) 0xFF;
         fakeJpeg[1] = (byte) 0xD8;
@@ -81,11 +81,11 @@ class GeminiAiServiceTest {
         MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", fakeJpeg);
 
         assertThrows(
-                RuntimeException.class,
+                IllegalArgumentException.class,
                 () -> geminiAiService.processNutritionalLabel("test@test.com", file)
         );
         verify(quotaService).checkQuotaAndCircuit("test@test.com");
-        verify(quotaService).recordFailure(any());
+        verify(quotaService, never()).recordFailure(any());
     }
 
     @Test
