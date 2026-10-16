@@ -52,6 +52,7 @@ public class FoodLogDTO {
     @Max(value = 5000, message = "Las grasas no pueden superar los 5.000g")
     private double fat;
     
+    @Size(max = 10000, message = "El campo portionsJson excede el límite máximo de 10000 caracteres")
     private String portionsJson;
 
     @AssertTrue(message = "Los valores nutricionales deben ser números válidos y finitos")

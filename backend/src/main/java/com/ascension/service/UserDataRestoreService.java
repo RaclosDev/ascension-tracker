@@ -607,7 +607,7 @@ public class UserDataRestoreService {
     private java.math.BigDecimal parseBigDecimal(String val) {
         if (val == null || val.trim().isEmpty()) return null;
         try {
-            return new java.math.BigDecimal(val.trim().replace(',', '.'));
+            return new java.math.BigDecimal(val.trim().replace(',', '.')).setScale(2, java.math.RoundingMode.HALF_UP);
         } catch (NumberFormatException e) {
             return null;
         }

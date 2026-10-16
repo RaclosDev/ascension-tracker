@@ -55,7 +55,7 @@ public class PushController {
     ) {
         String email = jwt.getClaimAsString("email");
         if (request != null && request.endpoint != null && !request.endpoint.isBlank()) {
-            pushService.removeSubscriptionByEndpoint(request.endpoint);
+            pushService.removeSubscriptionByEndpoint(request.endpoint, email);
         } else {
             pushService.removeSubscription(email);
             pushService.cancelRestNotification(email);
