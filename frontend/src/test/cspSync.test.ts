@@ -39,6 +39,7 @@ describe('CSP Policy Synchronization (Single Source of Truth)', () => {
     expect(imgSrc).not.toContain('https:');
     expect(imgSrc).toContain('https://lh3.googleusercontent.com');
     expect(imgSrc).toContain('https://images.openfoodfacts.org');
+    expect(imgSrc).toContain('https://raw.githubusercontent.com');
   });
 
   it('frontend/security-headers.conf must match the canonical CSP policy', () => {
@@ -66,7 +67,9 @@ describe('CSP Policy Synchronization (Single Source of Truth)', () => {
 
   it('backend SecurityConfig.java CSP_POLICY must match the canonical CSP policy', () => {
     const secContent = fs.readFileSync(securityConfigFile, 'utf-8');
-    const match = secContent.match(/public\s+static\s+final\s+String\s+CSP_POLICY\s*=\s*"([^"]+)";/);
+    const match = secContent.match(
+      /public\s+static\s+final\s+String\s+CSP_POLICY\s*=\s*"([^"]+)";/,
+    );
     expect(match).not.toBeNull();
     const javaCsp = match![1];
     expect(javaCsp).toBe(canonicalCsp);

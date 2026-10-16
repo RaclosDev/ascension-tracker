@@ -10,7 +10,8 @@
       "data:",
       "blob:",
       "https://lh3.googleusercontent.com",
-      "https://images.openfoodfacts.org"
+      "https://images.openfoodfacts.org",
+      "https://raw.githubusercontent.com"
     ],
     "connect-src": [
       "'self'",
