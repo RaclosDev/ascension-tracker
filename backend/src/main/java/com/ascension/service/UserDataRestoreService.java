@@ -265,8 +265,8 @@ public class UserDataRestoreService {
                                     .workoutExercise(we)
                                     .orderIndex(setOrder++)
                                     .type(sDTO.getType() != null ? sDTO.getType() : "normal")
-                                    .weight(sDTO.getWeight())
-                                    .reps(sDTO.getReps())
+                                    .weight(parseBigDecimal(sDTO.getWeight()))
+                                    .reps(parseBigDecimal(sDTO.getReps()))
                                     .distance(sDTO.getDistance())
                                     .duration(sDTO.getDuration())
                                     .rpe(sDTO.getRpe())
@@ -599,6 +599,15 @@ public class UserDataRestoreService {
         if (val == null || val.trim().isEmpty()) return null;
         try {
             return Integer.parseInt(val.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private java.math.BigDecimal parseBigDecimal(String val) {
+        if (val == null || val.trim().isEmpty()) return null;
+        try {
+            return new java.math.BigDecimal(val.trim().replace(',', '.'));
         } catch (NumberFormatException e) {
             return null;
         }

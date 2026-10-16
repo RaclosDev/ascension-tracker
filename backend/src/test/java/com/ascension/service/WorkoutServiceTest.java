@@ -222,38 +222,75 @@ class WorkoutServiceTest {
     }
 
     @Test
-    void getStats_calculatesRealMetricsAccurately() {
+    void getWorkoutHistory_clampsSizeTo100WhenRequestedExceedsMax() {
         String email = "athlete@example.com";
-        com.ascension.model.WorkoutSet set1 = com.ascension.model.WorkoutSet.builder()
-                .weight("100")
-                .reps("10")
-                .build();
-        com.ascension.model.WorkoutSet set2 = com.ascension.model.WorkoutSet.builder()
-                .weight("80.5")
-                .reps("8")
-                .build();
+        org.mockito.ArgumentCaptor<org.springframework.data.domain.Pageable> pageableCaptor =
+                org.mockito.ArgumentCaptor.forClass(org.springframework.data.domain.Pageable.class);
 
-        com.ascension.model.WorkoutExercise we = com.ascension.model.WorkoutExercise.builder()
-                .sets(new java.util.LinkedHashSet<>(java.util.List.of(set1, set2)))
-                .build();
+        when(workoutRepository.findByUserEmailOrderByStartedAtDesc(eq(email), pageableCaptor.capture()))
+                .thenReturn(org.springframework.data.domain.Page.empty());
 
-        Workout w1 = Workout.builder()
-                .id("w-1")
-                .userEmail(email)
-                .startedAt(1700000000000L)
-                .finishedAt(1700003600000L)
-                .exercises(new java.util.LinkedHashSet<>(java.util.List.of(we)))
-                .build();
+        workoutService.getWorkoutHistory(email, 0, 1_000_000);
 
-        when(workoutRepository.findAllByUserEmailOrderByStartedAtDesc(email))
-                .thenReturn(java.util.List.of(w1));
+        org.springframework.data.domain.Pageable captured = pageableCaptor.getValue();
+        assertThat(captured.getPageSize()).isEqualTo(100);
+        assertThat(captured.getPageNumber()).isEqualTo(0);
+    }
+
+    @Test
+    void getWorkoutHistory_clampsNegativePageAndZeroSize() {
+        String email = "athlete@example.com";
+        org.mockito.ArgumentCaptor<org.springframework.data.domain.Pageable> pageableCaptor =
+                org.mockito.ArgumentCaptor.forClass(org.springframework.data.domain.Pageable.class);
+
+        when(workoutRepository.findByUserEmailOrderByStartedAtDesc(eq(email), pageableCaptor.capture()))
+                .thenReturn(org.springframework.data.domain.Page.empty());
+
+        workoutService.getWorkoutHistory(email, -5, 0);
+
+        org.springframework.data.domain.Pageable captured = pageableCaptor.getValue();
+        assertThat(captured.getPageSize()).isEqualTo(1);
+        assertThat(captured.getPageNumber()).isEqualTo(0);
+    }
+
+    @Test
+    void getStats_calculatesRealMetricsAccuratelyViaDatabaseAggregation() {
+        String email = "athlete@example.com";
+
+        com.ascension.repository.WorkoutStatsProjection projection = Mockito.mock(com.ascension.repository.WorkoutStatsProjection.class);
+        when(projection.getTotalWorkouts()).thenReturn(3L);
+        when(projection.getTotalDurationSeconds()).thenReturn(7200L);
+        when(projection.getTotalSets()).thenReturn(15L);
+        when(projection.getTotalVolume()).thenReturn(new java.math.BigDecimal("12500.50"));
+
+        when(workoutRepository.getWorkoutStats(email)).thenReturn(projection);
 
         com.ascension.dto.WorkoutStatsDTO stats = workoutService.getStats(email);
 
-        assertThat(stats.getTotalWorkouts()).isEqualTo(1);
-        assertThat(stats.getTotalDurationSeconds()).isEqualTo(3600);
-        assertThat(stats.getTotalSets()).isEqualTo(2);
-        assertThat(stats.getTotalVolume()).isEqualTo(1644.0);
+        assertThat(stats.getTotalWorkouts()).isEqualTo(3);
+        assertThat(stats.getTotalDurationSeconds()).isEqualTo(7200);
+        assertThat(stats.getTotalSets()).isEqualTo(15);
+        assertThat(stats.getTotalVolume()).isEqualTo(12500.5);
+
+        // Verify that database aggregation is used and full entities are NEVER loaded into memory
+        verify(workoutRepository).getWorkoutStats(email);
+        verify(workoutRepository, never()).findAllByUserEmailOrderByStartedAtDesc(anyString());
+    }
+
+    @Test
+    void getStats_whenNoWorkoutsExist_returnsZeroedStatsWithoutLoadingEntities() {
+        String email = "newuser@example.com";
+        when(workoutRepository.getWorkoutStats(email)).thenReturn(null);
+
+        com.ascension.dto.WorkoutStatsDTO stats = workoutService.getStats(email);
+
+        assertThat(stats.getTotalWorkouts()).isEqualTo(0);
+        assertThat(stats.getTotalDurationSeconds()).isEqualTo(0);
+        assertThat(stats.getTotalSets()).isEqualTo(0);
+        assertThat(stats.getTotalVolume()).isEqualTo(0.0);
+
+        verify(workoutRepository).getWorkoutStats(email);
+        verify(workoutRepository, never()).findAllByUserEmailOrderByStartedAtDesc(anyString());
     }
 }
 
