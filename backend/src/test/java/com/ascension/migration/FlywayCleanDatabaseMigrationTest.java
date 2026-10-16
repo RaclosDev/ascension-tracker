@@ -37,8 +37,8 @@ class FlywayCleanDatabaseMigrationTest {
                 .isNotEmpty();
 
         assertThat(appliedMigrations.length)
-                .as("All 24 Flyway migrations (V1 to V24) should be applied")
-                .isGreaterThanOrEqualTo(24);
+                .as("All 25 Flyway migrations (V1 to V25) should be applied")
+                .isGreaterThanOrEqualTo(25);
 
         boolean allSuccessful = Arrays.stream(appliedMigrations)
                 .allMatch(m -> m.getState().isApplied());

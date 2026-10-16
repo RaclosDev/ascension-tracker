@@ -1,17 +1,40 @@
 package com.ascension.controller;
 
+import com.ascension.config.SecurityConfig;
+import com.ascension.exception.TokenRefreshException;
+import com.ascension.interceptor.RateLimitInterceptor;
 import com.ascension.model.RefreshToken;
+import com.ascension.service.AccountDeletionService;
 import com.ascension.service.RefreshTokenService;
+import com.ascension.service.UserService;
+import com.ascension.service.UserService.User;
+import com.ascension.service.UserService.UserSecurityState;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,14 +43,14 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.hamcrest.Matchers.containsString;
 
-@org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest(AuthController.class)
-@org.springframework.context.annotation.Import(com.ascension.config.SecurityConfig.class)
-@org.springframework.test.context.TestPropertySource(properties = {
+@WebMvcTest(AuthController.class)
+@Import(SecurityConfig.class)
+@TestPropertySource(properties = {
     "app.jwt.secret=this_is_a_very_long_secret_that_is_at_least_32_bytes_long_for_tests",
     "google.client-id=test-google-client-id"
 })
@@ -37,7 +60,7 @@ class AuthControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private org.springframework.security.oauth2.jwt.JwtEncoder jwtEncoder;
+    private JwtEncoder jwtEncoder;
 
     @Autowired
     private AuthController authController;
@@ -46,18 +69,18 @@ class AuthControllerTest {
     private RefreshTokenService refreshTokenService;
 
     @MockBean
-    private com.ascension.service.UserService userService;
+    private UserService userService;
 
     @MockBean
-    private com.ascension.service.AccountDeletionService accountDeletionService;
+    private AccountDeletionService accountDeletionService;
 
     @MockBean
-    private com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier googleIdTokenVerifier;
+    private GoogleIdTokenVerifier googleIdTokenVerifier;
 
     @MockBean
-    private com.ascension.interceptor.RateLimitInterceptor rateLimitInterceptor;
+    private RateLimitInterceptor rateLimitInterceptor;
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     void setUpRateLimit() throws Exception {
         when(rateLimitInterceptor.preHandle(
                 org.mockito.ArgumentMatchers.any(),
@@ -68,21 +91,21 @@ class AuthControllerTest {
 
     @Test
     void refresh_WhenTokenMissing_ReturnsUnauthorized() throws Exception {
-        mockMvc.perform(post("/api/auth/refresh").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void refresh_WhenTokenNotInDatabase_ReturnsUnauthorized() throws Exception {
         when(refreshTokenService.rotateRefreshToken(anyString()))
-                .thenThrow(new com.ascension.exception.TokenRefreshException("Refresh token not found"));
+                .thenThrow(new TokenRefreshException("Refresh token not found"));
 
         mockMvc.perform(post("/api/auth/refresh")
-                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .with(csrf())
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "invalid_token")))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").exists())
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Set-Cookie", org.hamcrest.Matchers.containsString("Max-Age=0")));
+                .andExpect(header().string("Set-Cookie", containsString("Max-Age=0")));
     }
 
     @Test
@@ -109,7 +132,7 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").exists())
                 .andExpect(jsonPath("$.refreshToken").doesNotExist())
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie().exists("refreshToken"));
+                .andExpect(cookie().exists("refreshToken"));
     }
 
     @Test
@@ -121,18 +144,18 @@ class AuthControllerTest {
         when(refreshTokenService.rotateRefreshToken(anyString())).thenReturn(graceToken);
 
         mockMvc.perform(post("/api/auth/refresh")
-                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .with(csrf())
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "reused_token")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").exists())
                 .andExpect(jsonPath("$.refreshToken").doesNotExist())
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie().exists("refreshToken"));
+                .andExpect(cookie().exists("refreshToken"));
     }
 
     @Test
     void refresh_WhenTokenProvidedViaHeader_IsIgnoredAndReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/auth/refresh")
-                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .with(csrf())
                 .header("X-Refresh-Token", "header_token"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("Refresh token is missing"));
@@ -141,7 +164,7 @@ class AuthControllerTest {
     @Test
     void refresh_WhenTokenProvidedViaBody_IsIgnoredAndReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/auth/refresh")
-                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"refreshToken\":\"body_token\"}"))
                 .andExpect(status().isUnauthorized())
@@ -164,26 +187,26 @@ class AuthControllerTest {
     @Test
     void refresh_WhenTokenReusedAfterGracePeriod_ReturnsUnauthorized() throws Exception {
         when(refreshTokenService.rotateRefreshToken(anyString()))
-                .thenThrow(new com.ascension.exception.TokenRefreshException("Session expired. Please log in again."));
+                .thenThrow(new TokenRefreshException("Session expired. Please log in again."));
 
         mockMvc.perform(post("/api/auth/refresh")
-                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .with(csrf())
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "reused_token")))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").exists())
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Set-Cookie", org.hamcrest.Matchers.containsString("Max-Age=0")));
+                .andExpect(header().string("Set-Cookie", containsString("Max-Age=0")));
     }
 
     @Test
     void securityHeaders_areProperlyConfigured() throws Exception {
         mockMvc.perform(post("/api/auth/refresh")
                 .secure(true)
-                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Strict-Transport-Security", org.hamcrest.Matchers.containsString("max-age=31536000")))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Strict-Transport-Security", org.hamcrest.Matchers.containsString("includeSubDomains")))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("X-Content-Type-Options", "nosniff"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("X-Frame-Options", "DENY"));
+                .with(csrf()))
+                .andExpect(header().string("Strict-Transport-Security", containsString("max-age=31536000")))
+                .andExpect(header().string("Strict-Transport-Security", containsString("includeSubDomains")))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
+                .andExpect(header().string("X-Frame-Options", "DENY"));
     }
 
     @Test
@@ -232,7 +255,7 @@ class AuthControllerTest {
         when(googleIdTokenVerifier.verify("token-recycled")).thenReturn(idToken);
 
         when(userService.findByEmail("recycled@example.com")).thenReturn(Optional.of(
-                new com.ascension.service.UserService.User("recycled@example.com", "Original Name", null, "original-sub", null)
+                new User("recycled@example.com", "Original Name", null, "original-sub", null)
         ));
 
         mockMvc.perform(post("/api/auth/login")
@@ -255,7 +278,7 @@ class AuthControllerTest {
 
         when(userService.findByEmail("attacker@example.com")).thenReturn(Optional.empty());
         when(userService.findByGoogleSub("victim-sub")).thenReturn(Optional.of(
-                new com.ascension.service.UserService.User("victim@example.com", "Victim Name", null, "victim-sub", null)
+                new User("victim@example.com", "Victim Name", null, "victim-sub", null)
         ));
 
         mockMvc.perform(post("/api/auth/login")
@@ -290,16 +313,16 @@ class AuthControllerTest {
 
     private String createSignedJwt(String email, java.time.Instant issuedAt) {
         java.time.Instant expiresAt = issuedAt.plusSeconds(900);
-        org.springframework.security.oauth2.jwt.JwtClaimsSet claims = org.springframework.security.oauth2.jwt.JwtClaimsSet.builder()
+        JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("ascension-backend")
                 .issuedAt(issuedAt)
                 .expiresAt(expiresAt)
                 .subject(email)
                 .claim("email", email)
                 .build();
-        org.springframework.security.oauth2.jose.jws.MacAlgorithm alg = org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256;
-        org.springframework.security.oauth2.jwt.JwsHeader jwsHeader = org.springframework.security.oauth2.jwt.JwsHeader.with(alg).build();
-        return jwtEncoder.encode(org.springframework.security.oauth2.jwt.JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
+        MacAlgorithm alg = MacAlgorithm.HS256;
+        JwsHeader jwsHeader = JwsHeader.with(alg).build();
+        return jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
     }
 
     @Test
@@ -309,10 +332,10 @@ class AuthControllerTest {
         String token = createSignedJwt("user@example.com", tokenIssuedAt);
 
         when(userService.getUserSecurityState("user@example.com"))
-                .thenReturn(new com.ascension.service.UserService.UserSecurityState(true, logoutTime));
+                .thenReturn(new UserSecurityState(true, logoutTime));
 
         mockMvc.perform(delete("/api/auth/account")
-                .header(org.springframework.http.HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .with(csrf()))
                 .andExpect(status().isUnauthorized());
     }
@@ -322,10 +345,10 @@ class AuthControllerTest {
         String token = createSignedJwt("deleted@example.com", java.time.Instant.now().minusSeconds(10));
 
         when(userService.getUserSecurityState("deleted@example.com"))
-                .thenReturn(new com.ascension.service.UserService.UserSecurityState(false, null));
+                .thenReturn(new UserSecurityState(false, null));
 
         mockMvc.perform(delete("/api/auth/account")
-                .header(org.springframework.http.HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .with(csrf()))
                 .andExpect(status().isUnauthorized());
     }
@@ -337,10 +360,10 @@ class AuthControllerTest {
         String token = createSignedJwt("active@example.com", tokenIssuedAt);
 
         when(userService.getUserSecurityState("active@example.com"))
-                .thenReturn(new com.ascension.service.UserService.UserSecurityState(true, validAfter));
+                .thenReturn(new UserSecurityState(true, validAfter));
 
         mockMvc.perform(delete("/api/auth/account")
-                .header(org.springframework.http.HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .with(csrf()))
                 .andExpect(status().isOk());
     }
@@ -369,11 +392,11 @@ class AuthControllerTest {
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "sample_token")))
                 .andExpect(status().isForbidden());
 
-        org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
+        MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Origin", "https://malicious.evil.com");
-        org.springframework.http.ResponseEntity<?> response = authController.refreshtoken("sample_token", request);
-        org.junit.jupiter.api.Assertions.assertEquals(org.springframework.http.HttpStatus.FORBIDDEN, response.getStatusCode());
-        org.junit.jupiter.api.Assertions.assertEquals(java.util.Map.of("error", "Forbidden origin"), response.getBody());
+        ResponseEntity<?> response = authController.refreshtoken("sample_token", request);
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals(java.util.Map.of("error", "Forbidden origin"), response.getBody());
     }
 
     @Test
@@ -407,11 +430,11 @@ class AuthControllerTest {
                 .header("Origin", "https://malicious.evil.com"))
                 .andExpect(status().isForbidden());
 
-        org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
+        MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Origin", "https://malicious.evil.com");
-        org.springframework.http.ResponseEntity<?> response = authController.logout("sample_token", null, null, request);
-        org.junit.jupiter.api.Assertions.assertEquals(org.springframework.http.HttpStatus.FORBIDDEN, response.getStatusCode());
-        org.junit.jupiter.api.Assertions.assertEquals(java.util.Map.of("error", "Forbidden origin"), response.getBody());
+        ResponseEntity<?> response = authController.logout("sample_token", null, null, request);
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals(java.util.Map.of("error", "Forbidden origin"), response.getBody());
     }
 
     @Test
@@ -449,14 +472,14 @@ class AuthControllerTest {
 
     @Test
     void cookieSameSite_usesNoneOnlyWhenConfiguredExplicitly() throws Exception {
-        org.springframework.test.util.ReflectionTestUtils.setField(authController, "cookieSameSite", "None");
+        ReflectionTestUtils.setField(authController, "cookieSameSite", "None");
         try {
             mockMvc.perform(post("/api/auth/logout")
                     .with(csrf()))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Set-Cookie", containsString("SameSite=None")));
         } finally {
-            org.springframework.test.util.ReflectionTestUtils.setField(authController, "cookieSameSite", "Lax");
+            ReflectionTestUtils.setField(authController, "cookieSameSite", "Lax");
         }
     }
 
@@ -496,7 +519,7 @@ class AuthControllerTest {
         when(idToken.getPayload()).thenReturn(payload);
         when(googleIdTokenVerifier.verify("db-fail-token")).thenReturn(idToken);
 
-        org.mockito.Mockito.doThrow(new org.springframework.dao.DataAccessResourceFailureException("Database unreachable"))
+        org.mockito.Mockito.doThrow(new DataAccessResourceFailureException("Database unreachable"))
                 .when(userService).ensureUserExists(
                         org.mockito.ArgumentMatchers.anyString(),
                         org.mockito.ArgumentMatchers.any(),
@@ -538,7 +561,7 @@ class AuthControllerTest {
                 .content("{\"token\":\"valid-long-pic-token\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").exists())
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie().exists("refreshToken"));
+                .andExpect(cookie().exists("refreshToken"));
 
         verify(userService).ensureUserExists(
                 org.mockito.ArgumentMatchers.eq("longpic@example.com"),
@@ -556,7 +579,7 @@ class AuthControllerTest {
         when(refreshTokenService.rotateRefreshToken("cookie-token")).thenReturn(rt);
 
         when(userService.findByEmail("refreshed@example.com")).thenReturn(Optional.of(
-                new com.ascension.service.UserService.User(
+                new User(
                         "refreshed@example.com",
                         "Latest Name",
                         "https://example.com/latest-avatar.png",

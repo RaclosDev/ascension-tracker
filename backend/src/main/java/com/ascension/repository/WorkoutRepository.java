@@ -1,8 +1,12 @@
 package com.ascension.repository;
 
 import com.ascension.model.Workout;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -11,16 +15,16 @@ import java.util.Optional;
 @Repository
 public interface WorkoutRepository extends JpaRepository<Workout, String> {
     
-    org.springframework.data.domain.Page<Workout> findByUserEmailOrderByStartedAtDesc(String userEmail, org.springframework.data.domain.Pageable pageable);
+    Page<Workout> findByUserEmailOrderByStartedAtDesc(String userEmail, Pageable pageable);
     
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"exercises", "exercises.sets"})
+    @EntityGraph(attributePaths = {"exercises", "exercises.sets"})
     List<Workout> findByUserEmailAndStartedAtGreaterThanEqualOrderByStartedAtDesc(String userEmail, Long startedAt);
     
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"exercises", "exercises.sets"})
+    @EntityGraph(attributePaths = {"exercises", "exercises.sets"})
     Optional<Workout> findByIdAndUserEmail(String id, String userEmail);
     long countByUserEmail(String userEmail);
 
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"exercises", "exercises.sets"})
+    @EntityGraph(attributePaths = {"exercises", "exercises.sets"})
     List<Workout> findAllByUserEmailOrderByStartedAtDesc(String userEmail);
 
     @Query(value = """
@@ -52,5 +56,5 @@ public interface WorkoutRepository extends JpaRepository<Workout, String> {
              JOIN workouts w ON e.workout_id = w.id
              WHERE w.user_email = :userEmail) AS totalVolume
         """, nativeQuery = true)
-    WorkoutStatsProjection getWorkoutStats(@org.springframework.data.repository.query.Param("userEmail") String userEmail);
+    WorkoutStatsProjection getWorkoutStats(@Param("userEmail") String userEmail);
 }

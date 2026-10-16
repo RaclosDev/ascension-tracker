@@ -2,17 +2,24 @@ package com.ascension.exception;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.util.Objects;
 import java.util.UUID;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -30,24 +37,24 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(errorMessage, HttpStatus.BAD_REQUEST, traceId);
     }
 
-    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
-    public ResponseEntity<ApiErrorResponse> handleConstraintViolationException(jakarta.validation.ConstraintViolationException ex) {
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleConstraintViolationException(ConstraintViolationException ex) {
         String traceId = UUID.randomUUID().toString();
         String errorMessage = ex.getConstraintViolations().stream()
-                .map(jakarta.validation.ConstraintViolation::getMessage)
+                .map(ConstraintViolation::getMessage)
                 .findFirst()
                 .orElse("Parametro invalido");
         log.warn("Constraint violation: {} [trace_id: {}]", errorMessage, traceId);
         return buildErrorResponse(errorMessage, HttpStatus.BAD_REQUEST, traceId);
     }
 
-    @ExceptionHandler(org.springframework.web.method.annotation.HandlerMethodValidationException.class)
-    public ResponseEntity<ApiErrorResponse> handleHandlerMethodValidationException(org.springframework.web.method.annotation.HandlerMethodValidationException ex) {
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ApiErrorResponse> handleHandlerMethodValidationException(HandlerMethodValidationException ex) {
         String traceId = UUID.randomUUID().toString();
         String errorMessage = ex.getAllValidationResults().stream()
                 .flatMap(r -> r.getResolvableErrors().stream())
-                .map(org.springframework.context.MessageSourceResolvable::getDefaultMessage)
-                .filter(java.util.Objects::nonNull)
+                .map(MessageSourceResolvable::getDefaultMessage)
+                .filter(Objects::nonNull)
                 .findFirst()
                 .orElse("Parametro invalido");
         log.warn("Handler method validation error: {} [trace_id: {}]", errorMessage, traceId);
@@ -84,8 +91,8 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(msg, HttpStatus.BAD_REQUEST, traceId);
     }
 
-    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         String traceId = UUID.randomUUID().toString();
         log.warn("Message not readable: {} [trace_id: {}]", ex.getMessage(), traceId);
         Throwable rootCause = ex.getMostSpecificCause();
@@ -109,8 +116,8 @@ public class GlobalExceptionHandler {
         return buildErrorResponse("Parametro '" + ex.getName() + "' invalido", HttpStatus.BAD_REQUEST, traceId);
     }
 
-    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
-    public ResponseEntity<ApiErrorResponse> handleMissingServletRequestParameter(org.springframework.web.bind.MissingServletRequestParameterException ex) {
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiErrorResponse> handleMissingServletRequestParameter(MissingServletRequestParameterException ex) {
         String traceId = UUID.randomUUID().toString();
         log.warn("Missing required parameter {}: {} [trace_id: {}]", ex.getParameterName(), ex.getMessage(), traceId);
         return buildErrorResponse("El parametro '" + ex.getParameterName() + "' es obligatorio", HttpStatus.BAD_REQUEST, traceId);
