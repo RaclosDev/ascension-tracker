@@ -107,12 +107,12 @@ public class AiJsonParser {
         SavedFoodDTO dto = new SavedFoodDTO();
         dto.setName(node.path("name").asText());
         dto.setBrand(node.path("brand").asText());
-        dto.setKcalPer100g(node.path("kcalPer100g").asDouble());
-        dto.setProteinPer100g(node.path("proteinPer100g").asDouble());
-        dto.setCarbsPer100g(node.path("carbsPer100g").asDouble());
-        dto.setFatPer100g(node.path("fatPer100g").asDouble());
+        dto.setKcalPer100g(sanitizeDouble(node.path("kcalPer100g").asDouble(0.0), 0.0, 50000.0, 0.0));
+        dto.setProteinPer100g(sanitizeDouble(node.path("proteinPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
+        dto.setCarbsPer100g(sanitizeDouble(node.path("carbsPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
+        dto.setFatPer100g(sanitizeDouble(node.path("fatPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
         if (node.has("servingSize") && !node.path("servingSize").isNull()) {
-            dto.setServingSize(node.path("servingSize").asDouble());
+            dto.setServingSize(sanitizeDouble(node.path("servingSize").asDouble(100.0), 0.1, 50000.0, 100.0));
         }
         if (node.has("servingLabel") && !node.path("servingLabel").isNull() && !node.path("servingLabel").asText().isEmpty()) {
             dto.setServingLabel(node.path("servingLabel").asText());
@@ -131,7 +131,7 @@ public class AiJsonParser {
         result.put("carbsPer100g", sanitizeDouble(node.path("carbsPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
         result.put("fatPer100g", sanitizeDouble(node.path("fatPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
         if (node.has("servingSize") && !node.path("servingSize").isNull()) {
-            result.put("servingSize", node.path("servingSize").asDouble());
+            result.put("servingSize", sanitizeDouble(node.path("servingSize").asDouble(100.0), 0.1, 50000.0, 100.0));
         }
         if (node.has("servingLabel") && !node.path("servingLabel").isNull()) {
             result.put("servingLabel", node.path("servingLabel").asText());
@@ -174,11 +174,11 @@ public class AiJsonParser {
                         dto.setDate(date);
                         dto.setMealIndex(mIdx);
                         dto.setProduct(fNode.path("product").asText());
-                        dto.setQuantity(fNode.path("quantity").asDouble(100.0));
-                        dto.setKcal(fNode.path("kcal").asDouble(0.0));
-                        dto.setProtein(fNode.path("protein").asDouble(0.0));
-                        dto.setCarbs(fNode.path("carbs").asDouble(0.0));
-                        dto.setFat(fNode.path("fat").asDouble(0.0));
+                        dto.setQuantity(sanitizeDouble(fNode.path("quantity").asDouble(100.0), 0.1, 50000.0, 100.0));
+                        dto.setKcal(sanitizeDouble(fNode.path("kcal").asDouble(0.0), 0.0, 50000.0, 0.0));
+                        dto.setProtein(sanitizeDouble(fNode.path("protein").asDouble(0.0), 0.0, 5000.0, 0.0));
+                        dto.setCarbs(sanitizeDouble(fNode.path("carbs").asDouble(0.0), 0.0, 5000.0, 0.0));
+                        dto.setFat(sanitizeDouble(fNode.path("fat").asDouble(0.0), 0.0, 5000.0, 0.0));
 
                         optKcal += dto.getKcal();
                         optP += dto.getProtein();

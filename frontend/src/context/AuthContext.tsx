@@ -202,6 +202,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (jwtToken: string) => {
     queryClient.clear();
     void purgeAllCaches();
+    useWorkoutStore.setState({ active: null, restUntil: null, restTimers: {} });
+    void del('forja-v1').catch(() => {});
     setToken(jwtToken);
     try {
       const payload = jwtDecode<Record<string, unknown>>(jwtToken);

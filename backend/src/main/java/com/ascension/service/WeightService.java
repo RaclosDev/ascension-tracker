@@ -32,6 +32,7 @@ public class WeightService {
 
     @Transactional
     public WeightEntryDTO saveEntry(String userEmail, WeightEntryDTO dto) {
+        userDataQuotaService.acquireUserQuotaLock(userEmail);
         WeightEntry entry = weightEntryRepository.findByUserEmailAndDate(userEmail, dto.getDate())
                 .orElse(null);
         if (entry == null) {

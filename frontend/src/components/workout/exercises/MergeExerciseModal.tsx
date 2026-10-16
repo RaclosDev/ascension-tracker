@@ -152,9 +152,14 @@ export function MergeExerciseModal({
 
       // Fetch and update templates containing the source exercise
       try {
-        const { data: templates = [] } = await api.get<
-          Array<{ id: string; name: string; exercises: Array<{ exerciseId: string; variant?: unknown }> }>
-        >('/workouts/templates');
+        const { data: templates = [] } =
+          await api.get<
+            Array<{
+              id: string;
+              name: string;
+              exercises: Array<{ exerciseId: string; variant?: unknown }>;
+            }>
+          >('/workouts/templates');
         const templatesToUpdate = templates.filter((tpl) =>
           tpl.exercises.some((e) => e.exerciseId === sourceId),
         );
@@ -172,7 +177,10 @@ export function MergeExerciseModal({
           queryClient.invalidateQueries({ queryKey: ['workoutTemplates'] });
         }
       } catch (templateErr) {
-        console.error('Error updating templates during merge:', templateErr);
+        console.error(
+          'Error updating templates during merge:',
+          templateErr instanceof Error ? templateErr.message : String(templateErr),
+        );
       }
 
       const isCustom = customExercises.some((e) => e.id === sourceId);
@@ -191,7 +199,7 @@ export function MergeExerciseModal({
       toast.success('Fusión completada con éxito', { id: toastId });
       onClose();
     } catch (err: unknown) {
-      console.error('Error merging exercises:', err);
+      console.error('Error merging exercises:', err instanceof Error ? err.message : String(err));
       toast.error('Error al fusionar ejercicios', { id: toastId });
     } finally {
       setIsMerging(false);

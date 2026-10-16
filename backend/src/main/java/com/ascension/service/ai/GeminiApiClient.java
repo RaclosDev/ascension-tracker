@@ -314,6 +314,9 @@ public class GeminiApiClient {
                 }
             } catch (Exception e) {
                 lastException = e;
+                if (isUnrecoverableClientError(e)) {
+                    throw e;
+                }
                 log.warn("Gemini API call unexpected error on attempt {}/{}: {}", attempt, maxAttempts, e.getMessage());
                 if (attempt < maxAttempts) {
                     applyBackoff(attempt, deadline);

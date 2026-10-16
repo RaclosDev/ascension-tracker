@@ -49,6 +49,12 @@ public class FoodExternalService {
                 java.util.concurrent.CompletableFuture.allOf(offFuture, fsFuture).get(4, java.util.concurrent.TimeUnit.SECONDS);
             } catch (Exception e) {
                 log.warn("External food APIs timeout or interrupted: {}", e.getMessage());
+                if (!offFuture.isDone()) {
+                    offFuture.cancel(true);
+                }
+                if (!fsFuture.isDone()) {
+                    fsFuture.cancel(true);
+                }
             }
 
             JsonNode offRoot = offFuture.getNow(null);

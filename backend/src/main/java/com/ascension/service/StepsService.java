@@ -29,6 +29,7 @@ public class StepsService {
 
     @Transactional
     public StepsEntryDTO saveEntry(String userEmail, StepsEntryDTO dto) {
+        userDataQuotaService.acquireUserQuotaLock(userEmail);
         StepsEntry entry = stepsEntryRepository.findByUserEmailAndDate(userEmail, dto.getDate())
                 .orElse(null);
         if (entry == null) {

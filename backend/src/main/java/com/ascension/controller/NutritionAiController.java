@@ -20,6 +20,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import com.ascension.util.SecurityUtils;
+import org.springframework.http.HttpStatus;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/nutrition/ai")
@@ -34,7 +37,9 @@ public class NutritionAiController {
     public ResponseEntity<?> scanNutritionalLabel(
             @RequestParam("image") MultipartFile image,
             @AuthenticationPrincipal Jwt jwt) {
-        var result = geminiAiService.processNutritionalLabel(jwt.getClaimAsString("email"), image);
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        var result = geminiAiService.processNutritionalLabel(userEmail, image);
         return ResponseEntity.ok().header("X-AI-Model", geminiAiService.getActiveModelName()).body(result);
     }
 
@@ -42,12 +47,14 @@ public class NutritionAiController {
     public ResponseEntity<?> addFoodLogWithAi(
             @Valid @RequestBody AiLogRequestDTO request, 
             @AuthenticationPrincipal Jwt jwt) {
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         String text = request.getText();
         int mealIndex = request.getMealIndex() != null ? request.getMealIndex() : -1;
         LocalDate date = LocalDate.parse(request.getDate());
         String base64Image = request.getBase64Image();
         
-        var result = geminiAiService.processNaturalLanguageLog(jwt.getClaimAsString("email"), text, base64Image, mealIndex, date);
+        var result = geminiAiService.processNaturalLanguageLog(userEmail, text, base64Image, mealIndex, date);
         return ResponseEntity.ok().header("X-AI-Model", geminiAiService.getActiveModelName()).body(result);
     }
 
@@ -55,8 +62,10 @@ public class NutritionAiController {
     public ResponseEntity<?> addSavedFoodWithAi(
             @Valid @RequestBody AiFoodRequestDTO request, 
             @AuthenticationPrincipal Jwt jwt) {
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         String text = request.getText();
-        var result = geminiAiService.processNaturalLanguageFood(jwt.getClaimAsString("email"), text);
+        var result = geminiAiService.processNaturalLanguageFood(userEmail, text);
         return ResponseEntity.ok().header("X-AI-Model", geminiAiService.getActiveModelName()).body(result);
     }
 
@@ -64,7 +73,8 @@ public class NutritionAiController {
     public ResponseEntity<?> getAssistantSummary(
             @RequestParam(required = false) String date,
             @AuthenticationPrincipal Jwt jwt) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         LocalDate targetDate = date != null ? LocalDate.parse(date) : LocalDate.now();
         return ResponseEntity.ok(macroCalculatorService.getAssistantSummary(userEmail, targetDate));
     }
@@ -73,7 +83,8 @@ public class NutritionAiController {
     public ResponseEntity<?> assistantChat(
             @Valid @RequestBody AiChatRequestDTO request,
             @AuthenticationPrincipal Jwt jwt) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         String message = request.getMessage();
         String dateStr = request.getDate();
         LocalDate date = dateStr != null ? LocalDate.parse(dateStr) : LocalDate.now();
@@ -88,7 +99,8 @@ public class NutritionAiController {
     public ResponseEntity<?> applyAssistantFoods(
             @Valid @RequestBody AiApplyRequestDTO request,
             @AuthenticationPrincipal Jwt jwt) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         LocalDate date = LocalDate.parse(request.getDate());
         int mealIndex = request.getMealIndex() != null ? request.getMealIndex() : 2;
 
