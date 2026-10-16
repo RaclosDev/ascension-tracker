@@ -250,11 +250,7 @@ public class UserDataRestoreService {
 
         Set<Long> existingStartTimes = new HashSet<>();
         if (!isOverwrite) {
-            for (Workout w : workoutRepository.findAllByUserEmailOrderByStartedAtDesc(userEmail)) {
-                if (w.getStartedAt() != null) {
-                    existingStartTimes.add(w.getStartedAt());
-                }
-            }
+            existingStartTimes.addAll(workoutRepository.findStartedAtByUserEmail(userEmail));
         }
 
         int count = 0;
@@ -424,11 +420,21 @@ public class UserDataRestoreService {
             }
         }
 
+        Set<String> processedNames = new HashSet<>();
         int count = 0;
         for (MealDTO dto : dtos) {
+            if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+                continue;
+            }
+            String normalizedName = dto.getName().trim().toLowerCase();
+            if (processedNames.contains(normalizedName)) {
+                continue;
+            }
+            processedNames.add(normalizedName);
+
             Meal meal = Meal.builder()
                     .userEmail(userEmail)
-                    .name(dto.getName())
+                    .name(dto.getName().trim())
                     .icon(dto.getIcon())
                     .proteinPct(dto.getProteinPct())
                     .fixedProtein(dto.getFixedProtein())

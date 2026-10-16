@@ -68,7 +68,7 @@ export default function DashboardPage() {
       queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
     },
     onError: (err: Error) => {
-      console.error('Error al guardar peso:', err);
+      console.error('Error al guardar peso:', err instanceof Error ? err.message : String(err));
       const e = err as Error & { response?: { data?: { message?: string; error?: string } } };
       const msg = e.response?.data?.message || e.response?.data?.error || e.message;
       toast.error(msg ? `Error al guardar: ${msg}` : 'Error al registrar peso');

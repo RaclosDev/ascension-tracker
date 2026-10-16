@@ -4,6 +4,7 @@ import { jwtDecode } from 'jwt-decode';
 import { del } from 'idb-keyval';
 import { useQueryClient } from '@tanstack/react-query';
 import api, { setMemoryToken, refreshAccessToken } from '../api/client';
+import { useWorkoutStore } from '@/lib/workout/store';
 
 export interface User {
   email: string;
@@ -186,6 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setCachedUser(null);
       queryClient.clear();
+      useWorkoutStore.setState({ active: null, restUntil: null, restTimers: {} });
       void del('forja-v1').catch(() => {});
       void purgeAllCaches();
     };
@@ -244,6 +246,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
     }
     queryClient.clear();
+    useWorkoutStore.setState({ active: null, restUntil: null, restTimers: {} });
 
     window.location.href = '/login';
   };

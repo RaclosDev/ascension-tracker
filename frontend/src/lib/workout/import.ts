@@ -48,7 +48,7 @@ export const MONTH_MAP: Record<string, number> = {
 export function sanitizeCsvFormula(str: string): string {
   if (!str) return '';
   const trimmed = str.trim();
-  if (/^[=+\-@\t\r]/.test(trimmed)) {
+  if (/^[=+\-@\t\r%|]/m.test(trimmed)) {
     return `'${trimmed}`;
   }
   return trimmed;
@@ -356,7 +356,7 @@ export function parseHevyCsv(
     const { muscle, equipment } = inferExerciseMetadata(title);
     const newEx: Exercise = {
       id: uid(),
-      name: title,
+      name: sanitizeCsvFormula(title).substring(0, 100),
       muscle,
       equipment,
       custom: true,

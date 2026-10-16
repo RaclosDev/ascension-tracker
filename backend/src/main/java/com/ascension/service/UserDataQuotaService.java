@@ -27,7 +27,7 @@ public class UserDataQuotaService {
     public void acquireUserQuotaLock(String userEmail) {
         if (userEmail != null && !userEmail.isBlank() && jdbcTemplate != null) {
             try {
-                jdbcTemplate.queryForObject("SELECT pg_advisory_xact_lock(hashtext(?))", Void.class, userEmail.trim().toLowerCase());
+                jdbcTemplate.queryForObject("SELECT pg_advisory_xact_lock(hashtext('ascension_quota'), hashtext(?))", Void.class, userEmail.trim().toLowerCase());
             } catch (Exception ignored) {
                 // Graceful fallback for non-Postgres test databases
             }
