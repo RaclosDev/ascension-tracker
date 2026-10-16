@@ -47,8 +47,11 @@ public class AuthController {
     @Value("${app.jwt.expiration-ms:900000}")
     private long jwtExpirationMs;
 
-    @Value("${app.cookie.same-site:None}")
+    @Value("${app.cookie.same-site:Lax}")
     private String cookieSameSite;
+
+    @Value("${app.cors.allowed-origins:http://localhost:5173,https://ascension.raclos.es}")
+    private String corsAllowedOrigins;
 
     public AuthController(
             GoogleIdTokenVerifier verifier,
@@ -158,10 +161,52 @@ public class AuthController {
         }
     }
 
+    private String getEffectiveSameSite() {
+        if (cookieSameSite != null && "none".equalsIgnoreCase(cookieSameSite.trim())) {
+            return "None";
+        }
+        if (cookieSameSite != null && "strict".equalsIgnoreCase(cookieSameSite.trim())) {
+            return "Strict";
+        }
+        return "Lax";
+    }
+
+    private java.util.List<String> parseAllowedOrigins() {
+        if (corsAllowedOrigins == null || corsAllowedOrigins.isBlank()) {
+            return Collections.emptyList();
+        }
+        return java.util.Arrays.stream(corsAllowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+    }
+
+    private boolean isOriginAllowed(HttpServletRequest request) {
+        if (request == null) {
+            return true;
+        }
+        String origin = request.getHeader("Origin");
+        if (origin == null || origin.isBlank()) {
+            return true;
+        }
+        String trimmedOrigin = origin.trim();
+        java.util.List<String> allowed = parseAllowedOrigins();
+        if (allowed.contains("*")) {
+            return true;
+        }
+        return allowed.contains(trimmedOrigin);
+    }
+
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshtoken(
             @CookieValue(name = "refreshToken", required = false) String requestCookieRefreshToken,
             HttpServletRequest request) {
+
+        if (!isOriginAllowed(request)) {
+            log.warn("Forbidden Origin header on /api/auth/refresh: {}", request != null ? request.getHeader("Origin") : null);
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Forbidden origin"));
+        }
 
         log.info("Refresh request received, token present in cookie: {}", requestCookieRefreshToken != null);
         
@@ -192,7 +237,7 @@ public class AuthController {
                 .secure(true)
                 .path("/")
                 .maxAge(30L * 24 * 60 * 60)
-                .sameSite(cookieSameSite)
+                .sameSite(getEffectiveSameSite())
                 .build();
     }
 
@@ -202,7 +247,7 @@ public class AuthController {
                 .secure(true)
                 .path("/")
                 .maxAge(0)
-                .sameSite(cookieSameSite)
+                .sameSite(getEffectiveSameSite())
                 .build();
     }
 
@@ -210,7 +255,15 @@ public class AuthController {
     public ResponseEntity<?> logout(
             @CookieValue(name = "refreshToken", required = false) String requestCookieRefreshToken,
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-            @AuthenticationPrincipal Jwt principalJwt) {
+            @AuthenticationPrincipal Jwt principalJwt,
+            HttpServletRequest request) {
+
+        if (!isOriginAllowed(request)) {
+            log.warn("Forbidden Origin header on /api/auth/logout: {}", request != null ? request.getHeader("Origin") : null);
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Forbidden origin"));
+        }
+
         if (principalJwt != null) {
             String email = extractEmail(principalJwt);
             if (email != null && !email.isBlank()) {

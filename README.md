@@ -77,6 +77,7 @@ Esta aplicación ha sido refactorizada repetidamente bajo estrictos estándares 
 2. **Seguridad y Rate Limiting:**
    - La API pública está protegida por un interceptor de `Caffeine` configurado con un límite estricto de tamaño (`maximumSize(10_000)`) para prevenir ataques de agotamiento de RAM (OOM) por escaneo de IPs.
    - Autenticación delegada en Google (OAuth2 ID Tokens) verificada criptográficamente en backend. Emisión de JWT propios (HS256) de vida corta (15 min por defecto, configurable con `JWT_EXPIRATION_MS`) junto con refresh tokens hasheados.
+   - **Cookies Seguras y Mitigación CSRF:** Las cookies de refresh token implementan por defecto `SameSite=Lax` (`app.cookie.same-site`), admitiendo `None` únicamente si se configura de forma explícita (`COOKIE_SAME_SITE=None`). Asimismo, los endpoints de `/api/auth/refresh` y `/api/auth/logout` comprueban la cabecera `Origin` contra la allowlist de CORS (`app.cors.allowed-origins`), denegando orígenes no autorizados con `403 Forbidden`.
 
 3. **Infraestructura CI/CD y Testing:**
    - **GitHub Actions:** Pipeline completo que verifica el *build*, el linter y los tests en cada PR a `main`. Emplea un sistema de caché avanzado (`actions/cache@v4`) para retener dependencias de Maven y los binarios del navegador de Playwright.
