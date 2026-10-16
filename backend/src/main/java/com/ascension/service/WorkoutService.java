@@ -21,6 +21,7 @@ public class WorkoutService {
     private final CustomExerciseService customExerciseService;
     private final CustomExerciseRepository customExerciseRepository;
     private final WorkoutMapper workoutMapper;
+    private final UserDataQuotaService userDataQuotaService;
 
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<WorkoutDTO> getWorkoutHistory(String userEmail, int page, int size) {
@@ -44,6 +45,7 @@ public class WorkoutService {
 
     @Transactional
     public WorkoutDTO saveWorkout(String userEmail, WorkoutDTO dto) {
+        userDataQuotaService.checkWorkoutQuota(userEmail, 1);
         Workout workout = Workout.builder()
                 .id(java.util.UUID.randomUUID().toString())
                 .userEmail(userEmail)
@@ -182,6 +184,12 @@ public class WorkoutService {
     public WorkoutImportSummaryDTO importWorkouts(String userEmail, WorkoutImportRequestDTO request) {
         if (request == null || request.getWorkouts() == null) {
             return WorkoutImportSummaryDTO.builder().build();
+        }
+
+        int incomingWorkouts = request.getWorkouts().size();
+        userDataQuotaService.checkWorkoutQuota(userEmail, incomingWorkouts);
+        if (request.getCustomExercises() != null && !request.getCustomExercises().isEmpty()) {
+            userDataQuotaService.checkCustomExerciseQuota(userEmail, request.getCustomExercises().size());
         }
 
         int createdExercises = 0;

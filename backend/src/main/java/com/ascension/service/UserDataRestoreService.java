@@ -28,6 +28,7 @@ public class UserDataRestoreService {
     private final StepsEntryRepository stepsEntryRepository;
     private final WeightEntryRepository weightEntryRepository;
     private final UserSettingsRepository userSettingsRepository;
+    private final UserDataQuotaService userDataQuotaService;
 
     @Transactional
     public UserDataRestoreSummaryDTO restoreUserData(String userEmail, RestoreMode mode, boolean confirmEmpty, UserDataExportDTO backup) {
@@ -50,6 +51,8 @@ public class UserDataRestoreService {
         if (isOverwrite && isBackupEmpty(backup) && !confirmEmpty) {
             throw new IllegalArgumentException("No se puede realizar OVERWRITE con un backup completamente vacío sin confirmación explícita (confirmEmpty=true).");
         }
+
+        userDataQuotaService.checkRestoreQuotas(userEmail, mode, backup);
 
         log.info("Iniciando restauración de datos en modo {} para usuario: {}", appliedMode, userEmail);
 

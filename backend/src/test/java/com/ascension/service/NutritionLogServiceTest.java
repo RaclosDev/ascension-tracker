@@ -37,6 +37,9 @@ class NutritionLogServiceTest {
     @Mock
     private SavedFoodRepository savedFoodRepository;
 
+    @Mock
+    private UserDataQuotaService userDataQuotaService;
+
     @InjectMocks
     private NutritionLogService nutritionLogService;
 

@@ -74,8 +74,18 @@ Esta aplicación ha sido refactorizada repetidamente bajo estrictos estándares 
    - 18 migraciones controladas (ej. `V18__Add_foreign_key_indexes.sql`) que normalizan el catálogo de ejercicios e inyectan índices compuestos y foráneos estratégicos en PostgreSQL, asegurando búsquedas y uniones relacionales en `O(log N)` en historiales de alto volumen.
    - Entidades UUID mapeadas con `Persistable<String>` y una flag `@Transient isNew` para evitar los costosos `SELECT` previos al `INSERT` masivo de Hibernate.
 
-2. **Seguridad y Rate Limiting:**
-   - La API pública está protegida por un interceptor de `Caffeine` configurado con un límite estricto de tamaño (`maximumSize(10_000)`) para prevenir ataques de agotamiento de RAM (OOM) por escaneo de IPs.
+2. **Seguridad, Rate Limiting y Cuotas de Datos:**
+   - **Clave por IP Real & Proxies de Confianza:** Integración con `server.tomcat.remoteip` (`RemoteIpValve` nativo) que resuelve la IP real del cliente mediante cabeceras `X-Forwarded-For` y `X-Forwarded-Proto` validando redes internas de confianza (`TOMCAT_INTERNAL_PROXIES`).
+     - *Heroku:* La red de enrutamiento interna de Heroku (`10.0.0.0/8`) está cubierta por defecto por la regex interna, resolviendo la IP real del cliente de forma transparente.
+     - *Nginx:* Configurar `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;` y `proxy_set_header X-Forwarded-Proto $scheme;`. La red Docker/local (`172.16.0.0/12`, `127.0.0.1`) está contemplada de forma nativa.
+     - *Vercel:* Para peticiones canalizadas a través de funciones o proxies perimetrales de Vercel, ajustar `TOMCAT_INTERNAL_PROXIES` a las CIDRs perimetrales o fijar `.*` si el origen está estrictamente protegido por secretos de ingress.
+   - **Rate Limiting Granular con `RateLimiterService`:**
+     - Interfaz `RateLimiterService` con implementación en memoria de alto rendimiento (`InMemoryRateLimiterService` vía Caffeine + Bucket4j).
+     - *Escalado Horizontal:* Para entornos clúster multi-instancia, la interfaz desacoplada permite sustituir o extender el adaptador por Redis (`bucket4j-redis` / Redisson) o un adaptador JDBC transaccional.
+     - *Buckets Dedicados por Endpoint:* Límites específicos para `/api/auth/login` (20/min), `/api/auth/refresh` (30/min), `/api/auth/logout` (30/min), `/api/workouts/import` (5/min), `/api/user/restore` (5/min) y `/api/user/export` (10/min).
+     - *Límite Genérico de Escrituras:* Cuota transversal por usuario autenticado (60 escrituras/min para métodos POST, PUT, DELETE, PATCH), aplicada también sobre `/api/workouts/import`.
+   - **Cuotas de Almacenamiento por Usuario:**
+     - Límites configurables vía `application.yml` (`app.quotas.*` / variables de entorno `QUOTA_MAX_*`) aplicados en creación, importación y restauración de datos (ej. entrenamientos, logs de comida, recetas, ejercicios personalizados y plantillas).
    - Autenticación delegada en Google (OAuth2 ID Tokens) verificada criptográficamente en backend. Emisión de JWT propios (HS256) de vida corta (15 min por defecto, configurable con `JWT_EXPIRATION_MS`) junto con refresh tokens hasheados.
    - **Cookies Seguras y Mitigación CSRF:** Las cookies de refresh token implementan por defecto `SameSite=Lax` (`app.cookie.same-site`), admitiendo `None` únicamente si se configura de forma explícita (`COOKIE_SAME_SITE=None`). Asimismo, los endpoints de `/api/auth/refresh` y `/api/auth/logout` comprueban la cabecera `Origin` contra la allowlist de CORS (`app.cors.allowed-origins`), denegando orígenes no autorizados con `403 Forbidden`.
 
