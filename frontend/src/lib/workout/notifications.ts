@@ -167,7 +167,6 @@ async function subscribeToPush() {
     });
 
     pushSubscribed = true;
-    console.info('Push subscription registered');
   } catch (e: unknown) {
     console.warn('Push subscription failed', e);
   }

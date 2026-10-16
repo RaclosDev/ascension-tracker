@@ -97,15 +97,13 @@ export default function LoginPage() {
                 });
                 if (res.data?.token) {
                   login(res.data.token);
-                } else {
-                  console.error('Login failed on backend', res.data);
                 }
-              } catch (e: unknown) {
-                console.error('Login error', e);
+              } catch {
+                // Login failed without leaking PII or credentials to console
               }
             }}
             onError={() => {
-              console.error('Login Failed');
+              // Login failed handled silently
             }}
             theme="filled_black"
             shape="pill"

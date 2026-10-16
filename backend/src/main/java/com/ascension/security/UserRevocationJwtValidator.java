@@ -37,13 +37,13 @@ public class UserRevocationJwtValidator implements OAuth2TokenValidator<Jwt> {
             email = jwt.getSubject();
         }
         if (email == null || email.isBlank()) {
-            log.warn("JWT rejected: missing email and subject claims");
+            log.warn("JWT rejected: missing subject or identifier claim");
             return OAuth2TokenValidatorResult.failure(ERROR_INVALID_CLAIMS);
         }
 
         UserSecurityState state = userService.getUserSecurityState(email);
         if (!state.exists()) {
-            log.warn("JWT rejected: user '{}' does not exist in database", email);
+            log.warn("JWT rejected: user '{}' does not exist in database", com.ascension.util.PiiMasker.maskEmail(email));
             return OAuth2TokenValidatorResult.failure(ERROR_USER_NOT_FOUND);
         }
 
@@ -51,7 +51,7 @@ public class UserRevocationJwtValidator implements OAuth2TokenValidator<Jwt> {
         Instant tokensValidAfter = state.tokensValidAfter();
         if (issuedAt != null && tokensValidAfter != null && issuedAt.isBefore(tokensValidAfter)) {
             log.warn("JWT rejected: token for '{}' issued at {} is prior to tokens_valid_after {}",
-                    email, issuedAt, tokensValidAfter);
+                    com.ascension.util.PiiMasker.maskEmail(email), issuedAt, tokensValidAfter);
             return OAuth2TokenValidatorResult.failure(ERROR_TOKEN_REVOKED);
         }
 

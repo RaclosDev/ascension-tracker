@@ -54,7 +54,7 @@ public class UserDataRestoreService {
 
         userDataQuotaService.checkRestoreQuotas(userEmail, mode, backup);
 
-        log.info("Iniciando restauración de datos en modo {} para usuario: {}", appliedMode, userEmail);
+        log.info("Iniciando restauración de datos en modo {} para usuario: {}", appliedMode, com.ascension.util.PiiMasker.maskEmail(userEmail));
 
         if (isOverwrite) {
             wipeUserData(userEmail);
@@ -92,7 +92,7 @@ public class UserDataRestoreService {
         boolean settingsRestored = restoreUserSettings(userEmail, backup.getUserSettings(), isOverwrite);
 
         log.info("Restauración completada para {}: {} entrenamientos, {} ejercicios, {} comidas",
-                userEmail, workoutsRestored, customExercisesRestored, foodLogsRestored);
+                com.ascension.util.PiiMasker.maskEmail(userEmail), workoutsRestored, customExercisesRestored, foodLogsRestored);
 
         return UserDataRestoreSummaryDTO.builder()
                 .mode(appliedMode)
@@ -140,7 +140,7 @@ public class UserDataRestoreService {
     }
 
     private void wipeUserData(String userEmail) {
-        log.warn("Limpiando datos existentes de usuario para restauración: {}", userEmail);
+        log.warn("Limpiando datos existentes de usuario para restauración: {}", com.ascension.util.PiiMasker.maskEmail(userEmail));
 
         jdbcTemplate.update("DELETE FROM workout_sets WHERE workout_exercise_id IN (SELECT id FROM workout_exercises WHERE workout_id IN (SELECT id FROM workouts WHERE user_email = ?))", userEmail);
         jdbcTemplate.update("DELETE FROM workout_exercises WHERE workout_id IN (SELECT id FROM workouts WHERE user_email = ?)", userEmail);

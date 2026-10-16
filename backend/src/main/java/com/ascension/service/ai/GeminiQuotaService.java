@@ -53,7 +53,7 @@ public class GeminiQuotaService {
         if (userEmail != null && !userEmail.isBlank()) {
             AtomicInteger userCount = userDailyUsage.computeIfAbsent(userEmail, k -> new AtomicInteger(0));
             if (userCount.get() >= userDailyLimit) {
-                log.warn("User {} reached daily Gemini quota: {}/{}", userEmail, userCount.get(), userDailyLimit);
+                log.warn("User {} reached daily Gemini quota: {}/{}", com.ascension.util.PiiMasker.maskEmail(userEmail), userCount.get(), userDailyLimit);
                 throw new AiQuotaExceededException("Has alcanzado tu límite diario de consultas de IA (" + userDailyLimit + "). Inténtalo de nuevo mañana.");
             }
         }
