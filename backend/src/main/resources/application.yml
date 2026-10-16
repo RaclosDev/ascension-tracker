@@ -88,6 +88,8 @@ app:
     vapid-public-key: ${VAPID_PUBLIC_KEY}
     vapid-private-key: ${VAPID_PRIVATE_KEY}
     vapid-subject: ${VAPID_SUBJECT:mailto:admin@example.com}
+    http-timeout-sec: ${PUSH_HTTP_TIMEOUT_SEC:10}
+    timer-poll-delay-ms: ${PUSH_TIMER_POLL_DELAY_MS:1000}
   external-api:
     fatsecret:
       max-attempts: ${FATSECRET_MAX_ATTEMPTS:3}
