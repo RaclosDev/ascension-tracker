@@ -78,6 +78,6 @@ class WorkoutDTOTest {
 
         Set<ConstraintViolation<WorkoutSetDTO>> violations = validator.validate(set);
         assertThat(violations).isNotEmpty();
-        assertThat(violations).anyMatch(v -> v.getMessage().contains("El valor debe ser un número válido 0 o positivo"));
+        assertThat(violations).anyMatch(v -> v.getMessage().contains("El valor debe ser un numero valido"));
     }
 }

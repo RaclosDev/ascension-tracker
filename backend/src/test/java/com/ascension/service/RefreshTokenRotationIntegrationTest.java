@@ -11,6 +11,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 
+import com.ascension.support.DisabledIfDockerUnavailable;
+
 import java.time.Instant;
 import java.util.List;
 
@@ -18,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
+@DisabledIfDockerUnavailable
 @Import(TestcontainersConfiguration.class)
 @TestPropertySource(properties = {
     "GOOGLE_CLIENT_ID=test-google-client-id",

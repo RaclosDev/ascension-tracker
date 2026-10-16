@@ -15,11 +15,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ascension.support.DisabledIfDockerUnavailable;
+
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@DisabledIfDockerUnavailable
 @Import(TestcontainersConfiguration.class)
 @TestPropertySource(properties = {
     "GOOGLE_CLIENT_ID=test-google-client-id",

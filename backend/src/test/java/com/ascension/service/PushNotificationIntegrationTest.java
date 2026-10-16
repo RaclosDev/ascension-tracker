@@ -38,11 +38,14 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import com.ascension.support.DisabledIfDockerUnavailable;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
+@DisabledIfDockerUnavailable
 @Import(TestcontainersConfiguration.class)
 @TestPropertySource(properties = {
     "GOOGLE_CLIENT_ID=test-google-client-id",
