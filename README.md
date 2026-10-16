@@ -111,7 +111,7 @@ Esta aplicación ha sido refactorizada repetidamente bajo estrictos estándares 
 | **PWA** | `vite-plugin-pwa` + Workbox (`injectManifest`) |
 | **Estilos & UI** | Tailwind CSS v4, Radix UI, `class-variance-authority`, `tailwind-merge` |
 | **Estado y Caché** | Zustand (IndexDB Persist) + TanStack Query v5 (Data Fetching) |
-| **Librerías Clave** | `@hello-pangea/dnd`, `html5-qrcode`, `date-fns`, `papaparse`, `jwt-decode` |
+| **Librerías Clave** | `@hello-pangea/dnd`, `html5-qrcode`, `date-fns`, `jwt-decode` |
 | **Control de Calidad** | ESLint 9, Prettier, Husky + lint-staged (Git Hooks automáticos), Playwright |
 
 ### Backend (`/backend`)
@@ -141,7 +141,7 @@ cp .env.example .env  # Rellena tus API keys
 docker-compose up --build
 ```
 - **Aplicación:** [http://localhost:3000](http://localhost:3000)
-- **API Swagger:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- **API Swagger:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) *(desactivado en perfil prod por seguridad)*
 
 ### Opción B — Desarrollo Manual
 
