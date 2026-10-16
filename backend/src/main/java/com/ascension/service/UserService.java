@@ -90,7 +90,7 @@ public class UserService {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("User email cannot be null or blank");
         }
-        String cleanEmail = email.trim();
+        String cleanEmail = email.trim().toLowerCase(Locale.ROOT);
         String sql = "INSERT INTO users (email, name, picture, google_sub, tokens_valid_after) " +
                      "VALUES (?, ?, ?, ?, NOW() - INTERVAL '1 second') " +
                      "ON CONFLICT (email) DO UPDATE SET " +

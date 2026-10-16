@@ -26,7 +26,7 @@ public class CustomExercise implements Persistable<String> {
     }
 
     @PostLoad
-    @PrePersist
+    @PostPersist
     void markNotNew() {
         this.isNew = false;
     }

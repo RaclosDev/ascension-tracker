@@ -291,7 +291,7 @@ public class AuthController {
         }
 
         if (principalJwt != null) {
-            String email = extractEmail(principalJwt);
+            String email = com.ascension.util.SecurityUtils.extractEmail(principalJwt);
             if (email != null && !email.isBlank()) {
                 userService.updateTokensValidAfter(email, Instant.now());
             }
@@ -300,13 +300,16 @@ public class AuthController {
             refreshTokenService.findByToken(RefreshToken.hashToken(requestCookieRefreshToken)).ifPresent(token -> {
                 userService.updateTokensValidAfter(token.getEmail(), Instant.now());
                 refreshTokenService.delete(token);
+                if (token.getFamilyId() != null && !token.getFamilyId().isBlank()) {
+                    refreshTokenService.deleteByFamilyId(token.getFamilyId());
+                }
             });
         }
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String tokenValue = authHeader.substring(7).trim();
             try {
                 Jwt decoded = jwtDecoder.decode(tokenValue);
-                String email = extractEmail(decoded);
+                String email = com.ascension.util.SecurityUtils.extractEmail(decoded);
                 if (email != null && !email.isBlank()) {
                     userService.updateTokensValidAfter(email, Instant.now());
                 }
@@ -320,20 +323,9 @@ public class AuthController {
                 .body(Map.of("message", "Log out successful"));
     }
 
-    private String extractEmail(Jwt jwt) {
-        if (jwt == null) {
-            return null;
-        }
-        String email = jwt.getClaimAsString("email");
-        if (email != null && !email.isBlank()) {
-            return email;
-        }
-        return jwt.getSubject();
-    }
-
     @DeleteMapping({"/account", "/users/account"})
     public ResponseEntity<Map<String, String>> deleteAccount(@AuthenticationPrincipal Jwt jwt) {
-        String email = extractEmail(jwt);
+        String email = com.ascension.util.SecurityUtils.extractEmail(jwt);
         if (email == null || email.isBlank()) {
             return ResponseEntity.status(401).build();
         }

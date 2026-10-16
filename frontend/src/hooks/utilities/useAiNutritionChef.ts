@@ -84,7 +84,10 @@ export function useAiNutritionChef() {
         const res = await api.get(`/nutrition/ai/assistant-summary?date=${queryDate}`);
         setSummary(res.data);
       } catch (err: unknown) {
-        console.error('Error fetching assistant summary:', err);
+        console.error(
+          'Error fetching assistant summary:',
+          err instanceof Error ? err.message : String(err),
+        );
       } finally {
         setLoadingSummary(false);
       }
