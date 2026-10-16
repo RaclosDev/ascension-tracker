@@ -42,6 +42,7 @@ services:
       VAPID_SUBJECT: ${VAPID_SUBJECT}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      APP_PII_SALT: ${APP_PII_SALT:-}
     # El frontend (nginx) hace proxy a backend:8080 por la red interna,
     # asi que no hace falta exponerlo publicamente.
 

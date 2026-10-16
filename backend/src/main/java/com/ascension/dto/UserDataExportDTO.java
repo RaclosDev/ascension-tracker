@@ -33,7 +33,7 @@ public class UserDataExportDTO {
     private List<@jakarta.validation.Valid WorkoutTemplateDTO> workoutTemplates;
 
     @jakarta.validation.Valid
-    @jakarta.validation.constraints.Size(max = 20000, message = "Número máximo de registros de alimentos excedido (20000)")
+    @jakarta.validation.constraints.Size(max = 25000, message = "Número máximo de registros de alimentos excedido (25000)")
     private List<@jakarta.validation.Valid FoodLogDTO> foodLogs;
 
     @jakarta.validation.Valid
