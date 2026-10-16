@@ -436,6 +436,10 @@ public class GeminiAiService {
 
             Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
             if (!readers.hasNext()) {
+                if ("image/webp".equals(mimeType)) {
+                    validateWebpDimensions(data);
+                    return "image/webp";
+                }
                 throw new IllegalArgumentException("Corrupt image data: No image reader found");
             }
 
@@ -463,5 +467,43 @@ public class GeminiAiService {
         }
 
         return mimeType;
+    }
+
+    private void validateWebpDimensions(byte[] data) {
+        if (data == null || data.length < 30) {
+            return;
+        }
+        try {
+            int width = -1;
+            int height = -1;
+            if (data[12] == 'V' && data[13] == 'P' && data[14] == '8' && data[15] == 'X') {
+                width = 1 + ((data[24] & 0xFF) | ((data[25] & 0xFF) << 8) | ((data[26] & 0xFF) << 16));
+                height = 1 + ((data[27] & 0xFF) | ((data[28] & 0xFF) << 8) | ((data[29] & 0xFF) << 16));
+            } else if (data[12] == 'V' && data[13] == 'P' && data[14] == '8' && data[15] == ' ') {
+                if (data.length >= 30 && (data[23] & 0xFF) == 0x9D && (data[24] & 0xFF) == 0x01 && (data[25] & 0xFF) == 0x2A) {
+                    width = ((data[26] & 0xFF) | ((data[27] & 0xFF) << 8)) & 0x3FFF;
+                    height = ((data[28] & 0xFF) | ((data[29] & 0xFF) << 8)) & 0x3FFF;
+                }
+            } else if (data[12] == 'V' && data[13] == 'P' && data[14] == '8' && data[15] == 'L') {
+                if (data.length >= 25 && data[20] == 0x2F) {
+                    int b1 = data[21] & 0xFF;
+                    int b2 = data[22] & 0xFF;
+                    int b3 = data[23] & 0xFF;
+                    int b4 = data[24] & 0xFF;
+                    width = 1 + (((b2 & 0x3F) << 8) | b1);
+                    height = 1 + (((b4 & 0x0F) << 10) | (b3 << 2) | ((b2 & 0xC0) >> 6));
+                }
+            }
+            if (width > 0 && height > 0) {
+                long pixelCount = (long) width * (long) height;
+                if (pixelCount > MAX_PIXEL_COUNT) {
+                    throw new IllegalArgumentException("Image resolution exceeds maximum allowed limit of 25 megapixels: " + width + "x" + height);
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception ignored) {
+            // Non-fatal if extended chunks prevent direct parsing
+        }
     }
 }

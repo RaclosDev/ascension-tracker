@@ -253,4 +253,35 @@ class GeminiAiServiceTest {
         verify(quotaService).releaseQuota(email);
         verify(quotaService).recordFailure(any());
     }
+
+    @Test
+    void validateAndGetMimeType_validWebp_returnsWebpMimeType() {
+        byte[] validWebp = new byte[30];
+        validWebp[0] = 'R'; validWebp[1] = 'I'; validWebp[2] = 'F'; validWebp[3] = 'F';
+        validWebp[8] = 'W'; validWebp[9] = 'E'; validWebp[10] = 'B'; validWebp[11] = 'P';
+        validWebp[12] = 'V'; validWebp[13] = 'P'; validWebp[14] = '8'; validWebp[15] = 'X';
+        // 100x100 -> width-1 = 99 (0x63), height-1 = 99 (0x63)
+        validWebp[24] = 99; validWebp[25] = 0; validWebp[26] = 0;
+        validWebp[27] = 99; validWebp[28] = 0; validWebp[29] = 0;
+
+        String mime = geminiAiService.validateAndGetMimeType(validWebp);
+        org.junit.jupiter.api.Assertions.assertEquals("image/webp", mime);
+    }
+
+    @Test
+    void validateAndGetMimeType_oversizedWebp_throwsIllegalArgumentException() {
+        byte[] oversizedWebp = new byte[30];
+        oversizedWebp[0] = 'R'; oversizedWebp[1] = 'I'; oversizedWebp[2] = 'F'; oversizedWebp[3] = 'F';
+        oversizedWebp[8] = 'W'; oversizedWebp[9] = 'E'; oversizedWebp[10] = 'B'; oversizedWebp[11] = 'P';
+        oversizedWebp[12] = 'V'; oversizedWebp[13] = 'P'; oversizedWebp[14] = '8'; oversizedWebp[15] = 'X';
+        // 6000x5000 = 30 MP -> 5999 (0x176F), 4999 (0x1387)
+        oversizedWebp[24] = (byte) 0x6F; oversizedWebp[25] = 0x17; oversizedWebp[26] = 0;
+        oversizedWebp[27] = (byte) 0x87; oversizedWebp[28] = 0x13; oversizedWebp[29] = 0;
+
+        IllegalArgumentException ex = org.junit.jupiter.api.Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> geminiAiService.validateAndGetMimeType(oversizedWebp)
+        );
+        org.junit.jupiter.api.Assertions.assertTrue(ex.getMessage().contains("exceeds maximum allowed limit of 25 megapixels"));
+    }
 }
