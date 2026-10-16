@@ -26,12 +26,13 @@ describe('Service Worker & CacheStorage purging (Audit #4)', () => {
     });
   });
 
-  it('purgeAllCaches deletes every existing cache from CacheStorage', async () => {
+  it('purgeAllCaches deletes runtime caches but preserves workbox precache for offline shell', async () => {
     await purgeAllCaches();
 
     expect(window.caches.keys).toHaveBeenCalled();
-    expect(window.caches.delete).toHaveBeenCalledTimes(fakeCaches.length);
-    expect(deletedCaches).toEqual(fakeCaches);
+    expect(window.caches.delete).toHaveBeenCalledTimes(2);
+    expect(deletedCaches).toEqual(['api-cache', 'food-search-cache']);
+    expect(deletedCaches).not.toContain('workbox-precache-v2');
   });
 
   it('handles empty cache list cleanly', async () => {

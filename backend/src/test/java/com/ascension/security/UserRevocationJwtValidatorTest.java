@@ -77,6 +77,22 @@ class UserRevocationJwtValidatorTest {
     }
 
     @Test
+    void validate_whenIssuedInSameSecondAsTokensValidAfter_returnsSuccess() {
+        // tokensValidAfter with milliseconds
+        Instant tokensValidAfter = Instant.parse("2026-10-16T12:00:00.789Z");
+        // JWT issuedAt truncated to seconds as per JWT spec
+        Instant issuedAt = Instant.parse("2026-10-16T12:00:00.000Z");
+
+        when(userService.getUserSecurityState("valid@example.com"))
+                .thenReturn(new UserSecurityState(true, tokensValidAfter));
+
+        Jwt jwt = createJwt("valid@example.com", issuedAt);
+        OAuth2TokenValidatorResult result = validator.validate(jwt);
+
+        assertThat(result.hasErrors()).isFalse();
+    }
+
+    @Test
     void validate_whenTokensValidAfterIsNull_returnsSuccess() {
         when(userService.getUserSecurityState("valid@example.com"))
                 .thenReturn(new UserSecurityState(true, null));

@@ -96,7 +96,7 @@ public class UserService {
                      "ON CONFLICT (email) DO UPDATE SET " +
                      "name = COALESCE(EXCLUDED.name, users.name), " +
                      "picture = COALESCE(EXCLUDED.picture, users.picture), " +
-                     "google_sub = COALESCE(EXCLUDED.google_sub, users.google_sub)";
+                     "google_sub = COALESCE(users.google_sub, EXCLUDED.google_sub)";
         jdbcTemplate.update(sql, cleanEmail, name, picture, googleSub);
 
         // Refresh cache entry
@@ -143,7 +143,7 @@ public class UserService {
         int updated = jdbcTemplate.update("UPDATE users SET tokens_valid_after = ? WHERE LOWER(email) = ?", ts, normalizedEmail);
         if (updated > 0) {
             securityCache.put(normalizedEmail, new UserSecurityState(true, effectiveTime));
-            log.info("Updated tokens_valid_after for user {} to {}", normalizedEmail, effectiveTime);
+            log.info("Updated tokens_valid_after for user {} to {}", com.ascension.util.PiiMasker.maskEmail(normalizedEmail), effectiveTime);
         } else {
             securityCache.invalidate(normalizedEmail);
         }
