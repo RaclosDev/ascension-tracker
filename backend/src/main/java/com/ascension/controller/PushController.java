@@ -49,10 +49,17 @@ public class PushController {
      * Unsubscribe.
      */
     @PostMapping("/unsubscribe")
-    public ResponseEntity<Void> unsubscribe(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<Void> unsubscribe(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody(required = false) UnsubscribeRequest request
+    ) {
         String email = jwt.getClaimAsString("email");
-        pushService.removeSubscription(email);
-        pushService.cancelRestNotification(email);
+        if (request != null && request.endpoint != null && !request.endpoint.isBlank()) {
+            pushService.removeSubscriptionByEndpoint(request.endpoint);
+        } else {
+            pushService.removeSubscription(email);
+            pushService.cancelRestNotification(email);
+        }
         return ResponseEntity.ok().build();
     }
 
@@ -111,6 +118,10 @@ public class PushController {
         @jakarta.validation.constraints.Min(1)
         @jakarta.validation.constraints.Max(3600)
         public int delaySec;
+    }
+
+    public static class UnsubscribeRequest {
+        public String endpoint;
     }
 }
 

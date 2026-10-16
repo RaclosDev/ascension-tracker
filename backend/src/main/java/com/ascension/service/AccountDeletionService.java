@@ -32,6 +32,7 @@ public class AccountDeletionService {
             "recipes",
             "saved_foods",
             "push_subscriptions",
+            "rest_timers",
             "refresh_tokens",
             "steps_entries",
             "weight_entries",
