@@ -51,9 +51,9 @@ app:
     secret: ${JWT_SECRET}
     expiration-ms: ${JWT_EXPIRATION_MS:900000}
   cookie:
-    same-site: ${COOKIE_SAME_SITE:None}
+    same-site: ${COOKIE_SAME_SITE:Lax}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,https://ascension.raclos.es}
   fatsecret:
     client-id: ${FATSECRET_CLIENT_ID}
     client-secret: ${FATSECRET_CLIENT_SECRET}

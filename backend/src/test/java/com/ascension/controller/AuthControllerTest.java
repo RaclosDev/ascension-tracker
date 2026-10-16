@@ -37,7 +37,11 @@ class AuthControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
+<<<<<<< HEAD
     private org.springframework.security.oauth2.jwt.JwtEncoder jwtEncoder;
+=======
+    private AuthController authController;
+>>>>>>> c21cfd6 (fix(auth): enforce same-site lax default and origin validation on refresh and logout [audit #10])
 
     @MockBean
     private RefreshTokenService refreshTokenService;
@@ -332,6 +336,126 @@ class AuthControllerTest {
                 .header(org.springframework.http.HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .with(csrf()))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void refresh_WhenOriginValid_AllowsRequest() throws Exception {
+        RefreshToken validToken = new RefreshToken();
+        validToken.setEmail("test@test.com");
+        validToken.setName("Test User");
+        validToken.setPicture("https://example.com/p.png");
+        validToken.setPlainToken("valid_plain_token");
+
+        when(refreshTokenService.rotateRefreshToken(anyString())).thenReturn(validToken);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(csrf())
+                .header("Origin", "http://localhost:5173")
+                .cookie(new jakarta.servlet.http.Cookie("refreshToken", "sample_token")))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Set-Cookie", containsString("SameSite=Lax")));
+    }
+
+    @Test
+    void refresh_WhenOriginInvalid_ReturnsForbidden() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(csrf())
+                .header("Origin", "https://malicious.evil.com")
+                .cookie(new jakarta.servlet.http.Cookie("refreshToken", "sample_token")))
+                .andExpect(status().isForbidden());
+
+        org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
+        request.addHeader("Origin", "https://malicious.evil.com");
+        org.springframework.http.ResponseEntity<?> response = authController.refreshtoken("sample_token", request);
+        org.junit.jupiter.api.Assertions.assertEquals(org.springframework.http.HttpStatus.FORBIDDEN, response.getStatusCode());
+        org.junit.jupiter.api.Assertions.assertEquals(java.util.Map.of("error", "Forbidden origin"), response.getBody());
+    }
+
+    @Test
+    void refresh_WhenOriginAbsent_AllowsRequest() throws Exception {
+        RefreshToken validToken = new RefreshToken();
+        validToken.setEmail("test@test.com");
+        validToken.setName("Test User");
+        validToken.setPicture("https://example.com/p.png");
+        validToken.setPlainToken("valid_plain_token");
+
+        when(refreshTokenService.rotateRefreshToken(anyString())).thenReturn(validToken);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(csrf())
+                .cookie(new jakarta.servlet.http.Cookie("refreshToken", "sample_token")))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Set-Cookie", containsString("SameSite=Lax")));
+    }
+
+    @Test
+    void logout_WhenOriginValid_ReturnsOk() throws Exception {
+        mockMvc.perform(post("/api/auth/logout")
+                .with(csrf())
+                .header("Origin", "https://ascension.raclos.es"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Set-Cookie", containsString("SameSite=Lax")));
+    }
+
+    @Test
+    void logout_WhenOriginInvalid_ReturnsForbidden() throws Exception {
+        mockMvc.perform(post("/api/auth/logout")
+                .with(csrf())
+                .header("Origin", "https://malicious.evil.com"))
+                .andExpect(status().isForbidden());
+
+        org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
+        request.addHeader("Origin", "https://malicious.evil.com");
+        org.springframework.http.ResponseEntity<?> response = authController.logout("sample_token", null, null, request);
+        org.junit.jupiter.api.Assertions.assertEquals(org.springframework.http.HttpStatus.FORBIDDEN, response.getStatusCode());
+        org.junit.jupiter.api.Assertions.assertEquals(java.util.Map.of("error", "Forbidden origin"), response.getBody());
+    }
+
+    @Test
+    void logout_WhenOriginAbsent_ReturnsOk() throws Exception {
+        mockMvc.perform(post("/api/auth/logout")
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Set-Cookie", containsString("SameSite=Lax")));
+    }
+
+    @Test
+    void cookieSameSite_defaultsToLaxOnLogin() throws Exception {
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
+        payload.setEmailVerified(true);
+        payload.setEmail("athlete@example.com");
+        payload.set("name", "Athlete Test");
+        payload.set("picture", "https://example.com/pic.png");
+        when(idToken.getPayload()).thenReturn(payload);
+        when(googleIdTokenVerifier.verify("valid-google-token-lax")).thenReturn(idToken);
+
+        RefreshToken rt = new RefreshToken();
+        rt.setEmail("athlete@example.com");
+        rt.setName("Athlete Test");
+        rt.setPicture("https://example.com/pic.png");
+        rt.setPlainToken("plain-token-lax");
+        when(refreshTokenService.createRefreshToken(anyString(), anyString(), anyString())).thenReturn(rt);
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"valid-google-token-lax\"}"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Set-Cookie", containsString("SameSite=Lax")));
+    }
+
+    @Test
+    void cookieSameSite_usesNoneOnlyWhenConfiguredExplicitly() throws Exception {
+        org.springframework.test.util.ReflectionTestUtils.setField(authController, "cookieSameSite", "None");
+        try {
+            mockMvc.perform(post("/api/auth/logout")
+                    .with(csrf()))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Set-Cookie", containsString("SameSite=None")));
+        } finally {
+            org.springframework.test.util.ReflectionTestUtils.setField(authController, "cookieSameSite", "Lax");
+        }
     }
 }
 
