@@ -28,12 +28,20 @@ public @interface DisabledIfDockerUnavailable {
 
         @Override
         public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+            boolean isCi = "true".equalsIgnoreCase(System.getenv("CI"))
+                    || "true".equalsIgnoreCase(System.getenv("GITHUB_ACTIONS"));
             try {
                 if (DockerClientFactory.instance().isDockerAvailable()) {
                     return ENABLED;
                 }
-                return ConditionEvaluationResult.disabled("Skipping test: Docker daemon is not running on this host");
+                if (isCi) {
+                    throw new AssertionError("Docker daemon is required in CI environment but is not available or failed to respond");
+                }
+                return ConditionEvaluationResult.disabled("Skipping test: Docker daemon is not running on this local host");
             } catch (Throwable t) {
+                if (isCi) {
+                    throw new AssertionError("Docker daemon check failed in CI environment: " + t.getMessage(), t);
+                }
                 return ConditionEvaluationResult.disabled("Skipping test: Docker is not available (" + t.getMessage() + ")");
             }
         }
