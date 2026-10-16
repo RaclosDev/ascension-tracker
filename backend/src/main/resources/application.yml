@@ -66,11 +66,11 @@ app:
     push-limit: ${RATE_LIMIT_PUSH:20}
     max-requests-per-minute: ${RATE_LIMIT_GENERAL:20}
   quotas:
-    max-workouts: ${QUOTA_MAX_WORKOUTS:1000}
-    max-food-logs: ${QUOTA_MAX_FOOD_LOGS:5000}
-    max-recipes: ${QUOTA_MAX_RECIPES:200}
-    max-custom-exercises: ${QUOTA_MAX_CUSTOM_EXERCISES:200}
-    max-workout-templates: ${QUOTA_MAX_WORKOUT_TEMPLATES:100}
+    max-workouts: ${QUOTA_MAX_WORKOUTS:3000}
+    max-food-logs: ${QUOTA_MAX_FOOD_LOGS:25000}
+    max-recipes: ${QUOTA_MAX_RECIPES:500}
+    max-custom-exercises: ${QUOTA_MAX_CUSTOM_EXERCISES:500}
+    max-workout-templates: ${QUOTA_MAX_WORKOUT_TEMPLATES:200}
     max-saved-foods: ${QUOTA_MAX_SAVED_FOODS:500}
     max-weight-entries: ${QUOTA_MAX_WEIGHT_ENTRIES:2000}
     max-steps-entries: ${QUOTA_MAX_STEPS_ENTRIES:2000}

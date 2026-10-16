@@ -31,6 +31,9 @@ class WeightServiceTest {
     @Mock
     private SettingsService settingsService;
 
+    @Mock
+    private UserDataQuotaService userDataQuotaService;
+
     @InjectMocks
     private WeightService weightService;
 
