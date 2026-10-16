@@ -163,6 +163,10 @@ public class GeminiApiClient {
                 throw new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY,
                         "Servicio de IA de Gemini respondió con error 5xx: " + rcre.getStatusCode().value(), lastException);
             }
+            if (rcre.getStatusCode().is4xxClientError()) {
+                throw new ExternalApiException("Gemini", HttpStatus.valueOf(rcre.getStatusCode().value()),
+                        "Gemini API rechazó la petición (" + rcre.getStatusCode().value() + "): " + rcre.getStatusText(), lastException);
+            }
         }
         throw new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY,
                 "Todos los modelos de Gemini fallaron. Último error: " + (lastException != null ? lastException.getMessage() : "desconocido"), lastException);

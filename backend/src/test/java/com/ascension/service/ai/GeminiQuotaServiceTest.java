@@ -71,23 +71,28 @@ class GeminiQuotaServiceTest {
     }
 
     @Test
-    void circuitBreaker_IgnoresClientValidationErrors() {
-        for (int i = 0; i < 10; i++) {
+    void circuitBreaker_IgnoresClientValidationAnd4xxErrors() {
+        // Client validation error
+        for (int i = 0; i < 5; i++) {
             quotaService.recordFailure(new IllegalArgumentException("Invalid base64 image or bad dimension"));
+        }
+        // Client 4xx error from upstream Gemini (e.g. 400 Bad Request, 422 Unprocessable)
+        for (int i = 0; i < 5; i++) {
+            quotaService.recordFailure(new com.ascension.exception.ExternalApiException("Gemini", org.springframework.http.HttpStatus.BAD_REQUEST, "Invalid prompt format"));
         }
         assertThat(quotaService.getConsecutiveFailures()).isEqualTo(0);
         assertThat(quotaService.isCircuitOpen()).isFalse();
     }
 
     @Test
-    void circuitBreaker_TripsOpenAfterConsecutiveFailuresAndRejectsFast() {
+    void circuitBreaker_TripsOpenAfterConsecutiveUpstreamFailuresAndRejectsFast() {
         for (int i = 0; i < 4; i++) {
-            quotaService.recordFailure(new RuntimeException("Transient error " + i));
+            quotaService.recordFailure(new com.ascension.exception.ExternalApiException("Gemini", org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE, "503 overload"));
             assertThat(quotaService.isCircuitOpen()).isFalse();
         }
 
-        // 5th consecutive failure trips circuit breaker
-        quotaService.recordFailure(new RuntimeException("Transient error 5"));
+        // 5th consecutive 5xx failure trips circuit breaker
+        quotaService.recordFailure(new com.ascension.exception.ExternalApiException("Gemini", org.springframework.http.HttpStatus.BAD_GATEWAY, "502 Bad Gateway"));
         assertThat(quotaService.isCircuitOpen()).isTrue();
 
         AiQuotaExceededException ex = assertThrows(
@@ -98,9 +103,18 @@ class GeminiQuotaServiceTest {
     }
 
     @Test
+    void circuitBreaker_TripsOpenOnRateLimitsAndNetworkTimeouts() {
+        for (int i = 0; i < 4; i++) {
+            quotaService.recordFailure(new com.ascension.exception.ExternalApiException("Gemini", org.springframework.http.HttpStatus.TOO_MANY_REQUESTS, "429 Rate Limit"));
+        }
+        quotaService.recordFailure(new org.springframework.web.client.ResourceAccessException("Read timed out"));
+        assertThat(quotaService.isCircuitOpen()).isTrue();
+    }
+
+    @Test
     void circuitBreaker_RecoversOnSuccess() {
         for (int i = 0; i < 3; i++) {
-            quotaService.recordFailure(new RuntimeException("Transient error " + i));
+            quotaService.recordFailure(new com.ascension.exception.ExternalApiException("Gemini", org.springframework.http.HttpStatus.BAD_GATEWAY, "502 Bad Gateway"));
         }
         assertThat(quotaService.getConsecutiveFailures()).isEqualTo(3);
 
