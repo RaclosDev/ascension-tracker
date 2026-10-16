@@ -58,6 +58,19 @@ public class RestTimerService {
     }
 
     @Transactional
+    public void revertToPending(Long timerId) {
+        if (timerId == null) {
+            return;
+        }
+        restTimerRepository.findById(timerId).ifPresent(timer -> {
+            if (timer.getStatus() == RestTimerStatus.COMPLETED) {
+                timer.setStatus(RestTimerStatus.PENDING);
+                restTimerRepository.save(timer);
+            }
+        });
+    }
+
+    @Transactional
     public int purgeOldTimers(Instant cutoff) {
         int deleted = restTimerRepository.deleteTimersOlderThan(cutoff);
         if (deleted > 0) {

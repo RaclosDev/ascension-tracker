@@ -73,7 +73,6 @@ public class GeminiAiService {
 
         // Check data quota before calling external AI API to avoid unbilled calls
         userDataQuotaService.checkFoodLogQuota(userEmail, 1);
-        quotaService.checkAndReserveQuota(userEmail);
 
         // Fetch user's custom foods, recipes, and meals for context
         List<SavedFoodDTO> savedFoods = nutritionLogService.getSavedFoods(userEmail);
@@ -117,6 +116,7 @@ public class GeminiAiService {
 
         String prompt = promptBuilder.buildFoodLogPrompt(text, base64Image, mealsContext, defaultMealDesc, contextFoods, contextRecipes, defaultMealIndex);
 
+        quotaService.checkAndReserveQuota(userEmail);
         String responseText;
         try {
             if (cleanBase64 != null && mimeType != null) {
@@ -267,8 +267,6 @@ public class GeminiAiService {
             mimeType = validateAndGetMimeType(decoded);
         }
 
-        quotaService.checkAndReserveQuota(userEmail);
-
         // 1. Get targets
         MacrosDTO targetMacros = macroCalculatorService.getMacros(userEmail);
         int targetKcal = targetMacros.getKcal() != null ? targetMacros.getKcal() : 2000;
@@ -369,6 +367,7 @@ public class GeminiAiService {
                 promptText, base64Image
         );
 
+        quotaService.checkAndReserveQuota(userEmail);
         String responseText;
         try {
             if (cleanBase64 != null && mimeType != null) {

@@ -146,7 +146,10 @@ export default function SettingsPage() {
       await exportUserData();
       toast.success('Copia de seguridad exportada con éxito');
     } catch (error) {
-      console.error('Error al exportar copia de seguridad:', error);
+      console.error(
+        'Error al exportar copia de seguridad:',
+        error instanceof Error ? error.message : String(error),
+      );
       toast.error('Error al exportar la copia de seguridad');
     } finally {
       setIsExportingJson(false);
@@ -231,7 +234,10 @@ export default function SettingsPage() {
       refetchSettings();
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     } catch (err: unknown) {
-      console.error('Error al guardar datos personales:', err);
+      console.error(
+        'Error al guardar datos personales:',
+        err instanceof Error ? err.message : String(err),
+      );
       const e = err as {
         response?: { data?: { message?: string; error?: string } };
         message?: string;
@@ -282,7 +288,7 @@ export default function SettingsPage() {
       refetchSettings();
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     } catch (err: unknown) {
-      console.error('Error al guardar macros:', err);
+      console.error('Error al guardar macros:', err instanceof Error ? err.message : String(err));
       const e = err as {
         response?: { data?: { message?: string; error?: string } };
         message?: string;

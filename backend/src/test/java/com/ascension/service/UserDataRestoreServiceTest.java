@@ -242,8 +242,8 @@ class UserDataRestoreServiceTest {
         UserDataExportDTO backup = createSampleBackup();
 
         // Simulate that the workout with startedAt 1700000000000 already exists
-        when(workoutRepository.findAllByUserEmailOrderByStartedAtDesc(AUTH_USER))
-                .thenReturn(List.of(Workout.builder().startedAt(1700000000000L).build()));
+        when(workoutRepository.findStartedAtByUserEmail(AUTH_USER))
+                .thenReturn(List.of(1700000000000L));
 
         // Simulate that custom exercise already exists
         CustomExercise existingEx = CustomExercise.builder()

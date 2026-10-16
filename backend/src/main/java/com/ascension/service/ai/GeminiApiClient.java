@@ -159,6 +159,10 @@ public class GeminiApiClient {
     }
 
     private boolean isUnrecoverableClientError(Exception e) {
+        if (e instanceof ExternalApiException eae) {
+            int code = eae.getStatus() != null ? eae.getStatus().value() : 500;
+            return eae.getStatus() != null && eae.getStatus().is4xxClientError() && code != 429 && code != 404;
+        }
         if (e instanceof RestClientResponseException rcre) {
             int code = rcre.getStatusCode().value();
             return rcre.getStatusCode().is4xxClientError() && code != 429 && code != 404;
@@ -359,13 +363,22 @@ public class GeminiApiClient {
         JsonNode candidates = root.path("candidates");
         if (candidates.isArray() && candidates.size() > 0) {
             JsonNode firstCandidate = candidates.get(0);
+            String finishReason = firstCandidate.path("finishReason").asText("");
+            if ("SAFETY".equalsIgnoreCase(finishReason) || "RECITATION".equalsIgnoreCase(finishReason) || "BLOCKLIST".equalsIgnoreCase(finishReason)) {
+                throw new ExternalApiException("Gemini", HttpStatus.BAD_REQUEST, "Peticion bloqueada por filtros de seguridad de Gemini (" + finishReason + ")");
+            }
             JsonNode partsNode = firstCandidate.path("content").path("parts");
             if (partsNode.isArray() && partsNode.size() > 0) {
                 return partsNode.get(0).path("text").asText();
             }
         }
 
-        throw new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY, "Estructura de respuesta inesperada de Gemini: " + response.getBody());
+        JsonNode blockReason = root.path("promptFeedback").path("blockReason");
+        if (!blockReason.isMissingNode() && !blockReason.asText().isBlank()) {
+            throw new ExternalApiException("Gemini", HttpStatus.BAD_REQUEST, "Peticion bloqueada por filtro de contenido de Gemini (" + blockReason.asText() + ")");
+        }
+
+        throw new ExternalApiException("Gemini", HttpStatus.BAD_REQUEST, "Respuesta sin contenido generado por Gemini");
     }
 
     private void applyBackoff(int attempt, long deadline) {

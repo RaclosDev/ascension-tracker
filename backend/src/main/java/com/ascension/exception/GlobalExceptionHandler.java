@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.Instant;
@@ -163,6 +165,20 @@ public class GlobalExceptionHandler {
         String traceId = UUID.randomUUID().toString();
         log.warn("Entity not found: {} [trace_id: {}]", ex.getMessage(), traceId);
         return buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND, traceId);
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ApiErrorResponse> handleOptimisticLockingFailureException(OptimisticLockingFailureException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Optimistic locking conflict [trace_id: {}]: {}", traceId, ex.getMessage());
+        return buildErrorResponse("Conflicto de concurrencia: el recurso fue modificado por otra solicitud. Intentalo de nuevo.", HttpStatus.CONFLICT, traceId);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Data integrity violation [trace_id: {}]: {}", traceId, ex.getMessage());
+        return buildErrorResponse("Error de integridad de datos: el registro ya existe o viola una restriccion del sistema.", HttpStatus.BAD_REQUEST, traceId);
     }
 
     @ExceptionHandler(Exception.class)

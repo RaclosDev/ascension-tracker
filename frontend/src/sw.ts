@@ -1,13 +1,20 @@
 /// <reference lib="webworker" />
-import { precacheAndRoute, PrecacheEntry } from 'workbox-precaching';
+import { createHandlerBoundToURL, precacheAndRoute, PrecacheEntry } from 'workbox-precaching';
 declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (PrecacheEntry | string)[] };
 
-import { registerRoute } from 'workbox-routing';
+import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 
 // Precache resources injected by VitePWA
 precacheAndRoute(self.__WB_MANIFEST);
+
+// SPA Navigation fallback for offline navigation (excluding /api routes)
+const navigationHandler = createHandlerBoundToURL('/index.html');
+const navigationRoute = new NavigationRoute(navigationHandler, {
+  denylist: [/^\/api/],
+});
+registerRoute(navigationRoute);
 
 // Cache public external food search results only (non-sensitive)
 registerRoute(

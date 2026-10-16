@@ -25,37 +25,55 @@ public class FoodExternalService {
         try {
             com.fasterxml.jackson.databind.node.ArrayNode combinedProducts = objectMapper.createArrayNode();
 
-            boolean offFailed = false;
-            boolean fsFailed = false;
+            java.util.concurrent.CompletableFuture<JsonNode> offFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                try {
+                    return offClient.searchOpenFoodFacts(query);
+                } catch (Exception e) {
+                    log.warn("OFF Search Failed: {}", e.getMessage());
+                    return null;
+                }
+            });
 
-            // 1. OpenFoodFacts
+            java.util.concurrent.CompletableFuture<JsonNode> fsFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                try {
+                    JsonNode fsRawRoot = fatSecretClient.searchFatSecret(query);
+                    String fsMapped = fatSecretMapper.mapFatSecretToOpenFoodFacts(fsRawRoot, false);
+                    return objectMapper.readTree(fsMapped);
+                } catch (Exception e) {
+                    log.warn("FatSecret Search Failed: {}", e.getMessage());
+                    return null;
+                }
+            });
+
             try {
-                JsonNode offRoot = offClient.searchOpenFoodFacts(query);
+                java.util.concurrent.CompletableFuture.allOf(offFuture, fsFuture).get(4, java.util.concurrent.TimeUnit.SECONDS);
+            } catch (Exception e) {
+                log.warn("External food APIs timeout or interrupted: {}", e.getMessage());
+            }
+
+            JsonNode offRoot = offFuture.getNow(null);
+            JsonNode fsRoot = fsFuture.getNow(null);
+
+            boolean offSuccess = false;
+            if (offRoot != null) {
                 JsonNode offProducts = offRoot.path("products");
                 if (offProducts.isArray()) {
                     combinedProducts.addAll((com.fasterxml.jackson.databind.node.ArrayNode) offProducts);
+                    offSuccess = true;
                 }
-            } catch (Exception e) {
-                offFailed = true;
-                log.warn("OFF Search Failed: {}", e.getMessage());
             }
 
-            // 2. FatSecret
-            try {
-                JsonNode fsRawRoot = fatSecretClient.searchFatSecret(query);
-                String fsMapped = fatSecretMapper.mapFatSecretToOpenFoodFacts(fsRawRoot, false);
-                JsonNode fsRoot = objectMapper.readTree(fsMapped);
+            boolean fsSuccess = false;
+            if (fsRoot != null) {
                 JsonNode fsProducts = fsRoot.path("products");
                 if (fsProducts.isArray()) {
                     combinedProducts.addAll((com.fasterxml.jackson.databind.node.ArrayNode) fsProducts);
+                    fsSuccess = true;
                 }
-            } catch (Exception e) {
-                fsFailed = true;
-                log.warn("FatSecret Search Failed: {}", e.getMessage());
             }
 
-            if (offFailed && fsFailed) {
-                throw new com.ascension.exception.ExternalApiException("ExternalFoodApis", org.springframework.http.HttpStatus.BAD_GATEWAY, "Both external food APIs failed");
+            if (!offSuccess && !fsSuccess) {
+                throw new com.ascension.exception.ExternalApiException("ExternalFoodApis", org.springframework.http.HttpStatus.BAD_GATEWAY, "Both external food APIs failed or timed out");
             }
 
             com.fasterxml.jackson.databind.node.ObjectNode finalRoot = objectMapper.createObjectNode();

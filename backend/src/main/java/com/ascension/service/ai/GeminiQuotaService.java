@@ -68,11 +68,11 @@ public class GeminiQuotaService {
     }
 
     public void releaseQuota(String userEmail) {
-        globalDailyUsage.decrementAndGet();
+        globalDailyUsage.updateAndGet(curr -> Math.max(0, curr - 1));
         if (userEmail != null && !userEmail.isBlank()) {
             AtomicInteger userCount = userDailyUsage.get(userEmail);
             if (userCount != null) {
-                userCount.decrementAndGet();
+                userCount.updateAndGet(curr -> Math.max(0, curr - 1));
             }
         }
     }

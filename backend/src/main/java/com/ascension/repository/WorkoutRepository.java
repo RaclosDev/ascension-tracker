@@ -27,6 +27,9 @@ public interface WorkoutRepository extends JpaRepository<Workout, String> {
     @EntityGraph(attributePaths = {"exercises", "exercises.sets"})
     List<Workout> findAllByUserEmailOrderByStartedAtDesc(String userEmail);
 
+    @Query("SELECT w.startedAt FROM Workout w WHERE w.userEmail = :userEmail AND w.startedAt IS NOT NULL")
+    List<Long> findStartedAtByUserEmail(@Param("userEmail") String userEmail);
+
     @Query(value = """
         SELECT
             (SELECT COUNT(*) FROM workouts WHERE user_email = :userEmail) AS totalWorkouts,

@@ -154,13 +154,22 @@ public class PushNotificationService {
     public void pollDueTimers() {
         List<RestTimer> dueTimers = restTimerService.claimDueTimers(Instant.now(), 50);
         for (RestTimer timer : dueTimers) {
-            pushExecutor.submit(() -> {
+            try {
+                pushExecutor.submit(() -> {
+                    try {
+                        sendPush(timer.getUserEmail(), "¡Descanso terminado!", "Es hora de la siguiente serie. 💪");
+                    } catch (Exception e) {
+                        log.error("Failed to deliver rest timer push notification for user {}", com.ascension.util.PiiMasker.maskEmail(timer.getUserEmail()), e);
+                    }
+                });
+            } catch (java.util.concurrent.RejectedExecutionException e) {
+                log.warn("Push executor rejected timer {}, reverting status to PENDING", timer.getId());
                 try {
-                    sendPush(timer.getUserEmail(), "¡Descanso terminado!", "Es hora de la siguiente serie. 💪");
-                } catch (Exception e) {
-                    log.error("Failed to deliver rest timer push notification for user {}", com.ascension.util.PiiMasker.maskEmail(timer.getUserEmail()), e);
+                    restTimerService.revertToPending(timer.getId());
+                } catch (Exception re) {
+                    log.error("Failed to revert timer {} to PENDING", timer.getId(), re);
                 }
-            });
+            }
         }
     }
 
