@@ -36,6 +36,7 @@ jobs:
           format: 'table'
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
+          exit-code: '1'
 
       - name: Build Backend Docker Image
         working-directory: backend
@@ -48,6 +49,7 @@ jobs:
           format: 'table'
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
+          exit-code: '1'
 
   frontend:
     name: Frontend CI
@@ -102,3 +104,4 @@ jobs:
           format: 'table'
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
+          exit-code: '1'
