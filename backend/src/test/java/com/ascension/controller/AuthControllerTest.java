@@ -37,11 +37,10 @@ class AuthControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-<<<<<<< HEAD
     private org.springframework.security.oauth2.jwt.JwtEncoder jwtEncoder;
-=======
+
+    @Autowired
     private AuthController authController;
->>>>>>> c21cfd6 (fix(auth): enforce same-site lax default and origin validation on refresh and logout [audit #10])
 
     @MockBean
     private RefreshTokenService refreshTokenService;
@@ -54,6 +53,18 @@ class AuthControllerTest {
 
     @MockBean
     private com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier googleIdTokenVerifier;
+
+    @MockBean
+    private com.ascension.interceptor.RateLimitInterceptor rateLimitInterceptor;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUpRateLimit() throws Exception {
+        when(rateLimitInterceptor.preHandle(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any()
+        )).thenReturn(true);
+    }
 
     @Test
     void refresh_WhenTokenMissing_ReturnsUnauthorized() throws Exception {
@@ -88,10 +99,8 @@ class AuthControllerTest {
 
         RefreshToken rt = new RefreshToken();
         rt.setEmail("athlete@example.com");
-        rt.setName("Athlete Test");
-        rt.setPicture("https://example.com/pic.png");
         rt.setPlainToken("plain-refresh-token");
-        when(refreshTokenService.createRefreshToken(anyString(), anyString(), anyString())).thenReturn(rt);
+        when(refreshTokenService.createRefreshToken(anyString())).thenReturn(rt);
 
         mockMvc.perform(post("/api/auth/login")
                 .with(csrf())
@@ -107,8 +116,6 @@ class AuthControllerTest {
     void refresh_WhenTokenReusedWithinGracePeriod_ReturnsOkWithNewCookieAndNoRefreshTokenInBody() throws Exception {
         RefreshToken graceToken = new RefreshToken();
         graceToken.setEmail("test@test.com");
-        graceToken.setName("Test User");
-        graceToken.setPicture("https://example.com/p.png");
         graceToken.setPlainToken("valid_new_grace_token");
 
         when(refreshTokenService.rotateRefreshToken(anyString())).thenReturn(graceToken);
@@ -342,8 +349,6 @@ class AuthControllerTest {
     void refresh_WhenOriginValid_AllowsRequest() throws Exception {
         RefreshToken validToken = new RefreshToken();
         validToken.setEmail("test@test.com");
-        validToken.setName("Test User");
-        validToken.setPicture("https://example.com/p.png");
         validToken.setPlainToken("valid_plain_token");
 
         when(refreshTokenService.rotateRefreshToken(anyString())).thenReturn(validToken);
@@ -375,8 +380,6 @@ class AuthControllerTest {
     void refresh_WhenOriginAbsent_AllowsRequest() throws Exception {
         RefreshToken validToken = new RefreshToken();
         validToken.setEmail("test@test.com");
-        validToken.setName("Test User");
-        validToken.setPicture("https://example.com/p.png");
         validToken.setPlainToken("valid_plain_token");
 
         when(refreshTokenService.rotateRefreshToken(anyString())).thenReturn(validToken);
@@ -425,6 +428,7 @@ class AuthControllerTest {
         com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
         payload.setEmailVerified(true);
         payload.setEmail("athlete@example.com");
+        payload.setSubject("athlete-sub");
         payload.set("name", "Athlete Test");
         payload.set("picture", "https://example.com/pic.png");
         when(idToken.getPayload()).thenReturn(payload);
@@ -432,10 +436,8 @@ class AuthControllerTest {
 
         RefreshToken rt = new RefreshToken();
         rt.setEmail("athlete@example.com");
-        rt.setName("Athlete Test");
-        rt.setPicture("https://example.com/pic.png");
         rt.setPlainToken("plain-token-lax");
-        when(refreshTokenService.createRefreshToken(anyString(), anyString(), anyString())).thenReturn(rt);
+        when(refreshTokenService.createRefreshToken("athlete@example.com")).thenReturn(rt);
 
         mockMvc.perform(post("/api/auth/login")
                 .with(csrf())
@@ -456,6 +458,120 @@ class AuthControllerTest {
         } finally {
             org.springframework.test.util.ReflectionTestUtils.setField(authController, "cookieSameSite", "Lax");
         }
+    }
+
+    @Test
+    void login_whenVerifierThrowsGeneralSecurityException_returns401() throws Exception {
+        when(googleIdTokenVerifier.verify("bad-sig-token"))
+                .thenThrow(new java.security.GeneralSecurityException("Invalid signature"));
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"bad-sig-token\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Failed to validate token"));
+    }
+
+    @Test
+    void login_whenVerifierThrowsIllegalArgumentException_returns401() throws Exception {
+        when(googleIdTokenVerifier.verify("malformed-token"))
+                .thenThrow(new IllegalArgumentException("Malformed token format"));
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"malformed-token\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Failed to validate token"));
+    }
+
+    @Test
+    void login_whenUnexpectedExceptionOccurs_propagatesToGlobalHandlerAs500() throws Exception {
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
+        payload.setEmailVerified(true);
+        payload.setEmail("dbfail@example.com");
+        payload.setSubject("sub-db-fail");
+        when(idToken.getPayload()).thenReturn(payload);
+        when(googleIdTokenVerifier.verify("db-fail-token")).thenReturn(idToken);
+
+        org.mockito.Mockito.doThrow(new org.springframework.dao.DataAccessResourceFailureException("Database unreachable"))
+                .when(userService).ensureUserExists(
+                        org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.anyString()
+                );
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"db-fail-token\"}"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void login_withPictureUrlLongerThan255Characters_succeedsAndPersistsUrl() throws Exception {
+        String longPictureUrl = "https://lh3.googleusercontent.com/a/ACg8oc" + "A".repeat(250) + "=s96-c";
+        org.assertj.core.api.Assertions.assertThat(longPictureUrl.length()).isGreaterThan(255);
+
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
+        payload.setEmailVerified(true);
+        payload.setEmail("longpic@example.com");
+        payload.setSubject("sub-long-pic");
+        payload.set("name", "Long Pic User");
+        payload.set("picture", longPictureUrl);
+
+        when(idToken.getPayload()).thenReturn(payload);
+        when(googleIdTokenVerifier.verify("valid-long-pic-token")).thenReturn(idToken);
+
+        RefreshToken rt = new RefreshToken();
+        rt.setEmail("longpic@example.com");
+        rt.setPlainToken("plain-token-long-pic");
+        when(refreshTokenService.createRefreshToken("longpic@example.com")).thenReturn(rt);
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"valid-long-pic-token\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie().exists("refreshToken"));
+
+        verify(userService).ensureUserExists(
+                org.mockito.ArgumentMatchers.eq("longpic@example.com"),
+                org.mockito.ArgumentMatchers.eq("Long Pic User"),
+                org.mockito.ArgumentMatchers.eq(longPictureUrl),
+                org.mockito.ArgumentMatchers.eq("sub-long-pic")
+        );
+    }
+
+    @Test
+    void refresh_readsNameAndPictureFromUsersTable() throws Exception {
+        RefreshToken rt = new RefreshToken();
+        rt.setEmail("refreshed@example.com");
+        rt.setPlainToken("plain-rotated-token");
+        when(refreshTokenService.rotateRefreshToken("cookie-token")).thenReturn(rt);
+
+        when(userService.findByEmail("refreshed@example.com")).thenReturn(Optional.of(
+                new com.ascension.service.UserService.User(
+                        "refreshed@example.com",
+                        "Latest Name",
+                        "https://example.com/latest-avatar.png",
+                        "sub-123",
+                        java.time.Instant.now()
+                )
+        ));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(csrf())
+                .cookie(new jakarta.servlet.http.Cookie("refreshToken", "cookie-token")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists());
+
+        verify(userService).findByEmail("refreshed@example.com");
     }
 }
 

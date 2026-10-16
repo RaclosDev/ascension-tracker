@@ -20,18 +20,30 @@ public class RefreshTokenService {
     }
 
     @Transactional
-    public RefreshToken createRefreshToken(String email, String name, String picture) {
-        return createRefreshToken(email, name, picture, null);
+    public RefreshToken createRefreshToken(String email) {
+        return createRefreshToken(email, (String) null);
     }
 
     @Transactional
-    public RefreshToken createRefreshToken(String email, String name, String picture, String familyId) {
+    public RefreshToken createRefreshToken(String email, String familyId) {
         RefreshToken refreshToken = new RefreshToken(
-                email, name, picture,
+                email,
                 Instant.now().plus(REFRESH_TOKEN_EXPIRATION_DAYS, ChronoUnit.DAYS),
                 familyId
         );
         return refreshTokenRepository.save(refreshToken);
+    }
+
+    @Deprecated
+    @Transactional
+    public RefreshToken createRefreshToken(String email, String name, String picture) {
+        return createRefreshToken(email, (String) null);
+    }
+
+    @Deprecated
+    @Transactional
+    public RefreshToken createRefreshToken(String email, String name, String picture, String familyId) {
+        return createRefreshToken(email, familyId);
     }
 
     @Transactional(noRollbackFor = com.ascension.exception.TokenRefreshException.class)
@@ -56,7 +68,7 @@ public class RefreshTokenService {
                 // Grace period: allow at most ONE additional emission
                 refreshToken.setGraceUsed(true);
                 refreshTokenRepository.save(refreshToken);
-                return createRefreshToken(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture(), refreshToken.getFamilyId());
+                return createRefreshToken(refreshToken.getEmail(), refreshToken.getFamilyId());
             }
             // Outside grace period or grace already consumed: reuse detected -> revoke whole family
             refreshTokenRepository.deleteByFamilyId(refreshToken.getFamilyId());
@@ -66,7 +78,7 @@ public class RefreshTokenService {
         refreshToken.setReplacedAt(Instant.now());
         refreshTokenRepository.save(refreshToken);
         
-        return createRefreshToken(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture(), refreshToken.getFamilyId());
+        return createRefreshToken(refreshToken.getEmail(), refreshToken.getFamilyId());
     }
 
     @Transactional
