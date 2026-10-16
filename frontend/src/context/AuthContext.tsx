@@ -146,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    api.post('/auth/logout').catch(() => {});
+    await api.post('/auth/logout').catch(() => {});
     googleLogout();
     setToken(null);
     setUser(null);

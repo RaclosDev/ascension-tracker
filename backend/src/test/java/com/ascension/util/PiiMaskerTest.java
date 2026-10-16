@@ -1,10 +1,16 @@
 package com.ascension.util;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PiiMaskerTest {
+
+    @AfterEach
+    void cleanupProperty() {
+        System.clearProperty("APP_PII_SALT");
+    }
 
     @Test
     void maskEmail_whenNullOrEmpty_returnsAnonymous() {
@@ -22,7 +28,7 @@ class PiiMaskerTest {
         assertThat(masked).doesNotContain("@");
         assertThat(masked).doesNotContain("athlete");
         assertThat(masked).doesNotContain("example");
-        assertThat(masked).hasSize("usr_".length() + 16); // 16 hex chars (64 bits) prefix
+        assertThat(masked).hasSize("usr_".length() + 16); // 16 hex chars (64 bits)
     }
 
     @Test
@@ -45,5 +51,17 @@ class PiiMaskerTest {
         String masked2 = PiiMasker.maskEmail("bob@example.com");
 
         assertThat(masked1).isNotEqualTo(masked2);
+    }
+
+    @Test
+    void maskEmail_withCustomSaltProperty_changesPseudonym() {
+        String email = "athlete@example.com";
+        String defaultMasked = PiiMasker.maskEmail(email);
+
+        System.setProperty("APP_PII_SALT", "super-secret-salt-for-testing-12345678");
+        String customMasked = PiiMasker.maskEmail(email);
+
+        assertThat(customMasked).startsWith("usr_");
+        assertThat(customMasked).isNotEqualTo(defaultMasked);
     }
 }
