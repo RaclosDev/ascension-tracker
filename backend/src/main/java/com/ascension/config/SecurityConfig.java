@@ -18,6 +18,24 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import com.ascension.security.UserRevocationJwtValidator;
+import com.ascension.service.UserService;
+import jakarta.annotation.PostConstruct;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -33,7 +51,7 @@ public class SecurityConfig {
     @Value("${app.cors.allowed-origins:http://localhost:5173,https://ascension.raclos.es}")
     private String allowedOrigins;
 
-    @jakarta.annotation.PostConstruct
+    @PostConstruct
     public void validateSecret() {
         if (jwtSecret == null || jwtSecret.trim().isEmpty()) {
             throw new IllegalStateException("FATAL: JWT_SECRET must be set and cannot be blank.");
@@ -41,7 +59,7 @@ public class SecurityConfig {
         if (jwtSecret.getBytes(StandardCharsets.UTF_8).length < 32) {
             throw new IllegalStateException("FATAL: JWT_SECRET must be at least 32 bytes long for HS256.");
         }
-        String lower = jwtSecret.toLowerCase(java.util.Locale.ROOT);
+        String lower = jwtSecret.toLowerCase(Locale.ROOT);
         if (lower.contains("change_me")) {
             throw new IllegalStateException("FATAL: JWT_SECRET must not be or contain the placeholder 'CHANGE_ME'.");
         }
@@ -57,7 +75,7 @@ public class SecurityConfig {
         if (s == null || s.isEmpty()) {
             return 0.0;
         }
-        java.util.Map<Character, Integer> freqMap = new java.util.HashMap<>();
+        Map<Character, Integer> freqMap = new HashMap<>();
         for (char c : s.toCharArray()) {
             freqMap.put(c, freqMap.getOrDefault(c, 0) + 1);
         }
@@ -72,7 +90,7 @@ public class SecurityConfig {
 
     // Auth endpoints: NO JWT filter at all — pure cookie-based refresh
     @Bean
-    @org.springframework.core.annotation.Order(1)
+    @Order(1)
     public SecurityFilterChain authFilterChain(HttpSecurity http) throws Exception {
         http
             .securityMatcher("/api/auth/login", "/api/auth/refresh", "/api/auth/logout", "/api/auth/config")
@@ -80,7 +98,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
             .sessionManagement(session -> session.sessionCreationPolicy(
-                org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
+                SessionCreationPolicy.STATELESS))
             .headers(headers -> headers
                 .frameOptions(frameOptions -> frameOptions.deny())
                 .httpStrictTransportSecurity(hsts -> hsts
@@ -99,7 +117,7 @@ public class SecurityConfig {
 
     // Everything else: JWT-protected
     @Bean
-    @org.springframework.core.annotation.Order(2)
+    @Order(2)
     public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(Customizer.withDefaults())
@@ -128,17 +146,17 @@ public class SecurityConfig {
     }
 
     @Bean
-    public com.ascension.security.UserRevocationJwtValidator userRevocationJwtValidator(com.ascension.service.UserService userService) {
-        return new com.ascension.security.UserRevocationJwtValidator(userService);
+    public UserRevocationJwtValidator userRevocationJwtValidator(UserService userService) {
+        return new UserRevocationJwtValidator(userService);
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(com.ascension.security.UserRevocationJwtValidator userRevocationJwtValidator) {
+    public JwtDecoder jwtDecoder(UserRevocationJwtValidator userRevocationJwtValidator) {
         SecretKey key = new SecretKeySpec(jwtSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(key).build();
-        org.springframework.security.oauth2.core.OAuth2TokenValidator<org.springframework.security.oauth2.jwt.Jwt> withIssuer = 
-            org.springframework.security.oauth2.jwt.JwtValidators.createDefaultWithIssuer("ascension-backend");
-        decoder.setJwtValidator(new org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator<>(withIssuer, userRevocationJwtValidator));
+        OAuth2TokenValidator<Jwt> withIssuer = 
+            JwtValidators.createDefaultWithIssuer("ascension-backend");
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(withIssuer, userRevocationJwtValidator));
         return decoder;
     }
 
@@ -150,9 +168,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
-        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        java.util.List<String> origins = java.util.Arrays.stream(allowedOrigins.split(","))
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toList();
@@ -164,11 +182,11 @@ public class SecurityConfig {
             configuration.setAllowCredentials(true);
         }
         
-        configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(java.util.Arrays.asList("*"));
-        configuration.setExposedHeaders(java.util.Arrays.asList("Content-Type", "X-AI-Model", "Content-Disposition"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setExposedHeaders(Arrays.asList("Content-Type", "X-AI-Model", "Content-Disposition"));
         
-        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", configuration);
         return source;
     }

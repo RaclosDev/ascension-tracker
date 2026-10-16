@@ -24,10 +24,21 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CookieValue;
 import jakarta.annotation.PostConstruct;
 
+import com.ascension.exception.TokenRefreshException;
+import com.ascension.service.UserService.User;
+import com.ascension.util.PiiMasker;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -36,7 +47,7 @@ public class AuthController {
 
     private final GoogleIdTokenVerifier verifier;
     private final JwtEncoder jwtEncoder;
-    private final org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder;
+    private final JwtDecoder jwtDecoder;
     private final RefreshTokenService refreshTokenService;
     private final AccountDeletionService accountDeletionService;
     private final UserService userService;
@@ -56,7 +67,7 @@ public class AuthController {
     public AuthController(
             GoogleIdTokenVerifier verifier,
             JwtEncoder jwtEncoder,
-            org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder,
+            JwtDecoder jwtDecoder,
             RefreshTokenService refreshTokenService,
             AccountDeletionService accountDeletionService,
             UserService userService) {
@@ -80,8 +91,8 @@ public class AuthController {
                 .claim("picture", picture != null ? picture : "")
                 .build();
 
-        org.springframework.security.oauth2.jose.jws.MacAlgorithm alg = org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256;
-        org.springframework.security.oauth2.jwt.JwsHeader jwsHeader = org.springframework.security.oauth2.jwt.JwsHeader.with(alg).build();
+        MacAlgorithm alg = MacAlgorithm.HS256;
+        JwsHeader jwsHeader = JwsHeader.with(alg).build();
         return jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
     }
 
@@ -126,23 +137,23 @@ public class AuthController {
 
         // Identity verification: enforce google sub uniqueness and detect recycled emails
         // 1. If an existing user has this email, verify google_sub matches
-        java.util.Optional<com.ascension.service.UserService.User> userByEmail = userService.findByEmail(email);
+        Optional<User> userByEmail = userService.findByEmail(email);
         if (userByEmail.isPresent()) {
             String existingSub = userByEmail.get().googleSub();
             if (existingSub != null && !existingSub.equals(googleSub)) {
                 log.error("SECURITY ALERT: Identity mismatch for account '{}'. Stored google_sub='{}', incoming google_sub='{}'. Possible account takeover attempt.",
-                        com.ascension.util.PiiMasker.maskEmail(email), existingSub, googleSub);
+                        PiiMasker.maskEmail(email), existingSub, googleSub);
                 return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
             }
         }
 
         // 2. If an existing user has this google_sub, verify email matches
-        java.util.Optional<com.ascension.service.UserService.User> userBySub = userService.findByGoogleSub(googleSub);
+        Optional<User> userBySub = userService.findByGoogleSub(googleSub);
         if (userBySub.isPresent()) {
             String existingEmail = userBySub.get().email();
             if (existingEmail != null && !existingEmail.equalsIgnoreCase(email)) {
                 log.error("SECURITY ALERT: Identity mismatch for google_sub '{}'. Already assigned to account '{}', incoming account='{}'. Rejecting login.",
-                        googleSub, com.ascension.util.PiiMasker.maskEmail(existingEmail), com.ascension.util.PiiMasker.maskEmail(email));
+                        googleSub, PiiMasker.maskEmail(existingEmail), PiiMasker.maskEmail(email));
                 return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
             }
         }
@@ -175,11 +186,11 @@ public class AuthController {
         return "Lax";
     }
 
-    private java.util.List<String> parseAllowedOrigins() {
+    private List<String> parseAllowedOrigins() {
         if (corsAllowedOrigins == null || corsAllowedOrigins.isBlank()) {
             return Collections.emptyList();
         }
-        return java.util.Arrays.stream(corsAllowedOrigins.split(","))
+        return Arrays.stream(corsAllowedOrigins.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toList();
@@ -194,7 +205,7 @@ public class AuthController {
             return true;
         }
         String trimmedOrigin = origin.trim();
-        java.util.List<String> allowed = parseAllowedOrigins();
+        List<String> allowed = parseAllowedOrigins();
         if (allowed.contains("*")) {
             return true;
         }
@@ -208,7 +219,7 @@ public class AuthController {
 
         if (!isOriginAllowed(request)) {
             log.warn("Forbidden Origin header on /api/auth/refresh: {}", request != null ? request.getHeader("Origin") : null);
-            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Forbidden origin"));
         }
 
@@ -226,20 +237,20 @@ public class AuthController {
             // Read latest profile data from users table
             String name = "";
             String picture = "";
-            java.util.Optional<com.ascension.service.UserService.User> userOpt = userService.findByEmail(email);
+            Optional<User> userOpt = userService.findByEmail(email);
             if (userOpt.isPresent()) {
                 name = userOpt.get().name() != null ? userOpt.get().name() : "";
                 picture = userOpt.get().picture() != null ? userOpt.get().picture() : "";
             }
 
             String token = generateJwt(email, name, picture);
-            log.info("Refresh token rotated successfully for user {}", com.ascension.util.PiiMasker.maskEmail(email));
+            log.info("Refresh token rotated successfully for user {}", PiiMasker.maskEmail(email));
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(newRefreshToken.getPlainToken()).toString())
                     .body(Map.of("token", token));
 
-        } catch (com.ascension.exception.TokenRefreshException e) {
+        } catch (TokenRefreshException e) {
             return ResponseEntity.status(401)
                     .header(HttpHeaders.SET_COOKIE, buildDeleteCookie().toString())
                     .body(Map.of("error", e.getMessage()));
@@ -275,7 +286,7 @@ public class AuthController {
 
         if (!isOriginAllowed(request)) {
             log.warn("Forbidden Origin header on /api/auth/logout: {}", request != null ? request.getHeader("Origin") : null);
-            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Forbidden origin"));
         }
 

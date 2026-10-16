@@ -6,6 +6,8 @@ import com.ascension.dto.MacrosDTO;
 import com.ascension.dto.MealDTO;
 import com.ascension.dto.RecipeDTO;
 import com.ascension.dto.SavedFoodDTO;
+import com.ascension.exception.AiProcessingException;
+import com.ascension.exception.ExternalApiException;
 import com.ascension.service.ai.AiJsonParser;
 import com.ascension.service.ai.GeminiApiClient;
 import com.ascension.service.ai.GeminiQuotaService;
@@ -113,13 +115,13 @@ public class GeminiAiService {
             }
             return addedLogs;
 
-        } catch (com.ascension.exception.ExternalApiException | IllegalArgumentException e) {
+        } catch (ExternalApiException | IllegalArgumentException e) {
             quotaService.recordFailure(e);
             throw e;
         } catch (Exception e) {
             quotaService.recordFailure(e);
             log.error("Error in GeminiAiService", e);
-            throw new com.ascension.exception.AiProcessingException("Failed to process with AI", e);
+            throw new AiProcessingException("Failed to process with AI", e);
         }
     }
 
@@ -133,13 +135,13 @@ public class GeminiAiService {
             SavedFoodDTO dto = jsonParser.parseSavedFood(responseText);
             return nutritionLogService.addSavedFood(userEmail, dto);
 
-        } catch (com.ascension.exception.ExternalApiException | IllegalArgumentException e) {
+        } catch (ExternalApiException | IllegalArgumentException e) {
             quotaService.recordFailure(e);
             throw e;
         } catch (Exception e) {
             quotaService.recordFailure(e);
             log.error("Error in GeminiAiService", e);
-            throw new com.ascension.exception.AiProcessingException("Failed to process food with AI", e);
+            throw new AiProcessingException("Failed to process food with AI", e);
         }
     }
 
@@ -155,13 +157,13 @@ public class GeminiAiService {
             quotaService.recordSuccess(userEmail);
 
             return jsonParser.parseNutritionalLabel(responseText);
-        } catch (com.ascension.exception.ExternalApiException | IllegalArgumentException e) {
+        } catch (ExternalApiException | IllegalArgumentException e) {
             quotaService.recordFailure(e);
             throw e;
         } catch (Exception e) {
             quotaService.recordFailure(e);
             log.error("Error in GeminiAiService", e);
-            throw new com.ascension.exception.AiProcessingException("Failed to process nutritional label", e);
+            throw new AiProcessingException("Failed to process nutritional label", e);
         }
     }
 
@@ -289,13 +291,13 @@ public class GeminiAiService {
                     targetKcal, targetProtein, targetCarbs, targetFat,
                     consumedKcal, consumedProtein, consumedCarbs, consumedFat
             );
-        } catch (com.ascension.exception.ExternalApiException | IllegalArgumentException e) {
+        } catch (ExternalApiException | IllegalArgumentException e) {
             quotaService.recordFailure(e);
             throw e;
         } catch (Exception e) {
             quotaService.recordFailure(e);
             log.error("Error in GeminiAiService", e);
-            throw new com.ascension.exception.AiProcessingException("Error en asistente de IA", e);
+            throw new AiProcessingException("Error en asistente de IA", e);
         }
     }
 

@@ -1,14 +1,22 @@
 package com.ascension.service;
 
 import com.ascension.dto.*;
+import com.ascension.exception.EntityNotFoundException;
 import com.ascension.model.*;
 import com.ascension.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,11 +32,11 @@ public class WorkoutService {
     private final UserDataQuotaService userDataQuotaService;
 
     @Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<WorkoutDTO> getWorkoutHistory(String userEmail, int page, int size) {
+    public Page<WorkoutDTO> getWorkoutHistory(String userEmail, int page, int size) {
         int boundedPage = Math.max(0, page);
         int boundedSize = Math.min(Math.max(1, size), 100);
-        org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(boundedPage, boundedSize);
-        org.springframework.data.domain.Page<Workout> w = workoutRepository.findByUserEmailOrderByStartedAtDesc(userEmail, pageRequest);
+        PageRequest pageRequest = PageRequest.of(boundedPage, boundedSize);
+        Page<Workout> w = workoutRepository.findByUserEmailOrderByStartedAtDesc(userEmail, pageRequest);
         return w.map(this::toFullDTO);
     }
 
@@ -42,7 +50,7 @@ public class WorkoutService {
     @Transactional(readOnly = true)
     public WorkoutDTO getWorkoutDetail(String userEmail, String id) {
         Workout workout = workoutRepository.findByIdAndUserEmail(id, userEmail)
-                .orElseThrow(() -> new com.ascension.exception.EntityNotFoundException("Entreno no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Entreno no encontrado"));
         return toFullDTO(workout);
     }
 
@@ -50,13 +58,13 @@ public class WorkoutService {
     public WorkoutDTO saveWorkout(String userEmail, WorkoutDTO dto) {
         userDataQuotaService.checkWorkoutQuota(userEmail, 1);
         Workout workout = Workout.builder()
-                .id(java.util.UUID.randomUUID().toString())
+                .id(UUID.randomUUID().toString())
                 .userEmail(userEmail)
                 .name(dto.getName())
                 .startedAt(dto.getStartedAt())
                 .finishedAt(dto.getFinishedAt())
                 .notes(dto.getNotes())
-                .exercises(new java.util.LinkedHashSet<>())
+                .exercises(new LinkedHashSet<>())
                 .build();
 
         mapExercisesToWorkout(workout, dto.getExercises());
@@ -66,7 +74,7 @@ public class WorkoutService {
     @Transactional
     public WorkoutDTO updateWorkout(String userEmail, String id, WorkoutDTO dto) {
         Workout workout = workoutRepository.findByIdAndUserEmail(id, userEmail)
-                .orElseThrow(() -> new com.ascension.exception.EntityNotFoundException("Entreno no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Entreno no encontrado"));
 
         workout.setName(dto.getName() != null ? dto.getName() : workout.getName());
         workout.setStartedAt(dto.getStartedAt());
@@ -83,11 +91,11 @@ public class WorkoutService {
     @Transactional
     public void deleteWorkout(String userEmail, String id) {
         Workout workout = workoutRepository.findByIdAndUserEmail(id, userEmail)
-                .orElseThrow(() -> new com.ascension.exception.EntityNotFoundException("Entreno no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Entreno no encontrado"));
         workoutRepository.delete(workout);
     }
 
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public WorkoutStatsDTO getStats(String userEmail) {
         WorkoutStatsProjection p = workoutRepository.getWorkoutStats(userEmail);
         if (p == null) {
@@ -108,7 +116,7 @@ public class WorkoutService {
                 .build();
     }
 
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public List<WorkoutExerciseDTO> getExerciseHistory(String userEmail, String exerciseId) {
         return workoutExerciseRepository.findByUserEmailAndExerciseIdOrderByDateDesc(userEmail, exerciseId)
                 .stream().map(this::toWorkoutExerciseDTO).collect(Collectors.toList());
@@ -170,7 +178,7 @@ public class WorkoutService {
         }
 
         int createdExercises = 0;
-        java.util.Map<String, String> customExMap = new java.util.HashMap<>();
+        Map<String, String> customExMap = new HashMap<>();
         for (CustomExercise ex : customExerciseRepository.findByUserEmail(userEmail)) {
             if (ex.getName() != null) {
                 customExMap.put(ex.getName().trim().toLowerCase(), ex.getId());
@@ -178,7 +186,7 @@ public class WorkoutService {
         }
 
         // Map client-side exerciseId -> backend resolved exerciseId
-        java.util.Map<String, String> clientToResolvedId = new java.util.HashMap<>();
+        Map<String, String> clientToResolvedId = new HashMap<>();
 
         if (request.getCustomExercises() != null) {
             for (CustomExerciseDTO exDTO : request.getCustomExercises()) {
@@ -187,7 +195,7 @@ public class WorkoutService {
                 String resolvedId;
                 if (!customExMap.containsKey(normalizedName)) {
                     // Prevent IDOR: always generate a fresh server-side UUID
-                    resolvedId = java.util.UUID.randomUUID().toString();
+                    resolvedId = UUID.randomUUID().toString();
                     CustomExercise newEx = CustomExercise.builder()
                             .id(resolvedId)
                             .name(exDTO.getName().trim())
@@ -213,13 +221,13 @@ public class WorkoutService {
 
         for (WorkoutDTO wDTO : request.getWorkouts()) {
             Workout workout = Workout.builder()
-                    .id(java.util.UUID.randomUUID().toString())
+                    .id(UUID.randomUUID().toString())
                     .userEmail(userEmail)
                     .name(wDTO.getName() != null ? wDTO.getName() : "Entrenamiento importado")
                     .startedAt(wDTO.getStartedAt())
                     .finishedAt(wDTO.getFinishedAt())
                     .notes(wDTO.getNotes())
-                    .exercises(new java.util.LinkedHashSet<>())
+                    .exercises(new LinkedHashSet<>())
                     .build();
 
             mapExercisesToWorkout(workout, wDTO.getExercises(), clientToResolvedId);
@@ -242,23 +250,23 @@ public class WorkoutService {
     }
 
     private void mapExercisesToWorkout(Workout workout, List<WorkoutExerciseDTO> exerciseDTOs) {
-        mapExercisesToWorkout(workout, exerciseDTOs, java.util.Collections.emptyMap());
+        mapExercisesToWorkout(workout, exerciseDTOs, Collections.emptyMap());
     }
 
     private void mapExercisesToWorkout(
             Workout workout,
             List<WorkoutExerciseDTO> exerciseDTOs,
-            java.util.Map<String, String> idTranslationMap) {
+            Map<String, String> idTranslationMap) {
         if (exerciseDTOs == null) return;
         int order = 0;
         for (WorkoutExerciseDTO weDTO : exerciseDTOs) {
             String rawExId = weDTO.getExerciseId();
             String resolvedExId = (idTranslationMap != null && rawExId != null)
-                    ? idTranslationMap.getOrDefault(rawExId, rawExId)
-                    : rawExId;
+                ? idTranslationMap.getOrDefault(rawExId, rawExId)
+                : rawExId;
 
             WorkoutExercise we = WorkoutExercise.builder()
-                    .id(java.util.UUID.randomUUID().toString())
+                    .id(UUID.randomUUID().toString())
                     .workout(workout)
                     .exerciseId(resolvedExId)
                     .notes(weDTO.getNotes())
@@ -266,14 +274,14 @@ public class WorkoutService {
                     .variantMachine(weDTO.getVariant() != null ? weDTO.getVariant().getMachine() : null)
                     .supersetId(weDTO.getSupersetId())
                     .orderIndex(order++)
-                    .sets(new java.util.LinkedHashSet<>())
+                    .sets(new LinkedHashSet<>())
                     .build();
 
             if (weDTO.getSets() != null) {
                 int setOrder = 0;
                 for (WorkoutSetDTO setDTO : weDTO.getSets()) {
                     WorkoutSet set = WorkoutSet.builder()
-                            .id(java.util.UUID.randomUUID().toString())
+                            .id(UUID.randomUUID().toString())
                             .workoutExercise(we)
                             .orderIndex(setOrder++)
                             .type(setDTO.getType())
