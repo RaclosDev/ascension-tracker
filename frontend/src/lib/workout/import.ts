@@ -269,6 +269,13 @@ export interface ParsedHevyImport {
   lastDate: number | null;
 }
 
+export function roundToTwoDecimals(val: string): string {
+  if (!val || !val.trim()) return '';
+  const num = parseFloat(val.replace(',', '.'));
+  if (Number.isNaN(num) || !Number.isFinite(num)) return '';
+  return (Math.round(num * 100) / 100).toString();
+}
+
 export function parseHevyCsv(
   csvContent: string,
   catalog: Exercise[] = EXERCISE_CATALOG,
@@ -414,9 +421,9 @@ export function parseHevyCsv(
     const newSet: WorkoutSet = {
       id: uid(),
       type: parseSetType(setTypeRaw),
-      weight: weightKg.substring(0, 20),
-      reps: reps.substring(0, 20),
-      distance: distanceKm.substring(0, 20),
+      weight: roundToTwoDecimals(weightKg).substring(0, 20),
+      reps: reps.replace(/[^\d]/g, '').substring(0, 20),
+      distance: roundToTwoDecimals(distanceKm).substring(0, 20),
       duration: durationSeconds ? `${durationSeconds.substring(0, 10)}s` : '',
       rpe: rpe.substring(0, 20),
       completed: true,
