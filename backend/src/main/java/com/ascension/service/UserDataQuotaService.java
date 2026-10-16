@@ -18,6 +18,9 @@ public class UserDataQuotaService {
     private final RecipeRepository recipeRepository;
     private final CustomExerciseRepository customExerciseRepository;
     private final WorkoutTemplateRepository workoutTemplateRepository;
+    private final SavedFoodRepository savedFoodRepository;
+    private final WeightEntryRepository weightEntryRepository;
+    private final StepsEntryRepository stepsEntryRepository;
 
     public void checkWorkoutQuota(String userEmail, int countToAdd) {
         if (countToAdd <= 0) return;
@@ -74,6 +77,39 @@ public class UserDataQuotaService {
         }
     }
 
+    public void checkSavedFoodQuota(String userEmail, int countToAdd) {
+        if (countToAdd <= 0) return;
+        long current = savedFoodRepository.countByUserEmail(userEmail);
+        if (current + countToAdd > quotaProperties.getMaxSavedFoods()) {
+            throw new UserDataQuotaExceededException(
+                    String.format("Límite de alimentos guardados alcanzado (%d/%d).",
+                            current + countToAdd, quotaProperties.getMaxSavedFoods())
+            );
+        }
+    }
+
+    public void checkWeightEntryQuota(String userEmail, int countToAdd) {
+        if (countToAdd <= 0) return;
+        long current = weightEntryRepository.countByUserEmail(userEmail);
+        if (current + countToAdd > quotaProperties.getMaxWeightEntries()) {
+            throw new UserDataQuotaExceededException(
+                    String.format("Límite de registros de peso alcanzado (%d/%d).",
+                            current + countToAdd, quotaProperties.getMaxWeightEntries())
+            );
+        }
+    }
+
+    public void checkStepsEntryQuota(String userEmail, int countToAdd) {
+        if (countToAdd <= 0) return;
+        long current = stepsEntryRepository.countByUserEmail(userEmail);
+        if (current + countToAdd > quotaProperties.getMaxStepsEntries()) {
+            throw new UserDataQuotaExceededException(
+                    String.format("Límite de registros de pasos alcanzado (%d/%d).",
+                            current + countToAdd, quotaProperties.getMaxStepsEntries())
+            );
+        }
+    }
+
     public void checkRestoreQuotas(String userEmail, RestoreMode mode, UserDataExportDTO backup) {
         if (backup == null) return;
         boolean isOverwrite = (mode == RestoreMode.OVERWRITE);
@@ -83,6 +119,9 @@ public class UserDataQuotaService {
         int incomingRecipes = backup.getRecipes() != null ? backup.getRecipes().size() : 0;
         int incomingExercises = backup.getCustomExercises() != null ? backup.getCustomExercises().size() : 0;
         int incomingTemplates = backup.getWorkoutTemplates() != null ? backup.getWorkoutTemplates().size() : 0;
+        int incomingSavedFoods = backup.getSavedFoods() != null ? backup.getSavedFoods().size() : 0;
+        int incomingWeightEntries = backup.getWeightEntries() != null ? backup.getWeightEntries().size() : 0;
+        int incomingStepsEntries = backup.getStepsEntries() != null ? backup.getStepsEntries().size() : 0;
 
         if (isOverwrite) {
             if (incomingWorkouts > quotaProperties.getMaxWorkouts()) {
@@ -110,12 +149,30 @@ public class UserDataQuotaService {
                         String.format("La copia de seguridad supera la cuota máxima de plantillas (%d/%d).",
                                 incomingTemplates, quotaProperties.getMaxWorkoutTemplates()));
             }
+            if (incomingSavedFoods > quotaProperties.getMaxSavedFoods()) {
+                throw new UserDataQuotaExceededException(
+                        String.format("La copia de seguridad supera la cuota máxima de alimentos guardados (%d/%d).",
+                                incomingSavedFoods, quotaProperties.getMaxSavedFoods()));
+            }
+            if (incomingWeightEntries > quotaProperties.getMaxWeightEntries()) {
+                throw new UserDataQuotaExceededException(
+                        String.format("La copia de seguridad supera la cuota máxima de registros de peso (%d/%d).",
+                                incomingWeightEntries, quotaProperties.getMaxWeightEntries()));
+            }
+            if (incomingStepsEntries > quotaProperties.getMaxStepsEntries()) {
+                throw new UserDataQuotaExceededException(
+                        String.format("La copia de seguridad supera la cuota máxima de registros de pasos (%d/%d).",
+                                incomingStepsEntries, quotaProperties.getMaxStepsEntries()));
+            }
         } else {
             if (incomingWorkouts > 0) checkWorkoutQuota(userEmail, incomingWorkouts);
             if (incomingFoodLogs > 0) checkFoodLogQuota(userEmail, incomingFoodLogs);
             if (incomingRecipes > 0) checkRecipeQuota(userEmail, incomingRecipes);
             if (incomingExercises > 0) checkCustomExerciseQuota(userEmail, incomingExercises);
             if (incomingTemplates > 0) checkWorkoutTemplateQuota(userEmail, incomingTemplates);
+            if (incomingSavedFoods > 0) checkSavedFoodQuota(userEmail, incomingSavedFoods);
+            if (incomingWeightEntries > 0) checkWeightEntryQuota(userEmail, incomingWeightEntries);
+            if (incomingStepsEntries > 0) checkStepsEntryQuota(userEmail, incomingStepsEntries);
         }
     }
 }

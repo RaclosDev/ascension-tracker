@@ -1,7 +1,10 @@
 package com.ascension.service;
 
 import com.ascension.config.UserDataQuotaProperties;
+import com.ascension.dto.SavedFoodDTO;
+import com.ascension.dto.StepsEntryDTO;
 import com.ascension.dto.UserDataExportDTO;
+import com.ascension.dto.WeightEntryDTO;
 import com.ascension.dto.WorkoutDTO;
 import com.ascension.exception.UserDataQuotaExceededException;
 import com.ascension.model.RestoreMode;
@@ -40,6 +43,15 @@ class UserDataQuotaServiceTest {
     @Mock
     private WorkoutTemplateRepository workoutTemplateRepository;
 
+    @Mock
+    private SavedFoodRepository savedFoodRepository;
+
+    @Mock
+    private WeightEntryRepository weightEntryRepository;
+
+    @Mock
+    private StepsEntryRepository stepsEntryRepository;
+
     @Spy
     private UserDataQuotaProperties quotaProperties = new UserDataQuotaProperties();
 
@@ -55,24 +67,27 @@ class UserDataQuotaServiceTest {
         quotaProperties.setMaxRecipes(5);
         quotaProperties.setMaxCustomExercises(5);
         quotaProperties.setMaxWorkoutTemplates(3);
+        quotaProperties.setMaxSavedFoods(5);
+        quotaProperties.setMaxWeightEntries(10);
+        quotaProperties.setMaxStepsEntries(10);
     }
 
     @Test
     void checkWorkoutQuota_whenUnderLimit_passes() {
-        when(workoutRepository.countByUserEmail(USER)).thenReturn(8L);
-        assertThatCode(() -> quotaService.checkWorkoutQuota(USER, 2)).doesNotThrowAnyException();
+        when(workoutRepository.countByUserEmail(USER)).thenReturn(5L);
+        assertThatCode(() -> quotaService.checkWorkoutQuota(USER, 3)).doesNotThrowAnyException();
     }
 
     @Test
-    void checkWorkoutQuota_whenExceedsLimit_throwsUserDataQuotaExceededException() {
-        when(workoutRepository.countByUserEmail(USER)).thenReturn(10L);
-        assertThatThrownBy(() -> quotaService.checkWorkoutQuota(USER, 1))
+    void checkWorkoutQuota_whenExceedsLimit_throwsException() {
+        when(workoutRepository.countByUserEmail(USER)).thenReturn(9L);
+        assertThatThrownBy(() -> quotaService.checkWorkoutQuota(USER, 2))
                 .isInstanceOf(UserDataQuotaExceededException.class)
                 .hasMessageContaining("Límite de entrenamientos alcanzado");
     }
 
     @Test
-    void checkFoodLogQuota_whenExceedsLimit_throwsUserDataQuotaExceededException() {
+    void checkFoodLogQuota_whenExceedsLimit_throwsException() {
         when(foodLogRepository.countByUserEmail(USER)).thenReturn(20L);
         assertThatThrownBy(() -> quotaService.checkFoodLogQuota(USER, 1))
                 .isInstanceOf(UserDataQuotaExceededException.class)
@@ -80,42 +95,57 @@ class UserDataQuotaServiceTest {
     }
 
     @Test
-    void checkRecipeQuota_whenExceedsLimit_throwsUserDataQuotaExceededException() {
-        when(recipeRepository.countByUserEmail(USER)).thenReturn(5L);
-        assertThatThrownBy(() -> quotaService.checkRecipeQuota(USER, 1))
+    void checkSavedFoodQuota_whenExceedsLimit_throwsException() {
+        when(savedFoodRepository.countByUserEmail(USER)).thenReturn(5L);
+        assertThatThrownBy(() -> quotaService.checkSavedFoodQuota(USER, 1))
                 .isInstanceOf(UserDataQuotaExceededException.class)
-                .hasMessageContaining("Límite de recetas alcanzado");
+                .hasMessageContaining("Límite de alimentos guardados alcanzado");
     }
 
     @Test
-    void checkCustomExerciseQuota_whenExceedsLimit_throwsUserDataQuotaExceededException() {
-        when(customExerciseRepository.countByUserEmail(USER)).thenReturn(5L);
-        assertThatThrownBy(() -> quotaService.checkCustomExerciseQuota(USER, 1))
+    void checkWeightEntryQuota_whenExceedsLimit_throwsException() {
+        when(weightEntryRepository.countByUserEmail(USER)).thenReturn(10L);
+        assertThatThrownBy(() -> quotaService.checkWeightEntryQuota(USER, 1))
                 .isInstanceOf(UserDataQuotaExceededException.class)
-                .hasMessageContaining("Límite de ejercicios personalizados alcanzado");
+                .hasMessageContaining("Límite de registros de peso alcanzado");
     }
 
     @Test
-    void checkWorkoutTemplateQuota_whenExceedsLimit_throwsUserDataQuotaExceededException() {
-        when(workoutTemplateRepository.countByUserEmail(USER)).thenReturn(3L);
-        assertThatThrownBy(() -> quotaService.checkWorkoutTemplateQuota(USER, 1))
+    void checkStepsEntryQuota_whenExceedsLimit_throwsException() {
+        when(stepsEntryRepository.countByUserEmail(USER)).thenReturn(10L);
+        assertThatThrownBy(() -> quotaService.checkStepsEntryQuota(USER, 1))
                 .isInstanceOf(UserDataQuotaExceededException.class)
-                .hasMessageContaining("Límite de plantillas de entrenamiento alcanzado");
+                .hasMessageContaining("Límite de registros de pasos alcanzado");
     }
 
     @Test
-    void checkRestoreQuotas_overwriteMode_whenBackupExceedsLimit_throwsException() {
-        List<WorkoutDTO> excessiveWorkouts = new ArrayList<>();
+    void checkRestoreQuotas_overwriteMode_whenExceedsLimit_throwsException() {
+        List<WorkoutDTO> incoming = new ArrayList<>();
         for (int i = 0; i < 15; i++) {
-            excessiveWorkouts.add(WorkoutDTO.builder().build());
+            incoming.add(WorkoutDTO.builder().build());
         }
         UserDataExportDTO backup = UserDataExportDTO.builder()
-                .workouts(excessiveWorkouts)
+                .workouts(incoming)
                 .build();
 
         assertThatThrownBy(() -> quotaService.checkRestoreQuotas(USER, RestoreMode.OVERWRITE, backup))
                 .isInstanceOf(UserDataQuotaExceededException.class)
-                .hasMessageContaining("La copia de seguridad supera la cuota máxima de entrenamientos");
+                .hasMessageContaining("cuota máxima de entrenamientos");
+    }
+
+    @Test
+    void checkRestoreQuotas_overwriteMode_whenSavedFoodsExceedsLimit_throwsException() {
+        List<SavedFoodDTO> incoming = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            incoming.add(SavedFoodDTO.builder().build());
+        }
+        UserDataExportDTO backup = UserDataExportDTO.builder()
+                .savedFoods(incoming)
+                .build();
+
+        assertThatThrownBy(() -> quotaService.checkRestoreQuotas(USER, RestoreMode.OVERWRITE, backup))
+                .isInstanceOf(UserDataQuotaExceededException.class)
+                .hasMessageContaining("cuota máxima de alimentos guardados");
     }
 
     @Test

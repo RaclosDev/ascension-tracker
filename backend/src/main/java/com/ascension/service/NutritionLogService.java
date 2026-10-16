@@ -265,6 +265,7 @@ public class NutritionLogService {
 
     @Transactional
     public SavedFoodDTO addSavedFood(String userEmail, SavedFoodDTO dto) {
+        userDataQuotaService.checkSavedFoodQuota(userEmail, 1);
         SavedFood f = SavedFood.builder()
                 .userEmail(userEmail)
                 .name(dto.getName())
