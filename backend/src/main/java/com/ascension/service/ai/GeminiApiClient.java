@@ -181,6 +181,7 @@ public class GeminiApiClient {
             candidates.add(geminiModel.trim());
         }
 
+        List<String> discovered = new ArrayList<>();
         try {
             String url = "https://generativelanguage.googleapis.com/v1beta/models";
             HttpHeaders headers = new HttpHeaders();
@@ -208,8 +209,8 @@ public class GeminiApiClient {
                         if (name.startsWith("models/")) {
                             name = name.substring(7);
                         }
-                        if (name.contains("gemini") && !candidates.contains(name)) {
-                            candidates.add(name);
+                        if (name.contains("gemini")) {
+                            discovered.add(name);
                         }
                     }
                 }
@@ -218,12 +219,40 @@ public class GeminiApiClient {
             log.warn("Failed to discover models, falling back to configured fallback list. Error: {}", e.getMessage());
         }
 
-        // Add configurable fallback models (no hardcoded retired models)
+        // Priority 1: Configured fallback models (stable fast flash models: gemini-2.5-flash, gemini-2.0-flash, etc.)
+        List<String> preferred = new ArrayList<>();
         if (fallbackModels != null && !fallbackModels.isBlank()) {
             Arrays.stream(fallbackModels.split(","))
                     .map(String::trim)
-                    .filter(s -> !s.isEmpty() && !candidates.contains(s))
-                    .forEach(candidates::add);
+                    .filter(s -> !s.isEmpty())
+                    .forEach(preferred::add);
+        }
+
+        for (String pref : preferred) {
+            if (!candidates.contains(pref) && (discovered.isEmpty() || discovered.contains(pref))) {
+                candidates.add(pref);
+            }
+        }
+
+        // Priority 2: Discovered models that contain "flash"
+        for (String disc : discovered) {
+            if (disc.contains("flash") && !candidates.contains(disc)) {
+                candidates.add(disc);
+            }
+        }
+
+        // Priority 3: Other discovered models
+        for (String disc : discovered) {
+            if (!candidates.contains(disc)) {
+                candidates.add(disc);
+            }
+        }
+
+        // Priority 4: Ensure preferred fallbacks are included even if discovery returned non-matching models
+        for (String pref : preferred) {
+            if (!candidates.contains(pref)) {
+                candidates.add(pref);
+            }
         }
 
         return candidates;

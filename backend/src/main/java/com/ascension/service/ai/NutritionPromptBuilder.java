@@ -29,7 +29,9 @@ public class NutritionPromptBuilder {
         }
         // 4. Escape quotes & backslashes
         sanitized = sanitized.replace("\\", "\\\\").replace("\"", "'");
-        // 5. Heuristic pattern filter (retained for defense-in-depth, but not relied upon)
+        // 5. Escape structural XML delimiter characters < and > to prevent tag breakout
+        sanitized = sanitized.replace("<", "&lt;").replace(">", "&gt;");
+        // 6. Heuristic pattern filter (retained for defense-in-depth, but not relied upon)
         sanitized = sanitized.replaceAll("(?i)(IGNORE|OVERRIDE|FORGET|DISREGARD)(\\s+(ALL|PREVIOUS|ABOVE|PRIOR))+\\s+(INSTRUCTIONS?|RULES?|PROMPTS?)", "[filtered]");
         return sanitized;
     }

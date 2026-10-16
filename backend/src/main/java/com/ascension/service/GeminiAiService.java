@@ -115,10 +115,15 @@ public class GeminiAiService {
             }
             return addedLogs;
 
-        } catch (ExternalApiException | IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
+            log.warn("Validation error in natural language log processing: {}", e.getMessage());
+            throw e;
+        } catch (ExternalApiException e) {
+            quotaService.releaseQuota(userEmail);
             quotaService.recordFailure(e);
             throw e;
         } catch (Exception e) {
+            quotaService.releaseQuota(userEmail);
             quotaService.recordFailure(e);
             log.error("Error in GeminiAiService", e);
             throw new AiProcessingException("Failed to process with AI", e);
@@ -135,10 +140,15 @@ public class GeminiAiService {
             SavedFoodDTO dto = jsonParser.parseSavedFood(responseText);
             return nutritionLogService.addSavedFood(userEmail, dto);
 
-        } catch (ExternalApiException | IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
+            log.warn("Validation error in natural language food processing: {}", e.getMessage());
+            throw e;
+        } catch (ExternalApiException e) {
+            quotaService.releaseQuota(userEmail);
             quotaService.recordFailure(e);
             throw e;
         } catch (Exception e) {
+            quotaService.releaseQuota(userEmail);
             quotaService.recordFailure(e);
             log.error("Error in GeminiAiService", e);
             throw new AiProcessingException("Failed to process food with AI", e);
@@ -157,10 +167,15 @@ public class GeminiAiService {
             quotaService.recordSuccess(userEmail);
 
             return jsonParser.parseNutritionalLabel(responseText);
-        } catch (ExternalApiException | IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
+            log.warn("Validation error in nutritional label processing: {}", e.getMessage());
+            throw e;
+        } catch (ExternalApiException e) {
+            quotaService.releaseQuota(userEmail);
             quotaService.recordFailure(e);
             throw e;
         } catch (Exception e) {
+            quotaService.releaseQuota(userEmail);
             quotaService.recordFailure(e);
             log.error("Error in GeminiAiService", e);
             throw new AiProcessingException("Failed to process nutritional label", e);
@@ -291,10 +306,15 @@ public class GeminiAiService {
                     targetKcal, targetProtein, targetCarbs, targetFat,
                     consumedKcal, consumedProtein, consumedCarbs, consumedFat
             );
-        } catch (ExternalApiException | IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
+            log.warn("Validation error in meal assistant processing: {}", e.getMessage());
+            throw e;
+        } catch (ExternalApiException e) {
+            quotaService.releaseQuota(userEmail);
             quotaService.recordFailure(e);
             throw e;
         } catch (Exception e) {
+            quotaService.releaseQuota(userEmail);
             quotaService.recordFailure(e);
             log.error("Error in GeminiAiService", e);
             throw new AiProcessingException("Error en asistente de IA", e);

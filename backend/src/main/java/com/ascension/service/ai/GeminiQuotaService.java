@@ -34,42 +34,59 @@ public class GeminiQuotaService {
     private final AtomicInteger consecutiveFailures = new AtomicInteger(0);
     private volatile long circuitOpenUntil = 0L;
 
-    public void checkQuotaAndCircuit(String userEmail) {
+    public void checkAndReserveQuota(String userEmail) {
         long now = System.currentTimeMillis();
         if (now < circuitOpenUntil) {
             long remainingSec = (circuitOpenUntil - now) / 1000;
             log.warn("Gemini circuit breaker OPEN, rejecting call fast. Remaining cooldown: {}s", remainingSec);
-            throw new AiQuotaExceededException("El servicio de IA se encuentra temporalmente degradado tras múltiples fallos consecutivos. Inténtalo de nuevo en unos momentos.");
+            throw new AiQuotaExceededException("El servicio de IA se encuentra temporalmente degradado tras multiples fallos consecutivos. Intentalo de nuevo en unos momentos.");
         }
 
         checkAndResetDailyQuotas();
 
-        int globalCount = globalDailyUsage.get();
-        if (globalCount >= globalDailyLimit) {
-            log.warn("Global Gemini daily quota reached: {}/{}", globalCount, globalDailyLimit);
-            throw new AiQuotaExceededException("Se ha alcanzado el límite diario global del servicio de IA (" + globalDailyLimit + "). Inténtalo de nuevo mañana.");
+        int newGlobal = globalDailyUsage.incrementAndGet();
+        if (newGlobal > globalDailyLimit) {
+            globalDailyUsage.decrementAndGet();
+            log.warn("Global Gemini daily quota reached: {}/{}", newGlobal - 1, globalDailyLimit);
+            throw new AiQuotaExceededException("Se ha alcanzado el limite diario global del servicio de IA (" + globalDailyLimit + "). Intentalo de nuevo manana.");
         }
 
         if (userEmail != null && !userEmail.isBlank()) {
             AtomicInteger userCount = userDailyUsage.computeIfAbsent(userEmail, k -> new AtomicInteger(0));
-            if (userCount.get() >= userDailyLimit) {
-                log.warn("User {} reached daily Gemini quota: {}/{}", com.ascension.util.PiiMasker.maskEmail(userEmail), userCount.get(), userDailyLimit);
-                throw new AiQuotaExceededException("Has alcanzado tu límite diario de consultas de IA (" + userDailyLimit + "). Inténtalo de nuevo mañana.");
+            int newUser = userCount.incrementAndGet();
+            if (newUser > userDailyLimit) {
+                userCount.decrementAndGet();
+                globalDailyUsage.decrementAndGet();
+                log.warn("User {} reached daily Gemini quota: {}/{}", com.ascension.util.PiiMasker.maskEmail(userEmail), newUser - 1, userDailyLimit);
+                throw new AiQuotaExceededException("Has alcanzado tu limite diario de consultas de IA (" + userDailyLimit + "). Intentalo de nuevo manana.");
+            }
+        }
+    }
+
+    public void checkQuotaAndCircuit(String userEmail) {
+        checkAndReserveQuota(userEmail);
+    }
+
+    public void releaseQuota(String userEmail) {
+        globalDailyUsage.decrementAndGet();
+        if (userEmail != null && !userEmail.isBlank()) {
+            AtomicInteger userCount = userDailyUsage.get(userEmail);
+            if (userCount != null) {
+                userCount.decrementAndGet();
             }
         }
     }
 
     public void recordSuccess(String userEmail) {
-        checkAndResetDailyQuotas();
-        globalDailyUsage.incrementAndGet();
-        if (userEmail != null && !userEmail.isBlank()) {
-            userDailyUsage.computeIfAbsent(userEmail, k -> new AtomicInteger(0)).incrementAndGet();
-        }
         consecutiveFailures.set(0);
         circuitOpenUntil = 0L;
     }
 
     public void recordFailure(Throwable t) {
+        if (t instanceof IllegalArgumentException) {
+            log.debug("Ignoring client validation error for circuit breaker: {}", t.getMessage());
+            return;
+        }
         int failures = consecutiveFailures.incrementAndGet();
         log.warn("Gemini call failed (consecutive: {}): {}", failures, t.getMessage());
         if (failures >= consecutiveFailuresThreshold) {
