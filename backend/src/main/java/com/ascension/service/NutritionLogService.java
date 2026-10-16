@@ -30,6 +30,7 @@ public class NutritionLogService {
 
     private final FoodLogRepository foodLogRepository;
     private final SavedFoodRepository savedFoodRepository;
+    private final UserDataQuotaService userDataQuotaService;
 
     public List<FoodLogDTO> getRecentDistinctFoods(String userEmail) {
         return foodLogRepository.findTop50ByUserEmailOrderByDateDesc(userEmail).stream()
@@ -103,6 +104,7 @@ public class NutritionLogService {
 
     @Transactional
     public FoodLogDTO addFoodLog(String userEmail, FoodLogDTO dto) {
+        userDataQuotaService.checkFoodLogQuota(userEmail, 1);
         FoodLog log = new FoodLog();
         log.setUserEmail(userEmail);
         log.setDate(dto.getDate());
@@ -166,6 +168,8 @@ public class NutritionLogService {
         if (foods.size() > 50) {
             throw new InvalidInputException("No se pueden añadir más de 50 alimentos a la vez");
         }
+
+        userDataQuotaService.checkFoodLogQuota(userEmail, foods.size());
 
         List<FoodLog> entities = new ArrayList<>();
         for (AiApplyRequestDTO.AppliedFoodItemDTO item : foods) {

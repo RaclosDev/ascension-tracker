@@ -10,4 +10,5 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
     List<Recipe> findAllByUserEmailOrderByNameAsc(String userEmail);
     void deleteByIdAndUserEmail(Long id, String userEmail);
     java.util.Optional<Recipe> findByIdAndUserEmail(Long id, String userEmail);
+    long countByUserEmail(String userEmail);
 }

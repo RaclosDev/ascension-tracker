@@ -57,6 +57,9 @@ class UserDataRestoreServiceTest {
     @Mock
     private UserSettingsRepository userSettingsRepository;
 
+    @Mock
+    private UserDataQuotaService userDataQuotaService;
+
     @InjectMocks
     private UserDataRestoreService service;
 

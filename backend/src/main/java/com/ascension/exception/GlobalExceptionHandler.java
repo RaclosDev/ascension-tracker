@@ -99,6 +99,13 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex.getMessage(), HttpStatus.TOO_MANY_REQUESTS, traceId);
     }
 
+    @ExceptionHandler(UserDataQuotaExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleUserDataQuotaExceededException(UserDataQuotaExceededException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("User data quota exceeded: {} [trace_id: {}]", ex.getMessage(), traceId);
+        return buildErrorResponse(ex.getMessage(), HttpStatus.TOO_MANY_REQUESTS, traceId);
+    }
+
     @ExceptionHandler(AiProcessingException.class)
     public ResponseEntity<ApiErrorResponse> handleAiProcessingException(AiProcessingException ex) {
         String traceId = UUID.randomUUID().toString();

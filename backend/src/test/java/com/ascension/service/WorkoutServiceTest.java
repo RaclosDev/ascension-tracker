@@ -44,6 +44,9 @@ class WorkoutServiceTest {
     @Mock
     private com.ascension.repository.CustomExerciseRepository customExerciseRepository;
 
+    @Mock
+    private UserDataQuotaService userDataQuotaService;
+
     @InjectMocks
     private WorkoutService workoutService;
 
