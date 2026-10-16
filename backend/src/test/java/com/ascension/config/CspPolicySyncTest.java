@@ -34,7 +34,7 @@ class CspPolicySyncTest {
         assertThat(csp).doesNotContain("*.raclos.es");
         assertThat(csp).doesNotContain("img-src 'self' data: blob: https:;");
 
-        assertThat(csp).contains("img-src 'self' data: blob: https://lh3.googleusercontent.com https://images.openfoodfacts.org;");
+        assertThat(csp).contains("img-src 'self' data: blob: https://lh3.googleusercontent.com https://images.openfoodfacts.org https://raw.githubusercontent.com;");
         assertThat(csp).contains("connect-src 'self' https://ascension-backend-7dd8e6190a75.herokuapp.com https://ascension.raclos.es https://accounts.google.com;");
     }
 
