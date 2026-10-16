@@ -97,7 +97,7 @@ class PushControllerTest {
                         .content(json))
                 .andExpect(status().isOk());
 
-        verify(pushService).removeSubscriptionByEndpoint("https://fcm.googleapis.com/fcm/send/device123");
+        verify(pushService).removeSubscriptionByEndpoint("https://fcm.googleapis.com/fcm/send/device123", TEST_EMAIL);
     }
 
     @Test

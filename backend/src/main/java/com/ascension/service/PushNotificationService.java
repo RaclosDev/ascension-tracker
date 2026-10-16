@@ -125,6 +125,11 @@ public class PushNotificationService {
         subscriptionRepo.deleteByEndpoint(endpoint);
     }
 
+    @Transactional
+    public void removeSubscriptionByEndpoint(String endpoint, String userEmail) {
+        subscriptionRepo.deleteByEndpointAndUserEmail(endpoint, userEmail);
+    }
+
     /**
      * Schedule a persisted rest notification to fire after `delaySec` seconds.
      * Cancels any pending rest timer for this user.
