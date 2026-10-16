@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 @Import(TestcontainersConfiguration.class)
 @TestPropertySource(properties = {
     "spring.flyway.baseline-on-migrate=false",
+    "spring.flyway.clean-disabled=false",
     "spring.flyway.enabled=true",
     "GOOGLE_CLIENT_ID=test-google-client-id",
     "GEMINI_API_KEY=test-gemini-key"
