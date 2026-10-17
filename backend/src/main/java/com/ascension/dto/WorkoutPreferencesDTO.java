@@ -12,6 +12,8 @@ public class WorkoutPreferencesDTO {
     private Map<String, ExerciseVariantDTO> exerciseVariants;
     private List<String> hiddenEquipments;
     private Map<String, String> exerciseGifs;
+    private Map<String, Integer> restTimers;
+    private Integer restPreset;
 
     @Data @NoArgsConstructor @AllArgsConstructor @Builder
     public static class ExerciseVariantDTO {
