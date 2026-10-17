@@ -96,6 +96,9 @@ public class NutritionService {
         if (userDataQuotaService != null) {
             userDataQuotaService.acquireUserQuotaLock(userEmail);
         }
+        if (mealRepository.countByUserEmail(userEmail) > 0) {
+            return;
+        }
         List<Meal> defaultMeals = List.of(
             Meal.builder().userEmail(userEmail).name("Desayuno").icon("☕").sortOrder(0).startTime("06:00").endTime("11:00").build(),
             Meal.builder().userEmail(userEmail).name("Comida").icon("🍽️").sortOrder(1).startTime("13:00").endTime("17:00").build(),

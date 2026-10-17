@@ -57,8 +57,8 @@ public class FoodExternalService {
                 }
             }
 
-            JsonNode offRoot = offFuture.getNow(null);
-            JsonNode fsRoot = fsFuture.getNow(null);
+            JsonNode offRoot = (!offFuture.isCancelled() && !offFuture.isCompletedExceptionally()) ? offFuture.getNow(null) : null;
+            JsonNode fsRoot = (!fsFuture.isCancelled() && !fsFuture.isCompletedExceptionally()) ? fsFuture.getNow(null) : null;
 
             boolean offSuccess = false;
             if (offRoot != null) {

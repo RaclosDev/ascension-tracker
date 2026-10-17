@@ -381,7 +381,7 @@ public class GeminiApiClient {
             throw new ExternalApiException("Gemini", HttpStatus.BAD_REQUEST, "Peticion bloqueada por filtro de contenido de Gemini (" + blockReason.asText() + ")");
         }
 
-        throw new ExternalApiException("Gemini", HttpStatus.BAD_REQUEST, "Respuesta sin contenido generado por Gemini");
+        throw new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY, "Respuesta sin contenido generado por Gemini");
     }
 
     private void applyBackoff(int attempt, long deadline) {

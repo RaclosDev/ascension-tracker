@@ -186,6 +186,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       delete api.defaults.headers.common['Authorization'];
       setUser(null);
       setCachedUser(null);
+      const theme = localStorage.getItem('ascension_custom_color');
+      localStorage.clear();
+      if (theme) localStorage.setItem('ascension_custom_color', theme);
       queryClient.clear();
       useWorkoutStore.setState({ active: null, restUntil: null, restTimers: {} });
       void del('forja-v1').catch(() => {});
@@ -204,6 +207,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void purgeAllCaches();
     useWorkoutStore.setState({ active: null, restUntil: null, restTimers: {} });
     void del('forja-v1').catch(() => {});
+    const theme = localStorage.getItem('ascension_custom_color');
+    localStorage.clear();
+    if (theme) localStorage.setItem('ascension_custom_color', theme);
     setToken(jwtToken);
     try {
       const payload = jwtDecode<Record<string, unknown>>(jwtToken);

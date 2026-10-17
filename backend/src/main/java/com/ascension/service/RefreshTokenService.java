@@ -66,11 +66,17 @@ public class RefreshTokenService {
 
         if (userService != null) {
             var state = userService.getUserSecurityState(refreshToken.getEmail());
-            if (state != null && state.tokensValidAfter() != null) {
-                Instant createdAt = refreshToken.getExpiryDate().minus(REFRESH_TOKEN_EXPIRATION_DAYS, ChronoUnit.DAYS);
-                if (createdAt.getEpochSecond() < state.tokensValidAfter().getEpochSecond()) {
+            if (state != null) {
+                if (!state.exists()) {
                     refreshTokenRepository.deleteByFamilyId(refreshToken.getFamilyId());
-                    throw new com.ascension.exception.TokenRefreshException("Session has been revoked. Please log in again.");
+                    throw new com.ascension.exception.TokenRefreshException("User account does not exist or has been removed.");
+                }
+                if (state.tokensValidAfter() != null) {
+                    Instant createdAt = refreshToken.getExpiryDate().minus(REFRESH_TOKEN_EXPIRATION_DAYS, ChronoUnit.DAYS);
+                    if (createdAt.getEpochSecond() < state.tokensValidAfter().getEpochSecond()) {
+                        refreshTokenRepository.deleteByFamilyId(refreshToken.getFamilyId());
+                        throw new com.ascension.exception.TokenRefreshException("Session has been revoked. Please log in again.");
+                    }
                 }
             }
         }

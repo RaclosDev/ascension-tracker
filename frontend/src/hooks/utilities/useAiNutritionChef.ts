@@ -207,8 +207,11 @@ export function useAiNutritionChef() {
       setChatMessages((prev) => [...prev, aiMsg]);
       setActiveOptionIndices((prev) => ({ ...prev, [aiMsgId]: 0 }));
     } catch (err: unknown) {
-      const e = err as Error & { response?: { data?: { error?: string } } };
-      console.error('AI Assistant Error:', e.response?.data?.error || e.message || err);
+      const e = err as { response?: { data?: { error?: string } }; message?: string };
+      console.error(
+        'AI Assistant Error:',
+        e?.response?.data?.error || (err instanceof Error ? err.message : String(err)),
+      );
       const errorMsg = 'Error conectando con el Asistente IA';
       toast.error(errorMsg);
       setChatMessages((prev) => [
