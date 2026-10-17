@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { Html5Qrcode, Html5QrcodeResult, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { haptics } from '@/lib/haptics';
 
 const SCANNER_CONFIG = {
   fps: 10,
@@ -67,11 +68,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
           SCANNER_CONFIG,
           (decodedText, decodedResult) => {
             if (onScanSuccess) {
-              try {
-                /* empty */ navigator.vibrate?.(100);
-              } catch {
-                /* ignore */
-              }
+              haptics.success();
               onScanSuccess(decodedText, decodedResult);
             }
           },

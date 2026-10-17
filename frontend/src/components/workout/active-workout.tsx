@@ -18,6 +18,7 @@ import { RestBanner } from '@/components/workout/rest-banner';
 import { EmptyCard } from '@/components/workout/dashboard';
 import { WorkoutCelebrationModal } from '@/components/workout/WorkoutCelebrationModal';
 import { useWorkoutStore } from '@/lib/workout/store';
+import { haptics } from '@/lib/haptics';
 import type { WorkoutExercise } from '@/lib/workout/types';
 
 const EMPTY_EXERCISES: WorkoutExercise[] = [];
@@ -90,7 +91,13 @@ export function ActiveWorkout() {
     <>
       <LiveSession />
       <ExercisePicker />
-      <button onClick={() => setPickerOpen(true)} className="add-exercise-btn">
+      <button
+        onClick={() => {
+          haptics.light();
+          setPickerOpen(true);
+        }}
+        className="add-exercise-btn btn-press"
+      >
         <Plus size={18} />
         Añadir ejercicio
       </button>
@@ -165,8 +172,11 @@ function LiveSession() {
 
           <button
             type="button"
-            onClick={() => navigate('/dashboard')}
-            className="btn btn-secondary live-session-minimize-btn"
+            onClick={() => {
+              haptics.light();
+              navigate('/dashboard');
+            }}
+            className="btn btn-secondary live-session-minimize-btn btn-press"
             style={{
               alignItems: 'center',
               gap: '0.35rem',
@@ -236,10 +246,12 @@ function FooterActions() {
     if (!active) return;
     const hasWork = active.exercises.some((e) => e.sets.some((s) => s.completed));
     if (!hasWork) {
+      haptics.warning();
       setEmptyOpen(true);
       return;
     }
 
+    haptics.medium();
     // Cancel rest timer and notifications so bell sound doesn't ring while in finish modal
     useWorkoutStore.getState().skipRest();
     dismissRestNotifications();
@@ -249,21 +261,32 @@ function FooterActions() {
   }
 
   function doSaveTemplate() {
+    haptics.light();
     const tpl = saveAsTemplate();
     if (tpl) saveTemplateMutation.mutate(tpl);
   }
 
   return (
     <div className="workout-footer-actions">
-      <button onClick={openFinish} className="workout-finish-btn">
+      <button onClick={openFinish} className="workout-finish-btn btn-press">
         <Check size={20} />
         Terminar Entrenamiento
       </button>
-      <button className="workout-secondary-btn" onClick={doSaveTemplate} disabled={!hasExercises}>
+      <button
+        className="workout-secondary-btn btn-press"
+        onClick={doSaveTemplate}
+        disabled={!hasExercises}
+      >
         <Bookmark size={16} />
         Guardar como plantilla
       </button>
-      <button className="workout-secondary-btn danger" onClick={() => setDiscardOpen(true)}>
+      <button
+        className="workout-secondary-btn danger btn-press"
+        onClick={() => {
+          haptics.warning();
+          setDiscardOpen(true);
+        }}
+      >
         <Square size={16} />
         Descartar
       </button>
@@ -295,7 +318,13 @@ function FooterActions() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="btn btn-secondary">Seguir entrenando</AlertDialogCancel>
-            <AlertDialogAction className="btn btn-danger" onClick={discardWorkout}>
+            <AlertDialogAction
+              className="btn btn-danger btn-press"
+              onClick={() => {
+                haptics.warning();
+                discardWorkout();
+              }}
+            >
               Descartar
             </AlertDialogAction>
           </AlertDialogFooter>

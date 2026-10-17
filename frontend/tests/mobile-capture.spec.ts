@@ -138,6 +138,30 @@ test.describe('Visual Screenshots Capture Suite', () => {
         fullPage: true,
       });
 
+      // Add second set to showcase quick steppers
+      const addSetBtn = page.getByRole('button', { name: /añadir serie/i });
+      if (await addSetBtn.isVisible()) {
+        await addSetBtn.click();
+        await page.waitForTimeout(300);
+        const secondWeightInput = page.locator('.set-input').nth(2);
+        await secondWeightInput.focus();
+        await page.waitForTimeout(400);
+        await page.screenshot({
+          path: path.join(SCREENSHOT_DIR, '04b_workout_stepper_mobile.png'),
+          fullPage: true,
+        });
+
+        // Scroll to bottom to inspect bottom actions with rest banner
+        await page.evaluate(() => {
+          const mc = document.querySelector('.main-content');
+          if (mc) mc.scrollTo({ top: mc.scrollHeight, behavior: 'instant' });
+        });
+        await page.waitForTimeout(300);
+        await page.screenshot({
+          path: path.join(SCREENSHOT_DIR, '04c_workout_footer_mobile.png'),
+        });
+      }
+
       // Click "Terminar Entrenamiento" to open the new Post-Workout Summary
       const finishBtn = page.getByRole('button', { name: /terminar entrenamiento/i });
       await expect(finishBtn).toBeVisible({ timeout: 5000 });
@@ -230,6 +254,16 @@ test.describe('Visual Screenshots Capture Suite', () => {
       // Screenshot 05: Settings
       await page.screenshot({
         path: path.join(SCREENSHOT_DIR, '05_settings_mobile.png'),
+        fullPage: true,
+      });
+
+      await page.goto('/tracking');
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(500);
+
+      // Screenshot 11: Tracking / Weight
+      await page.screenshot({
+        path: path.join(SCREENSHOT_DIR, '11_tracking_mobile.png'),
         fullPage: true,
       });
     });
