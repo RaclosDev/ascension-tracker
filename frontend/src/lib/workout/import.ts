@@ -45,6 +45,15 @@ export const MONTH_MAP: Record<string, number> = {
   december: 11,
 };
 
+export function sanitizeCsvFormula(str: string): string {
+  if (!str) return '';
+  const trimmed = str.trim();
+  if (/^[=+\-@\t\r%|]/m.test(trimmed)) {
+    return `'${trimmed}`;
+  }
+  return trimmed;
+}
+
 export function parseCsvRows(text: string): string[][] {
   const rows: string[][] = [];
   let currentRow: string[] = [];
@@ -269,6 +278,13 @@ export interface ParsedHevyImport {
   lastDate: number | null;
 }
 
+export function roundToTwoDecimals(val: string): string {
+  if (!val || !val.trim()) return '';
+  const num = parseFloat(val.replace(',', '.'));
+  if (Number.isNaN(num) || !Number.isFinite(num)) return '';
+  return (Math.round(num * 100) / 100).toString();
+}
+
 export function parseHevyCsv(
   csvContent: string,
   catalog: Exercise[] = EXERCISE_CATALOG,
@@ -340,7 +356,7 @@ export function parseHevyCsv(
     const { muscle, equipment } = inferExerciseMetadata(title);
     const newEx: Exercise = {
       id: uid(),
-      name: title,
+      name: sanitizeCsvFormula(title).substring(0, 100),
       muscle,
       equipment,
       custom: true,
@@ -386,10 +402,10 @@ export function parseHevyCsv(
     if (!workout) {
       workout = {
         id: uid(),
-        name: title.substring(0, 100),
+        name: sanitizeCsvFormula(title).substring(0, 100),
         startedAt,
         finishedAt,
-        notes: description.substring(0, 500),
+        notes: sanitizeCsvFormula(description).substring(0, 500),
         exercises: [],
       };
       workoutsMap.set(workoutKey, workout);
@@ -404,7 +420,7 @@ export function parseHevyCsv(
       currentExerciseBlock = {
         id: uid(),
         exerciseId,
-        notes: exerciseNotes.substring(0, 500),
+        notes: sanitizeCsvFormula(exerciseNotes).substring(0, 500),
         supersetId: supersetId ? `superset_${supersetId}` : undefined,
         sets: [],
       };
@@ -414,9 +430,9 @@ export function parseHevyCsv(
     const newSet: WorkoutSet = {
       id: uid(),
       type: parseSetType(setTypeRaw),
-      weight: weightKg.substring(0, 20),
-      reps: reps.substring(0, 20),
-      distance: distanceKm.substring(0, 20),
+      weight: roundToTwoDecimals(weightKg).substring(0, 20),
+      reps: reps.replace(/[^\d]/g, '').substring(0, 20),
+      distance: roundToTwoDecimals(distanceKm).substring(0, 20),
       duration: durationSeconds ? `${durationSeconds.substring(0, 10)}s` : '',
       rpe: rpe.substring(0, 20),
       completed: true,

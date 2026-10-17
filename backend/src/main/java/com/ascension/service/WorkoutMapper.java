@@ -35,7 +35,31 @@ public interface WorkoutMapper {
     @Mapping(target = "workoutExercise", ignore = true)
     @Mapping(target = "orderIndex", ignore = true)
     @Mapping(target = "isNew", ignore = true)
+    @Mapping(target = "weight", source = "weight", qualifiedByName = "stringToBigDecimal")
+    @Mapping(target = "reps", source = "reps", qualifiedByName = "stringToBigDecimal")
     WorkoutSet toEntity(WorkoutSetDTO dto);
 
+    @Mapping(target = "weight", source = "weight", qualifiedByName = "bigDecimalToString")
+    @Mapping(target = "reps", source = "reps", qualifiedByName = "bigDecimalToString")
     WorkoutSetDTO toDTO(WorkoutSet entity);
+
+    @org.mapstruct.Named("stringToBigDecimal")
+    default java.math.BigDecimal stringToBigDecimal(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return new java.math.BigDecimal(value.trim()).setScale(2, java.math.RoundingMode.HALF_UP);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    @org.mapstruct.Named("bigDecimalToString")
+    default String bigDecimalToString(java.math.BigDecimal value) {
+        if (value == null) {
+            return null;
+        }
+        return value.stripTrailingZeros().toPlainString();
+    }
 }

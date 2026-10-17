@@ -184,10 +184,21 @@ export function RestoreBackupModal({ isOpen, onClose }: RestoreBackupModalProps)
     setIsLoading(true);
     setError(null);
 
+    const isBackupEmpty =
+      preview.workoutsCount === 0 &&
+      preview.customExercisesCount === 0 &&
+      preview.workoutTemplatesCount === 0 &&
+      preview.foodLogsCount === 0 &&
+      preview.recipesCount === 0 &&
+      preview.weightEntriesCount === 0 &&
+      preview.stepsEntriesCount === 0 &&
+      !preview.hasSettings;
+
     try {
       const summary: UserDataRestoreSummary = await restoreUserData(
         preview.rawPayload,
         restoreMode,
+        restoreMode === 'OVERWRITE' && isBackupEmpty && confirmOverwrite,
       );
       toast.success(
         `Copia de seguridad restaurada (${summary.mode}): ${summary.workoutsRestored} entrenamientos, ${summary.foodLogsRestored} registros de comida`,

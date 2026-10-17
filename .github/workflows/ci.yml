@@ -28,9 +28,26 @@ jobs:
         working-directory: backend
         run: ./mvnw -B verify
 
+      - name: Scan Maven Dependencies (Trivy fs)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: 'fs'
+          scan-ref: 'backend'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+
       - name: Build Backend Docker Image
         working-directory: backend
         run: docker build -t ascension-api:latest .
+
+      - name: Scan Backend Docker Image (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: 'ascension-api:latest'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
 
   frontend:
     name: Frontend CI
@@ -44,6 +61,10 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
+
+      - name: Security Audit Frontend Dependencies
+        working-directory: frontend
+        run: npm audit --omit=dev
 
       - name: Lint, Typecheck and Test Frontend
         working-directory: frontend
@@ -73,3 +94,11 @@ jobs:
       - name: Build Frontend Docker Image
         working-directory: frontend
         run: docker build --build-arg VITE_API_URL=/api --build-arg VITE_GOOGLE_CLIENT_ID=ci-mock-id -t ascension-frontend:latest .
+
+      - name: Scan Frontend Docker Image (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: 'ascension-frontend:latest'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true

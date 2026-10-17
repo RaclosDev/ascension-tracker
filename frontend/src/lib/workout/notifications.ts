@@ -167,9 +167,8 @@ async function subscribeToPush() {
     });
 
     pushSubscribed = true;
-    console.info('Push subscription registered');
   } catch (e: unknown) {
-    console.warn('Push subscription failed', e);
+    console.warn('Push subscription failed', e instanceof Error ? e.message : String(e));
   }
 }
 
@@ -182,7 +181,10 @@ export async function scheduleServerRestTimer(delaySec: number) {
   try {
     await api.post('/push/rest-timer', { delaySec });
   } catch (e: unknown) {
-    console.warn('Failed to schedule server rest timer', e);
+    console.warn(
+      'Failed to schedule server rest timer',
+      e instanceof Error ? e.message : String(e),
+    );
   }
 }
 
@@ -193,7 +195,7 @@ export async function cancelServerRestTimer() {
   try {
     await api.post('/push/rest-timer/cancel');
   } catch (e: unknown) {
-    console.warn('Failed to cancel server rest timer', e);
+    console.warn('Failed to cancel server rest timer', e instanceof Error ? e.message : String(e));
   }
 }
 

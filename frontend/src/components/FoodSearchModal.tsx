@@ -6,42 +6,17 @@ import { useSpeechToText } from '../hooks/useSpeechToText';
 
 import { normalizeString } from '../lib/workout/format';
 import { getSanitizedKcal, extractPortions } from '../utils/portionHelper';
-import { GENERIC_FOODS } from '../lib/nutrition/generic-foods';
 import { getSmartFallbackQueries } from '../utils/searchHelper';
-import { SegmentedControl } from './ui/segmented-control';
 const BarcodeScanner = lazy(() => import('./BarcodeScanner'));
 import ManualFoodForm from './food/ManualFoodForm';
+import { FoodPortionEditor, SearchProduct } from './food/FoodPortionEditor';
+import { FoodSearchResultsList, SavedFoodExtended } from './food/FoodSearchResultsList';
 
 import { Mic, ImageIcon, X, ScanLine, ArrowLeft } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { FoodListsData, FoodLog, Meal, Recipe } from '../types/api';
 
-interface SearchProduct {
-  name: string;
-  category: string;
-  kcal: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  portions?: Array<{ label: string; amount: number }>;
-}
-
-export type SavedFoodExtended = {
-  id?: number | string;
-  name: string;
-  brand?: string;
-  kcalPer100g?: number;
-  proteinPer100g?: number;
-  carbsPer100g?: number;
-  fatPer100g?: number;
-  servingSize?: number;
-  servingLabel?: string;
-  isRecipe?: boolean;
-  kcal?: number;
-  protein?: number;
-  carbs?: number;
-  fat?: number;
-};
+export type { SavedFoodExtended, SearchProduct };
 
 export default function FoodSearchModal({
   isOpen,
@@ -245,7 +220,10 @@ export default function FoodSearchModal({
       }
     } catch (err) {
       if (currentRequestId !== searchRequestId.current) return;
-      console.error(err);
+      console.error(
+        'Error al consultar base de datos de alimentos:',
+        err instanceof Error ? err.message : String(err),
+      );
       toast.error('Error al consultar base de datos');
     } finally {
       /* ignore */
@@ -284,7 +262,10 @@ export default function FoodSearchModal({
 
       toast.success('¡Macros extraídos correctamente!');
     } catch (err: unknown) {
-      console.error(err);
+      console.error(
+        'Error al analizar etiqueta OCR:',
+        err instanceof Error ? err.message : String(err),
+      );
       toast.error(
         (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
           'Error al analizar la etiqueta.',
@@ -327,7 +308,10 @@ export default function FoodSearchModal({
       toast('Producto no encontrado por código de barras', { icon: '🤔' });
       setOffResults([]);
     } catch (err) {
-      console.error(err);
+      console.error(
+        'Error al consultar código de barras:',
+        err instanceof Error ? err.message : String(err),
+      );
       toast.error('Error al consultar código de barras');
     } finally {
       /* ignore */
@@ -468,7 +452,10 @@ export default function FoodSearchModal({
       if (onLogAdded) onLogAdded();
       if (onClose) onClose();
     } catch (err) {
-      console.error(err);
+      console.error(
+        'Error al guardar el alimento:',
+        err instanceof Error ? err.message : String(err),
+      );
       toast.error('Error al guardar el alimento');
     }
   };
@@ -511,7 +498,7 @@ export default function FoodSearchModal({
           (e as { response?: { data?: { error?: string } } }).response?.data?.error ||
           'Error procesando texto con IA';
         toast.error(msg);
-        console.error(e);
+        console.error('Error procesando texto con IA:', e instanceof Error ? e.message : String(e));
       });
   };
 
@@ -557,223 +544,15 @@ export default function FoodSearchModal({
 
         <div className="food-search-body fade-in">
           {selectedProduct ? (
-            /* VIEW 1: PORTION SELECTION (Unchanged logic) */
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
-              <div
-                style={{
-                  background: 'var(--bg-secondary)',
-                  padding: '1.25rem',
-                  borderRadius: '12px',
-                }}
-              >
-                <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>
-                  {selectedProduct.name}
-                </h3>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '1rem',
-                    fontSize: '0.85rem',
-                    color: 'var(--text-secondary)',
-                  }}
-                >
-                  <span>{Math.round(selectedProduct.kcal || 0)} kcal / 100g</span>
-                  <span>P: {Math.round(selectedProduct.protein || 0)}g</span>
-                  <span>C: {Math.round(selectedProduct.carbs || 0)}g</span>
-                  <span>G: {Math.round(selectedProduct.fat || 0)}g</span>
-                </div>
-              </div>
-
-              {(() => {
-                const portions = selectedProduct.portions || [];
-                const hasPortions = portions.length > 0;
-                const basePortion = hasPortions
-                  ? portions.find((p: { label: string; amount: number }) =>
-                      p.label.startsWith('1 '),
-                    ) || portions[0]
-                  : null;
-                const baseAmount = basePortion ? basePortion.amount : 100;
-                const multiplier = quantity ? Number((quantity / baseAmount).toFixed(2)) : 0;
-                const portionLabel = basePortion ? basePortion.label.replace(/^1\s*/, '') : 'ud';
-
-                const handleMultiplierChange = (newMultiplier: number) => {
-                  if (newMultiplier < 0) newMultiplier = 0;
-                  setQuantity(Number((newMultiplier * baseAmount).toFixed(1)));
-                };
-
-                return (
-                  <div
-                    className="form-group"
-                    style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <label className="form-label" style={{ margin: 0 }}>
-                        Cantidad {inputMode === 'grams' ? '(gramos)' : `(${portionLabel})`}
-                      </label>
-                      {hasPortions && (
-                        <div style={{ width: '160px' }}>
-                          <SegmentedControl
-                            options={[
-                              { label: 'Gramos', value: 'grams' },
-                              { label: 'Porción', value: 'portions' },
-                            ]}
-                            value={inputMode}
-                            onChange={(val: string) => setInputMode(val as 'grams' | 'portions')}
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {inputMode === 'grams' || !hasPortions ? (
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          className="form-input"
-                          style={{
-                            fontSize: '1.2rem',
-                            padding: '0.75rem',
-                            fontWeight: 600,
-                            width: '120px',
-                            textAlign: 'center',
-                          }}
-                          value={quantity || ''}
-                          onChange={(e) => setQuantity(Number(e.target.value))}
-                          autoFocus
-                        />
-                        <span style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>
-                          g
-                        </span>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => handleMultiplierChange(multiplier - 1)}
-                          style={{
-                            width: '48px',
-                            height: '48px',
-                            fontSize: '1.5rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: 0,
-                          }}
-                        >
-                          -
-                        </button>
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          className="form-input"
-                          style={{
-                            fontSize: '1.2rem',
-                            padding: '0.75rem',
-                            fontWeight: 600,
-                            width: '100px',
-                            textAlign: 'center',
-                          }}
-                          value={multiplier || ''}
-                          onChange={(e) => handleMultiplierChange(Number(e.target.value))}
-                          autoFocus
-                        />
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => handleMultiplierChange(multiplier + 1)}
-                          style={{
-                            width: '48px',
-                            height: '48px',
-                            fontSize: '1.5rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: 0,
-                          }}
-                        >
-                          +
-                        </button>
-                        <span style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>
-                          x {portionLabel}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
-              {selectedProduct.portions && selectedProduct.portions.length > 0 && (
-                <div
-                  style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}
-                >
-                  {selectedProduct.portions.map(
-                    (port: { label: string; amount: number }, idx: number) => (
-                      <button
-                        key={idx}
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => setQuantity(port.amount)}
-                        style={{
-                          background: quantity === port.amount ? 'var(--color-protein-bg)' : '',
-                          color: quantity === port.amount ? 'var(--color-protein)' : '',
-                          borderColor: quantity === port.amount ? 'var(--color-protein)' : '',
-                        }}
-                      >
-                        {port.label} ({port.amount}g)
-                      </button>
-                    ),
-                  )}
-                </div>
-              )}
-
-              <div style={{ flex: 1 }}></div>
-
-              <div
-                style={{
-                  padding: '1rem',
-                  background: 'var(--bg-secondary)',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    Total Calculado
-                  </div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>
-                    {Math.round((selectedProduct.kcal || 0) * (Number(quantity) / 100))} kcal
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem' }}>
-                  <div>
-                    <span style={{ color: 'var(--color-protein)' }}>P:</span>{' '}
-                    {((selectedProduct.protein || 0) * (Number(quantity) / 100)).toFixed(1)}g
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--color-carbs)' }}>C:</span>{' '}
-                    {((selectedProduct.carbs || 0) * (Number(quantity) / 100)).toFixed(1)}g
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--color-fat)' }}>G:</span>{' '}
-                    {((selectedProduct.fat || 0) * (Number(quantity) / 100)).toFixed(1)}g
-                  </div>
-                </div>
-              </div>
-
-              <button
-                className="btn btn-primary"
-                style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }}
-                onClick={handleConfirmAdd}
-              >
-                Añadir a mi registro
-              </button>
-            </div>
+            /* VIEW 1: PORTION SELECTION */
+            <FoodPortionEditor
+              selectedProduct={selectedProduct}
+              quantity={quantity}
+              setQuantity={setQuantity}
+              inputMode={inputMode}
+              setInputMode={setInputMode}
+              onConfirmAdd={handleConfirmAdd}
+            />
           ) : activeOverlay === 'manual' ? (
             /* VIEW: MANUAL ENTRY */
             <ManualFoodForm
@@ -804,7 +583,7 @@ export default function FoodSearchModal({
               >
                 <BarcodeScanner
                   onScanSuccess={handleScanSuccess}
-                  onScanError={(err: string) => console.error(err)}
+                  onScanError={(err: string) => console.warn('Barcode scan:', err)}
                 />
               </Suspense>
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -1128,280 +907,19 @@ export default function FoodSearchModal({
               </form>
 
               {/* RESULTS AREA */}
-              <div style={{ overflowY: 'auto', flex: 1, paddingBottom: '2rem' }}>
-                {/* 2. SAVED & RECENT (Default or Filtered) */}
-                {(() => {
-                  const qLower = normalizeString(query.trim());
-                  const filteredSaved = savedFoods.filter(
-                    (f: SavedFoodExtended) =>
-                      !qLower ||
-                      normalizeString(f.name || '').includes(qLower) ||
-                      (f.brand && normalizeString(f.brand).includes(qLower)),
-                  );
-                  const filteredRecent = recentLogs.filter(
-                    (l: FoodLog) => !qLower || normalizeString(l.product).includes(qLower),
-                  );
-                  const filteredGeneric = GENERIC_FOODS.filter(
-                    (f: { name: string; brand?: string }) =>
-                      qLower.length > 0 &&
-                      (normalizeString(f.name).includes(qLower) ||
-                        (f.brand && normalizeString(f.brand).includes(qLower))),
-                  );
-
-                  return (
-                    <div style={{ marginTop: 0 }}>
-                      {filteredRecent.length > 0 && (
-                        <div>
-                          <div
-                            style={{
-                              fontSize: '0.85rem',
-                              fontWeight: 600,
-                              color: 'var(--text-secondary)',
-                              marginBottom: '0.5rem',
-                            }}
-                          >
-                            Últimos Alimentos Añadidos
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                            {filteredRecent.map((log: FoodLog) => {
-                              const q = Number(log.quantity) || 100;
-                              const kcal100 = Math.round((Number(log.kcal) || 0) * (100 / q));
-                              return (
-                                <div
-                                  key={log.id}
-                                  className="card"
-                                  style={{
-                                    padding: '0.5rem 0.75rem',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                  }}
-                                  onClick={() => handleSelectRecent(log)}
-                                >
-                                  <div style={{ fontWeight: 500, fontSize: '0.95rem' }}>
-                                    {log.product}
-                                  </div>
-                                  <div
-                                    style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}
-                                  >
-                                    {kcal100} kcal / 100g
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                      {filteredSaved.length > 0 && (
-                        <div style={{ marginBottom: '1.5rem' }}>
-                          <div
-                            style={{
-                              fontSize: '0.85rem',
-                              fontWeight: 600,
-                              color: 'var(--text-secondary)',
-                              marginBottom: '0.5rem',
-                            }}
-                          >
-                            Mis Alimentos Guardados
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                            {filteredSaved.map((food: SavedFoodExtended) => (
-                              <div
-                                key={food.id}
-                                className="card"
-                                style={{
-                                  padding: '0.5rem 0.75rem',
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  background: 'rgba(59, 130, 246, 0.05)',
-                                  border: '1px solid rgba(59, 130, 246, 0.2)',
-                                }}
-                                onClick={() => handleSelectSaved(food)}
-                              >
-                                <div>
-                                  <div style={{ fontWeight: 500, fontSize: '0.95rem' }}>
-                                    {food.name}{' '}
-                                    {food.brand && (
-                                      <span style={{ opacity: 0.7, fontSize: '0.85rem' }}>
-                                        ({food.brand})
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div
-                                    style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}
-                                  >
-                                    {food.kcalPer100g ?? food.kcal ?? 0} kcal / 100g
-                                    {food.servingSize && food.servingSize > 0 && (
-                                      <span
-                                        style={{
-                                          marginLeft: '0.5rem',
-                                          color: 'var(--color-success)',
-                                        }}
-                                      >
-                                        [{food.servingSize}g / {food.servingLabel || 'ud'}]
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}{' '}
-                      {qLower.length > 0 && filteredGeneric.length > 0 && (
-                        <div style={{ marginBottom: '1.5rem' }}>
-                          <div
-                            style={{
-                              fontSize: '0.85rem',
-                              fontWeight: 600,
-                              color: 'var(--text-secondary)',
-                              marginBottom: '0.5rem',
-                            }}
-                          >
-                            Alimentos Básicos
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                            {filteredGeneric.map((food: SavedFoodExtended & { image?: string }) => (
-                              <div
-                                key={food.id}
-                                className="card"
-                                style={{
-                                  padding: '0.5rem 0.75rem',
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  background: 'rgba(34, 197, 94, 0.05)',
-                                  border: '1px solid rgba(34, 197, 94, 0.2)',
-                                }}
-                                onClick={() => handleSelectSaved(food)}
-                              >
-                                <div
-                                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}
-                                >
-                                  <div style={{ fontSize: '1.5rem' }}>{food.image}</div>
-                                  <div>
-                                    <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>
-                                      {food.name}
-                                    </div>
-                                    <div
-                                      style={{
-                                        fontSize: '0.75rem',
-                                        color: 'var(--text-secondary)',
-                                      }}
-                                    >
-                                      {food.kcal} kcal | P: {food.protein}g | C: {food.carbs}g | G:{' '}
-                                      {food.fat}g
-                                      <span style={{ marginLeft: '0.5rem', opacity: 0.7 }}>
-                                        [{food.servingSize}
-                                        {food.servingLabel}]
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-
-                {/* 1. SEARCH RESULTS (External API) */}
-                {offResults.length > 0 && (
-                  <div>
-                    <div
-                      style={{
-                        fontSize: '0.85rem',
-                        fontWeight: 700,
-                        color: 'var(--color-carbs)',
-                        marginBottom: '0.5rem',
-                        marginTop: '1.5rem',
-                      }}
-                    >
-                      Resultados de Búsqueda
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                      {offResults.map((p, idx) => {
-                        const name = (p.product_name || p.product_name_es || 'Producto') as string;
-                        const brand = (p.brands || '') as string;
-                        const rawNut = (p.nutriments || {}) as Record<string, unknown>;
-                        const kcal = getSanitizedKcal(rawNut);
-                        const prot = (
-                          Number(rawNut['proteins_100g'] ?? rawNut['proteins'] ?? 0) || 0
-                        ).toFixed(1);
-                        const carb = (
-                          Number(rawNut['carbohydrates_100g'] ?? rawNut['carbohydrates'] ?? 0) || 0
-                        ).toFixed(1);
-                        const fat = (Number(rawNut['fat_100g'] ?? rawNut['fat'] ?? 0) || 0).toFixed(
-                          1,
-                        );
-
-                        return (
-                          <div
-                            key={(p.code as string) || idx}
-                            className="card"
-                            style={{
-                              padding: '0.65rem 0.85rem',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              borderLeft: '4px solid var(--color-carbs)',
-                            }}
-                            onClick={() => handleSelectOff(p)}
-                          >
-                            <div>
-                              <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>
-                                {name}{' '}
-                                {brand && (
-                                  <span style={{ fontWeight: 400, color: 'var(--text-secondary)' }}>
-                                    - {brand}
-                                  </span>
-                                )}
-                              </div>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                100g: <strong>{kcal} kcal</strong> | P: {prot}g | C: {carb}g | G:{' '}
-                                {fat}g
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. MANUAL CREATE FALLBACK */}
-                {(query.trim().length > 0 || offResults.length === 0) && (
-                  <div
-                    style={{
-                      textAlign: 'center',
-                      padding: '1.5rem',
-                      background: 'var(--bg-secondary)',
-                      borderRadius: '12px',
-                      marginTop: '1.5rem',
-                    }}
-                  >
-                    <p style={{ margin: '0 0 0.75rem 0', color: 'var(--text-secondary)' }}>
-                      ¿No encuentras el producto exacto?
-                    </p>
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => {
-                        setManualForm((prev) => ({ ...prev, name: query }));
-                        setActiveOverlay('manual');
-                      }}
-                    >
-                      Crear {query ? `"${query}"` : 'alimento'} manualmente
-                    </button>
-                  </div>
-                )}
-              </div>
+              <FoodSearchResultsList
+                query={query}
+                savedFoods={savedFoods}
+                recentLogs={recentLogs}
+                offResults={offResults}
+                onSelectRecent={handleSelectRecent}
+                onSelectSaved={handleSelectSaved}
+                onSelectOff={handleSelectOff}
+                onOpenManual={() => {
+                  setManualForm((prev) => ({ ...prev, name: query }));
+                  setActiveOverlay('manual');
+                }}
+              />
             </div>
           )}
         </div>

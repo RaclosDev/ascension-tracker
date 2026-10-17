@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ascension.util.SecurityUtils;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/nutrition")
@@ -21,6 +23,8 @@ public class NutritionController {
 
     @GetMapping("/macros")
     public ResponseEntity<MacrosDTO> getMacros(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(macroCalculatorService.getMacros(jwt.getClaimAsString("email")));
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(macroCalculatorService.getMacros(userEmail));
     }
 }

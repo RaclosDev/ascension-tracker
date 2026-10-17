@@ -9,25 +9,17 @@ const WeightLossPlan = lazy(() => import('../components/calculators/WeightLossPl
 const MacroConfigurator = lazy(() => import('../components/calculators/MacroConfigurator'));
 const MealConfigurator = lazy(() => import('../components/MealConfigurator'));
 import { useWorkoutStore } from '../lib/workout/store';
-import { formatRestFriendly } from '../lib/workout/format';
 import { useCustomExercises, useWorkoutPreferencesActions } from '../lib/workout/api';
 import { HevyImportModal } from '../components/workout/HevyImportModal';
 import { RestoreBackupModal } from '../components/settings/RestoreBackupModal';
+import { SettingsPersonalSection } from '../components/settings/SettingsPersonalSection';
+import { SettingsThemeSection } from '../components/settings/SettingsThemeSection';
+import { SettingsWorkoutSection } from '../components/settings/SettingsWorkoutSection';
+import { SettingsDataSection } from '../components/settings/SettingsDataSection';
 import { useAuth } from '../context/AuthContext';
 import { applyThemeColor } from '../utils/colorHelper';
 import { Skeleton } from '../components/ui/skeleton';
-import {
-  Palette,
-  User,
-  Scale,
-  Activity,
-  Dumbbell,
-  Utensils,
-  LogOut,
-  UploadCloud,
-  Download,
-  ChevronDown,
-} from 'lucide-react';
+import { Scale, Activity, Utensils, ChevronDown } from 'lucide-react';
 
 export interface SettingsForm {
   startDate: string;
@@ -154,14 +146,16 @@ export default function SettingsPage() {
       await exportUserData();
       toast.success('Copia de seguridad exportada con éxito');
     } catch (error) {
-      console.error('Error al exportar copia de seguridad:', error);
+      console.error(
+        'Error al exportar copia de seguridad:',
+        error instanceof Error ? error.message : String(error),
+      );
       toast.error('Error al exportar la copia de seguridad');
     } finally {
       setIsExportingJson(false);
     }
   };
 
-  const PRESETS = ['#0085FF', '#E11D48', '#FFFFFF', '#FF5E00', '#8B5CF6'];
   const [customColor, setCustomColor] = useState(
     localStorage.getItem('ascension_custom_color') || '#0085FF',
   );
@@ -169,6 +163,7 @@ export default function SettingsPage() {
     setCustomColor(color);
     applyThemeColor(color);
   };
+
   useEffect(() => {
     if (location.hash === '#meals') {
       setOpenSections((prev: Record<string, boolean>) => ({ ...prev, meals: true }));
@@ -179,7 +174,7 @@ export default function SettingsPage() {
     }
   }, [location.hash]);
 
-  const toggleSection = (key: string, e: React.MouseEvent<HTMLDivElement>) => {
+  const toggleSection = (key: string, e?: React.MouseEvent<HTMLDivElement>) => {
     if (!openSections[key] && e?.currentTarget) {
       const el = e.currentTarget;
       setTimeout(() => {
@@ -239,7 +234,10 @@ export default function SettingsPage() {
       refetchSettings();
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     } catch (err: unknown) {
-      console.error('Error al guardar datos personales:', err);
+      console.error(
+        'Error al guardar datos personales:',
+        err instanceof Error ? err.message : String(err),
+      );
       const e = err as {
         response?: { data?: { message?: string; error?: string } };
         message?: string;
@@ -290,7 +288,7 @@ export default function SettingsPage() {
       refetchSettings();
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     } catch (err: unknown) {
-      console.error('Error al guardar macros:', err);
+      console.error('Error al guardar macros:', err instanceof Error ? err.message : String(err));
       const e = err as {
         response?: { data?: { message?: string; error?: string } };
         message?: string;
@@ -352,131 +350,13 @@ export default function SettingsPage() {
         style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
       >
         {/* 1. Personal Data */}
-        <div
-          className={`card accordion-card transition-all duration-300 ease-out ${openSections.personal ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
-        >
-          <div
-            className="accordion-header flex justify-between items-center cursor-pointer select-none"
-            onClick={(e) => toggleSection('personal', e)}
-          >
-            <div className="flex items-center gap-2">
-              <User size={20} className="text-primary" />
-              <span className="card-title m-0 text-base font-semibold">Datos Personales</span>
-            </div>
-            <span
-              className={`text-xs text-gray-400 transition-transform duration-300 ${openSections.personal ? 'rotate-180' : 'rotate-0'}`}
-            >
-              <ChevronDown size={18} />
-            </span>
-          </div>
-          {openSections.personal && (
-            <div className="accordion-content fade-in mt-5 pt-5 border-t border-white/10">
-              <h4 className="subsection-title">Métricas Corporales y Biometría</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Sexo</label>
-                  <select
-                    className="form-input"
-                    value={form.sex || 'M'}
-                    onChange={(e) => setForm({ ...form, sex: e.target.value })}
-                  >
-                    <option value="M">Hombre</option>
-                    <option value="F">Mujer</option>
-                  </select>
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Edad</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    value={form.age || ''}
-                    onChange={(e) => setForm({ ...form, age: e.target.value })}
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Altura (cm)</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    value={form.heightCm || ''}
-                    onChange={(e) => setForm({ ...form, heightCm: e.target.value })}
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Actividad</label>
-                  <select
-                    className="form-input"
-                    value={form.activityFactor || '1.2'}
-                    onChange={(e) => setForm({ ...form, activityFactor: e.target.value })}
-                  >
-                    <option value="1.2">Sedentario</option>
-                    <option value="1.375">Ligero</option>
-                    <option value="1.55">Moderado</option>
-                    <option value="1.725">Alto</option>
-                    <option value="1.9">Muy Alto</option>
-                  </select>
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Peso Inicial (kg)</label>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    className="form-input"
-                    step="0.1"
-                    value={form.startWeight || ''}
-                    onChange={(e) => setForm({ ...form, startWeight: e.target.value })}
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Peso Deseado (kg)</label>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    className="form-input"
-                    step="0.1"
-                    value={form.goalWeight || ''}
-                    onChange={(e) => setForm({ ...form, goalWeight: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <h4 className="subsection-title" style={{ marginTop: '1.5rem' }}>
-                Progreso y Fechas
-              </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Pérdida (kg/sem)</label>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    className="form-input"
-                    step="0.1"
-                    min="0.1"
-                    max="2"
-                    value={form.weeklyGoal || ''}
-                    onChange={(e) => setForm({ ...form, weeklyGoal: e.target.value })}
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Fecha de Inicio</label>
-                  <input
-                    type="date"
-                    className="form-input"
-                    value={form.startDate || ''}
-                    onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                  />
-                </div>
-              </div>
-              <button
-                className="btn btn-primary"
-                style={{ width: '100%', marginTop: '0.5rem' }}
-                onClick={handleSavePersonal}
-              >
-                Guardar Cambios
-              </button>
-            </div>
-          )}
-        </div>
+        <SettingsPersonalSection
+          isOpen={openSections.personal}
+          onToggle={(e) => toggleSection('personal', e)}
+          form={form}
+          setForm={setForm}
+          onSave={handleSavePersonal}
+        />
 
         {/* 1.5 Plan de Adelgazamiento */}
         <div
@@ -588,416 +468,44 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* THEME & APPEARANCE */}
-        <div
-          className={`card accordion-card transition-all duration-300 ease-out ${openSections.theme ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
-        >
-          <div
-            className="accordion-header flex justify-between items-center cursor-pointer select-none"
-            onClick={(e) => toggleSection('theme', e)}
-          >
-            <div className="flex items-center gap-2">
-              <Palette size={20} className="text-primary" />
-              <span className="card-title m-0 text-base font-semibold">Tema y Apariencia</span>
-            </div>
-            <span
-              className={`text-xs text-gray-400 transition-transform duration-300 ${openSections.theme ? 'rotate-180' : 'rotate-0'}`}
-            >
-              <ChevronDown size={18} />
-            </span>
-          </div>
-          {openSections.theme && (
-            <div className="accordion-content fade-in mt-5 pt-5 border-t border-white/10">
-              <div className="form-group">
-                <label className="form-label" style={{ marginBottom: '0.5rem', display: 'block' }}>
-                  Color Principal
-                </label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <input
-                    type="color"
-                    value={customColor}
-                    onChange={(e) => handleColorChange(e.target.value)}
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      padding: '0',
-                      border: 'none',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      background: 'none',
-                    }}
-                  />
-                  <div
-                    style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}
-                  >
-                    {PRESETS.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => handleColorChange(color)}
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '50%',
-                          background: color,
-                          border:
-                            customColor === color ? '2px solid white' : '2px solid transparent',
-                          cursor: 'pointer',
-                          padding: 0,
-                          transition: 'transform 0.1s',
-                        }}
-                        title={color}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <p
-                  style={{
-                    fontSize: '0.8rem',
-                    color: 'var(--text-secondary)',
-                    marginTop: '0.75rem',
-                  }}
-                >
-                  El color acento que elegiste es el {customColor}. ¡Se aplicará instantáneamente en
-                  toda la aplicación!
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* 4. Theme & Appearance */}
+        <SettingsThemeSection
+          isOpen={openSections.theme}
+          onToggle={(e) => toggleSection('theme', e)}
+          customColor={customColor}
+          onColorChange={handleColorChange}
+        />
 
-        {/* 4. Workout */}
-        <div
-          className={`card accordion-card transition-all duration-300 ease-out ${openSections.workout ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
-        >
-          <div
-            className="accordion-header flex justify-between items-center cursor-pointer select-none"
-            onClick={(e) => toggleSection('workout', e)}
-          >
-            <div className="flex items-center gap-2">
-              <Dumbbell size={20} className="text-primary" />
-              <span className="card-title m-0 text-base font-semibold">Entrenamiento</span>
-            </div>
-            <span
-              className={`text-xs text-gray-400 transition-transform duration-300 ${openSections.workout ? 'rotate-180' : 'rotate-0'}`}
-            >
-              <ChevronDown size={18} />
-            </span>
-          </div>
-          {openSections.workout && (
-            <div className="accordion-content fade-in mt-5 pt-5 border-t border-white/10">
-              <div
-                className="form-group"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '1.25rem',
-                }}
-              >
-                <div style={{ paddingRight: '1rem' }}>
-                  <label className="form-label" style={{ marginBottom: '2px' }}>
-                    {' '}
-                    Descanso Base (segundos)
-                  </label>
-                  <div className="form-hint" style={{ marginTop: 0 }}>
-                    El tiempo que se aplicará por defecto a todos los ejercicios si no configuras
-                    uno específico.
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    className="form-input"
-                    style={{ width: '80px', textAlign: 'center', fontWeight: 600 }}
-                    value={restPreset}
-                    onChange={(e) => {
-                      const val = Number(e.target.value) || 90;
-                      setRestPreset(val);
-                      setRestPresetPref(val);
-                    }}
-                    min="0"
-                    step="15"
-                    aria-label="Descanso base en segundos"
-                  />
-                  <span
-                    style={{
-                      fontSize: '0.85rem',
-                      color: 'var(--text-secondary)',
-                      fontWeight: 600,
-                    }}
-                  >
-                    seg ({formatRestFriendly(restPreset)})
-                  </span>
-                </div>
-              </div>
-
-              <div
-                className="form-group"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-              >
-                <div>
-                  <label className="form-label" style={{ marginBottom: '2px' }}>
-                    Mostrar RPE (Esfuerzo Percibido)
-                  </label>
-                  <div className="form-hint" style={{ marginTop: 0 }}>
-                    Muestra una columna de RPE en los ejercicios para medir la intensidad (1-10)
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={workoutSettings?.showRpe ?? false}
-                  onChange={(e) =>
-                    setWorkoutSettings({ ...workoutSettings, showRpe: e.target.checked })
-                  }
-                  style={{ transform: 'scale(1.2)' }}
-                />
-              </div>
-
-              <div
-                style={{
-                  marginTop: '1.5rem',
-                  borderTop: '1px dashed var(--border-subtle)',
-                  paddingTop: '1.5rem',
-                }}
-              >
-                <label className="form-label" style={{ marginBottom: '2px' }}>
-                  Ocultar material no disponible
-                </label>
-                <div className="form-hint" style={{ marginTop: 0, marginBottom: '1rem' }}>
-                  Los ejercicios que usen estos materiales no aparecerán en las búsquedas ni en los
-                  catálogos.
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                  {[
-                    'barra',
-                    'mancuernas',
-                    'maquina',
-                    'multipower',
-                    'polea',
-                    'banda',
-                    'kettlebell',
-                    'peso corporal',
-                  ].map((eq) => {
-                    const isHidden = hiddenEquipments.includes(eq);
-                    return (
-                      <label
-                        key={eq}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          fontSize: '0.85rem',
-                          color: isHidden ? 'var(--text-muted)' : 'var(--text-secondary)',
-                          textDecoration: isHidden ? 'line-through' : 'none',
-                          cursor: 'pointer',
-                          textTransform: 'capitalize',
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isHidden}
-                          onChange={() => {
-                            toggleHiddenEquipment(eq);
-                            togglePrefHiddenEquipment(eq);
-                          }}
-                        />
-                        {eq === 'multipower' ? 'Multipower (Smith)' : eq}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  marginTop: '1.5rem',
-                  borderTop: '1px dashed var(--border-subtle)',
-                  paddingTop: '1.5rem',
-                }}
-              >
-                <label className="form-label">Importar desde Hevy</label>
-                <p
-                  style={{
-                    color: 'var(--text-muted)',
-                    fontSize: '0.85rem',
-                    marginBottom: 'var(--space-md)',
-                  }}
-                >
-                  Sube el archivo{' '}
-                  <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                    workout_data.csv
-                  </span>{' '}
-                  exportado de Hevy para migrar todo tu histórico de entrenamientos.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setIsHevyModalOpen(true)}
-                  className="btn btn-primary"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.6rem 1.2rem',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                  }}
-                  aria-label="Abrir modal para importar entrenamientos desde Hevy"
-                >
-                  <UploadCloud size={18} />
-                  Importar CSV de Hevy
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 5. Backup & Privacy / Copia de Seguridad */}
-        <div
-          className="card accordion-card mb-4"
-          style={{
-            padding: 'var(--space-lg)',
-            transition: 'all 0.25s ease',
-            border: '1px solid var(--border-subtle)',
+        {/* 5. Workout */}
+        <SettingsWorkoutSection
+          isOpen={openSections.workout}
+          onToggle={(e) => toggleSection('workout', e)}
+          restPreset={restPreset}
+          onRestPresetChange={(val) => {
+            setRestPreset(val);
+            setRestPresetPref(val);
           }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div className="flex items-center gap-2">
-              <Download size={20} style={{ color: 'var(--color-primary)' }} />
-              <span
-                className="card-title"
-                style={{
-                  margin: 0,
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  color: 'var(--text-primary)',
-                }}
-              >
-                Copia de Seguridad y Privacidad
-              </span>
-            </div>
-          </div>
-          <div
-            style={{
-              marginTop: '1.25rem',
-              borderTop: '1px solid rgba(255,255,255,0.06)',
-              paddingTop: '1.25rem',
-            }}
-          >
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              Descarga una copia de seguridad completa con todos tus entrenamientos, ejercicios
-              personalizados, plantillas, registros de comidas, recetas, alimentos guardados, pasos,
-              peso y ajustes en formato JSON (GDPR).
-            </p>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.75rem',
-                marginBottom: '1.5rem',
-              }}
-            >
-              <button
-                className="btn btn-primary"
-                style={{ width: '100%' }}
-                onClick={handleExportJson}
-                disabled={isExportingJson}
-                aria-busy={isExportingJson}
-                aria-label={
-                  isExportingJson
-                    ? 'Exportando datos en curso'
-                    : 'Exportar copia de seguridad (JSON)'
-                }
-              >
-                {isExportingJson ? 'Exportando datos...' : 'Exportar copia de seguridad (JSON)'}
-              </button>
-              <button
-                className="btn btn-secondary"
-                style={{
-                  width: '100%',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                }}
-                onClick={() => setIsRestoreModalOpen(true)}
-                aria-label="Abrir modal para restaurar copia de seguridad desde archivo JSON"
-              >
-                <UploadCloud size={18} />
-                Restaurar copia de seguridad (JSON)
-              </button>
-            </div>
-            <div
-              style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '1.5rem 0' }}
-            />
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              Descarga todos tus datos de peso registrados en un archivo CSV.
-            </p>
-            <button
-              className="btn btn-secondary"
-              style={{ width: '100%' }}
-              onClick={handleExportData}
-              aria-label="Exportar datos a CSV"
-            >
-              Exportar Datos a CSV
-            </button>
-          </div>
-        </div>
-
-        {/* 6. Account / Logout */}
-        <div
-          className="card accordion-card"
-          style={{
-            padding: 'var(--space-lg)',
-            transition: 'all 0.25s ease',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
+          workoutSettings={workoutSettings}
+          onWorkoutSettingsChange={setWorkoutSettings}
+          hiddenEquipments={hiddenEquipments}
+          onToggleHiddenEquipment={(eq) => {
+            toggleHiddenEquipment(eq);
+            togglePrefHiddenEquipment(eq);
           }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div className="flex items-center gap-2">
-              <LogOut size={20} style={{ color: 'var(--color-danger, #ef4444)' }} />
-              <span
-                className="card-title"
-                style={{
-                  margin: 0,
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  color: 'var(--color-danger, #ef4444)',
-                }}
-              >
-                Cuenta
-              </span>
-            </div>
-          </div>
-          <div
-            style={{
-              marginTop: '1.25rem',
-              borderTop: '1px solid rgba(255,255,255,0.06)',
-              paddingTop: '1.25rem',
-            }}
-          >
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              Cierra tu sesión de forma segura en este dispositivo.
-            </p>
-            <button
-              className="btn btn-secondary"
-              style={{
-                width: '100%',
-                borderColor: 'rgba(239, 68, 68, 0.5)',
-                color: '#ef4444',
-                background: 'rgba(239, 68, 68, 0.1)',
-              }}
-              onClick={() => {
-                logout();
-                toast.success('Sesión cerrada');
-              }}
-              aria-label="Cerrar sesión"
-            >
-              Cerrar Sesión
-            </button>
-          </div>
-        </div>
+          onOpenHevyModal={() => setIsHevyModalOpen(true)}
+        />
+
+        {/* 6. Backup, Privacy & Logout */}
+        <SettingsDataSection
+          isExportingJson={isExportingJson}
+          onExportJson={handleExportJson}
+          onOpenRestoreModal={() => setIsRestoreModalOpen(true)}
+          onExportCsv={handleExportData}
+          onLogout={() => {
+            logout();
+            toast.success('Sesión cerrada');
+          }}
+        />
       </div>
 
       <HevyImportModal

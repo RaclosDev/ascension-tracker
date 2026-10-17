@@ -78,6 +78,30 @@ class WorkoutDTOTest {
 
         Set<ConstraintViolation<WorkoutSetDTO>> violations = validator.validate(set);
         assertThat(violations).isNotEmpty();
-        assertThat(violations).anyMatch(v -> v.getMessage().contains("El valor debe ser un número válido 0 o positivo"));
+        assertThat(violations).anyMatch(v -> v.getMessage().contains("El valor debe ser un numero valido"));
+    }
+
+    @Test
+    void testWorkoutSetWithMultipleDecimals_PassesValidation() {
+        WorkoutSetDTO set = WorkoutSetDTO.builder()
+                .type("normal")
+                .weight("1.134")
+                .reps("10.5")
+                .distance("1.60934")
+                .build();
+
+        Set<ConstraintViolation<WorkoutSetDTO>> violations = validator.validate(set);
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
+    void testWorkoutSetWithMoreThan8IntegerDigits_FailsValidation() {
+        WorkoutSetDTO set = WorkoutSetDTO.builder()
+                .type("normal")
+                .weight("123456789.5")
+                .build();
+
+        Set<ConstraintViolation<WorkoutSetDTO>> violations = validator.validate(set);
+        assertThat(violations).anyMatch(v -> v.getMessage().contains("El valor debe ser un numero valido"));
     }
 }

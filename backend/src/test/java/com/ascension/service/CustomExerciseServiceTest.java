@@ -22,6 +22,9 @@ class CustomExerciseServiceTest {
     @Mock
     private CustomExerciseRepository customExerciseRepository;
 
+    @Mock
+    private UserDataQuotaService userDataQuotaService;
+
     @InjectMocks
     private CustomExerciseService customExerciseService;
 

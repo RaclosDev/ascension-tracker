@@ -1,8 +1,10 @@
 package com.ascension.service;
 
+import com.ascension.dto.AiApplyRequestDTO;
 import com.ascension.dto.FoodLogDTO;
 import com.ascension.dto.SavedFoodDTO;
 import com.ascension.dto.WeekSummaryDTO;
+import com.ascension.exception.InvalidInputException;
 import com.ascension.model.FoodLog;
 import com.ascension.model.SavedFood;
 import com.ascension.repository.FoodLogRepository;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,6 +30,7 @@ public class NutritionLogService {
 
     private final FoodLogRepository foodLogRepository;
     private final SavedFoodRepository savedFoodRepository;
+    private final UserDataQuotaService userDataQuotaService;
 
     public List<FoodLogDTO> getRecentDistinctFoods(String userEmail) {
         return foodLogRepository.findTop50ByUserEmailOrderByDateDesc(userEmail).stream()
@@ -100,6 +104,7 @@ public class NutritionLogService {
 
     @Transactional
     public FoodLogDTO addFoodLog(String userEmail, FoodLogDTO dto) {
+        userDataQuotaService.checkFoodLogQuota(userEmail, 1);
         FoodLog log = new FoodLog();
         log.setUserEmail(userEmail);
         log.setDate(dto.getDate());
@@ -153,26 +158,57 @@ public class NutritionLogService {
     }
 
     @Transactional
-    public List<FoodLogDTO> applyAssistantFoods(String userEmail, LocalDate date, int defaultMealIndex, List<Map<String, Object>> foods) {
-        List<FoodLogDTO> added = new ArrayList<>();
-        if (foods != null) {
-            for (Map<String, Object> f : foods) {
-                FoodLogDTO dto = new FoodLogDTO();
-                dto.setDate(date);
-                dto.setMealIndex(parseIntSafe(f.get("mealIndex"), defaultMealIndex));
-                dto.setProduct(f.get("product") != null ? f.get("product").toString() : "");
-                dto.setQuantity(parseDoubleSafe(f.get("quantity"), 0.0));
-                dto.setKcal(parseDoubleSafe(f.get("kcal"), 0.0));
-                dto.setProtein(parseDoubleSafe(f.get("protein"), 0.0));
-                dto.setCarbs(parseDoubleSafe(f.get("carbs"), 0.0));
-                dto.setFat(parseDoubleSafe(f.get("fat"), 0.0));
-                if (f.containsKey("portionsJson") && f.get("portionsJson") != null) {
-                    dto.setPortionsJson(f.get("portionsJson").toString());
-                }
-                added.add(addFoodLog(userEmail, dto));
-            }
+    public List<FoodLogDTO> applyAssistantFoods(String userEmail, LocalDate date, int defaultMealIndex, List<AiApplyRequestDTO.AppliedFoodItemDTO> foods) {
+        if (defaultMealIndex < 0 || defaultMealIndex > 20) {
+            throw new InvalidInputException("El índice de la comida está fuera de rango: " + defaultMealIndex);
         }
-        return added;
+        if (foods == null || foods.isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (foods.size() > 50) {
+            throw new InvalidInputException("No se pueden añadir más de 50 alimentos a la vez");
+        }
+
+        userDataQuotaService.checkFoodLogQuota(userEmail, foods.size());
+
+        List<FoodLog> entities = new ArrayList<>();
+        for (AiApplyRequestDTO.AppliedFoodItemDTO item : foods) {
+            int resolvedMeal = item.getMealIndex() != null ? item.getMealIndex() : defaultMealIndex;
+            if (resolvedMeal < 0 || resolvedMeal > 20) {
+                throw new InvalidInputException("El índice de comida " + resolvedMeal + " está fuera de rango");
+            }
+            if (!Double.isFinite(item.getQuantity()) || !Double.isFinite(item.getKcal()) ||
+                !Double.isFinite(item.getProtein()) || !Double.isFinite(item.getCarbs()) ||
+                !Double.isFinite(item.getFat())) {
+                throw new InvalidInputException("Los valores nutricionales no pueden ser NaN ni infinitos");
+            }
+            if (item.getQuantity() < 0 || item.getKcal() < 0 ||
+                item.getProtein() < 0 || item.getCarbs() < 0 || item.getFat() < 0) {
+                throw new InvalidInputException("Los valores nutricionales no pueden ser negativos");
+            }
+            if (item.getProduct() == null || item.getProduct().isBlank()) {
+                throw new InvalidInputException("El nombre del producto no puede estar vacío");
+            }
+            if (item.getProduct().length() > 255) {
+                throw new InvalidInputException("El nombre del producto no puede superar los 255 caracteres");
+            }
+
+            FoodLog entity = new FoodLog();
+            entity.setUserEmail(userEmail);
+            entity.setDate(date);
+            entity.setMealIndex(resolvedMeal);
+            entity.setProduct(item.getProduct().trim());
+            entity.setQuantity(item.getQuantity());
+            entity.setKcal(item.getKcal());
+            entity.setProtein(item.getProtein());
+            entity.setCarbs(item.getCarbs());
+            entity.setFat(item.getFat());
+            entity.setPortionsJson(item.getPortionsJson());
+            entities.add(entity);
+        }
+
+        List<FoodLog> saved = foodLogRepository.saveAll(entities);
+        return saved.stream().map(this::toFoodLogDTO).collect(Collectors.toList());
     }
 
     private double parseDoubleSafe(Object val, double defaultVal) {
@@ -229,6 +265,7 @@ public class NutritionLogService {
 
     @Transactional
     public SavedFoodDTO addSavedFood(String userEmail, SavedFoodDTO dto) {
+        userDataQuotaService.checkSavedFoodQuota(userEmail, 1);
         SavedFood f = SavedFood.builder()
                 .userEmail(userEmail)
                 .name(dto.getName())

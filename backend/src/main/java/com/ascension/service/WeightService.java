@@ -20,6 +20,7 @@ public class WeightService {
 
     private final WeightEntryRepository weightEntryRepository;
     private final SettingsService settingsService;
+    private final UserDataQuotaService userDataQuotaService;
 
     // ==================== CRUD ====================
 
@@ -31,8 +32,13 @@ public class WeightService {
 
     @Transactional
     public WeightEntryDTO saveEntry(String userEmail, WeightEntryDTO dto) {
+        userDataQuotaService.acquireUserQuotaLock(userEmail);
         WeightEntry entry = weightEntryRepository.findByUserEmailAndDate(userEmail, dto.getDate())
-                .orElse(new WeightEntry());
+                .orElse(null);
+        if (entry == null) {
+            userDataQuotaService.checkWeightEntryQuota(userEmail, 1);
+            entry = new WeightEntry();
+        }
         entry.setUserEmail(userEmail);
         entry.setDate(dto.getDate());
         entry.setWeight(dto.getWeight());

@@ -2,17 +2,26 @@ package com.ascension.exception;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.util.Objects;
 import java.util.UUID;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -27,6 +36,30 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .orElse("Datos invalidos");
         log.warn("Validation error: {} [trace_id: {}]", errorMessage, traceId);
+        return buildErrorResponse(errorMessage, HttpStatus.BAD_REQUEST, traceId);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleConstraintViolationException(ConstraintViolationException ex) {
+        String traceId = UUID.randomUUID().toString();
+        String errorMessage = ex.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
+                .findFirst()
+                .orElse("Parametro invalido");
+        log.warn("Constraint violation: {} [trace_id: {}]", errorMessage, traceId);
+        return buildErrorResponse(errorMessage, HttpStatus.BAD_REQUEST, traceId);
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ApiErrorResponse> handleHandlerMethodValidationException(HandlerMethodValidationException ex) {
+        String traceId = UUID.randomUUID().toString();
+        String errorMessage = ex.getAllValidationResults().stream()
+                .flatMap(r -> r.getResolvableErrors().stream())
+                .map(MessageSourceResolvable::getDefaultMessage)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse("Parametro invalido");
+        log.warn("Handler method validation error: {} [trace_id: {}]", errorMessage, traceId);
         return buildErrorResponse(errorMessage, HttpStatus.BAD_REQUEST, traceId);
     }
 
@@ -60,8 +93,8 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(msg, HttpStatus.BAD_REQUEST, traceId);
     }
 
-    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         String traceId = UUID.randomUUID().toString();
         log.warn("Message not readable: {} [trace_id: {}]", ex.getMessage(), traceId);
         Throwable rootCause = ex.getMostSpecificCause();
@@ -85,19 +118,46 @@ public class GlobalExceptionHandler {
         return buildErrorResponse("Parametro '" + ex.getName() + "' invalido", HttpStatus.BAD_REQUEST, traceId);
     }
 
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiErrorResponse> handleMissingServletRequestParameter(MissingServletRequestParameterException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Missing required parameter {}: {} [trace_id: {}]", ex.getParameterName(), ex.getMessage(), traceId);
+        return buildErrorResponse("El parametro '" + ex.getParameterName() + "' es obligatorio", HttpStatus.BAD_REQUEST, traceId);
+    }
+
+    @ExceptionHandler(AiQuotaExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleAiQuotaExceededException(AiQuotaExceededException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("AI quota / circuit breaker exceeded: {} [trace_id: {}]", ex.getMessage(), traceId);
+        return buildErrorResponse(ex.getMessage(), HttpStatus.TOO_MANY_REQUESTS, traceId);
+    }
+
+    @ExceptionHandler(UserDataQuotaExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleUserDataQuotaExceededException(UserDataQuotaExceededException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("User data quota exceeded: {} [trace_id: {}]", ex.getMessage(), traceId);
+        return buildErrorResponse(ex.getMessage(), HttpStatus.TOO_MANY_REQUESTS, traceId);
+    }
+
     @ExceptionHandler(AiProcessingException.class)
     public ResponseEntity<ApiErrorResponse> handleAiProcessingException(AiProcessingException ex) {
         String traceId = UUID.randomUUID().toString();
-        log.error("AI processing error: {} [trace_id: {}]", ex.getMessage(), traceId);
-        return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, traceId);
+        log.error("AI processing error: {} [trace_id: {}]", ex.getMessage(), traceId, ex);
+        return buildErrorResponse("No se pudo procesar la solicitud con el servicio de IA.", HttpStatus.BAD_REQUEST, traceId);
     }
 
     @ExceptionHandler(ExternalApiException.class)
     public ResponseEntity<ApiErrorResponse> handleExternalApiException(ExternalApiException ex) {
         String traceId = UUID.randomUUID().toString();
         log.error("External API error in {}: {} (status: {}) [trace_id: {}]",
-                ex.getServiceName(), ex.getMessage(), ex.getStatus(), traceId);
-        return buildErrorResponse(ex.getMessage(), ex.getStatus(), traceId);
+                ex.getServiceName(), ex.getMessage(), ex.getStatus(), traceId, ex);
+        String clientMsg;
+        if (ex.getStatus() == HttpStatus.TOO_MANY_REQUESTS) {
+            clientMsg = "Límite de peticiones alcanzado en el servicio externo. Por favor, inténtalo más tarde.";
+        } else {
+            clientMsg = "El servicio externo no está disponible temporalmente. Por favor, inténtalo más tarde.";
+        }
+        return buildErrorResponse(clientMsg, ex.getStatus(), traceId);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
@@ -105,6 +165,20 @@ public class GlobalExceptionHandler {
         String traceId = UUID.randomUUID().toString();
         log.warn("Entity not found: {} [trace_id: {}]", ex.getMessage(), traceId);
         return buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND, traceId);
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ApiErrorResponse> handleOptimisticLockingFailureException(OptimisticLockingFailureException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Optimistic locking conflict [trace_id: {}]: {}", traceId, ex.getMessage());
+        return buildErrorResponse("Conflicto de concurrencia: el recurso fue modificado por otra solicitud. Intentalo de nuevo.", HttpStatus.CONFLICT, traceId);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        String traceId = UUID.randomUUID().toString();
+        log.warn("Data integrity violation [trace_id: {}]: {}", traceId, ex.getMessage());
+        return buildErrorResponse("Error de integridad de datos: el registro ya existe o viola una restriccion del sistema.", HttpStatus.BAD_REQUEST, traceId);
     }
 
     @ExceptionHandler(Exception.class)

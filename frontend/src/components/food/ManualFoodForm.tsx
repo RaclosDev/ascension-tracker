@@ -1,6 +1,7 @@
 import React from 'react';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
+import { getLocalDateString } from '../../utils/dateHelper';
 
 const BASE_GRAMS = 100;
 
@@ -61,7 +62,7 @@ export default function ManualFoodForm({
     const productName =
       manualForm.name.trim() + (manualForm.brand.trim() ? ` (${manualForm.brand.trim()})` : '');
 
-    const effectiveDate = date || new Date().toISOString().split('T')[0];
+    const effectiveDate = date || getLocalDateString();
     const logEntry = {
       date: effectiveDate,
       mealIndex: Number(selectedMealIndex) || 0,
@@ -100,7 +101,10 @@ export default function ManualFoodForm({
       if (onLogAdded) onLogAdded();
       onClose();
     } catch (err: unknown) {
-      console.error(err);
+      console.error(
+        'Error al guardar el alimento manualmente:',
+        err instanceof Error ? err.message : String(err),
+      );
       const errorMessage =
         (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data
           ?.message ||

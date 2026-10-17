@@ -214,7 +214,10 @@ export function useSpeechToText({ onTranscript, lang = 'es-ES' }: SpeechToTextOp
           recognitionRef.current = recognition;
           recognition.start();
         } catch (err: unknown) {
-          console.error('SpeechRecognition start error:', err);
+          console.error(
+            'SpeechRecognition start error:',
+            err instanceof Error ? err.message : String(err),
+          );
           isStartingRef.current = false;
           setIsListening(false);
           shouldListenRef.current = false;

@@ -13,25 +13,45 @@ import java.util.Optional;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserService userService;
     private final long REFRESH_TOKEN_EXPIRATION_DAYS = 30;
 
-    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository) {
+    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, UserService userService) {
         this.refreshTokenRepository = refreshTokenRepository;
+        this.userService = userService;
     }
 
     @Transactional
-    public RefreshToken createRefreshToken(String email, String name, String picture) {
+    public RefreshToken createRefreshToken(String email) {
+        return createRefreshToken(email, (String) null);
+    }
+
+    @Transactional
+    public RefreshToken createRefreshToken(String email, String familyId) {
         RefreshToken refreshToken = new RefreshToken(
-                email, name, picture,
-                Instant.now().plus(REFRESH_TOKEN_EXPIRATION_DAYS, ChronoUnit.DAYS)
+                email,
+                Instant.now().plus(REFRESH_TOKEN_EXPIRATION_DAYS, ChronoUnit.DAYS),
+                familyId
         );
         return refreshTokenRepository.save(refreshToken);
     }
 
+    @Deprecated
     @Transactional
+    public RefreshToken createRefreshToken(String email, String name, String picture) {
+        return createRefreshToken(email, (String) null);
+    }
+
+    @Deprecated
+    @Transactional
+    public RefreshToken createRefreshToken(String email, String name, String picture, String familyId) {
+        return createRefreshToken(email, familyId);
+    }
+
+    @Transactional(noRollbackFor = com.ascension.exception.TokenRefreshException.class)
     public RefreshToken rotateRefreshToken(String requestRefreshToken) {
         String hashedToken = RefreshToken.hashToken(requestRefreshToken);
-        var optionalToken = refreshTokenRepository.findByToken(hashedToken);
+        var optionalToken = refreshTokenRepository.findByTokenForUpdate(hashedToken);
         
         if (optionalToken.isEmpty()) {
             throw new com.ascension.exception.TokenRefreshException("Refresh token not found");
@@ -44,19 +64,43 @@ public class RefreshTokenService {
             throw new com.ascension.exception.TokenRefreshException("Refresh token expired");
         }
 
-        if (refreshToken.getReplacedAt() != null) {
-            if (java.time.Instant.now().isBefore(refreshToken.getReplacedAt().plusSeconds(60))) {
-                // Grace period for concurrent requests and network retries: return fresh valid token
-                return createRefreshToken(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture());
+        if (userService != null) {
+            var state = userService.getUserSecurityState(refreshToken.getEmail());
+            if (state != null) {
+                if (!state.exists()) {
+                    refreshTokenRepository.deleteByFamilyId(refreshToken.getFamilyId());
+                    throw new com.ascension.exception.TokenRefreshException("User account does not exist or has been removed.");
+                }
+                if (state.tokensValidAfter() != null) {
+                    Instant createdAt = refreshToken.getExpiryDate().minus(REFRESH_TOKEN_EXPIRATION_DAYS, ChronoUnit.DAYS);
+                    if (createdAt.getEpochSecond() < state.tokensValidAfter().getEpochSecond()) {
+                        refreshTokenRepository.deleteByFamilyId(refreshToken.getFamilyId());
+                        throw new com.ascension.exception.TokenRefreshException("Session has been revoked. Please log in again.");
+                    }
+                }
             }
-            refreshTokenRepository.deleteByUserEmail(refreshToken.getEmail());
+        }
+
+        if (refreshToken.getReplacedAt() != null) {
+            Instant graceThreshold = refreshToken.getReplacedAt().plusSeconds(10);
+            if (Instant.now().isBefore(graceThreshold)) {
+                // Grace period: allow concurrent cluster/tab refresh without deleting the family
+                refreshToken.setGraceUsed(true);
+                refreshTokenRepository.save(refreshToken);
+                return createRefreshToken(refreshToken.getEmail(), refreshToken.getFamilyId());
+            }
+            // Outside grace period (10s elapsed): true token reuse attack detected -> revoke family and access tokens
+            if (userService != null) {
+                userService.updateTokensValidAfter(refreshToken.getEmail(), Instant.now());
+            }
+            refreshTokenRepository.deleteByFamilyId(refreshToken.getFamilyId());
             throw new com.ascension.exception.TokenRefreshException("Session expired. Please log in again.");
         }
 
         refreshToken.setReplacedAt(Instant.now());
         refreshTokenRepository.save(refreshToken);
         
-        return createRefreshToken(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture());
+        return createRefreshToken(refreshToken.getEmail(), refreshToken.getFamilyId());
     }
 
     @Transactional
@@ -79,6 +123,13 @@ public class RefreshTokenService {
     @Transactional
     public void deleteByEmail(String email) {
         refreshTokenRepository.deleteByEmail(email);
+    }
+
+    @Transactional
+    public void deleteByFamilyId(String familyId) {
+        if (familyId != null && !familyId.isBlank()) {
+            refreshTokenRepository.deleteByFamilyId(familyId);
+        }
     }
 
     @Transactional

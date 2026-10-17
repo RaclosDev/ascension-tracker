@@ -4,7 +4,9 @@ import com.ascension.dto.DashboardDTO;
 import com.ascension.dto.WeekSummaryDTO;
 import com.ascension.dto.WeightEntryDTO;
 import com.ascension.service.WeightService;
+import com.ascension.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -23,27 +25,37 @@ public class WeightController {
 
     @GetMapping
     public ResponseEntity<List<WeightEntryDTO>> getAllWeights(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(weightService.getAllEntries(jwt.getClaimAsString("email")));
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(weightService.getAllEntries(userEmail));
     }
 
     @PostMapping
     public ResponseEntity<WeightEntryDTO> saveWeight(@Valid @RequestBody WeightEntryDTO dto, @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(weightService.saveEntry(jwt.getClaimAsString("email"), dto));
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(weightService.saveEntry(userEmail, dto));
     }
 
     @DeleteMapping("/{date}")
     public ResponseEntity<Void> deleteWeight(@PathVariable LocalDate date, @AuthenticationPrincipal Jwt jwt) {
-        weightService.deleteEntry(jwt.getClaimAsString("email"), date);
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        weightService.deleteEntry(userEmail, date);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/dashboard")
     public ResponseEntity<DashboardDTO> getDashboard(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(weightService.getDashboard(jwt.getClaimAsString("email")));
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(weightService.getDashboard(userEmail));
     }
 
     @GetMapping("/weekly")
     public ResponseEntity<List<WeekSummaryDTO>> getWeeklySummaries(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(weightService.getWeeklySummaries(jwt.getClaimAsString("email")));
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(weightService.getWeeklySummaries(userEmail));
     }
 }

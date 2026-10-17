@@ -31,7 +31,7 @@ public class UserDataExportService {
 
     @Transactional(readOnly = true)
     public UserDataExportDTO exportUserData(String userEmail) {
-        log.info("Generating full user data export for user: {}", userEmail);
+        log.info("Generating full user data export for user: {}", com.ascension.util.PiiMasker.maskEmail(userEmail));
 
         List<WorkoutDTO> workouts = workoutRepository.findAllByUserEmailOrderByStartedAtDesc(userEmail).stream()
                 .map(workoutMapper::toDTO)

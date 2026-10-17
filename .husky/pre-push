@@ -1,26 +1,26 @@
 echo "========================================================="
-echo "🚀 [PRE-PUSH] AUDITORÍA PROFESIONAL DE INTEGRIDAD 🚀"
+echo "🚀 [PRE-PUSH] AUDITORÍA RÁPIDA DE INTEGRIDAD 🚀"
 echo "========================================================="
 
 # 1. VERIFICACIÓN DEL BACKEND
-echo "⚙️  Construyendo y Verificando el Backend (Maven)..."
-cd backend && ./mvnw clean verify || {
-  echo "❌ ERROR CRÍTICO: El Backend está roto. No puedes hacer push a código que no compila."
+echo "⚙️  Verificando Backend (Compilación y Tests)..."
+cd backend && ./mvnw test-compile test || {
+  echo "❌ ERROR CRÍTICO: Falló la compilación o los tests del backend."
   echo "💡 Solución: Revisa los errores de Maven arriba, arréglalos, haz un commit y vuelve a intentar el push."
   exit 1
 }
 cd ..
-echo "✅ Backend perfecto."
+echo "✅ Backend verificado."
 
 # 2. VERIFICACIÓN DEL FRONTEND
-echo "🎨 Verificando compilación del Frontend (Vite/TypeScript)..."
-cd frontend && npm run build || {
-  echo "❌ ERROR CRÍTICO: El Frontend no compila (falla el build de Vite o los tipos estáticos)."
-  echo "💡 Solución: Ejecuta 'npm run typecheck' y 'npm run build' localmente para depurar."
+echo "🎨 Verificando Frontend (Lint, Tipos, Tests y Build)..."
+cd frontend && npm run lint && npm run typecheck && npm run test -- --run && npm run build || {
+  echo "❌ ERROR CRÍTICO: El Frontend no superó las verificaciones de calidad."
+  echo "💡 Solución: Ejecuta 'npm run lint', 'npm run typecheck' y 'npm test' localmente."
   exit 1
 }
 cd ..
-echo "✅ Frontend perfecto."
+echo "✅ Frontend verificado."
 
 echo "========================================================="
 echo "✅ AUDITORÍA SUPERADA. Subiendo código a GitHub..."
