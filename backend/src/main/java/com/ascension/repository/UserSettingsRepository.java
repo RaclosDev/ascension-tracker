@@ -15,10 +15,6 @@ public interface UserSettingsRepository extends JpaRepository<UserSettings, Long
         return findByUserEmail(userEmail);
     }
 
-    default Optional<UserSettings> findSettings() {
-        return findByUserEmail("raclosdev@gmail.com");
-    }
-
     void deleteByUserEmail(String userEmail);
 }
 

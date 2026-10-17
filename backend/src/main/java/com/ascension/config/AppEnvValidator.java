@@ -15,8 +15,20 @@ public class AppEnvValidator {
     @Value("${google.client-id:CHANGE_ME}")
     private String googleClientId;
 
-    @Value("${gemini.api.key:CHANGE_ME}")
+    @Value("${GEMINI_API_KEY:}")
     private String geminiApiKey;
+
+    @Value("${app.fatsecret.client-id:}")
+    private String fatsecretClientId;
+
+    @Value("${app.fatsecret.client-secret:}")
+    private String fatsecretClientSecret;
+
+    @Value("${app.push.vapid-public-key:}")
+    private String vapidPublicKey;
+
+    @Value("${app.push.vapid-private-key:}")
+    private String vapidPrivateKey;
 
     @Value("${app.cors.allowed-origins:http://localhost:5173}")
     private String corsOrigins;
@@ -30,8 +42,26 @@ public class AppEnvValidator {
             throw new IllegalStateException("FATAL: google.client-id is not configured correctly. Please set GOOGLE_CLIENT_ID environment variable.");
         }
         
-        if ("CHANGE_ME".equals(geminiApiKey) || geminiApiKey == null || geminiApiKey.trim().isEmpty()) {
-            log.warn("gemini.api.key is missing or has default value. AI features will fail.");
+        if (geminiApiKey == null || geminiApiKey.trim().isEmpty() || "CHANGE_ME".equalsIgnoreCase(geminiApiKey.trim())) {
+            log.warn("GEMINI_API_KEY is missing or has default value 'CHANGE_ME'. AI features will fail.");
+        }
+
+        boolean fatsecretConfigured = (fatsecretClientId != null && !fatsecretClientId.trim().isEmpty())
+                || (fatsecretClientSecret != null && !fatsecretClientSecret.trim().isEmpty());
+        if (fatsecretConfigured) {
+            if ("CHANGE_ME".equalsIgnoreCase(fatsecretClientId != null ? fatsecretClientId.trim() : "")
+                    || "CHANGE_ME".equalsIgnoreCase(fatsecretClientSecret != null ? fatsecretClientSecret.trim() : "")) {
+                throw new IllegalStateException("FATAL: FatSecret configuration contains default placeholder 'CHANGE_ME'. Please set valid credentials or remove them.");
+            }
+        }
+
+        boolean vapidConfigured = (vapidPublicKey != null && !vapidPublicKey.trim().isEmpty())
+                || (vapidPrivateKey != null && !vapidPrivateKey.trim().isEmpty());
+        if (vapidConfigured) {
+            if ("CHANGE_ME".equalsIgnoreCase(vapidPublicKey != null ? vapidPublicKey.trim() : "")
+                    || "CHANGE_ME".equalsIgnoreCase(vapidPrivateKey != null ? vapidPrivateKey.trim() : "")) {
+                throw new IllegalStateException("FATAL: VAPID push configuration contains default placeholder 'CHANGE_ME'. Please set valid keys or remove them.");
+            }
         }
         
         if (java.util.Arrays.asList(activeProfile.split(",")).contains("prod") && corsOrigins.contains("*")) {

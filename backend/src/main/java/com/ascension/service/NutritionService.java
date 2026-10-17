@@ -16,13 +16,16 @@ import java.util.stream.Collectors;
 public class NutritionService {
 
     private final MealRepository mealRepository;
+    private final UserDataQuotaService userDataQuotaService;
 
     @Transactional
     public List<MealDTO> getMeals(String userEmail) {
-        if (mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail).isEmpty()) {
+        List<Meal> meals = mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail);
+        if (meals.isEmpty()) {
             seedDefaultMeals(userEmail);
+            meals = mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail);
         }
-        return mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail).stream()
+        return meals.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -75,7 +78,8 @@ public class NutritionService {
     @Transactional
     public void deleteMeal(Long id, String userEmail) {
         mealRepository.deleteByIdAndUserEmail(id, userEmail);
-        if (mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail).isEmpty()) {
+        List<Meal> remaining = mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail);
+        if (remaining.isEmpty()) {
             seedDefaultMeals(userEmail);
         }
     }
@@ -89,12 +93,23 @@ public class NutritionService {
 
     @Transactional
     public void seedDefaultMeals(String userEmail) {
-        mealRepository.saveAll(List.of(
+        if (userDataQuotaService != null) {
+            userDataQuotaService.acquireUserQuotaLock(userEmail);
+        }
+        if (mealRepository.countByUserEmail(userEmail) > 0) {
+            return;
+        }
+        List<Meal> defaultMeals = List.of(
             Meal.builder().userEmail(userEmail).name("Desayuno").icon("☕").sortOrder(0).startTime("06:00").endTime("11:00").build(),
             Meal.builder().userEmail(userEmail).name("Comida").icon("🍽️").sortOrder(1).startTime("13:00").endTime("17:00").build(),
             Meal.builder().userEmail(userEmail).name("Cena").icon("🌙").sortOrder(2).startTime("20:00").endTime("05:59").build(),
             Meal.builder().userEmail(userEmail).name("Snacks").icon("🍎").sortOrder(3).startTime("11:00").endTime("13:00").isDefault(true).build()
-        ));
+        );
+        try {
+            mealRepository.saveAll(defaultMeals);
+        } catch (org.springframework.dao.DataIntegrityViolationException ignored) {
+            // Concurrent seed completed by another parallel request
+        }
     }
 
     private MealDTO toDTO(Meal meal) {

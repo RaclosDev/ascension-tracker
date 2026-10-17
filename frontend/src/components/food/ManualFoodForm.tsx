@@ -1,6 +1,7 @@
 import React from 'react';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
+import { getLocalDateString } from '../../utils/dateHelper';
 
 const BASE_GRAMS = 100;
 
@@ -20,6 +21,15 @@ interface ManualFoodFormProps {
   date?: string;
   selectedMealIndex: number | string;
   onLogAdded?: () => void;
+  onCustomAdd?: (foodObj: {
+    product: string;
+    quantity: number;
+    kcal: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    [key: string]: unknown;
+  }) => void;
   onClose: () => void;
 }
 
@@ -32,6 +42,7 @@ export default function ManualFoodForm({
   date,
   selectedMealIndex,
   onLogAdded,
+  onCustomAdd,
   onClose,
 }: ManualFoodFormProps) {
   const handleManualSubmit = async (e: React.FormEvent) => {
@@ -51,8 +62,9 @@ export default function ManualFoodForm({
     const productName =
       manualForm.name.trim() + (manualForm.brand.trim() ? ` (${manualForm.brand.trim()})` : '');
 
+    const effectiveDate = date || getLocalDateString();
     const logEntry = {
-      date: date,
+      date: effectiveDate,
       mealIndex: Number(selectedMealIndex) || 0,
       product: productName,
       quantity: qty,
@@ -61,6 +73,12 @@ export default function ManualFoodForm({
       carbs: Number((cPer100 * factor).toFixed(1)),
       fat: Number((fPer100 * factor).toFixed(1)),
     };
+
+    if (onCustomAdd) {
+      onCustomAdd(logEntry);
+      onClose();
+      return;
+    }
 
     try {
       await api.post('/nutrition/logs', logEntry);
@@ -83,7 +101,10 @@ export default function ManualFoodForm({
       if (onLogAdded) onLogAdded();
       onClose();
     } catch (err: unknown) {
-      console.error(err);
+      console.error(
+        'Error al guardar el alimento manualmente:',
+        err instanceof Error ? err.message : String(err),
+      );
       const errorMessage =
         (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data
           ?.message ||

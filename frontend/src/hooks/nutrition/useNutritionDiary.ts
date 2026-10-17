@@ -163,7 +163,8 @@ export function useNutritionDiary() {
       });
       fetchData();
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
+      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
+      queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
       toast.success('Movido correctamente');
     } catch {
       toast.error('Error al mover');
@@ -188,29 +189,30 @@ export function useNutritionDiary() {
         return;
       }
 
-      for (const log of logsToCopy) {
-        await api.post('/nutrition/logs', {
-          date: selectedDate,
-          mealIndex: mealIndex,
-          product: log.product,
-          quantity: log.quantity,
-          kcal: log.kcal,
-          protein: log.protein,
-          carbs: log.carbs,
-          fat: log.fat,
-          barcode: log.barcode,
-          myFoodId: log.myFoodId,
-          portionsJson: log.portionsJson,
-        });
-      }
+      await Promise.all(
+        logsToCopy.map((log: FoodLog) =>
+          api.post('/nutrition/logs', {
+            date: selectedDate,
+            mealIndex: mealIndex,
+            product: log.product,
+            quantity: log.quantity,
+            kcal: log.kcal,
+            protein: log.protein,
+            carbs: log.carbs,
+            fat: log.fat,
+            portionsJson: log.portionsJson || null,
+          }),
+        ),
+      );
 
       fetchData();
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
+      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
+      queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
       toast.dismiss(loadingToast);
       toast.success('¡Comida copiada!');
     } catch (err: unknown) {
-      console.error(err);
+      console.error('Error al copiar la comida:', err instanceof Error ? err.message : String(err));
       toast.dismiss(loadingToast);
       toast.error('Error al copiar la comida');
     }
@@ -222,7 +224,8 @@ export function useNutritionDiary() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
+      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
+      queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
       toast.success('Alimento eliminado');
     },
     onError: () => {
@@ -243,7 +246,7 @@ export function useNutritionDiary() {
         hasPortions = p && p.length > 0;
       }
     } catch (e: unknown) {
-      console.error(e);
+      console.error('Error al analizar portionsJson:', e instanceof Error ? e.message : String(e));
     }
     setEditInputMode(hasPortions ? 'portions' : 'grams');
     const isZeroQty = log.quantity <= 0;
@@ -286,7 +289,8 @@ export function useNutritionDiary() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
+      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
+      queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
       setEditingLog(null);
       toast.success('Registro actualizado');
     },

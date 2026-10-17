@@ -6,6 +6,7 @@ import { useWorkoutStore } from '@/lib/workout/store';
 import { normalizeString } from '@/lib/workout/format';
 import { MUSCLE_LABEL, type Equipment, type MuscleGroup } from '@/lib/workout/types';
 import { EQUIPMENT_OPTIONS, MUSCLE_OPTIONS } from './exercises-view';
+import { useExerciseCatalog } from '@/lib/workout/catalog-query';
 import {
   useRecentWorkouts,
   useCustomExercises,
@@ -14,11 +15,11 @@ import {
 } from '@/lib/workout/api';
 
 export function ExercisePicker() {
+  const { data: catalogExercises } = useExerciseCatalog();
   const open = useWorkoutStore((s) => s.pickerOpen);
   const setPickerOpen = useWorkoutStore((s) => s.setPickerOpen);
   const addExercises = useWorkoutStore((s) => s.addExercises);
-  const { prefs, addGlobalMachine, addGlobalGrip, addExerciseVariant } =
-    useWorkoutPreferencesActions();
+  const { prefs, addGripOption, addMachineOption } = useWorkoutPreferencesActions();
   const globalMachines = prefs?.globalMachines || [];
   const globalGrips = prefs?.globalGrips || [];
   const exerciseVariants = prefs?.exerciseVariants || {};
@@ -32,7 +33,7 @@ export function ExercisePicker() {
     return id;
   };
   const aliases = prefs?.exerciseAliases || {};
-  const customGifs: Record<string, string> = {};
+  const customGifs = prefs?.exerciseGifs || {};
   const hiddenEquipments = prefs?.hiddenEquipments || [];
   const { data: recentWorkouts = [] } = useRecentWorkouts(180);
   const history = recentWorkouts;
@@ -97,21 +98,24 @@ export function ExercisePicker() {
 
   const handleAddGrip = (val: string) => {
     if (!expandedId) return;
-    addGlobalGrip(val);
-    addExerciseVariant(expandedId, 'grip', val);
+    addGripOption(expandedId, val);
   };
   const handleAddMachine = (val: string) => {
     if (!expandedId) return;
-    addGlobalMachine(val);
-    addExerciseVariant(expandedId, 'machine', val);
+    addMachineOption(expandedId, val);
+  };
+
+  const getVariantKey = (
+    exerciseId: string,
+    variant?: { grip?: string | null; machine?: string | null },
+  ) => {
+    const g = (variant?.grip || '').trim().toLowerCase();
+    const m = (variant?.machine || '').trim().toLowerCase();
+    return `${exerciseId}::${g}::${m}`;
   };
 
   const alreadyStrs = useMemo(
-    () =>
-      new Set(
-        active?.exercises.map((e) => JSON.stringify({ id: e.exerciseId, variant: e.variant })) ??
-          [],
-      ),
+    () => new Set(active?.exercises.map((e) => getVariantKey(e.exerciseId, e.variant)) ?? []),
     [active],
   );
 
@@ -136,7 +140,7 @@ export function ExercisePicker() {
         if (!baseEx) continue;
         if (hiddenEquipments.includes(baseEx.equipment)) continue;
 
-        const strKey = JSON.stringify({ id: ex.exerciseId, variant: ex.variant });
+        const strKey = getVariantKey(ex.exerciseId, ex.variant);
         if (alreadyStrs.has(strKey)) continue;
 
         const current = l.get(strKey)?.timestamp || 0;
@@ -159,7 +163,7 @@ export function ExercisePicker() {
     return Array.from(l.values())
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 8);
-  }, [history, alreadyStrs, customExercises, aliases, hiddenEquipments]);
+  }, [history, alreadyStrs, customExercises, aliases, hiddenEquipments, catalogExercises]);
 
   const groupedList = useMemo(() => {
     const all =
@@ -217,7 +221,16 @@ export function ExercisePicker() {
         return nameA.localeCompare(nameB);
       },
     );
-  }, [tab, customExercises, filterMuscle, filterEquip, query, aliases, hiddenEquipments]);
+  }, [
+    tab,
+    customExercises,
+    filterMuscle,
+    filterEquip,
+    query,
+    aliases,
+    hiddenEquipments,
+    catalogExercises,
+  ]);
 
   function close() {
     setPickerOpen(false);

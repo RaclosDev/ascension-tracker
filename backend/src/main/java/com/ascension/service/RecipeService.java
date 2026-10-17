@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 public class RecipeService {
 
     private final RecipeRepository recipeRepository;
+    private final UserDataQuotaService userDataQuotaService;
 
     public List<RecipeDTO> getRecipes(String userEmail) {
         return recipeRepository.findTop200ByUserEmailOrderByNameAsc(userEmail).stream()
@@ -33,6 +34,7 @@ public class RecipeService {
 
     @Transactional
     public RecipeDTO addRecipe(String userEmail, RecipeDTO dto) {
+        userDataQuotaService.checkRecipeQuota(userEmail, 1);
         Recipe r = Recipe.builder()
                 .userEmail(userEmail)
                 .name(dto.getName())

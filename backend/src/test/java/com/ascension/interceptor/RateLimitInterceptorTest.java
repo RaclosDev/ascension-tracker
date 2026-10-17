@@ -73,9 +73,101 @@ class RateLimitInterceptorTest {
     }
 
     @Test
+    void userExportEndpointsAreRateLimited() throws Exception {
+        loginAs("charlie@example.com");
+        for (int i = 0; i < RateLimitInterceptor.USER_MAX_REQUESTS_PER_MINUTE; i++) {
+            assertThat(hit("/api/user/export", "10.0.0.7")).isEqualTo(200);
+        }
+        assertThat(hit("/api/user/export", "10.0.0.7")).isEqualTo(429);
+    }
+
+    @Test
     void unrelatedEndpointsAreNeverLimited() throws Exception {
         for (int i = 0; i < 100; i++) {
             assertThat(hit("/api/nutrition/logs", "10.0.0.6")).isEqualTo(200);
         }
+    }
+
+    @Test
+    void tooManyRequestsResponse_returnsJsonWithUtf8ContentType() throws Exception {
+        for (int i = 0; i < RateLimitInterceptor.MAX_REQUESTS_PER_MINUTE; i++) {
+            hit(AI_PATH, "10.0.0.99");
+        }
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", AI_PATH);
+        request.setRequestURI(AI_PATH);
+        request.setRemoteAddr("10.0.0.99");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        boolean allowed = interceptor.preHandle(request, response, new Object());
+
+        assertThat(allowed).isFalse();
+        assertThat(response.getStatus()).isEqualTo(429);
+        assertThat(response.getContentType()).isEqualTo("application/json;charset=UTF-8");
+        assertThat(response.getContentAsString()).contains("Demasiadas peticiones. Por favor, inténtalo de nuevo en unos minutos.");
+    }
+
+    @Test
+    void unregisteredApiAiPrefix_isNotRateLimited() throws Exception {
+        assertThat(RateLimitInterceptor.groupOf("/api/ai")).isNull();
+        assertThat(RateLimitInterceptor.groupOf("/api/ai/chat")).isNull();
+        for (int i = 0; i < 50; i++) {
+            assertThat(hit("/api/ai/chat", "10.0.0.88")).isEqualTo(200);
+        }
+    }
+
+    @Test
+    void refreshEndpointsAreRateLimitedPerIp() throws Exception {
+        for (int i = 0; i < 30; i++) {
+            assertThat(hit("/api/auth/refresh", "10.0.1.1")).isEqualTo(200);
+        }
+        assertThat(hit("/api/auth/refresh", "10.0.1.1")).isEqualTo(429);
+        assertThat(hit("/api/auth/refresh", "10.0.1.2")).isEqualTo(200);
+    }
+
+    @Test
+    void logoutEndpointsAreRateLimited() throws Exception {
+        loginAs("logoutuser@example.com");
+        for (int i = 0; i < 30; i++) {
+            assertThat(hit("/api/auth/logout", "10.0.2.1")).isEqualTo(200);
+        }
+        assertThat(hit("/api/auth/logout", "10.0.2.1")).isEqualTo(429);
+    }
+
+    @Test
+    void importEndpointsAreRateLimited() throws Exception {
+        loginAs("importer@example.com");
+        for (int i = 0; i < 5; i++) {
+            assertThat(hit("/api/workouts/import", "10.0.3.1")).isEqualTo(200);
+        }
+        assertThat(hit("/api/workouts/import", "10.0.3.1")).isEqualTo(429);
+    }
+
+    @Test
+    void restoreEndpointsAreRateLimited() throws Exception {
+        loginAs("restorer@example.com");
+        for (int i = 0; i < 5; i++) {
+            assertThat(hit("/api/user/restore", "10.0.4.1")).isEqualTo(200);
+        }
+        assertThat(hit("/api/user/restore", "10.0.4.1")).isEqualTo(429);
+    }
+
+    @Test
+    void genericUserWriteRateLimiting_limitsMutatingRequestsAcrossEndpoints() throws Exception {
+        loginAs("spammer@example.com");
+        // User sends 60 writes across different mutating endpoints
+        for (int i = 0; i < 60; i++) {
+            MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/workouts");
+            req.setRequestURI("/api/workouts");
+            MockHttpServletResponse res = new MockHttpServletResponse();
+            boolean ok = interceptor.preHandle(req, res, new Object());
+            assertThat(ok).isTrue();
+        }
+
+        // 61st write must be rate limited
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/workouts");
+        req.setRequestURI("/api/workouts");
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        boolean ok = interceptor.preHandle(req, res, new Object());
+        assertThat(ok).isFalse();
+        assertThat(res.getStatus()).isEqualTo(429);
     }
 }

@@ -15,8 +15,6 @@ public interface WeightEntryRepository extends JpaRepository<WeightEntry, Long> 
 
     List<WeightEntry> findAllByUserEmailOrderByDateAsc(String userEmail);
 
-    List<WeightEntry> findAllByOrderByDateAsc();
-
     List<WeightEntry> findByUserEmailAndDateBetweenOrderByDateAsc(String userEmail, LocalDate start, LocalDate end);
 
     Optional<WeightEntry> findTopByUserEmailOrderByDateDesc(String userEmail);
@@ -24,5 +22,7 @@ public interface WeightEntryRepository extends JpaRepository<WeightEntry, Long> 
     boolean existsByUserEmailAndDate(String userEmail, LocalDate date);
     
     void deleteAllByUserEmail(String userEmail);
+
+    long countByUserEmail(String userEmail);
 }
 

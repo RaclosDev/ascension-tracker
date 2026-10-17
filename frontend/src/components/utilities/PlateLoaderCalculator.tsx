@@ -161,7 +161,7 @@ export default function PlateLoaderCalculator({
               </strong>
             </span>
             {result.isExact ? (
-              <span className="px-2 py-0.5 rounded-full text-[11px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span className="px-2 py-0.5 rounded-full text-[11px] bg-blue-500/20 text-blue-300 border border-blue-500/30">
                 ✓ Carga Exacta
               </span>
             ) : (

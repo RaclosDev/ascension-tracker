@@ -2,7 +2,9 @@ package com.ascension.controller;
 
 import com.ascension.dto.WorkoutPreferencesDTO;
 import com.ascension.service.WorkoutPreferencesService;
+import com.ascension.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -18,13 +20,17 @@ public class WorkoutPreferencesController {
 
     @GetMapping
     public ResponseEntity<WorkoutPreferencesDTO> getPreferences(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(workoutPreferencesService.getPreferences(jwt.getClaimAsString("email")));
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(workoutPreferencesService.getPreferences(userEmail));
     }
 
     @PutMapping
     public ResponseEntity<WorkoutPreferencesDTO> updatePreferences(
             @Valid @RequestBody WorkoutPreferencesDTO dto, 
             @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(workoutPreferencesService.updatePreferences(jwt.getClaimAsString("email"), dto));
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(workoutPreferencesService.updatePreferences(userEmail, dto));
     }
 }

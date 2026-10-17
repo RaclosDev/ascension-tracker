@@ -31,6 +31,9 @@ class WeightServiceTest {
     @Mock
     private SettingsService settingsService;
 
+    @Mock
+    private UserDataQuotaService userDataQuotaService;
+
     @InjectMocks
     private WeightService weightService;
 
@@ -217,5 +220,37 @@ class WeightServiceTest {
         List<WeekSummaryDTO> summaries = weightService.getWeeklySummaries(USER_EMAIL);
 
         assertThat(summaries).isEmpty();
+    }
+
+    @Test
+    @DisplayName("getDashboard with null settings uses safe fallback values without NPE")
+    void getDashboard_withNullSettings_usesFallbackWithoutNPE() {
+        when(settingsService.getSettings(USER_EMAIL)).thenReturn(null);
+        when(weightEntryRepository.findAllByUserEmailOrderByDateAsc(USER_EMAIL)).thenReturn(List.of());
+
+        DashboardDTO result = weightService.getDashboard(USER_EMAIL);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getCurrentWeight()).isEqualTo(80.0);
+        assertThat(result.getProgress()).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("getDashboard protects against division by zero when startWeight equals goalWeight")
+    void getDashboard_startWeightEqualsGoalWeight_doesNotProduceNaN() {
+        UserSettingsDTO settings = UserSettingsDTO.builder()
+                .startWeight(80.0)
+                .goalWeight(80.0)
+                .weeklyGoal(0.0)
+                .build();
+
+        when(settingsService.getSettings(USER_EMAIL)).thenReturn(settings);
+        when(weightEntryRepository.findAllByUserEmailOrderByDateAsc(USER_EMAIL))
+                .thenReturn(List.of(WeightEntry.builder().date(LocalDate.now()).weight(80.0).build()));
+
+        DashboardDTO result = weightService.getDashboard(USER_EMAIL);
+
+        assertThat(Double.isNaN(result.getProgress())).isFalse();
+        assertThat(result.getProgress()).isEqualTo(0.0);
     }
 }

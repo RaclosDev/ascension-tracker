@@ -1,4 +1,5 @@
 import api from '@/api/client';
+import { haptics } from '@/lib/haptics';
 //  Notifications module
 // Handles:
 // 1. Subscribing to Web Push (so the server can send background notifications)
@@ -50,6 +51,7 @@ export async function initAudioAndNotifications() {
  * Play the bell sound (only works when app is in foreground).
  */
 export function playRestSound() {
+  haptics.alarm();
   if (!audio) return;
   try {
     audio.currentTime = 0;
@@ -165,9 +167,8 @@ async function subscribeToPush() {
     });
 
     pushSubscribed = true;
-    console.info('Push subscription registered');
   } catch (e: unknown) {
-    console.warn('Push subscription failed', e);
+    console.warn('Push subscription failed', e instanceof Error ? e.message : String(e));
   }
 }
 
@@ -180,7 +181,10 @@ export async function scheduleServerRestTimer(delaySec: number) {
   try {
     await api.post('/push/rest-timer', { delaySec });
   } catch (e: unknown) {
-    console.warn('Failed to schedule server rest timer', e);
+    console.warn(
+      'Failed to schedule server rest timer',
+      e instanceof Error ? e.message : String(e),
+    );
   }
 }
 
@@ -191,7 +195,7 @@ export async function cancelServerRestTimer() {
   try {
     await api.post('/push/rest-timer/cancel');
   } catch (e: unknown) {
-    console.warn('Failed to cancel server rest timer', e);
+    console.warn('Failed to cancel server rest timer', e instanceof Error ? e.message : String(e));
   }
 }
 

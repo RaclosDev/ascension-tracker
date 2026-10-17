@@ -7,6 +7,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,9 +36,10 @@ public class WorkoutPreferencesService {
         }
     }
 
+    @Transactional
     public WorkoutPreferencesDTO updatePreferences(String email, WorkoutPreferencesDTO dto) {
         UserSettings settings = userSettingsRepository.findByUserEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User settings not found for: " + email));
 
         try {
             String json = objectMapper.writeValueAsString(ensureDefaults(dto));
@@ -44,7 +47,7 @@ public class WorkoutPreferencesService {
             userSettingsRepository.save(settings);
             return dto;
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error saving preferences", e);
+            throw new RuntimeException("Error serializing workout preferences", e);
         }
     }
 
@@ -55,6 +58,9 @@ public class WorkoutPreferencesService {
                 .exerciseAliases(new HashMap<>())
                 .exerciseVariants(new HashMap<>())
                 .hiddenEquipments(new ArrayList<>())
+                .exerciseGifs(new HashMap<>())
+                .restTimers(new HashMap<>())
+                .restPreset(90)
                 .build();
     }
 
@@ -64,6 +70,9 @@ public class WorkoutPreferencesService {
         if (dto.getExerciseAliases() == null) dto.setExerciseAliases(new HashMap<>());
         if (dto.getExerciseVariants() == null) dto.setExerciseVariants(new HashMap<>());
         if (dto.getHiddenEquipments() == null) dto.setHiddenEquipments(new ArrayList<>());
+        if (dto.getExerciseGifs() == null) dto.setExerciseGifs(new HashMap<>());
+        if (dto.getRestTimers() == null) dto.setRestTimers(new HashMap<>());
+        if (dto.getRestPreset() == null) dto.setRestPreset(90);
         return dto;
     }
 }
