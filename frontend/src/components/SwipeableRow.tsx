@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Trash2, Edit3 } from 'lucide-react';
+import { haptics } from '@/lib/haptics';
 
 interface SwipeableRowProps {
   children: React.ReactNode;
@@ -57,8 +58,10 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
 
       setOffsetX((currentOffset) => {
         if (currentOffset < -40) {
+          haptics.warning();
           onDelete();
         } else if (currentOffset > 40) {
+          haptics.light();
           onEdit();
         }
         return 0;

@@ -59,21 +59,18 @@ export function BodyHeatmap({
         const primaryMuscle = dbEx.muscle?.toLowerCase() || '';
         const synergists = dbEx.synergists;
 
-        // Add dummy data points to increase heat intensity based on sets and synergists scores
+        // Add data points to increase heat intensity based on sets and synergists scores
         if (synergists) {
-          // If we have synergists, we multiply sets by synergist score / 10 to scale it
           Object.entries(synergists).forEach(([synMuscle, score]) => {
             const mappedMuscles = MUSCLE_MAP[synMuscle.toLowerCase()];
             if (mappedMuscles) {
-              // Add a data point for every point of "heat" generated
-              const heatPoints = Math.round((setsCount * score) / 5); // Scale down a bit to prevent maxing out too fast
+              const heatPoints = Math.round((setsCount * score) / 5);
               for (let i = 0; i < heatPoints; i++) {
                 data.push({ name: 'Workout', muscles: mappedMuscles });
               }
             }
           });
         } else {
-          // Fallback to primary muscle
           const mappedMuscles = MUSCLE_MAP[primaryMuscle];
           if (mappedMuscles) {
             for (let i = 0; i < setsCount; i++) {
@@ -90,7 +87,7 @@ export function BodyHeatmap({
   const modelProps = {
     data: bodyData,
     highlightedColors: colors,
-    style: { width: '100%', padding: '0' },
+    style: { width: '100%', height: '100%', display: 'flex', justifyContent: 'center' },
   };
 
   const [isReady, setIsReady] = useState(false);
@@ -101,13 +98,13 @@ export function BodyHeatmap({
 
   if (hideTitle) {
     return (
-      <div className="flex gap-1 w-full justify-center min-h-[300px]">
+      <div className="flex gap-1 w-full justify-center items-center h-[140px]">
         {isReady && (
           <>
-            <div className="flex-1">
+            <div className="flex-1 max-w-[66px] aspect-[1/2]">
               <Model type="anterior" {...modelProps} />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 max-w-[66px] aspect-[1/2]">
               <Model type="posterior" {...modelProps} />
             </div>
           </>
@@ -117,23 +114,40 @@ export function BodyHeatmap({
   }
 
   return (
-    <div className="card p-6 flex flex-col items-center min-h-[300px]">
-      <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-        Músculos esta Semana
-      </h3>
-      <p className="text-sm mb-6 text-center" style={{ color: 'var(--text-secondary)' }}>
-        Zonas más trabajadas en los últimos 7 días
-      </p>
+    <div className="card p-2.5 sm:p-4 flex flex-col justify-between items-center h-full min-h-[190px]">
+      <div className="w-full flex items-center justify-between mb-1">
+        <h3
+          className="text-xs sm:text-sm font-bold tracking-tight"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          Zonas Activas
+        </h3>
+        <span
+          className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+          style={{ color: 'var(--text-secondary)', background: 'rgba(255, 255, 255, 0.05)' }}
+        >
+          7 días
+        </span>
+      </div>
 
-      <div className="flex gap-4 w-full justify-center">
-        {/* Front view */}
-        <div className="w-[140px] md:w-[180px]">
+      <div className="flex flex-row items-center justify-center gap-1 w-full my-auto py-1">
+        {/* Vista Frontal */}
+        <div className="flex-1 min-w-0 max-w-[66px] sm:max-w-[78px] aspect-[1/2] flex items-center justify-center">
           {isReady && <Model type="anterior" {...modelProps} />}
         </div>
-        {/* Back view */}
-        <div className="w-[140px] md:w-[180px]">
+        {/* Vista Posterior */}
+        <div className="flex-1 min-w-0 max-w-[66px] sm:max-w-[78px] aspect-[1/2] flex items-center justify-center">
           {isReady && <Model type="posterior" {...modelProps} />}
         </div>
+      </div>
+
+      <div
+        className="flex items-center justify-center gap-2 text-[10px] font-medium"
+        style={{ color: 'var(--text-secondary)' }}
+      >
+        <span>Frente</span>
+        <span>•</span>
+        <span>Espalda</span>
       </div>
     </div>
   );

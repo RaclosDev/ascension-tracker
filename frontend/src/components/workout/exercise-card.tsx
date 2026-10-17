@@ -76,12 +76,49 @@ export const SwipeableSetRow = React.memo(
     // Optimización Pro: Extraída la lógica táctil a un hook puro
     const { offsetX, swiped, isDragging, closeSwipe, touchHandlers } = useSwipe();
     const [deleteFocused, setDeleteFocused] = useState(false);
+    const [focusedField, setFocusedField] = useState<'weight' | 'reps' | null>(null);
+    const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+      return () => {
+        if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+      };
+    }, []);
 
     if (!s) return null;
 
     const prev = previousSetLabel(exerciseId, variant, i, recentWorkouts);
     const pr = s.completed && isPrSet(exerciseId, variant, s.weight, recentWorkouts);
     const typeLabel = SET_TYPE_LABEL[s.type] || String(workingIndex + 1);
+
+    const adjustWeight = (delta: number) => {
+      haptics.step();
+      const currentStr = String(s.weight || '')
+        .replace(',', '.')
+        .trim();
+      let baseNum = parseFloat(currentStr);
+      if (Number.isNaN(baseNum) || !Number.isFinite(baseNum)) {
+        const prevWeight = prev !== '' ? parseFloat(prev.split('×')[0]?.trim()) : 0;
+        baseNum = !Number.isNaN(prevWeight) ? prevWeight : 0;
+      }
+      const nextVal = Math.max(0, Math.round((baseNum + delta) * 100) / 100);
+      updateSet(rowId, s.id, { weight: nextVal.toString() });
+    };
+
+    const adjustReps = (delta: number) => {
+      haptics.step();
+      const currentStr = String(s.reps || '')
+        .replace(/[^\d]/g, '')
+        .trim();
+      let baseNum = parseInt(currentStr, 10);
+      if (Number.isNaN(baseNum)) {
+        const prevReps =
+          prev !== '' ? parseInt(prev.split('×')[1]?.replace(/[^\d]/g, '')?.trim() || '0', 10) : 0;
+        baseNum = !Number.isNaN(prevReps) ? prevReps : 0;
+      }
+      const nextVal = Math.max(0, baseNum + delta);
+      updateSet(rowId, s.id, { reps: nextVal.toString() });
+    };
 
     return (
       <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px' }}>
@@ -153,6 +190,18 @@ export const SwipeableSetRow = React.memo(
             inputMode="decimal"
             value={isCardio ? s.distance || '' : s.weight || ''}
             placeholder={prev === '' ? '0' : prev.split('×')[0]?.trim()}
+            onFocus={() => {
+              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+              setFocusedField('weight');
+            }}
+            onClick={() => {
+              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+              setFocusedField('weight');
+            }}
+            onPointerDown={() => {
+              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+              setFocusedField('weight');
+            }}
             onChange={(e) => {
               if (isCardio) {
                 updateSet(rowId, s.id, { distance: e.target.value.replace(',', '.') });
@@ -161,6 +210,9 @@ export const SwipeableSetRow = React.memo(
               }
             }}
             onBlur={(e) => {
+              blurTimeoutRef.current = setTimeout(() => {
+                setFocusedField(null);
+              }, 400);
               const val = e.target.value.replace(',', '.').trim();
               if (val) {
                 const num = parseFloat(val);
@@ -185,12 +237,29 @@ export const SwipeableSetRow = React.memo(
             placeholder={
               prev === '' ? '0' : prev.split('×')[1]?.replace(/[^\d]/g, '')?.trim() || '0'
             }
+            onFocus={() => {
+              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+              setFocusedField('reps');
+            }}
+            onClick={() => {
+              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+              setFocusedField('reps');
+            }}
+            onPointerDown={() => {
+              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+              setFocusedField('reps');
+            }}
             onChange={(e) => {
               if (isCardio) {
                 updateSet(rowId, s.id, { duration: e.target.value });
               } else {
                 updateSet(rowId, s.id, { reps: e.target.value.replace(/[^\d]/g, '') });
               }
+            }}
+            onBlur={() => {
+              blurTimeoutRef.current = setTimeout(() => {
+                setFocusedField(null);
+              }, 400);
             }}
             className={`set-input ${s.completed ? 'completed' : ''}`}
           />
@@ -219,10 +288,153 @@ export const SwipeableSetRow = React.memo(
             }}
             aria-label={s.completed ? 'Desmarcar serie' : 'Completar serie'}
             className={`set-check-btn ${s.completed ? 'checked' : ''}`}
+            style={
+              s.completed
+                ? {
+                    background: 'var(--accent-primary)',
+                    borderColor: 'var(--accent-primary)',
+                    color: 'var(--accent-text, #ffffff)',
+                    boxShadow: '0 0 12px var(--accent-glow)',
+                  }
+                : undefined
+            }
           >
             <Check size={16} strokeWidth={s.completed ? 3 : 2} />
           </button>
         </div>
+
+        {/* Quick Stepper Accessory Bar for gym ergonomics */}
+        {!isCardio && focusedField === 'weight' && (
+          <div
+            onMouseDown={(e) => {
+              e.preventDefault();
+              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+            }}
+            onTouchStart={(e) => e.stopPropagation()}
+            className="flex items-center justify-between gap-1 px-3 py-2 mt-1.5 bg-[#1C1C1E] border border-[var(--accent-primary)]/40 rounded-xl text-xs shadow-lg animate-fadeIn z-10 relative"
+          >
+            <div className="flex items-center gap-1">
+              <span className="text-[0.68rem] font-bold text-[var(--accent-primary-light)] uppercase tracking-wider pr-1">
+                Kg
+              </span>
+              {[-5, -2.5, -1.25].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+                  }}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+                    adjustWeight(d);
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+                    adjustWeight(d);
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-white font-mono font-semibold text-xs transition select-none"
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+            <div className="h-4 w-px bg-white/20" />
+            <div className="flex items-center gap-1">
+              {[+1.25, +2.5, +5].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+                  }}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+                    adjustWeight(d);
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+                    adjustWeight(d);
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 font-mono font-bold text-xs transition shadow-sm select-none"
+                >
+                  +{d}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!isCardio && focusedField === 'reps' && (
+          <div
+            onMouseDown={(e) => {
+              e.preventDefault();
+              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+            }}
+            onTouchStart={(e) => e.stopPropagation()}
+            className="flex items-center justify-between gap-1 px-3 py-2 mt-1.5 bg-[#1C1C1E] border border-[var(--accent-primary)]/40 rounded-xl text-xs shadow-lg animate-fadeIn z-10 relative"
+          >
+            <div className="flex items-center gap-1">
+              <span className="text-[0.68rem] font-bold text-[var(--accent-primary-light)] uppercase tracking-wider pr-1">
+                Reps
+              </span>
+              {[-2, -1].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+                  }}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+                    adjustReps(d);
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+                    adjustReps(d);
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-white font-mono font-semibold text-xs transition select-none"
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+            <div className="h-4 w-px bg-white/20" />
+            <div className="flex items-center gap-1">
+              {[+1, +2, +5].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+                  }}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+                    adjustReps(d);
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+                    adjustReps(d);
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 font-mono font-bold text-xs transition shadow-sm select-none"
+                >
+                  +{d}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Accessible delete button (supports keyboard focus + Enter/Space and swipe reveal) */}
         <button
@@ -232,6 +444,7 @@ export const SwipeableSetRow = React.memo(
           onBlur={() => setDeleteFocused(false)}
           onClick={(e) => {
             e.stopPropagation();
+            haptics.warning();
             removeSet(rowId, s.id);
           }}
           style={{
@@ -672,7 +885,13 @@ export const ExerciseCard = React.memo(function ExerciseCard({
               })}
             </div>
 
-            <button onClick={() => addSet(row.id, recentWorkouts)} className="add-set-btn">
+            <button
+              onClick={() => {
+                haptics.light();
+                addSet(row.id, recentWorkouts);
+              }}
+              className="add-set-btn btn-press"
+            >
               <Plus size={16} />
               Añadir serie
             </button>

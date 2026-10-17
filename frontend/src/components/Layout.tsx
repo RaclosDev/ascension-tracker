@@ -13,6 +13,7 @@ import { preloadRoute } from '../utils/routePreload';
 import { Skeleton } from './ui/skeleton';
 import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings, Plus } from 'lucide-react';
 import { ActiveWorkoutBanner } from './workout/ActiveWorkoutBanner';
+import { haptics } from '@/lib/haptics';
 
 const navItems = [
   {
@@ -98,9 +99,25 @@ export default function Layout() {
 
   const navigateTo = (path: string) => {
     if (location.pathname !== path) {
-      startTransition(() => {
-        navigate(path);
-      });
+      haptics.light();
+      if (
+        typeof document !== 'undefined' &&
+        'startViewTransition' in document &&
+        typeof (document as unknown as { startViewTransition: (cb: () => void) => void })
+          .startViewTransition === 'function'
+      ) {
+        (
+          document as unknown as { startViewTransition: (cb: () => void) => void }
+        ).startViewTransition(() => {
+          startTransition(() => {
+            navigate(path);
+          });
+        });
+      } else {
+        startTransition(() => {
+          navigate(path);
+        });
+      }
     }
   };
 
@@ -270,6 +287,7 @@ export default function Layout() {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            haptics.medium();
             preloadRoute('/utilities');
             preloadRoute('/settings');
             setMoreMenuOpen(!moreMenuOpen);

@@ -89,7 +89,29 @@ test.describe('Visual Screenshots Capture Suite', () => {
           await route.fulfill({
             status: 200,
             contentType: 'application/json',
-            json: { content: [], number: 0, totalPages: 0 },
+            json: {
+              content: [
+                {
+                  id: 'w-1',
+                  name: 'Torso Fuerza',
+                  startedAt: Date.now() - 3600000 * 24,
+                  finishedAt: Date.now() - 3600000 * 23,
+                  exercises: [
+                    {
+                      exerciseId: 'bench-press',
+                      sets: [
+                        { completed: true, weight: 100, reps: 8 },
+                        { completed: true, weight: 100, reps: 8 },
+                        { completed: true, weight: 100, reps: 8 },
+                        { completed: true, weight: 100, reps: 8 },
+                      ],
+                    },
+                  ],
+                },
+              ],
+              number: 0,
+              totalPages: 1,
+            },
           });
         } else {
           await route.fulfill({
@@ -102,6 +124,13 @@ test.describe('Visual Screenshots Capture Suite', () => {
 
       await page.goto('/workout');
       await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(500);
+
+      // Screenshot 03b: Workout Dashboard Overview (Muscle Recovery & Body Heatmap in 2 columns + Activity)
+      await page.screenshot({
+        path: path.join(SCREENSHOT_DIR, '03b_workout_overview_2cols_mobile.png'),
+        fullPage: true,
+      });
 
       const startBtn = page.getByRole('button', { name: /empezar entrenamiento/i });
       await expect(startBtn).toBeVisible({ timeout: 15000 });
@@ -137,6 +166,30 @@ test.describe('Visual Screenshots Capture Suite', () => {
         path: path.join(SCREENSHOT_DIR, '04_workout_active_mobile.png'),
         fullPage: true,
       });
+
+      // Add second set to showcase quick steppers
+      const addSetBtn = page.getByRole('button', { name: /añadir serie/i });
+      if (await addSetBtn.isVisible()) {
+        await addSetBtn.click();
+        await page.waitForTimeout(300);
+        const secondWeightInput = page.locator('.set-input').nth(2);
+        await secondWeightInput.focus();
+        await page.waitForTimeout(400);
+        await page.screenshot({
+          path: path.join(SCREENSHOT_DIR, '04b_workout_stepper_mobile.png'),
+          fullPage: true,
+        });
+
+        // Scroll to bottom to inspect bottom actions with rest banner
+        await page.evaluate(() => {
+          const mc = document.querySelector('.main-content');
+          if (mc) mc.scrollTo({ top: mc.scrollHeight, behavior: 'instant' });
+        });
+        await page.waitForTimeout(300);
+        await page.screenshot({
+          path: path.join(SCREENSHOT_DIR, '04c_workout_footer_mobile.png'),
+        });
+      }
 
       // Click "Terminar Entrenamiento" to open the new Post-Workout Summary
       const finishBtn = page.getByRole('button', { name: /terminar entrenamiento/i });
@@ -230,6 +283,16 @@ test.describe('Visual Screenshots Capture Suite', () => {
       // Screenshot 05: Settings
       await page.screenshot({
         path: path.join(SCREENSHOT_DIR, '05_settings_mobile.png'),
+        fullPage: true,
+      });
+
+      await page.goto('/tracking');
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(500);
+
+      // Screenshot 11: Tracking / Weight
+      await page.screenshot({
+        path: path.join(SCREENSHOT_DIR, '11_tracking_mobile.png'),
         fullPage: true,
       });
     });
