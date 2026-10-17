@@ -46,6 +46,9 @@ class FlywayLegacyDataMigrationTest {
                 .load();
         flywayV22.migrate();
 
+        // 0. Ensure user exists for foreign key constraint fk_workouts_user_email
+        jdbcTemplate.update("INSERT INTO users (email) VALUES ('legacy@test.com') ON CONFLICT (email) DO NOTHING");
+
         // 1. Insert legacy hierarchy
         jdbcTemplate.update("INSERT INTO workouts (id, name, user_email, started_at) VALUES ('w_test', 'Legacy Workout', 'legacy@test.com', 1000)");
         jdbcTemplate.update("INSERT INTO workout_exercises (id, workout_id, exercise_id, order_index) VALUES ('we_test', 'w_test', 'squat', 0)");
