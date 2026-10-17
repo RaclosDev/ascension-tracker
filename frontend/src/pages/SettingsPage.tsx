@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
-import { lazy } from 'react';
 import api, { exportUserData } from '../api/client';
 import toast from 'react-hot-toast';
 
-const WeightLossPlan = lazy(() => import('../components/calculators/WeightLossPlan'));
-const MacroConfigurator = lazy(() => import('../components/calculators/MacroConfigurator'));
-const MealConfigurator = lazy(() => import('../components/MealConfigurator'));
+import WeightLossPlan from '../components/calculators/WeightLossPlan';
+import MacroConfigurator, { MacroForm } from '../components/calculators/MacroConfigurator';
+import MealConfigurator from '../components/MealConfigurator';
+import { haptics } from '../lib/haptics';
 import { useWorkoutStore } from '../lib/workout/store';
 import { useCustomExercises, useWorkoutPreferencesActions } from '../lib/workout/api';
 import { HevyImportModal } from '../components/workout/HevyImportModal';
@@ -175,6 +175,7 @@ export default function SettingsPage() {
   }, [location.hash]);
 
   const toggleSection = (key: string, e?: React.MouseEvent<HTMLDivElement>) => {
+    haptics.medium();
     if (!openSections[key] && e?.currentTarget) {
       const el = e.currentTarget;
       setTimeout(() => {
@@ -422,13 +423,7 @@ export default function SettingsPage() {
             <div className="accordion-content fade-in mt-5 pt-5 border-t border-white/10">
               <MacroConfigurator
                 form={form}
-                setForm={
-                  setForm as unknown as React.Dispatch<
-                    React.SetStateAction<
-                      import('../components/calculators/MacroConfigurator').MacroForm
-                    >
-                  >
-                }
+                setForm={setForm as unknown as React.Dispatch<React.SetStateAction<MacroForm>>}
                 initialStartWeight={dashboard?.currentWeight || effectiveSettings?.startWeight}
               />
               <button
