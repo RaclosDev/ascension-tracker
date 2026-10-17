@@ -84,7 +84,10 @@ export function useAiNutritionChef() {
         const res = await api.get(`/nutrition/ai/assistant-summary?date=${queryDate}`);
         setSummary(res.data);
       } catch (err: unknown) {
-        console.error('Error fetching assistant summary:', err);
+        console.error(
+          'Error fetching assistant summary:',
+          err instanceof Error ? err.message : String(err),
+        );
       } finally {
         setLoadingSummary(false);
       }
@@ -167,7 +170,10 @@ export function useAiNutritionChef() {
       };
 
       if (selectedImage) {
-        payload.base64Image = selectedImage;
+        const cleanBase64 = selectedImage.includes(',')
+          ? selectedImage.split(',')[1]
+          : selectedImage;
+        payload.base64Image = cleanBase64;
       }
 
       const res = await api.post('/nutrition/ai/assistant-chat', payload);
@@ -201,8 +207,11 @@ export function useAiNutritionChef() {
       setChatMessages((prev) => [...prev, aiMsg]);
       setActiveOptionIndices((prev) => ({ ...prev, [aiMsgId]: 0 }));
     } catch (err: unknown) {
-      const e = err as Error & { response?: { data?: { error?: string } } };
-      console.error('AI Assistant Error:', e.response?.data?.error || e.message || err);
+      const e = err as { response?: { data?: { error?: string } }; message?: string };
+      console.error(
+        'AI Assistant Error:',
+        e?.response?.data?.error || (err instanceof Error ? err.message : String(err)),
+      );
       const errorMsg = 'Error conectando con el Asistente IA';
       toast.error(errorMsg);
       setChatMessages((prev) => [
@@ -242,7 +251,10 @@ export function useAiNutritionChef() {
       fetchSummary(todayStr);
     } catch (err: unknown) {
       toast.error('Error al añadir la comida al diario');
-      console.error(err);
+      console.error(
+        'Error al añadir la comida al diario:',
+        err instanceof Error ? err.message : String(err),
+      );
     } finally {
       setApplyingOptionKey(null);
     }

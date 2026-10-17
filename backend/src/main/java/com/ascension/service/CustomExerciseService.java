@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 public class CustomExerciseService {
 
     private final CustomExerciseRepository customExerciseRepository;
+    private final UserDataQuotaService userDataQuotaService;
 
     @Transactional(readOnly = true)
     public List<CustomExerciseDTO> getCustomExercises(String userEmail) {
@@ -26,6 +27,7 @@ public class CustomExerciseService {
 
     @Transactional
     public CustomExerciseDTO saveCustomExercise(String userEmail, CustomExerciseDTO dto) {
+        userDataQuotaService.checkCustomExerciseQuota(userEmail, 1);
         CustomExercise ex = CustomExercise.builder()
                 .id(UUID.randomUUID().toString())
                 .name(dto.getName())
@@ -33,6 +35,17 @@ public class CustomExerciseService {
                 .equipment(dto.getEquipment())
                 .userEmail(userEmail)
                 .build();
+        ex = customExerciseRepository.save(ex);
+        return toCustomExerciseDTO(ex);
+    }
+
+    @Transactional
+    public CustomExerciseDTO updateCustomExercise(String userEmail, String id, CustomExerciseDTO dto) {
+        CustomExercise ex = customExerciseRepository.findByUserEmailAndId(userEmail, id)
+                .orElseThrow(() -> new com.ascension.exception.EntityNotFoundException("Custom exercise not found with id: " + id));
+        ex.setName(dto.getName());
+        ex.setMuscle(dto.getMuscle());
+        ex.setEquipment(dto.getEquipment());
         ex = customExerciseRepository.save(ex);
         return toCustomExerciseDTO(ex);
     }

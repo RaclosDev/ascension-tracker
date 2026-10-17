@@ -22,12 +22,11 @@ interface Props {
 
 export function ExerciseDetailsModal({ exercise, onClose }: Props) {
   const { data: history = [] } = useRecentWorkouts(365);
-  const { prefs, addGlobalMachine, addGlobalGrip, addExerciseVariant } =
-    useWorkoutPreferencesActions();
+  const { prefs, addGripOption, addMachineOption } = useWorkoutPreferencesActions();
   const globalMachines = prefs?.globalMachines || [];
   const globalGrips = prefs?.globalGrips || [];
   const exerciseVariants = prefs?.exerciseVariants || {};
-  const customGifs: Record<string, string> = {};
+  const customGifs = prefs?.exerciseGifs || {};
   const [filterGrip, setFilterGrip] = useState<string>('ALL');
   const [filterMachine, setFilterMachine] = useState<string>('ALL');
 
@@ -65,13 +64,11 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
 
   const handleAddGrip = (val: string) => {
     if (!exercise) return;
-    addGlobalGrip(val);
-    addExerciseVariant(exercise.id, 'grip', val);
+    addGripOption(exercise.id, val);
   };
   const handleAddMachine = (val: string) => {
     if (!exercise) return;
-    addGlobalMachine(val);
-    addExerciseVariant(exercise.id, 'machine', val);
+    addMachineOption(exercise.id, val);
   };
 
   const stats = useMemo(() => {

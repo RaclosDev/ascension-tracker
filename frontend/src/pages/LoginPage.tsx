@@ -1,6 +1,7 @@
 import React from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
+import api from '../api/client';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -27,8 +28,9 @@ export default function LoginPage() {
           WebkitBackdropFilter: 'blur(20px)',
           padding: '2.75rem 2rem',
           borderRadius: '24px',
-          border: '1px solid rgba(220, 38, 38, 0.35)',
-          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.85), 0 0 30px rgba(220, 38, 38, 0.22)',
+          border: '1px solid var(--border-medium, rgba(255, 255, 255, 0.12))',
+          boxShadow:
+            '0 24px 64px rgba(0, 0, 0, 0.85), 0 0 35px var(--accent-glow, rgba(0, 133, 255, 0.15))',
           textAlign: 'center',
           maxWidth: '420px',
           width: '100%',
@@ -44,8 +46,9 @@ export default function LoginPage() {
             borderRadius: '22px',
             overflow: 'hidden',
             margin: '0 auto 1.25rem',
-            border: '1.5px solid rgba(220, 38, 38, 0.65)',
-            boxShadow: '0 0 25px rgba(220, 38, 38, 0.45), 0 8px 24px rgba(0, 0, 0, 0.7)',
+            border: '1.5px solid rgba(255, 255, 255, 0.15)',
+            boxShadow:
+              '0 0 25px var(--accent-glow, rgba(0, 133, 255, 0.25)), 0 8px 24px rgba(0, 0, 0, 0.7)',
             background: '#000',
           }}
         >
@@ -89,24 +92,18 @@ export default function LoginPage() {
           <GoogleLogin
             onSuccess={async (credentialResponse) => {
               try {
-                const baseUrl = import.meta.env.VITE_API_URL || '';
-                const res = await fetch(`${baseUrl}/api/auth/login`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ token: credentialResponse.credential }),
+                const res = await api.post<{ token?: string }>('/auth/login', {
+                  token: credentialResponse.credential,
                 });
-                const data = await res.json();
-                if (data.token) {
-                  login(data.token);
-                } else {
-                  console.error('Login failed on backend', data);
+                if (res.data?.token) {
+                  login(res.data.token);
                 }
-              } catch (e: unknown) {
-                console.error('Login error', e);
+              } catch {
+                // Login failed without leaking PII or credentials to console
               }
             }}
             onError={() => {
-              console.error('Login Failed');
+              // Login failed handled silently
             }}
             theme="filled_black"
             shape="pill"

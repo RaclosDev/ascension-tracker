@@ -20,8 +20,12 @@ public class WorkoutSet implements Persistable<String> {
     private Integer orderIndex;
 
     private String type;
-    private String weight;
-    private String reps;
+
+    @Column(name = "weight", precision = 10, scale = 2)
+    private java.math.BigDecimal weight;
+
+    @Column(name = "reps", precision = 10, scale = 2)
+    private java.math.BigDecimal reps;
     private String distance;
     private String duration;
     private String rpe;

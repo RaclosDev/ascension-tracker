@@ -16,8 +16,12 @@ import { ExerciseCard } from '@/components/workout/exercise-card';
 import { ExercisePicker } from '@/components/workout/exercise-picker';
 import { RestBanner } from '@/components/workout/rest-banner';
 import { EmptyCard } from '@/components/workout/dashboard';
+import { WorkoutCelebrationModal } from '@/components/workout/WorkoutCelebrationModal';
 import { useWorkoutStore } from '@/lib/workout/store';
-import { useShallow } from 'zustand/react/shallow';
+import { haptics } from '@/lib/haptics';
+import type { WorkoutExercise } from '@/lib/workout/types';
+
+const EMPTY_EXERCISES: WorkoutExercise[] = [];
 
 export function ActiveWorkout() {
   const hasActive = useWorkoutStore((s) => s.active !== null);
@@ -49,7 +53,7 @@ export function ActiveWorkout() {
         />
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
           <button
-            onClick={startEmpty}
+            onClick={() => startEmpty()}
             className="btn btn-primary"
             style={{
               flex: 1,
@@ -87,7 +91,13 @@ export function ActiveWorkout() {
     <>
       <LiveSession />
       <ExercisePicker />
-      <button onClick={() => setPickerOpen(true)} className="add-exercise-btn">
+      <button
+        onClick={() => {
+          haptics.light();
+          setPickerOpen(true);
+        }}
+        className="add-exercise-btn btn-press"
+      >
         <Plus size={18} />
         Añadir ejercicio
       </button>
@@ -99,10 +109,12 @@ export function ActiveWorkout() {
 function LiveSession() {
   const navigate = useNavigate();
   const workoutName = useWorkoutStore((s) => s.active?.name?.trim() || 'Entrenamiento');
-  const exercises = useWorkoutStore(
-    useShallow(
-      (s) => s.active?.exercises.map((row) => ({ id: row.id, supersetId: row.supersetId })) ?? [],
-    ),
+  const exercises = useWorkoutStore((s) => s.active?.exercises ?? EMPTY_EXERCISES);
+
+  const totalSetsCount = exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
+  const completedSetsCount = exercises.reduce(
+    (acc, ex) => acc + ex.sets.filter((s) => s.completed).length,
+    0,
   );
 
   return (
@@ -140,24 +152,45 @@ function LiveSession() {
           </h2>
         </div>
 
-        <button
-          type="button"
-          onClick={() => navigate('/dashboard')}
-          className="btn btn-secondary"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.35rem',
-            padding: '0.45rem 0.85rem',
-            fontSize: '0.85rem',
-            fontWeight: 500,
-          }}
-          aria-label="Minimizar entrenamiento y navegar por la app"
-          title="Minimizar entrenamiento"
-        >
-          <ChevronDown size={16} />
-          <span>Minimizar</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {totalSetsCount > 0 && (
+            <span
+              style={{
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                padding: '0.35rem 0.65rem',
+                borderRadius: '9999px',
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                color: 'var(--text-primary)',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {completedSetsCount}/{totalSetsCount} series
+            </span>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              haptics.light();
+              navigate('/dashboard');
+            }}
+            className="btn btn-secondary live-session-minimize-btn btn-press"
+            style={{
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.45rem 0.85rem',
+              fontSize: '0.85rem',
+              fontWeight: 500,
+            }}
+            aria-label="Minimizar entrenamiento y navegar por la app"
+            title="Minimizar entrenamiento"
+          >
+            <ChevronDown size={16} />
+            <span>Minimizar</span>
+          </button>
+        </div>
       </header>
 
       <RestBanner />
@@ -205,8 +238,6 @@ function FooterActions() {
   const [finishOpen, setFinishOpen] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
   const [emptyOpen, setEmptyOpen] = useState(false);
-  const [customName, setCustomName] = useState('');
-  const [customDuration, setCustomDuration] = useState(0);
   const [saveError, setSaveError] = useState<string | null>(null);
   const hasExercises = useWorkoutStore((s) => (s.active?.exercises.length ?? 0) > 0);
 
@@ -215,53 +246,47 @@ function FooterActions() {
     if (!active) return;
     const hasWork = active.exercises.some((e) => e.sets.some((s) => s.completed));
     if (!hasWork) {
+      haptics.warning();
       setEmptyOpen(true);
       return;
     }
 
+    haptics.medium();
     // Cancel rest timer and notifications so bell sound doesn't ring while in finish modal
     useWorkoutStore.getState().skipRest();
     dismissRestNotifications();
 
     setSaveError(null);
-    setCustomName(active.name);
-    setCustomDuration(Math.round((Date.now() - active.startedAt) / 60000));
     setFinishOpen(true);
   }
 
-  function confirmFinish() {
-    setSaveError(null);
-    const record = finishWorkout(customName, customDuration * 60000);
-    if (!record) return;
-    saveWorkoutMutation.mutate(record, {
-      onSuccess: () => {
-        clearActiveWorkout();
-        setFinishOpen(false);
-      },
-      onError: () => {
-        setSaveError(
-          'No se pudo sincronizar con el servidor. Tu entrenamiento sigue protegido y guardado localmente en este dispositivo. Puedes reintentar cuando recuperes conexión.',
-        );
-      },
-    });
-  }
-
   function doSaveTemplate() {
+    haptics.light();
     const tpl = saveAsTemplate();
     if (tpl) saveTemplateMutation.mutate(tpl);
   }
 
   return (
     <div className="workout-footer-actions">
-      <button onClick={openFinish} className="workout-finish-btn">
+      <button onClick={openFinish} className="workout-finish-btn btn-press">
         <Check size={20} />
         Terminar Entrenamiento
       </button>
-      <button className="workout-secondary-btn" onClick={doSaveTemplate} disabled={!hasExercises}>
+      <button
+        className="workout-secondary-btn btn-press"
+        onClick={doSaveTemplate}
+        disabled={!hasExercises}
+      >
         <Bookmark size={16} />
         Guardar como plantilla
       </button>
-      <button className="workout-secondary-btn danger" onClick={() => setDiscardOpen(true)}>
+      <button
+        className="workout-secondary-btn danger btn-press"
+        onClick={() => {
+          haptics.warning();
+          setDiscardOpen(true);
+        }}
+      >
         <Square size={16} />
         Descartar
       </button>
@@ -293,7 +318,13 @@ function FooterActions() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="btn btn-secondary">Seguir entrenando</AlertDialogCancel>
-            <AlertDialogAction className="btn btn-danger" onClick={discardWorkout}>
+            <AlertDialogAction
+              className="btn btn-danger btn-press"
+              onClick={() => {
+                haptics.warning();
+                discardWorkout();
+              }}
+            >
               Descartar
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -331,121 +362,30 @@ function FooterActions() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={finishOpen} onOpenChange={setFinishOpen}>
-        <AlertDialogContent
-          className="card"
-          style={{
-            padding: '1.5rem',
-            background: 'var(--bg-primary)',
-            border: '1px solid var(--border-color)',
-            width: '95vw',
-            maxWidth: '400px',
-            maxHeight: '85dvh',
-            overflowY: 'auto',
-          }}
-        >
-          <AlertDialogHeader>
-            <AlertDialogTitle
-              style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}
-            >
-              Finalizar Sesión
-            </AlertDialogTitle>
-            <div
-              style={{
-                marginTop: '1rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem',
-                textAlign: 'left',
-              }}
-            >
-              <div>
-                <label
-                  className="form-label"
-                  style={{
-                    fontSize: '0.85rem',
-                    color: 'var(--text-secondary)',
-                    marginBottom: '0.4rem',
-                    display: 'block',
-                  }}
-                >
-                  Nombre del entrenamiento
-                </label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={customName}
-                  onChange={(e) => setCustomName(e.target.value)}
-                  style={{
-                    width: '100%',
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-medium)',
-                    color: 'var(--text-primary)',
-                    borderRadius: '8px',
-                    padding: '0.5rem',
-                  }}
-                />
-              </div>
-              <div>
-                <label
-                  className="form-label"
-                  style={{
-                    fontSize: '0.85rem',
-                    color: 'var(--text-secondary)',
-                    marginBottom: '0.4rem',
-                    display: 'block',
-                  }}
-                >
-                  Duración (minutos)
-                </label>
-                <input
-                  type="number"
-                  className="form-input"
-                  value={customDuration}
-                  onChange={(e) => setCustomDuration(Number(e.target.value))}
-                  min="1"
-                  style={{
-                    width: '100%',
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-medium)',
-                    color: 'var(--text-primary)',
-                    borderRadius: '8px',
-                    padding: '0.5rem',
-                  }}
-                />
-              </div>
-              {saveError && (
-                <div
-                  style={{
-                    padding: '0.6rem 0.8rem',
-                    background: 'rgba(239, 68, 68, 0.12)',
-                    border: '1px solid rgba(239, 68, 68, 0.35)',
-                    borderRadius: '8px',
-                    color: '#ef4444',
-                    fontSize: '0.85rem',
-                    lineHeight: '1.4',
-                  }}
-                >
-                  {saveError}
-                </div>
-              )}
-            </div>
-          </AlertDialogHeader>
-          <AlertDialogFooter style={{ marginTop: '1.5rem' }}>
-            <AlertDialogCancel className="btn btn-secondary">Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="btn btn-primary"
-              onClick={(e) => {
-                e.preventDefault();
-                confirmFinish();
-              }}
-              disabled={saveWorkoutMutation.isPending}
-            >
-              {saveWorkoutMutation.isPending ? 'Guardando...' : 'Guardar'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <WorkoutCelebrationModal
+        open={finishOpen}
+        onClose={() => setFinishOpen(false)}
+        activeWorkout={useWorkoutStore.getState().active}
+        onSave={async (name, durationMin, notes) => {
+          setSaveError(null);
+          const record = finishWorkout(name, durationMin * 60000);
+          if (!record) return;
+          if (notes) record.notes = notes;
+          saveWorkoutMutation.mutate(record, {
+            onSuccess: () => {
+              setFinishOpen(false);
+              clearActiveWorkout();
+            },
+            onError: () => {
+              setSaveError(
+                'No se pudo sincronizar con el servidor. Tu entrenamiento sigue protegido y guardado localmente en este dispositivo. Puedes reintentar cuando recuperes conexión.',
+              );
+            },
+          });
+        }}
+        isSaving={saveWorkoutMutation.isPending}
+        saveError={saveError}
+      />
     </div>
   );
 }

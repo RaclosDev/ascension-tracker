@@ -33,7 +33,9 @@ export function MuscleRecovery({
   const now = Date.now();
 
   const fatigueScores: Record<string, number> = {};
-  Object.keys(INDIVIDUAL_MUSCLES).forEach((m) => (fatigueScores[m] = 0));
+  Object.keys(INDIVIDUAL_MUSCLES).forEach((m) => {
+    fatigueScores[m] = 0;
+  });
 
   // Calculate fatigue
   history.forEach((workout) => {
@@ -75,88 +77,85 @@ export function MuscleRecovery({
       const recoveryPct = 100 - fatiguePct;
       return { key, group, recoveryPct };
     })
-    .filter((m) => m.recoveryPct < 100);
+    .filter((m) => m.recoveryPct < 100)
+    .sort((a, b) => a.recoveryPct - b.recoveryPct);
+
+  const displayedMuscles = musclesToRecover.slice(0, 4);
 
   return (
-    <div
-      className="card"
-      style={{
-        padding: '1.25rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1.25rem',
-        height: '100%',
-      }}
-    >
+    <div className="card p-2.5 sm:p-4 flex flex-col justify-between h-full min-h-[190px]">
       <div>
-        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-          Estado de Recuperación
-        </h3>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-          Basado en el volumen de las últimas 72 horas.
-        </p>
+        <div className="flex items-center justify-between mb-2">
+          <h3
+            className="text-xs sm:text-sm font-bold tracking-tight"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Recuperación
+          </h3>
+          <span
+            className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+            style={{ color: 'var(--text-secondary)', background: 'rgba(255, 255, 255, 0.05)' }}
+          >
+            72h
+          </span>
+        </div>
+
+        {musclesToRecover.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-6 text-center">
+            <span className="text-2xl mb-1">⚡</span>
+            <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+              100% Listo
+            </p>
+            <p className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
+              Músculos recuperados
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {displayedMuscles.map(({ key, group, recoveryPct }) => {
+              let barColor = 'var(--color-success)';
+              if (recoveryPct < 30) barColor = 'var(--color-fat)';
+              else if (recoveryPct < 60) barColor = 'var(--color-carbs)';
+
+              return (
+                <div key={key} className="flex flex-col gap-0.5">
+                  <div className="flex items-center justify-between text-xs leading-none">
+                    <span
+                      className="font-medium truncate max-w-[85px] sm:max-w-[100px]"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      {group.label}
+                    </span>
+                    <span
+                      className="text-[11px] font-bold font-mono tabular-nums"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      {recoveryPct}%
+                    </span>
+                  </div>
+                  <div
+                    className="w-full h-1.5 rounded-full overflow-hidden"
+                    style={{ background: 'var(--bg-secondary)' }}
+                  >
+                    <div
+                      className="h-full rounded-full transition-all duration-700 ease-out"
+                      style={{ width: `${recoveryPct}%`, background: barColor }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {musclesToRecover.length === 0 ? (
-        <div
-          style={{
-            textAlign: 'center',
-            color: 'var(--text-secondary)',
-            fontSize: '0.9rem',
-            padding: '1rem 0',
-          }}
+      {musclesToRecover.length > 4 && (
+        <p
+          className="text-[10px] font-medium text-center mt-1"
+          style={{ color: 'var(--text-secondary)' }}
         >
-          ¡Todos tus músculos están al 100% recuperados! 💪
-        </div>
-      ) : (
-        <div
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem 1rem' }}
-        >
-          {musclesToRecover.map(({ key, group, recoveryPct }) => {
-            let barColor = 'var(--color-success)';
-            if (recoveryPct < 30) barColor = 'var(--color-fat)';
-            else if (recoveryPct < 60) barColor = 'var(--color-carbs)';
-
-            return (
-              <div key={key}>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: '0.25rem',
-                    fontSize: '0.8rem',
-                  }}
-                >
-                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                    {group.label}
-                  </span>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
-                    {recoveryPct}%
-                  </span>
-                </div>
-                <div
-                  style={{
-                    width: '100%',
-                    height: '6px',
-                    background: 'var(--bg-secondary)',
-                    borderRadius: '3px',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${recoveryPct}%`,
-                      height: '100%',
-                      background: barColor,
-                      borderRadius: '3px',
-                      transition: 'width 1s ease-in-out, background 0.5s',
-                    }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+          +{musclesToRecover.length - 4} músculos más
+        </p>
       )}
     </div>
   );

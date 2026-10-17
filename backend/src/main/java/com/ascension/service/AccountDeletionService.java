@@ -15,7 +15,8 @@ public class AccountDeletionService {
 
     @Transactional
     public void wipeAccountData(String email) {
-        log.warn("Initiating complete GDPR account wipe for user: {}", email);
+        String maskedUser = com.ascension.util.PiiMasker.maskEmail(email);
+        log.warn("Initiating complete GDPR account wipe for user: {}", maskedUser);
         
         jdbcTemplate.update("DELETE FROM workout_sets WHERE workout_exercise_id IN (SELECT id FROM workout_exercises WHERE workout_id IN (SELECT id FROM workouts WHERE user_email = ?))", email);
         jdbcTemplate.update("DELETE FROM workout_exercises WHERE workout_id IN (SELECT id FROM workouts WHERE user_email = ?)", email);
@@ -31,6 +32,7 @@ public class AccountDeletionService {
             "recipes",
             "saved_foods",
             "push_subscriptions",
+            "rest_timers",
             "refresh_tokens",
             "steps_entries",
             "weight_entries",
@@ -41,15 +43,15 @@ public class AccountDeletionService {
             String column = table.equals("refresh_tokens") ? "email" : "user_email";
             int count = jdbcTemplate.update("DELETE FROM " + table + " WHERE " + column + " = ?", email);
             if (count > 0) {
-                log.info("Deleted {} rows from {} for user {}", count, table, email);
+                log.info("Deleted {} rows from {} for user {}", count, table, maskedUser);
             }
         }
         
         int userCount = jdbcTemplate.update("DELETE FROM users WHERE email = ?", email);
         if (userCount > 0) {
-            log.info("Deleted {} rows from users for user {}", userCount, email);
+            log.info("Deleted {} rows from users for user {}", userCount, maskedUser);
         }
         
-        log.warn("Account wipe completed for user: {}", email);
+        log.warn("Account wipe completed for user: {}", maskedUser);
     }
 }

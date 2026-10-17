@@ -17,6 +17,7 @@ import LoginPage from './pages/LoginPage';
 
 import { PageLoader } from './components/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
+import { preloadAllRoutes } from './utils/routePreload';
 
 let currentAppVersion: string | null = null;
 
@@ -25,12 +26,18 @@ function AppContent() {
 
   useEffect(() => {
     if (token) {
+      preloadAllRoutes();
       api
         .get('/version')
         .then((res) => {
           currentAppVersion = res.data.version;
         })
-        .catch((err: Error) => console.error('Error fetching app version', err));
+        .catch((err: unknown) =>
+          console.error(
+            'Error fetching app version:',
+            err instanceof Error ? err.message : String(err),
+          ),
+        );
 
       const handleVisibilityChange = () => {
         if (document.visibilityState === 'visible') {
@@ -41,7 +48,12 @@ function AppContent() {
                 window.location.reload();
               }
             })
-            .catch((err: Error) => console.error('Error fetching app version', err));
+            .catch((err: unknown) =>
+              console.error(
+                'Error fetching app version:',
+                err instanceof Error ? err.message : String(err),
+              ),
+            );
         }
       };
 

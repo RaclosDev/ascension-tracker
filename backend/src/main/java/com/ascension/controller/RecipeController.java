@@ -2,9 +2,11 @@ package com.ascension.controller;
 
 import com.ascension.dto.RecipeDTO;
 import com.ascension.service.RecipeService;
+import com.ascension.util.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -22,23 +24,31 @@ public class RecipeController {
 
     @GetMapping
     public ResponseEntity<List<RecipeDTO>> getRecipes(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(recipeService.getRecipes(jwt.getClaimAsString("email")));
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(recipeService.getRecipes(userEmail));
     }
 
     @PostMapping
     public ResponseEntity<RecipeDTO> addRecipe(@Valid @RequestBody RecipeDTO dto, @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(recipeService.addRecipe(jwt.getClaimAsString("email"), dto));
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(recipeService.addRecipe(userEmail, dto));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<RecipeDTO> updateRecipe(@PathVariable Long id, @Valid @RequestBody RecipeDTO dto, @AuthenticationPrincipal Jwt jwt) {
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         dto.setId(id);
-        return ResponseEntity.ok(recipeService.updateRecipe(jwt.getClaimAsString("email"), dto));
+        return ResponseEntity.ok(recipeService.updateRecipe(userEmail, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRecipe(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
-        recipeService.deleteRecipe(jwt.getClaimAsString("email"), id);
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        recipeService.deleteRecipe(userEmail, id);
         return ResponseEntity.ok().build();
     }
 }

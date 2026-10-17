@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ChevronDown, Copy } from 'lucide-react';
+import { ChevronDown, Copy, Plus } from 'lucide-react';
 import { MealIcon } from '../MealIcon';
 import { FoodLog, Macros, Meal } from '../../types/api';
 import { EditingLog } from '../../types/nutrition';
@@ -131,9 +131,12 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
             type="button"
             className="btn btn-secondary btn-sm"
             style={{
-              padding: '0.4rem',
-              borderRadius: '16px',
+              padding: '0.45rem',
+              borderRadius: '12px',
               color: 'var(--text-secondary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
             title="Copiar comida de ayer"
             aria-label={`Copiar comida ${meal.name} de ayer`}
@@ -144,14 +147,20 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
           <button
             type="button"
             className="btn btn-primary btn-sm"
-            style={{ padding: '0.4rem 0.8rem', borderRadius: '16px' }}
+            style={{
+              padding: '0.45rem 0.75rem',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
             aria-label={`Añadir alimento a ${meal.name}`}
             onClick={(e) => {
               e.stopPropagation();
               onOpenAddFoodModal(mealIndex);
             }}
           >
-            +
+            <Plus size={16} />
           </button>
         </div>
       </div>

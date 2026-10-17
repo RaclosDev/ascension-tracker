@@ -2,7 +2,8 @@ package com.ascension.dto;
 
 import lombok.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.DecimalMax;
 import java.time.LocalDate;
 
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
@@ -13,6 +14,7 @@ public class WeightEntryDTO {
     private LocalDate date;
     
     @NotNull(message = "El peso es obligatorio")
-    @Min(value = 0, message = "El peso no puede ser negativo")
+    @DecimalMin(value = "1.0", message = "El peso debe ser superior a 0")
+    @DecimalMax(value = "1000.0", message = "El peso no puede superar 1000kg")
     private Double weight;
 }

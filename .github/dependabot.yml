@@ -1,26 +1,114 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
   - package-ecosystem: "maven"
     directory: "/backend"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "org.springframework.security:*"
+        update-types: ["version-update:semver-major"]
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
+    open-pull-requests-limit: 10
+    groups:
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
   - package-ecosystem: "docker"
     directory: "/frontend"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
+    open-pull-requests-limit: 10
+    groups:
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
+
   - package-ecosystem: "docker"
     directory: "/backend"
     schedule:
-      interval: "weekly"
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
+      interval: "monthly"
+    open-pull-requests-limit: 10
+    groups:
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "eclipse-temurin"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "maven"
+        update-types: ["version-update:semver-major"]

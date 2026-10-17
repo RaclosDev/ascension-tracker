@@ -44,9 +44,6 @@ export function useFoodFilters(
       .sort((a: PageFoodItem, b: PageFoodItem) => {
         if (sortBy === 'name_asc') return (a.name || '').localeCompare(b.name || '');
         if (sortBy === 'recent') {
-          const dateA = Number(a.createdAt) || 0 ? new Date(Number(a.createdAt) || 0).getTime() : 0;
-          const dateB = Number(b.createdAt) || 0 ? new Date(Number(b.createdAt) || 0).getTime() : 0;
-          if (dateA !== dateB) return dateB - dateA;
           if (a.id && b.id) {
             if (typeof a.id === 'number' && typeof b.id === 'number') return b.id - a.id;
             return String(b.id).localeCompare(String(a.id));

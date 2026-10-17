@@ -2,6 +2,7 @@ import React from 'react';
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -18,7 +19,7 @@ interface DashboardChartsProps {
   goalWeight: number;
 }
 
-export default function DashboardCharts({
+export default React.memo(function DashboardCharts({
   weightChartData,
   deltaData,
   goalWeight,
@@ -27,7 +28,7 @@ export default function DashboardCharts({
     <div className="charts-grid">
       {/* Weight Evolution Chart */}
       <div className="chart-card full-width">
-        <div className="chart-title"> Evolución de Peso</div>
+        <div className="chart-title">Evolución de Peso</div>
         <div className="chart-wrapper">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={weightChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -92,7 +93,7 @@ export default function DashboardCharts({
 
       {/* Delta Chart */}
       <div className="chart-card">
-        <div className="chart-title"> Variación Semanal (Δ)</div>
+        <div className="chart-title">Variación Semanal (Δ)</div>
         <div className="chart-wrapper">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={deltaData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -118,7 +119,7 @@ export default function DashboardCharts({
               />
               <Bar dataKey="delta" radius={[6, 6, 0, 0]}>
                 {deltaData.map((entry: { fill: string }, i: number) => (
-                  <rect key={i} fill={entry.fill} />
+                  <Cell key={i} fill={entry.fill} />
                 ))}
               </Bar>
             </BarChart>
@@ -127,4 +128,4 @@ export default function DashboardCharts({
       </div>
     </div>
   );
-}
+});

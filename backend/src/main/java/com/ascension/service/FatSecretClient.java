@@ -64,8 +64,8 @@ public class FatSecretClient {
         try {
             signedUrl = signatureBuilder.sign("https://platform.fatsecret.com/rest/server.api", params);
         } catch (Exception e) {
-            log.error("Error signing FatSecret request", e);
-            throw new ExternalApiException("FatSecret", HttpStatus.BAD_GATEWAY, "Error firmando solicitud de FatSecret", e);
+            log.error("Error signing FatSecret request: {}", e.getClass().getSimpleName());
+            throw new ExternalApiException("FatSecret", HttpStatus.BAD_GATEWAY, "Error firmando solicitud de FatSecret", new RuntimeException("FatSecret signature generation failed"));
         }
 
         URI uri = URI.create(signedUrl);
@@ -82,12 +82,12 @@ public class FatSecretClient {
             } catch (RestClientResponseException rcre) {
                 lastException = rcre;
                 int statusCode = rcre.getStatusCode().value();
-                log.error("FS Search Error on attempt {}/{}: status {} - {}", attempt, maxAttempts, statusCode, rcre.getResponseBodyAsString());
+                log.error("FS Search Error on attempt {}/{}: status {}", attempt, maxAttempts, statusCode);
                 
                 // Do not retry 4xx errors except 429 Too Many Requests
                 if (rcre.getStatusCode().is4xxClientError() && statusCode != 429) {
                     throw new ExternalApiException("FatSecret", HttpStatus.BAD_GATEWAY,
-                            "Error en la llamada al servicio externo FatSecret: " + statusCode, rcre);
+                            "Error en la llamada al servicio externo FatSecret: " + statusCode, sanitizeException(rcre));
                 }
 
                 if (attempt < maxAttempts) {
@@ -95,17 +95,14 @@ public class FatSecretClient {
                 }
             } catch (ResourceAccessException rae) {
                 lastException = rae;
-                String errorMsg = rae.getMessage() != null
-                        ? rae.getMessage().replaceAll("https://platform.fatsecret.com/rest/server.api.*", "https://platform.fatsecret.com/rest/server.api[REDACTED]")
-                        : "Network I/O error";
-                log.error("FS Search Network Error on attempt {}/{}: {}", attempt, maxAttempts, errorMsg);
+                log.error("FS Search Network Error on attempt {}/{}: I/O timeout or connection error", attempt, maxAttempts);
 
                 if (attempt < maxAttempts) {
                     applyBackoff(attempt);
                 }
             } catch (Exception e) {
                 lastException = e;
-                log.error("FS Search unexpected error on attempt {}/{}: {}", attempt, maxAttempts, e.getMessage());
+                log.error("FS Search unexpected error on attempt {}/{}: {}", attempt, maxAttempts, e.getClass().getSimpleName());
                 if (attempt < maxAttempts) {
                     applyBackoff(attempt);
                 }
@@ -113,30 +110,44 @@ public class FatSecretClient {
         }
 
         if (response == null || lastException != null) {
+            Exception safeCause = sanitizeException(lastException);
             if (lastException instanceof ResourceAccessException) {
                 throw new ExternalApiException("FatSecret", HttpStatus.SERVICE_UNAVAILABLE,
-                        "Servicio externo FatSecret no disponible o tiempo de espera agotado", lastException);
+                        "Servicio externo FatSecret no disponible o tiempo de espera agotado", safeCause);
             }
             if (lastException instanceof RestClientResponseException rcre) {
                 if (rcre.getStatusCode().value() == 429) {
                     throw new ExternalApiException("FatSecret", HttpStatus.SERVICE_UNAVAILABLE,
-                            "Límite de cuota excedido en FatSecret (429)", lastException);
+                            "Límite de cuota excedido en FatSecret (429)", safeCause);
                 }
                 if (rcre.getStatusCode().is5xxServerError()) {
                     throw new ExternalApiException("FatSecret", HttpStatus.BAD_GATEWAY,
-                            "Servicio externo FatSecret respondió con error 5xx: " + rcre.getStatusCode().value(), lastException);
+                            "Servicio externo FatSecret respondió con error 5xx: " + rcre.getStatusCode().value(), safeCause);
                 }
             }
             throw new ExternalApiException("FatSecret", HttpStatus.BAD_GATEWAY,
-                    "Error de comunicación con el servicio externo FatSecret", lastException);
+                    "Error de comunicación con el servicio externo FatSecret", safeCause);
         }
 
         try {
             return objectMapper.readTree(response.getBody());
         } catch (Exception e) {
-            log.error("Error parsing FatSecret response", e);
-            throw new ExternalApiException("FatSecret", HttpStatus.BAD_GATEWAY, "Error al parsear respuesta JSON de FatSecret", e);
+            log.error("Error parsing FatSecret response: {}", e.getClass().getSimpleName());
+            throw new ExternalApiException("FatSecret", HttpStatus.BAD_GATEWAY, "Error al parsear respuesta JSON de FatSecret", new RuntimeException("JSON parse error"));
         }
+    }
+
+    private Exception sanitizeException(Exception e) {
+        if (e == null) {
+            return null;
+        }
+        String safeMessage = "FatSecret external service communication error (" + e.getClass().getSimpleName() + ")";
+        if (e instanceof RestClientResponseException rcre) {
+            safeMessage = "FatSecret responded with status " + rcre.getStatusCode().value();
+        } else if (e instanceof ResourceAccessException) {
+            safeMessage = "FatSecret network I/O timeout or connection error";
+        }
+        return new RuntimeException(safeMessage);
     }
 
     private void applyBackoff(int attempt) {
