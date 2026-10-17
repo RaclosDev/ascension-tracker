@@ -707,12 +707,11 @@ export default function SettingsPage() {
                   <span
                     style={{
                       fontSize: '0.85rem',
-                      color: 'var(--text-muted)',
-                      fontWeight: 500,
-                      minWidth: '45px',
+                      color: 'var(--text-secondary)',
+                      fontWeight: 600,
                     }}
                   >
-                    ({formatRestFriendly(restPreset)})
+                    seg ({formatRestFriendly(restPreset)})
                   </span>
                 </div>
               </div>

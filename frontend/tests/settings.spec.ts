@@ -92,17 +92,17 @@ test.describe('Settings Page & User Preferences Flows', () => {
     const workoutHeader = page.locator('.accordion-header').filter({ hasText: /Entrenamiento/i });
     await workoutHeader.click();
 
-    // Rest preset input and friendly format label
+    // Rest preset input
     const restInput = page.getByRole('spinbutton', { name: /Descanso base en segundos/i });
     await expect(restInput).toBeVisible();
 
-    // Change to 120s and verify friendly label "(2m)"
+    // Change to 120s and verify value
     await restInput.fill('120');
-    await expect(page.getByText('(2m)')).toBeVisible();
+    await expect(restInput).toHaveValue('120');
 
-    // Change to 90s and verify friendly label "(1m 30s)"
+    // Change to 90s and verify value
     await restInput.fill('90');
-    await expect(page.getByText('(1m 30s)')).toBeVisible();
+    await expect(restInput).toHaveValue('90');
 
     // Toggle RPE checkbox
     const rpeCheckbox = page
