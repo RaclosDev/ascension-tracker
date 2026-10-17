@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Scale, Calendar, Check, Loader2, Sparkles, Pencil } from 'lucide-react';
+import { Scale, Calendar, Check, Loader2 } from 'lucide-react';
 import api from '../../api/client';
 import { haptics } from '../../lib/haptics';
 import { parseSafeWeight } from '../../utils/weightHelper';
@@ -23,13 +23,12 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
 }: QuickWeightCardProps) {
   const queryClient = useQueryClient();
   const [quickWeight, setQuickWeight] = useState('');
-  const [isManualEdit, setIsManualEdit] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize display value
+  // Initialize display value only if empty
   useEffect(() => {
-    if (todayWeight !== undefined) {
+    if (todayWeight !== undefined && quickWeight === '') {
       setQuickWeight(todayWeight.toString());
     } else if (recentWeight !== undefined && quickWeight === '') {
       setQuickWeight(recentWeight.toString());
@@ -64,7 +63,6 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
     }
     haptics.medium();
     inputRef.current?.blur();
-    setIsManualEdit(false);
     addWeightMutation.mutate(val);
   };
 
@@ -77,10 +75,9 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
   };
 
   const isPending = addWeightMutation.isPending;
-  const numericDisplay = parseSafeWeight(quickWeight) ?? todayWeight ?? recentWeight ?? 70.0;
 
   return (
-    <div className="card nutrition-summary-card glass-panel-elevated p-4 sm:p-5 rounded-2xl mb-6 relative overflow-hidden border border-white/[0.08]">
+    <div className="card quick-add-card glass-panel-elevated p-4 sm:p-5 rounded-2xl mb-6 relative overflow-hidden border border-white/[0.08]">
       {/* Background ambient radial glow matching active skin */}
       <div
         className="absolute -top-12 -right-12 w-48 h-48 rounded-full pointer-events-none opacity-20 blur-2xl"
@@ -90,7 +87,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
       />
 
       {/* Header Row */}
-      <div className="flex items-center justify-between mb-4 relative z-10">
+      <div className="quick-add-header flex items-center justify-between mb-4 relative z-10">
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-xl flex items-center justify-center border"
@@ -104,13 +101,13 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
           </div>
           <div>
             <span
-              className="text-xs font-bold uppercase tracking-wider block"
+              className="quick-add-title text-xs font-bold uppercase tracking-wider block"
               style={{ color: 'var(--text-primary)' }}
             >
               Peso Hoy
             </span>
             <span
-              className="text-[0.72rem] capitalize flex items-center gap-1"
+              className="quick-add-date text-[0.72rem] capitalize flex items-center gap-1"
               style={{ color: 'var(--text-secondary)' }}
             >
               <Calendar size={11} className="opacity-70" /> {todayLabel}
@@ -146,47 +143,31 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
         </div>
       </div>
 
-      {/* Hero Display & Stepper Controls */}
-      <div className="flex flex-col items-center justify-center my-1 relative z-10">
-        <div className="flex items-baseline gap-1.5 mb-3">
-          {isManualEdit ? (
-            <input
-              ref={inputRef}
-              type="text"
-              inputMode="decimal"
-              pattern="[0-9]*[.,]?[0-9]*"
-              autoFocus
-              className="text-3xl sm:text-4xl font-black font-mono text-center rounded-xl w-36 py-1 outline-none text-white border"
-              style={{
-                background: 'rgba(0, 0, 0, 0.45)',
-                borderColor: 'var(--accent-primary)',
-                boxShadow: '0 0 12px var(--accent-glow)',
-              }}
-              value={quickWeight}
-              onChange={(e) => setQuickWeight(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleQuickAdd()}
-              onBlur={() => setIsManualEdit(false)}
-            />
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                setIsManualEdit(true);
-                setTimeout(() => inputRef.current?.focus(), 50);
-              }}
-              className="group flex items-baseline gap-2 cursor-pointer transition-transform active:scale-95"
-              title="Toca para editar manualmente"
-            >
-              <span className="text-4xl sm:text-5xl font-black font-mono text-white tracking-tight tabular-nums group-hover:text-[var(--accent-primary-light,#38bdf8)] transition-colors">
-                {numericDisplay.toFixed(1)}
-              </span>
-              <Pencil
-                size={14}
-                className="opacity-40 group-hover:opacity-100 transition-opacity"
-                style={{ color: 'var(--accent-primary-light, #38bdf8)' }}
-              />
-            </button>
-          )}
+      {/* Input Body & Stepper Controls */}
+      <div className="quick-add-body flex flex-col items-center justify-center my-1 relative z-10">
+        <div className="flex items-baseline gap-2 mb-3 w-full justify-center">
+          <label htmlFor="quick-weight-input" className="sr-only">
+            Peso corporal de hoy
+          </label>
+          <input
+            ref={inputRef}
+            id="quick-weight-input"
+            type="text"
+            inputMode="decimal"
+            pattern="[0-9]*[.,]?[0-9]*"
+            aria-label="Peso corporal de hoy en kilogramos"
+            className="quick-add-input text-3xl sm:text-4xl font-black font-mono text-center rounded-xl w-36 py-1 outline-none text-white border"
+            style={{
+              background: 'rgba(0, 0, 0, 0.45)',
+              borderColor: 'var(--accent-primary)',
+              boxShadow: '0 0 12px var(--accent-glow)',
+            }}
+            value={quickWeight}
+            onChange={(e) => setQuickWeight(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleQuickAdd()}
+            placeholder={hasTodayWeight && todayWeight ? todayWeight.toString() : '00.00'}
+            disabled={isPending}
+          />
           <span
             className="text-sm sm:text-base font-bold font-mono"
             style={{ color: 'var(--text-secondary)' }}
@@ -245,11 +226,14 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
 
         {/* Action Button */}
         <button
+          aria-label={
+            hasTodayWeight ? 'Actualizar peso corporal de hoy' : 'Registrar peso corporal de hoy'
+          }
           type="button"
           onClick={handleQuickAdd}
           disabled={isPending}
-          className={`w-full max-w-xs py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 btn-press transition-all duration-300 ${
-            justSaved ? 'text-white' : 'text-white hover:brightness-110 active:scale-[0.98]'
+          className={`btn w-full max-w-xs min-h-[44px] rounded-xl font-semibold text-sm flex items-center justify-center gap-2 btn-press transition-all duration-300 ${
+            hasTodayWeight ? 'btn-secondary' : 'btn-primary'
           }`}
           style={
             justSaved
@@ -257,10 +241,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
                   background: 'var(--color-success, #10b981)',
                   boxShadow: '0 0 16px rgba(16, 185, 129, 0.4)',
                 }
-              : {
-                  background: 'var(--accent-primary)',
-                  boxShadow: '0 0 16px var(--accent-glow)',
-                }
+              : undefined
           }
         >
           {isPending ? (
@@ -269,16 +250,12 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
             </>
           ) : justSaved ? (
             <>
-              <Check size={18} /> ¡Peso Guardado!
+              <Check size={18} /> {hasTodayWeight ? 'Actualizado' : 'Registrado'}
             </>
           ) : hasTodayWeight ? (
-            <>
-              <Sparkles size={16} /> Actualizar Peso
-            </>
+            'Actualizar'
           ) : (
-            <>
-              <Check size={16} /> Guardar Peso de Hoy
-            </>
+            'Registrar'
           )}
         </button>
       </div>
