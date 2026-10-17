@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 public class WorkoutTemplateService {
 
     private final WorkoutTemplateRepository workoutTemplateRepository;
+    private final UserDataQuotaService userDataQuotaService;
 
     @Transactional(readOnly = true)
     public List<WorkoutTemplateDTO> getTemplates(String userEmail) {
@@ -32,6 +33,7 @@ public class WorkoutTemplateService {
 
     @Transactional
     public WorkoutTemplateDTO saveTemplate(String userEmail, WorkoutTemplateDTO dto) {
+        userDataQuotaService.checkWorkoutTemplateQuota(userEmail, 1);
         List<TemplateExercise> exercises = dto.getExercises() != null
                 ? dto.getExercises().stream()
                         .map(e -> new TemplateExercise(

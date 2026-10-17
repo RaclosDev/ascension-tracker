@@ -10,4 +10,5 @@ public interface CustomExerciseRepository extends JpaRepository<CustomExercise, 
     List<CustomExercise> findByUserEmail(String userEmail);
     Optional<CustomExercise> findByUserEmailAndId(String userEmail, String id);
     void deleteByUserEmailAndId(String userEmail, String id);
+    long countByUserEmail(String userEmail);
 }

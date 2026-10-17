@@ -14,5 +14,6 @@ public interface MealRepository extends JpaRepository<Meal, Long> {
     List<Meal> findAllByUserEmailOrderBySortOrderAsc(String userEmail);
     void deleteByIdAndUserEmail(Long id, String userEmail);
     java.util.Optional<Meal> findByIdAndUserEmail(Long id, String userEmail);
+    long countByUserEmail(String userEmail);
 }
 

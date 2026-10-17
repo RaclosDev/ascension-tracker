@@ -18,4 +18,5 @@ public interface SavedFoodRepository extends JpaRepository<SavedFood, Long> {
     Optional<SavedFood> findFirstByUserEmailAndName(String userEmail, String name);
     void deleteByIdAndUserEmail(Long id, String userEmail);
     Optional<SavedFood> findByIdAndUserEmail(Long id, String userEmail);
+    long countByUserEmail(String userEmail);
 }

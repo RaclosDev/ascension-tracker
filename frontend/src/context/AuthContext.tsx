@@ -3,7 +3,8 @@ import { googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { del } from 'idb-keyval';
 import { useQueryClient } from '@tanstack/react-query';
-import api, { setMemoryToken } from '../api/client';
+import api, { setMemoryToken, refreshAccessToken } from '../api/client';
+import { useWorkoutStore } from '@/lib/workout/store';
 
 export interface User {
   email: string;
@@ -22,118 +23,100 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+export const purgeAllCaches = async () => {
+  if (typeof window !== 'undefined' && 'caches' in window && window.caches) {
+    try {
+      const cacheNames = await window.caches.keys();
+      // Preserve workbox precache to keep PWA offline app shell intact
+      const runtimeCaches = cacheNames.filter((name) => !name.startsWith('workbox-precache'));
+      await Promise.all(runtimeCaches.map((name) => window.caches.delete(name)));
+    } catch {
+      // ignore
+    }
+  }
+};
+
+const CACHED_USER_KEY = 'ascension_cached_user';
+
+export const getCachedUser = (): User | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(CACHED_USER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const setCachedUser = (user: User | null) => {
+  if (typeof window === 'undefined') return;
+  try {
+    if (user) {
+      localStorage.setItem(CACHED_USER_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(CACHED_USER_KEY);
+    }
+  } catch {
+    // ignore storage write errors
+  }
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const getInitialSession = (): { token: string | null; user: User | null } => {
-    try {
-      const cached = localStorage.getItem('ascension_token');
-      if (cached) {
-        const payload = jwtDecode<Record<string, unknown>>(cached);
-        const exp = (payload.exp as number) * 1000;
-        if (exp > Date.now() + 60000) {
-          setMemoryToken(cached);
-          api.defaults.headers.common['Authorization'] = 'Bearer ' + cached;
-          return {
-            token: cached,
-            user: {
-              email: payload.email as string,
-              name: payload.name as string,
-              picture: payload.picture as string,
-            },
-          };
-        }
-      }
-    } catch {
-      localStorage.removeItem('ascension_token');
-    }
-    return { token: null, user: null };
-  };
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
-  const initialSession = getInitialSession();
-  const [token, setToken] = useState<string | null>(initialSession.token);
-  const [user, setUser] = useState<User | null>(initialSession.user);
-  const [isReady, setIsReady] = useState(initialSession.token !== null);
-
-  // On mount: proactively attempt to refresh to get a token if we have a valid cookie or stored refresh token
+  // On mount: proactively attempt to refresh to get an access token in memory via HttpOnly cookie
   useEffect(() => {
     let cancelled = false;
 
     async function initAuth() {
-      console.log('[Auth] Attempting proactive refresh on mount...');
-      const baseUrl = import.meta.env.VITE_API_URL || '';
       const maxRetries = 2;
-      const storedRefreshToken = localStorage.getItem('ascension_refresh_token');
 
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
         if (cancelled) return;
         try {
-          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-          if (storedRefreshToken) {
-            headers['X-Refresh-Token'] = storedRefreshToken;
-          }
-          const res = await fetch(`${baseUrl}/api/auth/refresh`, {
-            method: 'POST',
-            credentials: 'include',
-            headers,
-            body: JSON.stringify({ refreshToken: storedRefreshToken || '' }),
-          });
+          const freshToken = await refreshAccessToken();
 
-          if (res.ok) {
-            const data = await res.json();
-            if (data.token && !cancelled) {
-              console.log('[Auth] Proactive refresh succeeded');
-              setMemoryToken(data.token);
-              localStorage.setItem('ascension_token', data.token);
-              if (data.refreshToken) {
-                localStorage.setItem('ascension_refresh_token', data.refreshToken);
-              }
-              api.defaults.headers.common['Authorization'] = 'Bearer ' + data.token;
-              setToken(data.token);
-            }
-            break;
-          } else if (res.status === 401 || res.status === 403) {
-            // Explicitly unauthenticated / session expired — do not retry
-            console.log('[Auth] Not authenticated or session expired:', res.status);
-            const currentToken = localStorage.getItem('ascension_token');
-            let hasValidToken = false;
-            if (currentToken) {
-              try {
-                const payload = jwtDecode<Record<string, unknown>>(currentToken);
-                if ((payload.exp as number) * 1000 > Date.now() + 60000) {
-                  hasValidToken = true;
-                }
-              } catch {
-                hasValidToken = false;
-              }
-            }
-            if (!hasValidToken && !cancelled) {
-              localStorage.removeItem('ascension_token');
-              localStorage.removeItem('ascension_refresh_token');
-              setMemoryToken(null);
-              setToken(null);
+          if (freshToken && !cancelled) {
+            setToken(freshToken);
+            try {
+              const payload = jwtDecode<Record<string, unknown>>(freshToken);
+              const u: User = {
+                email: payload.email as string,
+                name: payload.name as string,
+                picture: payload.picture as string,
+              };
+              setUser(u);
+              setCachedUser(u);
+            } catch {
               setUser(null);
             }
-            break;
-          } else {
-            // Server error (500, 502, 503, 504) — retry if attempts remain
-            console.warn(
-              `[Auth] Transient server error ${res.status} on attempt ${attempt + 1}/${maxRetries + 1}`,
-            );
-            if (attempt < maxRetries) {
-              await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
-            } else if (!cancelled && !initialSession.token) {
-              setMemoryToken(null);
-              setToken(null);
-            }
-          }
-        } catch (err) {
-          // Network error / connection glitch — retry if attempts remain
-          console.warn(`[Auth] Network error on attempt ${attempt + 1}/${maxRetries + 1}`, err);
-          if (attempt < maxRetries) {
-            await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
-          } else if (!cancelled && !initialSession.token) {
-            setMemoryToken(null);
+          } else if (!cancelled) {
             setToken(null);
+            setUser(null);
+            setCachedUser(null);
+          }
+          break;
+        } catch {
+          if (attempt === maxRetries) {
+            if (!cancelled) {
+              const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+              const cachedUser = getCachedUser();
+              if (isOffline && cachedUser) {
+                // Gym / airplane mode: allow entering offline PWA mode with cached user profile
+                setToken('offline-session');
+                setUser(cachedUser);
+              } else {
+                setMemoryToken(null);
+                delete api.defaults.headers.common['Authorization'];
+                setToken(null);
+                setUser(null);
+              }
+            }
+          } else {
+            await new Promise((r) => setTimeout(r, 1500));
           }
         }
       }
@@ -142,47 +125,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     initAuth();
+
+    const handleOnline = async () => {
+      try {
+        const freshToken = await refreshAccessToken();
+        if (freshToken && !cancelled) {
+          setToken(freshToken);
+        }
+      } catch {
+        // Still recovering network
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+
     return () => {
       cancelled = true;
+      window.removeEventListener('online', handleOnline);
     };
   }, []);
 
   useEffect(() => {
     if (token) {
       setMemoryToken(token);
-      localStorage.setItem('ascension_token', token);
+      if (token !== 'offline-session') {
+        api.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+      }
 
       try {
         const payload = jwtDecode<Record<string, unknown>>(token);
-        setUser({
+        const u: User = {
           email: payload.email as string,
           name: payload.name as string,
           picture: payload.picture as string,
-        });
+        };
+        setUser(u);
+        setCachedUser(u);
       } catch {
-        console.error('Invalid token format');
-        setToken(null);
-        setMemoryToken(null);
-        localStorage.removeItem('ascension_token');
-        localStorage.removeItem('ascension_refresh_token');
+        if (token !== 'offline-session') {
+          setToken(null);
+          setMemoryToken(null);
+          delete api.defaults.headers.common['Authorization'];
+          setUser(null);
+        }
       }
     } else {
       setMemoryToken(null);
+      delete api.defaults.headers.common['Authorization'];
       setUser(null);
-      localStorage.removeItem('ascension_token');
-      localStorage.removeItem('ascension_refresh_token');
     }
 
     const handleTokenRefresh = (e: Event) => {
-      if (e instanceof CustomEvent) {
+      if (e instanceof CustomEvent && e.detail) {
         setToken(e.detail);
       }
     };
     const handleAuthFailed = () => {
       setToken(null);
       setMemoryToken(null);
-      localStorage.removeItem('ascension_token');
-      localStorage.removeItem('ascension_refresh_token');
+      delete api.defaults.headers.common['Authorization'];
+      setUser(null);
+      setCachedUser(null);
+      const theme = localStorage.getItem('ascension_custom_color');
+      localStorage.clear();
+      if (theme) localStorage.setItem('ascension_custom_color', theme);
+      queryClient.clear();
+      useWorkoutStore.setState({ active: null, restUntil: null, restTimers: {} });
+      void del('forja-v1').catch(() => {});
+      void purgeAllCaches();
     };
     window.addEventListener('token_refresh', handleTokenRefresh);
     window.addEventListener('auth_failed', handleAuthFailed);
@@ -190,10 +200,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('token_refresh', handleTokenRefresh);
       window.removeEventListener('auth_failed', handleAuthFailed);
     };
-  }, [token]);
+  }, [token, queryClient]);
 
   const login = (jwtToken: string) => {
+    queryClient.clear();
+    void purgeAllCaches();
+    useWorkoutStore.setState({ active: null, restUntil: null, restTimers: {} });
+    void del('forja-v1').catch(() => {});
+    const theme = localStorage.getItem('ascension_custom_color');
+    localStorage.clear();
+    if (theme) localStorage.setItem('ascension_custom_color', theme);
     setToken(jwtToken);
+    try {
+      const payload = jwtDecode<Record<string, unknown>>(jwtToken);
+      const u: User = {
+        email: payload.email as string,
+        name: payload.name as string,
+        picture: payload.picture as string,
+      };
+      setUser(u);
+      setCachedUser(u);
+    } catch {
+      // ignore
+    }
   };
 
   const updateToken = (newToken: string) => {
@@ -201,20 +230,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    const storedRefreshToken = localStorage.getItem('ascension_refresh_token');
-    const headers: Record<string, string> = {};
-    if (storedRefreshToken) {
-      headers['X-Refresh-Token'] = storedRefreshToken;
-    }
-    api
-      .post('/auth/logout', { refreshToken: storedRefreshToken || '' }, { headers })
-      .catch(() => {});
+    await api.post('/auth/logout').catch(() => {});
     googleLogout();
     setToken(null);
     setUser(null);
+    setCachedUser(null);
     setMemoryToken(null);
-    localStorage.removeItem('ascension_token');
-    localStorage.removeItem('ascension_refresh_token');
+    delete api.defaults.headers.common['Authorization'];
+
+    await purgeAllCaches();
 
     // Save custom theme, clear local storage to prevent data leaks between accounts, and reload
     const theme = localStorage.getItem('ascension_custom_color');
@@ -224,9 +248,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await del('forja-v1');
     } catch (e) {
-      console.error('Error clearing IndexedDB on logout:', e);
+      console.error(
+        'Error clearing IndexedDB on logout:',
+        e instanceof Error ? e.message : String(e),
+      );
     }
     queryClient.clear();
+    useWorkoutStore.setState({ active: null, restUntil: null, restTimers: {} });
 
     window.location.href = '/login';
   };

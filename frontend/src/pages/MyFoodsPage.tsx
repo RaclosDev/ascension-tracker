@@ -429,7 +429,7 @@ export default function MyFoodsPage() {
               >
                 <BarcodeScanner
                   onScanSuccess={scanner.handleScanBarcode}
-                  onScanError={console.error}
+                  onScanError={(err: string) => console.warn('Barcode scan:', err)}
                 />
               </Suspense>
             )}

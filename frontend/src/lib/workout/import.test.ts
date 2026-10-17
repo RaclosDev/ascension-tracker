@@ -147,4 +147,20 @@ describe('parseHevyCsv', () => {
   it('throws error if header is invalid', () => {
     expect(() => parseHevyCsv('colA,colB\n1,2')).toThrow(/Formato CSV de Hevy no reconocido/);
   });
+
+  it('neutralizes malicious formula injection characters in workout titles and notes', () => {
+    const maliciousCsv = `
+"title","start_time","end_time","description","exercise_title","superset_id","exercise_notes","set_type","weight_kg","reps","distance_km","duration_seconds","rpe"
+"=CMD|'/C calc'!A1","10 ene 2024, 10:00","10 ene 2024, 11:00","+2+5+cmd","Bench Press",,"@dangerous_notes","normal",100,5,,,
+`;
+    const result = parseHevyCsv(
+      maliciousCsv,
+      [{ id: 'bench-press', name: 'Bench Press', muscle: 'pecho', equipment: 'barra' }],
+      [],
+    );
+    expect(result.workouts.length).toBe(1);
+    expect(result.workouts[0]?.name?.startsWith("'=")).toBe(true);
+    expect(result.workouts[0]?.notes?.startsWith("'+")).toBe(true);
+    expect(result.workouts[0]?.exercises[0]?.notes?.startsWith("'@")).toBe(true);
+  });
 });

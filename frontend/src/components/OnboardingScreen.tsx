@@ -2,6 +2,7 @@ import { useState } from 'react';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import { User, Scale, Activity } from 'lucide-react';
+import { getLocalDateString } from '../utils/dateHelper';
 import WeightLossPlan from './calculators/WeightLossPlan';
 import MacroConfigurator from './calculators/MacroConfigurator';
 
@@ -68,7 +69,7 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
         kcal: Number(form.kcal),
         macroStrategy: form.macroStrategy,
         weeklyGoal: 0.5,
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: getLocalDateString(),
       });
 
       // 2. Configurar comidas
@@ -85,7 +86,10 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
       onComplete();
     } catch (err) {
       toast.error('Error al guardar configuración inicial');
-      console.error(err);
+      console.error(
+        'Error al guardar configuración inicial:',
+        err instanceof Error ? err.message : String(err),
+      );
       setLoading(false);
     }
   };

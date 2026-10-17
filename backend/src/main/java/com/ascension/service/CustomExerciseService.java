@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 public class CustomExerciseService {
 
     private final CustomExerciseRepository customExerciseRepository;
+    private final UserDataQuotaService userDataQuotaService;
 
     @Transactional(readOnly = true)
     public List<CustomExerciseDTO> getCustomExercises(String userEmail) {
@@ -26,6 +27,7 @@ public class CustomExerciseService {
 
     @Transactional
     public CustomExerciseDTO saveCustomExercise(String userEmail, CustomExerciseDTO dto) {
+        userDataQuotaService.checkCustomExerciseQuota(userEmail, 1);
         CustomExercise ex = CustomExercise.builder()
                 .id(UUID.randomUUID().toString())
                 .name(dto.getName())

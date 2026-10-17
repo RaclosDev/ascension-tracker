@@ -2,7 +2,9 @@ package com.ascension.controller;
 
 import com.ascension.dto.UserSettingsDTO;
 import com.ascension.service.SettingsService;
+import com.ascension.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -19,7 +21,9 @@ public class SettingsController {
 
     @GetMapping
     public ResponseEntity<UserSettingsDTO> getSettings(@AuthenticationPrincipal Jwt jwt) {
-        UserSettingsDTO dto = settingsService.getSettings(jwt.getClaimAsString("email"));
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        UserSettingsDTO dto = settingsService.getSettings(userEmail);
         if (dto == null) {
             return ResponseEntity.noContent().build();
         }
@@ -30,6 +34,8 @@ public class SettingsController {
 
     @PutMapping
     public ResponseEntity<UserSettingsDTO> updateSettings(@Valid @RequestBody UserSettingsDTO dto, @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(settingsService.updateSettings(jwt.getClaimAsString("email"), dto));
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(settingsService.updateSettings(userEmail, dto));
     }
 }

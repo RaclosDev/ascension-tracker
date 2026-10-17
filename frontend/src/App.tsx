@@ -32,7 +32,12 @@ function AppContent() {
         .then((res) => {
           currentAppVersion = res.data.version;
         })
-        .catch((err: Error) => console.error('Error fetching app version', err));
+        .catch((err: unknown) =>
+          console.error(
+            'Error fetching app version:',
+            err instanceof Error ? err.message : String(err),
+          ),
+        );
 
       const handleVisibilityChange = () => {
         if (document.visibilityState === 'visible') {
@@ -43,7 +48,12 @@ function AppContent() {
                 window.location.reload();
               }
             })
-            .catch((err: Error) => console.error('Error fetching app version', err));
+            .catch((err: unknown) =>
+              console.error(
+                'Error fetching app version:',
+                err instanceof Error ? err.message : String(err),
+              ),
+            );
         }
       };
 

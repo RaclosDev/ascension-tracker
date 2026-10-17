@@ -8,17 +8,30 @@ public class NutritionPromptBuilder {
     public static final int MAX_USER_INPUT_LENGTH = 2000;
 
     /**
-     * Sanitize user input before embedding in AI prompts to mitigate prompt injection.
+     * Sanitizes user-controlled input before embedding it into AI prompts.
+     * Strips control characters and line breaks, normalizes whitespace, escapes quotes,
+     * and truncates to the maximum allowed length.
+     *
+     * NOTE: Regex filtering of 'IGNORE ALL...' or similar override patterns is NOT a complete
+     * or reliable defense against prompt injection and MUST NOT be solely relied upon.
+     * Structural data boundaries (such as XML-style delimiters like &lt;user_data&gt; ... &lt;/user_data&gt;)
+     * combined with input sanitization provide proper structural encapsulation.
      */
     public String sanitizeUserInput(String input) {
         if (input == null) return "";
-        String sanitized = input.trim();
+        // 1. Remove control characters (ASCII 0x00-0x1F except none, plus 0x7F) and newlines/carriage returns
+        String sanitized = input.replaceAll("[\\x00-\\x1F\\x7F\\r\\n]", " ");
+        // 2. Collapse multiple whitespace into a single space
+        sanitized = sanitized.replaceAll("\\s+", " ").trim();
+        // 3. Truncate
         if (sanitized.length() > MAX_USER_INPUT_LENGTH) {
             sanitized = sanitized.substring(0, MAX_USER_INPUT_LENGTH);
         }
-        // Escape quotes to prevent prompt structure breakout
+        // 4. Escape quotes & backslashes
         sanitized = sanitized.replace("\\", "\\\\").replace("\"", "'");
-        // Strip patterns that look like system/prompt override attempts
+        // 5. Escape ampersands first, then structural XML delimiter characters < and > to prevent tag breakout via pre-escaped entities
+        sanitized = sanitized.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+        // 6. Heuristic pattern filter (retained for defense-in-depth, but not relied upon)
         sanitized = sanitized.replaceAll("(?i)(IGNORE|OVERRIDE|FORGET|DISREGARD)(\\s+(ALL|PREVIOUS|ABOVE|PRIOR))+\\s+(INSTRUCTIONS?|RULES?|PROMPTS?)", "[filtered]");
         return sanitized;
     }
@@ -29,8 +42,8 @@ public class NutritionPromptBuilder {
 
     public String buildFoodLogPrompt(String text, String base64Image, String mealsContext, String defaultMealDesc, String contextFoods, String contextRecipes, int defaultMealIndex) {
         return "You are an expert nutritionist AI API for a food tracking app.\n" +
-                "The user describes what they ate (this could be a single meal or multiple meals / their entire day):\n" +
-                "\"" + sanitizeUserInput(text) + "\"\n\n" +
+                "The user describes what they ate (this could be a single meal or multiple meals / their entire day) delimited within data tags:\n" +
+                "<user_data>" + sanitizeUserInput(text) + "</user_data>\n\n" +
                 (base64Image != null && !base64Image.isEmpty() ? "USER ATTACHED AN IMAGE: Identify the food in the image, estimate its weight/grams, and use it as the primary log entry.\n\n" : "") +
                 "CONFIGURED MEALS IN THE APP (assign each food to an integer 'mealIndex'):\n" +
                 mealsContext + "\n" +
@@ -61,7 +74,8 @@ public class NutritionPromptBuilder {
     }
 
     public String buildSavedFoodPrompt(String text) {
-        return "You are an AI nutritionist API. The user wants to create a custom saved food based on this text: \"" + sanitizeUserInput(text) + "\".\n\n" +
+        return "You are an AI nutritionist API. The user wants to create a custom saved food based on this user input delimited within data tags:\n" +
+                "<user_data>" + sanitizeUserInput(text) + "</user_data>\n\n" +
                 "Your task is to identify the name of the food, the brand (if mentioned), and estimate its macros per 100g of RAW/UNCOOKED product (en crudo) based on standard nutritional databases. " +
                 "IMPORTANT: Always provide macros for the raw/uncooked version. For example, rice macros should be for dry raw rice, not cooked rice. Chicken macros should be for raw chicken, not cooked.\n" +
                 "If it's a known branded product, use its real macros. If the user specifies the macros in the text (e.g. 'tiene 20g de proteina y 100 kcal por 100g'), USE THOSE VALUES strictly.\n\n" +
@@ -98,14 +112,14 @@ public class NutritionPromptBuilder {
                 "- REMAINING BUDGET TODAY: " + Math.round(remKcal) + " kcal | " + remProtein + "g Protein | " + remCarbs + "g Carbs | " + remFat + "g Fat\n\n" +
                 "CONFIGURED MEALS IN THE APP:\n" +
                 mealsContext + "\n" +
-                "Default Meal suggested: index " + resolvedMealIndex + " (\"" + resolvedMealName + "\")\n\n" +
+                "Default Meal suggested: index " + resolvedMealIndex + " (\"" + sanitizeUserInput(resolvedMealName) + "\")\n\n" +
                 "USER'S SAVED FOODS:\n" +
                 contextFoods + "\n\n" +
                 "USER'S SAVED RECIPES:\n" +
                 contextRecipes + "\n\n" +
                 historyContext +
                 "USER REQUEST:\n" +
-                "\"" + sanitizeUserInput(promptText) + "\"\n\n" +
+                "<user_data>" + sanitizeUserInput(promptText) + "</user_data>\n\n" +
                 (base64Image != null && !base64Image.isEmpty() ? "USER ATTACHED AN IMAGE: Identify the food/label in the image, estimate its weight/macros if asked, and use it as the primary component of your meal options if applicable.\n\n" : "") +
                 "CRITICAL INSTRUCTIONS:\n" +
                 "1. NUTRITIONAL COACHING OVER COOKING: In 'reply', provide an expert, complete, and insightful nutritional breakdown in SPANISH. Explain the strategy behind the macros (satiety, muscle protein synthesis, glycemic impact, nocturnal digestion, micronutrients). DO NOT write lengthy cooking recipes or step-by-step culinary instructions.\n" +
@@ -125,7 +139,7 @@ public class NutritionPromptBuilder {
                 "      \"title\": \"Opción 1: Clásica con tus Favoritos\",\n" +
                 "      \"description\": \"Alta saciedad aprovechando tus alimentos habituales.\",\n" +
                 "      \"mealIndex\": " + resolvedMealIndex + ",\n" +
-                "      \"mealName\": \"" + resolvedMealName + "\",\n" +
+                "      \"mealName\": \"" + sanitizeUserInput(resolvedMealName) + "\",\n" +
                 "      \"suggestedFoods\": [\n" +
                 "        {\n" +
                 "          \"product\": \"Pechuga de pollo\",\n" +

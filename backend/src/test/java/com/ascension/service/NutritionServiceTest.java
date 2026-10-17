@@ -25,6 +25,9 @@ class NutritionServiceTest {
     @Mock
     private MealRepository mealRepository;
 
+    @Mock
+    private UserDataQuotaService userDataQuotaService;
+
     @InjectMocks
     private NutritionService nutritionService;
 

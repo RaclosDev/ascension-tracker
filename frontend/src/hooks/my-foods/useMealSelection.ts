@@ -2,17 +2,12 @@ import { useState } from 'react';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 import { PageFoodItem } from '../../types/myfoods';
-
-const getLocalISODate = () => {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().split('T')[0];
-};
+import { getLocalDateString } from '../../utils/dateHelper';
 
 export function useMealSelection(savedFoods: PageFoodItem[]) {
   const [selectedFoods, setSelectedFoods] = useState<Set<number>>(new Set());
   const [isMealSelectorOpen, setIsMealSelectorOpen] = useState(false);
-  const [mealSelectorDate, setMealSelectorDate] = useState(getLocalISODate());
+  const [mealSelectorDate, setMealSelectorDate] = useState(getLocalDateString());
   const [bulkQuantities, setBulkQuantities] = useState<Record<number, number>>({});
   const [isAddingToMeal, setIsAddingToMeal] = useState(false);
 
@@ -30,7 +25,7 @@ export function useMealSelection(savedFoods: PageFoodItem[]) {
       if (food) initial[id] = (food.servingSize || 0) > 0 ? food.servingSize! : 100;
     });
     setBulkQuantities(initial);
-    setMealSelectorDate(getLocalISODate());
+    setMealSelectorDate(getLocalDateString());
     setIsMealSelectorOpen(true);
   };
 

@@ -76,4 +76,82 @@ class WorkoutControllerTest {
 
         verify(customExerciseService).updateCustomExercise(eq(TEST_EMAIL), eq("ce-123"), any(CustomExerciseDTO.class));
     }
+
+    @Test
+    @DisplayName("GET /api/workouts with size=1000000 is rejected with 400 Bad Request")
+    void getHistory_whenSizeExceeds100_returns400BadRequest() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/workouts")
+                        .param("size", "1000000")
+                        .with(jwt().jwt(builder -> builder.claim("email", TEST_EMAIL))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    @DisplayName("GET /api/workouts with size=0 is rejected with 400 Bad Request")
+    void getHistory_whenSizeZero_returns400BadRequest() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/workouts")
+                        .param("size", "0")
+                        .with(jwt().jwt(builder -> builder.claim("email", TEST_EMAIL))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    @DisplayName("GET /api/workouts with page=-1 is rejected with 400 Bad Request")
+    void getHistory_whenPageNegative_returns400BadRequest() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/workouts")
+                        .param("page", "-1")
+                        .with(jwt().jwt(builder -> builder.claim("email", TEST_EMAIL))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    @DisplayName("GET /api/workouts/recent with negative since is rejected with 400 Bad Request")
+    void getRecent_whenSinceNegative_returns400BadRequest() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/workouts/recent")
+                        .param("since", "-500")
+                        .with(jwt().jwt(builder -> builder.claim("email", TEST_EMAIL))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    @DisplayName("GET /api/workouts with valid page and size returns 200 OK")
+    void getHistory_withValidParams_returns200Ok() throws Exception {
+        when(workoutService.getWorkoutHistory(eq(TEST_EMAIL), eq(1), eq(25)))
+                .thenReturn(org.springframework.data.domain.Page.empty());
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/workouts")
+                        .param("page", "1")
+                        .param("size", "25")
+                        .with(jwt().jwt(builder -> builder.claim("email", TEST_EMAIL))))
+                .andExpect(status().isOk());
+
+        verify(workoutService).getWorkoutHistory(eq(TEST_EMAIL), eq(1), eq(25));
+    }
+
+    @Test
+    @DisplayName("GET /api/workouts/stats returns 200 OK with aggregated metrics")
+    void getStats_returns200OkWithMetrics() throws Exception {
+        com.ascension.dto.WorkoutStatsDTO statsDto = com.ascension.dto.WorkoutStatsDTO.builder()
+                .totalWorkouts(5)
+                .totalDurationSeconds(12000)
+                .totalSets(30)
+                .totalVolume(8500.0)
+                .build();
+
+        when(workoutService.getStats(eq(TEST_EMAIL))).thenReturn(statsDto);
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/workouts/stats")
+                        .with(jwt().jwt(builder -> builder.claim("email", TEST_EMAIL))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalWorkouts").value(5))
+                .andExpect(jsonPath("$.totalDurationSeconds").value(12000))
+                .andExpect(jsonPath("$.totalSets").value(30))
+                .andExpect(jsonPath("$.totalVolume").value(8500.0));
+
+        verify(workoutService).getStats(eq(TEST_EMAIL));
+    }
 }

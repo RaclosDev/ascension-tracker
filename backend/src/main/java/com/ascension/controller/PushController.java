@@ -7,6 +7,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import com.ascension.util.SecurityUtils;
 
 import java.util.Map;
 
@@ -36,7 +37,8 @@ public class PushController {
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody SubscriptionRequest request
     ) {
-        String email = jwt.getClaimAsString("email");
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(401).build();
         Subscription sub = new Subscription(
                 request.endpoint,
                 new Subscription.Keys(request.keys.p256dh, request.keys.auth)
@@ -49,10 +51,18 @@ public class PushController {
      * Unsubscribe.
      */
     @PostMapping("/unsubscribe")
-    public ResponseEntity<Void> unsubscribe(@AuthenticationPrincipal Jwt jwt) {
-        String email = jwt.getClaimAsString("email");
-        pushService.removeSubscription(email);
-        pushService.cancelRestNotification(email);
+    public ResponseEntity<Void> unsubscribe(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody(required = false) UnsubscribeRequest request
+    ) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(401).build();
+        if (request != null && request.endpoint != null && !request.endpoint.isBlank()) {
+            pushService.removeSubscriptionByEndpoint(request.endpoint, email);
+        } else {
+            pushService.removeSubscription(email);
+            pushService.cancelRestNotification(email);
+        }
         return ResponseEntity.ok().build();
     }
 
@@ -64,7 +74,8 @@ public class PushController {
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody RestTimerRequest request
     ) {
-        String email = jwt.getClaimAsString("email");
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(401).build();
         if (request.delaySec > 0) {
             pushService.scheduleRestNotification(email, request.delaySec);
         }
@@ -76,7 +87,8 @@ public class PushController {
      */
     @PostMapping("/rest-timer/cancel")
     public ResponseEntity<Void> cancelRest(@AuthenticationPrincipal Jwt jwt) {
-        String email = jwt.getClaimAsString("email");
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(401).build();
         pushService.cancelRestNotification(email);
         return ResponseEntity.ok().build();
     }
@@ -111,6 +123,11 @@ public class PushController {
         @jakarta.validation.constraints.Min(1)
         @jakarta.validation.constraints.Max(3600)
         public int delaySec;
+    }
+
+    public static class UnsubscribeRequest {
+        @jakarta.validation.constraints.Size(max = 600)
+        public String endpoint;
     }
 }
 

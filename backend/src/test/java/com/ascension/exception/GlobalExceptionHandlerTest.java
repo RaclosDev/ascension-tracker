@@ -67,4 +67,15 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getError()).contains("tamaño máximo permitido");
     }
+
+    @Test
+    void handleUserDataQuotaExceededException_returnsTooManyRequests429() {
+        UserDataQuotaExceededException ex = new UserDataQuotaExceededException("Límite de entrenamientos alcanzado (1001/1000).");
+        ResponseEntity<ApiErrorResponse> response = handler.handleUserDataQuotaExceededException(ex);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getError()).contains("Límite de entrenamientos alcanzado");
+        assertThat(response.getBody().getTrace_id()).isNotBlank();
+    }
 }

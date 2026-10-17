@@ -22,5 +22,7 @@ public interface WeightEntryRepository extends JpaRepository<WeightEntry, Long> 
     boolean existsByUserEmailAndDate(String userEmail, LocalDate date);
     
     void deleteAllByUserEmail(String userEmail);
+
+    long countByUserEmail(String userEmail);
 }
 

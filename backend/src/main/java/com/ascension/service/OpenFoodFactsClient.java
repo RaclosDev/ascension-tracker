@@ -1,16 +1,24 @@
 package com.ascension.service;
 
+import com.ascension.config.ExternalApiProperties;
+import com.ascension.exception.ExternalApiException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestTemplate;
 
 import jakarta.annotation.PostConstruct;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 @Component
@@ -19,10 +27,10 @@ public class OpenFoodFactsClient {
     
     private final RestTemplateBuilder builder;
     private final ObjectMapper objectMapper;
-    private final com.ascension.config.ExternalApiProperties externalApiProperties;
+    private final ExternalApiProperties externalApiProperties;
     private RestTemplate restTemplate;
 
-    public OpenFoodFactsClient(RestTemplateBuilder builder, ObjectMapper objectMapper, com.ascension.config.ExternalApiProperties externalApiProperties) {
+    public OpenFoodFactsClient(RestTemplateBuilder builder, ObjectMapper objectMapper, ExternalApiProperties externalApiProperties) {
         this.builder = builder;
         this.objectMapper = objectMapper;
         this.externalApiProperties = externalApiProperties;
@@ -40,24 +48,24 @@ public class OpenFoodFactsClient {
     public JsonNode searchOpenFoodFacts(String query) {
         try {
             String offUrl = "https://es.openfoodfacts.org/cgi/search.pl?search_terms=" + 
-                java.net.URLEncoder.encode(query.trim(), "UTF-8") + "&search_simple=1&action=process&json=true&page_size=15";
+                URLEncoder.encode(query.trim(), StandardCharsets.UTF_8) + "&search_simple=1&action=process&json=true&page_size=15";
             ResponseEntity<String> offResponse;
             try {
-                offResponse = restTemplate.exchange(java.net.URI.create(offUrl), HttpMethod.GET, null, String.class);
-            } catch (org.springframework.web.client.RestClientException e) {
-                if (e instanceof org.springframework.web.client.RestClientResponseException rcre) {
+                offResponse = restTemplate.exchange(URI.create(offUrl), HttpMethod.GET, null, String.class);
+            } catch (RestClientException e) {
+                if (e instanceof RestClientResponseException rcre) {
                     log.error("OFF Search Error: {} - {}", rcre.getStatusCode(), rcre.getResponseBodyAsString());
                 } else {
                     log.error("OFF Search Network Error: {}", e.getMessage());
                 }
-                throw new com.ascension.exception.ExternalApiException("OpenFoodFacts", org.springframework.http.HttpStatus.BAD_GATEWAY, "External API Error", e);
+                throw new ExternalApiException("OpenFoodFacts", HttpStatus.BAD_GATEWAY, "External API Error", e);
             }
             return objectMapper.readTree(offResponse.getBody());
-        } catch (com.ascension.exception.ExternalApiException e) {
+        } catch (ExternalApiException e) {
             throw e;
         } catch (Exception e) {
             log.error("OFF Search Error", e);
-            throw new com.ascension.exception.ExternalApiException("OpenFoodFacts", org.springframework.http.HttpStatus.BAD_GATEWAY, "OFF Search Error: " + e.getMessage(), e);
+            throw new ExternalApiException("OpenFoodFacts", HttpStatus.BAD_GATEWAY, "OFF Search Error: " + e.getMessage(), e);
         }
     }
 
@@ -65,24 +73,24 @@ public class OpenFoodFactsClient {
         if (barcode == null || barcode.isBlank() || !barcode.matches("^\\d{6,14}$")) return "{\"product\": null}";
         try {
             String url = "https://world.openfoodfacts.org/api/v2/product/" + barcode + ".json";
-            java.net.URI uri = java.net.URI.create(url);
+            URI uri = URI.create(url);
             ResponseEntity<String> response;
             try {
                 response = restTemplate.exchange(uri, HttpMethod.GET, null, String.class);
-            } catch (org.springframework.web.client.RestClientException e) {
-                if (e instanceof org.springframework.web.client.RestClientResponseException rcre) {
+            } catch (RestClientException e) {
+                if (e instanceof RestClientResponseException rcre) {
                     log.error("Barcode Search Error: {} - {}", rcre.getStatusCode(), rcre.getResponseBodyAsString());
                 } else {
                     log.error("Barcode Search Network Error: {}", e.getMessage());
                 }
-                throw new com.ascension.exception.ExternalApiException("OpenFoodFacts", org.springframework.http.HttpStatus.BAD_GATEWAY, "External API Error", e);
+                throw new ExternalApiException("OpenFoodFacts", HttpStatus.BAD_GATEWAY, "External API Error", e);
             }
             return response.getBody();
-        } catch (com.ascension.exception.ExternalApiException e) {
+        } catch (ExternalApiException e) {
             throw e;
         } catch (Exception e) {
             log.error("Barcode Search Error", e);
-            throw new com.ascension.exception.ExternalApiException("OpenFoodFacts", org.springframework.http.HttpStatus.BAD_GATEWAY, "External API Error: " + e.getMessage(), e);
+            throw new ExternalApiException("OpenFoodFacts", HttpStatus.BAD_GATEWAY, "External API Error: " + e.getMessage(), e);
         }
     }
 }

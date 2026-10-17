@@ -4,7 +4,9 @@
     "lint-staged": "^17.5.1"
   },
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "sync:csp": "node scripts/generate-csp.js",
+    "check:csp": "node scripts/generate-csp.js --check"
   },
   "lint-staged": {
     "frontend/**/*.{js,jsx,ts,tsx}": [

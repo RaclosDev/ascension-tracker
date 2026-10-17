@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 public class StepsService {
 
     private final StepsEntryRepository stepsEntryRepository;
+    private final UserDataQuotaService userDataQuotaService;
 
     public List<StepsEntryDTO> getAllEntries(String userEmail) {
         return stepsEntryRepository.findAllByUserEmailOrderByDateAsc(userEmail).stream()
@@ -28,8 +29,13 @@ public class StepsService {
 
     @Transactional
     public StepsEntryDTO saveEntry(String userEmail, StepsEntryDTO dto) {
+        userDataQuotaService.acquireUserQuotaLock(userEmail);
         StepsEntry entry = stepsEntryRepository.findByUserEmailAndDate(userEmail, dto.getDate())
-                .orElse(new StepsEntry());
+                .orElse(null);
+        if (entry == null) {
+            userDataQuotaService.checkStepsEntryQuota(userEmail, 1);
+            entry = new StepsEntry();
+        }
         entry.setUserEmail(userEmail);
         entry.setDate(dto.getDate());
         entry.setSteps(dto.getSteps());

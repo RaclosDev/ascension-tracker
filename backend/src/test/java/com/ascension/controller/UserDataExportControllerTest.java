@@ -91,7 +91,55 @@ class UserDataExportControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/user/restore with valid JWT should call service and return summary")
+    @DisplayName("POST /api/user/restore without mode parameter should return 400 Bad Request")
+    void restoreUserData_withoutModeParam_returnsBadRequest400() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/user/restore")
+                .with(jwt().jwt(builder -> builder.claim("email", TEST_EMAIL)))
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"version\":\"1.0\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/user/restore with invalid mode parameter should return 400 Bad Request")
+    void restoreUserData_withInvalidMode_returnsBadRequest400() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/user/restore?mode=INVALID_MODE")
+                .with(jwt().jwt(builder -> builder.claim("email", TEST_EMAIL)))
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"version\":\"1.0\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/user/restore with out-of-range field in nested DTO should return 400 Bad Request")
+    void restoreUserData_withOutOfRangeFieldInNestedDto_returnsBadRequest400() throws Exception {
+        String invalidJson = """
+                {
+                  "version": "1.0",
+                  "foodLogs": [
+                    {
+                      "date": "2026-10-14",
+                      "mealIndex": 0,
+                      "product": "Avena",
+                      "quantity": -50.0,
+                      "kcal": -200.0
+                    }
+                  ]
+                }
+                """;
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/user/restore?mode=MERGE")
+                .with(jwt().jwt(builder -> builder.claim("email", TEST_EMAIL)))
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidJson))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/user/restore with valid JWT and explicit mode should call service and return summary")
     void restoreUserData_withValidJwt_returnsSummary() throws Exception {
         com.ascension.dto.UserDataRestoreSummaryDTO summary = com.ascension.dto.UserDataRestoreSummaryDTO.builder()
                 .mode("OVERWRITE")
@@ -102,14 +150,14 @@ class UserDataExportControllerTest {
                 .restoredAt(Instant.now())
                 .build();
 
-        when(userDataRestoreService.restoreUserData(eq(TEST_EMAIL), eq("OVERWRITE"), any(UserDataExportDTO.class)))
+        when(userDataRestoreService.restoreUserData(eq(TEST_EMAIL), eq(com.ascension.model.RestoreMode.OVERWRITE), eq(false), any(UserDataExportDTO.class)))
                 .thenReturn(summary);
 
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/user/restore?mode=OVERWRITE")
                 .with(jwt().jwt(builder -> builder.claim("email", TEST_EMAIL)))
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"version\":\"1.0\",\"userEmail\":\"attacker@evil.com\"}"))
+                .content("{\"version\":\"1.0\",\"userEmail\":\"athlete@example.com\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.mode").value("OVERWRITE"))
                 .andExpect(jsonPath("$.workoutsRestored").value(5))
@@ -117,6 +165,6 @@ class UserDataExportControllerTest {
                 .andExpect(jsonPath("$.foodLogsRestored").value(10))
                 .andExpect(jsonPath("$.settingsRestored").value(true));
 
-        verify(userDataRestoreService).restoreUserData(eq(TEST_EMAIL), eq("OVERWRITE"), any(UserDataExportDTO.class));
+        verify(userDataRestoreService).restoreUserData(eq(TEST_EMAIL), eq(com.ascension.model.RestoreMode.OVERWRITE), eq(false), any(UserDataExportDTO.class));
     }
 }

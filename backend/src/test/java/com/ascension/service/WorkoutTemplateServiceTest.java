@@ -29,6 +29,9 @@ class WorkoutTemplateServiceTest {
     @Mock
     private WorkoutTemplateRepository workoutTemplateRepository;
 
+    @Mock
+    private UserDataQuotaService userDataQuotaService;
+
     @InjectMocks
     private WorkoutTemplateService workoutTemplateService;
 

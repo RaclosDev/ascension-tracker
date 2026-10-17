@@ -26,11 +26,11 @@ public class UserDataExportController {
 
     @GetMapping("/export")
     public ResponseEntity<UserDataExportDTO> exportUserData(@AuthenticationPrincipal Jwt jwt) {
-        if (jwt == null || jwt.getClaimAsString("email") == null) {
+        String email = com.ascension.util.SecurityUtils.extractEmail(jwt);
+        if (email == null) {
             return ResponseEntity.status(401).build();
         }
 
-        String email = jwt.getClaimAsString("email");
         UserDataExportDTO exportDTO = userDataExportService.exportUserData(email);
 
         String dateStr = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -45,14 +45,15 @@ public class UserDataExportController {
     @PostMapping("/restore")
     public ResponseEntity<UserDataRestoreSummaryDTO> restoreUserData(
             @AuthenticationPrincipal Jwt jwt,
-            @RequestParam(defaultValue = "OVERWRITE") String mode,
+            @RequestParam com.ascension.model.RestoreMode mode,
+            @RequestParam(required = false, defaultValue = "false") boolean confirmEmpty,
             @Valid @RequestBody UserDataExportDTO backup) {
-        if (jwt == null || jwt.getClaimAsString("email") == null) {
+        String email = com.ascension.util.SecurityUtils.extractEmail(jwt);
+        if (email == null) {
             return ResponseEntity.status(401).build();
         }
 
-        String email = jwt.getClaimAsString("email");
-        UserDataRestoreSummaryDTO summary = userDataRestoreService.restoreUserData(email, mode, backup);
+        UserDataRestoreSummaryDTO summary = userDataRestoreService.restoreUserData(email, mode, confirmEmpty, backup);
         return ResponseEntity.ok(summary);
     }
 }

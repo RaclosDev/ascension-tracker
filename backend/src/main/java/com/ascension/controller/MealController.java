@@ -10,9 +10,13 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import com.ascension.util.SecurityUtils;
+import org.springframework.validation.annotation.Validated;
+
 import java.util.List;
 
 @Slf4j
+@Validated
 @RestController
 @RequestMapping("/api/nutrition/meals")
 @RequiredArgsConstructor
@@ -22,32 +26,37 @@ public class MealController {
 
     @GetMapping
     public ResponseEntity<List<MealDTO>> getMeals(@AuthenticationPrincipal Jwt jwt) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(401).build();
         return ResponseEntity.ok(nutritionService.getMeals(userEmail));
     }
 
     @PutMapping
     public ResponseEntity<List<MealDTO>> updateMeals(@Valid @RequestBody List<MealDTO> meals, @AuthenticationPrincipal Jwt jwt) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(401).build();
         return ResponseEntity.ok(nutritionService.updateMeals(meals, userEmail));
     }
 
     @PostMapping
     public ResponseEntity<MealDTO> addMeal(@Valid @RequestBody MealDTO meal, @AuthenticationPrincipal Jwt jwt) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(401).build();
         return ResponseEntity.ok(nutritionService.addMeal(meal, userEmail));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMeal(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(401).build();
         nutritionService.deleteMeal(id, userEmail);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/reset")
     public ResponseEntity<List<MealDTO>> resetDefaultMeals(@AuthenticationPrincipal Jwt jwt) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = SecurityUtils.extractEmail(jwt);
+        if (userEmail == null) return ResponseEntity.status(401).build();
         return ResponseEntity.ok(nutritionService.resetDefaultMeals(userEmail));
     }
 }

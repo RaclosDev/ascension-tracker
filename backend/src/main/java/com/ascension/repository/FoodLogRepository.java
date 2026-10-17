@@ -19,5 +19,7 @@ public interface FoodLogRepository extends JpaRepository<FoodLog, Long> {
 
     @org.springframework.data.jpa.repository.Query("SELECT f.date, SUM(f.kcal) FROM FoodLog f WHERE f.userEmail = ?1 GROUP BY f.date ORDER BY f.date ASC")
     List<Object[]> findDailyCaloriesByUserEmail(String userEmail);
+
+    long countByUserEmail(String userEmail);
 }
 

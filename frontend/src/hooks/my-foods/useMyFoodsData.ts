@@ -58,7 +58,7 @@ export function useMyFoodsData() {
       fetchData();
     } catch (err) {
       toast.error('Error al eliminar');
-      console.error(err);
+      console.error('Error al eliminar receta:', err instanceof Error ? err.message : String(err));
     }
   };
 

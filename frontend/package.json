@@ -11,7 +11,9 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "sync:csp": "node ../scripts/generate-csp.js",
+    "check:csp": "node ../scripts/generate-csp.js --check"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

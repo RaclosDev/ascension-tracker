@@ -212,7 +212,7 @@ export function useNutritionDiary() {
       toast.dismiss(loadingToast);
       toast.success('¡Comida copiada!');
     } catch (err: unknown) {
-      console.error(err);
+      console.error('Error al copiar la comida:', err instanceof Error ? err.message : String(err));
       toast.dismiss(loadingToast);
       toast.error('Error al copiar la comida');
     }
@@ -246,7 +246,7 @@ export function useNutritionDiary() {
         hasPortions = p && p.length > 0;
       }
     } catch (e: unknown) {
-      console.error(e);
+      console.error('Error al analizar portionsJson:', e instanceof Error ? e.message : String(e));
     }
     setEditInputMode(hasPortions ? 'portions' : 'grams');
     const isZeroQty = log.quantity <= 0;

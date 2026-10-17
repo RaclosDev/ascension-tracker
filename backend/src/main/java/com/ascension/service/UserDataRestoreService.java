@@ -3,8 +3,9 @@ package com.ascension.service;
 import com.ascension.dto.*;
 import com.ascension.model.*;
 import com.ascension.repository.*;
-import lombok.RequiredArgsConstructor;
+import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +15,6 @@ import java.util.*;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserDataRestoreService {
 
     private final JdbcTemplate jdbcTemplate;
@@ -28,11 +28,81 @@ public class UserDataRestoreService {
     private final StepsEntryRepository stepsEntryRepository;
     private final WeightEntryRepository weightEntryRepository;
     private final UserSettingsRepository userSettingsRepository;
+    private final UserDataQuotaService userDataQuotaService;
+    private final EntityManager entityManager;
+
+    @Autowired
+    public UserDataRestoreService(
+            JdbcTemplate jdbcTemplate,
+            WorkoutRepository workoutRepository,
+            CustomExerciseRepository customExerciseRepository,
+            WorkoutTemplateRepository workoutTemplateRepository,
+            FoodLogRepository foodLogRepository,
+            MealRepository mealRepository,
+            RecipeRepository recipeRepository,
+            SavedFoodRepository savedFoodRepository,
+            StepsEntryRepository stepsEntryRepository,
+            WeightEntryRepository weightEntryRepository,
+            UserSettingsRepository userSettingsRepository,
+            UserDataQuotaService userDataQuotaService,
+            @Autowired(required = false) EntityManager entityManager
+    ) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.workoutRepository = workoutRepository;
+        this.customExerciseRepository = customExerciseRepository;
+        this.workoutTemplateRepository = workoutTemplateRepository;
+        this.foodLogRepository = foodLogRepository;
+        this.mealRepository = mealRepository;
+        this.recipeRepository = recipeRepository;
+        this.savedFoodRepository = savedFoodRepository;
+        this.stepsEntryRepository = stepsEntryRepository;
+        this.weightEntryRepository = weightEntryRepository;
+        this.userSettingsRepository = userSettingsRepository;
+        this.userDataQuotaService = userDataQuotaService;
+        this.entityManager = entityManager;
+    }
+
+    public UserDataRestoreService(
+            JdbcTemplate jdbcTemplate,
+            WorkoutRepository workoutRepository,
+            CustomExerciseRepository customExerciseRepository,
+            WorkoutTemplateRepository workoutTemplateRepository,
+            FoodLogRepository foodLogRepository,
+            MealRepository mealRepository,
+            RecipeRepository recipeRepository,
+            SavedFoodRepository savedFoodRepository,
+            StepsEntryRepository stepsEntryRepository,
+            WeightEntryRepository weightEntryRepository,
+            UserSettingsRepository userSettingsRepository,
+            UserDataQuotaService userDataQuotaService
+    ) {
+        this(jdbcTemplate, workoutRepository, customExerciseRepository, workoutTemplateRepository,
+                foodLogRepository, mealRepository, recipeRepository, savedFoodRepository,
+                stepsEntryRepository, weightEntryRepository, userSettingsRepository,
+                userDataQuotaService, null);
+    }
+
+    private void flushAndClearBatch(int count) {
+        if (entityManager != null && count % 100 == 0) {
+            entityManager.flush();
+            entityManager.clear();
+        }
+    }
+
+    private void finalFlushAndClear() {
+        if (entityManager != null) {
+            entityManager.flush();
+            entityManager.clear();
+        }
+    }
 
     @Transactional
-    public UserDataRestoreSummaryDTO restoreUserData(String userEmail, String mode, UserDataExportDTO backup) {
+    public UserDataRestoreSummaryDTO restoreUserData(String userEmail, RestoreMode mode, boolean confirmEmpty, UserDataExportDTO backup) {
         if (userEmail == null || userEmail.trim().isEmpty()) {
             throw new IllegalArgumentException("El email de usuario autenticado es obligatorio");
+        }
+        if (mode == null) {
+            throw new IllegalArgumentException("El modo de restauración es obligatorio (MERGE o OVERWRITE)");
         }
         if (backup == null) {
             throw new IllegalArgumentException("El archivo de copia de seguridad no puede ser nulo");
@@ -41,10 +111,16 @@ public class UserDataRestoreService {
             throw new IllegalArgumentException("Versión de copia de seguridad incompatible: " + backup.getVersion());
         }
 
-        boolean isOverwrite = !"MERGE".equalsIgnoreCase(mode);
-        String appliedMode = isOverwrite ? "OVERWRITE" : "MERGE";
+        boolean isOverwrite = (mode == RestoreMode.OVERWRITE);
+        String appliedMode = mode.name();
 
-        log.info("Iniciando restauración de datos en modo {} para usuario: {}", appliedMode, userEmail);
+        if (isOverwrite && isBackupEmpty(backup) && !confirmEmpty) {
+            throw new IllegalArgumentException("No se puede realizar OVERWRITE con un backup completamente vacío sin confirmación explícita (confirmEmpty=true).");
+        }
+
+        userDataQuotaService.checkRestoreQuotas(userEmail, mode, backup);
+
+        log.info("Iniciando restauración de datos en modo {} para usuario: {}", appliedMode, com.ascension.util.PiiMasker.maskEmail(userEmail));
 
         if (isOverwrite) {
             wipeUserData(userEmail);
@@ -82,7 +158,7 @@ public class UserDataRestoreService {
         boolean settingsRestored = restoreUserSettings(userEmail, backup.getUserSettings(), isOverwrite);
 
         log.info("Restauración completada para {}: {} entrenamientos, {} ejercicios, {} comidas",
-                userEmail, workoutsRestored, customExercisesRestored, foodLogsRestored);
+                com.ascension.util.PiiMasker.maskEmail(userEmail), workoutsRestored, customExercisesRestored, foodLogsRestored);
 
         return UserDataRestoreSummaryDTO.builder()
                 .mode(appliedMode)
@@ -100,8 +176,37 @@ public class UserDataRestoreService {
                 .build();
     }
 
+    @Transactional
+    public UserDataRestoreSummaryDTO restoreUserData(String userEmail, String mode, UserDataExportDTO backup) {
+        if (mode == null || mode.trim().isEmpty()) {
+            throw new IllegalArgumentException("El modo de restauración es obligatorio (MERGE o OVERWRITE)");
+        }
+        RestoreMode restoreMode;
+        try {
+            restoreMode = RestoreMode.valueOf(mode.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Modo de restauración inválido: " + mode);
+        }
+        return restoreUserData(userEmail, restoreMode, false, backup);
+    }
+
+    public boolean isBackupEmpty(UserDataExportDTO backup) {
+        if (backup == null) return true;
+        boolean hasWorkouts = backup.getWorkouts() != null && !backup.getWorkouts().isEmpty();
+        boolean hasExercises = backup.getCustomExercises() != null && !backup.getCustomExercises().isEmpty();
+        boolean hasTemplates = backup.getWorkoutTemplates() != null && !backup.getWorkoutTemplates().isEmpty();
+        boolean hasFoodLogs = backup.getFoodLogs() != null && !backup.getFoodLogs().isEmpty();
+        boolean hasMeals = backup.getMeals() != null && !backup.getMeals().isEmpty();
+        boolean hasRecipes = backup.getRecipes() != null && !backup.getRecipes().isEmpty();
+        boolean hasSavedFoods = backup.getSavedFoods() != null && !backup.getSavedFoods().isEmpty();
+        boolean hasSteps = backup.getStepsEntries() != null && !backup.getStepsEntries().isEmpty();
+        boolean hasWeights = backup.getWeightEntries() != null && !backup.getWeightEntries().isEmpty();
+        boolean hasSettings = backup.getUserSettings() != null;
+        return !(hasWorkouts || hasExercises || hasTemplates || hasFoodLogs || hasMeals || hasRecipes || hasSavedFoods || hasSteps || hasWeights || hasSettings);
+    }
+
     private void wipeUserData(String userEmail) {
-        log.warn("Limpiando datos existentes de usuario para restauración: {}", userEmail);
+        log.warn("Limpiando datos existentes de usuario para restauración: {}", com.ascension.util.PiiMasker.maskEmail(userEmail));
 
         jdbcTemplate.update("DELETE FROM workout_sets WHERE workout_exercise_id IN (SELECT id FROM workout_exercises WHERE workout_id IN (SELECT id FROM workouts WHERE user_email = ?))", userEmail);
         jdbcTemplate.update("DELETE FROM workout_exercises WHERE workout_id IN (SELECT id FROM workouts WHERE user_email = ?)", userEmail);
@@ -175,11 +280,7 @@ public class UserDataRestoreService {
 
         Set<Long> existingStartTimes = new HashSet<>();
         if (!isOverwrite) {
-            for (Workout w : workoutRepository.findAllByUserEmailOrderByStartedAtDesc(userEmail)) {
-                if (w.getStartedAt() != null) {
-                    existingStartTimes.add(w.getStartedAt());
-                }
-            }
+            existingStartTimes.addAll(workoutRepository.findStartedAtByUserEmail(userEmail));
         }
 
         int count = 0;
@@ -226,8 +327,8 @@ public class UserDataRestoreService {
                                     .workoutExercise(we)
                                     .orderIndex(setOrder++)
                                     .type(sDTO.getType() != null ? sDTO.getType() : "normal")
-                                    .weight(sDTO.getWeight())
-                                    .reps(sDTO.getReps())
+                                    .weight(parseBigDecimal(sDTO.getWeight()))
+                                    .reps(parseBigDecimal(sDTO.getReps()))
                                     .distance(sDTO.getDistance())
                                     .duration(sDTO.getDuration())
                                     .rpe(sDTO.getRpe())
@@ -245,7 +346,9 @@ public class UserDataRestoreService {
                 existingStartTimes.add(dto.getStartedAt());
             }
             count++;
+            flushAndClearBatch(count);
         }
+        finalFlushAndClear();
         return count;
     }
 
@@ -330,7 +433,9 @@ public class UserDataRestoreService {
             foodLogRepository.save(logEntry);
             existingKeys.add(key);
             count++;
+            flushAndClearBatch(count);
         }
+        finalFlushAndClear();
         return count;
     }
 
@@ -345,11 +450,21 @@ public class UserDataRestoreService {
             }
         }
 
+        Set<String> processedNames = new HashSet<>();
         int count = 0;
         for (MealDTO dto : dtos) {
+            if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+                continue;
+            }
+            String normalizedName = dto.getName().trim().toLowerCase();
+            if (processedNames.contains(normalizedName)) {
+                continue;
+            }
+            processedNames.add(normalizedName);
+
             Meal meal = Meal.builder()
                     .userEmail(userEmail)
-                    .name(dto.getName())
+                    .name(dto.getName().trim())
                     .icon(dto.getIcon())
                     .proteinPct(dto.getProteinPct())
                     .fixedProtein(dto.getFixedProtein())
@@ -445,7 +560,9 @@ public class UserDataRestoreService {
             savedFoodRepository.save(savedFood);
             existingKeys.add(key);
             count++;
+            flushAndClearBatch(count);
         }
+        finalFlushAndClear();
         return count;
     }
 
@@ -476,7 +593,9 @@ public class UserDataRestoreService {
             stepsEntryRepository.save(entry);
             existingDates.add(dto.getDate());
             count++;
+            flushAndClearBatch(count);
         }
+        finalFlushAndClear();
         return count;
     }
 
@@ -508,7 +627,9 @@ public class UserDataRestoreService {
             weightEntryRepository.save(entry);
             existingDates.add(dto.getDate());
             count++;
+            flushAndClearBatch(count);
         }
+        finalFlushAndClear();
         return count;
     }
 
@@ -560,6 +681,15 @@ public class UserDataRestoreService {
         if (val == null || val.trim().isEmpty()) return null;
         try {
             return Integer.parseInt(val.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private java.math.BigDecimal parseBigDecimal(String val) {
+        if (val == null || val.trim().isEmpty()) return null;
+        try {
+            return new java.math.BigDecimal(val.trim().replace(',', '.')).setScale(2, java.math.RoundingMode.HALF_UP);
         } catch (NumberFormatException e) {
             return null;
         }
