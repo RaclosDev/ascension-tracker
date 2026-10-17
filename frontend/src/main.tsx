@@ -2,7 +2,6 @@ import React, { StrictMode } from 'react';
 import ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import App from './App';
-import './tailwind.css';
 import './index.css';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -12,7 +11,6 @@ if (import.meta.env.DEV) {
     axe.default(React, ReactDOM, 1000);
   });
 }
-
 
 // Initialize theme before rendering to avoid FOUC
 const savedTheme = localStorage.getItem('ascension_theme') || 'brutal';
