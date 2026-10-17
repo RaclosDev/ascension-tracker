@@ -1,8 +1,32 @@
 @import "tailwindcss";
 @import "tailwindcss/theme" theme(reference);
-@theme { --color-background: var(--bg-main); --color-foreground: var(--text-main); --color-card: var(--bg-card); --color-muted: var(--bg-card-hover); --color-muted-foreground: var(--text-muted); --color-primary: var(--accent-red); --color-primary-foreground: #fff; --color-border: var(--border-color); --color-success: #10b981; }
+@source "./components";
+@source "./pages";
+@source "./context";
+@source "./hooks";
+@source "./lib";
+@source "../index.html";
+
+@theme {
+  --font-display: "Oswald", sans-serif;
+  --font-main: "Inter", sans-serif;
+
+  --color-background: var(--bg-main);
+  --color-foreground: var(--text-main);
+  --color-card: var(--bg-card);
+  --color-muted: var(--bg-card-hover);
+  --color-muted-foreground: var(--text-muted);
+  --color-primary: var(--accent-red);
+  --color-primary-foreground: #fff;
+  --color-secondary: var(--bg-card-hover);
+  --color-secondary-foreground: var(--text-main);
+  --color-border: var(--border-color);
+  --color-success: var(--accent-primary);
+}
 
 :root {
+  --font-display: 'Oswald', sans-serif;
+  --font-main: 'Inter', sans-serif;
   /* Background */
   --bg-primary: #000000;
   --bg-secondary: #121212;
@@ -71,10 +95,10 @@
   --sidebar-width: 260px;
 }
 
-*, *::before, *::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
 }
 
 *:focus {
@@ -86,6 +110,8 @@
   outline-offset: 1px;
 }
 html {
+  margin: 0;
+  padding: 0;
   font-size: 16px;
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
@@ -94,6 +120,8 @@ html {
   overscroll-behavior-y: none;
 }
 body {
+  margin: 0;
+  padding: 0;
   font-family: var(--font-main);
   background: var(--bg-primary);
   color: var(--text-primary);
@@ -1416,6 +1444,7 @@ input[type=number]::-webkit-outer-spin-button {
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-md);
+  pointer-events: auto;
 }
 .mobile-top-logo {
   position: absolute;
@@ -1437,11 +1466,11 @@ input[type=number]::-webkit-outer-spin-button {
 .mobile-bottom-nav {
   display: none;
   position: fixed;
-  bottom: env(safe-area-inset-bottom);
+  bottom: calc(env(safe-area-inset-bottom, 12px) + 8px);
   left: 1rem;
   right: 1rem;
   height: 64px;
-  background: rgba(28, 28, 30, 0.45);
+  background: rgba(18, 18, 20, 0.92);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1511,6 +1540,10 @@ input[type=number]::-webkit-outer-spin-button {
   opacity: 0;
   transition: opacity var(--transition-base);
   pointer-events: none;
+}
+
+.live-session-minimize-btn {
+  display: flex;
 }
 
 @media (max-width: 768px) {
@@ -2018,7 +2051,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
 
 .chat-history-scroll {
   max-height: 540px;
-  min-height: 220px;
+  min-height: 80px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -3175,13 +3208,13 @@ button, a, input, select, textarea, [role=button], [onclick] {
   background: rgba(255, 255, 255, 0.03);
 }
 .workout-exercise-card .set-row.set-completed {
-  background: rgba(52, 211, 153, 0.08);
-  border-color: rgba(52, 211, 153, 0.2);
+  background: rgba(0, 133, 255, 0.05);
+  border-color: rgba(0, 133, 255, 0.18);
 }
 .workout-exercise-card .set-row.set-completed .set-input {
-  background: rgba(52, 211, 153, 0.1);
-  border-color: rgba(52, 211, 153, 0.35);
-  color: var(--color-success);
+  background: rgba(0, 133, 255, 0.08);
+  border-color: rgba(0, 133, 255, 0.22);
+  color: var(--accent-primary-light, #38bdf8);
 }
 .workout-exercise-card {
   /* Set Type Badge (1, 2, W, D, F) */
@@ -3315,18 +3348,15 @@ button, a, input, select, textarea, [role=button], [onclick] {
   }
 }
 .workout-exercise-card .set-check-btn:hover {
-  border-color: var(--color-success);
-  color: var(--color-success);
-  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
 }
 .workout-exercise-card .set-check-btn.checked {
-  background: var(--color-success);
-  border-color: var(--color-success);
-  color: #052e16;
-  font-weight: 900;
-  box-shadow: 0 4px 16px rgba(52, 211, 153, 0.45);
-  transform: scale(1.02);
-  animation: checkPulse 0.3s ease-out;
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+  color: var(--accent-text, #ffffff) !important;
+  font-weight: 700;
+  box-shadow: 0 0 14px var(--accent-glow) !important;
 }
 .workout-exercise-card {
   /* Delete Set Button */
@@ -3990,8 +4020,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   scrollbar-width: thin;
   scrollbar-color: var(--border-medium) var(--bg-primary);
 }
-
-/*# sourceMappingURL=index.css.map */
 
 /* Bulk Action Bar Mobile Enhancements */
 .bulk-action-bar {
@@ -4759,7 +4787,62 @@ button, a, input, select, textarea, [role=button], [onclick] {
   align-items: center;
   gap: 0.5rem;
 }
+.exercise-card-variant-badge {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+.exercise-card-variant-badge:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+}
+.exercise-card-meta-dot {
+  color: var(--border-medium);
+  font-size: 0.75rem;
+  line-height: 1;
+  user-select: none;
+  opacity: 0.6;
+}
+.exercise-card-rest-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  padding: 0.2rem 0.55rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  line-height: 1.2;
+}
+.exercise-card-rest-pill:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px var(--accent-glow, rgba(0, 133, 255, 0.2));
+}
+.exercise-card-rest-pill:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-glow, rgba(0, 133, 255, 0.25));
+}
+.exercise-card-rest-icon {
+  color: var(--accent-primary-light, #339cff);
+  opacity: 0.85;
+  flex-shrink: 0;
+}
 .exercise-card-rest-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   background: transparent;
   border: none;
   font-size: 0.72rem;
@@ -4769,29 +4852,46 @@ button, a, input, select, textarea, [role=button], [onclick] {
   cursor: pointer;
   padding: 0;
   font-family: var(--font-main);
+  line-height: 1.2;
 }
 .exercise-card-rest-select option {
-  background: var(--bg-primary);
+  background: #1C1C1E;
+  color: #FFFFFF;
+  padding: 0.5rem;
+}
+.exercise-card-rest-chevron {
+  pointer-events: none;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  opacity: 0.7;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+.exercise-card-rest-pill:hover .exercise-card-rest-chevron {
+  color: var(--text-primary);
+  opacity: 1;
 }
 .exercise-card-actions {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0.25rem;
+  position: relative;
 }
 .exercise-card-action-btn {
   background: none;
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 0.3rem;
-  border-radius: 6px;
-  transition: all 0.12s ease;
+  padding: 0.4rem;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .exercise-card-action-btn:hover {
-  background: var(--bg-glass-strong);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
 }
 .exercise-card-action-btn.danger {
@@ -4799,11 +4899,58 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 .exercise-card-action-btn.danger:hover {
   color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.12);
 }
 .exercise-card-action-btn:disabled {
   opacity: 0.25;
   cursor: default;
+}
+
+.exercise-card-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 170px;
+  background: rgba(28, 28, 30, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
+  padding: 0.35rem;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.exercise-card-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  text-align: left;
+}
+.exercise-card-menu-item:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+.exercise-card-menu-item:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.exercise-card-menu-item.danger {
+  color: #ef4444;
+}
+.exercise-card-menu-item.danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
 }
 
 /* Set grid improvements */
@@ -4831,21 +4978,26 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 
 .set-type-btn {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg-secondary);
   border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   cursor: pointer;
   color: var(--text-primary);
   font-family: var(--font-main);
   transition: all 0.12s ease;
+}
+.set-type-btn:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
 }
 .set-type-btn.warmup { color: var(--text-secondary); }
 .set-type-btn.failure { color: #ef4444; }
@@ -4859,11 +5011,17 @@ button, a, input, select, textarea, [role=button], [onclick] {
   border: 1px solid var(--border-subtle);
   background: var(--bg-secondary);
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-family: var(--font-main);
+  font-variant-numeric: tabular-nums;
   outline: none;
   transition: all 0.15s ease;
   min-height: 40px;
+}
+.set-input::placeholder {
+  color: rgba(255, 255, 255, 0.32);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 .set-input:focus {
   border-color: var(--accent-primary);
@@ -4876,26 +5034,43 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 
 .set-check-btn {
-  width: 40px;
+  width: 42px;
   height: 40px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   cursor: pointer;
-  transition: all 0.15s ease;
-  background: transparent;
-  color: var(--text-muted);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #9CA3AF;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 .set-check-btn:hover {
-  color: var(--accent-primary);
-  background: var(--accent-glow);
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.09);
+  color: #FFFFFF;
+  transform: scale(1.02);
+}
+.set-check-btn:active {
+  transform: scale(0.92);
 }
 .set-check-btn.checked {
-  background: var(--accent-primary);
-  color: var(--accent-text, white);
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+  color: var(--accent-text, #ffffff) !important;
+  box-shadow: 0 0 14px var(--accent-glow) !important;
+}
+.set-check-btn.checked:hover {
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+  color: var(--accent-text, #ffffff) !important;
+  filter: brightness(1.1);
+}
+.set-check-btn.checked:active {
+  transform: scale(0.94);
 }
 
 .add-set-btn {
@@ -4928,7 +5103,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 16px));
 }
 .workout-finish-btn {
   width: 100%;
@@ -5247,7 +5422,7 @@ input[type="range"]:active::-moz-range-thumb {
 
 .active-workout-banner:hover {
   transform: translateY(-2px);
-  border-color: rgba(16, 185, 129, 0.4);
+  border-color: var(--accent-shadow);
 }
 
 @keyframes slideUpFade {
@@ -5285,8 +5460,8 @@ input[type="range"]:active::-moz-range-thumb {
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-shadow);
   flex-shrink: 0;
 }
 
@@ -5297,8 +5472,8 @@ input[type="range"]:active::-moz-range-thumb {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
+  background: var(--accent-primary);
+  box-shadow: 0 0 8px var(--accent-primary);
   animation: pulseDot 1.5s infinite;
 }
 
@@ -5331,7 +5506,7 @@ input[type="range"]:active::-moz-range-thumb {
 .active-workout-time {
   font-size: 0.78rem;
   font-weight: 500;
-  color: #10b981;
+  color: var(--accent-primary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -5362,9 +5537,9 @@ input[type="range"]:active::-moz-range-thumb {
   gap: 0.3rem;
   padding: 0.35rem 0.75rem;
   border-radius: 8px;
-  background: rgba(16, 185, 129, 0.2);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  color: #34d399;
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-shadow);
+  color: var(--accent-primary-light);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -5372,7 +5547,7 @@ input[type="range"]:active::-moz-range-thumb {
 }
 
 .active-workout-resume-btn:hover {
-  background: rgba(16, 185, 129, 0.3);
+  background: var(--accent-shadow);
   transform: translateY(-1px);
 }
 
@@ -5385,5 +5560,96 @@ input[type="range"]:active::-moz-range-thumb {
     width: 100%;
   }
 }
+
+/* ==========================================================================
+   Mobile & PWA Sensory Elevation: View Transitions, Haptics & Micro-Physics
+   ========================================================================== */
+
+/* 1. Native View Transitions API */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: 160ms cubic-bezier(0.4, 0, 1, 1) both vtPageFadeOut;
+}
+
+::view-transition-new(root) {
+  animation: 200ms cubic-bezier(0, 0, 0.2, 1) both vtPageFadeIn;
+}
+
+@keyframes vtPageFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+
+@keyframes vtPageFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(1.015);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* 2. Tactile Micro-Physics & Button Press */
+button,
+[role="button"],
+.clickable,
+.tap-effect {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-press {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: transform 120ms cubic-bezier(0.2, 0, 0, 1), filter 120ms ease, opacity 120ms ease;
+  will-change: transform;
+}
+
+.btn-press:active {
+  transform: scale(0.965);
+  filter: brightness(0.92);
+}
+
+.btn-press:disabled {
+  transform: none !important;
+  filter: none !important;
+}
+
+/* 3. Dark Glassmorphism 2.0 Utilities */
+.glass-panel-elevated {
+  background: rgba(22, 22, 24, 0.72);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
 
 
