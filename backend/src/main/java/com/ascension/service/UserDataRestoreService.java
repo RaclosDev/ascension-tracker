@@ -4,8 +4,8 @@ import com.ascension.dto.*;
 import com.ascension.model.*;
 import com.ascension.repository.*;
 import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +15,6 @@ import java.util.*;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserDataRestoreService {
 
     private final JdbcTemplate jdbcTemplate;
@@ -31,6 +30,37 @@ public class UserDataRestoreService {
     private final UserSettingsRepository userSettingsRepository;
     private final UserDataQuotaService userDataQuotaService;
     private final EntityManager entityManager;
+
+    @Autowired
+    public UserDataRestoreService(
+            JdbcTemplate jdbcTemplate,
+            WorkoutRepository workoutRepository,
+            CustomExerciseRepository customExerciseRepository,
+            WorkoutTemplateRepository workoutTemplateRepository,
+            FoodLogRepository foodLogRepository,
+            MealRepository mealRepository,
+            RecipeRepository recipeRepository,
+            SavedFoodRepository savedFoodRepository,
+            StepsEntryRepository stepsEntryRepository,
+            WeightEntryRepository weightEntryRepository,
+            UserSettingsRepository userSettingsRepository,
+            UserDataQuotaService userDataQuotaService,
+            @Autowired(required = false) EntityManager entityManager
+    ) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.workoutRepository = workoutRepository;
+        this.customExerciseRepository = customExerciseRepository;
+        this.workoutTemplateRepository = workoutTemplateRepository;
+        this.foodLogRepository = foodLogRepository;
+        this.mealRepository = mealRepository;
+        this.recipeRepository = recipeRepository;
+        this.savedFoodRepository = savedFoodRepository;
+        this.stepsEntryRepository = stepsEntryRepository;
+        this.weightEntryRepository = weightEntryRepository;
+        this.userSettingsRepository = userSettingsRepository;
+        this.userDataQuotaService = userDataQuotaService;
+        this.entityManager = entityManager;
+    }
 
     public UserDataRestoreService(
             JdbcTemplate jdbcTemplate,

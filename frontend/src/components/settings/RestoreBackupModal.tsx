@@ -42,7 +42,7 @@ export function RestoreBackupModal({ isOpen, onClose }: RestoreBackupModalProps)
   const [fileName, setFileName] = useState<string | null>(null);
   const [preview, setPreview] = useState<BackupPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [restoreMode, setRestoreMode] = useState<'OVERWRITE' | 'MERGE'>('MERGE');
+  const [restoreMode, setRestoreMode] = useState<'OVERWRITE' | 'MERGE'>('OVERWRITE');
   const [confirmOverwrite, setConfirmOverwrite] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
