@@ -1,6 +1,22 @@
 import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { Html5Qrcode, Html5QrcodeResult, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+const SCANNER_CONFIG = {
+  fps: 10,
+  qrbox: { width: 260, height: 150 },
+  aspectRatio: 1.333,
+  formatsToSupport: [
+    Html5QrcodeSupportedFormats.EAN_13,
+    Html5QrcodeSupportedFormats.EAN_8,
+    Html5QrcodeSupportedFormats.UPC_A,
+    Html5QrcodeSupportedFormats.UPC_E,
+    Html5QrcodeSupportedFormats.CODE_128,
+    Html5QrcodeSupportedFormats.CODE_39,
+    Html5QrcodeSupportedFormats.QR_CODE,
+  ],
+};
 
 interface CameraDevice {
   id: string;
@@ -46,24 +62,9 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
           /* empty */
         }
 
-        const config = {
-          fps: 10,
-          qrbox: { width: 260, height: 150 },
-          aspectRatio: 1.333,
-          formatsToSupport: [
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.QR_CODE,
-          ],
-        };
-
         await scanner.start(
           { facingMode: 'environment' },
-          config,
+          SCANNER_CONFIG,
           (decodedText, decodedResult) => {
             if (onScanSuccess) {
               try {
@@ -150,14 +151,9 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
       try {
         const cameraId =
           cameras.length > 0 ? cameras[currentCameraIndex]?.id : { facingMode: 'environment' };
-        const config = {
-          fps: 10,
-          qrbox: { width: 260, height: 150 },
-          aspectRatio: 1.333,
-        };
         await scannerRef.current.start(
           cameraId,
-          config,
+          SCANNER_CONFIG,
           (decodedText: string, decodedResult: Html5QrcodeResult) => {
             if (onScanSuccess) {
               try {
@@ -192,14 +188,9 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
         await scannerRef.current.stop();
       }
       setIsStarting(true);
-      const config = {
-        fps: 10,
-        qrbox: { width: 260, height: 150 },
-        aspectRatio: 1.333,
-      };
       await scannerRef.current.start(
         cameras[nextIndex].id,
-        config,
+        SCANNER_CONFIG,
         (decodedText: string, decodedResult: Html5QrcodeResult) => {
           if (onScanSuccess) {
             try {
@@ -390,7 +381,10 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
             }}
             onClick={handleSwitchCamera}
             title="Cambiar Cámara"
-          ></button>
+            aria-label="Cambiar Cámara"
+          >
+            <RefreshCw size={18} />
+          </button>
         )}
 
         <button

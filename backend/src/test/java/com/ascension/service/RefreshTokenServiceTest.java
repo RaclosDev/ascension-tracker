@@ -88,7 +88,7 @@ class RefreshTokenServiceTest {
     }
 
     @Test
-    void rotateRefreshToken_afterGracePeriod_deletesOnlySpecificTokenAndThrows() {
+    void rotateRefreshToken_afterGracePeriod_revokesAllUserSessionsAndThrows() {
         // Token was replaced 90 seconds ago (past 60s grace period)
         activeToken.setReplacedAt(Instant.now().minusSeconds(90));
         when(refreshTokenRepository.findByToken(hashedToken)).thenReturn(Optional.of(activeToken));
@@ -98,8 +98,7 @@ class RefreshTokenServiceTest {
         );
 
         assertTrue(ex.getMessage().contains("Session expired"));
-        verify(refreshTokenRepository).delete(activeToken);
-        verify(refreshTokenRepository, never()).deleteByEmail(anyString());
+        verify(refreshTokenRepository).deleteByUserEmail(activeToken.getEmail());
     }
 
     @Test

@@ -2,6 +2,7 @@ import React from 'react';
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -118,7 +119,7 @@ export default function DashboardCharts({
               />
               <Bar dataKey="delta" radius={[6, 6, 0, 0]}>
                 {deltaData.map((entry: { fill: string }, i: number) => (
-                  <rect key={i} fill={entry.fill} />
+                  <Cell key={i} fill={entry.fill} />
                 ))}
               </Bar>
             </BarChart>

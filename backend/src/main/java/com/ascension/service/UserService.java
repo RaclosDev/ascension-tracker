@@ -14,8 +14,18 @@ public class UserService {
 
     @Transactional
     public void ensureUserExists(String email, String name, String picture) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("User email cannot be null or blank");
+        }
         String sql = "INSERT INTO users (email, name, picture) VALUES (?, ?, ?) " +
-                     "ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name, picture = EXCLUDED.picture";
-        jdbcTemplate.update(sql, email, name, picture);
+                     "ON CONFLICT (email) DO UPDATE SET " +
+                     "name = COALESCE(EXCLUDED.name, users.name), " +
+                     "picture = COALESCE(EXCLUDED.picture, users.picture)";
+        jdbcTemplate.update(sql, email.trim(), name, picture);
+    }
+
+    @Transactional
+    public void ensureUserExists(String email) {
+        ensureUserExists(email, null, null);
     }
 }

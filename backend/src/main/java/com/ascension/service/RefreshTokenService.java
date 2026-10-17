@@ -49,7 +49,7 @@ public class RefreshTokenService {
                 // Grace period for concurrent requests and network retries: return fresh valid token
                 return createRefreshToken(refreshToken.getEmail(), refreshToken.getName(), refreshToken.getPicture());
             }
-            refreshTokenRepository.delete(refreshToken);
+            refreshTokenRepository.deleteByUserEmail(refreshToken.getEmail());
             throw new com.ascension.exception.TokenRefreshException("Session expired. Please log in again.");
         }
 

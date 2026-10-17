@@ -408,7 +408,7 @@ export function Dashboard() {
                         }}
                       >
                         {names.join(' · ')}
-                        {w.exercises.length > 4 ? '' : ''}
+                        {w.exercises.length > 4 ? '...' : ''}
                       </p>
                     </button>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Circle, Edit3 } from 'lucide-react';
+import { CheckCircle2, Circle, Edit3, Trash2 } from 'lucide-react';
 import { SavedFood } from '../../types/api';
 
 export interface DragFoodData {
@@ -16,6 +16,7 @@ interface FoodCardProps {
   isSelected: boolean;
   onToggleSelect: (id: number) => void;
   onEdit: (food: SavedFood) => void;
+  onDelete?: (id: number | string) => void;
   viewMode: string;
   onDragStart: (e: React.DragEvent, data: DragFoodData) => void;
 }
@@ -50,6 +51,7 @@ export default function FoodCard({
   isSelected,
   onToggleSelect,
   onEdit,
+  onDelete,
   viewMode,
   onDragStart,
 }: FoodCardProps) {
@@ -101,8 +103,22 @@ export default function FoodCard({
           >
             {food.name}
           </div>
-          <div style={{ flexShrink: 0, marginTop: '-0.2rem', marginRight: '-0.2rem' }}>
+          <div style={{ flexShrink: 0, marginTop: '-0.2rem', marginRight: '-0.2rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
             <EditBtn onClick={() => onEdit(food)} />
+            {onDelete && food.id && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(food.id!);
+                }}
+                className="icon-btn delete-btn min-w-[36px] min-h-[36px] flex items-center justify-center text-[var(--color-danger)] hover:opacity-80"
+                title="Eliminar"
+                aria-label="Eliminar"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -218,8 +234,22 @@ export default function FoodCard({
       <div style={{ flex: 1, textAlign: 'right' }}>{Number(food.proteinPer100g).toFixed(1)}</div>
       <div style={{ flex: 1, textAlign: 'right' }}>{Number(food.carbsPer100g).toFixed(1)}</div>
       <div style={{ flex: 1, textAlign: 'right' }}>{Number(food.fatPer100g).toFixed(1)}</div>
-      <div style={{ width: '30px', display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '2px' }}>
         <EditBtn onClick={() => onEdit(food)} />
+        {onDelete && food.id && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(food.id!);
+            }}
+            className="icon-btn delete-btn min-w-[32px] min-h-[32px] flex items-center justify-center text-[var(--color-danger)] hover:opacity-80"
+            title="Eliminar"
+            aria-label="Eliminar"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </div>
   );

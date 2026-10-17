@@ -217,5 +217,40 @@ class WorkoutServiceTest {
         com.ascension.model.WorkoutExercise savedWe = savedWorkout.getExercises().iterator().next();
         assertThat(savedWe.getExerciseId()).isEqualTo(savedEx.getId());
     }
+
+    @Test
+    void getStats_calculatesRealMetricsAccurately() {
+        String email = "athlete@example.com";
+        com.ascension.model.WorkoutSet set1 = com.ascension.model.WorkoutSet.builder()
+                .weight("100")
+                .reps("10")
+                .build();
+        com.ascension.model.WorkoutSet set2 = com.ascension.model.WorkoutSet.builder()
+                .weight("80.5")
+                .reps("8")
+                .build();
+
+        com.ascension.model.WorkoutExercise we = com.ascension.model.WorkoutExercise.builder()
+                .sets(new java.util.LinkedHashSet<>(java.util.List.of(set1, set2)))
+                .build();
+
+        Workout w1 = Workout.builder()
+                .id("w-1")
+                .userEmail(email)
+                .startedAt(1700000000000L)
+                .finishedAt(1700003600000L)
+                .exercises(new java.util.LinkedHashSet<>(java.util.List.of(we)))
+                .build();
+
+        when(workoutRepository.findAllByUserEmailOrderByStartedAtDesc(email))
+                .thenReturn(java.util.List.of(w1));
+
+        com.ascension.dto.WorkoutStatsDTO stats = workoutService.getStats(email);
+
+        assertThat(stats.getTotalWorkouts()).isEqualTo(1);
+        assertThat(stats.getTotalDurationSeconds()).isEqualTo(3600);
+        assertThat(stats.getTotalSets()).isEqualTo(2);
+        assertThat(stats.getTotalVolume()).isEqualTo(1644.0);
+    }
 }
 

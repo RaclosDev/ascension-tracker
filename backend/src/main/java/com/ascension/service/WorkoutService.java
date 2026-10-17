@@ -84,10 +84,48 @@ public class WorkoutService {
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public WorkoutStatsDTO getStats(String userEmail) {
-        // Just return dummy or updated stats logic
-        long totalWorkouts = workoutRepository.countByUserEmail(userEmail);
+        List<Workout> workouts = workoutRepository.findAllByUserEmailOrderByStartedAtDesc(userEmail);
+        long totalWorkouts = workouts.size();
+        long totalDurationSeconds = 0;
+        double totalVolume = 0.0;
+        long totalSets = 0;
+
+        for (Workout w : workouts) {
+            if (w.getStartedAt() != null && w.getFinishedAt() != null && w.getFinishedAt() > w.getStartedAt()) {
+                long diff = w.getFinishedAt() - w.getStartedAt();
+                if (w.getStartedAt() > 100_000_000_000L) { // Epoch in milliseconds
+                    totalDurationSeconds += (diff / 1000);
+                } else {
+                    totalDurationSeconds += diff;
+                }
+            }
+
+            if (w.getExercises() != null) {
+                for (WorkoutExercise ex : w.getExercises()) {
+                    if (ex.getSets() != null) {
+                        totalSets += ex.getSets().size();
+                        for (WorkoutSet s : ex.getSets()) {
+                            try {
+                                if (s.getWeight() != null && s.getReps() != null) {
+                                    double weight = Double.parseDouble(s.getWeight().trim());
+                                    double reps = Double.parseDouble(s.getReps().trim());
+                                    if (weight > 0 && reps > 0) {
+                                        totalVolume += (weight * reps);
+                                    }
+                                }
+                            } catch (Exception ignored) {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         return WorkoutStatsDTO.builder()
                 .totalWorkouts(totalWorkouts)
+                .totalDurationSeconds(totalDurationSeconds)
+                .totalVolume(Math.round(totalVolume * 100.0) / 100.0)
+                .totalSets(totalSets)
                 .build();
     }
 

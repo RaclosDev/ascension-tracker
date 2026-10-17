@@ -5,6 +5,7 @@ import type { Equipment, Exercise, MuscleGroup } from '@/lib/workout/types';
 import {
   useCustomExercises,
   useSaveCustomExercise,
+  useUpdateCustomExercise,
   useDeleteCustomExercise,
   useRecentWorkouts,
   useWorkoutPreferencesActions,
@@ -34,6 +35,7 @@ export function ExercisesView() {
   const { data: customExercises = [], isLoading } = useCustomExercises();
   const { data: recentWorkouts = [] } = useRecentWorkouts(180);
   const saveExerciseMutation = useSaveCustomExercise();
+  const updateExerciseMutation = useUpdateCustomExercise();
   const deleteExerciseMutation = useDeleteCustomExercise();
 
   const { prefs, setExerciseAlias, addGlobalMachine, addGlobalGrip, setExerciseGif } =
@@ -77,10 +79,20 @@ export function ExercisesView() {
     gifUrl?: string;
   }) => {
     if (editingExercise) {
-      saveExerciseMutation.mutate({ ...editingExercise, ...payload });
+      updateExerciseMutation.mutate({ ...editingExercise, ...payload });
+      if (payload.gifUrl !== undefined) {
+        setExerciseGif(editingExercise.id, payload.gifUrl);
+      }
       setEditingExercise(null);
     } else {
-      saveExerciseMutation.mutate({ ...payload, id: Date.now().toString() } as Exercise);
+      const tempId = Date.now().toString();
+      saveExerciseMutation.mutate({ ...payload, id: tempId } as Exercise, {
+        onSuccess: (saved: Exercise) => {
+          if (payload.gifUrl) {
+            setExerciseGif(saved?.id || tempId, payload.gifUrl);
+          }
+        },
+      });
       setCreating(false);
     }
   };
@@ -165,7 +177,14 @@ export function ExercisesView() {
           setEditingExercise(null);
           setInitialVariantName(undefined);
         }}
-        initialData={editingExercise}
+        initialData={
+          editingExercise
+            ? {
+                ...editingExercise,
+                gifUrl: customGifs[editingExercise.id] || editingExercise.gifUrl,
+              }
+            : null
+        }
         initialName={initialVariantName}
         hiddenEquipments={hiddenEquipments}
         onSubmit={handleCreateOrUpdate}

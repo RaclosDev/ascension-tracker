@@ -67,6 +67,8 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
         activityFactor: parseFloat(form.activityFactor),
         kcal: Number(form.kcal),
         macroStrategy: form.macroStrategy,
+        weeklyGoal: 0.5,
+        startDate: new Date().toISOString().split('T')[0],
       });
 
       // 2. Configurar comidas

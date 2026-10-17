@@ -243,7 +243,8 @@ export default function NutritionPage() {
                 onLogAdded={() => {
                   fetchData();
                   queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-                  queryClient.invalidateQueries({ queryKey: ['week-summaries'] });
+                  queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
+                  queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
                 }}
                 meals={meals}
               />

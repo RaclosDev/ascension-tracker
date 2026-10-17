@@ -1,4 +1,4 @@
-import { Play, Trash2 } from 'lucide-react';
+import { Play, Trash2, Plus } from 'lucide-react';
 import { EmptyCard } from '@/components/workout/dashboard';
 import { getExerciseMap } from '@/lib/workout/exercises';
 import { useWorkoutStore } from '@/lib/workout/store';
@@ -35,7 +35,7 @@ export function TemplatesView() {
         }}
       >
         <button
-          onClick={startEmpty}
+          onClick={() => startEmpty('Nueva Plantilla')}
           className="btn btn-primary"
           style={{
             display: 'flex',
@@ -45,7 +45,7 @@ export function TemplatesView() {
             fontSize: '0.9rem',
           }}
         >
-          <Play size={16} />
+          <Plus size={16} />
           Nueva Plantilla
         </button>
       </header>
@@ -155,7 +155,7 @@ export function TemplatesView() {
                   }}
                 >
                   {names.slice(0, 6).join(' · ')}
-                  {names.length > 6 ? '' : ''}
+                  {names.length > 6 ? '...' : ''}
                 </p>
                 <button
                   onClick={() => startFromTemplate(tpl, recentWorkouts)}

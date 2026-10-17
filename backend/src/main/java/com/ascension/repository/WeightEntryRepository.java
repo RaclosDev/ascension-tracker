@@ -15,8 +15,6 @@ public interface WeightEntryRepository extends JpaRepository<WeightEntry, Long> 
 
     List<WeightEntry> findAllByUserEmailOrderByDateAsc(String userEmail);
 
-    List<WeightEntry> findAllByOrderByDateAsc();
-
     List<WeightEntry> findByUserEmailAndDateBetweenOrderByDateAsc(String userEmail, LocalDate start, LocalDate end);
 
     Optional<WeightEntry> findTopByUserEmailOrderByDateDesc(String userEmail);

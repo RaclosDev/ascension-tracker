@@ -135,7 +135,7 @@ export function MergeExerciseModal({
       const sourceId = sourceExercise.id;
       const toUpdate = history.filter((w) => w.exercises.some((e) => e.exerciseId === sourceId));
 
-      for (const w of toUpdate) {
+      const workoutPromises = toUpdate.map((w) => {
         const updated = {
           ...w,
           exercises: w.exercises.map((e) =>
@@ -143,10 +143,36 @@ export function MergeExerciseModal({
           ),
         };
         if ('id' in updated && typeof updated.id === 'string' && updated.id.includes('-')) {
-          await api.put(`/workouts/${updated.id}`, updated);
+          return api.put(`/workouts/${updated.id}`, updated);
         } else {
-          await api.post('/workouts', updated);
+          return api.post('/workouts', updated);
         }
+      });
+      await Promise.all(workoutPromises);
+
+      // Fetch and update templates containing the source exercise
+      try {
+        const { data: templates = [] } = await api.get<
+          Array<{ id: string; name: string; exercises: Array<{ exerciseId: string; variant?: unknown }> }>
+        >('/workouts/templates');
+        const templatesToUpdate = templates.filter((tpl) =>
+          tpl.exercises.some((e) => e.exerciseId === sourceId),
+        );
+        if (templatesToUpdate.length > 0) {
+          const templatePromises = templatesToUpdate.map((tpl) => {
+            const updatedTpl = {
+              ...tpl,
+              exercises: tpl.exercises.map((e) =>
+                e.exerciseId === sourceId ? { ...e, exerciseId: confirmTargetId } : e,
+              ),
+            };
+            return api.post('/workouts/templates', updatedTpl);
+          });
+          await Promise.all(templatePromises);
+          queryClient.invalidateQueries({ queryKey: ['workoutTemplates'] });
+        }
+      } catch (templateErr) {
+        console.error('Error updating templates during merge:', templateErr);
       }
 
       const isCustom = customExercises.some((e) => e.id === sourceId);
@@ -156,6 +182,8 @@ export function MergeExerciseModal({
 
       queryClient.invalidateQueries({ queryKey: ['workoutHistory'] });
       queryClient.invalidateQueries({ queryKey: ['recentWorkouts'] });
+      queryClient.invalidateQueries({ queryKey: ['workouts'] });
+      queryClient.invalidateQueries({ queryKey: ['workoutTemplates'] });
       if (isCustom) {
         queryClient.invalidateQueries({ queryKey: ['customExercises'] });
       }
