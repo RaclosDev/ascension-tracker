@@ -3352,11 +3352,11 @@ button, a, input, select, textarea, [role=button], [onclick] {
   color: #FFFFFF;
 }
 .workout-exercise-card .set-check-btn.checked {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.22);
-  color: #FFFFFF;
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+  color: var(--accent-text, #ffffff) !important;
   font-weight: 700;
-  box-shadow: none;
+  box-shadow: 0 0 14px var(--accent-glow) !important;
 }
 .workout-exercise-card {
   /* Delete Set Button */
@@ -5058,10 +5058,16 @@ button, a, input, select, textarea, [role=button], [onclick] {
   transform: scale(0.92);
 }
 .set-check-btn.checked {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.22);
-  color: #FFFFFF;
-  box-shadow: none;
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+  color: var(--accent-text, #ffffff) !important;
+  box-shadow: 0 0 14px var(--accent-glow) !important;
+}
+.set-check-btn.checked:hover {
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+  color: var(--accent-text, #ffffff) !important;
+  filter: brightness(1.1);
 }
 .set-check-btn.checked:active {
   transform: scale(0.94);
