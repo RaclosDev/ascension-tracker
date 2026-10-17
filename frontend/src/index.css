@@ -5097,7 +5097,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 16px));
 }
 .workout-finish-btn {
   width: 100%;
