@@ -1,21 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useMemo, lazy, Suspense } from 'react';
 import { DashboardData, WeightEntry, WeekSummary, UserSettings } from '../types/api';
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { lazy, Suspense } from 'react';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import api from '../api/client';
-import toast from 'react-hot-toast';
-
-const DashboardCharts = lazy(() => import('../components/DashboardCharts'));
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { parseSafeWeight } from '../utils/weightHelper';
 import { Skeleton } from '../components/ui/skeleton';
 import { DashboardChartsSkeleton } from '../components/workout/skeletons/DashboardChartsSkeleton';
+import { QuickWeightCard } from '../components/dashboard/QuickWeightCard';
+import { ElevatedKpiGrid } from '../components/dashboard/ElevatedKpiGrid';
+import { GoalProgressBar } from '../components/dashboard/GoalProgressBar';
+
+const DashboardCharts = lazy(() => import('../components/DashboardCharts'));
 
 export default function DashboardPage() {
-  const queryClient = useQueryClient();
-  const [quickWeight, setQuickWeight] = useState('');
-
   // 1. Fetch data with React Query
   const { data: dashboard, isLoading: loadingDash } = useQuery<DashboardData>({
     queryKey: ['dashboard'],
@@ -51,77 +48,72 @@ export default function DashboardPage() {
   const todayDateStr = format(today, 'yyyy-MM-dd');
   const todayEntry = weights.find((w: WeightEntry) => w.date === todayDateStr);
   const hasTodayWeight = !!todayEntry;
+  const recentWeight =
+    weights.length > 0 ? weights[weights.length - 1].weight : settings?.startWeight;
 
-  useEffect(() => {
-    if (todayEntry && quickWeight === '') {
-      setQuickWeight(todayEntry.weight.toString());
-    }
-  }, [todayEntry, quickWeight]);
+  const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const todayLabel = `${dayNames[today.getDay()]}, ${format(today, "d 'de' MMMM 'de' yyyy", { locale: es })}`;
 
-  // 2. Mutations with React Query
-  const addWeightMutation = useMutation({
-    mutationFn: (val: number) => api.post('/weights', { date: todayDateStr, weight: val }),
-    onSuccess: (_, val) => {
-      toast.success(hasTodayWeight ? `Peso actualizado: ${val} kg` : `Peso registrado: ${val} kg`);
-      queryClient.invalidateQueries({ queryKey: ['weights'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
-    },
-    onError: (err: Error) => {
-      console.error('Error al guardar peso:', err instanceof Error ? err.message : String(err));
-      const e = err as Error & { response?: { data?: { message?: string; error?: string } } };
-      const msg = e.response?.data?.message || e.response?.data?.error || e.message;
-      toast.error(msg ? `Error al guardar: ${msg}` : 'Error al registrar peso');
-    },
-  });
+  // Memoized Chart data
+  const weightChartData = useMemo(() => {
+    return weights.map((w: WeightEntry) => ({
+      date: w.date,
+      weight: w.weight,
+      label: format(new Date(w.date + 'T00:00:00'), 'd MMM', { locale: es }),
+    }));
+  }, [weights]);
 
-  const handleQuickAdd = () => {
-    const val = parseSafeWeight(quickWeight);
-    if (val === null) {
-      toast.error('Introduce un peso válido en kg (ej: 80.5)');
-      return;
-    }
-    addWeightMutation.mutate(val);
-  };
+  // Memoized Delta chart data
+  const deltaData = useMemo(() => {
+    return weekSummaries
+      .filter((w: WeekSummary): w is WeekSummary & { delta: number } => w.delta !== null)
+      .map((w) => ({
+        week: format(new Date(w.weekStart + 'T00:00:00'), 'd MMM', { locale: es }),
+        delta: w.delta,
+        fill:
+          w.delta <= 0
+            ? 'var(--color-success-strong, rgba(52, 211, 153, 0.8))'
+            : 'var(--color-fat-strong, rgba(248, 113, 113, 0.8))',
+      }));
+  }, [weekSummaries]);
 
   if (isLoading) {
     return (
       <div className="fade-in">
         {/* Skeleton for Quick Add */}
-        <div className="quick-add-card">
-          <div className="quick-add-header">
+        <div className="card glass-panel-elevated p-4 sm:p-5 rounded-2xl mb-6">
+          <div className="flex items-center justify-between mb-4">
             <Skeleton className="h-5 w-24" />
             <Skeleton className="h-4 w-32" />
           </div>
-          <div className="quick-add-body">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-24" />
+          <div className="flex flex-col items-center gap-3">
+            <Skeleton className="h-12 w-32" />
+            <Skeleton className="h-9 w-64" />
+            <Skeleton className="h-10 w-full max-w-xs rounded-xl" />
           </div>
         </div>
 
         {/* Skeleton for KPI Grid */}
-        <div className="kpi-grid">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="kpi-card">
+            <div key={i} className="card glass-panel-elevated p-3.5 sm:p-4 rounded-2xl">
               <Skeleton className="h-4 w-20 mb-2" />
-              <Skeleton className="h-8 w-24 mb-2" />
+              <Skeleton className="h-7 w-24 mb-2" />
               <Skeleton className="h-3 w-32" />
             </div>
           ))}
         </div>
 
         {/* Skeleton for Progress Bar */}
-        <div className="progress-section">
-          <div className="progress-card">
-            <div className="progress-info mb-2">
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-4 w-10" />
-            </div>
-            <Skeleton className="h-3 w-full mb-2" />
-            <div className="progress-markers">
-              <Skeleton className="h-3 w-12" />
-              <Skeleton className="h-3 w-12" />
-            </div>
+        <div className="card glass-panel-elevated p-4 sm:p-5 rounded-2xl mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-6 w-14 rounded-full" />
+          </div>
+          <Skeleton className="h-4 w-full rounded-full mb-3" />
+          <div className="flex justify-between">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-3 w-16" />
           </div>
         </div>
 
@@ -133,126 +125,36 @@ export default function DashboardPage() {
 
   if (!dashboard || !settings) return null;
 
-  const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-  const todayLabel = `${dayNames[today.getDay()]}, ${format(today, "d 'de' MMMM 'de' yyyy", { locale: es })}`;
-
-  // Chart data
-  const weightChartData = weights.map((w: WeightEntry) => ({
-    date: w.date,
-    weight: w.weight,
-    label: format(new Date(w.date + 'T00:00:00'), 'd MMM', { locale: es }),
-  }));
-
-  // Delta chart data
-  const deltaData = weekSummaries
-    .filter((w: WeekSummary): w is WeekSummary & { delta: number } => w.delta !== null)
-    .map((w) => ({
-      week: format(new Date(w.weekStart + 'T00:00:00'), 'd MMM', { locale: es }),
-      delta: w.delta,
-      fill:
-        w.delta <= 0
-          ? 'var(--color-success-strong, rgba(52, 211, 153, 0.8))'
-          : 'var(--color-fat-strong, rgba(248, 113, 113, 0.8))',
-    }));
-
   return (
     <div className="fade-in">
-      {/* Quick Add / Edit Bar */}
-      <div className="quick-add-card">
-        <div className="quick-add-header">
-          <div className="flex items-center gap-2">
-            <span className="quick-add-title">Peso hoy</span>
-          </div>
-          <span className="quick-add-date">{todayLabel}</span>
-        </div>
-        <div className="quick-add-body">
-          <label htmlFor="quick-weight-input" className="sr-only">
-            Peso corporal de hoy
-          </label>
-          <input
-            id="quick-weight-input"
-            type="text"
-            inputMode="decimal"
-            pattern="[0-9]*[.,]?[0-9]*"
-            aria-label="Peso corporal de hoy en kilogramos"
-            className="quick-add-input"
-            value={quickWeight}
-            onChange={(e) => setQuickWeight(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleQuickAdd()}
-            placeholder={hasTodayWeight && todayEntry ? todayEntry.weight.toString() : '00.00'}
-          />
-          <button
-            aria-label={
-              hasTodayWeight ? 'Actualizar peso corporal de hoy' : 'Registrar peso corporal de hoy'
-            }
-            className={`btn ${hasTodayWeight ? 'btn-secondary' : 'btn-primary'}`}
-            onClick={handleQuickAdd}
-          >
-            {hasTodayWeight ? 'Actualizar' : 'Registrar'}
-          </button>
-        </div>
-      </div>
+      {/* 1. Quick Add / Edit Weight Card */}
+      <QuickWeightCard
+        todayLabel={todayLabel}
+        todayDateStr={todayDateStr}
+        todayWeight={todayEntry?.weight}
+        recentWeight={recentWeight}
+        hasTodayWeight={hasTodayWeight}
+      />
 
-      {/* KPI Cards */}
-      <div className="kpi-grid">
-        <div className="kpi-card">
-          <div className="kpi-label">Peso Actual</div>
-          <div className="kpi-value">{dashboard.currentWeight?.toFixed(2)} kg</div>
-          <div className="kpi-detail">
-            Media semanal: {dashboard.currentWeeklyAverage?.toFixed(2)} kg
-          </div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-label">Total Perdido</div>
-          <div className="kpi-value">{dashboard.totalLost?.toFixed(2)} kg</div>
-          <div className="kpi-detail">
-            {dashboard.totalLost < 0 ? (
-              <span className="kpi-badge positive">
-                {Math.abs(dashboard.totalLost).toFixed(1)} kg perdidos
-              </span>
-            ) : (
-              <span className="kpi-badge negative">
-                {dashboard.totalLost?.toFixed(1)} kg ganados
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-label">Te Falta</div>
-          <div className="kpi-value">{dashboard.remaining?.toFixed(1)} kg</div>
-          <div className="kpi-detail">
-            {dashboard.remaining > 0 ? 'por perder' : '¡Meta alcanzada!'}
-          </div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-label">Fecha Estimada</div>
-          <div className="kpi-value" style={{ fontSize: '1.15rem' }}>
-            {dashboard.estimatedDate}
-          </div>
-          <div className="kpi-detail">
-            A ritmo de {Math.abs(dashboard.avgWeeklyChange).toFixed(2)} kg/semana
-          </div>
-        </div>
-      </div>
+      {/* 2. Elevated KPI Grid */}
+      <ElevatedKpiGrid
+        currentWeight={dashboard.currentWeight}
+        weeklyAverage={dashboard.currentWeeklyAverage}
+        totalLost={dashboard.totalLost}
+        remaining={dashboard.remaining}
+        estimatedDate={dashboard.estimatedDate}
+        avgWeeklyRate={dashboard.avgWeeklyChange}
+      />
 
-      {/* Progress Bar */}
-      <div className="progress-section">
-        <div className="progress-card">
-          <div className="progress-info">
-            <span className="progress-label">Progreso hacia tu meta</span>
-            <span className="progress-pct">{dashboard.progress?.toFixed(1)}%</span>
-          </div>
-          <div className="progress-bar-container">
-            <div className="progress-bar-fill" style={{ width: `${dashboard.progress}%` }} />
-          </div>
-          <div className="progress-markers">
-            <span>{settings.startWeight} kg</span>
-            <span>{settings.goalWeight} kg</span>
-          </div>
-        </div>
-      </div>
+      {/* 3. Goal Progress Bar */}
+      <GoalProgressBar
+        progress={dashboard.progress}
+        startWeight={settings.startWeight}
+        goalWeight={settings.goalWeight}
+        currentWeight={dashboard.currentWeight}
+      />
 
-      {/* Charts */}
+      {/* 4. Charts */}
       <Suspense fallback={<DashboardChartsSkeleton />}>
         <DashboardCharts
           weightChartData={weightChartData}
