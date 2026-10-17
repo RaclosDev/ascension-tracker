@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, ReactNode } from 'react';
+import { haptics } from '@/lib/haptics';
 
 interface BottomSheetProps {
   isOpen: boolean;
@@ -14,10 +15,25 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
   const currentYRef = useRef(0);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      haptics.medium();
+    } else {
       setTranslateY(0);
     }
   }, [isOpen]);
+
+  // Cerrar al pulsar Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        haptics.light();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -41,8 +57,9 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
   const handleTouchEnd = () => {
     setIsDragging(false);
     const diff = currentYRef.current - startYRef.current;
-    // Si se arrastró más de 80px hacia abajo, cerramos
+    // Si se arrastró más de 80px hacia abajo, cerramos con háptica suave
     if (diff > 80) {
+      haptics.light();
       onClose();
     } else {
       // Si no, vuelve a la posición original
@@ -51,16 +68,19 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
   };
 
   return (
-    <div className="bottom-sheet-overlay" onClick={onClose}>
+    <div className="bottom-sheet-overlay" onClick={onClose} role="presentation">
       <div
         className="bottom-sheet-content"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title || 'Panel de opciones'}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
           transform: `translateY(${translateY}px)`,
-          transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+          transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
         <div className="bottom-sheet-drag-handle" />

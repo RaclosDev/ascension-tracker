@@ -5555,4 +5555,95 @@ input[type="range"]:active::-moz-range-thumb {
   }
 }
 
+/* ==========================================================================
+   Mobile & PWA Sensory Elevation: View Transitions, Haptics & Micro-Physics
+   ========================================================================== */
+
+/* 1. Native View Transitions API */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: 160ms cubic-bezier(0.4, 0, 1, 1) both vtPageFadeOut;
+}
+
+::view-transition-new(root) {
+  animation: 200ms cubic-bezier(0, 0, 0.2, 1) both vtPageFadeIn;
+}
+
+@keyframes vtPageFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+
+@keyframes vtPageFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(1.015);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* 2. Tactile Micro-Physics & Button Press */
+button,
+[role="button"],
+.clickable,
+.tap-effect {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-press {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: transform 120ms cubic-bezier(0.2, 0, 0, 1), filter 120ms ease, opacity 120ms ease;
+  will-change: transform;
+}
+
+.btn-press:active {
+  transform: scale(0.965);
+  filter: brightness(0.92);
+}
+
+.btn-press:disabled {
+  transform: none !important;
+  filter: none !important;
+}
+
+/* 3. Dark Glassmorphism 2.0 Utilities */
+.glass-panel-elevated {
+  background: rgba(22, 22, 24, 0.72);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+
 

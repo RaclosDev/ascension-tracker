@@ -38,101 +38,184 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
   const fatPercent =
     fatTarget > 0 ? Math.min(100, Math.max(0, (fatConsumed / fatTarget) * 100)) : 0;
 
+  // SVG Ring calculation for Calories
+  const radius = 38;
+  const strokeWidth = 7;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (circumference * kcalPercent) / 100;
+
   return (
-    <div className="card nutrition-summary-card p-4 sm:p-5 rounded-2xl mb-6 bg-white/[0.04] border border-white/10 backdrop-blur-xl">
-      <div className="nutrition-summary-main mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[var(--accent-glow)] text-[var(--accent-primary)] flex items-center justify-center">
-              <Flame size={16} />
-            </div>
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                Calorías
-              </span>
-              <p className="text-[0.7rem] text-gray-500 font-medium">
-                {caloriesTarget > 0
-                  ? caloriesRemaining >= 0
-                    ? `${caloriesRemaining} kcal restantes`
-                    : `${Math.abs(caloriesRemaining)} kcal sobre el objetivo`
-                  : 'Objetivo calórico no fijado'}
-              </p>
-            </div>
-          </div>
-          <div className="text-right">
+    <div className="card nutrition-summary-card glass-panel-elevated p-4 sm:p-5 rounded-2xl mb-6 relative overflow-hidden">
+      {/* Background radial ambient glow */}
+      <div
+        className="absolute -top-12 -left-12 w-48 h-48 rounded-full pointer-events-none opacity-20 blur-2xl"
+        style={{
+          background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)',
+        }}
+      />
+
+      {/* Main Calories Header Row */}
+      <div className="flex items-center gap-4 sm:gap-6 mb-4">
+        {/* Animated Calorie Progress Ring */}
+        <div className="relative flex-shrink-0 w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
+          <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 96 96">
+            <defs>
+              <linearGradient id="calorieGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="var(--accent-primary-light, #38bdf8)" />
+                <stop offset="100%" stopColor="var(--accent-primary, #0284c7)" />
+              </linearGradient>
+            </defs>
+            {/* Background track */}
+            <circle
+              cx="48"
+              cy="48"
+              r={radius}
+              stroke="rgba(255, 255, 255, 0.08)"
+              strokeWidth={strokeWidth}
+              fill="transparent"
+            />
+            {/* Animated progress stroke */}
+            <circle
+              cx="48"
+              cy="48"
+              r={radius}
+              stroke="url(#calorieGradient)"
+              strokeWidth={strokeWidth}
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              fill="transparent"
+              style={{
+                transition: 'stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            />
+          </svg>
+
+          {/* Center Content in Ring */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <Flame size={15} className="text-[var(--accent-primary-light)] mb-0.5" />
             <span
-              className="text-lg sm:text-xl font-extrabold text-white font-mono"
+              className="text-base sm:text-lg font-black text-white font-mono leading-none tracking-tight"
               style={{ fontVariantNumeric: 'tabular-nums' }}
             >
-              {caloriesConsumed}{' '}
-              {caloriesTarget > 0 && (
-                <span className="text-xs font-normal text-gray-400">/ {caloriesTarget} kcal</span>
-              )}
+              {caloriesTarget > 0
+                ? caloriesRemaining >= 0
+                  ? caloriesRemaining
+                  : `+${Math.abs(caloriesRemaining)}`
+                : caloriesConsumed}
+            </span>
+            <span className="text-[0.62rem] sm:text-[0.65rem] font-medium text-gray-400 leading-tight mt-0.5">
+              {caloriesTarget > 0 ? (caloriesRemaining >= 0 ? 'kcal rest.' : 'kcal sobre') : 'kcal'}
             </span>
           </div>
         </div>
 
-        <div className="w-full h-2 rounded-full bg-white/[0.08] overflow-hidden">
-          <div
-            className="h-full rounded-full bg-[var(--accent-primary)] transition-all duration-500"
-            style={{ width: `${kcalPercent}%` }}
-          />
+        {/* Calorie Stats Breakdown */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-300">
+              Calorías Totales
+            </span>
+            <span className="text-xs font-mono font-bold text-[var(--accent-primary-light)] tabular-nums">
+              {Math.round(kcalPercent)}%
+            </span>
+          </div>
+
+          <div className="flex items-baseline gap-1.5 mb-2">
+            <span
+              className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight"
+              style={{ fontVariantNumeric: 'tabular-nums' }}
+            >
+              {caloriesConsumed}
+            </span>
+            {caloriesTarget > 0 ? (
+              <span className="text-xs sm:text-sm font-medium text-gray-400 font-mono tabular-nums">
+                / {caloriesTarget} kcal
+              </span>
+            ) : (
+              <span className="text-xs text-gray-500">kcal consumidas</span>
+            )}
+          </div>
+
+          <p className="text-[0.72rem] text-gray-400 font-medium truncate">
+            {caloriesTarget > 0
+              ? caloriesRemaining >= 0
+                ? `${caloriesRemaining} kcal para alcanzar el objetivo diario`
+                : `${Math.abs(caloriesRemaining)} kcal por encima de la meta`
+              : 'Configura tu objetivo en Ajustes'}
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 sm:gap-6 pt-3 border-t border-white/[0.08]">
+      {/* 3 Macro Cards / Badges */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-3.5 border-t border-white/[0.08]">
         {/* Protein */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
-            <span className="font-semibold text-gray-300 text-[0.75rem] sm:text-xs">Proteínas</span>
-            <span className="text-gray-400 font-mono text-[0.72rem] sm:text-xs tabular-nums">
+        <div className="flex flex-col gap-1.5 p-2 sm:p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-gray-300 text-[0.72rem] sm:text-xs">Proteínas</span>
+            <span className="text-[0.65rem] font-mono text-[var(--accent-primary-light)] font-bold tabular-nums">
+              {Math.round(proteinPercent)}%
+            </span>
+          </div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-sm sm:text-base font-bold text-white font-mono tabular-nums">
               {proteinConsumed}
-              <span className="text-gray-500 text-[0.65rem] sm:text-[0.7rem]">
-                {proteinTarget > 0 ? `/${proteinTarget}g` : 'g'}
-              </span>
+            </span>
+            <span className="text-[0.68rem] text-gray-400 font-mono">
+              {proteinTarget > 0 ? `/${proteinTarget}g` : 'g'}
             </span>
           </div>
           <div className="w-full h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
             <div
-              className="h-full rounded-full bg-[var(--accent-primary-light)] transition-all duration-500"
+              className="h-full rounded-full bg-[var(--accent-primary-light)] transition-all duration-700 ease-out"
               style={{ width: `${proteinPercent}%` }}
             />
           </div>
         </div>
 
         {/* Carbs */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
-            <span className="font-semibold text-gray-300 text-[0.75rem] sm:text-xs">Hidratos</span>
-            <span className="text-gray-400 font-mono text-[0.72rem] sm:text-xs tabular-nums">
+        <div className="flex flex-col gap-1.5 p-2 sm:p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-gray-300 text-[0.72rem] sm:text-xs">Hidratos</span>
+            <span className="text-[0.65rem] font-mono text-[var(--accent-primary)] font-bold tabular-nums">
+              {Math.round(carbsPercent)}%
+            </span>
+          </div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-sm sm:text-base font-bold text-white font-mono tabular-nums">
               {carbsConsumed}
-              <span className="text-gray-500 text-[0.65rem] sm:text-[0.7rem]">
-                {carbsTarget > 0 ? `/${carbsTarget}g` : 'g'}
-              </span>
+            </span>
+            <span className="text-[0.68rem] text-gray-400 font-mono">
+              {carbsTarget > 0 ? `/${carbsTarget}g` : 'g'}
             </span>
           </div>
           <div className="w-full h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
             <div
-              className="h-full rounded-full bg-[var(--accent-primary)] transition-all duration-500"
+              className="h-full rounded-full bg-[var(--accent-primary)] transition-all duration-700 ease-out"
               style={{ width: `${carbsPercent}%` }}
             />
           </div>
         </div>
 
         {/* Fat */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
-            <span className="font-semibold text-gray-300 text-[0.75rem] sm:text-xs">Grasas</span>
-            <span className="text-gray-400 font-mono text-[0.72rem] sm:text-xs tabular-nums">
+        <div className="flex flex-col gap-1.5 p-2 sm:p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-gray-300 text-[0.72rem] sm:text-xs">Grasas</span>
+            <span className="text-[0.65rem] font-mono text-gray-400 font-bold tabular-nums">
+              {Math.round(fatPercent)}%
+            </span>
+          </div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-sm sm:text-base font-bold text-white font-mono tabular-nums">
               {fatConsumed}
-              <span className="text-gray-500 text-[0.65rem] sm:text-[0.7rem]">
-                {fatTarget > 0 ? `/${fatTarget}g` : 'g'}
-              </span>
+            </span>
+            <span className="text-[0.68rem] text-gray-400 font-mono">
+              {fatTarget > 0 ? `/${fatTarget}g` : 'g'}
             </span>
           </div>
           <div className="w-full h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
             <div
-              className="h-full rounded-full bg-[var(--accent-primary-dark)] transition-all duration-500"
+              className="h-full rounded-full bg-[var(--accent-primary-dark)] transition-all duration-700 ease-out"
               style={{ width: `${fatPercent}%` }}
             />
           </div>
