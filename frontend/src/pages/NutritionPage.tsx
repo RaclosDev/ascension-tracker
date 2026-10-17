@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { FoodLog, Meal } from '../types/api';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { SegmentedControl } from '../components/ui/segmented-control';
 import { Skeleton } from '../components/ui/skeleton';
 import MacroSummaryHeader from '../components/nutrition/MacroSummaryHeader';
@@ -130,23 +130,10 @@ export default function NutritionPage() {
 
           <button
             type="button"
-            className="btn"
+            className="fixed z-40 rounded-full w-14 h-14 flex items-center justify-center bg-[var(--accent-primary)] text-white shadow-xl shadow-[var(--accent-primary)]/30 hover:scale-105 active:scale-95 transition-all duration-200"
             style={{
-              position: 'fixed',
-              bottom: 'calc(95px + env(safe-area-inset-bottom))',
-              right: '20px',
-              zIndex: 90,
-              borderRadius: '50%',
-              width: '56px',
-              height: '56px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '2rem',
-              lineHeight: 1,
-              background: 'var(--gradient-primary)',
-              color: 'var(--accent-text, white)',
-              border: 'none',
+              bottom: 'calc(90px + env(safe-area-inset-bottom, 16px))',
+              right: '1.25rem',
             }}
             onClick={() => {
               setSelectedMealIndex(0);
@@ -154,7 +141,7 @@ export default function NutritionPage() {
             }}
             aria-label="Añadir alimento"
           >
-            +
+            <Plus size={26} strokeWidth={2.5} />
           </button>
 
           <MacroSummaryHeader consumed={consumed} macros={macros} />
@@ -197,19 +184,8 @@ export default function NutritionPage() {
               })}
             </div>
 
-            <div
-              className="card"
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                padding: '1.5rem',
-                marginBottom: 'var(--space-xxl)',
-              }}
-            >
-              <h3
-                style={{ marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '1rem' }}
-              >
+            <div className="card flex flex-col items-center p-6 mb-12">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">
                 Distribución de Macros
               </h3>
               <div

@@ -154,7 +154,14 @@ export async function setupAuthMocks(page: Page): Promise<void> {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      json: [],
+      json: [
+        {
+          id: 'bench-press',
+          name: 'Press de Banca Plano',
+          muscle: 'pecho',
+          equipment: 'barra',
+        },
+      ],
     });
   });
 
@@ -162,7 +169,14 @@ export async function setupAuthMocks(page: Page): Promise<void> {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      json: [],
+      json: [
+        {
+          id: 'base-pecho-press-de-pecho-plano-barra',
+          name: 'Press de Pecho Plano con Barra',
+          muscle: 'pecho',
+          equipment: 'barra',
+        },
+      ],
     });
   });
 

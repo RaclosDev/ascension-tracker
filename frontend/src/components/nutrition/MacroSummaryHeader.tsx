@@ -1,4 +1,5 @@
 import React from 'react';
+import { Flame } from 'lucide-react';
 
 interface MacroSummaryHeaderProps {
   consumed: {
@@ -16,79 +17,206 @@ interface MacroSummaryHeaderProps {
 }
 
 export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHeaderProps) {
+  const caloriesConsumed = Math.round(Number(consumed?.kcal) || 0);
+  const caloriesTarget = Math.round(Number(macros?.kcal) || 0);
+  const caloriesRemaining = caloriesTarget > 0 ? caloriesTarget - caloriesConsumed : 0;
+  const kcalPercent =
+    caloriesTarget > 0 ? Math.min(100, Math.max(0, (caloriesConsumed / caloriesTarget) * 100)) : 0;
+
+  const proteinConsumed = Math.round(Number(consumed?.protein) || 0);
+  const proteinTarget = Math.round(Number(macros?.protein) || 0);
+  const proteinPercent =
+    proteinTarget > 0 ? Math.min(100, Math.max(0, (proteinConsumed / proteinTarget) * 100)) : 0;
+
+  const carbsConsumed = Math.round(Number(consumed?.carbs) || 0);
+  const carbsTarget = Math.round(Number(macros?.carbs) || 0);
+  const carbsPercent =
+    carbsTarget > 0 ? Math.min(100, Math.max(0, (carbsConsumed / carbsTarget) * 100)) : 0;
+
+  const fatConsumed = Math.round(Number(consumed?.fat) || 0);
+  const fatTarget = Math.round(Number(macros?.fat) || 0);
+  const fatPercent =
+    fatTarget > 0 ? Math.min(100, Math.max(0, (fatConsumed / fatTarget) * 100)) : 0;
+
+  // SVG Ring calculation for Calories
+  const radius = 38;
+  const strokeWidth = 7;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (circumference * kcalPercent) / 100;
+
   return (
-    <div className="card nutrition-summary-card">
-      <div className="nutrition-summary-main">
-        <div className="nutrition-summary-header">
-          <span className="nutrition-summary-title">Calorías</span>
-          <span className="nutrition-summary-value">
-            {Math.round(consumed.kcal)}{' '}
-            <span className="nutrition-summary-unit">/ {macros.kcal} kcal</span>
-          </span>
+    <div className="card nutrition-summary-card glass-panel-elevated p-4 sm:p-5 rounded-2xl mb-6 relative overflow-hidden">
+      {/* Background radial ambient glow */}
+      <div
+        className="absolute -top-12 -left-12 w-48 h-48 rounded-full pointer-events-none opacity-20 blur-2xl"
+        style={{
+          background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)',
+        }}
+      />
+
+      {/* Main Calories Header Row */}
+      <div className="flex items-center gap-4 sm:gap-6 mb-4">
+        {/* Animated Calorie Progress Ring */}
+        <div className="relative flex-shrink-0 w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
+          <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 96 96">
+            <defs>
+              <linearGradient id="calorieGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="var(--accent-primary-light, #38bdf8)" />
+                <stop offset="100%" stopColor="var(--accent-primary, #0284c7)" />
+              </linearGradient>
+            </defs>
+            {/* Background track */}
+            <circle
+              cx="48"
+              cy="48"
+              r={radius}
+              stroke="rgba(255, 255, 255, 0.08)"
+              strokeWidth={strokeWidth}
+              fill="transparent"
+            />
+            {/* Animated progress stroke */}
+            <circle
+              cx="48"
+              cy="48"
+              r={radius}
+              stroke="url(#calorieGradient)"
+              strokeWidth={strokeWidth}
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              fill="transparent"
+              style={{
+                transition: 'stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            />
+          </svg>
+
+          {/* Center Content in Ring */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <Flame size={15} className="text-[var(--accent-primary-light)] mb-0.5" />
+            <span
+              className="text-base sm:text-lg font-black text-white font-mono leading-none tracking-tight"
+              style={{ fontVariantNumeric: 'tabular-nums' }}
+            >
+              {caloriesTarget > 0
+                ? caloriesRemaining >= 0
+                  ? caloriesRemaining
+                  : `+${Math.abs(caloriesRemaining)}`
+                : caloriesConsumed}
+            </span>
+            <span className="text-[0.62rem] sm:text-[0.65rem] font-medium text-gray-400 leading-tight mt-0.5">
+              {caloriesTarget > 0 ? (caloriesRemaining >= 0 ? 'kcal rest.' : 'kcal sobre') : 'kcal'}
+            </span>
+          </div>
         </div>
-        <div className="macro-progress-bg main-progress">
-          <div
-            className="macro-progress-fill"
-            style={{
-              width: `${Math.min(100, (consumed.kcal / macros.kcal) * 100)}%`,
-              background: 'var(--accent-primary)',
-            }}
-          />
+
+        {/* Calorie Stats Breakdown */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-300">
+              Calorías Totales
+            </span>
+            <span className="text-xs font-mono font-bold text-[var(--accent-primary-light)] tabular-nums">
+              {Math.round(kcalPercent)}%
+            </span>
+          </div>
+
+          <div className="flex items-baseline gap-1.5 mb-2">
+            <span
+              className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight"
+              style={{ fontVariantNumeric: 'tabular-nums' }}
+            >
+              {caloriesConsumed}
+            </span>
+            {caloriesTarget > 0 ? (
+              <span className="text-xs sm:text-sm font-medium text-gray-400 font-mono tabular-nums">
+                / {caloriesTarget} kcal
+              </span>
+            ) : (
+              <span className="text-xs text-gray-500">kcal consumidas</span>
+            )}
+          </div>
+
+          <p className="text-[0.72rem] text-gray-400 font-medium truncate">
+            {caloriesTarget > 0
+              ? caloriesRemaining >= 0
+                ? `${caloriesRemaining} kcal para alcanzar el objetivo diario`
+                : `${Math.abs(caloriesRemaining)} kcal por encima de la meta`
+              : 'Configura tu objetivo en Ajustes'}
+          </p>
         </div>
       </div>
 
-      <div className="nutrition-summary-macros">
-        {/* Prot */}
-        <div className="macro-item">
-          <div className="macro-item-header">
-            <span className="macro-item-title">Proteínas</span>
-            <span className="macro-item-value">
-              {consumed.protein.toFixed(0)}/{macros.protein.toFixed(0)}g
+      {/* 3 Macro Cards / Badges */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-3.5 border-t border-white/[0.08]">
+        {/* Protein */}
+        <div className="flex flex-col gap-1.5 p-2 sm:p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-gray-300 text-[0.72rem] sm:text-xs">Proteínas</span>
+            <span className="text-[0.65rem] font-mono text-[var(--accent-primary-light)] font-bold tabular-nums">
+              {Math.round(proteinPercent)}%
             </span>
           </div>
-          <div className="macro-progress-bg">
+          <div className="flex items-baseline gap-1">
+            <span className="text-sm sm:text-base font-bold text-white font-mono tabular-nums">
+              {proteinConsumed}
+            </span>
+            <span className="text-[0.68rem] text-gray-400 font-mono">
+              {proteinTarget > 0 ? `/${proteinTarget}g` : 'g'}
+            </span>
+          </div>
+          <div className="w-full h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
             <div
-              className="macro-progress-fill"
-              style={{
-                width: `${Math.min(100, (consumed.protein / macros.protein) * 100)}%`,
-                background: 'var(--color-protein)',
-              }}
+              className="h-full rounded-full bg-[var(--accent-primary-light)] transition-all duration-700 ease-out"
+              style={{ width: `${proteinPercent}%` }}
             />
           </div>
         </div>
+
         {/* Carbs */}
-        <div className="macro-item">
-          <div className="macro-item-header">
-            <span className="macro-item-title">Hidratos</span>
-            <span className="macro-item-value">
-              {consumed.carbs.toFixed(0)}/{macros.carbs.toFixed(0)}g
+        <div className="flex flex-col gap-1.5 p-2 sm:p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-gray-300 text-[0.72rem] sm:text-xs">Hidratos</span>
+            <span className="text-[0.65rem] font-mono text-[var(--accent-primary)] font-bold tabular-nums">
+              {Math.round(carbsPercent)}%
             </span>
           </div>
-          <div className="macro-progress-bg">
+          <div className="flex items-baseline gap-1">
+            <span className="text-sm sm:text-base font-bold text-white font-mono tabular-nums">
+              {carbsConsumed}
+            </span>
+            <span className="text-[0.68rem] text-gray-400 font-mono">
+              {carbsTarget > 0 ? `/${carbsTarget}g` : 'g'}
+            </span>
+          </div>
+          <div className="w-full h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
             <div
-              className="macro-progress-fill"
-              style={{
-                width: `${Math.min(100, (consumed.carbs / macros.carbs) * 100)}%`,
-                background: 'var(--color-carbs)',
-              }}
+              className="h-full rounded-full bg-[var(--accent-primary)] transition-all duration-700 ease-out"
+              style={{ width: `${carbsPercent}%` }}
             />
           </div>
         </div>
+
         {/* Fat */}
-        <div className="macro-item">
-          <div className="macro-item-header">
-            <span className="macro-item-title">Grasas</span>
-            <span className="macro-item-value">
-              {consumed.fat.toFixed(0)}/{macros.fat.toFixed(0)}g
+        <div className="flex flex-col gap-1.5 p-2 sm:p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-gray-300 text-[0.72rem] sm:text-xs">Grasas</span>
+            <span className="text-[0.65rem] font-mono text-gray-400 font-bold tabular-nums">
+              {Math.round(fatPercent)}%
             </span>
           </div>
-          <div className="macro-progress-bg">
+          <div className="flex items-baseline gap-1">
+            <span className="text-sm sm:text-base font-bold text-white font-mono tabular-nums">
+              {fatConsumed}
+            </span>
+            <span className="text-[0.68rem] text-gray-400 font-mono">
+              {fatTarget > 0 ? `/${fatTarget}g` : 'g'}
+            </span>
+          </div>
+          <div className="w-full h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
             <div
-              className="macro-progress-fill"
-              style={{
-                width: `${Math.min(100, (consumed.fat / macros.fat) * 100)}%`,
-                background: 'var(--color-fat)',
-              }}
+              className="h-full rounded-full bg-[var(--accent-primary-dark)] transition-all duration-700 ease-out"
+              style={{ width: `${fatPercent}%` }}
             />
           </div>
         </div>

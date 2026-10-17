@@ -261,8 +261,8 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
 
       {/* KPI METRICS */}
       <div role="status" aria-live="polite" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-black/40 border border-purple-500/20">
-          <span className="text-xs font-bold tracking-wider uppercase text-purple-400">
+        <div className="p-5 rounded-2xl bg-zinc-900/60 border border-white/5">
+          <span className="text-xs font-bold tracking-wider uppercase text-zinc-400">
             Tasa Metabólica Basal (BMR)
           </span>
           <div className="text-4xl font-extrabold text-white mt-1">
@@ -273,8 +273,8 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-teal-950/20 to-black/40 border border-emerald-500/20">
-          <span className="text-xs font-bold tracking-wider uppercase text-emerald-400">
+        <div className="p-5 rounded-2xl bg-blue-500/10 border border-blue-500/20">
+          <span className="text-xs font-bold tracking-wider uppercase text-blue-400">
             Gasto Energético Total (TDEE)
           </span>
           <div className="text-4xl font-extrabold text-white mt-1">
@@ -302,7 +302,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                 onClick={() => setSelectedGoal(goalKey)}
                 className={`p-3 rounded-xl border text-left transition-all ${
                   isSelected
-                    ? 'bg-rose-500/20 border-rose-500 text-white shadow-md'
+                    ? 'bg-blue-500 text-white shadow-md shadow-blue-500/25 border-blue-400'
                     : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
                 }`}
               >
@@ -312,11 +312,13 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                 </div>
                 <div
                   className={`text-[10px] font-medium mt-0.5 ${
-                    goal.difference > 0
-                      ? 'text-emerald-400'
-                      : goal.difference < 0
-                        ? 'text-amber-400'
-                        : 'text-gray-400'
+                    isSelected
+                      ? 'text-blue-100'
+                      : goal.difference > 0
+                        ? 'text-blue-400'
+                        : goal.difference < 0
+                          ? 'text-zinc-400'
+                          : 'text-gray-400'
                   }`}
                 >
                   {goal.difference > 0 ? `+${goal.difference}` : goal.difference} kcal
@@ -428,7 +430,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                 </div>
                 <div>
                   <span className="text-xs text-gray-400 block">Gasto Total:</span>
-                  <span className="text-base font-bold text-emerald-400">
+                  <span className="text-base font-bold text-blue-400">
                     {weyandMetabolicResult.kcal.toFixed(2)} kcal
                   </span>
                 </div>

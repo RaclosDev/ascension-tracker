@@ -6,6 +6,7 @@ import { useWorkoutStore } from '@/lib/workout/store';
 import { normalizeString } from '@/lib/workout/format';
 import { MUSCLE_LABEL, type Equipment, type MuscleGroup } from '@/lib/workout/types';
 import { EQUIPMENT_OPTIONS, MUSCLE_OPTIONS } from './exercises-view';
+import { useExerciseCatalog } from '@/lib/workout/catalog-query';
 import {
   useRecentWorkouts,
   useCustomExercises,
@@ -14,6 +15,7 @@ import {
 } from '@/lib/workout/api';
 
 export function ExercisePicker() {
+  const { data: catalogExercises } = useExerciseCatalog();
   const open = useWorkoutStore((s) => s.pickerOpen);
   const setPickerOpen = useWorkoutStore((s) => s.setPickerOpen);
   const addExercises = useWorkoutStore((s) => s.addExercises);
@@ -161,7 +163,7 @@ export function ExercisePicker() {
     return Array.from(l.values())
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 8);
-  }, [history, alreadyStrs, customExercises, aliases, hiddenEquipments]);
+  }, [history, alreadyStrs, customExercises, aliases, hiddenEquipments, catalogExercises]);
 
   const groupedList = useMemo(() => {
     const all =
@@ -219,7 +221,16 @@ export function ExercisePicker() {
         return nameA.localeCompare(nameB);
       },
     );
-  }, [tab, customExercises, filterMuscle, filterEquip, query, aliases, hiddenEquipments]);
+  }, [
+    tab,
+    customExercises,
+    filterMuscle,
+    filterEquip,
+    query,
+    aliases,
+    hiddenEquipments,
+    catalogExercises,
+  ]);
 
   function close() {
     setPickerOpen(false);

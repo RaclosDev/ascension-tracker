@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { Html5Qrcode, Html5QrcodeResult, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { haptics } from '@/lib/haptics';
 
 const SCANNER_CONFIG = {
   fps: 10,
@@ -67,11 +68,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
           SCANNER_CONFIG,
           (decodedText, decodedResult) => {
             if (onScanSuccess) {
-              try {
-                /* empty */ navigator.vibrate?.(100);
-              } catch {
-                /* ignore */
-              }
+              haptics.success();
               onScanSuccess(decodedText, decodedResult);
             }
           },
@@ -142,7 +139,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
         await scannerRef.current.stop();
         setIsScanning(false);
       } catch (e) {
-        console.error('Error al detener cámara:', e);
+        console.error('Error al detener cámara:', e instanceof Error ? e.message : String(e));
       }
     } else {
       // Reanudar cámara
@@ -207,7 +204,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
       );
       setIsScanning(true);
     } catch (err) {
-      console.error('Error al cambiar cámara:', err);
+      console.error('Error al cambiar cámara:', err instanceof Error ? err.message : String(err));
     } finally {
       /* ignore */
       setIsStarting(false);

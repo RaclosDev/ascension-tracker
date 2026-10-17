@@ -80,12 +80,13 @@ export default function NutritionCalculators() {
   const bodyComp = bfPct && pWeight ? calcBodyComposition(pWeight, bfPct) : null;
 
   return (
-    <div className="flex flex-col gap-3.5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
       {/* TDEE Card */}
       <CalculatorCard
         title="Gasto de mantenimiento (TDEE)"
         subtitle="Metabolismo basal y gasto calórico diario"
         icon={<Flame size={18} />}
+        defaultOpen={false}
       >
         {tdee && bmr ? (
           <div>
@@ -93,17 +94,17 @@ export default function NutritionCalculators() {
               className="kpi-card accent"
               style={{
                 textAlign: 'center',
-                padding: '1.5rem',
-                borderRadius: '16px',
+                padding: '1.15rem',
+                borderRadius: '14px',
                 background: 'rgba(0, 133, 255, 0.05)',
                 border: '1px solid rgba(0, 133, 255, 0.2)',
               }}
             >
               <div
                 className="kpi-value accent"
-                style={{ color: 'var(--accent-primary)', fontSize: '2.5rem', fontWeight: 800 }}
+                style={{ color: 'var(--accent-primary)', fontSize: '2rem', fontWeight: 800 }}
               >
-                {Math.round(tdee)} <span style={{ fontSize: '1.2rem', fontWeight: 500 }}>kcal</span>
+                {Math.round(tdee)} <span style={{ fontSize: '1.1rem', fontWeight: 500 }}>kcal</span>
               </div>
               <div className="kpi-label" style={{ marginTop: '4px' }}>
                 Gasto Energético Diario (TDEE)
@@ -124,12 +125,13 @@ export default function NutritionCalculators() {
 
       {/* Body fat Card */}
       <CalculatorCard
-        title="% de grasa corporal (método Marina)"
-        subtitle="Estimación Navy según circunferencia corporal"
+        title="% Grasa Corporal (Marina)"
+        subtitle="Estimación Navy según perímetros"
         icon={<Percent size={18} />}
+        defaultOpen={false}
       >
-        <div className="utilities-grid" style={{ marginBottom: '16px' }}>
-          <div className="form-group">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label" htmlFor="calc-bf-waist">
               Cintura (cm)
             </label>
@@ -142,7 +144,7 @@ export default function NutritionCalculators() {
               placeholder="A la altura del ombligo"
             />
           </div>
-          <div className="form-group">
+          <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label" htmlFor="calc-bf-neck">
               Cuello (cm)
             </label>
@@ -156,7 +158,7 @@ export default function NutritionCalculators() {
             />
           </div>
           {sex === 'F' && (
-            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+            <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
               <label className="form-label" htmlFor="calc-bf-hip">
                 Cadera (cm)
               </label>
@@ -177,10 +179,10 @@ export default function NutritionCalculators() {
             <div
               className="kpi-card accent"
               style={{
-                marginBottom: '16px',
+                marginBottom: '1rem',
                 textAlign: 'center',
-                padding: '1.5rem',
-                borderRadius: '16px',
+                padding: '1.15rem',
+                borderRadius: '14px',
                 background: 'rgba(0, 133, 255, 0.05)',
                 border: '1px solid rgba(0, 133, 255, 0.2)',
               }}

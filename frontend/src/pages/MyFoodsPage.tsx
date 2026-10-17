@@ -177,7 +177,7 @@ export default function MyFoodsPage() {
                         <div className="text-sm font-medium">{f.product}</div>
                         <button
                           onClick={() => scanner.saveRecentAsFood(f as unknown as PageFoodItem)}
-                          className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded"
+                          className="text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-1 rounded-lg"
                         >
                           Añadir
                         </button>
@@ -269,7 +269,8 @@ export default function MyFoodsPage() {
       />
 
       <button
-        className="fixed z-50 bottom-[calc(75px+env(safe-area-inset-bottom))] right-5 w-14 h-14 rounded-full flex items-center justify-center text-3xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-none shadow-lg"
+        aria-label="+"
+        className="fixed z-50 bottom-[calc(75px+env(safe-area-inset-bottom))] right-5 w-14 h-14 rounded-full flex items-center justify-center bg-blue-500 hover:bg-blue-600 active:scale-95 text-white text-2xl font-bold shadow-lg shadow-blue-500/25 border-none transition-all cursor-pointer"
         onClick={() => setIsActionMenuOpen(true)}
       >
         +
@@ -353,7 +354,7 @@ export default function MyFoodsPage() {
 
             {scanner.isLookingUpCode ? (
               <div className="flex flex-col items-center justify-center py-10 gap-3">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
                 <p className="text-zinc-300 text-sm m-0">Buscando producto...</p>
               </div>
             ) : scanner.scannedProduct ? (
@@ -385,7 +386,7 @@ export default function MyFoodsPage() {
                   </div>
                   <div>
                     <span className="block text-xs text-zinc-400">Prot</span>
-                    <span className="text-sm font-semibold text-emerald-400">
+                    <span className="text-sm font-semibold text-blue-400">
                       {scanner.scannedProduct.protein}g
                     </span>
                   </div>
