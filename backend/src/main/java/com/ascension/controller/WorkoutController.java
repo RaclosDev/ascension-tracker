@@ -51,6 +51,13 @@ public class WorkoutController {
         return ResponseEntity.ok(workoutService.saveWorkout(jwt.getClaimAsString("email"), dto));
     }
 
+    @PostMapping("/import")
+    public ResponseEntity<WorkoutImportSummaryDTO> importWorkouts(
+            @Valid @RequestBody WorkoutImportRequestDTO request,
+            @AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.ok(workoutService.importWorkouts(jwt.getClaimAsString("email"), request));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<WorkoutDTO> updateWorkout(
             @PathVariable String id,
