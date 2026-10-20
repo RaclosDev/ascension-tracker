@@ -1,4 +1,5 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { Skeleton } from '../components/ui/skeleton';
 import { useMyFoodsData } from '../hooks/my-foods/useMyFoodsData';
 import { useFoodFilters } from '../hooks/my-foods/useFoodFilters';
@@ -19,7 +20,7 @@ import AiFoodModal from '../components/my-foods/AiFoodModal';
 import { ChevronDown, ChevronRight, ScanLine, Pencil, X, Loader2 } from 'lucide-react';
 import { PageFoodItem } from '../types/myfoods';
 import { Recipe, FoodLog, SavedFood } from '../types/api';
-const BarcodeScanner = lazy(() => import('../components/BarcodeScanner'));
+const BarcodeScanner = lazyWithRetry(() => import('../components/BarcodeScanner'));
 
 export default function MyFoodsPage() {
   const {

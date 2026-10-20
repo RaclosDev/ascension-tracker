@@ -235,6 +235,7 @@ export const useWorkoutPreferencesActions = () => {
       syncFromPreferences({
         restTimers: prefs.restTimers,
         restPreset: prefs.restPreset,
+        hiddenEquipments: prefs.hiddenEquipments,
       });
     }
   }, [prefs, syncFromPreferences]);

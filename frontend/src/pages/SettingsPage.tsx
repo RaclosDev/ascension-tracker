@@ -139,6 +139,7 @@ export default function SettingsPage() {
   };
 
   const [isExportingJson, setIsExportingJson] = useState(false);
+  const [isSavingPersonal, setIsSavingPersonal] = useState(false);
 
   const handleExportJson = async () => {
     try {
@@ -221,6 +222,7 @@ export default function SettingsPage() {
 
   const handleSavePersonal = async () => {
     try {
+      setIsSavingPersonal(true);
       await api.put('/settings', {
         startWeight: parseSafeFloat(form.startWeight, Number(effectiveSettings?.startWeight || 0)),
         goalWeight: parseSafeFloat(form.goalWeight, Number(effectiveSettings?.goalWeight || 0)),
@@ -245,6 +247,8 @@ export default function SettingsPage() {
       };
       const msg = e.response?.data?.message || e.response?.data?.error || e.message;
       toast.error(msg ? `Error al guardar: ${msg}` : 'Error al guardar datos personales');
+    } finally {
+      setIsSavingPersonal(false);
     }
   };
 
@@ -357,6 +361,7 @@ export default function SettingsPage() {
           form={form}
           setForm={setForm}
           onSave={handleSavePersonal}
+          isSaving={isSavingPersonal}
         />
 
         {/* 1.5 Plan de Adelgazamiento */}

@@ -22,8 +22,12 @@ export function RestBanner() {
   useEffect(() => {
     if (restUntil && restUntil <= now) {
       if (!notified.current) {
-        playRestSound();
-        notifyRestFinished();
+        // Solo reproducir aviso sonoro si es reciente (< 15s tras expirar el descanso)
+        // Evita campanadas sorpresa si el móvil estuvo bloqueado en el bolsillo 10 minutos
+        if (now - restUntil < 15000) {
+          playRestSound();
+          notifyRestFinished();
+        }
         notified.current = true;
       }
       skipRest();

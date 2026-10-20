@@ -14,7 +14,7 @@ export default defineConfig({
       filename: 'sw.ts',
       registerType: 'autoUpdate',
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,ico,svg}'],
+        globPatterns: ['**/*.{js,css,html,ico,svg,png,jpg,jpeg,webp,mp3,json}'],
         globIgnores: ['**/BarcodeScanner*', '**/CategoricalChart*'],
       },
     }),

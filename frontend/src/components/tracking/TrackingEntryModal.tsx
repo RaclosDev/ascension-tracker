@@ -171,9 +171,9 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
                   className="btn btn-secondary btn-sm"
                   style={{ padding: '0.25rem 0' }}
                   onClick={() => onDeltaAdjust('weight', step)}
-                  aria-label={`Ajustar peso en ${step > 0 ? `+${step}` : step} kg`}
+                  aria-label={`Ajustar peso en ${step > 0 ? `+${step.toFixed(2)}` : step.toFixed(2)} kg`}
                 >
-                  {step > 0 ? `+${step}` : step}
+                  {step > 0 ? `+${step.toFixed(2)}` : step.toFixed(2)}
                 </button>
               ))}
             </div>

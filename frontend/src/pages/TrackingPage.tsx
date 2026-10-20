@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/client';
 import toast from 'react-hot-toast';
@@ -159,16 +159,42 @@ export default function TrackingPage() {
     }
   };
 
+  const mostRecentWeight = useMemo(() => {
+    for (let w = weeks.length - 1; w >= 0; w--) {
+      const days = weeks[w].days;
+      for (let d = days.length - 1; d >= 0; d--) {
+        const val = days[d]?.weight;
+        if (val !== null && val !== undefined) {
+          return val;
+        }
+      }
+    }
+    return null;
+  }, [weeks]);
+
+  const mostRecentSteps = useMemo(() => {
+    for (let w = weeks.length - 1; w >= 0; w--) {
+      const days = weeks[w].days;
+      for (let d = days.length - 1; d >= 0; d--) {
+        const val = days[d]?.steps;
+        if (val !== null && val !== undefined) {
+          return val;
+        }
+      }
+    }
+    return null;
+  }, [weeks]);
+
   const handleDeltaAdjust = (metric: 'weight' | 'steps', delta: number) => {
     if (metric === 'weight') {
       const normalized = modalWeight.replace(',', '.');
       let current = parseFloat(normalized);
-      if (isNaN(current)) current = 75;
+      if (isNaN(current)) current = mostRecentWeight ?? 70;
       const nextWeight = Math.max(0, Math.round((current + delta) * 100) / 100);
       setModalWeight(nextWeight.toFixed(2));
     } else if (metric === 'steps') {
       let current = parseInt(modalSteps, 10);
-      if (isNaN(current)) current = 5000;
+      if (isNaN(current)) current = mostRecentSteps ?? 5000;
       setModalSteps(Math.max(0, Math.round(current + delta)).toString());
     }
   };

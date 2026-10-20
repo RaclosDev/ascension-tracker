@@ -99,13 +99,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setCachedUser(null);
           }
           break;
-        } catch {
+        } catch (err: unknown) {
           if (attempt === maxRetries) {
             if (!cancelled) {
-              const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
               const cachedUser = getCachedUser();
-              if (isOffline && cachedUser) {
-                // Gym / airplane mode: allow entering offline PWA mode with cached user profile
+              const axiosErr = err as { response?: { status?: number } };
+              const isNetworkOrServerError =
+                !axiosErr?.response ||
+                (Boolean(axiosErr.response.status) && axiosErr.response.status! >= 500);
+              const isOffline =
+                (typeof navigator !== 'undefined' && !navigator.onLine) || isNetworkOrServerError;
+
+              if (cachedUser && isOffline) {
+                // Gym / airplane mode / dead wifi: allow entering offline PWA mode with cached user profile
                 setToken('offline-session');
                 setUser(cachedUser);
               } else {
@@ -186,13 +192,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       delete api.defaults.headers.common['Authorization'];
       setUser(null);
       setCachedUser(null);
-      const theme = localStorage.getItem('ascension_custom_color');
-      localStorage.clear();
-      if (theme) localStorage.setItem('ascension_custom_color', theme);
-      queryClient.clear();
-      useWorkoutStore.setState({ active: null, restUntil: null, restTimers: {} });
-      void del('forja-v1').catch(() => {});
-      void purgeAllCaches();
     };
     window.addEventListener('token_refresh', handleTokenRefresh);
     window.addEventListener('auth_failed', handleAuthFailed);
@@ -204,12 +203,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (jwtToken: string) => {
     queryClient.clear();
-    void purgeAllCaches();
-    useWorkoutStore.setState({ active: null, restUntil: null, restTimers: {} });
-    void del('forja-v1').catch(() => {});
-    const theme = localStorage.getItem('ascension_custom_color');
-    localStorage.clear();
-    if (theme) localStorage.setItem('ascension_custom_color', theme);
     setToken(jwtToken);
     try {
       const payload = jwtDecode<Record<string, unknown>>(jwtToken);
@@ -246,6 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (theme) localStorage.setItem('ascension_custom_color', theme);
 
     try {
+      await del('ascension-workout-v1');
       await del('forja-v1');
     } catch (e) {
       console.error(

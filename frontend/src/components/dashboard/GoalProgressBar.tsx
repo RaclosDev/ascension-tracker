@@ -14,10 +14,29 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
   goalWeight,
   currentWeight,
 }: GoalProgressBarProps) {
-  const safeProgress = Math.max(0, Math.min(100, progress || 0));
   const numCurrent = currentWeight ?? 0;
   const numStart = startWeight ?? 0;
   const numGoal = goalWeight ?? 0;
+  const isGainGoal = numGoal > numStart && numStart > 0;
+
+  const calculatedProgress = React.useMemo(() => {
+    if (isGainGoal && numStart > 0 && numGoal > numStart && numCurrent > 0) {
+      const gained = numCurrent - numStart;
+      const total = numGoal - numStart;
+      return total > 0 ? (gained / total) * 100 : 0;
+    }
+    if (progress !== undefined && progress !== null) {
+      return progress;
+    }
+    if (numStart > 0 && numGoal > 0 && numStart !== numGoal && numCurrent > 0) {
+      const lost = numStart - numCurrent;
+      const total = numStart - numGoal;
+      return total > 0 ? (lost / total) * 100 : 0;
+    }
+    return 0;
+  }, [progress, isGainGoal, numStart, numGoal, numCurrent]);
+
+  const safeProgress = Math.max(0, Math.min(100, calculatedProgress));
 
   return (
     <div className="card progress-card glass-panel-elevated relative overflow-hidden rounded-2xl p-4 sm:p-5 mb-6 border border-white/[0.08]">
@@ -47,7 +66,7 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
               className="progress-label text-xs sm:text-sm font-bold uppercase tracking-wider block"
               style={{ color: 'var(--text-primary)' }}
             >
-              Progreso hacia tu meta
+              {isGainGoal ? 'Meta de ganancia' : 'Progreso hacia tu meta'}
             </span>
             <p className="text-[0.72rem] font-medium" style={{ color: 'var(--text-secondary)' }}>
               Actualmente en{' '}

@@ -104,6 +104,7 @@ interface WorkoutState {
   syncFromPreferences: (prefs: {
     restTimers?: Record<string, number>;
     restPreset?: number;
+    hiddenEquipments?: string[];
   }) => void;
 }
 
@@ -197,6 +198,7 @@ export const useWorkoutStore = create<WorkoutState>()(
             exercises: w.exercises.map((ex: import('./types').WorkoutExercise) => ({
               id: uid(),
               exerciseId: ex.exerciseId,
+              variant: ex.variant,
               notes: '',
               sets: ex.sets.map((s: import('./types').WorkoutSet) =>
                 blankSet({
@@ -234,6 +236,7 @@ export const useWorkoutStore = create<WorkoutState>()(
         set((state) => ({
           restTimers: { ...state.restTimers, ...prefs.restTimers },
           restPreset: prefs.restPreset ?? state.restPreset,
+          hiddenEquipments: prefs.hiddenEquipments ?? state.hiddenEquipments,
         }));
       },
 
@@ -464,9 +467,22 @@ export const useWorkoutStore = create<WorkoutState>()(
       },
     }),
     {
-      name: 'forja-v1',
+      name: 'ascension-workout-v1',
       storage: createJSONStorage(() => ({
-        getItem: async (name) => (await get(name)) || null,
+        getItem: async (name) => {
+          const val = await get(name);
+          if (val) return val;
+          // Migración automática del nombre heredado del prototipo 'forja-v1'
+          if (name === 'ascension-workout-v1') {
+            const legacy = await get('forja-v1');
+            if (legacy) {
+              await set('ascension-workout-v1', legacy);
+              await del('forja-v1');
+              return legacy;
+            }
+          }
+          return null;
+        },
         setItem: async (name, value) => await set(name, value),
         removeItem: async (name) => await del(name),
       })),

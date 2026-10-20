@@ -99,24 +99,43 @@ export function FoodPortionEditor({
         </div>
 
         {inputMode === 'grams' || !hasPortions ? (
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <input
-              type="number"
-              inputMode="decimal"
-              className="form-input"
-              style={{
-                fontSize: '1.2rem',
-                padding: '0.75rem',
-                fontWeight: 600,
-                width: '120px',
-                textAlign: 'center',
-              }}
-              value={quantity || ''}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              autoFocus
-              aria-label="Cantidad en gramos"
-            />
-            <span style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>g</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input
+                type="number"
+                inputMode="decimal"
+                className="form-input"
+                style={{
+                  fontSize: '1.2rem',
+                  padding: '0.75rem',
+                  fontWeight: 600,
+                  width: '120px',
+                  textAlign: 'center',
+                }}
+                value={quantity || ''}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+                autoFocus
+                aria-label="Cantidad en gramos"
+              />
+              <span style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>g</span>
+            </div>
+            <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+              {[-50, -10, 10, 50].map((delta) => (
+                <button
+                  key={delta}
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  style={{ padding: '0.2rem 0.55rem', fontSize: '0.75rem' }}
+                  onClick={() => {
+                    const current = Number(quantity) || 0;
+                    const next = Math.max(0, current + delta);
+                    setQuantity(next);
+                  }}
+                >
+                  {delta > 0 ? `+${delta}g` : `${delta}g`}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

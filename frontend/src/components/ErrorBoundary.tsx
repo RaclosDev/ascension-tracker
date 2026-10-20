@@ -1,4 +1,5 @@
 import React, { Component, ReactNode, ErrorInfo } from 'react';
+import { isChunkLoadError } from '../utils/lazyWithRetry';
 
 interface Props {
   children: ReactNode;
@@ -16,6 +17,21 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    const isChunkOrMimeError = isChunkLoadError(error);
+
+    if (isChunkOrMimeError) {
+      const alreadyReloaded = sessionStorage.getItem('ascension_eb_reload_lock');
+      if (!alreadyReloaded) {
+        sessionStorage.setItem('ascension_eb_reload_lock', 'true');
+        if (typeof window !== 'undefined' && 'caches' in window) {
+          caches.keys().then((keys) => {
+            keys.forEach((k) => caches.delete(k));
+          });
+        }
+        window.location.reload();
+      }
+    }
+
     return { hasError: true, error };
   }
 
@@ -25,6 +41,8 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      const isChunkOrMimeError = isChunkLoadError(this.state.error);
+
       return (
         <div
           style={{
@@ -39,41 +57,77 @@ export class ErrorBoundary extends Component<Props, State> {
             textAlign: 'center',
           }}
         >
-          <h2 style={{ marginBottom: '10px' }}>Algo salió mal.</h2>
+          <h2 style={{ marginBottom: '10px' }}>
+            {isChunkOrMimeError ? 'Nueva versión disponible' : 'Algo salió mal.'}
+          </h2>
           <p style={{ color: '#94a3b8', marginBottom: '20px' }}>
-            Ha ocurrido un error en la aplicación.
+            {isChunkOrMimeError
+              ? 'Se ha desplegado una nueva versión de Ascension. Pulsa para actualizar a los últimos cambios.'
+              : 'Ha ocurrido un error en la aplicación.'}
           </p>
-          <pre
-            style={{
-              color: '#ef4444',
-              marginBottom: '20px',
-              maxWidth: '80%',
-              overflowX: 'auto',
-              textAlign: 'left',
-              padding: '10px',
-              background: '#1e1e1e',
-              borderRadius: '8px',
-            }}
-          >
-            {this.state.error?.message}
-            <br />
-            <br />
-            {this.state.error?.stack}
-          </pre>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button
-              className="btn btn-secondary"
-              onClick={() => {
-                const text = `${this.state.error?.message}\n\n${this.state.error?.stack}`;
-                navigator.clipboard.writeText(text);
-                alert('Error copiado al portapapeles');
+          {!isChunkOrMimeError && this.state.error?.message && (
+            <pre
+              style={{
+                color: '#ef4444',
+                marginBottom: '20px',
+                maxWidth: '80%',
+                overflowX: 'auto',
+                textAlign: 'left',
+                padding: '10px',
+                background: '#1e1e1e',
+                borderRadius: '8px',
               }}
             >
-              Copiar Error
+              {this.state.error.message}
+              {this.state.error.stack ? (
+                <>
+                  <br />
+                  <br />
+                  {this.state.error.stack}
+                </>
+              ) : null}
+            </pre>
+          )}
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              className="btn btn-primary"
+              onClick={async () => {
+                sessionStorage.removeItem('ascension_chunk_reload_lock');
+                sessionStorage.removeItem('ascension_eb_reload_lock');
+                if ('caches' in window) {
+                  try {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map((k) => caches.delete(k)));
+                  } catch {
+                    // ignore
+                  }
+                }
+                if ('serviceWorker' in navigator) {
+                  try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map((r) => r.unregister()));
+                  } catch {
+                    // ignore
+                  }
+                }
+                window.location.href =
+                  window.location.origin + window.location.pathname + '?v=' + Date.now();
+              }}
+            >
+              {isChunkOrMimeError ? 'Actualizar aplicación' : 'Recargar'}
             </button>
-            <button className="btn btn-primary" onClick={() => window.location.reload()}>
-              Recargar
-            </button>
+            {!isChunkOrMimeError && (
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  const text = `${this.state.error?.message || ''}\n\n${this.state.error?.stack || ''}`;
+                  navigator.clipboard.writeText(text);
+                  alert('Error copiado al portapapeles');
+                }}
+              >
+                Copiar Error
+              </button>
+            )}
           </div>
         </div>
       );

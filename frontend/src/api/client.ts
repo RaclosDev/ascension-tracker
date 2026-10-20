@@ -7,6 +7,7 @@ const api = axios.create({
   baseURL: baseUrl ? `${baseUrl}/api` : '/api',
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
+  timeout: 10000,
 });
 
 export let memoryToken: string | null = null;
@@ -18,7 +19,7 @@ export const setMemoryToken = (token: string | null) => {
 export const isTokenValid = (token: string | null): boolean => {
   if (!token) return false;
   if (token === 'offline-session') {
-    return typeof navigator !== 'undefined' && !navigator.onLine;
+    return true;
   }
   try {
     const payload = jwtDecode<{ exp?: number }>(token);
