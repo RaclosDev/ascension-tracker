@@ -11,7 +11,7 @@ import { WeeklyMetricResponse } from '../types/tracking';
 describe('trackingHelpers', () => {
   it('exporta constantes esperadas', () => {
     expect(DAY_NAMES).toHaveLength(7);
-    expect(WEIGHT_DELTAS).toEqual([-0.5, -0.1, 0.1, 0.5]);
+    expect(WEIGHT_DELTAS).toEqual([-0.1, -0.05, 0.05, 0.1]);
     expect(STEPS_DELTAS).toEqual([-1000, -100, 100, 1000]);
   });
 

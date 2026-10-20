@@ -9,10 +9,13 @@ import { DashboardChartsSkeleton } from '../components/workout/skeletons/Dashboa
 import { QuickWeightCard } from '../components/dashboard/QuickWeightCard';
 import { ElevatedKpiGrid } from '../components/dashboard/ElevatedKpiGrid';
 import { GoalProgressBar } from '../components/dashboard/GoalProgressBar';
+import { useRatePreference, calcEstimatedDate } from '../hooks/useRatePreference';
 
 const DashboardCharts = lazy(() => import('../components/DashboardCharts'));
 
 export default function DashboardPage() {
+  const { pref, update: updateRatePref } = useRatePreference();
+
   // 1. Fetch data with React Query
   const { data: dashboard, isLoading: loadingDash } = useQuery<DashboardData>({
     queryKey: ['dashboard'],
@@ -50,6 +53,9 @@ export default function DashboardPage() {
   const hasTodayWeight = !!todayEntry;
   const recentWeight =
     weights.length > 0 ? weights[weights.length - 1].weight : settings?.startWeight;
+
+  // Previous day weight (last entry that is not today)
+  const yesterdayWeight = weights.filter((w: WeightEntry) => w.date < todayDateStr).at(-1)?.weight;
 
   const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   const todayLabel = `${dayNames[today.getDay()]}, ${format(today, "d 'de' MMMM 'de' yyyy", { locale: es })}`;
@@ -125,6 +131,20 @@ export default function DashboardPage() {
 
   if (!dashboard || !settings) return null;
 
+  // Effective rate based on user preference
+  const historyRate = Math.abs(dashboard.avgWeeklyChange ?? 0);
+  const effectiveRate =
+    pref.mode === 'goal'
+      ? Math.abs(settings.weeklyGoal ?? 0.5)
+      : pref.mode === 'custom'
+        ? Math.abs(pref.customRate)
+        : historyRate;
+
+  const effectiveEstimatedDate =
+    pref.mode === 'history'
+      ? dashboard.estimatedDate
+      : calcEstimatedDate(dashboard.currentWeight, settings.goalWeight, effectiveRate);
+
   return (
     <div className="fade-in">
       {/* 1. Quick Add / Edit Weight Card */}
@@ -133,6 +153,7 @@ export default function DashboardPage() {
         todayDateStr={todayDateStr}
         todayWeight={todayEntry?.weight}
         recentWeight={recentWeight}
+        yesterdayWeight={yesterdayWeight}
         hasTodayWeight={hasTodayWeight}
       />
 
@@ -142,8 +163,11 @@ export default function DashboardPage() {
         weeklyAverage={dashboard.currentWeeklyAverage}
         totalLost={dashboard.totalLost}
         remaining={dashboard.remaining}
-        estimatedDate={dashboard.estimatedDate}
-        avgWeeklyRate={dashboard.avgWeeklyChange}
+        estimatedDate={effectiveEstimatedDate}
+        avgWeeklyRate={effectiveRate}
+        ratePref={pref}
+        onRateChange={updateRatePref}
+        weeklyGoal={settings.weeklyGoal}
       />
 
       {/* 3. Goal Progress Bar */}

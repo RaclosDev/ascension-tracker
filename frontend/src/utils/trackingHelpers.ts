@@ -1,7 +1,7 @@
 import { WeekData, WeeklyMetricResponse } from '../types/tracking';
 
 export const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-export const WEIGHT_DELTAS = [-0.5, -0.1, 0.1, 0.5];
+export const WEIGHT_DELTAS = [-0.1, -0.05, 0.05, 0.1];
 export const STEPS_DELTAS = [-1000, -100, 100, 1000];
 
 export function getMondayStr(date: Date = new Date()): string {

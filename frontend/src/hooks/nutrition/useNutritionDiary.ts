@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
@@ -218,15 +218,56 @@ export function useNutritionDiary() {
     }
   };
 
-  // Delete Log Mutation
-  const deleteLogMutation = useMutation<unknown, Error, number | string>({
-    mutationFn: (id) => api.delete(`/nutrition/logs/${id}`),
-    onSuccess: () => {
+  // Delete Log Mutation with Undo support
+  const deleteLogMutation = useMutation<unknown, Error, { id: number | string; log: FoodLog }>({
+    mutationFn: ({ id }) => api.delete(`/nutrition/logs/${id}`),
+    onSuccess: (_, { log }) => {
       queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
       queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
-      toast.success('Alimento eliminado');
+
+      toast.success(
+        (t) =>
+          React.createElement(
+            'span',
+            { className: 'flex items-center gap-3' },
+            React.createElement('span', null, 'Alimento eliminado'),
+            React.createElement(
+              'button',
+              {
+                type: 'button',
+                className:
+                  'text-xs font-bold underline opacity-90 hover:opacity-100 cursor-pointer',
+                onClick: async () => {
+                  toast.dismiss(t.id);
+                  try {
+                    await api.post('/nutrition/logs', {
+                      date: log.date,
+                      mealIndex: log.mealIndex,
+                      product: log.product,
+                      quantity: log.quantity,
+                      kcal: log.kcal,
+                      protein: log.protein,
+                      carbs: log.carbs,
+                      fat: log.fat,
+                      portionsJson: log.portionsJson || null,
+                    });
+                    queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
+                    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+                    queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
+                    queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
+                    toast.success('¡Alimento restaurado!');
+                  } catch {
+                    toast.error('Error al restaurar alimento');
+                  }
+                },
+              },
+              'Deshacer',
+            ),
+          ),
+        { duration: 5000 },
+      );
     },
     onError: () => {
       toast.error('Error al eliminar alimento');
@@ -234,7 +275,15 @@ export function useNutritionDiary() {
   });
 
   const handleDeleteLog = (id: number | string) => {
-    deleteLogMutation.mutate(id);
+    const logToDelete = foodLogs.find((l: FoodLog) => l.id === id);
+    if (!logToDelete) {
+      api.delete(`/nutrition/logs/${id}`).then(() => {
+        queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
+        toast.success('Alimento eliminado');
+      });
+      return;
+    }
+    deleteLogMutation.mutate({ id, log: logToDelete });
   };
 
   // Edit Log Handlers
