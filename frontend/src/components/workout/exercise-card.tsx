@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, ChevronDown, ChevronUp, Plus, Trash2, Timer, MoreVertical } from 'lucide-react';
 import { getExerciseMap } from '@/lib/workout/exercises';
 import {
@@ -563,6 +564,35 @@ export const ExerciseCard = React.memo(function ExerciseCard({
   const customGifs = prefs?.exerciseGifs || {};
   const [editingVariant, setEditingVariant] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showActionsMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node) &&
+        menuButtonRef.current &&
+        !menuButtonRef.current.contains(e.target as Node)
+      ) {
+        setShowActionsMenu(false);
+      }
+    };
+    const handleScrollOrResize = () => {
+      setShowActionsMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+    window.addEventListener('resize', handleScrollOrResize);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [showActionsMenu]);
+
   const [activeStepper, setActiveStepper] = useState<{
     setId: string;
     field: 'weight' | 'reps';
@@ -726,11 +756,18 @@ export const ExerciseCard = React.memo(function ExerciseCard({
         </div>
         <div className="exercise-card-actions" onClick={(e) => e.stopPropagation()}>
           <button
+            ref={menuButtonRef}
             type="button"
             aria-label="Opciones del ejercicio"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               haptics.light();
-              setShowActionsMenu(!showActionsMenu);
+              if (!showActionsMenu && menuButtonRef.current) {
+                setMenuRect(menuButtonRef.current.getBoundingClientRect());
+                setShowActionsMenu(true);
+              } else {
+                setShowActionsMenu(false);
+              }
             }}
             className="exercise-card-action-btn"
             title="Opciones del ejercicio"
@@ -756,51 +793,67 @@ export const ExerciseCard = React.memo(function ExerciseCard({
             />
           </button>
 
-          {showActionsMenu && (
-            <div className="exercise-card-menu-dropdown fade-in">
-              <button
-                type="button"
-                disabled={index === 0}
-                aria-label="Subir"
-                onClick={() => {
-                  haptics.light();
-                  moveExercise(row.id, -1);
-                  setShowActionsMenu(false);
+          {showActionsMenu &&
+            menuRect &&
+            createPortal(
+              <div
+                ref={menuRef}
+                className="exercise-card-menu-dropdown fade-in"
+                style={{
+                  position: 'fixed',
+                  top:
+                    menuRect.bottom + 140 > window.innerHeight
+                      ? Math.max(10, menuRect.top - 130)
+                      : menuRect.bottom + 6,
+                  right: Math.max(12, window.innerWidth - menuRect.right),
+                  zIndex: 9999,
                 }}
-                className="exercise-card-menu-item"
+                onClick={(e) => e.stopPropagation()}
               >
-                <ChevronUp size={16} />
-                <span>Mover arriba</span>
-              </button>
-              <button
-                type="button"
-                disabled={index === total - 1}
-                aria-label="Bajar"
-                onClick={() => {
-                  haptics.light();
-                  moveExercise(row.id, 1);
-                  setShowActionsMenu(false);
-                }}
-                className="exercise-card-menu-item"
-              >
-                <ChevronDown size={16} />
-                <span>Mover abajo</span>
-              </button>
-              <button
-                type="button"
-                aria-label="Quitar ejercicio"
-                onClick={() => {
-                  haptics.warning();
-                  removeExercise(row.id);
-                  setShowActionsMenu(false);
-                }}
-                className="exercise-card-menu-item danger"
-              >
-                <Trash2 size={16} />
-                <span>Quitar ejercicio</span>
-              </button>
-            </div>
-          )}
+                <button
+                  type="button"
+                  disabled={index === 0}
+                  aria-label="Subir"
+                  onClick={() => {
+                    haptics.light();
+                    moveExercise(row.id, -1);
+                    setShowActionsMenu(false);
+                  }}
+                  className="exercise-card-menu-item"
+                >
+                  <ChevronUp size={16} />
+                  <span>Mover arriba</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={index === total - 1}
+                  aria-label="Bajar"
+                  onClick={() => {
+                    haptics.light();
+                    moveExercise(row.id, 1);
+                    setShowActionsMenu(false);
+                  }}
+                  className="exercise-card-menu-item"
+                >
+                  <ChevronDown size={16} />
+                  <span>Mover abajo</span>
+                </button>
+                <button
+                  type="button"
+                  aria-label="Quitar ejercicio"
+                  onClick={() => {
+                    haptics.warning();
+                    removeExercise(row.id);
+                    setShowActionsMenu(false);
+                  }}
+                  className="exercise-card-menu-item danger"
+                >
+                  <Trash2 size={16} />
+                  <span>Quitar ejercicio</span>
+                </button>
+              </div>,
+              document.body,
+            )}
         </div>
       </div>
 

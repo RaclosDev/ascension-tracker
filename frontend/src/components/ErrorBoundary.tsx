@@ -1,4 +1,5 @@
 import React, { Component, ReactNode, ErrorInfo } from 'react';
+import { isChunkLoadError } from '../utils/lazyWithRetry';
 
 interface Props {
   children: ReactNode;
@@ -16,19 +17,17 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
-    const errorMsg = error?.message || String(error || '');
-    const isChunkOrMimeError =
-      errorMsg.includes('MIME type') ||
-      errorMsg.includes('text/html') ||
-      errorMsg.includes('dynamically imported module') ||
-      errorMsg.includes('Failed to fetch') ||
-      errorMsg.includes('Importing a module script failed') ||
-      errorMsg.includes('error loading dynamically imported module');
+    const isChunkOrMimeError = isChunkLoadError(error);
 
     if (isChunkOrMimeError) {
       const alreadyReloaded = sessionStorage.getItem('ascension_eb_reload_lock');
       if (!alreadyReloaded) {
         sessionStorage.setItem('ascension_eb_reload_lock', 'true');
+        if (typeof window !== 'undefined' && 'caches' in window) {
+          caches.keys().then((keys) => {
+            keys.forEach((k) => caches.delete(k));
+          });
+        }
         window.location.reload();
       }
     }
@@ -42,14 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      const errorMsg = this.state.error?.message || String(this.state.error || '');
-      const isChunkOrMimeError =
-        errorMsg.includes('MIME type') ||
-        errorMsg.includes('text/html') ||
-        errorMsg.includes('dynamically imported module') ||
-        errorMsg.includes('Failed to fetch') ||
-        errorMsg.includes('Importing a module script failed') ||
-        errorMsg.includes('error loading dynamically imported module');
+      const isChunkOrMimeError = isChunkLoadError(this.state.error);
 
       return (
         <div
@@ -99,10 +91,27 @@ export class ErrorBoundary extends Component<Props, State> {
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
               className="btn btn-primary"
-              onClick={() => {
+              onClick={async () => {
                 sessionStorage.removeItem('ascension_chunk_reload_lock');
                 sessionStorage.removeItem('ascension_eb_reload_lock');
-                window.location.reload();
+                if ('caches' in window) {
+                  try {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map((k) => caches.delete(k)));
+                  } catch {
+                    // ignore
+                  }
+                }
+                if ('serviceWorker' in navigator) {
+                  try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map((r) => r.unregister()));
+                  } catch {
+                    // ignore
+                  }
+                }
+                window.location.href =
+                  window.location.origin + window.location.pathname + '?v=' + Date.now();
               }}
             >
               {isChunkOrMimeError ? 'Actualizar aplicación' : 'Recargar'}

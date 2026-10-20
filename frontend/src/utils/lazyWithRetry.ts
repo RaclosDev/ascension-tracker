@@ -1,12 +1,36 @@
 import { ComponentType, lazy, LazyExoticComponent } from 'react';
 
 /**
+ * Checks whether an error is caused by a deployment chunk mismatch,
+ * network failure during dynamic import, or MIME type mismatch.
+ */
+export function isChunkLoadError(error: unknown): boolean {
+  if (!error) return false;
+  const msg = (error instanceof Error ? error.message : String(error)).toLowerCase();
+  return (
+    msg.includes('mime type') ||
+    msg.includes('text/html') ||
+    msg.includes('dynamically imported module') ||
+    msg.includes('failed to fetch dynamically') ||
+    msg.includes('failed to fetch') ||
+    msg.includes('importing a module script failed') ||
+    msg.includes('importing module script failed') ||
+    msg.includes('module script failed') ||
+    msg.includes('error loading dynamically imported module') ||
+    msg.includes('failed to load module script') ||
+    msg.includes('loading chunk') ||
+    msg.includes('load chunk')
+  );
+}
+
+/**
  * Helper to wrap dynamic component imports with automatic reload recovery.
  * When a new deployment occurs, older chunk hashes may return 404 or index.html (MIME text/html).
  * This detects that specific deployment mismatch and cleanly reloads the window to fetch
  * the latest index.html and chunk manifest without stranding the user on an error screen.
  */
-export function lazyWithRetry<T extends ComponentType<unknown>>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function lazyWithRetry<T extends ComponentType<any>>(
   factory: () => Promise<{ default: T }>,
 ): LazyExoticComponent<T> {
   return lazy(async () => {
@@ -17,19 +41,20 @@ export function lazyWithRetry<T extends ComponentType<unknown>>(
       sessionStorage.removeItem(sessionKey);
       return component;
     } catch (error: unknown) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      const isMimeOrChunkError =
-        errorMsg.includes('MIME type') ||
-        errorMsg.includes('text/html') ||
-        errorMsg.includes('dynamically imported module') ||
-        errorMsg.includes('Failed to fetch dynamically imported module') ||
-        errorMsg.includes('Importing a module script failed') ||
-        errorMsg.includes('error loading dynamically imported module');
-
+      const isMimeOrChunkError = isChunkLoadError(error);
       const alreadyReloaded = sessionStorage.getItem(sessionKey);
 
       if (isMimeOrChunkError && !alreadyReloaded) {
         sessionStorage.setItem(sessionKey, 'true');
+        // Clear caches to prevent re-serving stale assets
+        if (typeof window !== 'undefined' && 'caches' in window) {
+          try {
+            const keys = await caches.keys();
+            await Promise.all(keys.map((k) => caches.delete(k)));
+          } catch {
+            // ignore cache errors
+          }
+        }
         // Hard refresh from server to pull latest index.html with new chunk hashes
         window.location.reload();
         // Return a never-resolving promise so React Suspense/ErrorBoundary doesn't crash while reloading

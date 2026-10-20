@@ -1,17 +1,28 @@
 /// <reference lib="webworker" />
-import { createHandlerBoundToURL, precacheAndRoute, PrecacheEntry } from 'workbox-precaching';
+import { precacheAndRoute, matchPrecache, PrecacheEntry } from 'workbox-precaching';
 declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (PrecacheEntry | string)[] };
 
 import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate } from 'workbox-strategies';
+import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 
 // Precache resources injected by VitePWA
 precacheAndRoute(self.__WB_MANIFEST);
 
-// SPA Navigation fallback for offline navigation (excluding /api routes)
-const navigationHandler = createHandlerBoundToURL('/index.html');
-const navigationRoute = new NavigationRoute(navigationHandler, {
+// SPA Navigation strategy: NetworkFirst ensures we pull the latest index.html on deployment,
+// falling back gracefully to the precached index.html when offline.
+const navigationStrategy = new NetworkFirst({
+  cacheName: 'navigation-cache',
+  networkTimeoutSeconds: 3,
+  plugins: [
+    {
+      handlerDidError: async () => {
+        return (await matchPrecache('/index.html')) || Response.error();
+      },
+    },
+  ],
+});
+const navigationRoute = new NavigationRoute(navigationStrategy, {
   denylist: [/^\/api/],
 });
 registerRoute(navigationRoute);

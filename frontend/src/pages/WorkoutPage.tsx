@@ -1,22 +1,23 @@
 import React from 'react';
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useWorkoutStore } from '../lib/workout/store';
 import { SegmentedControl } from '../components/ui/segmented-control';
 import { Loader2 } from 'lucide-react';
 
-const Dashboard = lazy(() =>
+const Dashboard = lazyWithRetry(() =>
   import('../components/workout/dashboard').then((m) => ({ default: m.Dashboard })),
 );
-const ActiveWorkout = lazy(() =>
+const ActiveWorkout = lazyWithRetry(() =>
   import('../components/workout/active-workout').then((m) => ({ default: m.ActiveWorkout })),
 );
-const HistoryView = lazy(() =>
+const HistoryView = lazyWithRetry(() =>
   import('../components/workout/history').then((m) => ({ default: m.HistoryView })),
 );
-const TemplatesView = lazy(() =>
+const TemplatesView = lazyWithRetry(() =>
   import('../components/workout/templates').then((m) => ({ default: m.TemplatesView })),
 );
-const ExercisesView = lazy(() =>
+const ExercisesView = lazyWithRetry(() =>
   import('../components/workout/exercises-view').then((m) => ({ default: m.ExercisesView })),
 );
 

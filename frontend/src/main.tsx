@@ -32,15 +32,43 @@ window.addEventListener('workout-migration-complete', () => {
   queryClient.invalidateQueries({ queryKey: ['recentWorkouts'] });
 });
 
-// Automatic recovery from deployment chunk load errors (Vite native event)
-window.addEventListener('vite:preloadError', (event) => {
-  event.preventDefault();
-  const reloadKey = 'ascension_preload_retry';
+import { isChunkLoadError } from './utils/lazyWithRetry';
+
+// Automatic recovery from deployment chunk load errors (Vite native event, unhandled rejections, and uncaught error events)
+const handleChunkError = async (error: unknown) => {
+  if (!isChunkLoadError(error)) return;
+  const reloadKey = 'ascension_chunk_reload_lock';
   const now = Date.now();
   const lastReload = parseInt(sessionStorage.getItem(reloadKey) || '0', 10);
   if (now - lastReload > 8000) {
     sessionStorage.setItem(reloadKey, String(now));
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      try {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      } catch {
+        // ignore
+      }
+    }
     window.location.reload();
+  }
+};
+
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault();
+  void handleChunkError(event);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  if (isChunkLoadError(event.reason)) {
+    event.preventDefault();
+    void handleChunkError(event.reason);
+  }
+});
+
+window.addEventListener('error', (event) => {
+  if (isChunkLoadError(event.error || event.message)) {
+    void handleChunkError(event.error || event.message);
   }
 });
 
