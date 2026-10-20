@@ -32,6 +32,18 @@ window.addEventListener('workout-migration-complete', () => {
   queryClient.invalidateQueries({ queryKey: ['recentWorkouts'] });
 });
 
+// Automatic recovery from deployment chunk load errors (Vite native event)
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault();
+  const reloadKey = 'ascension_preload_retry';
+  const now = Date.now();
+  const lastReload = parseInt(sessionStorage.getItem(reloadKey) || '0', 10);
+  if (now - lastReload > 8000) {
+    sessionStorage.setItem(reloadKey, String(now));
+    window.location.reload();
+  }
+});
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
@@ -49,8 +61,9 @@ if (
   const updateSW = registerSW({
     immediate: true,
     onNeedRefresh() {
-      // Silently update the PWA when a new version is detected
+      // Activate new service worker and refresh window to load the latest HTML & chunks
       updateSW(true);
+      window.location.reload();
     },
   });
 }
