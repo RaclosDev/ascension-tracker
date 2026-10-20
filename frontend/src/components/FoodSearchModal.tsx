@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, FormEvent, ChangeEvent, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, FormEvent, ChangeEvent, Suspense } from 'react';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import api from '../api/client';
@@ -7,7 +8,7 @@ import { useSpeechToText } from '../hooks/useSpeechToText';
 import { normalizeString } from '../lib/workout/format';
 import { getSanitizedKcal, extractPortions } from '../utils/portionHelper';
 import { getSmartFallbackQueries } from '../utils/searchHelper';
-const BarcodeScanner = lazy(() => import('./BarcodeScanner'));
+const BarcodeScanner = lazyWithRetry(() => import('./BarcodeScanner'));
 import ManualFoodForm from './food/ManualFoodForm';
 import { FoodPortionEditor, SearchProduct } from './food/FoodPortionEditor';
 import { FoodSearchResultsList, SavedFoodExtended } from './food/FoodSearchResultsList';

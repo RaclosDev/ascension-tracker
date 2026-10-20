@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState, lazy, Suspense } from 'react';
+import React, { Component, useEffect, useState, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -6,13 +6,14 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import api from './api/client';
 import { applyThemeColor } from './utils/colorHelper';
+import { lazyWithRetry } from './utils/lazyWithRetry';
 
-const DashboardPage = lazy(() => import('./pages/DashboardPage'));
-const TrackingPage = lazy(() => import('./pages/TrackingPage'));
-const NutritionPage = lazy(() => import('./pages/NutritionPage'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage'));
-const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
-const UtilitiesPage = lazy(() => import('./pages/UtilitiesPage'));
+const DashboardPage = lazyWithRetry(() => import('./pages/DashboardPage'));
+const TrackingPage = lazyWithRetry(() => import('./pages/TrackingPage'));
+const NutritionPage = lazyWithRetry(() => import('./pages/NutritionPage'));
+const SettingsPage = lazyWithRetry(() => import('./pages/SettingsPage'));
+const WorkoutPage = lazyWithRetry(() => import('./pages/WorkoutPage'));
+const UtilitiesPage = lazyWithRetry(() => import('./pages/UtilitiesPage'));
 import LoginPage from './pages/LoginPage';
 
 import { PageLoader } from './components/PageLoader';

@@ -36,6 +36,12 @@ export function SettingsWorkoutSection({
   onToggleHiddenEquipment,
   onOpenHevyModal,
 }: SettingsWorkoutSectionProps) {
+  const [localRest, setLocalRest] = React.useState(String(restPreset));
+
+  React.useEffect(() => {
+    setLocalRest(String(restPreset));
+  }, [restPreset]);
+
   return (
     <div
       className={`card accordion-card transition-all duration-300 ease-out ${isOpen ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
@@ -77,15 +83,28 @@ export function SettingsWorkoutSection({
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <input
                 type="number"
-                inputMode="decimal"
+                inputMode="numeric"
                 className="form-input"
                 style={{ width: '80px', textAlign: 'center', fontWeight: 600 }}
-                value={restPreset}
+                value={localRest}
                 onChange={(e) => {
-                  const val = Number(e.target.value) || 90;
-                  onRestPresetChange(val);
+                  const val = e.target.value;
+                  setLocalRest(val);
+                  if (val !== '') {
+                    const parsed = parseInt(val, 10);
+                    if (!Number.isNaN(parsed) && parsed >= 5) {
+                      onRestPresetChange(parsed);
+                    }
+                  }
                 }}
-                min="0"
+                onBlur={() => {
+                  const parsed = parseInt(localRest, 10);
+                  if (Number.isNaN(parsed) || parsed < 5) {
+                    setLocalRest(String(restPreset >= 5 ? restPreset : 90));
+                    onRestPresetChange(restPreset >= 5 ? restPreset : 90);
+                  }
+                }}
+                min="5"
                 step="15"
                 aria-label="Descanso base en segundos"
               />

@@ -1,4 +1,5 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useQueryClient } from '@tanstack/react-query';
 import { FoodLog, Meal } from '../types/api';
 import { Loader2, Plus } from 'lucide-react';
@@ -9,9 +10,9 @@ import { NutritionDateBar } from '../components/nutrition/NutritionDateBar';
 import { MealFoodGroup } from '../components/nutrition/MealFoodGroup';
 import { useNutritionDiary } from '../hooks/nutrition/useNutritionDiary';
 
-const MyFoodsPage = lazy(() => import('./MyFoodsPage'));
-const FoodSearchModal = lazy(() => import('../components/FoodSearchModal'));
-const NutritionPieChart = lazy(() => import('../components/nutrition/NutritionPieChart'));
+const MyFoodsPage = lazyWithRetry(() => import('./MyFoodsPage'));
+const FoodSearchModal = lazyWithRetry(() => import('../components/FoodSearchModal'));
+const NutritionPieChart = lazyWithRetry(() => import('../components/nutrition/NutritionPieChart'));
 
 export default function NutritionPage() {
   const queryClient = useQueryClient();
