@@ -60,9 +60,9 @@ class RefreshTokenRotationIntegrationTest {
                 .toList();
         assertThat(familyTokens).hasSize(2);
 
-        // 3. Simulate passage of time past 10s grace period
+        // 3. Simulate passage of time past 60s grace period
         RefreshToken oldTokenInDb = refreshTokenRepository.findByToken(RefreshToken.hashToken(plainToken1)).orElseThrow();
-        oldTokenInDb.setReplacedAt(Instant.now().minusSeconds(15));
+        oldTokenInDb.setReplacedAt(Instant.now().minusSeconds(75));
         refreshTokenRepository.save(oldTokenInDb);
 
         // 4. Attacker attempts to reuse the old rotated token (plainToken1)
