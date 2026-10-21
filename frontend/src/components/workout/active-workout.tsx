@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark, Plus, Square, Check, ChevronDown } from 'lucide-react';
+import {
+  Bookmark,
+  Plus,
+  Square,
+  Check,
+  ChevronDown,
+  Edit3,
+  Calendar,
+  Clock,
+  X,
+  Save,
+} from 'lucide-react';
 import { dismissRestNotifications } from '@/lib/workout/notifications';
 import {
   AlertDialog,
@@ -18,10 +29,29 @@ import { RestBanner } from '@/components/workout/rest-banner';
 import { EmptyCard } from '@/components/workout/dashboard';
 import { WorkoutCelebrationModal } from '@/components/workout/WorkoutCelebrationModal';
 import { useWorkoutStore } from '@/lib/workout/store';
+import { useSaveWorkout, useSaveTemplate } from '@/lib/workout/api';
 import { haptics } from '@/lib/haptics';
+import toast from 'react-hot-toast';
 import type { WorkoutExercise } from '@/lib/workout/types';
 
 const EMPTY_EXERCISES: WorkoutExercise[] = [];
+
+function toLocalDatetimeString(timestamp: number): string {
+  const d = new Date(timestamp);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const mm = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const min = pad(d.getMinutes());
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+}
+
+function fromLocalDatetimeString(str: string): number {
+  if (!str) return Date.now();
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? Date.now() : d.getTime();
+}
 
 export function ActiveWorkout() {
   const hasActive = useWorkoutStore((s) => s.active !== null);
@@ -108,14 +138,33 @@ export function ActiveWorkout() {
 
 function LiveSession() {
   const navigate = useNavigate();
-  const workoutName = useWorkoutStore((s) => s.active?.name?.trim() || 'Entrenamiento');
-  const exercises = useWorkoutStore((s) => s.active?.exercises ?? EMPTY_EXERCISES);
+  const activeWorkout = useWorkoutStore((s) => s.active);
+  const setWorkoutName = useWorkoutStore((s) => s.setWorkoutName);
+  const setWorkoutDate = useWorkoutStore((s) => s.setWorkoutDate);
+  const isEditing = Boolean(activeWorkout?.editingId);
+  const workoutName = activeWorkout?.name?.trim() || 'Entrenamiento';
+  const exercises = activeWorkout?.exercises ?? EMPTY_EXERCISES;
+
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleInput, setTitleInput] = useState(workoutName);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const totalSetsCount = exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
   const completedSetsCount = exercises.reduce(
     (acc, ex) => acc + ex.sets.filter((s) => s.completed).length,
     0,
   );
+
+  const durationMin = activeWorkout
+    ? Math.max(
+        1,
+        Math.round(
+          ((activeWorkout.editingFinishedAt || activeWorkout.startedAt + 3600000) -
+            activeWorkout.startedAt) /
+            60000,
+        ),
+      )
+    : 60;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -128,28 +177,93 @@ function LiveSession() {
           paddingBottom: '0.25rem',
         }}
       >
-        <div>
-          <span
-            style={{
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              color: 'var(--accent-primary)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-            }}
+        <div style={{ flex: 1, minWidth: 0, marginRight: '0.5rem' }}>
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}
           >
-            En curso
-          </span>
-          <h2
-            style={{
-              fontSize: '1.35rem',
-              fontWeight: 700,
-              color: 'var(--text-primary)',
-              margin: '0.1rem 0 0',
-            }}
-          >
-            {workoutName}
-          </h2>
+            {isEditing ? (
+              <span
+                style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  color: 'var(--accent-primary-light, #38bdf8)',
+                  background: 'rgba(56, 189, 248, 0.12)',
+                  border: '1px solid rgba(56, 189, 248, 0.28)',
+                  padding: '0.15rem 0.5rem',
+                  borderRadius: '6px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}
+              >
+                <Edit3 size={11} />
+                Modo edición
+              </span>
+            ) : (
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: 'var(--accent-primary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                }}
+              >
+                En curso
+              </span>
+            )}
+          </div>
+
+          {isEditingTitle ? (
+            <input
+              type="text"
+              value={titleInput}
+              onChange={(e) => setTitleInput(e.target.value)}
+              onBlur={() => {
+                setIsEditingTitle(false);
+                if (titleInput.trim()) setWorkoutName(titleInput.trim());
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setIsEditingTitle(false);
+                  if (titleInput.trim()) setWorkoutName(titleInput.trim());
+                }
+              }}
+              autoFocus
+              className="set-input"
+              style={{
+                fontSize: '1.25rem',
+                fontWeight: 700,
+                textAlign: 'left',
+                padding: '0.2rem 0.5rem',
+                width: '100%',
+                maxWidth: '320px',
+              }}
+            />
+          ) : (
+            <h2
+              onClick={() => {
+                setTitleInput(workoutName);
+                setIsEditingTitle(true);
+              }}
+              style={{
+                fontSize: '1.35rem',
+                fontWeight: 700,
+                color: 'var(--text-primary)',
+                margin: '0.1rem 0 0',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}
+              title="Pulsa para cambiar el nombre"
+            >
+              <span>{workoutName}</span>
+              <Edit3 size={14} style={{ color: 'var(--text-muted)', opacity: 0.6 }} />
+            </h2>
+          )}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -193,7 +307,160 @@ function LiveSession() {
         </div>
       </header>
 
-      <RestBanner />
+      {/* Date & Time configuration card */}
+      {activeWorkout && (
+        <div
+          className="workout-session-details-bar"
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+            padding: '0.65rem 0.9rem',
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid var(--border-subtle, rgba(255, 255, 255, 0.08))',
+            borderRadius: '12px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.6rem',
+              flex: 1,
+              minWidth: '220px',
+            }}
+          >
+            <Calendar
+              size={16}
+              style={{ color: 'var(--accent-primary-light, #38bdf8)', flexShrink: 0 }}
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span
+                  style={{
+                    fontSize: '0.65rem',
+                    color: 'var(--text-secondary)',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  Fecha y hora del entreno
+                </span>
+                {!isEditing && !showDatePicker && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDatePicker(true)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--accent-primary-light, #38bdf8)',
+                      fontSize: '0.68rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      padding: 0,
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    (Cambiar si fue ayer)
+                  </button>
+                )}
+              </div>
+              {isEditing || showDatePicker ? (
+                <input
+                  type="datetime-local"
+                  value={toLocalDatetimeString(activeWorkout.startedAt)}
+                  onChange={(e) => {
+                    const ts = fromLocalDatetimeString(e.target.value);
+                    setWorkoutDate(ts);
+                  }}
+                  className="workout-date-input"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '6px',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    padding: '0.2rem 0.4rem',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    marginTop: '0.2rem',
+                    maxWidth: '240px',
+                  }}
+                />
+              ) : (
+                <span
+                  style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600 }}
+                >
+                  {new Date(activeWorkout.startedAt).toLocaleDateString(undefined, {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {isEditing && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Clock size={16} style={{ color: 'var(--text-muted)' }} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span
+                  style={{
+                    fontSize: '0.65rem',
+                    color: 'var(--text-secondary)',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  Duración
+                </span>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    marginTop: '0.2rem',
+                  }}
+                >
+                  <input
+                    type="number"
+                    min="1"
+                    max="999"
+                    value={durationMin}
+                    onChange={(e) => {
+                      const min = Math.max(1, parseInt(e.target.value, 10) || 1);
+                      const newFinishedAt = activeWorkout.startedAt + min * 60000;
+                      setWorkoutDate(activeWorkout.startedAt, newFinishedAt);
+                    }}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      borderRadius: '6px',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      width: '60px',
+                      textAlign: 'center',
+                      padding: '0.2rem 0.25rem',
+                    }}
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>min</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isEditing && <RestBanner />}
 
       {exercises.length === 0 ? (
         <EmptyCard
@@ -225,11 +492,12 @@ function LiveSession() {
   );
 }
 
-import { useSaveWorkout, useSaveTemplate } from '@/lib/workout/api';
-
 function FooterActions() {
+  const activeWorkout = useWorkoutStore((s) => s.active);
+  const isEditing = Boolean(activeWorkout?.editingId);
   const finishWorkout = useWorkoutStore((s) => s.finishWorkout);
   const clearActiveWorkout = useWorkoutStore((s) => s.clearActiveWorkout);
+  const cancelEditWorkout = useWorkoutStore((s) => s.cancelEditWorkout);
   const discardWorkout = useWorkoutStore((s) => s.discardWorkout);
   const saveAsTemplate = useWorkoutStore((s) => s.saveAsTemplate);
   const saveWorkoutMutation = useSaveWorkout();
@@ -237,6 +505,7 @@ function FooterActions() {
 
   const [finishOpen, setFinishOpen] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [cancelEditOpen, setCancelEditOpen] = useState(false);
   const [emptyOpen, setEmptyOpen] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const hasExercises = useWorkoutStore((s) => (s.active?.exercises.length ?? 0) > 0);
@@ -264,6 +533,130 @@ function FooterActions() {
     haptics.light();
     const tpl = saveAsTemplate();
     if (tpl) saveTemplateMutation.mutate(tpl);
+  }
+
+  function handleSaveEdit() {
+    const active = useWorkoutStore.getState().active;
+    if (!active) return;
+    const hasWork = active.exercises.some((e) => e.sets.some((s) => s.completed));
+    if (!hasWork) {
+      haptics.warning();
+      setEmptyOpen(true);
+      return;
+    }
+
+    haptics.success();
+    const durationMs =
+      active.editingFinishedAt && active.startedAt
+        ? Math.max(60000, active.editingFinishedAt - active.startedAt)
+        : 3600000;
+
+    const record = finishWorkout(active.name, durationMs, active.startedAt);
+    if (!record) return;
+
+    saveWorkoutMutation.mutate(record, {
+      onSuccess: () => {
+        clearActiveWorkout();
+      },
+      onError: () => {
+        toast.error('Error al guardar los cambios del entrenamiento');
+      },
+    });
+  }
+
+  if (isEditing) {
+    return (
+      <div className="workout-footer-actions">
+        <button
+          onClick={handleSaveEdit}
+          disabled={saveWorkoutMutation.isPending}
+          className="workout-finish-btn btn-press"
+          style={{ background: 'var(--accent-primary, #0284c7)' }}
+        >
+          <Save size={18} />
+          {saveWorkoutMutation.isPending ? 'Guardando cambios...' : 'Guardar Cambios'}
+        </button>
+
+        <button className="workout-secondary-btn btn-press" onClick={() => setCancelEditOpen(true)}>
+          <X size={16} />
+          Cancelar edición
+        </button>
+
+        {/* Modal de confirmación para cancelar edición */}
+        <AlertDialog open={cancelEditOpen} onOpenChange={setCancelEditOpen}>
+          <AlertDialogContent
+            className="card"
+            style={{
+              padding: '1.5rem',
+              background: 'var(--bg-primary)',
+              border: '1px solid var(--border-color)',
+              width: '95vw',
+              maxWidth: '400px',
+              maxHeight: '85dvh',
+              overflowY: 'auto',
+            }}
+          >
+            <AlertDialogHeader>
+              <AlertDialogTitle
+                style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}
+              >
+                ¿Cancelar edición?
+              </AlertDialogTitle>
+              <AlertDialogDescription
+                style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.5rem' }}
+              >
+                Los cambios no guardados en este entrenamiento se descartarán y volverás al
+                historial.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="btn btn-secondary">Seguir editando</AlertDialogCancel>
+              <AlertDialogAction
+                className="btn btn-danger btn-press"
+                onClick={() => {
+                  haptics.light();
+                  cancelEditWorkout();
+                }}
+              >
+                Salir sin guardar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Empty sets warning */}
+        <AlertDialog open={emptyOpen} onOpenChange={setEmptyOpen}>
+          <AlertDialogContent
+            className="card"
+            style={{
+              padding: '1.5rem',
+              background: 'var(--bg-primary)',
+              border: '1px solid var(--border-color)',
+              width: '95vw',
+              maxWidth: '400px',
+              maxHeight: '85dvh',
+              overflowY: 'auto',
+            }}
+          >
+            <AlertDialogHeader>
+              <AlertDialogTitle
+                style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}
+              >
+                No hay series completadas
+              </AlertDialogTitle>
+              <AlertDialogDescription
+                style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.5rem' }}
+              >
+                Marca al menos una serie para guardar el entrenamiento.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="btn btn-primary">Entendido</AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    );
   }
 
   return (
@@ -366,9 +759,9 @@ function FooterActions() {
         open={finishOpen}
         onClose={() => setFinishOpen(false)}
         activeWorkout={useWorkoutStore.getState().active}
-        onSave={async (name, durationMin, notes) => {
+        onSave={async (name, durationMin, notes, selectedStartedAt) => {
           setSaveError(null);
-          const record = finishWorkout(name, durationMin * 60000);
+          const record = finishWorkout(name, durationMin * 60000, selectedStartedAt);
           if (!record) return;
           if (notes) record.notes = notes;
           saveWorkoutMutation.mutate(record, {

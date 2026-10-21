@@ -129,4 +129,70 @@ describe('WorkoutStore - finishWorkout persistence & resilience', () => {
     expect(cancelServerRestTimer).toHaveBeenCalled();
     expect(dismissRestNotifications).toHaveBeenCalled();
   });
+
+  test('setWorkoutDate correctly updates startedAt and editingFinishedAt', () => {
+    useWorkoutStore.setState({
+      active: {
+        name: 'Pierna Pasada',
+        startedAt: 1000000,
+        editingId: 'workout-123',
+        editingFinishedAt: 1003600,
+        notes: '',
+        exercises: [],
+      },
+    });
+
+    const yesterday = Date.now() - 86400000;
+    useWorkoutStore.getState().setWorkoutDate(yesterday, yesterday + 3600000);
+
+    const active = useWorkoutStore.getState().active;
+    expect(active?.startedAt).toBe(yesterday);
+    expect(active?.editingFinishedAt).toBe(yesterday + 3600000);
+  });
+
+  test('finishWorkout honors customStartedAt allowing logging workouts in the past', () => {
+    useWorkoutStore.setState({
+      active: {
+        name: 'Entreno de Ayer',
+        startedAt: Date.now(),
+        notes: 'Ayer por la tarde',
+        exercises: [
+          {
+            id: 'ex-1',
+            exerciseId: 'deadlift',
+            notes: '',
+            sets: [{ id: 's-1', type: 'normal', weight: '140', reps: '5', completed: true }],
+          },
+        ],
+      },
+    });
+
+    const yesterday = Date.now() - 86400000;
+    const durationMs = 45 * 60000;
+    const record = useWorkoutStore
+      .getState()
+      .finishWorkout('Entreno de Ayer', durationMs, yesterday);
+
+    expect(record).not.toBeNull();
+    expect(record?.startedAt).toBe(yesterday);
+    expect(record?.finishedAt).toBe(yesterday + durationMs);
+  });
+
+  test('cancelEditWorkout closes active session and navigates to history tab', () => {
+    useWorkoutStore.setState({
+      active: {
+        name: 'Entreno en edición',
+        startedAt: 1000,
+        editingId: 'w-existing',
+        notes: '',
+        exercises: [],
+      },
+      tab: 'train',
+      detailId: 'w-existing',
+    });
+
+    useWorkoutStore.getState().cancelEditWorkout();
+    expect(useWorkoutStore.getState().active).toBeNull();
+    expect(useWorkoutStore.getState().tab).toBe('history');
+  });
 });
