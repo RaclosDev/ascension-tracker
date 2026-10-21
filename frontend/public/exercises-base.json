@@ -4,11 +4,11 @@
     "name": "Press de Pecho Plano con Barra",
     "muscle": "pecho",
     "equipment": "barra",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1254-khlHMqs.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0025-EIeI8Vf.gif",
     "options": {},
     "mappedIds": [
-      "ex-1254",
       "ex-0025",
+      "ex-1254",
       "ex-0045",
       "ex-0052",
       "ex-0122",
@@ -24,9 +24,9 @@
       "press de pecho plano"
     ],
     "synergists": {
-      "pecho": 8,
+      "pecho": 10,
       "triceps": 7,
-      "hombros": 5
+      "hombros": 6
     }
   },
   {
@@ -260,12 +260,12 @@
     "name": "Cruces en Polea",
     "muscle": "pecho",
     "equipment": "polea",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0153-OQ1otBN.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0155-0CXGHya.gif",
     "options": {},
     "mappedIds": [
+      "ex-0155",
       "ex-0153",
       "ex-0154",
-      "ex-0155",
       "ex-0158",
       "ex-0171",
       "ex-0170"
@@ -274,9 +274,9 @@
       "cruces en polea"
     ],
     "synergists": {
-      "dorsales": 9,
-      "espalda_alta": 7,
-      "biceps": 6
+      "pecho": 9,
+      "hombros": 6,
+      "triceps": 3
     }
   },
   {
@@ -284,11 +284,11 @@
     "name": "Pec Deck en Máquina",
     "muscle": "pecho",
     "equipment": "maquina",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1494-bWlZvXh.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0596-v3xmPAR.gif",
     "options": {},
     "mappedIds": [
-      "ex-1494",
       "ex-0596",
+      "ex-1494",
       "ex-0602",
       "ex-0601"
     ],
@@ -296,9 +296,8 @@
       "pec deck"
     ],
     "synergists": {
-      "aductores": 10,
-      "abductores": 2,
-      "gluteos": 1
+      "pecho": 10,
+      "hombros": 4
     }
   },
   {
@@ -306,9 +305,10 @@
     "name": "Flexiones",
     "muscle": "pecho",
     "equipment": "peso corporal",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/3294-A9qxk2F.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0662-I4hDWkc.gif",
     "options": {},
     "mappedIds": [
+      "ex-0662",
       "ex-3294",
       "ex-3216",
       "ex-1273",
@@ -331,7 +331,6 @@
       "ex-0642",
       "ex-1306",
       "ex-1307",
-      "ex-0662",
       "ex-0653",
       "ex-0655",
       "ex-0656",
@@ -360,7 +359,7 @@
       "pecho": 9,
       "triceps": 7,
       "hombros": 6,
-      "abdominales": 5
+      "abdominales": 4
     }
   },
   {
@@ -368,12 +367,12 @@
     "name": "Fondos en Paralelas",
     "muscle": "pecho",
     "equipment": "peso corporal",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0009-PAgTVaK.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0251-9WTm7dq.gif",
     "options": {},
     "mappedIds": [
+      "ex-0251",
       "ex-0009",
       "ex-2364",
-      "ex-0251",
       "ex-1430",
       "ex-2462",
       "ex-2363"
@@ -382,9 +381,9 @@
       "fondos en paralelas"
     ],
     "synergists": {
-      "pecho": 8,
-      "triceps": 7,
-      "hombros": 6
+      "pecho": 9,
+      "triceps": 8,
+      "hombros": 7
     }
   },
   {
@@ -414,9 +413,10 @@
     "name": "Dominadas",
     "muscle": "dorsales",
     "equipment": "peso corporal",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/3293-72BC5Za.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0652-lBDjFxJ.gif",
     "options": {},
     "mappedIds": [
+      "ex-0652",
       "ex-3293",
       "ex-3019",
       "ex-0139",
@@ -429,7 +429,6 @@
       "ex-0627",
       "ex-0638",
       "ex-0651",
-      "ex-0652",
       "ex-0670",
       "ex-0674",
       "ex-0678",
@@ -445,11 +444,11 @@
       "dominadas"
     ],
     "synergists": {
-      "dorsales": 9,
+      "dorsales": 10,
       "espalda_alta": 7,
-      "biceps": 7,
+      "biceps": 6,
       "antebrazos": 5,
-      "abdominales": 4
+      "trapecios": 4
     }
   },
   {
@@ -636,11 +635,11 @@
     "name": "Remo en Polea",
     "muscle": "espalda_alta",
     "equipment": "polea",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0167-ZSJNetl.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0861-fUBheHs.gif",
     "options": {},
     "mappedIds": [
-      "ex-0167",
       "ex-0861",
+      "ex-0167",
       "ex-0159",
       "ex-0160",
       "ex-1318",
@@ -662,11 +661,10 @@
       "remo en polea"
     ],
     "synergists": {
-      "espalda_alta": 9,
-      "dorsales": 7,
+      "espalda_alta": 10,
+      "dorsales": 8,
       "biceps": 6,
-      "trapecios": 5,
-      "abdominales": 4
+      "antebrazos": 4
     }
   },
   {
@@ -1230,12 +1228,12 @@
     "name": "Peso Muerto Rumano con Barra",
     "muscle": "femorales",
     "equipment": "barra",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1009-kuMiR2T.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0085-wQ2c4XD.gif",
     "options": {},
     "mappedIds": [
+      "ex-0085",
       "ex-1009",
       "ex-1023",
-      "ex-0085",
       "ex-1459",
       "ex-0432"
     ],
@@ -1243,10 +1241,9 @@
       "peso muerto rumano"
     ],
     "synergists": {
-      "gluteos": 9,
-      "femorales": 9,
-      "lumbares": 7,
-      "espalda_alta": 3
+      "femorales": 10,
+      "gluteos": 8,
+      "lumbares": 6
     }
   },
   {
@@ -1313,23 +1310,21 @@
     "name": "Elevación de Gemelos de Pie en Máquina",
     "muscle": "gemelos",
     "equipment": "maquina",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1372-8ozhUIZ.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0605-ykUOVze.gif",
     "options": {},
     "mappedIds": [
+      "ex-0605",
       "ex-1372",
       "ex-1373",
       "ex-1375",
       "ex-0417",
-      "ex-0605",
       "ex-1490"
     ],
     "tags": [
       "elevación de gemelos de pie"
     ],
     "synergists": {
-      "gemelos": 10,
-      "antebrazos": 3,
-      "lumbares": 3
+      "gemelos": 10
     }
   },
   {
@@ -1337,13 +1332,13 @@
     "name": "Elevación de Gemelos Sentado en Máquina",
     "muscle": "gemelos",
     "equipment": "maquina",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0088-ktsFQAZ.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0594-bOOdeyc.gif",
     "options": {},
     "mappedIds": [
+      "ex-0594",
       "ex-0088",
       "ex-1371",
-      "ex-1379",
-      "ex-0594"
+      "ex-1379"
     ],
     "tags": [
       "elevación de gemelos sentado"
@@ -1650,9 +1645,10 @@
     "name": "Fondos de Tríceps",
     "muscle": "triceps",
     "equipment": "peso corporal",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0019-J60bN17.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0814-X6C6i5Y.gif",
     "options": {},
     "mappedIds": [
+      "ex-0814",
       "ex-0019",
       "ex-0975",
       "ex-0129",
@@ -1663,7 +1659,6 @@
       "ex-0490",
       "ex-0591",
       "ex-1753",
-      "ex-0814",
       "ex-0812",
       "ex-0813",
       "ex-0815"
@@ -1672,9 +1667,9 @@
       "fondos de tríceps"
     ],
     "synergists": {
-      "triceps": 8,
+      "triceps": 10,
       "pecho": 6,
-      "hombros": 5
+      "hombros": 6
     }
   },
   {
@@ -1682,11 +1677,11 @@
     "name": "Patada de Tríceps con Mancuernas",
     "muscle": "triceps",
     "equipment": "mancuernas",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1728-vvNjDJS.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0333-W6PxUkg.gif",
     "options": {},
     "mappedIds": [
-      "ex-1728",
       "ex-0333",
+      "ex-1728",
       "ex-1734",
       "ex-1739",
       "ex-1742",
@@ -1700,9 +1695,8 @@
       "patada de tríceps"
     ],
     "synergists": {
-      "triceps": 9,
-      "hombros": 3,
-      "antebrazos": 3
+      "triceps": 10,
+      "hombros": 2
     }
   },
   {
@@ -1710,9 +1704,10 @@
     "name": "Crunch Abdominal",
     "muscle": "abdominales",
     "equipment": "peso corporal",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0972-tZkGYZ9.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0274-TFqbd8t.gif",
     "options": {},
     "mappedIds": [
+      "ex-0274",
       "ex-0972",
       "ex-0985",
       "ex-1005",
@@ -1721,7 +1716,6 @@
       "ex-0267",
       "ex-0271",
       "ex-0272",
-      "ex-0274",
       "ex-0277",
       "ex-2429",
       "ex-0469",
@@ -1746,9 +1740,7 @@
       "crunch abdominal"
     ],
     "synergists": {
-      "abdominales": 9,
-      "cuadriceps": 4,
-      "cardio": 3
+      "abdominales": 10
     }
   },
   {
@@ -1774,9 +1766,10 @@
     "name": "Elevación de Piernas Tumbado",
     "muscle": "abdominales",
     "equipment": "peso corporal",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0012-UGhRD1A.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0620-WhuFnR7.gif",
     "options": {},
     "mappedIds": [
+      "ex-0620",
       "ex-0012",
       "ex-0013",
       "ex-1002",
@@ -1788,7 +1781,6 @@
       "ex-1679",
       "ex-1343",
       "ex-0600",
-      "ex-0620",
       "ex-0689",
       "ex-2802",
       "ex-2801",
@@ -1798,8 +1790,8 @@
       "elevación de piernas tumbado"
     ],
     "synergists": {
-      "abdominales": 8,
-      "cuadriceps": 3
+      "abdominales": 9,
+      "cuadriceps": 4
     }
   },
   {
@@ -1807,9 +1799,10 @@
     "name": "Rueda Abdominal",
     "muscle": "abdominales",
     "equipment": "peso corporal",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0103-xnInPfE.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0857-NAgVB3t.gif",
     "options": {},
     "mappedIds": [
+      "ex-0857",
       "ex-0103"
     ],
     "tags": [
@@ -1817,11 +1810,9 @@
     ],
     "synergists": {
       "abdominales": 10,
-      "lumbares": 7,
-      "dorsales": 6,
-      "pecho": 5,
-      "hombros": 5,
-      "antebrazos": 4
+      "dorsales": 5,
+      "hombros": 4,
+      "lumbares": 3
     }
   },
   {
@@ -1926,22 +1917,20 @@
     "name": "Extensión de Tríceps en Polea",
     "muscle": "triceps",
     "equipment": "polea",
-    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0172-1PK5Uo3.gif",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0200-dU605di.gif",
     "options": {},
     "mappedIds": [
+      "ex-0200",
       "ex-0172",
       "ex-0201",
-      "ex-0200",
       "ex-0207"
     ],
     "tags": [
       "extensión de tríceps en polea"
     ],
     "synergists": {
-      "dorsales": 9,
-      "triceps": 5,
-      "pecho": 4,
-      "abdominales": 4
+      "triceps": 10,
+      "antebrazos": 3
     }
   },
   {
