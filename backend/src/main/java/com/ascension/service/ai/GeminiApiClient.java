@@ -31,7 +31,7 @@ public class GeminiApiClient {
     private static final Logger log = LoggerFactory.getLogger(GeminiApiClient.class);
     public static final long TOTAL_REQUEST_DEADLINE_MS = 20_000L;
     public static final long MODEL_CACHE_TTL_MS = 3600_000L; // 1 hour TTL
-    public static final int MAX_MODELS_PER_REQUEST = 2;
+    public static final int MAX_MODELS_PER_REQUEST = 3;
 
     @Value("${GEMINI_API_KEY:}")
     private String geminiApiKey;
@@ -39,8 +39,8 @@ public class GeminiApiClient {
     @Value("${GEMINI_MODEL:}")
     private String geminiModel;
 
-    @Value("${app.gemini.fallback-models:gemini-2.5-flash,gemini-2.0-flash}")
-    private String fallbackModels = "gemini-2.5-flash,gemini-2.0-flash";
+    @Value("${app.gemini.fallback-models:gemini-flash-lite-latest,gemini-3-flash-preview,gemini-3.5-flash-lite,gemini-flash-latest,gemini-3.8-flash}")
+    private String fallbackModels = "gemini-flash-lite-latest,gemini-3-flash-preview,gemini-3.5-flash-lite,gemini-flash-latest,gemini-3.8-flash";
 
     private final RestTemplateBuilder builder;
     private final ExternalApiProperties properties;
@@ -63,6 +63,35 @@ public class GeminiApiClient {
         factory.setConnectTimeout(cfg.getConnectTimeoutMs());
         factory.setReadTimeout(cfg.getReadTimeoutMs());
         this.restTemplate = builder.requestFactory(() -> factory).build();
+    }
+
+    private boolean matchesDiscovered(String pref, List<String> discovered) {
+        return discovered.contains(pref) || discovered.stream().anyMatch(d -> d.startsWith(pref) || pref.startsWith(d));
+    }
+
+    private boolean isTextGenerationModel(String name) {
+        if (name == null || name.isBlank()) return false;
+        String lower = name.toLowerCase();
+        return !(lower.contains("tts") || lower.contains("audio") || lower.contains("embed")
+                || lower.contains("realtime") || lower.contains("live") || lower.contains("image")
+                || lower.contains("banana") || lower.contains("transcribe") || lower.contains("robotics")
+                || lower.contains("lyria") || lower.contains("computer-use") || lower.contains("deep-research")
+                || lower.contains("customtools") || lower.contains("antigravity"));
+    }
+
+    private String sanitizeApiKey(String key) {
+        if (key == null) {
+            return null;
+        }
+        String trimmed = key.trim();
+        if (trimmed.length() >= 2) {
+            char first = trimmed.charAt(0);
+            char last = trimmed.charAt(trimmed.length() - 1);
+            if ((first == '"' && last == '"') || (first == '\'' && last == '\'')) {
+                trimmed = trimmed.substring(1, trimmed.length() - 1).trim();
+            }
+        }
+        return trimmed;
     }
 
     void setRestTemplate(RestTemplate restTemplate) {
@@ -101,11 +130,10 @@ public class GeminiApiClient {
     }
 
     public String executePrompt(String prompt, String base64Image, String mimeType) {
-        if (geminiApiKey == null || geminiApiKey.trim().isEmpty()) {
+        String apiKey = sanitizeApiKey(geminiApiKey);
+        if (apiKey == null || apiKey.isEmpty()) {
             throw new ExternalApiException("Gemini", HttpStatus.SERVICE_UNAVAILABLE, "GEMINI_API_KEY is not configured.");
         }
-
-        String apiKey = geminiApiKey.trim();
         long deadline = System.currentTimeMillis() + TOTAL_REQUEST_DEADLINE_MS;
 
         if (cachedWorkingUrl != null) {
@@ -165,7 +193,17 @@ public class GeminiApiClient {
         }
         if (e instanceof RestClientResponseException rcre) {
             int code = rcre.getStatusCode().value();
-            return rcre.getStatusCode().is4xxClientError() && code != 429 && code != 404;
+            if (code == 429 || code == 404) {
+                return false;
+            }
+            if (code == 400) {
+                String body = rcre.getResponseBodyAsString().toLowerCase();
+                if (body.contains("model") || body.contains("not supported") || body.contains("not found")
+                        || body.contains("unsupported") || body.contains("modalit")) {
+                    return false;
+                }
+            }
+            return rcre.getStatusCode().is4xxClientError();
         }
         return false;
     }
@@ -179,6 +217,7 @@ public class GeminiApiClient {
                     "Servicio de IA de Gemini no disponible o tiempo de espera agotado", lastException);
         }
         if (lastException instanceof RestClientResponseException rcre) {
+            String detailedMsg = extractErrorMessage(rcre);
             if (rcre.getStatusCode().value() == 429) {
                 return new ExternalApiException("Gemini", HttpStatus.SERVICE_UNAVAILABLE,
                         "Límite de cuota o tasa excedido en Gemini API (429)", lastException);
@@ -189,11 +228,27 @@ public class GeminiApiClient {
             }
             if (rcre.getStatusCode().is4xxClientError()) {
                 return new ExternalApiException("Gemini", HttpStatus.valueOf(rcre.getStatusCode().value()),
-                        "Gemini API rechazó la petición (" + rcre.getStatusCode().value() + "): " + rcre.getStatusText(), lastException);
+                        "Gemini API (" + rcre.getStatusCode().value() + "): " + detailedMsg, lastException);
             }
         }
         return new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY,
                 "Todos los modelos de Gemini fallaron. Último error: " + (lastException != null ? lastException.getMessage() : "desconocido"), lastException);
+    }
+
+    private String extractErrorMessage(RestClientResponseException rcre) {
+        try {
+            String body = rcre.getResponseBodyAsString();
+            if (body != null && !body.isBlank()) {
+                JsonNode root = objectMapper.readTree(body);
+                JsonNode msgNode = root.path("error").path("message");
+                if (!msgNode.isMissingNode() && !msgNode.asText().isBlank()) {
+                    return msgNode.asText();
+                }
+            }
+        } catch (Exception ignored) {
+            // Fallback to status text
+        }
+        return rcre.getStatusText();
     }
 
     private void checkDeadline(long deadline) {
@@ -205,13 +260,13 @@ public class GeminiApiClient {
 
     private List<String> discoverModels(String apiKey) {
         List<String> candidates = new ArrayList<>();
-        if (geminiModel != null && !geminiModel.trim().isEmpty()) {
+        if (geminiModel != null && !geminiModel.trim().isEmpty() && isTextGenerationModel(geminiModel)) {
             candidates.add(geminiModel.trim());
         }
 
         List<String> discovered = new ArrayList<>();
         try {
-            String url = "https://generativelanguage.googleapis.com/v1beta/models";
+            String url = "https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey;
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/json");
             headers.set("x-goog-api-key", apiKey);
@@ -237,39 +292,39 @@ public class GeminiApiClient {
                         if (name.startsWith("models/")) {
                             name = name.substring(7);
                         }
-                        if (name.contains("gemini")) {
+                        if (name.contains("gemini") && isTextGenerationModel(name)) {
                             discovered.add(name);
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            log.warn("Failed to discover models, falling back to configured fallback list. Error: {}", e.getMessage());
+            log.warn("Failed to discover models, using configured preferred models. Error: {}", e.getMessage());
         }
 
-        // Priority 1: Configured fallback models (stable fast flash models: gemini-2.5-flash, gemini-2.0-flash, etc.)
+        // Priority 1: Configured fallback models matching discovered models or if discovery failed
         List<String> preferred = new ArrayList<>();
         if (fallbackModels != null && !fallbackModels.isBlank()) {
             Arrays.stream(fallbackModels.split(","))
                     .map(String::trim)
-                    .filter(s -> !s.isEmpty())
+                    .filter(s -> !s.isEmpty() && isTextGenerationModel(s))
                     .forEach(preferred::add);
         }
 
         for (String pref : preferred) {
-            if (!candidates.contains(pref) && (discovered.isEmpty() || discovered.contains(pref))) {
+            if (!candidates.contains(pref) && (discovered.isEmpty() || matchesDiscovered(pref, discovered))) {
                 candidates.add(pref);
             }
         }
 
-        // Priority 2: Discovered models that contain "flash"
+        // Priority 2: Discovered text models that contain "flash"
         for (String disc : discovered) {
             if (disc.contains("flash") && !candidates.contains(disc)) {
                 candidates.add(disc);
             }
         }
 
-        // Priority 3: Other discovered models
+        // Priority 3: Other discovered text models
         for (String disc : discovered) {
             if (!candidates.contains(disc)) {
                 candidates.add(disc);
@@ -355,12 +410,20 @@ public class GeminiApiClient {
         generationConfig.put("temperature", 0.1);
         request.put("generationConfig", generationConfig);
 
+        String apiKey = sanitizeApiKey(geminiApiKey);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
-        headers.set("x-goog-api-key", geminiApiKey.trim());
+        if (apiKey != null && !apiKey.isEmpty()) {
+            headers.set("x-goog-api-key", apiKey);
+        }
+
+        String callUrl = url;
+        if (apiKey != null && !apiKey.isEmpty() && !url.contains("key=")) {
+            callUrl = url.contains("?") ? url + "&key=" + apiKey : url + "?key=" + apiKey;
+        }
 
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(callUrl, HttpMethod.POST, entity, String.class);
 
         JsonNode root = objectMapper.readTree(response.getBody());
         JsonNode candidates = root.path("candidates");

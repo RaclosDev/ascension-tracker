@@ -78,4 +78,36 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody().getError()).contains("Límite de entrenamientos alcanzado");
         assertThat(response.getBody().getTrace_id()).isNotBlank();
     }
+    @Test
+    void handleExternalApiException_when400BadRequest_returnsSpecificClientMessage() {
+        ExternalApiException ex = new ExternalApiException("Gemini", HttpStatus.BAD_REQUEST, "Peticion bloqueada por filtros de seguridad");
+        ResponseEntity<ApiErrorResponse> response = handler.handleExternalApiException(ex);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getError()).isEqualTo("Peticion bloqueada por filtros de seguridad");
+        assertThat(response.getBody().getTrace_id()).isNotBlank();
+    }
+
+    @Test
+    void handleExternalApiException_when502BadGateway_masksUpstreamMessage() {
+        ExternalApiException ex = new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY, "Raw Google internal upstream error");
+        ResponseEntity<ApiErrorResponse> response = handler.handleExternalApiException(ex);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getError()).isEqualTo("El servicio externo no está disponible temporalmente. Por favor, inténtalo más tarde.");
+        assertThat(response.getBody().getTrace_id()).isNotBlank();
+    }
+
+    @Test
+    void handleExternalApiException_when429TooManyRequests_returnsRateLimitMessage() {
+        ExternalApiException ex = new ExternalApiException("Gemini", HttpStatus.TOO_MANY_REQUESTS, "Rate limit exceeded");
+        ResponseEntity<ApiErrorResponse> response = handler.handleExternalApiException(ex);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getError()).isEqualTo("Límite de peticiones alcanzado en el servicio externo. Por favor, inténtalo más tarde.");
+        assertThat(response.getBody().getTrace_id()).isNotBlank();
+    }
 }

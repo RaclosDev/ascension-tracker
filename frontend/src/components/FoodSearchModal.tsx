@@ -495,8 +495,10 @@ export default function FoodSearchModal({
         if (onLogAdded) onLogAdded();
       })
       .catch((e: unknown) => {
+        const axiosError = e as { response?: { data?: { error?: string; message?: string } } };
         const msg =
-          (e as { response?: { data?: { error?: string } } }).response?.data?.error ||
+          axiosError.response?.data?.error ||
+          axiosError.response?.data?.message ||
           'Error procesando texto con IA';
         toast.error(msg);
         console.error('Error procesando texto con IA:', e instanceof Error ? e.message : String(e));
