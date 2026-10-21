@@ -65,6 +65,18 @@ public class GeminiApiClient {
         this.restTemplate = builder.requestFactory(() -> factory).build();
     }
 
+    private boolean matchesDiscovered(String pref, List<String> discovered) {
+        return discovered.contains(pref) || discovered.stream().anyMatch(d -> d.startsWith(pref) || pref.startsWith(d));
+    }
+
+    private boolean isTextGenerationModel(String name) {
+        if (name == null || name.isBlank()) return false;
+        String lower = name.toLowerCase();
+        return !(lower.contains("tts") || lower.contains("audio") || lower.contains("embed")
+                || lower.contains("realtime") || lower.contains("live") || lower.contains("imagen")
+                || lower.contains("robotics") || lower.contains("custom"));
+    }
+
     private String sanitizeApiKey(String key) {
         if (key == null) {
             return null;
@@ -184,7 +196,8 @@ public class GeminiApiClient {
             }
             if (code == 400) {
                 String body = rcre.getResponseBodyAsString().toLowerCase();
-                if (body.contains("model") || body.contains("not supported") || body.contains("not found") || body.contains("unsupported")) {
+                if (body.contains("model") || body.contains("not supported") || body.contains("not found")
+                        || body.contains("unsupported") || body.contains("modalit")) {
                     return false;
                 }
             }
@@ -245,7 +258,7 @@ public class GeminiApiClient {
 
     private List<String> discoverModels(String apiKey) {
         List<String> candidates = new ArrayList<>();
-        if (geminiModel != null && !geminiModel.trim().isEmpty()) {
+        if (geminiModel != null && !geminiModel.trim().isEmpty() && isTextGenerationModel(geminiModel)) {
             candidates.add(geminiModel.trim());
         }
 
@@ -277,39 +290,39 @@ public class GeminiApiClient {
                         if (name.startsWith("models/")) {
                             name = name.substring(7);
                         }
-                        if (name.contains("gemini")) {
+                        if (name.contains("gemini") && isTextGenerationModel(name)) {
                             discovered.add(name);
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            log.warn("Failed to discover models, falling back to configured fallback list. Error: {}", e.getMessage());
+            log.warn("Failed to discover models, using configured preferred models. Error: {}", e.getMessage());
         }
 
-        // Priority 1: Configured fallback models (stable fast flash models: gemini-2.5-flash, gemini-2.0-flash, etc.)
+        // Priority 1: Configured fallback models matching discovered models or if discovery failed
         List<String> preferred = new ArrayList<>();
         if (fallbackModels != null && !fallbackModels.isBlank()) {
             Arrays.stream(fallbackModels.split(","))
                     .map(String::trim)
-                    .filter(s -> !s.isEmpty())
+                    .filter(s -> !s.isEmpty() && isTextGenerationModel(s))
                     .forEach(preferred::add);
         }
 
         for (String pref : preferred) {
-            if (!candidates.contains(pref) && (discovered.isEmpty() || discovered.contains(pref))) {
+            if (!candidates.contains(pref) && (discovered.isEmpty() || matchesDiscovered(pref, discovered))) {
                 candidates.add(pref);
             }
         }
 
-        // Priority 2: Discovered models that contain "flash"
+        // Priority 2: Discovered text models that contain "flash"
         for (String disc : discovered) {
             if (disc.contains("flash") && !candidates.contains(disc)) {
                 candidates.add(disc);
             }
         }
 
-        // Priority 3: Other discovered models
+        // Priority 3: Other discovered text models
         for (String disc : discovered) {
             if (!candidates.contains(disc)) {
                 candidates.add(disc);

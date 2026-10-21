@@ -177,4 +177,26 @@ class GeminiApiClientTest {
 
         assertThat(result).isEqualTo("{\"status\":\"ok\"}");
     }
+    @Test
+    void executePrompt_FiltersOutTtsAndAudioModelsEvenIfTheySupportGenerateContent() {
+        geminiApiClient.setGeminiApiKey("dummy-key");
+        geminiApiClient.setFallbackModels(""); // empty fallback to rely purely on discovery
+
+        String mockModelsResponse = "{\"models\":[" +
+                "{\"name\":\"models/gemini-2.5-flash-preview-tts\",\"supportedGenerationMethods\":[\"generateContent\"]}," +
+                "{\"name\":\"models/gemini-2.0-flash\",\"supportedGenerationMethods\":[\"generateContent\"]}" +
+                "]}";
+        String mockGenerateResponse = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"{\\\"result\\\":\\\"text_ok\\\"}\"}]}}]}";
+
+        when(restTemplate.exchange(contains("/models"), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(ResponseEntity.ok(mockModelsResponse));
+        when(restTemplate.exchange(contains("gemini-2.0-flash:generateContent"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(ResponseEntity.ok(mockGenerateResponse));
+
+        String result = geminiApiClient.executePrompt("Hola");
+
+        assertThat(result).isEqualTo("{\"result\":\"text_ok\"}");
+        verify(restTemplate, times(0)).exchange(contains("gemini-2.5-flash-preview-tts"), any(), any(), eq(String.class));
+        verify(restTemplate, times(1)).exchange(contains("gemini-2.0-flash:generateContent"), any(), any(), eq(String.class));
+    }
 }
