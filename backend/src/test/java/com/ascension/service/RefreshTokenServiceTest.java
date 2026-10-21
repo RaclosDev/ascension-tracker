@@ -113,7 +113,7 @@ class RefreshTokenServiceTest {
     @Test
     void rotateRefreshToken_afterGracePeriod_revokesTokenFamilyAndAccessTokensAndThrows() {
         // Token was replaced 75 seconds ago (past 60s grace period)
-        activeToken.setReplacedAt(Instant.now().minusSeconds(75));
+        activeToken.setReplacedAt(Instant.now().minusSeconds(360));
         when(refreshTokenRepository.findByTokenForUpdate(hashedToken)).thenReturn(Optional.of(activeToken));
 
         TokenRefreshException ex = assertThrows(TokenRefreshException.class, () ->

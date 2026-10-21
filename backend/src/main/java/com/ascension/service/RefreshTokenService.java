@@ -15,6 +15,8 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserService userService;
     private final long REFRESH_TOKEN_EXPIRATION_DAYS = 30;
+    @org.springframework.beans.factory.annotation.Value("${app.auth.refresh-grace-seconds:300}")
+    private long gracePeriodSeconds = 300;
 
     public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, UserService userService) {
         this.refreshTokenRepository = refreshTokenRepository;
@@ -82,7 +84,7 @@ public class RefreshTokenService {
         }
 
         if (refreshToken.getReplacedAt() != null) {
-            Instant graceThreshold = refreshToken.getReplacedAt().plusSeconds(60);
+            Instant graceThreshold = refreshToken.getReplacedAt().plusSeconds(gracePeriodSeconds);
             if (Instant.now().isBefore(graceThreshold)) {
                 // Grace period: allow concurrent cluster/tab refresh without deleting the family
                 refreshToken.setGraceUsed(true);

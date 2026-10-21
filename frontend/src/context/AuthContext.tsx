@@ -3,7 +3,7 @@ import { googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { del } from 'idb-keyval';
 import { useQueryClient } from '@tanstack/react-query';
-import api, { setMemoryToken, refreshAccessToken } from '../api/client';
+import api, { setMemoryToken, refreshAccessToken, getSessionToken } from '../api/client';
 import { useWorkoutStore } from '@/lib/workout/store';
 
 export interface User {
@@ -63,9 +63,21 @@ export const setCachedUser = (user: User | null) => {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [isReady, setIsReady] = useState(false);
+  const getInitialSession = (): { token: string | null; user: User | null } => {
+    const sessionToken = getSessionToken();
+    const cachedUser = getCachedUser();
+    if (sessionToken && cachedUser) {
+      setMemoryToken(sessionToken);
+      api.defaults.headers.common['Authorization'] = 'Bearer ' + sessionToken;
+      return { token: sessionToken, user: cachedUser };
+    }
+    return { token: null, user: null };
+  };
+
+  const initialSession = getInitialSession();
+  const [token, setToken] = useState<string | null>(initialSession.token);
+  const [user, setUser] = useState<User | null>(initialSession.user);
+  const [isReady, setIsReady] = useState(initialSession.token !== null);
 
   // On mount: proactively attempt to refresh to get an access token in memory via HttpOnly cookie
   useEffect(() => {
@@ -93,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } catch {
               setUser(null);
             }
-          } else if (!cancelled) {
+          } else if (!cancelled && !initialSession.token) {
             setToken(null);
             setUser(null);
             setCachedUser(null);
@@ -110,11 +122,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               const isOffline =
                 (typeof navigator !== 'undefined' && !navigator.onLine) || isNetworkOrServerError;
 
-              if (cachedUser && isOffline) {
+              if (cachedUser && (isOffline || initialSession.token)) {
                 // Gym / airplane mode / dead wifi: allow entering offline PWA mode with cached user profile
-                setToken('offline-session');
+                if (!initialSession.token) {
+                  setToken('offline-session');
+                }
                 setUser(cachedUser);
-              } else {
+              } else if (!initialSession.token) {
                 setMemoryToken(null);
                 delete api.defaults.headers.common['Authorization'];
                 setToken(null);
@@ -236,6 +250,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Save custom theme, clear local storage to prevent data leaks between accounts, and reload
     const theme = localStorage.getItem('ascension_custom_color');
     localStorage.clear();
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      sessionStorage.clear();
+    }
     if (theme) localStorage.setItem('ascension_custom_color', theme);
 
     try {

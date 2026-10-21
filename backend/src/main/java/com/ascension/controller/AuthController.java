@@ -55,7 +55,7 @@ public class AuthController {
     @Value("${google.client-id:CHANGE_ME}")
     private String googleClientId;
 
-    @Value("${app.jwt.expiration-ms:900000}")
+    @Value("${app.jwt.expiration-ms:86400000}")
     private long jwtExpirationMs;
 
     @Value("${app.cookie.same-site:Lax}")
