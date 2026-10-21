@@ -33,6 +33,8 @@ export function lazyWithRetry<T extends ComponentType<any>>(
     try {
       const component = await factory();
       sessionStorage.removeItem(sessionKey);
+      sessionStorage.removeItem('ascension_global_chunk_reload_at');
+      sessionStorage.removeItem('ascension_eb_reload_lock');
       return component;
     } catch (error: unknown) {
       const isMimeOrChunkError = isChunkLoadError(error);
