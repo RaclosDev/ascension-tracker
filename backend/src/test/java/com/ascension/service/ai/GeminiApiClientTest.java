@@ -136,4 +136,45 @@ class GeminiApiClientTest {
         // model-two was never called because 400 is an unrecoverable client error
         verify(restTemplate, times(0)).exchange(contains("model-two:generateContent"), any(), any(), eq(String.class));
     }
+    @Test
+    void executePrompt_WhenModelNotSupported400_TriesFallbackModelAndSucceeds() {
+        geminiApiClient.setGeminiApiKey("dummy-key");
+        geminiApiClient.setFallbackModels("bad-model,good-model");
+
+        when(restTemplate.exchange(contains("/models"), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+                .thenThrow(new RuntimeException("Discovery failed"));
+
+        HttpClientErrorException modelNotFoundException = HttpClientErrorException.create(
+                HttpStatus.BAD_REQUEST, "Bad Request", HttpHeaders.EMPTY,
+                "{\"error\":{\"code\":400,\"message\":\"models/bad-model is not supported for generateContent\"}}".getBytes(StandardCharsets.UTF_8), null
+        );
+        when(restTemplate.exchange(contains("bad-model:generateContent"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
+                .thenThrow(modelNotFoundException);
+
+        String mockSuccessResponse = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"{\\\"result\\\":\\\"fallback_ok\\\"}\"}]}}]}";
+        when(restTemplate.exchange(contains("good-model:generateContent"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(ResponseEntity.ok(mockSuccessResponse));
+
+        String result = geminiApiClient.executePrompt("Test prompt");
+
+        assertThat(result).isEqualTo("{\"result\":\"fallback_ok\"}");
+        verify(restTemplate, times(1)).exchange(contains("good-model:generateContent"), any(), any(), eq(String.class));
+    }
+
+    @Test
+    void executePrompt_SanitizesQuotedApiKey() {
+        geminiApiClient.setGeminiApiKey("\"clean-key-123\"");
+        geminiApiClient.setFallbackModels("test-model");
+
+        when(restTemplate.exchange(contains("/models"), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+                .thenThrow(new RuntimeException("Discovery failed"));
+
+        String mockSuccessResponse = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"{\\\"status\\\":\\\"ok\\\"}\"}]}}]}";
+        when(restTemplate.exchange(contains("test-model:generateContent"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(ResponseEntity.ok(mockSuccessResponse));
+
+        String result = geminiApiClient.executePrompt("Test");
+
+        assertThat(result).isEqualTo("{\"status\":\"ok\"}");
+    }
 }

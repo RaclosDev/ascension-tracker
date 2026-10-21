@@ -154,6 +154,10 @@ public class GlobalExceptionHandler {
         String clientMsg;
         if (ex.getStatus() == HttpStatus.TOO_MANY_REQUESTS) {
             clientMsg = "Límite de peticiones alcanzado en el servicio externo. Por favor, inténtalo más tarde.";
+        } else if (ex.getStatus() == HttpStatus.BAD_REQUEST) {
+            clientMsg = ex.getMessage() != null && !ex.getMessage().isBlank()
+                    ? ex.getMessage()
+                    : "Petición no válida al servicio externo.";
         } else {
             clientMsg = "El servicio externo no está disponible temporalmente. Por favor, inténtalo más tarde.";
         }
