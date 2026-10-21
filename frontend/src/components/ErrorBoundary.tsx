@@ -92,12 +92,19 @@ export class ErrorBoundary extends Component<Props, State> {
                 sessionStorage.removeItem('ascension_eb_reload_lock');
                 sessionStorage.removeItem('ascension_global_chunk_reload_at');
                 try {
-                  const registration = await navigator.serviceWorker?.getRegistration();
-                  await registration?.update();
+                  if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map((r) => r.unregister()));
+                  }
+                  if ('caches' in window) {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map((k) => caches.delete(k)));
+                  }
                 } catch {
-                  // Reload is still useful when service worker update checks are unavailable.
+                  // Reload is still useful when service worker cleanup fails.
                 }
-                window.location.reload();
+                window.location.href =
+                  window.location.origin + window.location.pathname + '?v=' + Date.now();
               }}
             >
               {isChunkOrMimeError ? 'Actualizar aplicación' : 'Recargar'}
