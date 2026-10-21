@@ -23,12 +23,6 @@ export function isChunkLoadError(error: unknown): boolean {
   );
 }
 
-/**
- * Helper to wrap dynamic component imports with automatic reload recovery.
- * When a new deployment occurs, older chunk hashes may return 404 or index.html (MIME text/html).
- * This detects that specific deployment mismatch and cleanly reloads the window to fetch
- * the latest index.html and chunk manifest without stranding the user on an error screen.
- */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function lazyWithRetry<T extends ComponentType<any>>(
   factory: () => Promise<{ default: T }>,
@@ -46,18 +40,9 @@ export function lazyWithRetry<T extends ComponentType<any>>(
 
       if (isMimeOrChunkError && !alreadyReloaded) {
         sessionStorage.setItem(sessionKey, 'true');
-        // Clear caches to prevent re-serving stale assets
-        if (typeof window !== 'undefined' && 'caches' in window) {
-          try {
-            const keys = await caches.keys();
-            await Promise.all(keys.map((k) => caches.delete(k)));
-          } catch {
-            // ignore cache errors
-          }
-        }
-        // Hard refresh from server to pull latest index.html with new chunk hashes
+        // Never delete all Cache Storage entries here: that includes Workbox's
+        // precache and can destroy the only offline app shell.
         window.location.reload();
-        // Return a never-resolving promise so React Suspense/ErrorBoundary doesn't crash while reloading
         return new Promise<{ default: T }>(() => {});
       }
 
