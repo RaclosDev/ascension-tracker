@@ -23,11 +23,7 @@ export class ErrorBoundary extends Component<Props, State> {
       const alreadyReloaded = sessionStorage.getItem('ascension_eb_reload_lock');
       if (!alreadyReloaded) {
         sessionStorage.setItem('ascension_eb_reload_lock', 'true');
-        if (typeof window !== 'undefined' && 'caches' in window) {
-          caches.keys().then((keys) => {
-            keys.forEach((k) => caches.delete(k));
-          });
-        }
+        // Preserve the Workbox precache; the service worker owns its lifecycle.
         window.location.reload();
       }
     }
@@ -62,7 +58,7 @@ export class ErrorBoundary extends Component<Props, State> {
           </h2>
           <p style={{ color: '#94a3b8', marginBottom: '20px' }}>
             {isChunkOrMimeError
-              ? 'Se ha desplegado una nueva versión de Ascension. Pulsa para actualizar a los últimos cambios.'
+              ? 'No se ha podido cargar un módulo de la versión actual. Actualiza la aplicación para volver a intentarlo.'
               : 'Ha ocurrido un error en la aplicación.'}
           </p>
           {!isChunkOrMimeError && this.state.error?.message && (
@@ -94,24 +90,14 @@ export class ErrorBoundary extends Component<Props, State> {
               onClick={async () => {
                 sessionStorage.removeItem('ascension_chunk_reload_lock');
                 sessionStorage.removeItem('ascension_eb_reload_lock');
-                if ('caches' in window) {
-                  try {
-                    const keys = await caches.keys();
-                    await Promise.all(keys.map((k) => caches.delete(k)));
-                  } catch {
-                    // ignore
-                  }
+                sessionStorage.removeItem('ascension_global_chunk_reload_at');
+                try {
+                  const registration = await navigator.serviceWorker?.getRegistration();
+                  await registration?.update();
+                } catch {
+                  // Reload is still useful when service worker update checks are unavailable.
                 }
-                if ('serviceWorker' in navigator) {
-                  try {
-                    const registrations = await navigator.serviceWorker.getRegistrations();
-                    await Promise.all(registrations.map((r) => r.unregister()));
-                  } catch {
-                    // ignore
-                  }
-                }
-                window.location.href =
-                  window.location.origin + window.location.pathname + '?v=' + Date.now();
+                window.location.reload();
               }}
             >
               {isChunkOrMimeError ? 'Actualizar aplicación' : 'Recargar'}
