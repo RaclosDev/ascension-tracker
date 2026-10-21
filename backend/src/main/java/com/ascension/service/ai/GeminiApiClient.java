@@ -39,8 +39,8 @@ public class GeminiApiClient {
     @Value("${GEMINI_MODEL:}")
     private String geminiModel;
 
-    @Value("${app.gemini.fallback-models:gemini-2.5-flash,gemini-2.0-flash}")
-    private String fallbackModels = "gemini-2.5-flash,gemini-2.0-flash";
+    @Value("${app.gemini.fallback-models:gemini-2.0-flash,gemini-1.5-flash,gemini-2.5-flash}")
+    private String fallbackModels = "gemini-2.0-flash,gemini-1.5-flash,gemini-2.5-flash";
 
     private final RestTemplateBuilder builder;
     private final ExternalApiProperties properties;
@@ -63,6 +63,21 @@ public class GeminiApiClient {
         factory.setConnectTimeout(cfg.getConnectTimeoutMs());
         factory.setReadTimeout(cfg.getReadTimeoutMs());
         this.restTemplate = builder.requestFactory(() -> factory).build();
+    }
+
+    private String sanitizeApiKey(String key) {
+        if (key == null) {
+            return null;
+        }
+        String trimmed = key.trim();
+        if (trimmed.length() >= 2) {
+            char first = trimmed.charAt(0);
+            char last = trimmed.charAt(trimmed.length() - 1);
+            if ((first == '"' && last == '"') || (first == '\'' && last == '\'')) {
+                trimmed = trimmed.substring(1, trimmed.length() - 1).trim();
+            }
+        }
+        return trimmed;
     }
 
     void setRestTemplate(RestTemplate restTemplate) {
@@ -101,11 +116,10 @@ public class GeminiApiClient {
     }
 
     public String executePrompt(String prompt, String base64Image, String mimeType) {
-        if (geminiApiKey == null || geminiApiKey.trim().isEmpty()) {
+        String apiKey = sanitizeApiKey(geminiApiKey);
+        if (apiKey == null || apiKey.isEmpty()) {
             throw new ExternalApiException("Gemini", HttpStatus.SERVICE_UNAVAILABLE, "GEMINI_API_KEY is not configured.");
         }
-
-        String apiKey = geminiApiKey.trim();
         long deadline = System.currentTimeMillis() + TOTAL_REQUEST_DEADLINE_MS;
 
         if (cachedWorkingUrl != null) {
@@ -165,7 +179,16 @@ public class GeminiApiClient {
         }
         if (e instanceof RestClientResponseException rcre) {
             int code = rcre.getStatusCode().value();
-            return rcre.getStatusCode().is4xxClientError() && code != 429 && code != 404;
+            if (code == 429 || code == 404) {
+                return false;
+            }
+            if (code == 400) {
+                String body = rcre.getResponseBodyAsString().toLowerCase();
+                if (body.contains("model") || body.contains("not supported") || body.contains("not found") || body.contains("unsupported")) {
+                    return false;
+                }
+            }
+            return rcre.getStatusCode().is4xxClientError();
         }
         return false;
     }
@@ -179,6 +202,7 @@ public class GeminiApiClient {
                     "Servicio de IA de Gemini no disponible o tiempo de espera agotado", lastException);
         }
         if (lastException instanceof RestClientResponseException rcre) {
+            String detailedMsg = extractErrorMessage(rcre);
             if (rcre.getStatusCode().value() == 429) {
                 return new ExternalApiException("Gemini", HttpStatus.SERVICE_UNAVAILABLE,
                         "Límite de cuota o tasa excedido en Gemini API (429)", lastException);
@@ -189,11 +213,27 @@ public class GeminiApiClient {
             }
             if (rcre.getStatusCode().is4xxClientError()) {
                 return new ExternalApiException("Gemini", HttpStatus.valueOf(rcre.getStatusCode().value()),
-                        "Gemini API rechazó la petición (" + rcre.getStatusCode().value() + "): " + rcre.getStatusText(), lastException);
+                        "Gemini API (" + rcre.getStatusCode().value() + "): " + detailedMsg, lastException);
             }
         }
         return new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY,
                 "Todos los modelos de Gemini fallaron. Último error: " + (lastException != null ? lastException.getMessage() : "desconocido"), lastException);
+    }
+
+    private String extractErrorMessage(RestClientResponseException rcre) {
+        try {
+            String body = rcre.getResponseBodyAsString();
+            if (body != null && !body.isBlank()) {
+                JsonNode root = objectMapper.readTree(body);
+                JsonNode msgNode = root.path("error").path("message");
+                if (!msgNode.isMissingNode() && !msgNode.asText().isBlank()) {
+                    return msgNode.asText();
+                }
+            }
+        } catch (Exception ignored) {
+            // Fallback to status text
+        }
+        return rcre.getStatusText();
     }
 
     private void checkDeadline(long deadline) {
@@ -211,7 +251,7 @@ public class GeminiApiClient {
 
         List<String> discovered = new ArrayList<>();
         try {
-            String url = "https://generativelanguage.googleapis.com/v1beta/models";
+            String url = "https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey;
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/json");
             headers.set("x-goog-api-key", apiKey);
@@ -355,12 +395,20 @@ public class GeminiApiClient {
         generationConfig.put("temperature", 0.1);
         request.put("generationConfig", generationConfig);
 
+        String apiKey = sanitizeApiKey(geminiApiKey);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
-        headers.set("x-goog-api-key", geminiApiKey.trim());
+        if (apiKey != null && !apiKey.isEmpty()) {
+            headers.set("x-goog-api-key", apiKey);
+        }
+
+        String callUrl = url;
+        if (apiKey != null && !apiKey.isEmpty() && !url.contains("key=")) {
+            callUrl = url.contains("?") ? url + "&key=" + apiKey : url + "?key=" + apiKey;
+        }
 
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(callUrl, HttpMethod.POST, entity, String.class);
 
         JsonNode root = objectMapper.readTree(response.getBody());
         JsonNode candidates = root.path("candidates");
