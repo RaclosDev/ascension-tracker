@@ -24,8 +24,11 @@ export function useAiAssistant(fetchData: () => void) {
       await api.post('/nutrition/ai/food', { text: queryText });
       toast.success(`"${queryText}" añadido`);
       fetchData();
-    } catch {
-      toast.error('Error IA');
+    } catch (e: unknown) {
+      const axiosError = e as { response?: { data?: { error?: string; message?: string } } };
+      const msg =
+        axiosError.response?.data?.error || axiosError.response?.data?.message || 'Error IA';
+      toast.error(msg);
     } finally {
       setPendingAiCount((p) => Math.max(0, p - 1));
     }

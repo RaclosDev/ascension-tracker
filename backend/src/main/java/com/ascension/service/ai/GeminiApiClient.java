@@ -31,7 +31,7 @@ public class GeminiApiClient {
     private static final Logger log = LoggerFactory.getLogger(GeminiApiClient.class);
     public static final long TOTAL_REQUEST_DEADLINE_MS = 20_000L;
     public static final long MODEL_CACHE_TTL_MS = 3600_000L; // 1 hour TTL
-    public static final int MAX_MODELS_PER_REQUEST = 2;
+    public static final int MAX_MODELS_PER_REQUEST = 3;
 
     @Value("${GEMINI_API_KEY:}")
     private String geminiApiKey;
@@ -39,8 +39,8 @@ public class GeminiApiClient {
     @Value("${GEMINI_MODEL:}")
     private String geminiModel;
 
-    @Value("${app.gemini.fallback-models:gemini-2.0-flash,gemini-1.5-flash,gemini-2.5-flash}")
-    private String fallbackModels = "gemini-2.0-flash,gemini-1.5-flash,gemini-2.5-flash";
+    @Value("${app.gemini.fallback-models:gemini-flash-lite-latest,gemini-3-flash-preview,gemini-3.5-flash-lite,gemini-flash-latest,gemini-3.8-flash}")
+    private String fallbackModels = "gemini-flash-lite-latest,gemini-3-flash-preview,gemini-3.5-flash-lite,gemini-flash-latest,gemini-3.8-flash";
 
     private final RestTemplateBuilder builder;
     private final ExternalApiProperties properties;
@@ -73,8 +73,10 @@ public class GeminiApiClient {
         if (name == null || name.isBlank()) return false;
         String lower = name.toLowerCase();
         return !(lower.contains("tts") || lower.contains("audio") || lower.contains("embed")
-                || lower.contains("realtime") || lower.contains("live") || lower.contains("imagen")
-                || lower.contains("robotics") || lower.contains("custom"));
+                || lower.contains("realtime") || lower.contains("live") || lower.contains("image")
+                || lower.contains("banana") || lower.contains("transcribe") || lower.contains("robotics")
+                || lower.contains("lyria") || lower.contains("computer-use") || lower.contains("deep-research")
+                || lower.contains("customtools") || lower.contains("antigravity"));
     }
 
     private String sanitizeApiKey(String key) {

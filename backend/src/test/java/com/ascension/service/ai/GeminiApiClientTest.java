@@ -79,7 +79,7 @@ class GeminiApiClientTest {
     }
 
     @Test
-    void executePrompt_LimitsCandidateAttemptsToAtMostTwoModels() {
+    void executePrompt_LimitsCandidateAttemptsToAtMostThreeModels() {
         geminiApiClient.setGeminiApiKey("dummy-key");
         geminiApiClient.setFallbackModels("model-one,model-two,model-three,model-four");
 
@@ -91,13 +91,15 @@ class GeminiApiClientTest {
                 .thenThrow(new RuntimeException("model-one 500 error"));
         when(restTemplate.exchange(contains("model-two:generateContent"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
                 .thenThrow(new RuntimeException("model-two 500 error"));
+        when(restTemplate.exchange(contains("model-three:generateContent"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
+                .thenThrow(new RuntimeException("model-three 500 error"));
 
         assertThrows(ExternalApiException.class, () -> geminiApiClient.executePrompt("Hola"));
 
-        // Only first 2 models attempted (with retries), 3rd and 4th models never invoked
+        // Only first 3 models attempted (with retries), 4th model never invoked
         verify(restTemplate, atLeastOnce()).exchange(contains("model-one:generateContent"), any(), any(), eq(String.class));
         verify(restTemplate, atLeastOnce()).exchange(contains("model-two:generateContent"), any(), any(), eq(String.class));
-        verify(restTemplate, times(0)).exchange(contains("model-three:generateContent"), any(), any(), eq(String.class));
+        verify(restTemplate, atLeastOnce()).exchange(contains("model-three:generateContent"), any(), any(), eq(String.class));
         verify(restTemplate, times(0)).exchange(contains("model-four:generateContent"), any(), any(), eq(String.class));
     }
 
