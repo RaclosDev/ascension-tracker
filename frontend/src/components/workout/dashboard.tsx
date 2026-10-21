@@ -291,7 +291,7 @@ export function Dashboard() {
 
       {/* The navigation cards for Ejercicios and Plantillas were removed since they are now top-level tabs */}
 
-      <section className="grid grid-cols-2 gap-2.5 sm:gap-4 mb-4 sm:mb-6 items-stretch">
+      <section className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6 items-stretch">
         <MuscleRecovery history={history} customExercises={customExercises} />
         <BodyHeatmap history={history} customExercises={customExercises} />
       </section>
