@@ -41,12 +41,12 @@ export default React.memo(function DashboardCharts({
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
               <XAxis
                 dataKey="label"
-                tick={{ fill: '#64748b', fontSize: 11 }}
+                tick={{ fill: 'var(--text-muted, #64748b)', fontSize: 11 }}
                 interval="preserveStartEnd"
               />
               <YAxis
                 width={40}
-                tick={{ fill: '#64748b', fontSize: 11 }}
+                tick={{ fill: 'var(--text-muted, #64748b)', fontSize: 11 }}
                 domain={[
                   (dataMin: number) => Math.floor(dataMin),
                   (dataMax: number) => Math.ceil(dataMax),
@@ -55,12 +55,12 @@ export default React.memo(function DashboardCharts({
               />
               <Tooltip
                 contentStyle={{
-                  background: 'rgba(10, 12, 15, 0.95)',
-                  border: '1px solid rgba(255,255,255,0.12)',
+                  background: 'var(--bg-card, #1C1C1E)',
+                  border: '1px solid var(--border-medium, rgba(255,255,255,0.12))',
                   borderRadius: 8,
                 }}
-                labelStyle={{ color: '#F4F5F7' }}
-                itemStyle={{ color: '#9BA3AF' }}
+                labelStyle={{ color: 'var(--text-primary, #F4F5F7)' }}
+                itemStyle={{ color: 'var(--text-secondary, #9BA3AF)' }}
                 formatter={(v: number | string | undefined | readonly (string | number)[]) => [
                   `${Number(v).toFixed(2)} kg`,
                   'Peso',
@@ -98,18 +98,18 @@ export default React.memo(function DashboardCharts({
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={deltaData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-              <XAxis dataKey="week" tick={{ fill: '#64748b', fontSize: 11 }} />
+              <XAxis dataKey="week" tick={{ fill: 'var(--text-muted, #64748b)', fontSize: 11 }} />
               <YAxis
                 width={40}
-                tick={{ fill: '#64748b', fontSize: 11 }}
+                tick={{ fill: 'var(--text-muted, #64748b)', fontSize: 11 }}
                 tickFormatter={(v: number) => `${v > 0 ? '+' : ''}${v.toFixed(1)}`}
               />
               <Tooltip
-                labelStyle={{ color: '#F4F5F7' }}
-                itemStyle={{ color: '#9BA3AF' }}
+                labelStyle={{ color: 'var(--text-primary, #F4F5F7)' }}
+                itemStyle={{ color: 'var(--text-secondary, #9BA3AF)' }}
                 contentStyle={{
-                  background: 'rgba(17, 24, 39, 0.95)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'var(--bg-card, #1C1C1E)',
+                  border: '1px solid var(--border-medium, rgba(255,255,255,0.1))',
                   borderRadius: 8,
                 }}
                 formatter={(v: number | string | undefined | readonly (string | number)[]) => [

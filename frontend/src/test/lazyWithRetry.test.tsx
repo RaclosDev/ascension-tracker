@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React, { Suspense } from 'react';
 import { render, screen } from '@testing-library/react';
-import { lazyWithRetry } from '../utils/lazyWithRetry';
+import { lazyWithRetry, isChunkLoadError } from '../utils/lazyWithRetry';
 import ErrorBoundary from '../components/ErrorBoundary';
 
 describe('lazyWithRetry and Deployment Resilience', () => {
@@ -60,6 +60,41 @@ describe('lazyWithRetry and Deployment Resilience', () => {
     );
 
     // Give microtask loop time to process rejection
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(reloadMock).toHaveBeenCalledTimes(1);
+    expect(sessionStorage.getItem('ascension_chunk_reload_lock')).toBe('true');
+  });
+
+  it('recognizes _result.default Safari JavaScriptCore TypeError as chunk load error', () => {
+    expect(
+      isChunkLoadError("TypeError: undefined is not an object (evaluating 'e._result.default')"),
+    ).toBe(true);
+    expect(
+      isChunkLoadError(
+        new Error("TypeError: Cannot read properties of undefined (reading 'default')"),
+      ),
+    ).toBe(true);
+    expect(
+      isChunkLoadError(
+        new Error('Failed to load component chunk: invalid module or missing default export'),
+      ),
+    ).toBe(true);
+  });
+
+  it('reloads when factory resolves with missing default export', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invalidFactory = vi.fn().mockResolvedValue({} as any);
+    const LazyComp = lazyWithRetry(invalidFactory);
+
+    render(
+      <ErrorBoundary>
+        <Suspense fallback={<div>Loading...</div>}>
+          <LazyComp />
+        </Suspense>
+      </ErrorBoundary>,
+    );
+
     await new Promise((r) => setTimeout(r, 50));
 
     expect(reloadMock).toHaveBeenCalledTimes(1);

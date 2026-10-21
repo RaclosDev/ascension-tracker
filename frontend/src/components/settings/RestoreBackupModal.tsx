@@ -297,7 +297,7 @@ export function RestoreBackupModal({ isOpen, onClose }: RestoreBackupModalProps)
               {/* File Info */}
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-blue-400 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-[var(--accent-primary-light)] shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-white">{fileName}</p>
                     <p className="text-xs text-neutral-400">

@@ -13,7 +13,7 @@ import ManualFoodForm from './food/ManualFoodForm';
 import { FoodPortionEditor, SearchProduct } from './food/FoodPortionEditor';
 import { FoodSearchResultsList, SavedFoodExtended } from './food/FoodSearchResultsList';
 
-import { Mic, ImageIcon, X, ScanLine, ArrowLeft } from 'lucide-react';
+import { Mic, ImageIcon, X, ScanLine, ArrowLeft, Loader2 } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { FoodListsData, FoodLog, Meal, Recipe } from '../types/api';
 
@@ -76,6 +76,7 @@ export default function FoodSearchModal({
     mealIndex !== undefined && mealIndex !== null ? mealIndex : 0,
   );
   const [ocrLoading, setOcrLoading] = useState(false);
+  const [aiSubmitting, setAiSubmitting] = useState(false);
 
   useEffect(() => {
     if (selectedProduct && selectedProduct.portions && selectedProduct.portions.length > 0) {
@@ -466,8 +467,8 @@ export default function FoodSearchModal({
       return toast.error('Escribe algo o adjunta una foto primero');
     stopListening();
     const queryText = query.trim();
-    toast(` Procesando con IA...`, { duration: 2500 });
-    setQuery('');
+    setAiSubmitting(true);
+    const loadingToast = toast.loading('Procesando con IA...');
 
     const payload: Record<string, unknown> = {
       text: queryText,
@@ -480,29 +481,32 @@ export default function FoodSearchModal({
       payload.base64Image = cleanBase64;
     }
 
-    setSelectedImage(null);
-    if (onClose) onClose();
-
-    api
-      .post('/nutrition/ai/log', payload)
-      .then((res) => {
-        const count = Array.isArray(res.data) ? res.data.length : 1;
-        if (selectedMealIndex === -1) {
-          toast.success(`¡${count} alimento(s) repartidos en tus comidas por IA!`);
-        } else {
-          toast.success(`¡${count} alimento(s) añadidos por IA!`);
-        }
-        if (onLogAdded) onLogAdded();
-      })
-      .catch((e: unknown) => {
-        const axiosError = e as { response?: { data?: { error?: string; message?: string } } };
-        const msg =
-          axiosError.response?.data?.error ||
-          axiosError.response?.data?.message ||
-          'Error procesando texto con IA';
-        toast.error(msg);
-        console.error('Error procesando texto con IA:', e instanceof Error ? e.message : String(e));
-      });
+    try {
+      const res = await api.post('/nutrition/ai/log', payload);
+      const count = Array.isArray(res.data) ? res.data.length : 1;
+      toast.dismiss(loadingToast);
+      if (selectedMealIndex === -1) {
+        toast.success(`¡${count} alimento(s) repartidos en tus comidas por IA!`);
+      } else {
+        toast.success(`¡${count} alimento(s) añadidos por IA!`);
+      }
+      setQuery('');
+      setSelectedImage(null);
+      if (onLogAdded) onLogAdded();
+      if (onClose) onClose();
+    } catch (e: unknown) {
+      toast.dismiss(loadingToast);
+      const axiosError = e as { response?: { data?: { error?: string; message?: string } } };
+      const msg =
+        axiosError.response?.data?.error ||
+        axiosError.response?.data?.message ||
+        'Error procesando texto con IA';
+      toast.error(msg);
+      console.error('Error procesando texto con IA:', e instanceof Error ? e.message : String(e));
+      // El texto y la imagen se conservan para que el usuario no pierda su entrada
+    } finally {
+      setAiSubmitting(false);
+    }
   };
 
   return (
@@ -763,14 +767,24 @@ export default function FoodSearchModal({
                 <button
                   className="btn btn-primary"
                   onClick={submitAiPrompt}
-                  disabled={!query.trim() && !selectedImage}
+                  disabled={aiSubmitting || (!query.trim() && !selectedImage)}
                   style={{
                     background:
                       'var(--gradient-protein-carbs, linear-gradient(90deg, #8b5cf6, #3b82f6))',
                     border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
                   }}
                 >
-                  Analizar y Añadir
+                  {aiSubmitting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Analizando...</span>
+                    </>
+                  ) : (
+                    'Analizar y Añadir'
+                  )}
                 </button>
               </div>
             </div>

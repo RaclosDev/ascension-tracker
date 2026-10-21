@@ -298,7 +298,7 @@ export default function MacroDistributionCalculator({
       <div role="status" aria-live="polite" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Proteína */}
         <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5">
-          <div className="flex justify-between items-center text-xs text-blue-300 font-bold uppercase">
+          <div className="flex justify-between items-center text-xs text-[var(--color-protein)] font-bold uppercase">
             <span>Proteína</span>
             <span className="text-zinc-400 font-mono">{result.protein.percentage}%</span>
           </div>
@@ -310,7 +310,7 @@ export default function MacroDistributionCalculator({
 
         {/* Carbohidratos */}
         <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5">
-          <div className="flex justify-between items-center text-xs text-blue-400 font-bold uppercase">
+          <div className="flex justify-between items-center text-xs text-[var(--color-carbs)] font-bold uppercase">
             <span>Carbohidratos</span>
             <span className="text-zinc-400 font-mono">{result.carbs.percentage}%</span>
           </div>
@@ -322,7 +322,7 @@ export default function MacroDistributionCalculator({
 
         {/* Grasas */}
         <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5">
-          <div className="flex justify-between items-center text-xs text-blue-500 font-bold uppercase">
+          <div className="flex justify-between items-center text-xs text-[var(--color-fat)] font-bold uppercase">
             <span>Grasas</span>
             <span className="text-zinc-400 font-mono">{result.fat.percentage}%</span>
           </div>

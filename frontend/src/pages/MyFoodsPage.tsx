@@ -186,7 +186,7 @@ export default function MyFoodsPage() {
                           ) : (
                             <button
                               onClick={() => scanner.saveRecentAsFood(f as unknown as PageFoodItem)}
-                              className="text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-1 rounded-lg hover:bg-blue-500/30 transition-colors"
+                              className="text-xs bg-[var(--accent-glow)] text-[var(--accent-primary-light)] border border-[var(--accent-primary)]/30 px-2 py-1 rounded-lg hover:bg-[var(--accent-primary)]/30 transition-colors"
                             >
                               Añadir
                             </button>
@@ -280,8 +280,8 @@ export default function MyFoodsPage() {
       />
 
       <button
-        aria-label="+"
-        className="fixed z-50 bottom-[calc(75px+env(safe-area-inset-bottom))] right-5 w-14 h-14 rounded-full flex items-center justify-center bg-blue-500 hover:bg-blue-600 active:scale-95 text-white text-2xl font-bold shadow-lg shadow-blue-500/25 border-none transition-all cursor-pointer"
+        aria-label="Crear nuevo alimento"
+        className="fixed z-50 bottom-[calc(75px+env(safe-area-inset-bottom))] right-5 w-14 h-14 rounded-full flex items-center justify-center bg-[var(--accent-primary)] hover:brightness-110 active:scale-95 text-white text-2xl font-bold shadow-lg shadow-[var(--accent-shadow)] border-none transition-all cursor-pointer"
         onClick={() => setIsActionMenuOpen(true)}
       >
         +
@@ -365,7 +365,7 @@ export default function MyFoodsPage() {
 
             {scanner.isLookingUpCode ? (
               <div className="flex flex-col items-center justify-center py-10 gap-3">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-primary)]" />
                 <p className="text-zinc-300 text-sm m-0">Buscando producto...</p>
               </div>
             ) : scanner.scannedProduct ? (
@@ -397,19 +397,19 @@ export default function MyFoodsPage() {
                   </div>
                   <div>
                     <span className="block text-xs text-zinc-400">Prot</span>
-                    <span className="text-sm font-semibold text-blue-400">
+                    <span className="text-sm font-semibold text-[var(--color-protein)]">
                       {scanner.scannedProduct.protein}g
                     </span>
                   </div>
                   <div>
                     <span className="block text-xs text-zinc-400">Carbs</span>
-                    <span className="text-sm font-semibold text-amber-400">
+                    <span className="text-sm font-semibold text-[var(--color-carbs)]">
                       {scanner.scannedProduct.carbs}g
                     </span>
                   </div>
                   <div>
                     <span className="block text-xs text-zinc-400">Grasa</span>
-                    <span className="text-sm font-semibold text-rose-400">
+                    <span className="text-sm font-semibold text-[var(--color-fat)]">
                       {scanner.scannedProduct.fat}g
                     </span>
                   </div>

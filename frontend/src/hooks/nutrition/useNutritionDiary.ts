@@ -189,8 +189,24 @@ export function useNutritionDiary() {
         return;
       }
 
+      // Filter out items already logged in this meal today to prevent duplicates
+      const currentLogsInMeal = foodLogs.filter((log: FoodLog) => log.mealIndex === mealIndex);
+      const newLogsToCopy = logsToCopy.filter(
+        (yesterdayLog: FoodLog) =>
+          !currentLogsInMeal.some(
+            (todayLog: FoodLog) =>
+              todayLog.product?.trim().toLowerCase() === yesterdayLog.product?.trim().toLowerCase(),
+          ),
+      );
+
+      if (newLogsToCopy.length === 0) {
+        toast.dismiss(loadingToast);
+        toast('Los alimentos de ayer ya están registrados en esta comida', { icon: 'ℹ️' });
+        return;
+      }
+
       await Promise.all(
-        logsToCopy.map((log: FoodLog) =>
+        newLogsToCopy.map((log: FoodLog) =>
           api.post('/nutrition/logs', {
             date: selectedDate,
             mealIndex: mealIndex,
@@ -210,7 +226,11 @@ export function useNutritionDiary() {
       queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
       queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
       toast.dismiss(loadingToast);
-      toast.success('¡Comida copiada!');
+      toast.success(
+        newLogsToCopy.length === logsToCopy.length
+          ? '¡Comida copiada!'
+          : `¡${newLogsToCopy.length} alimento(s) añadidos (los ya existentes se omitieron)!`,
+      );
     } catch (err: unknown) {
       console.error('Error al copiar la comida:', err instanceof Error ? err.message : String(err));
       toast.dismiss(loadingToast);

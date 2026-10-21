@@ -1,61 +1,17 @@
-import React from 'react';
-import { Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useWorkoutStore } from '../lib/workout/store';
 import { SegmentedControl } from '../components/ui/segmented-control';
 import { Loader2 } from 'lucide-react';
-
-const Dashboard = lazyWithRetry(() =>
-  import('../components/workout/dashboard').then((m) => ({ default: m.Dashboard })),
-);
-const ActiveWorkout = lazyWithRetry(() =>
-  import('../components/workout/active-workout').then((m) => ({ default: m.ActiveWorkout })),
-);
-const HistoryView = lazyWithRetry(() =>
-  import('../components/workout/history').then((m) => ({ default: m.HistoryView })),
-);
-const TemplatesView = lazyWithRetry(() =>
-  import('../components/workout/templates').then((m) => ({ default: m.TemplatesView })),
-);
-const ExercisesView = lazyWithRetry(() =>
-  import('../components/workout/exercises-view').then((m) => ({ default: m.ExercisesView })),
-);
-
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error: Error | null; info: React.ErrorInfo | null }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false, error: null, info: null };
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, info: React.ErrorInfo) {
-    this.setState({ error, info });
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{ padding: '2rem', color: 'red', background: '#222' }}>
-          <h2>Algo salió mal.</h2>
-          <pre style={{ whiteSpace: 'pre-wrap' }}>{this.state.error?.toString()}</pre>
-          <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem' }}>
-            {this.state.info?.componentStack}
-          </pre>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
+import ErrorBoundary from '../components/ErrorBoundary';
 import { useExerciseCatalog } from '../lib/workout/exercises';
 import { WorkoutPageSkeleton } from '../components/workout/skeletons/WorkoutPageSkeleton';
+
+const Dashboard = lazyWithRetry(() => import('../components/workout/dashboard'));
+const ActiveWorkout = lazyWithRetry(() => import('../components/workout/active-workout'));
+const HistoryView = lazyWithRetry(() => import('../components/workout/history'));
+const TemplatesView = lazyWithRetry(() => import('../components/workout/templates'));
+const ExercisesView = lazyWithRetry(() => import('../components/workout/exercises-view'));
 
 export default function WorkoutPage() {
   const tab = useWorkoutStore((s) => s.tab);

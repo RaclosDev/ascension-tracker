@@ -37,6 +37,10 @@ vi.mock('@/api/client', () => {
     getSessionToken: vi.fn().mockReturnValue(null),
     refreshAccessToken: vi.fn().mockResolvedValue(null),
     isTokenValid: vi.fn().mockReturnValue(true),
+    authBroadcast: {
+      postMessage: vi.fn(),
+      onmessage: null,
+    },
   };
 });
 

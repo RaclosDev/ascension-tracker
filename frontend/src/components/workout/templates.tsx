@@ -11,7 +11,7 @@ import {
   useRecentWorkouts,
 } from '@/lib/workout/api';
 
-export function TemplatesView() {
+export default function TemplatesView() {
   const { data: templates = [], isLoading } = useWorkoutTemplates();
   const { data: customExercises = [] } = useCustomExercises();
   const { data: recentWorkouts = [] } = useRecentWorkouts(180);
@@ -180,3 +180,5 @@ export function TemplatesView() {
     </div>
   );
 }
+
+export { TemplatesView };

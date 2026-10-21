@@ -447,3 +447,5 @@ export function EmptyCard({ title, body }: { title: string; body: string }) {
     </div>
   );
 }
+
+export default Dashboard;

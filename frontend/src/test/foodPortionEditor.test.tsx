@@ -105,4 +105,25 @@ describe('FoodPortionEditor Component', () => {
 
     expect(onConfirmAdd).toHaveBeenCalledTimes(1);
   });
+
+  it('supports decimal comma in grams and portions without resetting to zero', () => {
+    const setQuantity = vi.fn();
+    const setInputMode = vi.fn();
+    const onConfirmAdd = vi.fn();
+
+    render(
+      <FoodPortionEditor
+        selectedProduct={sampleProduct}
+        quantity={100}
+        setQuantity={setQuantity}
+        inputMode="grams"
+        setInputMode={setInputMode}
+        onConfirmAdd={onConfirmAdd}
+      />,
+    );
+
+    const input = screen.getByLabelText('Cantidad en gramos');
+    fireEvent.change(input, { target: { value: '125,5' } });
+    expect(setQuantity).toHaveBeenCalledWith(125.5);
+  });
 });

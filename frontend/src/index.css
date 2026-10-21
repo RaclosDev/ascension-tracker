@@ -4610,6 +4610,21 @@ button, a, input, select, textarea, [role=button], [onclick] {
   font-weight: 700;
 }
 
+.picker-in-workout-badge {
+  font-size: 0.55rem;
+  padding: 0.05rem 0.35rem;
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--color-success, #34d399);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
 /* ---- Picker Footer (sticky) ---- */
 .picker-footer {
   border-top: 1px solid var(--border-subtle);

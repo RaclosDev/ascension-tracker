@@ -238,14 +238,14 @@ export function WorkoutCelebrationModal({
         <div
           className="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-48 rounded-full pointer-events-none opacity-40"
           style={{
-            background: 'radial-gradient(circle, rgba(0, 133, 255, 0.22) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)',
           }}
         />
 
         {/* Modal Top Navigation Bar */}
         <div className="relative flex items-center justify-between px-5 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-3.5 border-b border-white/[0.08] flex-shrink-0 z-10">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-[var(--accent-glow)] border border-[var(--accent-primary)]/20 flex items-center justify-center text-[var(--accent-primary-light)] shadow-sm">
               <Trophy size={16} />
             </div>
             <div>
@@ -286,7 +286,7 @@ export function WorkoutCelebrationModal({
               onChange={(e) => setCustomName(e.target.value)}
               disabled={isSaving}
               placeholder="Nombre del entrenamiento"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 text-white text-sm font-semibold focus:border-blue-500 focus:outline-none transition-colors"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 text-white text-sm font-semibold focus:border-[var(--accent-primary)] focus:outline-none transition-colors"
             />
           </div>
 
@@ -299,7 +299,7 @@ export function WorkoutCelebrationModal({
               Fecha y hora del entrenamiento
             </label>
             <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10">
-              <Calendar size={15} className="text-blue-400 shrink-0" />
+              <Calendar size={15} className="text-[var(--accent-primary-light)] shrink-0" />
               <input
                 id="finish-workout-date"
                 type="datetime-local"
@@ -321,7 +321,7 @@ export function WorkoutCelebrationModal({
                 Duración (min)
               </label>
               <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10">
-                <Clock size={15} className="text-blue-400 shrink-0" />
+                <Clock size={15} className="text-[var(--accent-primary-light)] shrink-0" />
                 <input
                   id="finish-workout-duration"
                   type="number"
@@ -383,16 +383,16 @@ export function WorkoutCelebrationModal({
 
           {/* Optional PRs Highlight Card */}
           {totalPrsCount > 0 && (
-            <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+            <div className="p-3.5 rounded-xl bg-[var(--accent-glow)] border border-[var(--accent-primary)]/20 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-[var(--accent-primary)]/20 flex items-center justify-center text-[var(--accent-primary-light)] shrink-0">
                 <Zap size={16} />
               </div>
               <div>
-                <span className="text-xs font-bold text-blue-300 block">
+                <span className="text-xs font-bold text-[var(--accent-primary-light)] block">
                   ¡{totalPrsCount}{' '}
                   {totalPrsCount === 1 ? 'nuevo récord personal' : 'nuevos récords personales'}!
                 </span>
-                <p className="text-[0.7rem] text-blue-200/70">
+                <p className="text-[0.7rem] text-zinc-300">
                   Has superado marcas históricas en esta sesión.
                 </p>
               </div>
@@ -434,7 +434,7 @@ export function WorkoutCelebrationModal({
                             {item.name}
                           </span>
                           {item.hasPr && (
-                            <span className="px-1.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-[0.6rem] font-bold text-blue-300">
+                            <span className="px-1.5 py-0.5 rounded-full bg-[var(--accent-glow)] border border-[var(--accent-primary)]/30 text-[0.6rem] font-bold text-[var(--accent-primary-light)]">
                               PR
                             </span>
                           )}
@@ -482,7 +482,7 @@ export function WorkoutCelebrationModal({
               onChange={(e) => setCustomNotes(e.target.value)}
               disabled={isSaving}
               placeholder="¿Sensaciones, fatiga, material o notas de entrenamiento?..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 text-white text-xs placeholder:text-zinc-500 focus:border-blue-500 focus:outline-none transition-colors resize-none"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 text-white text-xs placeholder:text-zinc-500 focus:border-[var(--accent-primary)] focus:outline-none transition-colors resize-none"
             />
           </div>
 
@@ -502,7 +502,7 @@ export function WorkoutCelebrationModal({
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full py-3 rounded-xl bg-blue-500 hover:bg-blue-600 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-[var(--accent-shadow)] flex items-center justify-center gap-2 transition-all disabled:opacity-50"
               >
                 {isSaving ? (
                   <>
@@ -547,7 +547,7 @@ export function WorkoutCelebrationModal({
                   haptics.success();
                   onClose();
                 }}
-                className="w-full py-3 rounded-xl bg-blue-500 hover:bg-blue-600 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 transition-all"
+                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-[var(--accent-shadow)] flex items-center justify-center gap-2 transition-all"
               >
                 <Check size={18} />
                 <span>Aceptar y Continuar</span>

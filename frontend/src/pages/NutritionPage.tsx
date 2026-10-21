@@ -137,7 +137,13 @@ export default function NutritionPage() {
               right: '1.25rem',
             }}
             onClick={() => {
-              setSelectedMealIndex(0);
+              const hour = new Date().getHours();
+              let defaultIdx = 0;
+              if (hour >= 12 && hour < 17) defaultIdx = 1;
+              else if (hour >= 17 && hour < 20) defaultIdx = 2;
+              else if (hour >= 20 || hour < 6)
+                defaultIdx = meals.length > 3 ? 3 : Math.max(0, meals.length - 1);
+              setSelectedMealIndex(Math.min(defaultIdx, Math.max(0, meals.length - 1)));
               setSearchModalOpen(true);
             }}
             aria-label="Añadir alimento"

@@ -169,10 +169,10 @@ export default function ManualFoodForm({
         <div
           style={{
             padding: '0.75rem',
-            background: 'rgba(59, 130, 246, 0.1)',
-            border: '1px solid var(--accent-color)',
+            background: 'var(--accent-glow)',
+            border: '1px solid var(--accent-primary)',
             borderRadius: '10px',
-            color: 'var(--accent-color)',
+            color: 'var(--accent-primary-light)',
             fontSize: '0.85rem',
             display: 'flex',
             alignItems: 'center',
@@ -187,7 +187,7 @@ export default function ManualFoodForm({
               width: '16px',
               height: '16px',
               borderWidth: '2px',
-              borderColor: 'var(--accent-color) transparent var(--accent-color) transparent',
+              borderColor: 'var(--accent-primary) transparent var(--accent-primary) transparent',
             }}
           ></div>
           Extrayendo macros de la etiqueta...

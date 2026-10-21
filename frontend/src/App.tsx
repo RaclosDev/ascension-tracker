@@ -19,6 +19,7 @@ import LoginPage from './pages/LoginPage';
 import { PageLoader } from './components/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
 import { preloadAllRoutes } from './utils/routePreload';
+import { useWorkoutStore } from './lib/workout/store';
 
 let currentAppVersion: string | null = null;
 
@@ -44,8 +45,8 @@ function AppContent() {
         if (document.visibilityState === 'visible') {
           // Do not interrupt an active workout with a version reload
           try {
-            const activeWorkout = localStorage.getItem('ascension-workout-v1');
-            if (activeWorkout && activeWorkout.includes('"active":true')) return;
+            const active = useWorkoutStore.getState().active;
+            if (active != null) return;
           } catch {
             // ignore
           }

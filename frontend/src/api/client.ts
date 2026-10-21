@@ -14,16 +14,26 @@ export let memoryToken: string | null = null;
 
 export const setMemoryToken = (token: string | null) => {
   memoryToken = token;
-  if (typeof window !== 'undefined' && window.sessionStorage) {
+  if (typeof window !== 'undefined') {
     if (token && token !== 'offline-session') {
       try {
-        sessionStorage.setItem('ascension_session_token', token);
+        sessionStorage?.setItem('ascension_session_token', token);
+      } catch {
+        // ignore storage errors
+      }
+      try {
+        localStorage?.setItem('ascension_session_token', token);
       } catch {
         // ignore storage errors
       }
     } else if (!token) {
       try {
-        sessionStorage.removeItem('ascension_session_token');
+        sessionStorage?.removeItem('ascension_session_token');
+      } catch {
+        // ignore
+      }
+      try {
+        localStorage?.removeItem('ascension_session_token');
       } catch {
         // ignore
       }
@@ -32,14 +42,42 @@ export const setMemoryToken = (token: string | null) => {
 };
 
 export const getSessionToken = (): string | null => {
-  if (typeof window === 'undefined' || !window.sessionStorage) return null;
+  if (typeof window === 'undefined') return null;
   try {
-    const saved = sessionStorage.getItem('ascension_session_token');
+    let saved: string | null = null;
+    try {
+      saved = sessionStorage?.getItem('ascension_session_token') || null;
+    } catch {
+      // ignore
+    }
+    if (!saved) {
+      try {
+        saved = localStorage?.getItem('ascension_session_token') || null;
+      } catch {
+        // ignore
+      }
+    }
     if (saved && isTokenValid(saved)) {
+      try {
+        if (!sessionStorage?.getItem('ascension_session_token')) {
+          sessionStorage?.setItem('ascension_session_token', saved);
+        }
+      } catch {
+        // ignore
+      }
       return saved;
     }
     if (saved) {
-      sessionStorage.removeItem('ascension_session_token');
+      try {
+        sessionStorage?.removeItem('ascension_session_token');
+      } catch {
+        // ignore
+      }
+      try {
+        localStorage?.removeItem('ascension_session_token');
+      } catch {
+        // ignore
+      }
     }
     return null;
   } catch {
@@ -62,7 +100,7 @@ export const isTokenValid = (token: string | null): boolean => {
   }
 };
 
-const authBroadcast =
+export const authBroadcast =
   typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('ascension_auth') : null;
 
 if (authBroadcast) {
@@ -71,6 +109,18 @@ if (authBroadcast) {
       setMemoryToken(event.data.token);
       api.defaults.headers.common['Authorization'] = 'Bearer ' + event.data.token;
       window.dispatchEvent(new CustomEvent('token_refresh', { detail: event.data.token }));
+    } else if (event.data?.type === 'REQUEST_SESSION') {
+      if (memoryToken && isTokenValid(memoryToken)) {
+        try {
+          authBroadcast.postMessage({ type: 'TOKEN_REFRESHED', token: memoryToken });
+        } catch {
+          // ignore
+        }
+      }
+    } else if (event.data?.type === 'AUTH_LOGOUT') {
+      setMemoryToken(null);
+      delete api.defaults.headers.common['Authorization'];
+      window.dispatchEvent(new CustomEvent('auth_failed'));
     }
   };
 }
