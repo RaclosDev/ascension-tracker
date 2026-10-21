@@ -106,12 +106,9 @@ export const refreshAccessToken = async (): Promise<string | null> => {
       return newToken;
     } catch (err) {
       const axiosErr = err as import('axios').AxiosError;
-      if (
-        axiosErr.response &&
-        (axiosErr.response.status === 400 ||
-          axiosErr.response.status === 401 ||
-          axiosErr.response.status === 403)
-      ) {
+      // Only a 401 from /auth/refresh means the refresh session is invalid.
+      // 403 can be an Origin/CORS policy failure and must not erase the user's session.
+      if (axiosErr.response?.status === 401) {
         setMemoryToken(null);
         delete api.defaults.headers.common['Authorization'];
         window.dispatchEvent(new CustomEvent('auth_failed'));
@@ -186,10 +183,7 @@ api.interceptors.response.use(
           res = await api.post('/auth/refresh', {}, { withCredentials: true });
         } catch (firstErr) {
           const axiosErr = firstErr as import('axios').AxiosError;
-          if (
-            axiosErr.response &&
-            (axiosErr.response.status === 401 || axiosErr.response.status === 403)
-          ) {
+          if (axiosErr.response?.status === 401) {
             throw firstErr;
           }
           // Retry once after 1.5s for network hiccups or transient errors
@@ -234,12 +228,8 @@ api.interceptors.response.use(
       } catch (error) {
         const err = error as import('axios').AxiosError;
         processQueue(err, null);
-        if (
-          err.response &&
-          (err.response.status === 400 ||
-            err.response.status === 401 ||
-            err.response.status === 403)
-        ) {
+        // Do not convert policy/server errors (400/403) into a client-side logout.
+        if (err.response?.status === 401) {
           setMemoryToken(null);
           delete api.defaults.headers.common['Authorization'];
           window.dispatchEvent(new CustomEvent('auth_failed'));
