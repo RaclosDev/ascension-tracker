@@ -264,10 +264,13 @@ export function useScannerAndOCR(
 
   const saveRecentAsFood = async (f: PageFoodItem) => {
     const q = f.quantity || 100;
+    const match = f.product?.match(/^(.+?)\s*\((.+?)\)$/);
+    const name = match ? match[1].trim() : f.product;
+    const brand = match ? match[2].trim() : '';
     try {
       await api.post('/nutrition/my-foods', {
-        name: f.product,
-        brand: '',
+        name,
+        brand,
         kcalPer100g: Math.round(((f.kcal || 0) / q) * 100 * 10) / 10,
         proteinPer100g: Math.round(((f.protein || 0) / q) * 100 * 10) / 10,
         carbsPer100g: Math.round(((f.carbs || 0) / q) * 100 * 10) / 10,
