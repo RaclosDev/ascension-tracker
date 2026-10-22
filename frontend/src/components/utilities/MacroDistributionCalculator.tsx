@@ -1,4 +1,5 @@
 import { useState, useId, useMemo } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { calculateMacroDistribution, MacroStrategy } from '../../utils/fitnessCalculators';
 
 interface MacroDistributionCalculatorProps {
@@ -289,7 +290,10 @@ export default function MacroDistributionCalculator({
       {result.warnings && result.warnings.length > 0 && (
         <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
           {result.warnings.map((w, idx) => (
-            <div key={idx}>⚠ {w}</div>
+            <div key={idx} className="flex items-center gap-1.5">
+              <AlertTriangle size={12} className="shrink-0" />
+              <span>{w}</span>
+            </div>
           ))}
         </div>
       )}
@@ -336,7 +340,7 @@ export default function MacroDistributionCalculator({
       {/* PER-MEAL BREAKDOWN */}
       {result.perMeal && (
         <div className="p-4 rounded-xl bg-[#161618] border border-white/10 space-y-2">
-          <h4 className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+          <h4 className="text-xs font-semibold text-gray-300">
             Reparto recomendado por plato ({result.perMeal.mealCount} comidas):
           </h4>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">

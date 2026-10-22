@@ -197,7 +197,7 @@ export function WorkoutCelebrationModal({
     haptics.light();
     const workoutTitle = customName.trim() || currentWorkout.name || 'Entrenamiento';
     const exercisesNames = completedExercisesList.map((e) => e.name).join(', ');
-    const shareText = `🏋️‍♂️ ¡He completado "${workoutTitle}" en Ascension Tracker!\n📊 ${formatKg(totalVolumeKg)} levantados • ${totalCompletedSets} series • ${customDuration} min\n💪 ${exercisesNames}`;
+    const shareText = `¡He completado "${workoutTitle}" en Ascension Tracker!\n${formatKg(totalVolumeKg)} levantados • ${totalCompletedSets} series • ${customDuration} min\n${exercisesNames}`;
 
     if (typeof navigator !== 'undefined' && 'share' in navigator) {
       try {
@@ -275,7 +275,7 @@ export function WorkoutCelebrationModal({
           <div>
             <label
               htmlFor="finish-workout-name"
-              className="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-400"
+              className="block mb-1.5 text-xs font-semibold text-zinc-300"
             >
               Nombre del entrenamiento
             </label>
@@ -294,11 +294,11 @@ export function WorkoutCelebrationModal({
           <div>
             <label
               htmlFor="finish-workout-date"
-              className="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-400"
+              className="block mb-1.5 text-xs font-semibold text-zinc-300"
             >
               Fecha y hora del entrenamiento
             </label>
-            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10">
+            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 focus-within:border-[var(--accent-primary)] focus-within:ring-1 focus-within:ring-[var(--accent-primary)] transition-all">
               <Calendar size={15} className="text-[var(--accent-primary-light)] shrink-0" />
               <input
                 id="finish-workout-date"
@@ -316,11 +316,11 @@ export function WorkoutCelebrationModal({
             <div>
               <label
                 htmlFor="finish-workout-duration"
-                className="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-400"
+                className="block mb-1.5 text-xs font-semibold text-zinc-300"
               >
                 Duración (min)
               </label>
-              <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10">
+              <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 focus-within:border-[var(--accent-primary)] focus-within:ring-1 focus-within:ring-[var(--accent-primary)] transition-all">
                 <Clock size={15} className="text-[var(--accent-primary-light)] shrink-0" />
                 <input
                   id="finish-workout-duration"
@@ -338,9 +338,7 @@ export function WorkoutCelebrationModal({
             </div>
 
             <div>
-              <span className="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-400">
-                Ejercicios
-              </span>
+              <span className="block mb-1.5 text-xs font-semibold text-zinc-300">Ejercicios</span>
               <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 text-white text-sm font-semibold">
                 <Layers size={15} className="text-zinc-400 shrink-0" />
                 <span className="font-mono">{completedExercisesList.length}</span>
@@ -354,27 +352,21 @@ export function WorkoutCelebrationModal({
           {/* Core Metric Cards (Volumen, Tiempo, Series) */}
           <div className="grid grid-cols-3 gap-2.5">
             <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/5 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
-                Volumen
-              </span>
+              <span className="text-[11px] font-semibold text-zinc-400 mb-1">Volumen</span>
               <span className="text-sm sm:text-base font-extrabold text-white font-mono tabular-nums">
                 {formatKg(totalVolumeKg)}
               </span>
             </div>
 
             <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/5 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
-                Tiempo
-              </span>
+              <span className="text-[11px] font-semibold text-zinc-400 mb-1">Tiempo</span>
               <span className="text-sm sm:text-base font-extrabold text-white font-mono tabular-nums">
                 {formatWorkoutDuration(customDuration)}
               </span>
             </div>
 
             <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/5 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
-                Series
-              </span>
+              <span className="text-[11px] font-semibold text-zinc-400 mb-1">Series</span>
               <span className="text-sm sm:text-base font-extrabold text-white font-mono tabular-nums">
                 {totalCompletedSets} {totalCompletedSets === 1 ? 'serie' : 'series'}
               </span>
@@ -401,7 +393,7 @@ export function WorkoutCelebrationModal({
 
           {/* Exercises Breakdown Section */}
           <div>
-            <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+            <label className="block mb-2 text-xs font-semibold text-zinc-300">
               Desglose por ejercicios ({completedExercisesList.length})
             </label>
 
@@ -452,7 +444,7 @@ export function WorkoutCelebrationModal({
 
                     {item.bestSet && (
                       <div className="px-2.5 py-1.5 rounded-lg bg-zinc-800/80 border border-white/10 text-right shrink-0">
-                        <span className="text-[9px] text-zinc-400 uppercase tracking-wider font-bold block">
+                        <span className="text-[10px] text-zinc-400 font-medium block">
                           Mejor serie
                         </span>
                         <span className="text-xs font-bold text-white font-mono tabular-nums">
@@ -470,7 +462,7 @@ export function WorkoutCelebrationModal({
           <div>
             <label
               htmlFor="finish-workout-notes"
-              className="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5"
+              className="block mb-1.5 text-xs font-semibold text-zinc-300 flex items-center gap-1.5"
             >
               <FileText size={12} />
               <span>Notas de la sesión (opcional)</span>

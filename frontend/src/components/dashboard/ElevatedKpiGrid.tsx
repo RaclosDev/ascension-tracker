@@ -137,7 +137,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
       <div className="card kpi-card glass-panel-elevated relative overflow-hidden rounded-2xl p-3.5 sm:p-4 border border-white/[0.08] flex flex-col justify-between">
         <div className="flex items-center justify-between mb-2">
           <span
-            className="kpi-label text-[0.7rem] sm:text-xs font-bold uppercase tracking-wider"
+            className="kpi-label text-xs font-semibold"
             style={{ color: 'var(--text-secondary)' }}
           >
             Peso Actual
@@ -173,7 +173,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
       <div className="card kpi-card glass-panel-elevated relative overflow-hidden rounded-2xl p-3.5 sm:p-4 border border-white/[0.08] flex flex-col justify-between">
         <div className="flex items-center justify-between mb-2">
           <span
-            className="kpi-label text-[0.7rem] sm:text-xs font-bold uppercase tracking-wider"
+            className="kpi-label text-xs font-semibold"
             style={{ color: 'var(--text-secondary)' }}
           >
             Total Perdido
@@ -212,7 +212,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
       <div className="card kpi-card glass-panel-elevated relative overflow-hidden rounded-2xl p-3.5 sm:p-4 border border-white/[0.08] flex flex-col justify-between">
         <div className="flex items-center justify-between mb-2">
           <span
-            className="kpi-label text-[0.7rem] sm:text-xs font-bold uppercase tracking-wider"
+            className="kpi-label text-xs font-semibold"
             style={{ color: 'var(--text-secondary)' }}
           >
             Te Falta
@@ -245,7 +245,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
       <div className="card kpi-card glass-panel-elevated relative rounded-2xl p-3.5 sm:p-4 border border-white/[0.08] flex flex-col justify-between">
         <div className="flex items-center justify-between mb-2">
           <span
-            className="kpi-label text-[0.7rem] sm:text-xs font-bold uppercase tracking-wider"
+            className="kpi-label text-xs font-semibold"
             style={{ color: 'var(--text-secondary)' }}
           >
             Fecha Estimada
@@ -294,7 +294,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
             />
           </button>
 
-          {/* Popover — rendered in body via portal to escape any overflow:hidden parent */}
+          {/* Popover: rendered in body via portal to escape any overflow:hidden parent */}
           {popoverOpen &&
             anchorRect &&
             (() => {
@@ -336,7 +336,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
                   }}
                 >
                   <p
-                    className="text-[0.68rem] font-bold uppercase tracking-wider mb-2.5"
+                    className="text-xs font-semibold mb-2.5"
                     style={{ color: 'var(--text-secondary)' }}
                   >
                     Ritmo de proyección

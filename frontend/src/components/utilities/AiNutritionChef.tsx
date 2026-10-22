@@ -1,6 +1,6 @@
 import React from 'react';
 import DOMPurify from 'dompurify';
-import { Camera, Mic, Square, Bot, User } from 'lucide-react';
+import { Camera, Mic, Square, ChefHat, User, Utensils, Check, Plus } from 'lucide-react';
 import {
   useAiNutritionChef,
   ChatMessage,
@@ -134,9 +134,9 @@ export default function AiNutritionChef() {
           }}
         >
           <div className="w-10 h-10 rounded-full bg-[var(--accent-glow,#0085FF1A)] border border-[var(--accent-primary,#0085FF)]/30 flex items-center justify-center mx-auto mb-2 text-[var(--accent-primary,#0085FF)]">
-            <Bot size={20} />
+            <ChefHat size={20} />
           </div>
-          <div className="text-sm font-semibold text-white mb-1">Estratega Nutricional IA</div>
+          <div className="text-sm font-semibold text-white mb-1">Chef Nutricional</div>
           <p className="text-xs text-[var(--text-secondary)] mb-4 max-w-xs mx-auto">
             Pídeme que diseñe un plato o sugerencias adaptadas a tus macros restantes de hoy.
           </p>
@@ -150,14 +150,14 @@ export default function AiNutritionChef() {
                 )
               }
             >
-              🥗 Diseñar cena para mis macros
+              Diseñar cena para mis macros
             </button>
             <button
               type="button"
               className="btn btn-secondary btn-sm rounded-xl text-xs py-1.5 px-3 text-gray-300 hover:text-white border border-white/10"
               onClick={() => handleQuickPrompt('Sugiéreme snacks o meriendas altas en proteína.')}
             >
-              🥜 Snacks altos en proteína
+              Snacks altos en proteína
             </button>
           </div>
         </div>
@@ -183,7 +183,7 @@ export default function AiNutritionChef() {
                   {isUser ? (
                     <User size={18} />
                   ) : (
-                    <Bot size={18} color="var(--accent-primary, #0085FF)" />
+                    <ChefHat size={18} color="var(--accent-primary, #0085FF)" />
                   )}
                 </div>
                 <div className={`chat-bubble ${isUser ? 'user-bubble' : 'ai-bubble'}`}>
@@ -231,7 +231,10 @@ export default function AiNutritionChef() {
                           <div>
                             <div className="meal-box-header">
                               <span>
-                                🍽️{' '}
+                                <Utensils
+                                  size={14}
+                                  className="inline mr-1 text-[var(--accent-primary-light)]"
+                                />
                                 {activeOption.title ||
                                   `Propuesta (${activeOption.mealName || 'Cena'})`}
                               </span>
@@ -371,11 +374,17 @@ export default function AiNutritionChef() {
                               }}
                             >
                               {isOptionApplied ? (
-                                <>✓ Añadido a tu diario</>
+                                <>
+                                  <Check size={14} className="inline mr-1" />
+                                  Añadido a tu diario
+                                </>
                               ) : applyingOptionKey === activeOptionKey ? (
                                 <>Añadiendo...</>
                               ) : (
-                                <>➕ Añadir opción al diario</>
+                                <>
+                                  <Plus size={14} className="inline mr-1" />
+                                  Añadir opción al diario
+                                </>
                               )}
                             </button>
                           </div>
@@ -400,14 +409,14 @@ export default function AiNutritionChef() {
                   )
                 }
               >
-                🥗 Diseñar cena para mis macros
+                Diseñar cena para mis macros
               </button>
               <button
                 type="button"
                 className="btn btn-secondary btn-sm rounded-xl text-xs py-1.5 px-3 w-fit text-left text-gray-300 hover:text-white"
                 onClick={() => handleQuickPrompt('Sugiéreme snacks o meriendas altas en proteína.')}
               >
-                🥜 Snacks altos en proteína
+                Snacks altos en proteína
               </button>
             </div>
           )}
@@ -416,7 +425,7 @@ export default function AiNutritionChef() {
           {sending && (
             <div className="chat-msg-row">
               <div className="chat-avatar">
-                <Bot size={18} color="var(--accent-primary, #0085FF)" />
+                <ChefHat size={18} color="var(--accent-primary, #0085FF)" />
               </div>
               <div className="chat-bubble ai-bubble flex items-center gap-2 text-gray-400 text-xs">
                 <span className="spinner w-4 h-4 border-2" />
@@ -433,7 +442,7 @@ export default function AiNutritionChef() {
       {isListening && (
         <div className="flex items-center justify-between text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-xl">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
             <span>
               <strong>Escuchando...</strong> Habla a tu ritmo. Pulsa Listo cuando termines.
             </span>
@@ -503,7 +512,7 @@ export default function AiNutritionChef() {
           aria-label={isListening ? 'Detener dictado por voz' : 'Dictar por voz'}
           className={`w-11 h-11 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
             isListening
-              ? 'bg-red-500/20 text-red-500 border-red-500 animate-pulse'
+              ? 'bg-red-500 text-white border-red-500'
               : 'bg-[#1C1C1E] border-white/10 text-white hover:bg-white/10'
           }`}
           title={isListening ? 'Detener dictado' : 'Dictar por voz'}

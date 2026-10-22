@@ -126,7 +126,7 @@ export default function OneRepMaxCalculator({
         className="p-5 rounded-2xl bg-[var(--accent-glow)] border border-[var(--accent-primary)]/20 flex flex-col sm:flex-row items-center justify-between gap-4"
       >
         <div>
-          <span className="text-xs font-bold tracking-wider uppercase text-[var(--accent-primary-light)]">
+          <span className="text-xs font-semibold text-[var(--accent-primary-light)]">
             1RM Estimado ({formula.toUpperCase()})
           </span>
           <div className="text-4xl font-extrabold text-white mt-1">

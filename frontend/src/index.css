@@ -42,7 +42,7 @@
   /* Text */
   --text-primary: #FFFFFF;
   --text-secondary: #d1d5db;
-  --text-muted: #666666;
+  --text-muted: #9CA3AF;
   --text-accent: #0085FF;
   /* Accent Colors */
   --accent-primary: #0085FF;
@@ -86,7 +86,7 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 24px rgba(0, 133, 255, 0.15);
+  --shadow-glow: 0 4px 12px rgba(0, 0, 0, 0.25);
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -2377,11 +2377,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
     gap: 1rem !important;
   }
 }
-/* ==========================================================================
-   WORKOUT TRACKER (PRO HEVY-INSPIRED SYSTEM)
-   Designed with generous spacing, modern glassmorphism, tabular typography,
-   fluid responsive grids, and rich tactile feedback.
-   ========================================================================== */
+/* Workout Tracker (Pro System) */
 /* --- Workout Nav Tabs --- */
 .workout-nav-container {
   margin-bottom: 2.5rem;
@@ -2858,7 +2854,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   border-color: rgba(248, 113, 113, 0.4);
 }
 
-/* ====================== ACTIVE WORKOUT EXPERIENCE ====================== */
+/* Active Workout Experience */
 /* --- Sticky Live Header --- */
 .active-workout-sticky-bar {
   position: sticky;
@@ -3011,7 +3007,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   color: var(--text-primary);
 }
 
-/* ====================== WORKOUT EXERCISE CARD (HEVY PRO) ====================== */
+/* Workout Exercise Card */
 .active-workout-exercises {
   display: flex;
   flex-direction: column;
@@ -3527,7 +3523,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   border-color: var(--color-danger);
 }
 
-/* ====================== REST TIMER MODAL ====================== */
+/* Rest Timer Modal */
 .rest-timer-overlay {
   position: fixed;
   top: 0;
@@ -3652,7 +3648,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   color: var(--text-primary);
 }
 
-/* ====================== EXERCISE PICKER MODAL ====================== */
+/* Exercise Picker Modal */
 .exercise-picker {
   width: 100%;
   max-width: 580px;
@@ -3866,7 +3862,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   gap: 0.65rem;
 }
 
-/* ====================== TEMPLATES GRID ====================== */
+/* Templates Grid */
 .templates-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -3924,7 +3920,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   padding-top: 1rem;
 }
 
-/* ====================== WORKOUT DETAIL MODAL ====================== */
+/* Workout Detail Modal */
 
 .workout-detail-modal .detail-modal-header {
   display: flex;
@@ -3997,7 +3993,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   color: var(--text-primary);
 }
 
-/* ====================== SCROLLBAR ====================== */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -4039,7 +4035,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   }
 }
 
-/* ====================== THEME TOGGLE ====================== */
+/* Theme Toggle */
 .theme-toggle-container {
   position: fixed;
   top: 20px;
@@ -4072,7 +4068,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   }
 }
 
-/* ====================== NUTRITION REDESIGN ====================== */
+/* Nutrition Styles */
 /* Summary Card */
 .nutrition-summary-card {
   padding: 1.25rem;
@@ -4250,9 +4246,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   }
 }
 
-/* ============================================
-   WORKOUT FLOW — Premium Mobile-First Styles
-   ============================================ */
+/* Workout Flow: Premium Mobile-First Styles */
 
 /* Full-screen sheet for mobile */
 .workout-sheet-overlay {
@@ -4730,10 +4724,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   border-radius: 50%;
   background: var(--accent-primary);
   animation: pulse-dot 1.5s ease-in-out infinite;
-}
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
 }
 .active-workout-timer-text {
   font-size: 0.95rem;
@@ -5327,9 +5317,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   margin-top: 0;
 }
 
-/* ============================================
-   FOOD SEARCH FULLSCREEN (Mobile Native Feel)
-   ============================================ */
+/* Food Search Fullscreen (Mobile Native Feel) */
 .food-search-fullscreen {
   position: fixed;
   top: 0;
@@ -5418,9 +5406,7 @@ input[type="range"]:active::-moz-range-thumb {
   transform: scale(1.1);
 }
 
-/* ==========================================================================
-   Active Workout Background Banner
-   ========================================================================== */
+/* Active Workout Background Banner */
 .active-workout-banner {
   position: fixed;
   left: 1rem;
@@ -5579,9 +5565,7 @@ input[type="range"]:active::-moz-range-thumb {
   }
 }
 
-/* ==========================================================================
-   Mobile & PWA Sensory Elevation: View Transitions, Haptics & Micro-Physics
-   ========================================================================== */
+/* Mobile & PWA Sensory Elevation: View Transitions, Haptics & Micro-Physics */
 
 /* 1. Native View Transitions API */
 @view-transition {

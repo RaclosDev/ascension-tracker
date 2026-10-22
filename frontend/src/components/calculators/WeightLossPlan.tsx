@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Footprints, Utensils } from 'lucide-react';
 import {
   KCAL_PER_KG_FAT,
   parseNumber,
@@ -241,7 +242,7 @@ export default function WeightLossPlan({
                 fontWeight: 600,
               }}
             >
-              Reparto del déficit — arrastra para ajustar
+              Reparto del déficit: arrastra para ajustar
             </div>
 
             {/* Range slider */}
@@ -278,14 +279,30 @@ export default function WeightLossPlan({
                 marginTop: '8px',
               }}
             >
-              <span style={{ color: 'var(--color-carbs)', fontWeight: 600 }}>
-                👟 {Math.round(plan.stepsKcal)} kcal
+              <span
+                style={{
+                  color: 'var(--color-carbs)',
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <Footprints size={13} /> {Math.round(plan.stepsKcal)} kcal
               </span>
               <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
                 {Math.round(stepsPct)}% pasos / {Math.round(100 - stepsPct)}% dieta
               </span>
-              <span style={{ color: 'var(--color-fat)', fontWeight: 600 }}>
-                🍽️ {Math.round(plan.dietDeficit)} kcal
+              <span
+                style={{
+                  color: 'var(--color-fat)',
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <Utensils size={13} /> {Math.round(plan.dietDeficit)} kcal
               </span>
             </div>
 

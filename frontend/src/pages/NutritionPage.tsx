@@ -192,9 +192,7 @@ export default function NutritionPage() {
             </div>
 
             <div className="card flex flex-col items-center p-6 mb-12">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">
-                Distribución de Macros
-              </h3>
+              <h3 className="text-xs font-semibold text-gray-300 mb-4">Distribución de macros</h3>
               <div
                 style={{
                   width: '100%',

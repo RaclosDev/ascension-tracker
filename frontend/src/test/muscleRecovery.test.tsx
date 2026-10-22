@@ -36,7 +36,7 @@ describe('MuscleRecovery Component', () => {
     expect(screen.getByText('Músculos recuperados')).toBeDefined();
   });
 
-  it('renders fatigued muscles in two columns and displays up to 8 muscles', () => {
+  it('renders fatigued muscles in a clean column and displays up to 5 muscles', () => {
     const recentTime = Date.now() - 2 * 60 * 60 * 1000; // 2 hours ago
     const mockWorkout: CompletedWorkout = {
       id: 'w1',
