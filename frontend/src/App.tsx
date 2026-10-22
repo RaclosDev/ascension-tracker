@@ -42,6 +42,14 @@ function AppContent() {
 
       const handleVisibilityChange = () => {
         if (document.visibilityState === 'visible') {
+          // Do not interrupt an active workout with a version reload
+          try {
+            const activeWorkout = localStorage.getItem('ascension-workout-v1');
+            if (activeWorkout && activeWorkout.includes('"active":true')) return;
+          } catch {
+            // ignore
+          }
+
           api
             .get('/version')
             .then((res) => {
@@ -49,12 +57,9 @@ function AppContent() {
                 window.location.reload();
               }
             })
-            .catch((err: unknown) =>
-              console.error(
-                'Error fetching app version:',
-                err instanceof Error ? err.message : String(err),
-              ),
-            );
+            .catch(() => {
+              // Ignore background version check errors silently without logging out
+            });
         }
       };
 

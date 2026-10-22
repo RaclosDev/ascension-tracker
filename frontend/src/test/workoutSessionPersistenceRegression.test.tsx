@@ -34,6 +34,8 @@ vi.mock('@/api/client', () => {
     },
     memoryToken: null,
     setMemoryToken: vi.fn(),
+    getSessionToken: vi.fn().mockReturnValue(null),
+    refreshAccessToken: vi.fn().mockResolvedValue(null),
     isTokenValid: vi.fn().mockReturnValue(true),
   };
 });

@@ -82,7 +82,9 @@ describe('lazyWithRetry and Deployment Resilience', () => {
     );
 
     expect(screen.getByText('Nueva versión disponible')).toBeDefined();
-    expect(screen.getByText(/Se ha desplegado una nueva versión/i)).toBeDefined();
+    expect(
+      screen.getByText(/No se ha podido cargar un módulo|Se ha desplegado una nueva versión/i),
+    ).toBeDefined();
     expect(screen.getByRole('button', { name: /Actualizar aplicación/i })).toBeDefined();
 
     // Verify raw "undefined" is NEVER rendered to the user

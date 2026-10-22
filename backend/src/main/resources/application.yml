@@ -76,7 +76,9 @@ app:
     max-steps-entries: ${QUOTA_MAX_STEPS_ENTRIES:2000}
   jwt:
     secret: ${JWT_SECRET}
-    expiration-ms: ${JWT_EXPIRATION_MS:900000}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  auth:
+    refresh-grace-seconds: ${REFRESH_GRACE_SECONDS:300}
   cookie:
     same-site: ${COOKIE_SAME_SITE:Lax}
   cors:

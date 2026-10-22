@@ -290,9 +290,10 @@ class AuthControllerTest {
     }
 
     @Test
-    void logout_WhenCookieProvided_UpdatesTokensValidAfterAndDeletesToken() throws Exception {
+    void logout_WhenCookieProvided_DeletesCurrentTokenAndFamilyWithoutRevokingOtherDevices() throws Exception {
         RefreshToken rt = new RefreshToken();
         rt.setEmail("user@example.com");
+        rt.setFamilyId("device-family-123");
         when(refreshTokenService.findByToken(anyString())).thenReturn(Optional.of(rt));
 
         mockMvc.perform(post("/api/auth/logout")
@@ -301,8 +302,52 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("Set-Cookie", containsString("Max-Age=0")));
 
-        verify(userService).updateTokensValidAfter(org.mockito.ArgumentMatchers.eq("user@example.com"), org.mockito.ArgumentMatchers.any());
+        verify(userService, org.mockito.Mockito.never()).updateTokensValidAfter(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any());
         verify(refreshTokenService).delete(rt);
+        verify(refreshTokenService).deleteByFamilyId("device-family-123");
+    }
+
+    @Test
+    void logout_WhenAllDevicesTrue_UpdatesTokensValidAfterAndDeletesAllTokens() throws Exception {
+        RefreshToken rt = new RefreshToken();
+        rt.setEmail("user@example.com");
+        when(refreshTokenService.findByToken(anyString())).thenReturn(Optional.of(rt));
+
+        mockMvc.perform(post("/api/auth/logout")
+                .param("allDevices", "true")
+                .with(csrf())
+                .cookie(new jakarta.servlet.http.Cookie("refreshToken", "my_refresh_cookie")))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Set-Cookie", containsString("Max-Age=0")));
+
+        verify(userService).updateTokensValidAfter(org.mockito.ArgumentMatchers.eq("user@example.com"), org.mockito.ArgumentMatchers.any());
+        verify(refreshTokenService).deleteByEmail("user@example.com");
+    }
+
+    @Test
+    void login_DoesNotRevokeExistingDevicesTokensValidAfter() throws Exception {
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
+        payload.setEmailVerified(true);
+        payload.setEmail("multidevice@example.com");
+        payload.setSubject("google-sub-456");
+        payload.set("name", "Multi User");
+        when(idToken.getPayload()).thenReturn(payload);
+        when(googleIdTokenVerifier.verify("token-multidevice")).thenReturn(idToken);
+
+        when(userService.findByEmail("multidevice@example.com")).thenReturn(Optional.empty());
+        when(userService.findByGoogleSub("google-sub-456")).thenReturn(Optional.empty());
+        RefreshToken mockRt = new RefreshToken("multidevice@example.com", java.time.Instant.now().plusSeconds(3600), "fam-456");
+        when(refreshTokenService.createRefreshToken("multidevice@example.com")).thenReturn(mockRt);
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"token-multidevice\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists());
+
+        verify(userService, org.mockito.Mockito.never()).updateTokensValidAfter(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test

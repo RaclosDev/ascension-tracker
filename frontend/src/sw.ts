@@ -3,17 +3,17 @@ import { precacheAndRoute, matchPrecache, PrecacheEntry } from 'workbox-precachi
 declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (PrecacheEntry | string)[] };
 
 import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
+import { NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 
-// Precache resources injected by VitePWA
+// Precache versioned static assets. Workbox manages old precache revisions.
 precacheAndRoute(self.__WB_MANIFEST);
 
-// SPA Navigation strategy: NetworkFirst ensures we pull the latest index.html on deployment,
-// falling back gracefully to the precached index.html when offline.
-const navigationStrategy = new NetworkFirst({
-  cacheName: 'navigation-cache',
-  networkTimeoutSeconds: 3,
+// Do not serve a stale cached index.html just because mobile networking takes >3s.
+// A stale shell references deleted Vite chunk hashes and results in "Module script failed".
+// Use the network for every navigation while online; only fall back to the precached shell
+// when the network actually fails (offline).
+const navigationStrategy = new NetworkOnly({
   plugins: [
     {
       handlerDidError: async () => {
@@ -37,8 +37,6 @@ registerRoute(
 );
 
 // Ascension Service Worker — handles push notifications
-
-// Push event — fires even when the app is in the background
 self.addEventListener('push', (event: PushEvent) => {
   let data = { title: '¡Descanso terminado!', body: 'Es hora de la siguiente serie.' };
 
@@ -81,13 +79,11 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // If there's already a window open, focus it
       for (const client of clientList) {
         if (client.url.includes('/workout') && 'focus' in client) {
           return client.focus();
         }
       }
-      // Otherwise open new window
       if (self.clients.openWindow) {
         return self.clients.openWindow('/workout');
       }

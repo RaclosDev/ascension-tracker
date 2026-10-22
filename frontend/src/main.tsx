@@ -19,7 +19,7 @@ document.documentElement.setAttribute('data-theme', savedTheme);
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
     },
   },
@@ -34,41 +34,35 @@ window.addEventListener('workout-migration-complete', () => {
 
 import { isChunkLoadError } from './utils/lazyWithRetry';
 
-// Automatic recovery from deployment chunk load errors (Vite native event, unhandled rejections, and uncaught error events)
-const handleChunkError = async (error: unknown) => {
+// Keep this guard separate from lazyWithRetry's lock: the two code paths used
+// incompatible values ("true" vs a timestamp) for the same key, preventing recovery.
+const handleChunkError = (error: unknown) => {
   if (!isChunkLoadError(error)) return;
-  const reloadKey = 'ascension_chunk_reload_lock';
+  const reloadKey = 'ascension_global_chunk_reload_at';
   const now = Date.now();
-  const lastReload = parseInt(sessionStorage.getItem(reloadKey) || '0', 10);
-  if (now - lastReload > 8000) {
+  const lastReload = Number(sessionStorage.getItem(reloadKey) || 0);
+  if (!Number.isFinite(lastReload) || now - lastReload > 60_000) {
     sessionStorage.setItem(reloadKey, String(now));
-    if (typeof window !== 'undefined' && 'caches' in window) {
-      try {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k)));
-      } catch {
-        // ignore
-      }
-    }
+    // Do not delete Workbox's precache: it is the offline application shell.
     window.location.reload();
   }
 };
 
 window.addEventListener('vite:preloadError', (event) => {
   event.preventDefault();
-  void handleChunkError(event);
+  handleChunkError(event);
 });
 
 window.addEventListener('unhandledrejection', (event) => {
   if (isChunkLoadError(event.reason)) {
     event.preventDefault();
-    void handleChunkError(event.reason);
+    handleChunkError(event.reason);
   }
 });
 
 window.addEventListener('error', (event) => {
   if (isChunkLoadError(event.error || event.message)) {
-    void handleChunkError(event.error || event.message);
+    handleChunkError(event.error || event.message);
   }
 });
 
@@ -86,12 +80,7 @@ if (
   'serviceWorker' in navigator &&
   (window.location.protocol === 'https:' || window.location.hostname === 'localhost')
 ) {
-  const updateSW = registerSW({
-    immediate: true,
-    onNeedRefresh() {
-      // Activate new service worker and refresh window to load the latest HTML & chunks
-      updateSW(true);
-      window.location.reload();
-    },
-  });
+  // autoUpdate already coordinates activation/reload. A second manual reload races
+  // the controller change and can reload under the previous worker.
+  registerSW({ immediate: true });
 }
