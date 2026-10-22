@@ -29,7 +29,7 @@ import java.util.Map;
 public class GeminiApiClient {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiApiClient.class);
-    public static final long TOTAL_REQUEST_DEADLINE_MS = 20_000L;
+    public static final long TOTAL_REQUEST_DEADLINE_MS = 35_000L;
     public static final long MODEL_CACHE_TTL_MS = 3600_000L; // 1 hour TTL
     public static final int MAX_MODELS_PER_REQUEST = 3;
 
@@ -254,7 +254,7 @@ public class GeminiApiClient {
     private void checkDeadline(long deadline) {
         if (System.currentTimeMillis() >= deadline) {
             throw new ExternalApiException("Gemini", HttpStatus.GATEWAY_TIMEOUT,
-                    "Deadline de petición excedido (20s) para Gemini API");
+                    "Deadline de petición excedido (35s) para Gemini API");
         }
     }
 

@@ -20,7 +20,7 @@ class ExternalApiPropertiesTest {
         assertThat(properties.getGemini().getMaxAttempts()).isEqualTo(3);
         assertThat(properties.getGemini().getInitialBackoffMs()).isEqualTo(150L);
         assertThat(properties.getGemini().getConnectTimeoutMs()).isEqualTo(5000);
-        assertThat(properties.getGemini().getReadTimeoutMs()).isEqualTo(15000);
+        assertThat(properties.getGemini().getReadTimeoutMs()).isEqualTo(25000);
     }
 
     @Test

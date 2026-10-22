@@ -21,7 +21,7 @@ export function useAiAssistant(fetchData: () => void) {
     setPendingAiCount((p) => p + 1);
     toast(`Buscando "${queryText}"...`, { duration: 2000 });
     try {
-      await api.post('/nutrition/ai/food', { text: queryText });
+      await api.post('/nutrition/ai/food', { text: queryText }, { timeout: 45000 });
       toast.success(`"${queryText}" añadido`);
       fetchData();
     } catch (e: unknown) {

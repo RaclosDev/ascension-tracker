@@ -17,9 +17,10 @@ import FoodCard from '../components/my-foods/FoodCard';
 import RecipeCard from '../components/my-foods/RecipeCard';
 import AiFoodModal from '../components/my-foods/AiFoodModal';
 
-import { ChevronDown, ChevronRight, ScanLine, Pencil, X, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, ScanLine, Pencil, X, Loader2, Check } from 'lucide-react';
 import { PageFoodItem } from '../types/myfoods';
 import { Recipe, FoodLog, SavedFood } from '../types/api';
+import { isFoodRegistered } from '../utils/nutritionHelpers';
 const BarcodeScanner = lazyWithRetry(() => import('../components/BarcodeScanner'));
 
 export default function MyFoodsPage() {
@@ -170,20 +171,29 @@ export default function MyFoodsPage() {
                 </div>
                 {expandedSections.recent && (
                   <div className="flex flex-col gap-2 flex-1">
-                    {filters.filteredRecent.map((f: FoodLog) => (
-                      <div
-                        key={f.id}
-                        className="p-2 bg-white/10 rounded-lg flex justify-between items-center"
-                      >
-                        <div className="text-sm font-medium">{f.product}</div>
-                        <button
-                          onClick={() => scanner.saveRecentAsFood(f as unknown as PageFoodItem)}
-                          className="text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-1 rounded-lg"
+                    {filters.filteredRecent.map((f: FoodLog) => {
+                      const registered = isFoodRegistered(f.product, savedFoods, recipes);
+                      return (
+                        <div
+                          key={f.id}
+                          className="p-2 bg-white/10 rounded-lg flex justify-between items-center"
                         >
-                          Añadir
-                        </button>
-                      </div>
-                    ))}
+                          <div className="text-sm font-medium">{f.product}</div>
+                          {registered ? (
+                            <span className="text-xs text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-1 rounded-lg flex items-center gap-1 font-medium select-none">
+                              <Check className="w-3.5 h-3.5" /> Guardado
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => scanner.saveRecentAsFood(f as unknown as PageFoodItem)}
+                              className="text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-1 rounded-lg hover:bg-blue-500/30 transition-colors"
+                            >
+                              Añadir
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
