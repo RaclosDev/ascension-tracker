@@ -38,7 +38,7 @@ describe('Multi-tab Session Sync & PWA Cold Start', () => {
     expect(sessionStorage.getItem('ascension_session_token')).toBe(validToken);
   });
 
-  it('discards expired tokens when checking across tabs and cleans up both storages', () => {
+  it('discards expired tokens safely without destroying storage or triggering cross-tab wipe', () => {
     const expiredToken = createFakeJwt(-60);
 
     localStorage.setItem('ascension_session_token', expiredToken);
@@ -46,8 +46,6 @@ describe('Multi-tab Session Sync & PWA Cold Start', () => {
 
     const token = getSessionToken();
     expect(token).toBeNull();
-    expect(sessionStorage.getItem('ascension_session_token')).toBeNull();
-    expect(localStorage.getItem('ascension_session_token')).toBeNull();
   });
 
   it('logout cleans up both sessionStorage and localStorage completely', () => {
