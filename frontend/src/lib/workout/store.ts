@@ -93,7 +93,13 @@ interface WorkoutState {
   skipRest: () => void;
   adjustRest: (deltaSec: number) => void;
 
-  finishWorkout: (customName?: string, customDurationMs?: number) => CompletedWorkout | null;
+  finishWorkout: (
+    customName?: string,
+    customDurationMs?: number,
+    customStartedAt?: number,
+  ) => CompletedWorkout | null;
+  setWorkoutDate: (startedAt: number, finishedAt?: number) => void;
+  cancelEditWorkout: () => void;
   clearActiveWorkout: () => void;
   discardWorkout: () => void;
   saveAsTemplate: () => Template | null;
@@ -391,7 +397,7 @@ export const useWorkoutStore = create<WorkoutState>()(
         const newDelay = Math.max(1, Math.ceil((next - Date.now()) / 1000));
         scheduleServerRestTimer(newDelay);
       },
-      finishWorkout: (customName?: string, customDurationMs?: number) => {
+      finishWorkout: (customName?: string, customDurationMs?: number, customStartedAt?: number) => {
         const active = get().active;
         if (!active) return null;
         const hasWork = active.exercises.some((e) => e.sets.some((s) => s.completed));
@@ -402,12 +408,14 @@ export const useWorkoutStore = create<WorkoutState>()(
         dismissRestNotifications();
         set({ restUntil: null });
 
-        const finalFinishedAt = active.editingFinishedAt || Date.now();
-        let finalStartedAt = active.startedAt;
-
-        if (customDurationMs !== undefined) {
-          finalStartedAt = finalFinishedAt - customDurationMs;
-        }
+        const finalStartedAt = customStartedAt !== undefined ? customStartedAt : active.startedAt;
+        const duration =
+          customDurationMs !== undefined
+            ? customDurationMs
+            : active.editingFinishedAt && active.startedAt
+              ? Math.max(60000, active.editingFinishedAt - active.startedAt)
+              : Math.max(60000, Date.now() - active.startedAt);
+        const finalFinishedAt = finalStartedAt + duration;
 
         const record: CompletedWorkout = {
           id: active.editingId || '',
@@ -423,6 +431,30 @@ export const useWorkoutStore = create<WorkoutState>()(
 
         // Active state in IndexedDB/memory is preserved until server confirms save
         return record;
+      },
+
+      setWorkoutDate: (startedAt: number, finishedAt?: number) => {
+        const active = get().active;
+        if (!active) return;
+        const currentDuration =
+          active.editingFinishedAt && active.startedAt
+            ? Math.max(60000, active.editingFinishedAt - active.startedAt)
+            : Math.max(60000, Date.now() - active.startedAt);
+        const newFinishedAt = finishedAt ?? startedAt + currentDuration;
+        set({
+          active: {
+            ...active,
+            startedAt,
+            editingFinishedAt:
+              active.editingId || active.editingFinishedAt ? newFinishedAt : undefined,
+          },
+        });
+      },
+
+      cancelEditWorkout: () => {
+        cancelServerRestTimer();
+        dismissRestNotifications();
+        set({ active: null, restUntil: null, tab: 'history', detailId: null });
       },
 
       clearActiveWorkout: () => {

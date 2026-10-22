@@ -5656,3 +5656,43 @@ button,
 
 
 
+
+/* Desktop Set Deletion Support */
+.desktop-row-delete-btn {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .set-row {
+    position: relative;
+  }
+  .set-row .desktop-row-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    right: 48px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.28);
+    color: #ef4444;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, background 0.15s ease;
+    cursor: pointer;
+    z-index: 10;
+  }
+  .set-row:hover .desktop-row-delete-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .set-row .desktop-row-delete-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+  }
+}

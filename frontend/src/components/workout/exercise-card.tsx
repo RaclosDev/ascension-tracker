@@ -301,6 +301,21 @@ export const SwipeableSetRow = React.memo(
 
             <button
               type="button"
+              className="desktop-row-delete-btn"
+              title="Eliminar serie"
+              aria-label={`Borrar serie ${i + 1}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                haptics.warning();
+                setActiveStepper?.(null);
+                removeSet(rowId, s.id);
+              }}
+            >
+              <Trash2 size={15} />
+            </button>
+
+            <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 initAudioAndNotifications();

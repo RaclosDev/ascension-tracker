@@ -10,6 +10,7 @@ import {
   Layers,
   Loader2,
   FileText,
+  Calendar,
 } from 'lucide-react';
 import { haptics } from '@/lib/haptics';
 import {
@@ -34,11 +35,33 @@ interface Props {
   onClose: () => void;
   // Mode 1: Finishing an active session (interactive review & save)
   activeWorkout?: ActiveWorkout | null;
-  onSave?: (name: string, durationMin: number, notes?: string) => Promise<void> | void;
+  onSave?: (
+    name: string,
+    durationMin: number,
+    notes?: string,
+    startedAtMs?: number,
+  ) => Promise<void> | void;
   isSaving?: boolean;
   saveError?: string | null;
   // Mode 2: Viewing a previously completed record
   workout?: CompletedWorkout | null;
+}
+
+function toLocalDatetimeString(timestamp: number): string {
+  const d = new Date(timestamp);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const mm = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const min = pad(d.getMinutes());
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+}
+
+function fromLocalDatetimeString(str: string): number {
+  if (!str) return Date.now();
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? Date.now() : d.getTime();
 }
 
 function formatWorkoutDuration(totalMinutes: number): string {
@@ -87,12 +110,18 @@ export function WorkoutCelebrationModal({
   const [customName, setCustomName] = useState('');
   const [customDuration, setCustomDuration] = useState(initialDurationMin);
   const [customNotes, setCustomNotes] = useState('');
+  const [customDateTime, setCustomDateTime] = useState('');
 
   useEffect(() => {
     if (open && currentWorkout) {
       setCustomName(currentWorkout.name?.trim() || 'Entrenamiento');
       setCustomDuration(initialDurationMin);
       setCustomNotes(currentWorkout.notes || '');
+      const initialStartedAt =
+        'startedAt' in currentWorkout && currentWorkout.startedAt
+          ? currentWorkout.startedAt
+          : Date.now();
+      setCustomDateTime(toLocalDatetimeString(initialStartedAt));
       haptics.celebration();
     }
   }, [open, currentWorkout, initialDurationMin]);
@@ -188,7 +217,8 @@ export function WorkoutCelebrationModal({
 
   const handleSave = () => {
     if (onSave) {
-      onSave(customName, customDuration, customNotes);
+      const selectedStartedAt = fromLocalDatetimeString(customDateTime);
+      onSave(customName, customDuration, customNotes, selectedStartedAt);
     } else {
       onClose();
     }
@@ -258,6 +288,27 @@ export function WorkoutCelebrationModal({
               placeholder="Nombre del entrenamiento"
               className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 text-white text-sm font-semibold focus:border-blue-500 focus:outline-none transition-colors"
             />
+          </div>
+
+          {/* Workout Date & Time Field */}
+          <div>
+            <label
+              htmlFor="finish-workout-date"
+              className="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-400"
+            >
+              Fecha y hora del entrenamiento
+            </label>
+            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10">
+              <Calendar size={15} className="text-blue-400 shrink-0" />
+              <input
+                id="finish-workout-date"
+                type="datetime-local"
+                value={customDateTime}
+                onChange={(e) => setCustomDateTime(e.target.value)}
+                disabled={isSaving}
+                className="w-full bg-transparent text-white font-medium focus:outline-none text-sm cursor-pointer"
+              />
+            </div>
           </div>
 
           {/* Duration & Exercise Count Row */}
