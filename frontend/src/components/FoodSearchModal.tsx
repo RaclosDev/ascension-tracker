@@ -77,6 +77,7 @@ export default function FoodSearchModal({
   );
   const [ocrLoading, setOcrLoading] = useState(false);
   const [aiSubmitting, setAiSubmitting] = useState(false);
+  const [aiElapsedSeconds, setAiElapsedSeconds] = useState(0);
 
   useEffect(() => {
     if (selectedProduct && selectedProduct.portions && selectedProduct.portions.length > 0) {
@@ -248,6 +249,7 @@ export default function FoodSearchModal({
     try {
       const res = await api.post('/nutrition/ai/ocr', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 45000,
       });
       const data = res.data;
 
@@ -461,13 +463,29 @@ export default function FoodSearchModal({
     }
   };
 
+  const getAiStatusText = (seconds: number) => {
+    if (seconds < 3) return 'Interpretando alimentos y raciones...';
+    if (seconds < 8) return 'Calculando macronutrientes con IA...';
+    if (seconds < 15) return 'Estructurando desglose nutricional...';
+    return 'Finalizando registro de comidas...';
+  };
+
   const submitAiPrompt = async () => {
     if (!query.trim() && !selectedImage)
       return toast.error('Escribe algo o adjunta una foto primero');
     stopListening();
     const queryText = query.trim();
     setAiSubmitting(true);
+    setAiElapsedSeconds(0);
+    const startTime = Date.now();
     const loadingToast = toast.loading('Procesando con IA...');
+    const timer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setAiElapsedSeconds(elapsed);
+      if (elapsed >= 3) {
+        toast.loading(`Procesando con IA (${elapsed}s)...`, { id: loadingToast });
+      }
+    }, 1000);
 
     const payload: Record<string, unknown> = {
       text: queryText,
@@ -481,7 +499,7 @@ export default function FoodSearchModal({
     }
 
     try {
-      const res = await api.post('/nutrition/ai/log', payload);
+      const res = await api.post('/nutrition/ai/log', payload, { timeout: 45000 });
       const count = Array.isArray(res.data) ? res.data.length : 1;
       toast.dismiss(loadingToast);
       if (selectedMealIndex === -1) {
@@ -495,16 +513,24 @@ export default function FoodSearchModal({
       if (onClose) onClose();
     } catch (e: unknown) {
       toast.dismiss(loadingToast);
-      const axiosError = e as { response?: { data?: { error?: string; message?: string } } };
+      const axiosError = e as {
+        code?: string;
+        message?: string;
+        response?: { data?: { error?: string; message?: string } };
+      };
       const msg =
         axiosError.response?.data?.error ||
         axiosError.response?.data?.message ||
-        'Error procesando texto con IA';
+        (axiosError.code === 'ECONNABORTED' || axiosError.message?.toLowerCase().includes('timeout')
+          ? 'La IA tardó más de lo esperado en responder. Intenta de nuevo o divide los alimentos.'
+          : 'Error procesando texto con IA');
       toast.error(msg);
       console.error('Error procesando texto con IA:', e instanceof Error ? e.message : String(e));
       // El texto y la imagen se conservan para que el usuario no pierda su entrada
     } finally {
+      clearInterval(timer);
       setAiSubmitting(false);
+      setAiElapsedSeconds(0);
     }
   };
 
@@ -755,36 +781,88 @@ export default function FoodSearchModal({
               <div
                 style={{
                   display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: '0.75rem',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
                   marginTop: '0.5rem',
                 }}
               >
-                <button className="btn btn-secondary" onClick={() => setActiveOverlay('none')}>
-                  Cancelar
-                </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={submitAiPrompt}
-                  disabled={aiSubmitting || (!query.trim() && !selectedImage)}
-                  style={{
-                    background:
-                      'var(--gradient-protein-carbs, linear-gradient(90deg, #8b5cf6, #3b82f6))',
-                    border: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                  }}
-                >
-                  {aiSubmitting ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      <span>Analizando...</span>
-                    </>
-                  ) : (
-                    'Analizar y Añadir'
-                  )}
-                </button>
+                {aiSubmitting && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.35rem',
+                      fontSize: '0.85rem',
+                      color: 'var(--text-primary)',
+                      background: 'rgba(139, 92, 246, 0.08)',
+                      border: '1px solid rgba(139, 92, 246, 0.25)',
+                      padding: '0.65rem 0.9rem',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Loader2 size={16} className="animate-spin" style={{ color: '#8b5cf6' }} />
+                        <span style={{ fontWeight: 600 }}>{getAiStatusText(aiElapsedSeconds)}</span>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '0.15rem 0.5rem',
+                          borderRadius: '999px',
+                          background: 'rgba(139, 92, 246, 0.15)',
+                          color: 'var(--text-primary)',
+                          fontWeight: 600,
+                          fontVariantNumeric: 'tabular-nums',
+                        }}
+                      >
+                        {aiElapsedSeconds}s
+                      </span>
+                    </div>
+                    {aiElapsedSeconds >= 6 && (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        Analizando ingredientes complejos y calculando macros con IA...
+                      </span>
+                    )}
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setActiveOverlay('none')}
+                    disabled={aiSubmitting}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={submitAiPrompt}
+                    disabled={aiSubmitting || (!query.trim() && !selectedImage)}
+                    style={{
+                      background:
+                        'var(--gradient-protein-carbs, linear-gradient(90deg, #8b5cf6, #3b82f6))',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    {aiSubmitting ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Analizando ({aiElapsedSeconds}s)...</span>
+                      </>
+                    ) : (
+                      'Analizar y Añadir'
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           ) : (

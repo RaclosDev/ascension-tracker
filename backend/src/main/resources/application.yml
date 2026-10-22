@@ -103,7 +103,7 @@ app:
       max-attempts: ${GEMINI_MAX_ATTEMPTS:3}
       initial-backoff-ms: ${GEMINI_INITIAL_BACKOFF_MS:150}
       connect-timeout-ms: ${GEMINI_CONNECT_TIMEOUT_MS:5000}
-      read-timeout-ms: ${GEMINI_READ_TIMEOUT_MS:15000}
+      read-timeout-ms: ${GEMINI_READ_TIMEOUT_MS:25000}
     google:
       max-attempts: ${GOOGLE_MAX_ATTEMPTS:1}
       initial-backoff-ms: ${GOOGLE_INITIAL_BACKOFF_MS:0}
