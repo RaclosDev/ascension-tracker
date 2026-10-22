@@ -122,7 +122,7 @@ class RefreshTokenServiceTest {
 
         assertTrue(ex.getMessage().contains("Session expired"));
         verify(refreshTokenRepository).deleteByFamilyId(activeToken.getFamilyId());
-        verify(userService).updateTokensValidAfter(eq(activeToken.getEmail()), any(Instant.class));
+        verify(userService, never()).updateTokensValidAfter(anyString(), any(Instant.class));
     }
 
     @Test

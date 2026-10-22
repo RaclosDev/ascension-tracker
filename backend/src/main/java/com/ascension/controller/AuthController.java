@@ -169,7 +169,6 @@ public class AuthController {
         // to a surrogate UUID (or UUID v7) primary key is planned as future architectural work
         // to decouple internal database foreign keys from mutable email addresses and OAuth subject identifiers.
         userService.ensureUserExists(email, name, picture, googleSub);
-        userService.updateTokensValidAfter(email, Instant.now().minusSeconds(5));
 
         String customToken = generateJwt(email, name, picture);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(email);
@@ -299,10 +298,19 @@ public class AuthController {
                 .build();
     }
 
+    public ResponseEntity<?> logout(
+            String requestCookieRefreshToken,
+            String authHeader,
+            Jwt principalJwt,
+            HttpServletRequest request) {
+        return logout(requestCookieRefreshToken, authHeader, false, principalJwt, request);
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout(
             @CookieValue(name = "refreshToken", required = false) String requestCookieRefreshToken,
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @RequestParam(name = "allDevices", defaultValue = "false") boolean allDevices,
             @AuthenticationPrincipal Jwt principalJwt,
             HttpServletRequest request) {
 
@@ -312,31 +320,36 @@ public class AuthController {
                     .body(Map.of("error", "Forbidden origin"));
         }
 
-        if (principalJwt != null) {
-            String email = com.ascension.util.SecurityUtils.extractEmail(principalJwt);
-            if (email != null && !email.isBlank()) {
-                userService.updateTokensValidAfter(email, Instant.now());
+        if (allDevices) {
+            String targetEmail = null;
+            if (principalJwt != null) {
+                targetEmail = com.ascension.util.SecurityUtils.extractEmail(principalJwt);
+            } else if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                try {
+                    Jwt decoded = jwtDecoder.decode(authHeader.substring(7).trim());
+                    targetEmail = com.ascension.util.SecurityUtils.extractEmail(decoded);
+                } catch (Exception e) {
+                    log.debug("Bearer token could not be decoded during logout: {}", e.getMessage());
+                }
+            } else if (requestCookieRefreshToken != null && !requestCookieRefreshToken.isBlank()) {
+                var found = refreshTokenService.findByToken(RefreshToken.hashToken(requestCookieRefreshToken));
+                if (found.isPresent()) {
+                    targetEmail = found.get().getEmail();
+                }
             }
-        }
-        if (requestCookieRefreshToken != null && !requestCookieRefreshToken.isBlank()) {
-            refreshTokenService.findByToken(RefreshToken.hashToken(requestCookieRefreshToken)).ifPresent(token -> {
-                userService.updateTokensValidAfter(token.getEmail(), Instant.now());
-                refreshTokenService.delete(token);
-                if (token.getFamilyId() != null && !token.getFamilyId().isBlank()) {
-                    refreshTokenService.deleteByFamilyId(token.getFamilyId());
-                }
-            });
-        }
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String tokenValue = authHeader.substring(7).trim();
-            try {
-                Jwt decoded = jwtDecoder.decode(tokenValue);
-                String email = com.ascension.util.SecurityUtils.extractEmail(decoded);
-                if (email != null && !email.isBlank()) {
-                    userService.updateTokensValidAfter(email, Instant.now());
-                }
-            } catch (Exception e) {
-                log.debug("Bearer token could not be decoded during logout: {}", e.getMessage());
+
+            if (targetEmail != null && !targetEmail.isBlank()) {
+                userService.updateTokensValidAfter(targetEmail, Instant.now());
+                refreshTokenService.deleteByEmail(targetEmail);
+            }
+        } else {
+            if (requestCookieRefreshToken != null && !requestCookieRefreshToken.isBlank()) {
+                refreshTokenService.findByToken(RefreshToken.hashToken(requestCookieRefreshToken)).ifPresent(token -> {
+                    refreshTokenService.delete(token);
+                    if (token.getFamilyId() != null && !token.getFamilyId().isBlank()) {
+                        refreshTokenService.deleteByFamilyId(token.getFamilyId());
+                    }
+                });
             }
         }
         

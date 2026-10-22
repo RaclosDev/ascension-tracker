@@ -67,18 +67,6 @@ export const getSessionToken = (): string | null => {
       }
       return saved;
     }
-    if (saved) {
-      try {
-        sessionStorage?.removeItem('ascension_session_token');
-      } catch {
-        // ignore
-      }
-      try {
-        localStorage?.removeItem('ascension_session_token');
-      } catch {
-        // ignore
-      }
-    }
     return null;
   } catch {
     return null;

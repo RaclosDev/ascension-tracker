@@ -77,6 +77,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       api.defaults.headers.common['Authorization'] = 'Bearer ' + sessionToken;
       return { token: sessionToken, user: cachedUser };
     }
+    if (cachedUser) {
+      return { token: null, user: cachedUser };
+    }
     return { token: null, user: null };
   };
 
@@ -106,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const maxRetries = 2;
+      const maxRetries = 3;
 
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
         if (cancelled) return;
@@ -127,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } catch {
               setUser(null);
             }
-          } else if (!cancelled && !initialSession.token) {
+          } else if (!cancelled && !initialSession.user) {
             setToken(null);
             setUser(null);
             setCachedUser(null);
@@ -144,13 +147,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               const isOffline =
                 (typeof navigator !== 'undefined' && !navigator.onLine) || isNetworkOrServerError;
 
-              if (cachedUser && (isOffline || initialSession.token)) {
-                // Gym / airplane mode / dead wifi: allow entering offline PWA mode with cached user profile
-                if (!initialSession.token) {
-                  setToken('offline-session');
-                }
+              if (cachedUser && (isOffline || initialSession.user)) {
+                // Gym / airplane mode / dead wifi / deployment reboot: allow entering offline PWA mode with cached user profile
+                setToken('offline-session');
                 setUser(cachedUser);
-              } else if (!initialSession.token) {
+              } else if (!initialSession.user) {
                 setMemoryToken(null);
                 delete api.defaults.headers.common['Authorization'];
                 setToken(null);
@@ -158,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               }
             }
           } else {
-            await new Promise((r) => setTimeout(r, 1500));
+            await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
           }
         }
       }
@@ -237,12 +238,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setToken(e.newValue);
           const cached = getCachedUser();
           if (cached) setUser(cached);
-        } else if (!e.newValue) {
+        } else if (!e.newValue && !getCachedUser()) {
           setToken(null);
           setMemoryToken(null);
           delete api.defaults.headers.common['Authorization'];
           setUser(null);
-          setCachedUser(null);
         }
       }
     };
