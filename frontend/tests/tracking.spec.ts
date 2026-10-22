@@ -347,6 +347,7 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     });
 
     await page.goto('/tracking');
+    await expect(page.locator('.calendar-container')).toBeVisible({ timeout: 15000 });
 
     const firstDayCell = page.locator('.calendar-day').first();
     await expect(firstDayCell).toContainText('81.20');
@@ -361,6 +362,10 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     const deleteBtn = page.getByRole('button', { name: /borrar ambos/i });
     await expect(deleteBtn).toBeVisible();
     await deleteBtn.click();
+    const confirmBtn = page.getByRole('button', { name: /^Eliminar$/i });
+    if (await confirmBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await confirmBtn.click();
+    }
 
     // Verificar llamadas DELETE a endpoints
     await expect.poll(() => deletedWeightDate, { timeout: 5000 }).toBe('2026-10-12');

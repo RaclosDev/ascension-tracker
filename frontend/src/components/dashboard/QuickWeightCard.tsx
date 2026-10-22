@@ -15,8 +15,6 @@ interface QuickWeightCardProps {
   hasTodayWeight: boolean;
 }
 
-const STEPPER_DELTAS = [-0.1, -0.05, +0.05, +0.1] as const;
-
 export const QuickWeightCard = React.memo(function QuickWeightCard({
   todayLabel,
   todayDateStr,
@@ -66,7 +64,6 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
               className="text-xs font-bold underline opacity-80 hover:opacity-100"
               onClick={() => {
                 toast.dismiss(t.id);
-                // Restore input to previous value
                 const prev = yesterdayWeight ?? recentWeight;
                 if (prev !== undefined) setQuickWeight(prev.toFixed(2));
               }}
@@ -104,14 +101,6 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
     [quickWeight, addWeightMutation],
   );
 
-  const adjustWeight = (delta: number) => {
-    haptics.step();
-    const currentNum = parseSafeWeight(quickWeight) ?? recentWeight ?? 70.0;
-    const nextVal = Math.round((currentNum + delta) * 100) / 100;
-    const clamped = Math.max(30, Math.min(250, nextVal));
-    setQuickWeight(clamped.toFixed(2));
-  };
-
   const isPending = addWeightMutation.isPending;
 
   // Delta vs yesterday
@@ -138,6 +127,11 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
           ? 'var(--color-fat-strong, #f87171)'
           : 'var(--text-secondary)';
 
+  const parsedCurrent = parseSafeWeight(quickWeight);
+  const isDirty =
+    parsedCurrent !== null &&
+    (todayWeight === undefined || Math.abs(parsedCurrent - todayWeight) > 0.001);
+
   return (
     <div className="card quick-add-card glass-panel-elevated p-4 sm:p-5 rounded-2xl mb-6 relative overflow-hidden border border-white/[0.08]">
       {/* Background ambient radial glow */}
@@ -147,7 +141,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
       />
 
       {/* Header Row */}
-      <div className="quick-add-header flex items-center justify-between mb-4 relative z-10">
+      <div className="quick-add-header flex items-center justify-between mb-3 relative z-10">
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-xl flex items-center justify-center border"
@@ -175,22 +169,22 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
           </div>
         </div>
 
-        {/* Status Badge */}
+        {/* Status Badge: Top Right */}
         <div className="flex items-center gap-2">
-          {hasTodayWeight ? (
+          {hasTodayWeight || justSaved ? (
             <span
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[0.7rem] font-semibold border"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border"
               style={{
                 background: 'rgba(52, 211, 153, 0.15)',
                 borderColor: 'rgba(52, 211, 153, 0.3)',
                 color: 'var(--color-success, #34d399)',
               }}
             >
-              <Check size={11} /> Registrado
+              <Check size={13} className="stroke-[2.5]" /> Registrado
             </span>
           ) : (
             <span
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[0.7rem] font-semibold border animate-pulse"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border animate-pulse"
               style={{
                 background: 'rgba(245, 158, 11, 0.15)',
                 borderColor: 'rgba(245, 158, 11, 0.3)',
@@ -203,112 +197,89 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
         </div>
       </div>
 
-      {/* Input Body */}
-      <div className="quick-add-body flex flex-col items-center justify-center my-1 relative z-10">
-        {/* Weight display / input */}
-        <div className="flex items-baseline gap-2 mb-1 w-full justify-center">
+      {/* Input Body: Clean, integrated action without steppers or giant button */}
+      <div className="quick-add-body flex flex-col items-center justify-center py-2 relative z-10">
+        <div className="flex items-center justify-center gap-2.5 w-full max-w-xs mb-2">
           <label htmlFor="quick-weight-input" className="sr-only">
             Peso corporal de hoy
           </label>
-          <input
-            ref={inputRef}
-            id="quick-weight-input"
-            type="text"
-            inputMode="decimal"
-            pattern="[0-9]*[.,]?[0-9]*"
-            aria-label="Peso corporal de hoy en kilogramos"
-            className="quick-add-input text-3xl sm:text-4xl font-black font-mono text-center rounded-xl w-36 py-1 outline-none text-white border transition-opacity"
-            style={{
-              background: 'rgba(0, 0, 0, 0.45)',
-              borderColor: 'var(--accent-primary)',
-              boxShadow: '0 0 12px var(--accent-glow)',
-            }}
-            value={quickWeight}
-            onChange={(e) => setQuickWeight(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && saveWeight()}
-            placeholder={hasTodayWeight && todayWeight ? todayWeight.toString() : '00.00'}
+          <div className="relative flex-1 max-w-[170px] flex items-center">
+            <input
+              ref={inputRef}
+              id="quick-weight-input"
+              type="text"
+              inputMode="decimal"
+              pattern="[0-9]*[.,]?[0-9]*"
+              aria-label="Peso corporal de hoy en kilogramos"
+              className="quick-add-input text-3xl sm:text-4xl font-black font-mono text-center rounded-xl w-full py-1.5 pr-8 pl-3 outline-none text-white border transition-all"
+              style={{
+                background: 'rgba(0, 0, 0, 0.45)',
+                borderColor: isDirty ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.12)',
+                boxShadow: isDirty ? '0 0 16px var(--accent-glow)' : 'none',
+              }}
+              value={quickWeight}
+              onChange={(e) => setQuickWeight(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && saveWeight()}
+              placeholder={hasTodayWeight && todayWeight ? todayWeight.toFixed(2) : '00.00'}
+              disabled={isPending}
+            />
+            <span
+              className="absolute right-2.5 text-xs font-bold font-mono pointer-events-none"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              kg
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => saveWeight()}
             disabled={isPending}
-          />
-          <span
-            className="text-sm sm:text-base font-bold font-mono"
-            style={{ color: 'var(--text-secondary)' }}
+            className={`btn-press h-11 px-3.5 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
+              isPending
+                ? 'opacity-60 cursor-not-allowed bg-white/5 border border-white/10 text-zinc-400'
+                : isDirty || !hasTodayWeight
+                  ? 'btn btn-primary text-white shadow-md shadow-[var(--accent-shadow)]'
+                  : 'bg-white/10 border border-white/15 text-zinc-200 hover:text-white'
+            }`}
+            aria-label={
+              hasTodayWeight ? 'Actualizar peso corporal de hoy' : 'Registrar peso corporal de hoy'
+            }
           >
-            kg
-          </span>
+            {isPending ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : justSaved ? (
+              <>
+                <Check size={16} className="text-emerald-400 stroke-[2.5]" />
+                <span className="hidden sm:inline">Guardado</span>
+              </>
+            ) : (
+              <>
+                <Check size={16} className="stroke-[2.5]" />
+                <span>{hasTodayWeight ? 'Actualizar' : 'Registrar'}</span>
+              </>
+            )}
+          </button>
         </div>
 
         {/* Delta vs yesterday + yesterday context */}
-        <div className="flex items-center gap-3 mb-3 h-5">
+        <div className="flex items-center gap-3 h-5 text-xs">
           {yesterdayWeight !== undefined && (
-            <span className="text-[0.68rem]" style={{ color: 'var(--text-secondary)' }}>
+            <span className="text-[0.72rem]" style={{ color: 'var(--text-secondary)' }}>
               Ayer: {yesterdayWeight.toFixed(2)} kg
             </span>
           )}
           {DeltaIcon !== null && deltaVsYesterday !== null && (
             <span
-              className="flex items-center gap-0.5 text-[0.68rem] font-semibold"
+              className="flex items-center gap-0.5 text-[0.72rem] font-semibold font-mono"
               style={{ color: deltaColor }}
             >
-              <DeltaIcon size={11} />
+              <DeltaIcon size={12} />
               {deltaVsYesterday > 0 ? '+' : ''}
               {deltaVsYesterday.toFixed(2)} kg
             </span>
           )}
         </div>
-
-        {/* Stepper Chips */}
-        <div className="grid grid-cols-4 gap-2 w-full max-w-xs mb-3.5">
-          {STEPPER_DELTAS.map((delta) => (
-            <button
-              key={delta}
-              type="button"
-              onClick={() => adjustWeight(delta)}
-              disabled={isPending}
-              className="btn-press py-2.5 rounded-xl border text-xs font-mono font-bold text-gray-300 hover:text-white transition-all"
-              style={{
-                background: 'rgba(255, 255, 255, 0.04)',
-                borderColor: 'rgba(255, 255, 255, 0.08)',
-              }}
-            >
-              {delta > 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2)}
-            </button>
-          ))}
-        </div>
-
-        {/* Action Button */}
-        <button
-          aria-label={
-            hasTodayWeight ? 'Actualizar peso corporal de hoy' : 'Registrar peso corporal de hoy'
-          }
-          type="button"
-          onClick={() => saveWeight()}
-          disabled={isPending}
-          className={`btn w-full max-w-xs min-h-[44px] rounded-xl font-semibold text-sm flex items-center justify-center gap-2 btn-press transition-all duration-300 ${
-            hasTodayWeight ? 'btn-secondary' : 'btn-primary'
-          }`}
-          style={
-            justSaved
-              ? {
-                  background: 'var(--color-success, #10b981)',
-                  boxShadow: '0 0 16px rgba(16, 185, 129, 0.4)',
-                }
-              : undefined
-          }
-        >
-          {isPending ? (
-            <>
-              <Loader2 size={16} className="animate-spin" /> Guardando...
-            </>
-          ) : justSaved ? (
-            <>
-              <Check size={18} /> {hasTodayWeight ? 'Actualizado' : 'Registrado'}
-            </>
-          ) : hasTodayWeight ? (
-            'Actualizar'
-          ) : (
-            'Registrar'
-          )}
-        </button>
       </div>
     </div>
   );

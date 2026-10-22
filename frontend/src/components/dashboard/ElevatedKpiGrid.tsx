@@ -73,6 +73,12 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
   const popoverRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
+  useEffect(() => {
+    if (ratePref?.customRate != null) {
+      setCustomInput(ratePref.customRate.toFixed(2));
+    }
+  }, [ratePref?.customRate]);
+
   // Close popover on outside click or scroll
   useEffect(() => {
     if (!popoverOpen) return;
@@ -132,7 +138,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
             style={{
               background: 'var(--accent-glow)',
               borderColor: 'rgba(255, 255, 255, 0.08)',
-              color: 'var(--accent-primary-light, #38bdf8)',
+              color: 'var(--accent-primary)',
             }}
           >
             <Scale size={15} />
@@ -285,19 +291,24 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
             createPortal(
               <div
                 ref={popoverRef}
-                className="rounded-xl border shadow-2xl p-3 w-60"
+                className="rounded-2xl border p-3.5 w-72 max-w-[calc(100vw-24px)] select-none"
                 style={{
                   position: 'fixed',
-                  bottom: window.innerHeight - anchorRect.top + 8,
-                  right: window.innerWidth - anchorRect.right,
+                  top: anchorRect.top < 260 ? anchorRect.bottom + 8 : 'auto',
+                  bottom:
+                    anchorRect.top < 260
+                      ? 'auto'
+                      : Math.max(12, window.innerHeight - anchorRect.top + 8),
+                  right: Math.max(12, window.innerWidth - anchorRect.right),
                   zIndex: 9999,
-                  background: 'var(--surface-elevated, #1a1a2e)',
-                  borderColor: 'rgba(255,255,255,0.12)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+                  background: 'var(--bg-card, #1C1C1E)',
+                  borderColor: 'var(--border-medium, rgba(255,255,255,0.15))',
+                  boxShadow: 'var(--shadow-lg, 0 12px 36px rgba(0,0,0,0.65))',
+                  backdropFilter: 'blur(16px)',
                 }}
               >
                 <p
-                  className="text-[0.65rem] font-bold uppercase tracking-wider mb-2.5"
+                  className="text-[0.68rem] font-bold uppercase tracking-wider mb-2.5"
                   style={{ color: 'var(--text-secondary)' }}
                 >
                   Ritmo de proyección
@@ -311,27 +322,29 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
                         key={mode}
                         type="button"
                         onClick={() => handleModeSelect(mode)}
-                        className="flex items-start gap-2.5 w-full rounded-lg px-2.5 py-2 text-left transition-colors"
+                        className="flex items-start gap-2.5 w-full rounded-xl px-2.5 py-2 text-left transition-all"
                         style={{
-                          background: active ? 'var(--accent-glow)' : 'transparent',
+                          background: active
+                            ? 'var(--accent-glow)'
+                            : 'var(--bg-glass, rgba(255, 255, 255, 0.02))',
                           borderWidth: 1,
                           borderStyle: 'solid',
-                          borderColor: active ? 'var(--accent-primary)' : 'rgba(255,255,255,0.06)',
+                          borderColor: active
+                            ? 'var(--accent-primary)'
+                            : 'var(--border-subtle, rgba(255,255,255,0.06))',
                         }}
                       >
                         <span
                           className="mt-0.5 shrink-0"
                           style={{
-                            color: active
-                              ? 'var(--accent-primary-light, #38bdf8)'
-                              : 'var(--text-secondary)',
+                            color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
                           }}
                         >
                           {icon}
                         </span>
                         <span className="flex flex-col min-w-0">
                           <span
-                            className="text-[0.72rem] font-semibold"
+                            className="text-[0.75rem] font-semibold"
                             style={{ color: active ? 'white' : 'var(--text-primary)' }}
                           >
                             {label}
@@ -342,7 +355,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
                             )}
                           </span>
                           <span
-                            className="text-[0.62rem]"
+                            className="text-[0.65rem]"
                             style={{ color: 'var(--text-secondary)' }}
                           >
                             {desc}
@@ -350,9 +363,9 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
                         </span>
                         {active && (
                           <Check
-                            size={13}
+                            size={14}
                             className="ml-auto mt-0.5 shrink-0"
-                            style={{ color: 'var(--accent-primary-light, #38bdf8)' }}
+                            style={{ color: 'var(--accent-primary)' }}
                           />
                         )}
                       </button>
@@ -362,38 +375,51 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
 
                 {/* Custom rate input */}
                 {currentMode === 'custom' && (
-                  <div className="mt-2.5 flex gap-2 items-center">
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={customInput}
-                      onChange={(e) => setCustomInput(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleCustomSave()}
-                      className="flex-1 rounded-lg px-2.5 py-1.5 text-sm font-mono text-white border outline-none"
-                      style={{
-                        background: 'rgba(0,0,0,0.4)',
-                        borderColor: 'var(--accent-primary)',
-                      }}
-                      placeholder="ej: 0.40"
-                      autoFocus
-                    />
+                  <div
+                    className="mt-3 pt-2.5 border-t flex flex-col gap-1.5"
+                    style={{ borderColor: 'var(--border-subtle, rgba(255,255,255,0.08))' }}
+                  >
                     <span
-                      className="text-[0.65rem] shrink-0"
+                      className="text-[0.68rem] font-medium"
                       style={{ color: 'var(--text-secondary)' }}
                     >
-                      kg/sem
+                      Ritmo personalizado
                     </span>
-                    <button
-                      type="button"
-                      onClick={handleCustomSave}
-                      className="rounded-lg px-2 py-1.5 text-xs font-bold transition-opacity hover:opacity-90"
-                      style={{
-                        background: 'var(--accent-primary)',
-                        color: 'white',
-                      }}
-                    >
-                      OK
-                    </button>
+                    <div className="flex gap-2 items-center w-full">
+                      <div className="relative flex-1 min-w-0">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={customInput}
+                          onChange={(e) => setCustomInput(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleCustomSave()}
+                          className="w-full min-w-0 rounded-lg pl-3 pr-14 py-2 text-sm font-mono font-semibold text-[var(--text-primary)] border outline-none transition-all focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]"
+                          style={{
+                            background: 'var(--bg-input, #2C2C2E)',
+                            borderColor: 'var(--border-medium, rgba(255,255,255,0.15))',
+                          }}
+                          placeholder="0.50"
+                          autoFocus
+                        />
+                        <span
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[0.68rem] font-medium pointer-events-none select-none"
+                          style={{ color: 'var(--text-muted)' }}
+                        >
+                          kg/sem
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCustomSave}
+                        className="shrink-0 rounded-lg px-3.5 py-2 text-xs font-bold text-white transition-all hover:brightness-110 active:scale-95 shadow-sm"
+                        style={{
+                          background: 'var(--gradient-primary, var(--accent-primary))',
+                          boxShadow: '0 0 12px var(--accent-glow)',
+                        }}
+                      >
+                        OK
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>,

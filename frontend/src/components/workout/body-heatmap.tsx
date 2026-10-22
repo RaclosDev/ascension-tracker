@@ -114,8 +114,11 @@ export function BodyHeatmap({
   }
 
   return (
-    <div className="card p-2.5 sm:p-4 flex flex-col justify-between items-center h-full min-h-[190px]">
-      <div className="w-full flex items-center justify-between mb-1">
+    <div
+      className="card flex flex-col justify-between items-center h-full min-h-[190px]"
+      style={{ padding: '0.45rem 0.25rem' }}
+    >
+      <div className="w-full flex items-center justify-between px-1 mb-1">
         <h3
           className="text-xs sm:text-sm font-bold tracking-tight"
           style={{ color: 'var(--text-primary)' }}
@@ -130,13 +133,13 @@ export function BodyHeatmap({
         </span>
       </div>
 
-      <div className="flex flex-row items-center justify-center gap-1 w-full my-auto py-1">
+      <div className="flex flex-row items-center justify-center gap-1.5 w-full my-auto">
         {/* Vista Frontal */}
-        <div className="flex-1 min-w-0 max-w-[66px] sm:max-w-[78px] aspect-[1/2] flex items-center justify-center">
+        <div className="flex-1 min-w-0 max-w-[76px] sm:max-w-[88px] aspect-[1/2] flex items-center justify-center">
           {isReady && <Model type="anterior" {...modelProps} />}
         </div>
         {/* Vista Posterior */}
-        <div className="flex-1 min-w-0 max-w-[66px] sm:max-w-[78px] aspect-[1/2] flex items-center justify-center">
+        <div className="flex-1 min-w-0 max-w-[76px] sm:max-w-[88px] aspect-[1/2] flex items-center justify-center">
           {isReady && <Model type="posterior" {...modelProps} />}
         </div>
       </div>
