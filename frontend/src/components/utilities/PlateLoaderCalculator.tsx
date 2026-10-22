@@ -144,10 +144,10 @@ export default function PlateLoaderCalculator({
       <div
         role="status"
         aria-live="polite"
-        className="p-5 rounded-2xl bg-gradient-to-br from-blue-950/40 via-sky-950/20 to-black/40 border border-sky-500/20 flex flex-col sm:flex-row items-center justify-between gap-4"
+        className="p-5 rounded-2xl bg-gradient-to-br from-[var(--accent-glow)] via-black/30 to-black/40 border border-[var(--accent-primary)]/20 flex flex-col sm:flex-row items-center justify-between gap-4"
       >
         <div>
-          <span className="text-xs font-bold tracking-wider uppercase text-sky-400">
+          <span className="text-xs font-bold tracking-wider uppercase text-[var(--accent-primary-light)]">
             Carga por cada lado
           </span>
           <div className="text-4xl font-extrabold text-white mt-1">
@@ -161,7 +161,7 @@ export default function PlateLoaderCalculator({
               </strong>
             </span>
             {result.isExact ? (
-              <span className="px-2 py-0.5 rounded-full text-[11px] bg-blue-500/20 text-blue-300 border border-blue-500/30">
+              <span className="px-2 py-0.5 rounded-full text-[11px] bg-[var(--accent-glow)] text-[var(--accent-primary-light)] border border-[var(--accent-primary)]/30">
                 ✓ Carga Exacta
               </span>
             ) : (

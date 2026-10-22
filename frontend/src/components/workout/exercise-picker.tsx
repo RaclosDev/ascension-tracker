@@ -484,6 +484,9 @@ export function ExercisePicker() {
                                 <div className="picker-exercise-name">
                                   {shortName}
                                   {ex.custom && <span className="picker-custom-badge">Custom</span>}
+                                  {active?.exercises.some((e) => e.exerciseId === ex.id) && (
+                                    <span className="picker-in-workout-badge">En entreno</span>
+                                  )}
                                 </div>
                                 <div className="picker-exercise-meta">
                                   {MUSCLE_LABEL[ex.muscle as keyof typeof MUSCLE_LABEL]} ·{' '}
@@ -570,7 +573,9 @@ export function ExercisePicker() {
                                   }}
                                   onClick={() => handleAddVariant(ex.id)}
                                 >
-                                  Añadir al entreno
+                                  {active?.exercises.some((e) => e.exerciseId === ex.id)
+                                    ? 'Añadir de nuevo al entreno'
+                                    : 'Añadir al entreno'}
                                 </button>
                               </div>
                             )}

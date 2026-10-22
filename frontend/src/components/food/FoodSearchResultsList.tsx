@@ -129,8 +129,8 @@ export function FoodSearchResultsList({
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    background: 'rgba(59, 130, 246, 0.05)',
-                    border: '1px solid rgba(59, 130, 246, 0.2)',
+                    background: 'var(--accent-glow, rgba(59, 130, 246, 0.05))',
+                    border: '1px solid var(--border-medium)',
                   }}
                   onClick={() => onSelectSaved(food)}
                 >

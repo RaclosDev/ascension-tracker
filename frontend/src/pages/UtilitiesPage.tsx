@@ -11,6 +11,10 @@ interface DashboardData {
   currentWeight?: number;
 }
 
+interface SettingsData {
+  heightCm?: number;
+}
+
 export default function UtilitiesPage() {
   // --- CALCULATORS STATE ---
   const [weight1, setWeight1] = useState('');
@@ -27,12 +31,23 @@ export default function UtilitiesPage() {
     queryFn: () => api.get('/weights/dashboard').then((res) => res.data),
   });
 
+  const { data: settingsData } = useQuery<SettingsData>({
+    queryKey: ['settings'],
+    queryFn: () => api.get('/settings').then((res) => res.data),
+  });
+
   useEffect(() => {
     if (dashboardData?.currentWeight) {
       setWeight1(dashboardData.currentWeight.toString());
       setWeight2(dashboardData.currentWeight.toString());
     }
   }, [dashboardData?.currentWeight]);
+
+  useEffect(() => {
+    if (settingsData?.heightCm) {
+      setHeight((settingsData.heightCm / 100).toFixed(2));
+    }
+  }, [settingsData?.heightCm]);
 
   // Calculations 1: Gasto por Pasos (Weyand)
   const numWeight1 = parseFloat(weight1) || 0;

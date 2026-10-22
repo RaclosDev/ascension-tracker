@@ -399,6 +399,10 @@ export default function SettingsPage() {
                 onSave={(kcal) => {
                   setForm({ ...form, kcal });
                   setOpenSections({ ...openSections, plan: false, macros: true });
+                  toast.success(
+                    `Calorías aplicadas (${kcal} kcal). Recuerda pulsar "Guardar Macros" abajo para confirmar los cambios.`,
+                    { duration: 4500, icon: '🎯' },
+                  );
                 }}
                 saveButtonText="Aplicar Calorías a Macros"
               />

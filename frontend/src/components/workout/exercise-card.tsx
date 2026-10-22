@@ -12,6 +12,16 @@ import {
 import { initAudioAndNotifications } from '@/lib/workout/notifications';
 import { haptics } from '@/lib/haptics';
 import { useWorkoutStore } from '@/lib/workout/store';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { VariantSelector } from './variant-selector';
 import {
   useRecentWorkouts,
@@ -579,6 +589,7 @@ export const ExerciseCard = React.memo(function ExerciseCard({
   const customGifs = prefs?.exerciseGifs || {};
   const [editingVariant, setEditingVariant] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
   const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -857,9 +868,14 @@ export const ExerciseCard = React.memo(function ExerciseCard({
                   type="button"
                   aria-label="Quitar ejercicio"
                   onClick={() => {
-                    haptics.warning();
-                    removeExercise(row.id);
                     setShowActionsMenu(false);
+                    const hasCompletedSets = row.sets.some((s) => s.completed);
+                    if (hasCompletedSets) {
+                      setConfirmRemoveOpen(true);
+                    } else {
+                      haptics.warning();
+                      removeExercise(row.id);
+                    }
                   }}
                   className="exercise-card-menu-item danger"
                 >
@@ -1011,6 +1027,51 @@ export const ExerciseCard = React.memo(function ExerciseCard({
           </div>
         </>
       )}
+
+      <AlertDialog open={confirmRemoveOpen} onOpenChange={setConfirmRemoveOpen}>
+        <AlertDialogContent
+          className="card"
+          style={{
+            maxWidth: '380px',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-medium)',
+            borderRadius: '16px',
+            padding: '1.25rem',
+          }}
+        >
+          <AlertDialogHeader>
+            <AlertDialogTitle
+              style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}
+            >
+              ¿Quitar {meta?.name || 'ejercicio'}?
+            </AlertDialogTitle>
+            <AlertDialogDescription style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+              Ya has completado series en este ejercicio. Si lo quitas ahora, esas series se
+              descartarán de la sesión actual.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter
+            style={{
+              marginTop: '1rem',
+              display: 'flex',
+              gap: '0.5rem',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <AlertDialogCancel className="btn btn-secondary">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="btn btn-danger btn-press"
+              style={{ color: 'var(--color-danger)' }}
+              onClick={() => {
+                haptics.warning();
+                if (row) removeExercise(row.id);
+              }}
+            >
+              Quitar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </article>
   );
 });

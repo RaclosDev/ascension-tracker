@@ -782,3 +782,5 @@ function FooterActions() {
     </div>
   );
 }
+
+export default ActiveWorkout;

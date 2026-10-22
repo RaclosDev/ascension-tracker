@@ -79,10 +79,10 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
     }
   }, [ratePref?.customRate]);
 
-  // Close popover on outside click or scroll
+  // Close popover on outside click or scroll (ignoring resize when typing in inputs)
   useEffect(() => {
     if (!popoverOpen) return;
-    const handler = (e: MouseEvent) => {
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
       if (
         popoverRef.current &&
         !popoverRef.current.contains(e.target as Node) &&
@@ -91,14 +91,23 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
         setPopoverOpen(false);
       }
     };
-    const closeOnScrollOrResize = () => setPopoverOpen(false);
-    document.addEventListener('mousedown', handler);
-    window.addEventListener('scroll', closeOnScrollOrResize, { passive: true });
-    window.addEventListener('resize', closeOnScrollOrResize);
+    const closeOnScroll = () => {
+      if (popoverRef.current?.contains(document.activeElement)) return;
+      setPopoverOpen(false);
+    };
+    const closeOnResize = () => {
+      if (popoverRef.current?.contains(document.activeElement)) return;
+      setPopoverOpen(false);
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick, { passive: true });
+    window.addEventListener('scroll', closeOnScroll, { passive: true });
+    window.addEventListener('resize', closeOnResize);
     return () => {
-      document.removeEventListener('mousedown', handler);
-      window.removeEventListener('scroll', closeOnScrollOrResize);
-      window.removeEventListener('resize', closeOnScrollOrResize);
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+      window.removeEventListener('scroll', closeOnScroll);
+      window.removeEventListener('resize', closeOnResize);
     };
   }, [popoverOpen]);
 
@@ -288,143 +297,162 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
           {/* Popover — rendered in body via portal to escape any overflow:hidden parent */}
           {popoverOpen &&
             anchorRect &&
-            createPortal(
-              <div
-                ref={popoverRef}
-                className="rounded-2xl border p-3.5 w-72 max-w-[calc(100vw-24px)] select-none"
-                style={{
-                  position: 'fixed',
-                  top: anchorRect.top < 260 ? anchorRect.bottom + 8 : 'auto',
-                  bottom:
-                    anchorRect.top < 260
-                      ? 'auto'
-                      : Math.max(12, window.innerHeight - anchorRect.top + 8),
-                  right: Math.max(12, window.innerWidth - anchorRect.right),
-                  zIndex: 9999,
-                  background: 'var(--bg-card, #1C1C1E)',
-                  borderColor: 'var(--border-medium, rgba(255,255,255,0.15))',
-                  boxShadow: 'var(--shadow-lg, 0 12px 36px rgba(0,0,0,0.65))',
-                  backdropFilter: 'blur(16px)',
-                }}
-              >
-                <p
-                  className="text-[0.68rem] font-bold uppercase tracking-wider mb-2.5"
-                  style={{ color: 'var(--text-secondary)' }}
+            (() => {
+              const popoverWidth = Math.min(
+                320,
+                typeof window !== 'undefined' ? window.innerWidth - 24 : 296,
+              );
+              const preferredLeft = anchorRect.right - popoverWidth;
+              const safeLeft = Math.max(
+                12,
+                Math.min(
+                  preferredLeft,
+                  (typeof window !== 'undefined' ? window.innerWidth : 360) - popoverWidth - 12,
+                ),
+              );
+              const spaceBelow =
+                typeof window !== 'undefined' ? window.innerHeight - anchorRect.bottom : 300;
+              const placeAbove = spaceBelow < 280 && anchorRect.top > 280;
+
+              return createPortal(
+                <div
+                  ref={popoverRef}
+                  className="rounded-2xl border p-4 select-none"
+                  style={{
+                    position: 'fixed',
+                    width: `${popoverWidth}px`,
+                    left: `${safeLeft}px`,
+                    top: placeAbove ? 'auto' : `${anchorRect.bottom + 8}px`,
+                    bottom: placeAbove
+                      ? `${Math.max(12, window.innerHeight - anchorRect.top + 8)}px`
+                      : 'auto',
+                    maxHeight: 'calc(100vh - 24px)',
+                    overflowY: 'auto',
+                    zIndex: 9999,
+                    background: 'var(--bg-card, #1C1C1E)',
+                    borderColor: 'var(--border-medium, rgba(255,255,255,0.15))',
+                    boxShadow: 'var(--shadow-lg, 0 12px 36px rgba(0,0,0,0.65))',
+                    backdropFilter: 'blur(16px)',
+                  }}
                 >
-                  Ritmo de proyección
-                </p>
-
-                <div className="flex flex-col gap-1.5">
-                  {MODE_OPTIONS.map(({ mode, label, icon, desc }) => {
-                    const active = currentMode === mode;
-                    return (
-                      <button
-                        key={mode}
-                        type="button"
-                        onClick={() => handleModeSelect(mode)}
-                        className="flex items-start gap-2.5 w-full rounded-xl px-2.5 py-2 text-left transition-all"
-                        style={{
-                          background: active
-                            ? 'var(--accent-glow)'
-                            : 'var(--bg-glass, rgba(255, 255, 255, 0.02))',
-                          borderWidth: 1,
-                          borderStyle: 'solid',
-                          borderColor: active
-                            ? 'var(--accent-primary)'
-                            : 'var(--border-subtle, rgba(255,255,255,0.06))',
-                        }}
-                      >
-                        <span
-                          className="mt-0.5 shrink-0"
-                          style={{
-                            color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                          }}
-                        >
-                          {icon}
-                        </span>
-                        <span className="flex flex-col min-w-0">
-                          <span
-                            className="text-[0.75rem] font-semibold"
-                            style={{ color: active ? 'white' : 'var(--text-primary)' }}
-                          >
-                            {label}
-                            {mode === 'goal' && weeklyGoal != null && (
-                              <span className="ml-1 font-mono opacity-60">
-                                ({weeklyGoal.toFixed(2)} kg/sem)
-                              </span>
-                            )}
-                          </span>
-                          <span
-                            className="text-[0.65rem]"
-                            style={{ color: 'var(--text-secondary)' }}
-                          >
-                            {desc}
-                          </span>
-                        </span>
-                        {active && (
-                          <Check
-                            size={14}
-                            className="ml-auto mt-0.5 shrink-0"
-                            style={{ color: 'var(--accent-primary)' }}
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Custom rate input */}
-                {currentMode === 'custom' && (
-                  <div
-                    className="mt-3 pt-2.5 border-t flex flex-col gap-1.5"
-                    style={{ borderColor: 'var(--border-subtle, rgba(255,255,255,0.08))' }}
+                  <p
+                    className="text-[0.68rem] font-bold uppercase tracking-wider mb-2.5"
+                    style={{ color: 'var(--text-secondary)' }}
                   >
-                    <span
-                      className="text-[0.68rem] font-medium"
-                      style={{ color: 'var(--text-secondary)' }}
-                    >
-                      Ritmo personalizado
-                    </span>
-                    <div className="flex gap-2 items-center w-full">
-                      <div className="relative flex-1 min-w-0">
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={customInput}
-                          onChange={(e) => setCustomInput(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleCustomSave()}
-                          className="w-full min-w-0 rounded-lg pl-3 pr-14 py-2 text-sm font-mono font-semibold text-[var(--text-primary)] border outline-none transition-all focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]"
+                    Ritmo de proyección
+                  </p>
+
+                  <div className="flex flex-col gap-1.5">
+                    {MODE_OPTIONS.map(({ mode, label, icon, desc }) => {
+                      const active = currentMode === mode;
+                      return (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => handleModeSelect(mode)}
+                          className="flex items-start gap-2.5 w-full rounded-xl px-2.5 py-2 text-left transition-all"
                           style={{
-                            background: 'var(--bg-input, #2C2C2E)',
-                            borderColor: 'var(--border-medium, rgba(255,255,255,0.15))',
+                            background: active
+                              ? 'var(--accent-glow)'
+                              : 'var(--bg-glass, rgba(255, 255, 255, 0.02))',
+                            borderWidth: 1,
+                            borderStyle: 'solid',
+                            borderColor: active
+                              ? 'var(--accent-primary)'
+                              : 'var(--border-subtle, rgba(255,255,255,0.06))',
                           }}
-                          placeholder="0.50"
-                          autoFocus
-                        />
-                        <span
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[0.68rem] font-medium pointer-events-none select-none"
-                          style={{ color: 'var(--text-muted)' }}
                         >
-                          kg/sem
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleCustomSave}
-                        className="shrink-0 rounded-lg px-3.5 py-2 text-xs font-bold text-white transition-all hover:brightness-110 active:scale-95 shadow-sm"
-                        style={{
-                          background: 'var(--gradient-primary, var(--accent-primary))',
-                          boxShadow: '0 0 12px var(--accent-glow)',
-                        }}
-                      >
-                        OK
-                      </button>
-                    </div>
+                          <span
+                            className="mt-0.5 shrink-0"
+                            style={{
+                              color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                            }}
+                          >
+                            {icon}
+                          </span>
+                          <span className="flex flex-col min-w-0">
+                            <span
+                              className="text-[0.75rem] font-semibold"
+                              style={{ color: active ? 'white' : 'var(--text-primary)' }}
+                            >
+                              {label}
+                              {mode === 'goal' && weeklyGoal != null && (
+                                <span className="ml-1 font-mono opacity-60">
+                                  ({weeklyGoal.toFixed(2)} kg/sem)
+                                </span>
+                              )}
+                            </span>
+                            <span
+                              className="text-[0.65rem]"
+                              style={{ color: 'var(--text-secondary)' }}
+                            >
+                              {desc}
+                            </span>
+                          </span>
+                          {active && (
+                            <Check
+                              size={14}
+                              className="ml-auto mt-0.5 shrink-0"
+                              style={{ color: 'var(--accent-primary)' }}
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
-                )}
-              </div>,
-              document.body,
-            )}
+
+                  {/* Custom rate input */}
+                  {currentMode === 'custom' && (
+                    <div
+                      className="mt-3 pt-3 border-t flex flex-col gap-2"
+                      style={{ borderColor: 'var(--border-subtle, rgba(255,255,255,0.08))' }}
+                    >
+                      <span
+                        className="text-[0.68rem] font-medium"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
+                        Introduce el ritmo manualmente
+                      </span>
+                      <div className="flex gap-2 items-center w-full">
+                        <div className="relative flex-1 min-w-0">
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={customInput}
+                            onChange={(e) => setCustomInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleCustomSave()}
+                            className="w-full min-w-0 rounded-lg pl-3 pr-16 py-2 text-sm font-mono font-semibold text-[var(--text-primary)] border outline-none transition-all focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]"
+                            style={{
+                              background: 'var(--bg-input, #2C2C2E)',
+                              borderColor: 'var(--border-medium, rgba(255,255,255,0.15))',
+                            }}
+                            placeholder="0.50"
+                            autoFocus
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.68rem] font-medium pointer-events-none select-none text-[var(--text-muted)]">
+                            kg/sem
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleCustomSave}
+                          className="btn btn-primary shrink-0 rounded-lg px-4 py-2 text-xs font-bold transition-all active:scale-95 shadow-sm"
+                          style={{
+                            height: '38px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          OK
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>,
+                document.body,
+              );
+            })()}
         </div>
       </div>
     </div>

@@ -1,6 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trash2, Scale, Footprints, Apple, X } from 'lucide-react';
 import { TrackingModalData } from '../../types/tracking';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface TrackingEntryModalProps {
   modalData: TrackingModalData | null;
@@ -29,6 +39,7 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
   onDelete,
   onClose,
 }) => {
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   useEffect(() => {
     if (!modalData) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -298,7 +309,7 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
           <button
             type="button"
             className="btn btn-danger btn-sm"
-            onClick={onDelete}
+            onClick={() => setConfirmDeleteOpen(true)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -326,6 +337,51 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
           </div>
         </div>
       </div>
+
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent
+          className="card"
+          style={{
+            maxWidth: '380px',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-medium)',
+            borderRadius: '16px',
+            padding: '1.25rem',
+          }}
+        >
+          <AlertDialogHeader>
+            <AlertDialogTitle
+              style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}
+            >
+              ¿Eliminar registros del día?
+            </AlertDialogTitle>
+            <AlertDialogDescription style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+              Se eliminarán tanto el peso como los pasos registrados para el {modalData?.fullLabel}.
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter
+            style={{
+              marginTop: '1rem',
+              display: 'flex',
+              gap: '0.5rem',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <AlertDialogCancel className="btn btn-secondary">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="btn btn-danger btn-press"
+              style={{ color: 'var(--color-danger)' }}
+              onClick={() => {
+                setConfirmDeleteOpen(false);
+                onDelete();
+              }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

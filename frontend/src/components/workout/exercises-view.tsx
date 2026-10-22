@@ -31,7 +31,7 @@ import { ExerciseVariantsTab } from './exercises/ExerciseVariantsTab';
 import { ExercisesLoadingSkeleton } from './exercises/ExercisesLoadingSkeleton';
 import { ExerciseDetailsModal } from './exercise-details-modal';
 
-export function ExercisesView() {
+export default function ExercisesView() {
   const { data: customExercises = [], isLoading } = useCustomExercises();
   const { data: recentWorkouts = [] } = useRecentWorkouts(180);
   const saveExerciseMutation = useSaveCustomExercise();
@@ -241,3 +241,5 @@ export function ExercisesView() {
     </div>
   );
 }
+
+export { ExercisesView };

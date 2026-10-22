@@ -2,7 +2,8 @@ import { ComponentType, lazy, LazyExoticComponent } from 'react';
 
 /**
  * Checks whether an error is caused by a deployment chunk mismatch,
- * network failure during dynamic import, or MIME type mismatch.
+ * network failure during dynamic import, MIME type mismatch, or
+ * stale minified chunk default export mismatch.
  */
 export function isChunkLoadError(error: unknown): boolean {
   if (!error) return false;
@@ -19,7 +20,11 @@ export function isChunkLoadError(error: unknown): boolean {
     msg.includes('error loading dynamically imported module') ||
     msg.includes('failed to load module script') ||
     msg.includes('loading chunk') ||
-    msg.includes('load chunk')
+    msg.includes('load chunk') ||
+    msg.includes('_result.default') ||
+    msg.includes("reading 'default'") ||
+    msg.includes('missing default export') ||
+    msg.includes('invalid module')
   );
 }
 
@@ -32,6 +37,14 @@ export function lazyWithRetry<T extends ComponentType<any>>(
 
     try {
       const component = await factory();
+      if (
+        !component ||
+        typeof component !== 'object' ||
+        !('default' in component) ||
+        !component.default
+      ) {
+        throw new Error('Failed to load component chunk: invalid module or missing default export');
+      }
       sessionStorage.removeItem(sessionKey);
       sessionStorage.removeItem('ascension_global_chunk_reload_at');
       sessionStorage.removeItem('ascension_eb_reload_lock');

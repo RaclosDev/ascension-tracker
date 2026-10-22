@@ -1,5 +1,6 @@
 import React from 'react';
 import { GoogleLogin } from '@react-oauth/google';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
 
@@ -97,13 +98,17 @@ export default function LoginPage() {
                 });
                 if (res.data?.token) {
                   login(res.data.token);
+                } else {
+                  toast.error('Respuesta de autenticación no válida');
                 }
               } catch {
-                // Login failed without leaking PII or credentials to console
+                toast.error(
+                  'No se pudo iniciar sesión. Comprueba tu conexión o inténtalo más tarde.',
+                );
               }
             }}
             onError={() => {
-              // Login failed handled silently
+              toast.error('Error al conectar con Google. Por favor, inténtalo de nuevo.');
             }}
             theme="filled_black"
             shape="pill"
