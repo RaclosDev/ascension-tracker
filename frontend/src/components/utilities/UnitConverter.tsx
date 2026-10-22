@@ -1,5 +1,6 @@
 import { useState, useId } from 'react';
 import toast from 'react-hot-toast';
+import { Copy } from 'lucide-react';
 import {
   kgToLbs,
   lbsToKg,
@@ -28,23 +29,19 @@ interface UnitConverterProps {
 export default function UnitConverter({ defaultCategory = 'weight' }: UnitConverterProps) {
   const [category, setCategory] = useState<UnitCategory>(defaultCategory);
 
-  // PESO
   const [kgVal, setKgVal] = useState('75');
   const [lbsVal, setLbsVal] = useState('165.35');
   const [stonesVal, setStonesVal] = useState('11');
   const [stoneLbsVal, setStoneLbsVal] = useState('11.3');
 
-  // ALTURA / LONGITUD
   const [cmVal, setCmVal] = useState('178');
   const [inVal, setInVal] = useState('70.08');
   const [feetVal, setFeetVal] = useState('5');
   const [feetInVal, setFeetInVal] = useState('10.1');
 
-  // DISTANCIA
   const [kmVal, setKmVal] = useState('10');
   const [miVal, setMiVal] = useState('6.21');
 
-  // RITMO Y VELOCIDAD
   const [paceMin, setPaceMin] = useState('5');
   const [paceSec, setPaceSec] = useState('0');
   const [paceMiMin, setPaceMiMin] = useState('8');
@@ -60,7 +57,6 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
     toast.success(`Copiado: ${text} (${label})`);
   };
 
-  // Handlers para Peso
   const handleKgChange = (val: string) => {
     setKgVal(val);
     const num = parseFloat(val);
@@ -94,7 +90,6 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
     setLbsVal(String(kgToLbs(kg)));
   };
 
-  // Handlers para Altura
   const handleCmChange = (val: string) => {
     setCmVal(val);
     const num = parseFloat(val);
@@ -128,7 +123,6 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
     setInVal(String(cmToInches(cm)));
   };
 
-  // Handlers para Distancia
   const handleKmChange = (val: string) => {
     setKmVal(val);
     const num = parseFloat(val);
@@ -145,7 +139,6 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
     }
   };
 
-  // Handlers para Ritmo / Velocidad
   const handlePaceKmChange = (m: string, s: string) => {
     setPaceMin(m);
     setPaceSec(s);
@@ -200,7 +193,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
               : 'text-gray-400 hover:text-white'
           }`}
         >
-          ⚖️ Peso (kg / lbs / stone)
+          Peso (kg / lbs / stone)
         </button>
         <button
           type="button"
@@ -211,7 +204,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
               : 'text-gray-400 hover:text-white'
           }`}
         >
-          📏 Altura (cm / ft+in)
+          Altura (cm / ft+in)
         </button>
         <button
           type="button"
@@ -222,7 +215,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
               : 'text-gray-400 hover:text-white'
           }`}
         >
-          🏃 Distancia (km / mi)
+          Distancia (km / mi)
         </button>
         <button
           type="button"
@@ -233,7 +226,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
               : 'text-gray-400 hover:text-white'
           }`}
         >
-          ⏱️ Ritmo y Velocidad (min/km ↔ km/h)
+          Ritmo y Velocidad (min/km ↔ km/h)
         </button>
       </div>
 
@@ -261,7 +254,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   className="px-2.5 bg-white/10 hover:bg-white/20 text-xs rounded-xl text-gray-300"
                   title="Copiar kg"
                 >
-                  📋
+                  <Copy size={13} />
                 </button>
               </div>
             </div>
@@ -286,7 +279,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   className="px-2.5 bg-white/10 hover:bg-white/20 text-xs rounded-xl text-gray-300"
                   title="Copiar lbs"
                 >
-                  📋
+                  <Copy size={13} />
                 </button>
               </div>
             </div>
@@ -352,7 +345,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   className="px-2.5 bg-white/10 hover:bg-white/20 text-xs rounded-xl text-gray-300"
                   title="Copiar cm"
                 >
-                  📋
+                  <Copy size={13} />
                 </button>
               </div>
             </div>
@@ -377,7 +370,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   className="px-2.5 bg-white/10 hover:bg-white/20 text-xs rounded-xl text-gray-300"
                   title="Copiar in"
                 >
-                  📋
+                  <Copy size={13} />
                 </button>
               </div>
             </div>
@@ -443,7 +436,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   className="px-2.5 bg-white/10 hover:bg-white/20 text-xs rounded-xl text-gray-300"
                   title="Copiar km"
                 >
-                  📋
+                  <Copy size={13} />
                 </button>
               </div>
             </div>
@@ -468,7 +461,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   className="px-2.5 bg-white/10 hover:bg-white/20 text-xs rounded-xl text-gray-300"
                   title="Copiar millas"
                 >
-                  📋
+                  <Copy size={13} />
                 </button>
               </div>
             </div>

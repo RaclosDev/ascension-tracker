@@ -90,7 +90,7 @@ public class SecurityConfig {
         return entropy;
     }
 
-    // Auth endpoints: NO JWT filter at all — pure cookie-based refresh
+    // Auth endpoints: NO JWT filter at all: pure cookie-based refresh
     @Bean
     @Order(1)
     public SecurityFilterChain authFilterChain(HttpSecurity http) throws Exception {

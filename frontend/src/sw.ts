@@ -36,7 +36,7 @@ registerRoute(
   }),
 );
 
-// Ascension Service Worker — handles push notifications
+// Ascension Service Worker: handles push notifications
 self.addEventListener('push', (event: PushEvent) => {
   let data = { title: '¡Descanso terminado!', body: 'Es hora de la siguiente serie.' };
 
@@ -71,7 +71,7 @@ self.addEventListener('push', (event: PushEvent) => {
   );
 });
 
-// Notification click — open the app
+// Notification click: open the app
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
 
@@ -91,12 +91,12 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   );
 });
 
-// Activate — claim clients immediately
+// Activate: claim clients immediately
 self.addEventListener('activate', (event: ExtendableEvent) => {
   event.waitUntil(self.clients.claim());
 });
 
-// Install — skip waiting
+// Install: skip waiting
 self.addEventListener('install', () => {
   self.skipWaiting();
 });

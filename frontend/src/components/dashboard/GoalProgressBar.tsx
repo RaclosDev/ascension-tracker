@@ -1,5 +1,5 @@
 import React from 'react';
-import { Target, Flag, Sparkles } from 'lucide-react';
+import { Target, Flag, Trophy } from 'lucide-react';
 
 interface GoalProgressBarProps {
   progress?: number | null;
@@ -40,14 +40,6 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
 
   return (
     <div className="card progress-card glass-panel-elevated relative overflow-hidden rounded-2xl p-4 sm:p-5 mb-6 border border-white/[0.08]">
-      {/* Ambient background glow */}
-      <div
-        className="absolute -bottom-10 -right-10 w-48 h-48 rounded-full pointer-events-none opacity-15 blur-2xl"
-        style={{
-          background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)',
-        }}
-      />
-
       {/* Header Info */}
       <div className="progress-info flex items-center justify-between mb-3 relative z-10">
         <div className="flex items-center gap-2.5">
@@ -59,11 +51,11 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
               color: 'var(--accent-primary-light, #38bdf8)',
             }}
           >
-            <Sparkles size={16} />
+            <Trophy size={16} />
           </div>
           <div>
             <span
-              className="progress-label text-xs sm:text-sm font-bold uppercase tracking-wider block"
+              className="progress-label text-xs sm:text-sm font-semibold block"
               style={{ color: 'var(--text-primary)' }}
             >
               {isGainGoal ? 'Meta de ganancia' : 'Progreso hacia tu meta'}
@@ -104,10 +96,8 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
             boxShadow: '0 0 16px var(--accent-glow)',
           }}
         >
-          {/* Luminous Puck Head */}
-          {safeProgress > 2 && (
-            <div className="w-2.5 h-2.5 rounded-full bg-white mr-0.5 shadow-[0_0_8px_#ffffff] animate-pulse" />
-          )}
+          {/* Puck Head */}
+          {safeProgress > 2 && <div className="w-2 h-2 rounded-full bg-white/90 mr-0.5" />}
         </div>
       </div>
 

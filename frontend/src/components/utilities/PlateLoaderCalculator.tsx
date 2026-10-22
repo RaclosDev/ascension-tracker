@@ -1,4 +1,5 @@
 import { useState, useId, useMemo } from 'react';
+import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { calculatePlateLoader, PlateCount } from '../../utils/fitnessCalculators';
 
 interface PlateLoaderCalculatorProps {
@@ -147,7 +148,7 @@ export default function PlateLoaderCalculator({
         className="p-5 rounded-2xl bg-gradient-to-br from-[var(--accent-glow)] via-black/30 to-black/40 border border-[var(--accent-primary)]/20 flex flex-col sm:flex-row items-center justify-between gap-4"
       >
         <div>
-          <span className="text-xs font-bold tracking-wider uppercase text-[var(--accent-primary-light)]">
+          <span className="text-xs font-semibold text-[var(--accent-primary-light)]">
             Carga por cada lado
           </span>
           <div className="text-4xl font-extrabold text-white mt-1">
@@ -161,12 +162,12 @@ export default function PlateLoaderCalculator({
               </strong>
             </span>
             {result.isExact ? (
-              <span className="px-2 py-0.5 rounded-full text-[11px] bg-[var(--accent-glow)] text-[var(--accent-primary-light)] border border-[var(--accent-primary)]/30">
-                ✓ Carga Exacta
+              <span className="px-2 py-0.5 rounded-full text-[11px] bg-[var(--accent-glow)] text-[var(--accent-primary-light)] border border-[var(--accent-primary)]/30 inline-flex items-center gap-1">
+                <CheckCircle2 size={12} /> Carga exacta
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-full text-[11px] bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                ⚠ Diferencia de {Math.abs(result.difference)} {unit}
+              <span className="px-2 py-0.5 rounded-full text-[11px] bg-amber-500/20 text-amber-300 border border-amber-500/30 inline-flex items-center gap-1">
+                <AlertTriangle size={12} /> Diferencia de {Math.abs(result.difference)} {unit}
               </span>
             )}
           </div>
@@ -289,7 +290,7 @@ export default function PlateLoaderCalculator({
 
       {/* DETAILED LIST BREAKDOWN */}
       <div className="space-y-2">
-        <h4 className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+        <h4 className="text-xs font-semibold text-gray-300">
           Desglose para montar por cada extremo:
         </h4>
         {result.platesPerSide.length === 0 ? (

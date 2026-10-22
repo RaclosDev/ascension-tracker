@@ -114,10 +114,7 @@ export function BodyHeatmap({
   }
 
   return (
-    <div
-      className="card flex flex-col justify-between items-center h-full min-h-[190px]"
-      style={{ padding: '0.45rem 0.25rem' }}
-    >
+    <div className="card flex flex-col justify-between items-center h-full min-h-[190px] p-3 sm:p-4">
       <div className="w-full flex items-center justify-between px-1 mb-1">
         <h3
           className="text-xs sm:text-sm font-bold tracking-tight"

@@ -22,7 +22,7 @@ public class WeightService {
     private final SettingsService settingsService;
     private final UserDataQuotaService userDataQuotaService;
 
-    // ==================== CRUD ====================
+    // CRUD operations
 
     public List<WeightEntryDTO> getAllEntries(String userEmail) {
         return weightEntryRepository.findAllByUserEmailOrderByDateAsc(userEmail).stream()
@@ -50,7 +50,7 @@ public class WeightService {
         weightEntryRepository.findByUserEmailAndDate(userEmail, date).ifPresent(weightEntryRepository::delete);
     }
 
-    // ==================== DASHBOARD ====================
+    // Dashboard
 
     public DashboardDTO getDashboard(String userEmail) {
         UserSettingsDTO settings = settingsService.getSettings(userEmail);
@@ -138,7 +138,7 @@ public class WeightService {
                 .build();
     }
 
-    // ==================== WEEKLY SUMMARIES ====================
+    // Weekly summaries
 
     public List<WeekSummaryDTO> getWeeklySummaries(String userEmail) {
         List<WeightEntry> allEntries = weightEntryRepository.findAllByUserEmailOrderByDateAsc(userEmail);
@@ -190,7 +190,7 @@ public class WeightService {
         return summaries;
     }
 
-    // ==================== INTERNAL HELPERS ====================
+    // Internal helpers
 
     private List<WeekData> groupByWeeks(List<WeightEntry> entries) {
         Map<LocalDate, List<WeightEntry>> weekMap = new LinkedHashMap<>();

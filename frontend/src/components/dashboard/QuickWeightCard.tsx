@@ -134,12 +134,6 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
 
   return (
     <div className="card quick-add-card glass-panel-elevated p-4 sm:p-5 rounded-2xl mb-6 relative overflow-hidden border border-white/[0.08]">
-      {/* Background ambient radial glow */}
-      <div
-        className="absolute -top-12 -right-12 w-48 h-48 rounded-full pointer-events-none opacity-20 blur-2xl"
-        style={{ background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)' }}
-      />
-
       {/* Header Row */}
       <div className="quick-add-header flex items-center justify-between mb-3 relative z-10">
         <div className="flex items-center gap-2.5">
@@ -155,7 +149,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
           </div>
           <div>
             <span
-              className="quick-add-title text-xs font-bold uppercase tracking-wider block"
+              className="quick-add-title text-xs font-semibold block"
               style={{ color: 'var(--text-primary)' }}
             >
               Peso Hoy
@@ -184,7 +178,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
             </span>
           ) : (
             <span
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border animate-pulse"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border"
               style={{
                 background: 'rgba(245, 158, 11, 0.15)',
                 borderColor: 'rgba(245, 158, 11, 0.3)',
@@ -211,7 +205,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
               inputMode="decimal"
               pattern="[0-9]*[.,]?[0-9]*"
               aria-label="Peso corporal de hoy en kilogramos"
-              className="quick-add-input text-3xl sm:text-4xl font-black font-mono text-center rounded-xl w-full py-1.5 pr-8 pl-3 outline-none text-white border transition-all"
+              className="quick-add-input text-3xl sm:text-4xl font-black font-mono text-center rounded-xl w-full py-1.5 pr-8 pl-3 outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-1 text-white border transition-all"
               style={{
                 background: 'rgba(0, 0, 0, 0.45)',
                 borderColor: isDirty ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.12)',
