@@ -401,7 +401,7 @@ export function HevyImportModal({ isOpen, onClose, customExercises = [] }: HevyI
               >
                 <Calendar size={16} />
                 <span>
-                  Período: <strong>{formatDay(parsedData.firstDate)}</strong> —{' '}
+                  Período: <strong>{formatDay(parsedData.firstDate)}</strong> al{' '}
                   <strong>{formatDay(parsedData.lastDate)}</strong>
                 </span>
               </div>

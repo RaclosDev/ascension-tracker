@@ -219,7 +219,7 @@ export function useAiNutritionChef() {
         {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          text: `⚠️ Lo sentimos, ocurrió un error: ${errorMsg}. Por favor prueba de nuevo.`,
+          text: `Ocurrió un error: ${errorMsg}. Por favor, inténtalo de nuevo.`,
           mealOptions: [],
         },
       ]);
@@ -246,7 +246,7 @@ export function useAiNutritionChef() {
         foods: option.suggestedFoods,
       });
 
-      toast.success(`${option.title || 'Opción'} añadida a tu diario de hoy! ✨`);
+      toast.success(`${option.title || 'Opción'} añadida a tu diario de hoy.`);
       setAppliedOptionKeys((prev) => new Set([...prev, optionKey]));
       fetchSummary(todayStr);
     } catch (err: unknown) {

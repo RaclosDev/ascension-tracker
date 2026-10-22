@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Bot, Footprints, Activity } from 'lucide-react';
+import { ChefHat, Footprints, Activity } from 'lucide-react';
 import api from '../api/client';
 import CalculatorCard from '../components/calculators/CalculatorCard';
 import NutritionCalculators from '../components/calculators/NutritionCalculators';
@@ -16,7 +16,6 @@ interface SettingsData {
 }
 
 export default function UtilitiesPage() {
-  // --- CALCULATORS STATE ---
   const [weight1, setWeight1] = useState('');
   const [steps, setSteps] = useState('');
 
@@ -82,7 +81,7 @@ export default function UtilitiesPage() {
         </p>
       </header>
 
-      {/* 1. ASISTENTE INTELIGENTE */}
+      {/* 1. CHEF NUTRICIONAL */}
       <section style={{ marginBottom: '1.75rem', marginTop: '1.25rem' }}>
         <div
           style={{
@@ -95,12 +94,12 @@ export default function UtilitiesPage() {
             textTransform: 'uppercase',
           }}
         >
-          Asistente Inteligente
+          Chef Nutricional
         </div>
         <CalculatorCard
           title="Estratega Nutricional IA"
-          subtitle="Platos y recetas según tus macros de hoy"
-          icon={<Bot size={18} />}
+          subtitle="Chef culinario y recetas según tus macros de hoy"
+          icon={<ChefHat size={18} />}
           defaultOpen={false}
         >
           <AiNutritionChef />

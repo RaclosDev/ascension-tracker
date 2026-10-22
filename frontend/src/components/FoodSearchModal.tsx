@@ -103,7 +103,6 @@ export default function FoodSearchModal({
     }
   }, [mealIndex]);
 
-  // --- MANUAL ENTRY STATE ---
   const [manualForm, setManualForm] = useState({
     name: '',
     brand: '',

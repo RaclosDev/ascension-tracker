@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Zap } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -90,16 +90,13 @@ export function MuscleRecovery({
     .sort((a, b) => a.recoveryPct - b.recoveryPct);
 
   const musclesToRecover = allMuscles.filter((m) => m.recoveryPct < 100);
-  const displayedMuscles = musclesToRecover.slice(0, 8);
+  const displayedMuscles = musclesToRecover.slice(0, 5);
 
   return (
     <>
-      <div
-        className="card flex flex-col justify-between h-full min-h-[190px]"
-        style={{ padding: '0.5rem 0.45rem' }}
-      >
+      <div className="card flex flex-col justify-between h-full min-h-[190px] p-3 sm:p-4">
         <div>
-          <div className="flex items-center justify-between px-0.5 mb-2">
+          <div className="flex items-center justify-between mb-2.5">
             <button
               type="button"
               onClick={() => setModalOpen(true)}
@@ -126,8 +123,10 @@ export function MuscleRecovery({
           </div>
 
           {musclesToRecover.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-6 text-center">
-              <span className="text-2xl mb-1">⚡</span>
+            <div className="flex flex-col items-center justify-center py-5 text-center">
+              <div className="w-9 h-9 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mb-1.5 text-emerald-400">
+                <Zap size={18} className="fill-emerald-400/20" />
+              </div>
               <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
                 100% Listo
               </p>
@@ -136,31 +135,24 @@ export function MuscleRecovery({
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 sm:gap-x-2.5 sm:gap-y-2">
+            <div className="flex flex-col gap-2">
               {displayedMuscles.map(({ key, label, recoveryPct }) => {
                 let barColor = 'var(--color-success)';
                 if (recoveryPct < 30) barColor = 'var(--color-fat)';
                 else if (recoveryPct < 60) barColor = 'var(--color-carbs)';
 
                 return (
-                  <div key={key} className="flex flex-col gap-0.5 min-w-0">
-                    <div className="flex items-baseline justify-between text-[10.5px] leading-tight">
-                      <span
-                        className="font-medium truncate"
-                        style={{ color: 'var(--text-primary)' }}
-                        title={label}
-                      >
+                  <div key={key} className="flex flex-col gap-1 min-w-0">
+                    <div className="flex items-baseline justify-between text-xs leading-none">
+                      <span className="font-medium truncate text-zinc-200" title={label}>
                         {label}
                       </span>
-                      <span
-                        className="text-[9.5px] font-bold font-mono tabular-nums ml-1 flex-shrink-0"
-                        style={{ color: 'var(--text-secondary)' }}
-                      >
+                      <span className="text-[10.5px] font-bold font-mono tabular-nums ml-1 flex-shrink-0 text-zinc-400">
                         {recoveryPct}%
                       </span>
                     </div>
                     <div
-                      className="w-full h-1 sm:h-1.5 rounded-full overflow-hidden"
+                      className="w-full h-1.5 rounded-full overflow-hidden"
                       style={{ background: 'var(--bg-secondary)' }}
                     >
                       <div
@@ -175,20 +167,20 @@ export function MuscleRecovery({
           )}
         </div>
 
-        {musclesToRecover.length > 8 ? (
+        {musclesToRecover.length > 5 ? (
           <button
             type="button"
             onClick={() => setModalOpen(true)}
-            className="text-[10px] font-semibold text-center mt-1.5 w-full text-[var(--accent-primary-light)] hover:underline flex items-center justify-center gap-0.5 cursor-pointer"
+            className="text-[11px] font-semibold text-center mt-2.5 w-full text-[var(--accent-primary-light)] hover:underline flex items-center justify-center gap-0.5 cursor-pointer"
           >
-            +{musclesToRecover.length - 8} más · Ver todos
+            +{musclesToRecover.length - 5} más · Ver todos
           </button>
         ) : (
           musclesToRecover.length > 0 && (
             <button
               type="button"
               onClick={() => setModalOpen(true)}
-              className="text-[10px] font-medium text-center mt-1 w-full text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors cursor-pointer"
+              className="text-[11px] font-medium text-center mt-2 w-full text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors cursor-pointer"
             >
               Ver detalle
             </button>

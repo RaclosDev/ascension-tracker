@@ -1,7 +1,7 @@
 {
-  "name": "Ascension — Weight & Nutrition Tracker",
+  "name": "Ascension: Weight & Nutrition Tracker",
   "short_name": "Ascension",
-  "description": "Seguimiento inteligente de peso, nutrición y progreso hacia tu objetivo",
+  "description": "Seguimiento de peso, nutrición y progreso hacia tu objetivo",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",

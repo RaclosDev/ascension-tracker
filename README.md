@@ -16,7 +16,7 @@
   <img alt="PWA" src="https://img.shields.io/badge/PWA-ready-5A0FC8.svg">
 </p>
 
-## 🚀 El Proyecto (Elevator Pitch)
+## El Proyecto (Elevator Pitch)
 
 **Ascension** no es otro clásico tracker de fitness; es una **Progressive Web App (PWA) de nivel producción** diseñada para resolver el problema del seguimiento físico unificando entrenamientos paramétricos, nutrición biométrica y asistencia por Inteligencia Artificial en una sola plataforma en la nube.
 
@@ -44,7 +44,7 @@ Desarrollada íntegramente como proyecto de portafolio, la aplicación demuestra
 
 ---
 
-## ✨ Funcionalidades Avanzadas (Core)
+## Funcionalidades Avanzadas (Core)
 
 Lo que diferencia a Ascension de otras aplicaciones comerciales es su nivel extremo de detalle paramétrico y su UX orientada a atletas avanzados:
 
@@ -130,7 +130,7 @@ Esta aplicación ha sido refactorizada repetidamente bajo estrictos estándares 
 
 ## 🚀 Puesta en Marcha
 
-### Opción A — Docker Compose (Recomendada)
+### Opción A: Docker Compose (Recomendada)
 
 Ideal para despliegues locales rápidos o producción.
 
@@ -143,7 +143,7 @@ docker-compose up --build
 - **Aplicación:** [http://localhost:3000](http://localhost:3000)
 - **API Swagger:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) *(desactivado en perfil prod por seguridad)*
 
-### Opción B — Desarrollo Manual
+### Opción B: Desarrollo Manual
 
 **Backend:**
 ```bash

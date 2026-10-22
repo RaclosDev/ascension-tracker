@@ -405,7 +405,7 @@ export const SwipeableSetRow = React.memo(
             className="flex items-center justify-between gap-1 px-3 py-2 mt-1.5 bg-[#1C1C1E] border border-[var(--accent-primary)]/40 rounded-xl text-xs shadow-lg animate-fadeIn z-10 relative select-none"
           >
             <div className="flex items-center gap-1">
-              <span className="text-[0.68rem] font-bold text-[var(--accent-primary-light)] uppercase tracking-wider pr-1">
+              <span className="text-xs font-semibold text-[var(--accent-primary-light)] pr-1">
                 Kg
               </span>
               {[-5, -2.5, -1.25].map((d) => (
@@ -472,7 +472,7 @@ export const SwipeableSetRow = React.memo(
             className="flex items-center justify-between gap-1 px-3 py-2 mt-1.5 bg-[#1C1C1E] border border-[var(--accent-primary)]/40 rounded-xl text-xs shadow-lg animate-fadeIn z-10 relative select-none"
           >
             <div className="flex items-center gap-1">
-              <span className="text-[0.68rem] font-bold text-[var(--accent-primary-light)] uppercase tracking-wider pr-1">
+              <span className="text-xs font-semibold text-[var(--accent-primary-light)] pr-1">
                 Reps
               </span>
               {[-2, -1].map((d) => (
