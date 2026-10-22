@@ -176,7 +176,7 @@ export function useAiNutritionChef() {
         payload.base64Image = cleanBase64;
       }
 
-      const res = await api.post('/nutrition/ai/assistant-chat', payload);
+      const res = await api.post('/nutrition/ai/assistant-chat', payload, { timeout: 45000 });
       const data = res.data;
 
       const options =

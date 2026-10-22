@@ -61,6 +61,7 @@ export function useScannerAndOCR(
 
       const { data } = await api.post('/nutrition/ai/ocr', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 45000,
       });
 
       toast.dismiss(loadingToast);
