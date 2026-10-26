@@ -5,7 +5,8 @@ import toast from 'react-hot-toast';
 import api from '../api/client';
 import { useSpeechToText } from '../hooks/useSpeechToText';
 
-import { normalizeString } from '../lib/workout/format';
+import { normalizeText as normalizeString } from '../utils/searchHelper';
+import { AiFoodAssistantView } from './food/AiFoodAssistantView';
 import { getSanitizedKcal, extractPortions } from '../utils/portionHelper';
 import { getSmartFallbackQueries } from '../utils/searchHelper';
 const BarcodeScanner = lazyWithRetry(() => import('./BarcodeScanner'));
@@ -13,7 +14,7 @@ import ManualFoodForm from './food/ManualFoodForm';
 import { FoodPortionEditor, SearchProduct } from './food/FoodPortionEditor';
 import { FoodSearchResultsList, SavedFoodExtended } from './food/FoodSearchResultsList';
 
-import { Mic, ImageIcon, X, ScanLine, ArrowLeft, Loader2 } from 'lucide-react';
+import { Mic, ImageIcon, X, ScanLine, ArrowLeft } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { FoodListsData, FoodLog, Meal, Recipe } from '../types/api';
 
@@ -77,6 +78,7 @@ export default function FoodSearchModal({
   );
   const [ocrLoading, setOcrLoading] = useState(false);
   const [aiSubmitting, setAiSubmitting] = useState(false);
+  const [aiElapsedSeconds, setAiElapsedSeconds] = useState(0);
 
   useEffect(() => {
     if (selectedProduct && selectedProduct.portions && selectedProduct.portions.length > 0) {
@@ -248,6 +250,7 @@ export default function FoodSearchModal({
     try {
       const res = await api.post('/nutrition/ai/ocr', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 45000,
       });
       const data = res.data;
 
@@ -461,13 +464,29 @@ export default function FoodSearchModal({
     }
   };
 
+  const getAiStatusText = (seconds: number) => {
+    if (seconds < 3) return 'Interpretando alimentos y raciones...';
+    if (seconds < 8) return 'Calculando macronutrientes con IA...';
+    if (seconds < 15) return 'Estructurando desglose nutricional...';
+    return 'Finalizando registro de comidas...';
+  };
+
   const submitAiPrompt = async () => {
     if (!query.trim() && !selectedImage)
       return toast.error('Escribe algo o adjunta una foto primero');
     stopListening();
     const queryText = query.trim();
     setAiSubmitting(true);
+    setAiElapsedSeconds(0);
+    const startTime = Date.now();
     const loadingToast = toast.loading('Procesando con IA...');
+    const timer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setAiElapsedSeconds(elapsed);
+      if (elapsed >= 3) {
+        toast.loading(`Procesando con IA (${elapsed}s)...`, { id: loadingToast });
+      }
+    }, 1000);
 
     const payload: Record<string, unknown> = {
       text: queryText,
@@ -481,7 +500,7 @@ export default function FoodSearchModal({
     }
 
     try {
-      const res = await api.post('/nutrition/ai/log', payload);
+      const res = await api.post('/nutrition/ai/log', payload, { timeout: 45000 });
       const count = Array.isArray(res.data) ? res.data.length : 1;
       toast.dismiss(loadingToast);
       if (selectedMealIndex === -1) {
@@ -495,16 +514,24 @@ export default function FoodSearchModal({
       if (onClose) onClose();
     } catch (e: unknown) {
       toast.dismiss(loadingToast);
-      const axiosError = e as { response?: { data?: { error?: string; message?: string } } };
+      const axiosError = e as {
+        code?: string;
+        message?: string;
+        response?: { data?: { error?: string; message?: string } };
+      };
       const msg =
         axiosError.response?.data?.error ||
         axiosError.response?.data?.message ||
-        'Error procesando texto con IA';
+        (axiosError.code === 'ECONNABORTED' || axiosError.message?.toLowerCase().includes('timeout')
+          ? 'La IA tardó más de lo esperado en responder. Intenta de nuevo o divide los alimentos.'
+          : 'Error procesando texto con IA');
       toast.error(msg);
       console.error('Error procesando texto con IA:', e instanceof Error ? e.message : String(e));
       // El texto y la imagen se conservan para que el usuario no pierda su entrada
     } finally {
+      clearInterval(timer);
       setAiSubmitting(false);
+      setAiElapsedSeconds(0);
     }
   };
 
@@ -599,194 +626,22 @@ export default function FoodSearchModal({
               </div>
             </div>
           ) : activeOverlay === 'ai' ? (
-            /* VIEW: AI ASSISTANT */
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div className="form-group" style={{ position: 'relative' }}>
-                <textarea
-                  className="form-input"
-                  rows={4}
-                  placeholder="Ej: 'Me he comido una hamburguesa con queso y patatas fritas' o '150g de pechuga de pollo y 200g de arroz'"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  style={{ resize: 'none', paddingBottom: '3rem' }}
-                  autoFocus
-                />
-
-                {/* IMAGE PREVIEW */}
-                {selectedImage && (
-                  <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', zIndex: 3 }}>
-                    <div style={{ position: 'relative', display: 'inline-block' }}>
-                      <img
-                        src={selectedImage as string}
-                        alt="Preview"
-                        style={{
-                          height: '40px',
-                          borderRadius: '6px',
-                          border: '1px solid var(--border-medium)',
-                          objectFit: 'cover',
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setSelectedImage(null)}
-                        style={{
-                          position: 'absolute',
-                          top: '-5px',
-                          right: '-5px',
-                          background: 'var(--bg-card)',
-                          color: 'var(--text-primary)',
-                          border: '1px solid var(--border-medium)',
-                          borderRadius: '50%',
-                          width: '16px',
-                          height: '16px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '8px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: '0.6rem',
-                    right: '0.6rem',
-                    display: 'flex',
-                    gap: '0.4rem',
-                    zIndex: 2,
-                  }}
-                >
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    style={{ display: 'none' }}
-                    onChange={handleImageChange}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                    style={{
-                      background: 'var(--bg-secondary)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '50%',
-                      width: '34px',
-                      height: '34px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      color: 'var(--text-primary)',
-                      transition: 'all 0.2s ease',
-                    }}
-                    title="Adjuntar foto"
-                  >
-                    <ImageIcon size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    className={isListening ? 'recording-pulse-btn' : ''}
-                    onClick={() => toggleListening(query)}
-                    style={{
-                      background: isListening ? 'rgba(239, 68, 68, 0.2)' : 'var(--bg-secondary)',
-                      border: isListening ? '1px solid #ef4444' : '1px solid var(--border-color)',
-                      borderRadius: '50%',
-                      width: '34px',
-                      height: '34px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      color: isListening ? '#ef4444' : 'var(--text-primary)',
-                      transition: 'all 0.2s ease',
-                    }}
-                  >
-                    <Mic size={16} color={isListening ? '#ef4444' : undefined} />
-                  </button>
-                </div>
-              </div>
-
-              {isListening && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    fontSize: '0.82rem',
-                    color: '#ef4444',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    border: '1px solid rgba(239, 68, 68, 0.25)',
-                    padding: '0.45rem 0.8rem',
-                    borderRadius: '8px',
-                    marginTop: '-0.35rem',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span className="recording-dot" />
-                    <span>
-                      <strong>Escuchando...</strong> Habla con calma a tu ritmo.
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={stopListening}
-                    style={{
-                      background: '#ef4444',
-                      border: 'none',
-                      color: '#fff',
-                      borderRadius: '6px',
-                      padding: '0.2rem 0.5rem',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Listo
-                  </button>
-                </div>
-              )}
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: '0.75rem',
-                  marginTop: '0.5rem',
-                }}
-              >
-                <button className="btn btn-secondary" onClick={() => setActiveOverlay('none')}>
-                  Cancelar
-                </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={submitAiPrompt}
-                  disabled={aiSubmitting || (!query.trim() && !selectedImage)}
-                  style={{
-                    background:
-                      'var(--gradient-protein-carbs, linear-gradient(90deg, #8b5cf6, #3b82f6))',
-                    border: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                  }}
-                >
-                  {aiSubmitting ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      <span>Analizando...</span>
-                    </>
-                  ) : (
-                    'Analizar y Añadir'
-                  )}
-                </button>
-              </div>
-            </div>
+            <AiFoodAssistantView
+              query={query}
+              setQuery={setQuery}
+              selectedImage={selectedImage}
+              setSelectedImage={setSelectedImage}
+              fileInputRef={fileInputRef}
+              handleImageChange={handleImageChange}
+              isListening={isListening}
+              toggleListening={toggleListening}
+              stopListening={stopListening}
+              aiSubmitting={aiSubmitting}
+              aiElapsedSeconds={aiElapsedSeconds}
+              getAiStatusText={getAiStatusText}
+              onCancel={() => setActiveOverlay('none')}
+              onSubmit={submitAiPrompt}
+            />
           ) : (
             /* VIEW: UNIFIED SEARCH & SHORTCUTS */
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
