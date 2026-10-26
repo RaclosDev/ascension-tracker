@@ -55,11 +55,14 @@ public class AuthController {
     @Value("${google.client-id:CHANGE_ME}")
     private String googleClientId;
 
-    @Value("${app.jwt.expiration-ms:900000}")
+    @Value("${app.jwt.expiration-ms:86400000}")
     private long jwtExpirationMs;
 
     @Value("${app.cookie.same-site:Lax}")
     private String cookieSameSite;
+
+    @Value("${app.cookie.secure:#{null}}")
+    private Boolean cookieSecure;
 
     @Value("${app.cors.allowed-origins:http://localhost:5173,https://ascension.raclos.es}")
     private String corsAllowedOrigins;
@@ -169,7 +172,7 @@ public class AuthController {
 
         String customToken = generateJwt(email, name, picture);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(email);
-        ResponseCookie springCookie = buildRefreshCookie(refreshToken.getPlainToken());
+        ResponseCookie springCookie = buildRefreshCookie(refreshToken.getPlainToken(), request);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, springCookie.toString())
@@ -247,40 +250,67 @@ public class AuthController {
             log.info("Refresh token rotated successfully for user {}", PiiMasker.maskEmail(email));
 
             return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(newRefreshToken.getPlainToken()).toString())
+                    .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(newRefreshToken.getPlainToken(), request).toString())
                     .body(Map.of("token", token));
 
         } catch (TokenRefreshException e) {
             return ResponseEntity.status(401)
-                    .header(HttpHeaders.SET_COOKIE, buildDeleteCookie().toString())
+                    .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString())
                     .body(Map.of("error", e.getMessage()));
         }
     }
 
-    private ResponseCookie buildRefreshCookie(String value) {
+    private boolean determineCookieSecure(HttpServletRequest request) {
+        String sameSite = getEffectiveSameSite();
+        if ("None".equalsIgnoreCase(sameSite)) {
+            return true;
+        }
+        if (cookieSecure != null) {
+            return cookieSecure;
+        }
+        if (request == null) {
+            return true;
+        }
+        String forwardedProto = request.getHeader("X-Forwarded-Proto");
+        if (forwardedProto != null) {
+            return "https".equalsIgnoreCase(forwardedProto.trim());
+        }
+        return request.isSecure();
+    }
+
+    private ResponseCookie buildRefreshCookie(String value, HttpServletRequest request) {
         return ResponseCookie.from("refreshToken", value)
                 .httpOnly(true)
-                .secure(true)
+                .secure(determineCookieSecure(request))
                 .path("/")
                 .maxAge(30L * 24 * 60 * 60)
                 .sameSite(getEffectiveSameSite())
                 .build();
     }
 
-    private ResponseCookie buildDeleteCookie() {
+    private ResponseCookie buildDeleteCookie(HttpServletRequest request) {
         return ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(determineCookieSecure(request))
                 .path("/")
                 .maxAge(0)
                 .sameSite(getEffectiveSameSite())
                 .build();
     }
 
+    public ResponseEntity<?> logout(
+            String requestCookieRefreshToken,
+            String authHeader,
+            Jwt principalJwt,
+            HttpServletRequest request) {
+        return logout(requestCookieRefreshToken, authHeader, false, principalJwt, request);
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout(
             @CookieValue(name = "refreshToken", required = false) String requestCookieRefreshToken,
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @RequestParam(name = "allDevices", defaultValue = "false") boolean allDevices,
             @AuthenticationPrincipal Jwt principalJwt,
             HttpServletRequest request) {
 
@@ -290,41 +320,46 @@ public class AuthController {
                     .body(Map.of("error", "Forbidden origin"));
         }
 
-        if (principalJwt != null) {
-            String email = com.ascension.util.SecurityUtils.extractEmail(principalJwt);
-            if (email != null && !email.isBlank()) {
-                userService.updateTokensValidAfter(email, Instant.now());
+        if (allDevices) {
+            String targetEmail = null;
+            if (principalJwt != null) {
+                targetEmail = com.ascension.util.SecurityUtils.extractEmail(principalJwt);
+            } else if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                try {
+                    Jwt decoded = jwtDecoder.decode(authHeader.substring(7).trim());
+                    targetEmail = com.ascension.util.SecurityUtils.extractEmail(decoded);
+                } catch (Exception e) {
+                    log.debug("Bearer token could not be decoded during logout: {}", e.getMessage());
+                }
+            } else if (requestCookieRefreshToken != null && !requestCookieRefreshToken.isBlank()) {
+                var found = refreshTokenService.findByToken(RefreshToken.hashToken(requestCookieRefreshToken));
+                if (found.isPresent()) {
+                    targetEmail = found.get().getEmail();
+                }
             }
-        }
-        if (requestCookieRefreshToken != null && !requestCookieRefreshToken.isBlank()) {
-            refreshTokenService.findByToken(RefreshToken.hashToken(requestCookieRefreshToken)).ifPresent(token -> {
-                userService.updateTokensValidAfter(token.getEmail(), Instant.now());
-                refreshTokenService.delete(token);
-                if (token.getFamilyId() != null && !token.getFamilyId().isBlank()) {
-                    refreshTokenService.deleteByFamilyId(token.getFamilyId());
-                }
-            });
-        }
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String tokenValue = authHeader.substring(7).trim();
-            try {
-                Jwt decoded = jwtDecoder.decode(tokenValue);
-                String email = com.ascension.util.SecurityUtils.extractEmail(decoded);
-                if (email != null && !email.isBlank()) {
-                    userService.updateTokensValidAfter(email, Instant.now());
-                }
-            } catch (Exception e) {
-                log.debug("Bearer token could not be decoded during logout: {}", e.getMessage());
+
+            if (targetEmail != null && !targetEmail.isBlank()) {
+                userService.updateTokensValidAfter(targetEmail, Instant.now());
+                refreshTokenService.deleteByEmail(targetEmail);
+            }
+        } else {
+            if (requestCookieRefreshToken != null && !requestCookieRefreshToken.isBlank()) {
+                refreshTokenService.findByToken(RefreshToken.hashToken(requestCookieRefreshToken)).ifPresent(token -> {
+                    refreshTokenService.delete(token);
+                    if (token.getFamilyId() != null && !token.getFamilyId().isBlank()) {
+                        refreshTokenService.deleteByFamilyId(token.getFamilyId());
+                    }
+                });
             }
         }
         
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie().toString())
+                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString())
                 .body(Map.of("message", "Log out successful"));
     }
 
     @DeleteMapping({"/account", "/users/account"})
-    public ResponseEntity<Map<String, String>> deleteAccount(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<Map<String, String>> deleteAccount(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request) {
         String email = com.ascension.util.SecurityUtils.extractEmail(jwt);
         if (email == null || email.isBlank()) {
             return ResponseEntity.status(401).build();
@@ -333,8 +368,12 @@ public class AuthController {
         accountDeletionService.wipeAccountData(email);
         userService.evictUser(email);
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie().toString())
+                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString())
                 .body(Collections.singletonMap("message", "Account deleted successfully"));
+    }
+
+    public ResponseEntity<Map<String, String>> deleteAccount(Jwt jwt) {
+        return deleteAccount(jwt, (HttpServletRequest) null);
     }
 
     @GetMapping("/config")

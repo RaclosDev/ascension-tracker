@@ -322,7 +322,6 @@ export function parseHevyCsv(
   const newCustomExercises: Exercise[] = [];
   const exerciseIdByName = new Map<string, string>();
 
-  // Helper to find or assign an exercise ID
   const getExerciseId = (rawTitle: string): string => {
     const title = rawTitle.trim();
     const normalized = title.toLowerCase();

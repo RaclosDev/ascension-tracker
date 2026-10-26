@@ -70,20 +70,87 @@ export function useSwipe(threshold = -40, maxSwipe = -72) {
     [threshold, maxSwipe],
   );
 
+  // Mouse handlers for PC desktop
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('input, button, select, textarea, a')) return;
+
+    touchStart.current = {
+      x: e.clientX,
+      y: e.clientY,
+    };
+    isDragging.current = false;
+  }, []);
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!touchStart.current) return;
+      const dx = e.clientX - touchStart.current.x;
+      const dy = e.clientY - touchStart.current.y;
+
+      if (!isDragging.current) {
+        if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) {
+          isDragging.current = true;
+        } else if (Math.abs(dy) > 12) {
+          touchStart.current = null;
+          return;
+        } else {
+          return;
+        }
+      }
+
+      if (isDragging.current) {
+        const clamped = Math.max(maxSwipe - 10, Math.min(0, dx));
+        setOffsetX(clamped);
+      }
+    },
+    [maxSwipe],
+  );
+
+  const handleMouseUp = useCallback(
+    (e: React.MouseEvent) => {
+      if (!touchStart.current) return;
+      if (isDragging.current) {
+        const dx = e.clientX - touchStart.current.x;
+        if (dx < threshold) {
+          setOffsetX(maxSwipe);
+          setSwiped(true);
+        } else {
+          setOffsetX(0);
+          setSwiped(false);
+        }
+      }
+      touchStart.current = null;
+      isDragging.current = false;
+    },
+    [threshold, maxSwipe],
+  );
+
   const closeSwipe = useCallback(() => {
     setOffsetX(0);
     setSwiped(false);
   }, []);
+
+  const openSwipe = useCallback(() => {
+    setOffsetX(maxSwipe);
+    setSwiped(true);
+  }, [maxSwipe]);
 
   return {
     offsetX,
     swiped,
     isDragging,
     closeSwipe,
+    openSwipe,
     touchHandlers: {
       onTouchStart: handleTouchStart,
       onTouchMove: handleTouchMove,
       onTouchEnd: handleTouchEnd,
+      onMouseDown: handleMouseDown,
+      onMouseMove: handleMouseMove,
+      onMouseUp: handleMouseUp,
+      onMouseLeave: handleMouseUp,
     },
   };
 }

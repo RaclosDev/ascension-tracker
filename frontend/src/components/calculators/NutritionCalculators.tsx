@@ -33,11 +33,11 @@ export default function NutritionCalculators() {
     activityFactor?: number;
   }
 
-  const { data: dashboardData, isError: dashboardError } = useQuery<DashboardData>({
+  const { data: dashboardData } = useQuery<DashboardData>({
     queryKey: ['dashboard'],
     queryFn: () => api.get('/weights/dashboard').then((res) => res.data),
   });
-  const { data: settingsData, isError: settingsError } = useQuery<SettingsData>({
+  const { data: settingsData } = useQuery<SettingsData>({
     queryKey: ['settings'],
     queryFn: () => api.get('/settings').then((res) => res.data),
   });
@@ -54,9 +54,6 @@ export default function NutritionCalculators() {
       if (s.activityFactor) setActivityFactor(String(s.activityFactor));
     }
   }, [dashboardData, settingsData]);
-
-  if (dashboardError || settingsError)
-    return <div className="text-red-500">Error cargando datos...</div>;
 
   // Base calculations
   const pAge = parseNumber(age);

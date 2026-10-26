@@ -7,18 +7,76 @@ const api = axios.create({
   baseURL: baseUrl ? `${baseUrl}/api` : '/api',
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
+  timeout: 10000,
 });
 
 export let memoryToken: string | null = null;
 
 export const setMemoryToken = (token: string | null) => {
   memoryToken = token;
+  if (typeof window !== 'undefined') {
+    if (token && token !== 'offline-session') {
+      try {
+        sessionStorage?.setItem('ascension_session_token', token);
+      } catch {
+        // ignore storage errors
+      }
+      try {
+        localStorage?.setItem('ascension_session_token', token);
+      } catch {
+        // ignore storage errors
+      }
+    } else if (!token) {
+      try {
+        sessionStorage?.removeItem('ascension_session_token');
+      } catch {
+        // ignore
+      }
+      try {
+        localStorage?.removeItem('ascension_session_token');
+      } catch {
+        // ignore
+      }
+    }
+  }
+};
+
+export const getSessionToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    let saved: string | null = null;
+    try {
+      saved = sessionStorage?.getItem('ascension_session_token') || null;
+    } catch {
+      // ignore
+    }
+    if (!saved) {
+      try {
+        saved = localStorage?.getItem('ascension_session_token') || null;
+      } catch {
+        // ignore
+      }
+    }
+    if (saved && isTokenValid(saved)) {
+      try {
+        if (!sessionStorage?.getItem('ascension_session_token')) {
+          sessionStorage?.setItem('ascension_session_token', saved);
+        }
+      } catch {
+        // ignore
+      }
+      return saved;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 };
 
 export const isTokenValid = (token: string | null): boolean => {
   if (!token) return false;
   if (token === 'offline-session') {
-    return typeof navigator !== 'undefined' && !navigator.onLine;
+    return true;
   }
   try {
     const payload = jwtDecode<{ exp?: number }>(token);
@@ -30,7 +88,7 @@ export const isTokenValid = (token: string | null): boolean => {
   }
 };
 
-const authBroadcast =
+export const authBroadcast =
   typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('ascension_auth') : null;
 
 if (authBroadcast) {
@@ -39,6 +97,18 @@ if (authBroadcast) {
       setMemoryToken(event.data.token);
       api.defaults.headers.common['Authorization'] = 'Bearer ' + event.data.token;
       window.dispatchEvent(new CustomEvent('token_refresh', { detail: event.data.token }));
+    } else if (event.data?.type === 'REQUEST_SESSION') {
+      if (memoryToken && isTokenValid(memoryToken)) {
+        try {
+          authBroadcast.postMessage({ type: 'TOKEN_REFRESHED', token: memoryToken });
+        } catch {
+          // ignore
+        }
+      }
+    } else if (event.data?.type === 'AUTH_LOGOUT') {
+      setMemoryToken(null);
+      delete api.defaults.headers.common['Authorization'];
+      window.dispatchEvent(new CustomEvent('auth_failed'));
     }
   };
 }
@@ -77,57 +147,78 @@ const processQueue = (error: Error | null, token: string | null = null) => {
   failedQueue = [];
 };
 
+let activeRefreshPromise: Promise<string | null> | null = null;
+
 export const refreshAccessToken = async (): Promise<string | null> => {
   if (isTokenValid(memoryToken)) {
     return memoryToken;
   }
-
-  const performRefresh = async (): Promise<string | null> => {
-    if (isTokenValid(memoryToken)) {
-      return memoryToken;
-    }
-
-    try {
-      const res = await api.post<{ token: string }>('/auth/refresh', {}, { withCredentials: true });
-      const newToken = res.data.token;
-      setMemoryToken(newToken);
-      api.defaults.headers.common['Authorization'] = 'Bearer ' + newToken;
-
-      if (authBroadcast) {
-        try {
-          authBroadcast.postMessage({ type: 'TOKEN_REFRESHED', token: newToken });
-        } catch {
-          // Ignore broadcast errors
-        }
-      }
-
-      window.dispatchEvent(new CustomEvent('token_refresh', { detail: newToken }));
-      return newToken;
-    } catch (err) {
-      const axiosErr = err as import('axios').AxiosError;
-      if (
-        axiosErr.response &&
-        (axiosErr.response.status === 400 ||
-          axiosErr.response.status === 401 ||
-          axiosErr.response.status === 403)
-      ) {
-        setMemoryToken(null);
-        delete api.defaults.headers.common['Authorization'];
-        window.dispatchEvent(new CustomEvent('auth_failed'));
-        return null;
-      }
-      throw err;
-    }
-  };
-
-  if (
-    typeof navigator !== 'undefined' &&
-    navigator.locks &&
-    typeof navigator.locks.request === 'function'
-  ) {
-    return await navigator.locks.request('ascension_token_refresh', performRefresh);
+  const sessionToken = getSessionToken();
+  if (isTokenValid(sessionToken)) {
+    setMemoryToken(sessionToken);
+    api.defaults.headers.common['Authorization'] = 'Bearer ' + sessionToken;
+    return sessionToken;
   }
-  return await performRefresh();
+
+  if (activeRefreshPromise) {
+    return activeRefreshPromise;
+  }
+
+  activeRefreshPromise = (async () => {
+    try {
+      const performRefresh = async (): Promise<string | null> => {
+        if (isTokenValid(memoryToken)) {
+          return memoryToken;
+        }
+
+        try {
+          const res = await api.post<{ token: string }>(
+            '/auth/refresh',
+            {},
+            { withCredentials: true },
+          );
+          const newToken = res.data.token;
+          setMemoryToken(newToken);
+          api.defaults.headers.common['Authorization'] = 'Bearer ' + newToken;
+
+          if (authBroadcast) {
+            try {
+              authBroadcast.postMessage({ type: 'TOKEN_REFRESHED', token: newToken });
+            } catch {
+              // Ignore broadcast errors
+            }
+          }
+
+          window.dispatchEvent(new CustomEvent('token_refresh', { detail: newToken }));
+          return newToken;
+        } catch (err) {
+          const axiosErr = err as import('axios').AxiosError;
+          // Only a 401 from /auth/refresh means the refresh session is invalid.
+          // 403 can be an Origin/CORS policy failure and must not erase the user's session.
+          if (axiosErr.response?.status === 401) {
+            setMemoryToken(null);
+            delete api.defaults.headers.common['Authorization'];
+            window.dispatchEvent(new CustomEvent('auth_failed'));
+            return null;
+          }
+          throw err;
+        }
+      };
+
+      if (
+        typeof navigator !== 'undefined' &&
+        navigator.locks &&
+        typeof navigator.locks.request === 'function'
+      ) {
+        return await navigator.locks.request('ascension_token_refresh', performRefresh);
+      }
+      return await performRefresh();
+    } finally {
+      activeRefreshPromise = null;
+    }
+  })();
+
+  return activeRefreshPromise;
 };
 
 api.interceptors.response.use(
@@ -185,10 +276,7 @@ api.interceptors.response.use(
           res = await api.post('/auth/refresh', {}, { withCredentials: true });
         } catch (firstErr) {
           const axiosErr = firstErr as import('axios').AxiosError;
-          if (
-            axiosErr.response &&
-            (axiosErr.response.status === 401 || axiosErr.response.status === 403)
-          ) {
+          if (axiosErr.response?.status === 401) {
             throw firstErr;
           }
           // Retry once after 1.5s for network hiccups or transient errors
@@ -233,12 +321,8 @@ api.interceptors.response.use(
       } catch (error) {
         const err = error as import('axios').AxiosError;
         processQueue(err, null);
-        if (
-          err.response &&
-          (err.response.status === 400 ||
-            err.response.status === 401 ||
-            err.response.status === 403)
-        ) {
+        // Do not convert policy/server errors (400/403) into a client-side logout.
+        if (err.response?.status === 401) {
           setMemoryToken(null);
           delete api.defaults.headers.common['Authorization'];
           window.dispatchEvent(new CustomEvent('auth_failed'));

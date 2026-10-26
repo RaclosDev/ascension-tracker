@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 public class ExternalApiProperties {
 
     private ClientConfig fatsecret = new ClientConfig(3, 100L, 5000, 15000);
-    private ClientConfig gemini = new ClientConfig(3, 150L, 5000, 15000);
+    private ClientConfig gemini = new ClientConfig(3, 150L, 5000, 25000);
     private ClientConfig google = new ClientConfig(1, 0L, 5000, 5000);
     private ClientConfig openfoodfacts = new ClientConfig(3, 100L, 5000, 15000);
 

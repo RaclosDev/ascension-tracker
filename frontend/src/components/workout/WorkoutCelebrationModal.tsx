@@ -10,6 +10,7 @@ import {
   Layers,
   Loader2,
   FileText,
+  Calendar,
 } from 'lucide-react';
 import { haptics } from '@/lib/haptics';
 import {
@@ -34,11 +35,33 @@ interface Props {
   onClose: () => void;
   // Mode 1: Finishing an active session (interactive review & save)
   activeWorkout?: ActiveWorkout | null;
-  onSave?: (name: string, durationMin: number, notes?: string) => Promise<void> | void;
+  onSave?: (
+    name: string,
+    durationMin: number,
+    notes?: string,
+    startedAtMs?: number,
+  ) => Promise<void> | void;
   isSaving?: boolean;
   saveError?: string | null;
   // Mode 2: Viewing a previously completed record
   workout?: CompletedWorkout | null;
+}
+
+function toLocalDatetimeString(timestamp: number): string {
+  const d = new Date(timestamp);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const mm = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const min = pad(d.getMinutes());
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+}
+
+function fromLocalDatetimeString(str: string): number {
+  if (!str) return Date.now();
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? Date.now() : d.getTime();
 }
 
 function formatWorkoutDuration(totalMinutes: number): string {
@@ -87,12 +110,18 @@ export function WorkoutCelebrationModal({
   const [customName, setCustomName] = useState('');
   const [customDuration, setCustomDuration] = useState(initialDurationMin);
   const [customNotes, setCustomNotes] = useState('');
+  const [customDateTime, setCustomDateTime] = useState('');
 
   useEffect(() => {
     if (open && currentWorkout) {
       setCustomName(currentWorkout.name?.trim() || 'Entrenamiento');
       setCustomDuration(initialDurationMin);
       setCustomNotes(currentWorkout.notes || '');
+      const initialStartedAt =
+        'startedAt' in currentWorkout && currentWorkout.startedAt
+          ? currentWorkout.startedAt
+          : Date.now();
+      setCustomDateTime(toLocalDatetimeString(initialStartedAt));
       haptics.celebration();
     }
   }, [open, currentWorkout, initialDurationMin]);
@@ -168,7 +197,7 @@ export function WorkoutCelebrationModal({
     haptics.light();
     const workoutTitle = customName.trim() || currentWorkout.name || 'Entrenamiento';
     const exercisesNames = completedExercisesList.map((e) => e.name).join(', ');
-    const shareText = `🏋️‍♂️ ¡He completado "${workoutTitle}" en Ascension Tracker!\n📊 ${formatKg(totalVolumeKg)} levantados • ${totalCompletedSets} series • ${customDuration} min\n💪 ${exercisesNames}`;
+    const shareText = `¡He completado "${workoutTitle}" en Ascension Tracker!\n${formatKg(totalVolumeKg)} levantados • ${totalCompletedSets} series • ${customDuration} min\n${exercisesNames}`;
 
     if (typeof navigator !== 'undefined' && 'share' in navigator) {
       try {
@@ -188,7 +217,8 @@ export function WorkoutCelebrationModal({
 
   const handleSave = () => {
     if (onSave) {
-      onSave(customName, customDuration, customNotes);
+      const selectedStartedAt = fromLocalDatetimeString(customDateTime);
+      onSave(customName, customDuration, customNotes, selectedStartedAt);
     } else {
       onClose();
     }
@@ -208,14 +238,14 @@ export function WorkoutCelebrationModal({
         <div
           className="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-48 rounded-full pointer-events-none opacity-40"
           style={{
-            background: 'radial-gradient(circle, rgba(0, 133, 255, 0.22) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)',
           }}
         />
 
         {/* Modal Top Navigation Bar */}
         <div className="relative flex items-center justify-between px-5 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-3.5 border-b border-white/[0.08] flex-shrink-0 z-10">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-[var(--accent-glow)] border border-[var(--accent-primary)]/20 flex items-center justify-center text-[var(--accent-primary-light)] shadow-sm">
               <Trophy size={16} />
             </div>
             <div>
@@ -245,7 +275,7 @@ export function WorkoutCelebrationModal({
           <div>
             <label
               htmlFor="finish-workout-name"
-              className="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-400"
+              className="block mb-1.5 text-xs font-semibold text-zinc-300"
             >
               Nombre del entrenamiento
             </label>
@@ -256,8 +286,29 @@ export function WorkoutCelebrationModal({
               onChange={(e) => setCustomName(e.target.value)}
               disabled={isSaving}
               placeholder="Nombre del entrenamiento"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 text-white text-sm font-semibold focus:border-blue-500 focus:outline-none transition-colors"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 text-white text-sm font-semibold focus:border-[var(--accent-primary)] focus:outline-none transition-colors"
             />
+          </div>
+
+          {/* Workout Date & Time Field */}
+          <div>
+            <label
+              htmlFor="finish-workout-date"
+              className="block mb-1.5 text-xs font-semibold text-zinc-300"
+            >
+              Fecha y hora del entrenamiento
+            </label>
+            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 focus-within:border-[var(--accent-primary)] focus-within:ring-1 focus-within:ring-[var(--accent-primary)] transition-all">
+              <Calendar size={15} className="text-[var(--accent-primary-light)] shrink-0" />
+              <input
+                id="finish-workout-date"
+                type="datetime-local"
+                value={customDateTime}
+                onChange={(e) => setCustomDateTime(e.target.value)}
+                disabled={isSaving}
+                className="w-full bg-transparent text-white font-medium focus:outline-none text-sm cursor-pointer"
+              />
+            </div>
           </div>
 
           {/* Duration & Exercise Count Row */}
@@ -265,12 +316,12 @@ export function WorkoutCelebrationModal({
             <div>
               <label
                 htmlFor="finish-workout-duration"
-                className="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-400"
+                className="block mb-1.5 text-xs font-semibold text-zinc-300"
               >
                 Duración (min)
               </label>
-              <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10">
-                <Clock size={15} className="text-blue-400 shrink-0" />
+              <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 focus-within:border-[var(--accent-primary)] focus-within:ring-1 focus-within:ring-[var(--accent-primary)] transition-all">
+                <Clock size={15} className="text-[var(--accent-primary-light)] shrink-0" />
                 <input
                   id="finish-workout-duration"
                   type="number"
@@ -287,9 +338,7 @@ export function WorkoutCelebrationModal({
             </div>
 
             <div>
-              <span className="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-400">
-                Ejercicios
-              </span>
+              <span className="block mb-1.5 text-xs font-semibold text-zinc-300">Ejercicios</span>
               <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 text-white text-sm font-semibold">
                 <Layers size={15} className="text-zinc-400 shrink-0" />
                 <span className="font-mono">{completedExercisesList.length}</span>
@@ -303,27 +352,21 @@ export function WorkoutCelebrationModal({
           {/* Core Metric Cards (Volumen, Tiempo, Series) */}
           <div className="grid grid-cols-3 gap-2.5">
             <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/5 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
-                Volumen
-              </span>
+              <span className="text-[11px] font-semibold text-zinc-400 mb-1">Volumen</span>
               <span className="text-sm sm:text-base font-extrabold text-white font-mono tabular-nums">
                 {formatKg(totalVolumeKg)}
               </span>
             </div>
 
             <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/5 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
-                Tiempo
-              </span>
+              <span className="text-[11px] font-semibold text-zinc-400 mb-1">Tiempo</span>
               <span className="text-sm sm:text-base font-extrabold text-white font-mono tabular-nums">
                 {formatWorkoutDuration(customDuration)}
               </span>
             </div>
 
             <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/5 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
-                Series
-              </span>
+              <span className="text-[11px] font-semibold text-zinc-400 mb-1">Series</span>
               <span className="text-sm sm:text-base font-extrabold text-white font-mono tabular-nums">
                 {totalCompletedSets} {totalCompletedSets === 1 ? 'serie' : 'series'}
               </span>
@@ -332,16 +375,16 @@ export function WorkoutCelebrationModal({
 
           {/* Optional PRs Highlight Card */}
           {totalPrsCount > 0 && (
-            <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+            <div className="p-3.5 rounded-xl bg-[var(--accent-glow)] border border-[var(--accent-primary)]/20 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-[var(--accent-primary)]/20 flex items-center justify-center text-[var(--accent-primary-light)] shrink-0">
                 <Zap size={16} />
               </div>
               <div>
-                <span className="text-xs font-bold text-blue-300 block">
+                <span className="text-xs font-bold text-[var(--accent-primary-light)] block">
                   ¡{totalPrsCount}{' '}
                   {totalPrsCount === 1 ? 'nuevo récord personal' : 'nuevos récords personales'}!
                 </span>
-                <p className="text-[0.7rem] text-blue-200/70">
+                <p className="text-[0.7rem] text-zinc-300">
                   Has superado marcas históricas en esta sesión.
                 </p>
               </div>
@@ -350,7 +393,7 @@ export function WorkoutCelebrationModal({
 
           {/* Exercises Breakdown Section */}
           <div>
-            <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+            <label className="block mb-2 text-xs font-semibold text-zinc-300">
               Desglose por ejercicios ({completedExercisesList.length})
             </label>
 
@@ -383,7 +426,7 @@ export function WorkoutCelebrationModal({
                             {item.name}
                           </span>
                           {item.hasPr && (
-                            <span className="px-1.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-[0.6rem] font-bold text-blue-300">
+                            <span className="px-1.5 py-0.5 rounded-full bg-[var(--accent-glow)] border border-[var(--accent-primary)]/30 text-[0.6rem] font-bold text-[var(--accent-primary-light)]">
                               PR
                             </span>
                           )}
@@ -401,7 +444,7 @@ export function WorkoutCelebrationModal({
 
                     {item.bestSet && (
                       <div className="px-2.5 py-1.5 rounded-lg bg-zinc-800/80 border border-white/10 text-right shrink-0">
-                        <span className="text-[9px] text-zinc-400 uppercase tracking-wider font-bold block">
+                        <span className="text-[10px] text-zinc-400 font-medium block">
                           Mejor serie
                         </span>
                         <span className="text-xs font-bold text-white font-mono tabular-nums">
@@ -419,7 +462,7 @@ export function WorkoutCelebrationModal({
           <div>
             <label
               htmlFor="finish-workout-notes"
-              className="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5"
+              className="block mb-1.5 text-xs font-semibold text-zinc-300 flex items-center gap-1.5"
             >
               <FileText size={12} />
               <span>Notas de la sesión (opcional)</span>
@@ -431,7 +474,7 @@ export function WorkoutCelebrationModal({
               onChange={(e) => setCustomNotes(e.target.value)}
               disabled={isSaving}
               placeholder="¿Sensaciones, fatiga, material o notas de entrenamiento?..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 text-white text-xs placeholder:text-zinc-500 focus:border-blue-500 focus:outline-none transition-colors resize-none"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 text-white text-xs placeholder:text-zinc-500 focus:border-[var(--accent-primary)] focus:outline-none transition-colors resize-none"
             />
           </div>
 
@@ -451,7 +494,7 @@ export function WorkoutCelebrationModal({
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full py-3 rounded-xl bg-blue-500 hover:bg-blue-600 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-[var(--accent-shadow)] flex items-center justify-center gap-2 transition-all disabled:opacity-50"
               >
                 {isSaving ? (
                   <>
@@ -496,7 +539,7 @@ export function WorkoutCelebrationModal({
                   haptics.success();
                   onClose();
                 }}
-                className="w-full py-3 rounded-xl bg-blue-500 hover:bg-blue-600 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 transition-all"
+                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-[var(--accent-shadow)] flex items-center justify-center gap-2 transition-all"
               >
                 <Check size={18} />
                 <span>Aceptar y Continuar</span>

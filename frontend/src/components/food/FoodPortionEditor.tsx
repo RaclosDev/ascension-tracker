@@ -37,6 +37,38 @@ export function FoodPortionEditor({
   const multiplier = quantity ? Number((quantity / baseAmount).toFixed(2)) : 0;
   const portionLabel = basePortion ? basePortion.label.replace(/^1\s*/, '') : 'ud';
 
+  const [gramsInput, setGramsInput] = React.useState<string>(quantity ? String(quantity) : '');
+  const [portionsInput, setPortionsInput] = React.useState<string>(
+    multiplier ? String(multiplier) : '',
+  );
+
+  React.useEffect(() => {
+    setGramsInput(quantity ? String(quantity) : '');
+    setPortionsInput(multiplier ? String(multiplier) : '');
+  }, [quantity, multiplier]);
+
+  const handleGramsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    if (!/^[0-9]*[.,]?[0-9]*$/.test(raw)) return;
+    setGramsInput(raw);
+    const normalized = raw.replace(',', '.');
+    const val = parseFloat(normalized);
+    setQuantity(isNaN(val) ? 0 : val);
+  };
+
+  const handlePortionsInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    if (!/^[0-9]*[.,]?[0-9]*$/.test(raw)) return;
+    setPortionsInput(raw);
+    const normalized = raw.replace(',', '.');
+    const m = parseFloat(normalized);
+    if (!isNaN(m) && m >= 0) {
+      setQuantity(Number((m * baseAmount).toFixed(1)));
+    } else if (raw === '') {
+      setQuantity(0);
+    }
+  };
+
   const handleMultiplierChange = (newMultiplier: number) => {
     let m = newMultiplier;
     if (m < 0) m = 0;
@@ -99,24 +131,44 @@ export function FoodPortionEditor({
         </div>
 
         {inputMode === 'grams' || !hasPortions ? (
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <input
-              type="number"
-              inputMode="decimal"
-              className="form-input"
-              style={{
-                fontSize: '1.2rem',
-                padding: '0.75rem',
-                fontWeight: 600,
-                width: '120px',
-                textAlign: 'center',
-              }}
-              value={quantity || ''}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              autoFocus
-              aria-label="Cantidad en gramos"
-            />
-            <span style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>g</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]*"
+                className="form-input"
+                style={{
+                  fontSize: '1.2rem',
+                  padding: '0.75rem',
+                  fontWeight: 600,
+                  width: '120px',
+                  textAlign: 'center',
+                }}
+                value={gramsInput}
+                onChange={handleGramsChange}
+                autoFocus
+                aria-label="Cantidad en gramos"
+              />
+              <span style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>g</span>
+            </div>
+            <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+              {[-50, -10, 10, 50].map((delta) => (
+                <button
+                  key={delta}
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  style={{ padding: '0.2rem 0.55rem', fontSize: '0.75rem' }}
+                  onClick={() => {
+                    const current = Number(quantity) || 0;
+                    const next = Math.max(0, current + delta);
+                    setQuantity(next);
+                  }}
+                >
+                  {delta > 0 ? `+${delta}g` : `${delta}g`}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -137,8 +189,9 @@ export function FoodPortionEditor({
               -
             </button>
             <input
-              type="number"
+              type="text"
               inputMode="decimal"
+              pattern="[0-9]*[.,]?[0-9]*"
               className="form-input"
               style={{
                 fontSize: '1.2rem',
@@ -147,8 +200,8 @@ export function FoodPortionEditor({
                 width: '100px',
                 textAlign: 'center',
               }}
-              value={multiplier || ''}
-              onChange={(e) => handleMultiplierChange(Number(e.target.value))}
+              value={portionsInput}
+              onChange={handlePortionsInputChange}
               autoFocus
               aria-label="Número de porciones"
             />

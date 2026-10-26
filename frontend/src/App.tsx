@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState, lazy, Suspense } from 'react';
+import React, { Component, useEffect, useState, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -6,18 +6,20 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import api from './api/client';
 import { applyThemeColor } from './utils/colorHelper';
+import { lazyWithRetry, isChunkLoadError } from './utils/lazyWithRetry';
 
-const DashboardPage = lazy(() => import('./pages/DashboardPage'));
-const TrackingPage = lazy(() => import('./pages/TrackingPage'));
-const NutritionPage = lazy(() => import('./pages/NutritionPage'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage'));
-const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
-const UtilitiesPage = lazy(() => import('./pages/UtilitiesPage'));
+const DashboardPage = lazyWithRetry(() => import('./pages/DashboardPage'));
+const TrackingPage = lazyWithRetry(() => import('./pages/TrackingPage'));
+const NutritionPage = lazyWithRetry(() => import('./pages/NutritionPage'));
+const SettingsPage = lazyWithRetry(() => import('./pages/SettingsPage'));
+const WorkoutPage = lazyWithRetry(() => import('./pages/WorkoutPage'));
+const UtilitiesPage = lazyWithRetry(() => import('./pages/UtilitiesPage'));
 import LoginPage from './pages/LoginPage';
 
 import { PageLoader } from './components/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
 import { preloadAllRoutes } from './utils/routePreload';
+import { useWorkoutStore } from './lib/workout/store';
 
 let currentAppVersion: string | null = null;
 
@@ -41,6 +43,14 @@ function AppContent() {
 
       const handleVisibilityChange = () => {
         if (document.visibilityState === 'visible') {
+          // Do not interrupt an active workout with a version reload
+          try {
+            const active = useWorkoutStore.getState().active;
+            if (active != null) return;
+          } catch {
+            // ignore
+          }
+
           api
             .get('/version')
             .then((res) => {
@@ -48,12 +58,9 @@ function AppContent() {
                 window.location.reload();
               }
             })
-            .catch((err: unknown) =>
-              console.error(
-                'Error fetching app version:',
-                err instanceof Error ? err.message : String(err),
-              ),
-            );
+            .catch(() => {
+              // Ignore background version check errors silently without logging out
+            });
         }
       };
 
@@ -79,8 +86,8 @@ function AppContent() {
   }
 
   return (
-    <Suspense fallback={<PageLoader />}>
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
@@ -94,8 +101,8 @@ function AppContent() {
           <Route path="/login" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </ErrorBoundary>
-    </Suspense>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
@@ -110,8 +117,12 @@ class GlobalErrorBoundary extends Component<{ children: React.ReactNode }, { has
   }
 
   componentDidCatch(error: Error) {
-    if (error.name === 'ChunkLoadError' || error.message?.includes('fetch')) {
-      window.location.reload();
+    if (isChunkLoadError(error)) {
+      const alreadyReloaded = sessionStorage.getItem('ascension_eb_reload_lock');
+      if (!alreadyReloaded) {
+        sessionStorage.setItem('ascension_eb_reload_lock', 'true');
+        window.location.reload();
+      }
     }
   }
 

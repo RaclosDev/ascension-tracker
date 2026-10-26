@@ -1,4 +1,5 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { Skeleton } from '../components/ui/skeleton';
 import { useMyFoodsData } from '../hooks/my-foods/useMyFoodsData';
 import { useFoodFilters } from '../hooks/my-foods/useFoodFilters';
@@ -16,10 +17,11 @@ import FoodCard from '../components/my-foods/FoodCard';
 import RecipeCard from '../components/my-foods/RecipeCard';
 import AiFoodModal from '../components/my-foods/AiFoodModal';
 
-import { ChevronDown, ChevronRight, ScanLine, Pencil, X, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, ScanLine, Pencil, X, Loader2, Check } from 'lucide-react';
 import { PageFoodItem } from '../types/myfoods';
 import { Recipe, FoodLog, SavedFood } from '../types/api';
-const BarcodeScanner = lazy(() => import('../components/BarcodeScanner'));
+import { isFoodRegistered } from '../utils/nutritionHelpers';
+const BarcodeScanner = lazyWithRetry(() => import('../components/BarcodeScanner'));
 
 export default function MyFoodsPage() {
   const {
@@ -169,20 +171,29 @@ export default function MyFoodsPage() {
                 </div>
                 {expandedSections.recent && (
                   <div className="flex flex-col gap-2 flex-1">
-                    {filters.filteredRecent.map((f: FoodLog) => (
-                      <div
-                        key={f.id}
-                        className="p-2 bg-white/10 rounded-lg flex justify-between items-center"
-                      >
-                        <div className="text-sm font-medium">{f.product}</div>
-                        <button
-                          onClick={() => scanner.saveRecentAsFood(f as unknown as PageFoodItem)}
-                          className="text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-1 rounded-lg"
+                    {filters.filteredRecent.map((f: FoodLog) => {
+                      const registered = isFoodRegistered(f.product, savedFoods, recipes);
+                      return (
+                        <div
+                          key={f.id}
+                          className="p-2 bg-white/10 rounded-lg flex justify-between items-center"
                         >
-                          Añadir
-                        </button>
-                      </div>
-                    ))}
+                          <div className="text-sm font-medium">{f.product}</div>
+                          {registered ? (
+                            <span className="text-xs text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-1 rounded-lg flex items-center gap-1 font-medium select-none">
+                              <Check className="w-3.5 h-3.5" /> Guardado
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => scanner.saveRecentAsFood(f as unknown as PageFoodItem)}
+                              className="text-xs bg-[var(--accent-glow)] text-[var(--accent-primary-light)] border border-[var(--accent-primary)]/30 px-2 py-1 rounded-lg hover:bg-[var(--accent-primary)]/30 transition-colors"
+                            >
+                              Añadir
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -270,7 +281,7 @@ export default function MyFoodsPage() {
 
       <button
         aria-label="+"
-        className="fixed z-50 bottom-[calc(75px+env(safe-area-inset-bottom))] right-5 w-14 h-14 rounded-full flex items-center justify-center bg-blue-500 hover:bg-blue-600 active:scale-95 text-white text-2xl font-bold shadow-lg shadow-blue-500/25 border-none transition-all cursor-pointer"
+        className="fixed z-50 bottom-[calc(75px+env(safe-area-inset-bottom))] right-5 w-14 h-14 rounded-full flex items-center justify-center bg-[var(--accent-primary)] hover:brightness-110 active:scale-95 text-white text-2xl font-bold shadow-lg shadow-[var(--accent-shadow)] border-none transition-all cursor-pointer"
         onClick={() => setIsActionMenuOpen(true)}
       >
         +
@@ -354,7 +365,7 @@ export default function MyFoodsPage() {
 
             {scanner.isLookingUpCode ? (
               <div className="flex flex-col items-center justify-center py-10 gap-3">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-primary)]" />
                 <p className="text-zinc-300 text-sm m-0">Buscando producto...</p>
               </div>
             ) : scanner.scannedProduct ? (
@@ -386,19 +397,19 @@ export default function MyFoodsPage() {
                   </div>
                   <div>
                     <span className="block text-xs text-zinc-400">Prot</span>
-                    <span className="text-sm font-semibold text-blue-400">
+                    <span className="text-sm font-semibold text-[var(--color-protein)]">
                       {scanner.scannedProduct.protein}g
                     </span>
                   </div>
                   <div>
                     <span className="block text-xs text-zinc-400">Carbs</span>
-                    <span className="text-sm font-semibold text-amber-400">
+                    <span className="text-sm font-semibold text-[var(--color-carbs)]">
                       {scanner.scannedProduct.carbs}g
                     </span>
                   </div>
                   <div>
                     <span className="block text-xs text-zinc-400">Grasa</span>
-                    <span className="text-sm font-semibold text-rose-400">
+                    <span className="text-sm font-semibold text-[var(--color-fat)]">
                       {scanner.scannedProduct.fat}g
                     </span>
                   </div>

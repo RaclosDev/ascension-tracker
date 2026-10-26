@@ -21,11 +21,14 @@ export function useAiAssistant(fetchData: () => void) {
     setPendingAiCount((p) => p + 1);
     toast(`Buscando "${queryText}"...`, { duration: 2000 });
     try {
-      await api.post('/nutrition/ai/food', { text: queryText });
+      await api.post('/nutrition/ai/food', { text: queryText }, { timeout: 45000 });
       toast.success(`"${queryText}" añadido`);
       fetchData();
-    } catch {
-      toast.error('Error IA');
+    } catch (e: unknown) {
+      const axiosError = e as { response?: { data?: { error?: string; message?: string } } };
+      const msg =
+        axiosError.response?.data?.error || axiosError.response?.data?.message || 'Error IA';
+      toast.error(msg);
     } finally {
       setPendingAiCount((p) => Math.max(0, p - 1));
     }

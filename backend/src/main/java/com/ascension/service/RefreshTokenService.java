@@ -15,6 +15,8 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserService userService;
     private final long REFRESH_TOKEN_EXPIRATION_DAYS = 30;
+    @org.springframework.beans.factory.annotation.Value("${app.auth.refresh-grace-seconds:300}")
+    private long gracePeriodSeconds = 300;
 
     public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, UserService userService) {
         this.refreshTokenRepository = refreshTokenRepository;
@@ -82,17 +84,14 @@ public class RefreshTokenService {
         }
 
         if (refreshToken.getReplacedAt() != null) {
-            Instant graceThreshold = refreshToken.getReplacedAt().plusSeconds(10);
+            Instant graceThreshold = refreshToken.getReplacedAt().plusSeconds(gracePeriodSeconds);
             if (Instant.now().isBefore(graceThreshold)) {
                 // Grace period: allow concurrent cluster/tab refresh without deleting the family
                 refreshToken.setGraceUsed(true);
                 refreshTokenRepository.save(refreshToken);
                 return createRefreshToken(refreshToken.getEmail(), refreshToken.getFamilyId());
             }
-            // Outside grace period (10s elapsed): true token reuse attack detected -> revoke family and access tokens
-            if (userService != null) {
-                userService.updateTokensValidAfter(refreshToken.getEmail(), Instant.now());
-            }
+            // Outside grace period (60s elapsed): token reuse detected -> revoke family
             refreshTokenRepository.deleteByFamilyId(refreshToken.getFamilyId());
             throw new com.ascension.exception.TokenRefreshException("Session expired. Please log in again.");
         }

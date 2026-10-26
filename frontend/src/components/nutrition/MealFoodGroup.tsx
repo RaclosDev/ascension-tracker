@@ -264,35 +264,68 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
                             <div
                               style={{
                                 display: 'flex',
-                                gap: '0.5rem',
+                                flexDirection: 'column',
                                 alignItems: 'center',
-                                justifyContent: 'center',
+                                gap: '0.5rem',
                               }}
                             >
-                              <input
-                                type="number"
-                                inputMode="decimal"
-                                className="form-input"
+                              <div
                                 style={{
-                                  fontSize: '1.2rem',
-                                  padding: '0.5rem',
-                                  fontWeight: 600,
-                                  width: '100px',
-                                  textAlign: 'center',
-                                }}
-                                aria-label="Cantidad en gramos"
-                                value={editingLog.quantity === 0 ? '' : editingLog.quantity}
-                                onChange={(e) => onEditQuantityChange(e.target.value)}
-                                autoFocus
-                              />
-                              <span
-                                style={{
-                                  fontSize: '1.1rem',
-                                  color: 'var(--text-secondary)',
+                                  display: 'flex',
+                                  gap: '0.5rem',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
                                 }}
                               >
-                                g
-                              </span>
+                                <input
+                                  type="number"
+                                  inputMode="decimal"
+                                  className="form-input"
+                                  style={{
+                                    fontSize: '1.2rem',
+                                    padding: '0.5rem',
+                                    fontWeight: 600,
+                                    width: '100px',
+                                    textAlign: 'center',
+                                  }}
+                                  aria-label="Cantidad en gramos"
+                                  value={editingLog.quantity === 0 ? '' : editingLog.quantity}
+                                  onChange={(e) => onEditQuantityChange(e.target.value)}
+                                  autoFocus
+                                />
+                                <span
+                                  style={{
+                                    fontSize: '1.1rem',
+                                    color: 'var(--text-secondary)',
+                                  }}
+                                >
+                                  g
+                                </span>
+                              </div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  gap: '0.35rem',
+                                  flexWrap: 'wrap',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                {[-50, -10, 10, 50].map((delta) => (
+                                  <button
+                                    key={delta}
+                                    type="button"
+                                    className="btn btn-secondary btn-sm"
+                                    style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
+                                    onClick={() => {
+                                      const current = Number(editingLog.quantity) || 0;
+                                      const next = Math.max(0, current + delta);
+                                      onEditQuantityChange(next);
+                                    }}
+                                  >
+                                    {delta > 0 ? `+${delta}g` : `${delta}g`}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
                           ) : (
                             <div

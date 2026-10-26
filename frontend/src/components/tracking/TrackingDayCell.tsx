@@ -90,7 +90,7 @@ export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
                   </span>
                 </>
               ) : (
-                <span style={{ opacity: 0.3 }}>—</span>
+                <span style={{ opacity: 0.3 }}>-</span>
               )}
             </div>
           )}
@@ -122,7 +122,7 @@ export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
                   </span>
                 </>
               ) : (
-                <span style={{ opacity: 0.3 }}>—</span>
+                <span style={{ opacity: 0.3 }}>-</span>
               )}
             </div>
           )}
@@ -154,7 +154,7 @@ export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
                   </span>
                 </>
               ) : (
-                <span style={{ opacity: 0.3 }}>—</span>
+                <span style={{ opacity: 0.3 }}>-</span>
               )}
             </div>
           )}

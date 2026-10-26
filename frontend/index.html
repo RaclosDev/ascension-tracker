@@ -13,13 +13,13 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <meta name="description" content="Ascension — Seguimiento inteligente de peso, nutrición y progreso hacia tu objetivo.">
+  <meta name="description" content="Ascension: Seguimiento de peso, nutrición y progreso hacia tu objetivo.">
   <title>Ascension</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="/pwa-logo.png" as="image">
-  <link rel="preload" href="/ascension-title.png" as="image">
+
+
   <!-- Precarga síncrona del color de tema para evitar flash -->
   <script>
     (function() {
@@ -46,9 +46,10 @@
       } catch(e) {}
     })();
   </script>
+  <script src="/pwa-recovery.js" defer></script>
 </head>
 <body>
   <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

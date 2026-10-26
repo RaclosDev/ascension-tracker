@@ -93,7 +93,13 @@ interface WorkoutState {
   skipRest: () => void;
   adjustRest: (deltaSec: number) => void;
 
-  finishWorkout: (customName?: string, customDurationMs?: number) => CompletedWorkout | null;
+  finishWorkout: (
+    customName?: string,
+    customDurationMs?: number,
+    customStartedAt?: number,
+  ) => CompletedWorkout | null;
+  setWorkoutDate: (startedAt: number, finishedAt?: number) => void;
+  cancelEditWorkout: () => void;
   clearActiveWorkout: () => void;
   discardWorkout: () => void;
   saveAsTemplate: () => Template | null;
@@ -104,6 +110,7 @@ interface WorkoutState {
   syncFromPreferences: (prefs: {
     restTimers?: Record<string, number>;
     restPreset?: number;
+    hiddenEquipments?: string[];
   }) => void;
 }
 
@@ -197,6 +204,7 @@ export const useWorkoutStore = create<WorkoutState>()(
             exercises: w.exercises.map((ex: import('./types').WorkoutExercise) => ({
               id: uid(),
               exerciseId: ex.exerciseId,
+              variant: ex.variant,
               notes: '',
               sets: ex.sets.map((s: import('./types').WorkoutSet) =>
                 blankSet({
@@ -234,6 +242,7 @@ export const useWorkoutStore = create<WorkoutState>()(
         set((state) => ({
           restTimers: { ...state.restTimers, ...prefs.restTimers },
           restPreset: prefs.restPreset ?? state.restPreset,
+          hiddenEquipments: prefs.hiddenEquipments ?? state.hiddenEquipments,
         }));
       },
 
@@ -388,7 +397,7 @@ export const useWorkoutStore = create<WorkoutState>()(
         const newDelay = Math.max(1, Math.ceil((next - Date.now()) / 1000));
         scheduleServerRestTimer(newDelay);
       },
-      finishWorkout: (customName?: string, customDurationMs?: number) => {
+      finishWorkout: (customName?: string, customDurationMs?: number, customStartedAt?: number) => {
         const active = get().active;
         if (!active) return null;
         const hasWork = active.exercises.some((e) => e.sets.some((s) => s.completed));
@@ -399,12 +408,14 @@ export const useWorkoutStore = create<WorkoutState>()(
         dismissRestNotifications();
         set({ restUntil: null });
 
-        const finalFinishedAt = active.editingFinishedAt || Date.now();
-        let finalStartedAt = active.startedAt;
-
-        if (customDurationMs !== undefined) {
-          finalStartedAt = finalFinishedAt - customDurationMs;
-        }
+        const finalStartedAt = customStartedAt !== undefined ? customStartedAt : active.startedAt;
+        const duration =
+          customDurationMs !== undefined
+            ? customDurationMs
+            : active.editingFinishedAt && active.startedAt
+              ? Math.max(60000, active.editingFinishedAt - active.startedAt)
+              : Math.max(60000, Date.now() - active.startedAt);
+        const finalFinishedAt = finalStartedAt + duration;
 
         const record: CompletedWorkout = {
           id: active.editingId || '',
@@ -420,6 +431,30 @@ export const useWorkoutStore = create<WorkoutState>()(
 
         // Active state in IndexedDB/memory is preserved until server confirms save
         return record;
+      },
+
+      setWorkoutDate: (startedAt: number, finishedAt?: number) => {
+        const active = get().active;
+        if (!active) return;
+        const currentDuration =
+          active.editingFinishedAt && active.startedAt
+            ? Math.max(60000, active.editingFinishedAt - active.startedAt)
+            : Math.max(60000, Date.now() - active.startedAt);
+        const newFinishedAt = finishedAt ?? startedAt + currentDuration;
+        set({
+          active: {
+            ...active,
+            startedAt,
+            editingFinishedAt:
+              active.editingId || active.editingFinishedAt ? newFinishedAt : undefined,
+          },
+        });
+      },
+
+      cancelEditWorkout: () => {
+        cancelServerRestTimer();
+        dismissRestNotifications();
+        set({ active: null, restUntil: null, tab: 'history', detailId: null });
       },
 
       clearActiveWorkout: () => {
@@ -464,9 +499,22 @@ export const useWorkoutStore = create<WorkoutState>()(
       },
     }),
     {
-      name: 'forja-v1',
+      name: 'ascension-workout-v1',
       storage: createJSONStorage(() => ({
-        getItem: async (name) => (await get(name)) || null,
+        getItem: async (name) => {
+          const val = await get(name);
+          if (val) return val;
+          // Migración automática del nombre heredado del prototipo 'forja-v1'
+          if (name === 'ascension-workout-v1') {
+            const legacy = await get('forja-v1');
+            if (legacy) {
+              await set('ascension-workout-v1', legacy);
+              await del('forja-v1');
+              return legacy;
+            }
+          }
+          return null;
+        },
         setItem: async (name, value) => await set(name, value),
         removeItem: async (name) => await del(name),
       })),
@@ -482,7 +530,24 @@ export const useWorkoutStore = create<WorkoutState>()(
       version: 1,
 
       migrate: (persistedState: unknown) => {
-        return persistedState as WorkoutState;
+        const state =
+          persistedState && typeof persistedState === 'object'
+            ? (persistedState as Partial<WorkoutState>)
+            : {};
+        return {
+          tab: state.tab ?? 'home',
+          active: state.active ?? null,
+          restUntil: state.restUntil ?? null,
+          restPreset: typeof state.restPreset === 'number' ? state.restPreset : 90,
+          restTimers: state.restTimers ?? {},
+          pickerOpen: false,
+          detailId: null,
+          settings: {
+            showRpe: false,
+            ...(state.settings ?? {}),
+          },
+          hiddenEquipments: Array.isArray(state.hiddenEquipments) ? state.hiddenEquipments : [],
+        } as WorkoutState;
       },
     },
   ),
