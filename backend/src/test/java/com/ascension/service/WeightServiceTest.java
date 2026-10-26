@@ -195,12 +195,12 @@ class WeightServiceTest {
     @Test
     @DisplayName("getWeeklySummaries returns grouped summaries with calculated averages and deltas")
     void getWeeklySummaries_calculatesAveragesAndDeltas() {
-        LocalDate now = LocalDate.now();
-        LocalDate pastMonday = now.minusWeeks(1);
+        LocalDate pastMonday = LocalDate.of(2026, 1, 5);
+        LocalDate nextMonday = LocalDate.of(2026, 1, 12);
 
         WeightEntry e1 = WeightEntry.builder().date(pastMonday).weight(80.0).build();
         WeightEntry e2 = WeightEntry.builder().date(pastMonday.plusDays(1)).weight(80.0).build();
-        WeightEntry e3 = WeightEntry.builder().date(now).weight(79.0).build();
+        WeightEntry e3 = WeightEntry.builder().date(nextMonday).weight(79.0).build();
 
         when(weightEntryRepository.findAllByUserEmailOrderByDateAsc(USER_EMAIL)).thenReturn(List.of(e1, e2, e3));
 

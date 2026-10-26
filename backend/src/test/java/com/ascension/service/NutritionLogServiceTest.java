@@ -148,7 +148,7 @@ class NutritionLogServiceTest {
     @Test
     @DisplayName("getWeeklyCalories computes weekly summaries and deltas")
     void getWeeklyCalories_withData() {
-        LocalDate monday = LocalDate.now().minusWeeks(1);
+        LocalDate monday = LocalDate.of(2026, 1, 5);
         Object[] row1 = new Object[]{monday, 2200.0};
         Object[] row2 = new Object[]{monday.plusDays(1), 2400.0};
 

@@ -157,7 +157,7 @@ public class PushNotificationService {
             try {
                 pushExecutor.submit(() -> {
                     try {
-                        sendPush(timer.getUserEmail(), "¡Descanso terminado!", "Es hora de la siguiente serie. 💪");
+                        sendPush(timer.getUserEmail(), "¡Descanso terminado!", "Es hora de la siguiente serie.");
                     } catch (Exception e) {
                         log.error("Failed to deliver rest timer push notification for user {}", com.ascension.util.PiiMasker.maskEmail(timer.getUserEmail()), e);
                     }

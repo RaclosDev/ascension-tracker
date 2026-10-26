@@ -16,10 +16,7 @@ import {
 export { EQUIPMENT_OPTIONS, MUSCLE_OPTIONS } from '@/lib/workout/equipmentOptions';
 export type { EquipmentOption, MuscleOption } from '@/lib/workout/equipmentOptions';
 
-// Hook de filtros
 import { useExerciseFilters } from '@/hooks/workout/useExerciseFilters';
-
-// Subcomponentes y modales desacoplados
 import { ExerciseCardItem } from './exercises/ExerciseCardItem';
 import { ExerciseFilterBar } from './exercises/ExerciseFilterBar';
 import { CreateExerciseModal } from './exercises/CreateExerciseModal';
@@ -31,7 +28,7 @@ import { ExerciseVariantsTab } from './exercises/ExerciseVariantsTab';
 import { ExercisesLoadingSkeleton } from './exercises/ExercisesLoadingSkeleton';
 import { ExerciseDetailsModal } from './exercise-details-modal';
 
-export function ExercisesView() {
+export default function ExercisesView() {
   const { data: customExercises = [], isLoading } = useCustomExercises();
   const { data: recentWorkouts = [] } = useRecentWorkouts(180);
   const saveExerciseMutation = useSaveCustomExercise();
@@ -241,3 +238,5 @@ export function ExercisesView() {
     </div>
   );
 }
+
+export { ExercisesView };

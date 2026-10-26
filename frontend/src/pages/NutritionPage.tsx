@@ -1,4 +1,5 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useQueryClient } from '@tanstack/react-query';
 import { FoodLog, Meal } from '../types/api';
 import { Loader2, Plus } from 'lucide-react';
@@ -9,9 +10,9 @@ import { NutritionDateBar } from '../components/nutrition/NutritionDateBar';
 import { MealFoodGroup } from '../components/nutrition/MealFoodGroup';
 import { useNutritionDiary } from '../hooks/nutrition/useNutritionDiary';
 
-const MyFoodsPage = lazy(() => import('./MyFoodsPage'));
-const FoodSearchModal = lazy(() => import('../components/FoodSearchModal'));
-const NutritionPieChart = lazy(() => import('../components/nutrition/NutritionPieChart'));
+const MyFoodsPage = lazyWithRetry(() => import('./MyFoodsPage'));
+const FoodSearchModal = lazyWithRetry(() => import('../components/FoodSearchModal'));
+const NutritionPieChart = lazyWithRetry(() => import('../components/nutrition/NutritionPieChart'));
 
 export default function NutritionPage() {
   const queryClient = useQueryClient();
@@ -136,7 +137,13 @@ export default function NutritionPage() {
               right: '1.25rem',
             }}
             onClick={() => {
-              setSelectedMealIndex(0);
+              const hour = new Date().getHours();
+              let defaultIdx = 0;
+              if (hour >= 12 && hour < 17) defaultIdx = 1;
+              else if (hour >= 17 && hour < 20) defaultIdx = 2;
+              else if (hour >= 20 || hour < 6)
+                defaultIdx = meals.length > 3 ? 3 : Math.max(0, meals.length - 1);
+              setSelectedMealIndex(Math.min(defaultIdx, Math.max(0, meals.length - 1)));
               setSearchModalOpen(true);
             }}
             aria-label="Añadir alimento"
@@ -185,9 +192,7 @@ export default function NutritionPage() {
             </div>
 
             <div className="card flex flex-col items-center p-6 mb-12">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">
-                Distribución de Macros
-              </h3>
+              <h3 className="text-xs font-semibold text-gray-300 mb-4">Distribución de macros</h3>
               <div
                 style={{
                   width: '100%',

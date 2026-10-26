@@ -262,9 +262,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
       {/* KPI METRICS */}
       <div role="status" aria-live="polite" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="p-5 rounded-2xl bg-zinc-900/60 border border-white/5">
-          <span className="text-xs font-bold tracking-wider uppercase text-zinc-400">
-            Tasa Metabólica Basal (BMR)
-          </span>
+          <span className="text-xs font-semibold text-zinc-400">Tasa Metabólica Basal (BMR)</span>
           <div className="text-4xl font-extrabold text-white mt-1">
             {tdeeResult.bmr} <span className="text-lg font-normal text-gray-400">kcal/día</span>
           </div>
@@ -273,8 +271,8 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-blue-500/10 border border-blue-500/20">
-          <span className="text-xs font-bold tracking-wider uppercase text-blue-400">
+        <div className="p-5 rounded-2xl bg-[var(--accent-glow)] border border-[var(--accent-primary)]/20">
+          <span className="text-xs font-semibold text-[var(--accent-primary-light)]">
             Gasto Energético Total (TDEE)
           </span>
           <div className="text-4xl font-extrabold text-white mt-1">
@@ -302,7 +300,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                 onClick={() => setSelectedGoal(goalKey)}
                 className={`p-3 rounded-xl border text-left transition-all ${
                   isSelected
-                    ? 'bg-blue-500 text-white shadow-md shadow-blue-500/25 border-blue-400'
+                    ? 'bg-[var(--accent-primary)] text-white shadow-md shadow-[var(--accent-shadow)] border-[var(--accent-primary)]'
                     : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
                 }`}
               >
@@ -313,9 +311,9 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                 <div
                   className={`text-[10px] font-medium mt-0.5 ${
                     isSelected
-                      ? 'text-blue-100'
+                      ? 'text-white/80'
                       : goal.difference > 0
-                        ? 'text-blue-400'
+                        ? 'text-[var(--accent-primary-light)]'
                         : goal.difference < 0
                           ? 'text-zinc-400'
                           : 'text-gray-400'
@@ -344,9 +342,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 fade-in">
             {/* Gasto por Pasos */}
             <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
-              <h5 className="text-xs font-bold text-white uppercase tracking-wider">
-                Gasto por Pasos (Weyand)
-              </h5>
+              <h5 className="text-xs font-semibold text-white">Gasto por pasos (Weyand)</h5>
               <p className="text-xs text-gray-400">
                 Estima la energía mecánica usada en cada impacto según la biomecánica de Weyand.
               </p>
@@ -374,8 +370,8 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
 
             {/* Gasto Metabólico por Tiempo */}
             <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
-              <h5 className="text-xs font-bold text-white uppercase tracking-wider">
-                Gasto Metabólico por Carrera/Marcha
+              <h5 className="text-xs font-semibold text-white">
+                Gasto metabólico por carrera/marcha
               </h5>
               <div className="grid grid-cols-3 gap-2">
                 <div>
@@ -430,7 +426,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                 </div>
                 <div>
                   <span className="text-xs text-gray-400 block">Gasto Total:</span>
-                  <span className="text-base font-bold text-blue-400">
+                  <span className="text-base font-bold text-[var(--accent-primary-light)]">
                     {weyandMetabolicResult.kcal.toFixed(2)} kcal
                   </span>
                 </div>

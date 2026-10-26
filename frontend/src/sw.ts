@@ -1,17 +1,28 @@
 /// <reference lib="webworker" />
-import { createHandlerBoundToURL, precacheAndRoute, PrecacheEntry } from 'workbox-precaching';
+import { precacheAndRoute, matchPrecache, PrecacheEntry } from 'workbox-precaching';
 declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (PrecacheEntry | string)[] };
 
 import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate } from 'workbox-strategies';
+import { NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 
-// Precache resources injected by VitePWA
+// Precache versioned static assets. Workbox manages old precache revisions.
 precacheAndRoute(self.__WB_MANIFEST);
 
-// SPA Navigation fallback for offline navigation (excluding /api routes)
-const navigationHandler = createHandlerBoundToURL('/index.html');
-const navigationRoute = new NavigationRoute(navigationHandler, {
+// Do not serve a stale cached index.html just because mobile networking takes >3s.
+// A stale shell references deleted Vite chunk hashes and results in "Module script failed".
+// Use the network for every navigation while online; only fall back to the precached shell
+// when the network actually fails (offline).
+const navigationStrategy = new NetworkOnly({
+  plugins: [
+    {
+      handlerDidError: async () => {
+        return (await matchPrecache('/index.html')) || Response.error();
+      },
+    },
+  ],
+});
+const navigationRoute = new NavigationRoute(navigationStrategy, {
   denylist: [/^\/api/],
 });
 registerRoute(navigationRoute);
@@ -25,9 +36,17 @@ registerRoute(
   }),
 );
 
-// Ascension Service Worker — handles push notifications
+// Cache exercises catalog at runtime (offline-ready without bloating the installation precache)
+registerRoute(
+  ({ url }) =>
+    url.pathname.endsWith('exercises.json') || url.pathname.endsWith('exercises-base.json'),
+  new StaleWhileRevalidate({
+    cacheName: 'exercises-catalog-cache',
+    plugins: [new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 30 })],
+  }),
+);
 
-// Push event — fires even when the app is in the background
+// Ascension Service Worker: handles push notifications
 self.addEventListener('push', (event: PushEvent) => {
   let data = { title: '¡Descanso terminado!', body: 'Es hora de la siguiente serie.' };
 
@@ -62,7 +81,7 @@ self.addEventListener('push', (event: PushEvent) => {
   );
 });
 
-// Notification click — open the app
+// Notification click: open the app
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
 
@@ -70,13 +89,11 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // If there's already a window open, focus it
       for (const client of clientList) {
         if (client.url.includes('/workout') && 'focus' in client) {
           return client.focus();
         }
       }
-      // Otherwise open new window
       if (self.clients.openWindow) {
         return self.clients.openWindow('/workout');
       }
@@ -84,12 +101,12 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   );
 });
 
-// Activate — claim clients immediately
+// Activate: claim clients immediately
 self.addEventListener('activate', (event: ExtendableEvent) => {
   event.waitUntil(self.clients.claim());
 });
 
-// Install — skip waiting
+// Install: skip waiting
 self.addEventListener('install', () => {
   self.skipWaiting();
 });

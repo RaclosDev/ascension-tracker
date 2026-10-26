@@ -5,9 +5,7 @@
  * reparto de macronutrientes y conversión de unidades fitness.
  */
 
-// ==========================================
-// 1. ONE REP MAX (1RM) & FUERZA
-// ==========================================
+// 1. One Rep Max (1RM) & Fuerza
 
 export type OneRepMaxFormula = 'epley' | 'brzycki' | 'lombardi' | 'oconner' | 'average';
 
@@ -154,9 +152,7 @@ export function calculateOneRepMax(params: OneRepMaxParams): OneRepMaxResult {
   };
 }
 
-// ==========================================
 // 2. CARGA DE DISCOS EN BARRA (PLATE LOADER)
-// ==========================================
 
 export interface PlateDefinition {
   weight: number;
@@ -278,9 +274,7 @@ export function calculatePlateLoader(params: PlateLoaderParams): PlateLoaderResu
   };
 }
 
-// ==========================================
 // 3. TDEE, BMR Y GASTO BIOMECÁNICO (WEYAND)
-// ==========================================
 
 export type Sex = 'M' | 'F';
 export type BmrFormulaType = 'mifflin' | 'katch' | 'harris';
@@ -454,9 +448,7 @@ export function calculateWeyandMetabolic(params: WeyandMetabolicParams): WeyandM
   };
 }
 
-// ==========================================
 // 4. DISTRIBUCIÓN DE MACRONUTRIENTES
-// ==========================================
 
 export type MacroStrategy = 'bodyweight' | 'percentage';
 
@@ -595,9 +587,7 @@ export function calculateMacroDistribution(
   return result;
 }
 
-// ==========================================
 // 5. CONVERSOR DE UNIDADES FITNESS
-// ==========================================
 
 export interface HeightFtIn {
   feet: number;

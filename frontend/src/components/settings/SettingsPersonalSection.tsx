@@ -8,6 +8,7 @@ interface SettingsPersonalSectionProps {
   form: SettingsForm;
   setForm: React.Dispatch<React.SetStateAction<SettingsForm>>;
   onSave: () => void;
+  isSaving?: boolean;
 }
 
 export function SettingsPersonalSection({
@@ -16,7 +17,13 @@ export function SettingsPersonalSection({
   form,
   setForm,
   onSave,
+  isSaving = false,
 }: SettingsPersonalSectionProps) {
+  const isGaining =
+    Number(form.goalWeight) && Number(form.startWeight)
+      ? Number(form.goalWeight) > Number(form.startWeight)
+      : false;
+
   return (
     <div
       className={`card accordion-card transition-all duration-300 ease-out ${isOpen ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
@@ -117,7 +124,9 @@ export function SettingsPersonalSection({
           </h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Pérdida (kg/sem)</label>
+              <label className="form-label">
+                {isGaining ? 'Ganancia (kg/sem)' : 'Pérdida (kg/sem)'}
+              </label>
               <input
                 type="number"
                 inputMode="decimal"
@@ -127,7 +136,11 @@ export function SettingsPersonalSection({
                 max="2"
                 value={form.weeklyGoal || ''}
                 onChange={(e) => setForm({ ...form, weeklyGoal: e.target.value })}
-                aria-label="Objetivo semanal de pérdida en kg"
+                aria-label={
+                  isGaining
+                    ? 'Objetivo semanal de ganancia en kg'
+                    : 'Objetivo semanal de pérdida en kg'
+                }
               />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
@@ -145,8 +158,9 @@ export function SettingsPersonalSection({
             className="btn btn-primary"
             style={{ width: '100%', marginTop: '0.5rem' }}
             onClick={onSave}
+            disabled={isSaving}
           >
-            Guardar Cambios
+            {isSaving ? 'Guardando...' : 'Guardar Cambios'}
           </button>
         </div>
       )}

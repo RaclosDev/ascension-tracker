@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Bot, Footprints, Activity } from 'lucide-react';
+import { ChefHat, Footprints, Activity } from 'lucide-react';
 import api from '../api/client';
 import CalculatorCard from '../components/calculators/CalculatorCard';
 import NutritionCalculators from '../components/calculators/NutritionCalculators';
@@ -11,8 +11,11 @@ interface DashboardData {
   currentWeight?: number;
 }
 
+interface SettingsData {
+  heightCm?: number;
+}
+
 export default function UtilitiesPage() {
-  // --- CALCULATORS STATE ---
   const [weight1, setWeight1] = useState('');
   const [steps, setSteps] = useState('');
 
@@ -27,12 +30,23 @@ export default function UtilitiesPage() {
     queryFn: () => api.get('/weights/dashboard').then((res) => res.data),
   });
 
+  const { data: settingsData } = useQuery<SettingsData>({
+    queryKey: ['settings'],
+    queryFn: () => api.get('/settings').then((res) => res.data),
+  });
+
   useEffect(() => {
     if (dashboardData?.currentWeight) {
       setWeight1(dashboardData.currentWeight.toString());
       setWeight2(dashboardData.currentWeight.toString());
     }
   }, [dashboardData?.currentWeight]);
+
+  useEffect(() => {
+    if (settingsData?.heightCm) {
+      setHeight((settingsData.heightCm / 100).toFixed(2));
+    }
+  }, [settingsData?.heightCm]);
 
   // Calculations 1: Gasto por Pasos (Weyand)
   const numWeight1 = parseFloat(weight1) || 0;
@@ -67,7 +81,7 @@ export default function UtilitiesPage() {
         </p>
       </header>
 
-      {/* 1. ASISTENTE INTELIGENTE */}
+      {/* 1. CHEF NUTRICIONAL */}
       <section style={{ marginBottom: '1.75rem', marginTop: '1.25rem' }}>
         <div
           style={{
@@ -80,12 +94,12 @@ export default function UtilitiesPage() {
             textTransform: 'uppercase',
           }}
         >
-          Asistente Inteligente
+          Chef Nutricional
         </div>
         <CalculatorCard
           title="Estratega Nutricional IA"
-          subtitle="Platos y recetas según tus macros de hoy"
-          icon={<Bot size={18} />}
+          subtitle="Chef culinario y recetas según tus macros de hoy"
+          icon={<ChefHat size={18} />}
           defaultOpen={false}
         >
           <AiNutritionChef />

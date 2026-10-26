@@ -46,14 +46,6 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
 
   return (
     <div className="card nutrition-summary-card glass-panel-elevated p-4 sm:p-5 rounded-2xl mb-6 relative overflow-hidden">
-      {/* Background radial ambient glow */}
-      <div
-        className="absolute -top-12 -left-12 w-48 h-48 rounded-full pointer-events-none opacity-20 blur-2xl"
-        style={{
-          background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)',
-        }}
-      />
-
       {/* Main Calories Header Row */}
       <div className="flex items-center gap-4 sm:gap-6 mb-4">
         {/* Animated Calorie Progress Ring */}
@@ -113,9 +105,7 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
         {/* Calorie Stats Breakdown */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-gray-300">
-              Calorías Totales
-            </span>
+            <span className="text-xs font-semibold text-gray-300">Calorías Totales</span>
             <span className="text-xs font-mono font-bold text-[var(--accent-primary-light)] tabular-nums">
               {Math.round(kcalPercent)}%
             </span>

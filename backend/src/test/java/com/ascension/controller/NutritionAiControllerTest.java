@@ -299,4 +299,21 @@ public class NutritionAiControllerTest {
                 .with(csrf()))
                 .andExpect(status().isOk());
     }
+    @Test
+    public void addSavedFoodWithAi_WhenExternalApiFails400_ReturnsBadRequestWithSpecificMessage() throws Exception {
+        AiFoodRequestDTO request = new AiFoodRequestDTO();
+        request.setText("1 manzana");
+
+        when(geminiAiService.processNaturalLanguageFood(eq("test@example.com"), eq("1 manzana")))
+                .thenThrow(new ExternalApiException("Gemini", HttpStatus.BAD_REQUEST, "Peticion bloqueada por filtros de seguridad"));
+
+        mockMvc.perform(post("/api/nutrition/ai/food")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(jwt().jwt(builder -> builder.claim("email", "test@example.com")))
+                .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Peticion bloqueada por filtros de seguridad"))
+                .andExpect(jsonPath("$.trace_id").exists());
+    }
 }

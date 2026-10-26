@@ -90,7 +90,7 @@ public class SecurityConfig {
         return entropy;
     }
 
-    // Auth endpoints: NO JWT filter at all — pure cookie-based refresh
+    // Auth endpoints: NO JWT filter at all: pure cookie-based refresh
     @Bean
     @Order(1)
     public SecurityFilterChain authFilterChain(HttpSecurity http) throws Exception {
@@ -124,6 +124,7 @@ public class SecurityConfig {
         http
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/api/version", "/api/auth/config").permitAll()

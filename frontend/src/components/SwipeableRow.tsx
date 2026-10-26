@@ -33,7 +33,7 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
       const dy = e.touches[0].clientY - touchStart.current.y;
 
       if (!isDragging.current) {
-        if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+        if (Math.abs(dx) > 15 && Math.abs(dx) > Math.abs(dy) * 1.5) {
           isDragging.current = true;
         } else if (Math.abs(dy) > 10) {
           touchStart.current = null;
@@ -48,7 +48,7 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
         if (e.cancelable) {
           e.preventDefault();
         }
-        const clamped = Math.max(-80, Math.min(80, dx));
+        const clamped = Math.max(-85, Math.min(85, dx));
         setOffsetX(clamped);
       }
     };
@@ -57,10 +57,10 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
       if (!touchStart.current) return;
 
       setOffsetX((currentOffset) => {
-        if (currentOffset < -40) {
+        if (currentOffset < -60) {
           haptics.warning();
           onDelete();
-        } else if (currentOffset > 40) {
+        } else if (currentOffset > 60) {
           haptics.light();
           onEdit();
         }
@@ -103,6 +103,19 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
     >
       {/* Edit button behind (left side) */}
       <div
+        role="button"
+        tabIndex={0}
+        onClick={() => {
+          haptics.light();
+          onEdit();
+          setOffsetX(0);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            onEdit();
+            setOffsetX(0);
+          }
+        }}
         style={{
           position: 'absolute',
           top: 0,
@@ -115,7 +128,8 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
           paddingLeft: '20px',
           background: 'var(--accent-primary)',
           borderRadius: '12px 0 0 12px',
-          opacity: offsetX > 10 ? 1 : 0,
+          opacity: offsetX > 15 ? 1 : 0,
+          cursor: 'pointer',
           transition: 'opacity 0.15s ease',
         }}
       >
@@ -124,6 +138,19 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
 
       {/* Delete button behind (right side) */}
       <div
+        role="button"
+        tabIndex={0}
+        onClick={() => {
+          haptics.warning();
+          onDelete();
+          setOffsetX(0);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            onDelete();
+            setOffsetX(0);
+          }
+        }}
         style={{
           position: 'absolute',
           top: 0,
@@ -136,7 +163,8 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
           paddingRight: '20px',
           background: '#ef4444',
           borderRadius: '0 12px 12px 0',
-          opacity: offsetX < -10 ? 1 : 0,
+          opacity: offsetX < -15 ? 1 : 0,
+          cursor: 'pointer',
           transition: 'opacity 0.15s ease',
         }}
       >

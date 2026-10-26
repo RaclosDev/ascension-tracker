@@ -2,7 +2,16 @@ import React from 'react';
 import { Repeat2, Trash2, Edit3, Dumbbell } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContentFullScreen } from '@/components/ui/dialog';
-import {} from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { BodyHeatmap } from '@/components/workout/body-heatmap';
 import toast from 'react-hot-toast';
 import { EmptyCard } from '@/components/workout/dashboard';
@@ -33,6 +42,7 @@ export function HistoryView() {
   const deleteHistory = (id: string) => deleteWorkout.mutate(id);
   const detailId = useWorkoutStore((s) => s.detailId);
   const setDetailId = useWorkoutStore((s) => s.setDetailId);
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const settings = useWorkoutStore((s) => s.settings);
   const showRpe = settings?.showRpe ?? false;
   const catalog = getExerciseMap(customExercises);
@@ -113,7 +123,7 @@ export function HistoryView() {
               setDetailId={setDetailId}
               editWorkout={editWorkout}
               startFromHistory={startFromHistory}
-              deleteHistory={deleteHistory}
+              deleteHistory={(id) => setDeletingId(id)}
               active={active}
             />
           ))}
@@ -398,7 +408,7 @@ export function HistoryView() {
                                     history,
                                     detail.id,
                                   ) ? (
-                                    <span className="text-[0.65rem] font-bold text-blue-300 bg-blue-500/20 border border-blue-500/30 px-1.5 py-0.5 rounded-full">
+                                    <span className="text-[0.65rem] font-bold text-[var(--accent-primary-light)] bg-[var(--accent-glow)] border border-[var(--accent-primary)]/30 px-1.5 py-0.5 rounded-full">
                                       PR
                                     </span>
                                   ) : null}
@@ -468,8 +478,7 @@ export function HistoryView() {
                   color: 'var(--color-danger)',
                 }}
                 onClick={() => {
-                  deleteHistory(detail.id);
-                  setDetailId(null);
+                  setDeletingId(detail.id);
                 }}
               >
                 <Trash2 size={20} />
@@ -479,6 +488,61 @@ export function HistoryView() {
           </DialogContentFullScreen>
         ) : null}
       </Dialog>
+
+      <AlertDialog open={deletingId !== null} onOpenChange={(open) => !open && setDeletingId(null)}>
+        <AlertDialogContent
+          className="card"
+          style={{
+            maxWidth: '400px',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-medium)',
+            borderRadius: '16px',
+            padding: '1.5rem',
+          }}
+        >
+          <AlertDialogHeader>
+            <AlertDialogTitle
+              style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}
+            >
+              ¿Borrar entrenamiento?
+            </AlertDialogTitle>
+            <AlertDialogDescription
+              style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.5rem' }}
+            >
+              Esta sesión se eliminará de tu historial de forma permanente. Esta acción no se puede
+              deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter
+            style={{
+              marginTop: '1.25rem',
+              display: 'flex',
+              gap: '0.75rem',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <AlertDialogCancel className="btn btn-secondary" onClick={() => setDeletingId(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="btn btn-danger btn-press"
+              style={{ color: 'var(--color-danger)' }}
+              onClick={() => {
+                if (deletingId) {
+                  deleteHistory(deletingId);
+                  if (detailId === deletingId) {
+                    setDetailId(null);
+                  }
+                  setDeletingId(null);
+                  toast.success('Entrenamiento eliminado');
+                }
+              }}
+            >
+              Borrar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -661,7 +725,7 @@ const HistoryItem = React.memo(function HistoryItem({
 
         <div
           style={{
-            width: '125px',
+            width: '130px',
             flexShrink: 0,
             display: 'flex',
             flexDirection: 'column',
@@ -678,7 +742,7 @@ const HistoryItem = React.memo(function HistoryItem({
           <div
             style={{
               display: 'flex',
-              gap: '0.25rem',
+              gap: '0.35rem',
               flexWrap: 'nowrap',
               justifyContent: 'center',
             }}
@@ -691,8 +755,10 @@ const HistoryItem = React.memo(function HistoryItem({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                minWidth: '32px',
+                width: '38px',
+                height: '38px',
               }}
+              aria-label="Editar entrenamiento"
             >
               <Edit3 size={16} />
             </button>
@@ -704,8 +770,10 @@ const HistoryItem = React.memo(function HistoryItem({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                minWidth: '32px',
+                width: '38px',
+                height: '38px',
               }}
+              aria-label="Repetir entrenamiento"
             >
               <Repeat2 size={16} />
             </button>
@@ -717,9 +785,11 @@ const HistoryItem = React.memo(function HistoryItem({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                minWidth: '32px',
+                width: '38px',
+                height: '38px',
                 color: 'var(--color-danger)',
               }}
+              aria-label="Borrar entrenamiento"
             >
               <Trash2 size={16} />
             </button>
@@ -729,3 +799,5 @@ const HistoryItem = React.memo(function HistoryItem({
     </li>
   );
 });
+
+export default HistoryView;

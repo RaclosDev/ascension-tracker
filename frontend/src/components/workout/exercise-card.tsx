@@ -1,493 +1,30 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, ChevronDown, ChevronUp, Plus, Trash2, Timer, MoreVertical } from 'lucide-react';
 import { getExerciseMap } from '@/lib/workout/exercises';
-import {
-  isPrSet,
-  previousSetLabel,
-  formatVariant,
-  matchVariant,
-  formatRestFriendly,
-} from '@/lib/workout/format';
-import { initAudioAndNotifications } from '@/lib/workout/notifications';
+import { formatVariant, formatRestFriendly } from '@/lib/workout/format';
 import { haptics } from '@/lib/haptics';
 import { useWorkoutStore } from '@/lib/workout/store';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { VariantSelector } from './variant-selector';
 import {
   useRecentWorkouts,
   useCustomExercises,
   useWorkoutPreferencesActions,
 } from '@/lib/workout/api';
-import {
-  MUSCLE_LABEL,
-  SET_TYPE_LABEL,
-  type WorkoutExercise,
-  type WorkoutSet,
-  type CompletedWorkout,
-} from '@/lib/workout/types';
+import { MUSCLE_LABEL, type WorkoutExercise } from '@/lib/workout/types';
 
-import { useSwipe } from '@/hooks/use-swipe';
-
-export interface SwipeableSetRowProps {
-  s?: WorkoutSet;
-  setId?: string;
-  rowId?: string;
-  exerciseId?: string;
-  variant?: WorkoutExercise['variant'];
-  i: number;
-  workingIndex: number;
-  showRpe: boolean;
-  isCardio: boolean;
-  cols: string;
-  recentWorkouts: CompletedWorkout[];
-}
-
-export const SwipeableSetRow = React.memo(
-  function SwipeableSetRow({
-    s: propSet,
-    setId,
-    rowId: propRowId,
-    exerciseId: propExerciseId,
-    variant: propVariant,
-    i,
-    workingIndex,
-    showRpe,
-    isCardio,
-    cols,
-    recentWorkouts,
-  }: SwipeableSetRowProps) {
-    const rowId = propRowId ?? '';
-    const effectiveSetId = setId ?? propSet?.id ?? '';
-    const exerciseId = propExerciseId ?? '';
-    const variant = propVariant;
-
-    // Consumo granular por fila/serie
-    const storeSet = useWorkoutStore((state) =>
-      state.active?.exercises
-        .find((e) => e.id === rowId)
-        ?.sets.find((set) => set.id === effectiveSetId),
-    );
-    const s = storeSet ?? propSet;
-
-    const updateSet = useWorkoutStore((s) => s.updateSet);
-    const cycleSetType = useWorkoutStore((s) => s.cycleSetType);
-    const toggleSet = useWorkoutStore((s) => s.toggleSet);
-    const removeSet = useWorkoutStore((s) => s.removeSet);
-
-    // Optimización Pro: Extraída la lógica táctil a un hook puro
-    const { offsetX, swiped, isDragging, closeSwipe, touchHandlers } = useSwipe();
-    const [deleteFocused, setDeleteFocused] = useState(false);
-    const [focusedField, setFocusedField] = useState<'weight' | 'reps' | null>(null);
-    const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    useEffect(() => {
-      return () => {
-        if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-      };
-    }, []);
-
-    if (!s) return null;
-
-    const prev = previousSetLabel(exerciseId, variant, i, recentWorkouts);
-    const pr = s.completed && isPrSet(exerciseId, variant, s.weight, recentWorkouts);
-    const typeLabel = SET_TYPE_LABEL[s.type] || String(workingIndex + 1);
-
-    const adjustWeight = (delta: number) => {
-      haptics.step();
-      const currentStr = String(s.weight || '')
-        .replace(',', '.')
-        .trim();
-      let baseNum = parseFloat(currentStr);
-      if (Number.isNaN(baseNum) || !Number.isFinite(baseNum)) {
-        const prevWeight = prev !== '' ? parseFloat(prev.split('×')[0]?.trim()) : 0;
-        baseNum = !Number.isNaN(prevWeight) ? prevWeight : 0;
-      }
-      const nextVal = Math.max(0, Math.round((baseNum + delta) * 100) / 100);
-      updateSet(rowId, s.id, { weight: nextVal.toString() });
-    };
-
-    const adjustReps = (delta: number) => {
-      haptics.step();
-      const currentStr = String(s.reps || '')
-        .replace(/[^\d]/g, '')
-        .trim();
-      let baseNum = parseInt(currentStr, 10);
-      if (Number.isNaN(baseNum)) {
-        const prevReps =
-          prev !== '' ? parseInt(prev.split('×')[1]?.replace(/[^\d]/g, '')?.trim() || '0', 10) : 0;
-        baseNum = !Number.isNaN(prevReps) ? prevReps : 0;
-      }
-      const nextVal = Math.max(0, baseNum + delta);
-      updateSet(rowId, s.id, { reps: nextVal.toString() });
-    };
-
-    return (
-      <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px' }}>
-        {/* Swipeable row */}
-        <div
-          {...touchHandlers}
-          onClick={swiped ? closeSwipe : undefined}
-          className={`set-row ${s.completed ? 'completed' : ''}`}
-          style={{
-            gridTemplateColumns: cols,
-            transform: `translateX(${offsetX}px)`,
-            transition: isDragging.current ? 'none' : 'transform 0.2s ease',
-            background: s.completed ? 'rgba(0, 133, 255, 0.04)' : 'var(--bg-card)',
-            position: 'relative',
-            zIndex: 1,
-          }}
-        >
-          {/* Set number + previous info */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '0.05rem',
-            }}
-          >
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                cycleSetType(rowId, s.id);
-                haptics.light();
-              }}
-              title="Cambiar tipo de serie"
-              className={`set-type-btn ${s.type === 'warmup' ? 'warmup' : s.type === 'failure' ? 'failure' : ''}`}
-            >
-              {typeLabel}
-            </button>
-            {prev !== '' && (
-              <span
-                style={{
-                  fontSize: '0.55rem',
-                  color: 'var(--text-muted)',
-                  whiteSpace: 'nowrap',
-                  maxWidth: '48px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  lineHeight: 1,
-                }}
-              >
-                {prev}
-              </span>
-            )}
-            {pr && (
-              <span
-                style={{
-                  fontSize: '0.5rem',
-                  fontWeight: 700,
-                  color: 'var(--accent-primary-light)',
-                  textTransform: 'uppercase',
-                }}
-              >
-                PR
-              </span>
-            )}
-          </div>
-
-          <input
-            inputMode="decimal"
-            value={isCardio ? s.distance || '' : s.weight || ''}
-            placeholder={prev === '' ? '0' : prev.split('×')[0]?.trim()}
-            onFocus={() => {
-              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-              setFocusedField('weight');
-            }}
-            onClick={() => {
-              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-              setFocusedField('weight');
-            }}
-            onPointerDown={() => {
-              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-              setFocusedField('weight');
-            }}
-            onChange={(e) => {
-              if (isCardio) {
-                updateSet(rowId, s.id, { distance: e.target.value.replace(',', '.') });
-              } else {
-                updateSet(rowId, s.id, { weight: e.target.value.replace(',', '.') });
-              }
-            }}
-            onBlur={(e) => {
-              blurTimeoutRef.current = setTimeout(() => {
-                setFocusedField(null);
-              }, 400);
-              const val = e.target.value.replace(',', '.').trim();
-              if (val) {
-                const num = parseFloat(val);
-                if (!Number.isNaN(num) && Number.isFinite(num)) {
-                  const rounded = (Math.round(num * 100) / 100).toString();
-                  if (rounded !== val) {
-                    if (isCardio) {
-                      updateSet(rowId, s.id, { distance: rounded });
-                    } else {
-                      updateSet(rowId, s.id, { weight: rounded });
-                    }
-                  }
-                }
-              }
-            }}
-            className={`set-input ${s.completed ? 'completed' : ''}`}
-          />
-          <input
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={isCardio ? s.duration || '' : s.reps || ''}
-            placeholder={
-              prev === '' ? '0' : prev.split('×')[1]?.replace(/[^\d]/g, '')?.trim() || '0'
-            }
-            onFocus={() => {
-              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-              setFocusedField('reps');
-            }}
-            onClick={() => {
-              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-              setFocusedField('reps');
-            }}
-            onPointerDown={() => {
-              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-              setFocusedField('reps');
-            }}
-            onChange={(e) => {
-              if (isCardio) {
-                updateSet(rowId, s.id, { duration: e.target.value });
-              } else {
-                updateSet(rowId, s.id, { reps: e.target.value.replace(/[^\d]/g, '') });
-              }
-            }}
-            onBlur={() => {
-              blurTimeoutRef.current = setTimeout(() => {
-                setFocusedField(null);
-              }, 400);
-            }}
-            className={`set-input ${s.completed ? 'completed' : ''}`}
-          />
-
-          {showRpe && (
-            <input
-              inputMode="decimal"
-              value={s.rpe || ''}
-              placeholder=""
-              onChange={(e) => updateSet(rowId, s.id, { rpe: e.target.value.replace(',', '.') })}
-              className={`set-input ${s.completed ? 'completed' : ''}`}
-            />
-          )}
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              initAudioAndNotifications();
-              toggleSet(rowId, s.id);
-              if (!s.completed) {
-                haptics.success();
-              } else {
-                haptics.light();
-              }
-            }}
-            aria-label={s.completed ? 'Desmarcar serie' : 'Completar serie'}
-            className={`set-check-btn ${s.completed ? 'checked' : ''}`}
-            style={
-              s.completed
-                ? {
-                    background: 'var(--accent-primary)',
-                    borderColor: 'var(--accent-primary)',
-                    color: 'var(--accent-text, #ffffff)',
-                    boxShadow: '0 0 12px var(--accent-glow)',
-                  }
-                : undefined
-            }
-          >
-            <Check size={16} strokeWidth={s.completed ? 3 : 2} />
-          </button>
-        </div>
-
-        {/* Quick Stepper Accessory Bar for gym ergonomics */}
-        {!isCardio && focusedField === 'weight' && (
-          <div
-            onMouseDown={(e) => {
-              e.preventDefault();
-              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-            }}
-            onTouchStart={(e) => e.stopPropagation()}
-            className="flex items-center justify-between gap-1 px-3 py-2 mt-1.5 bg-[#1C1C1E] border border-[var(--accent-primary)]/40 rounded-xl text-xs shadow-lg animate-fadeIn z-10 relative"
-          >
-            <div className="flex items-center gap-1">
-              <span className="text-[0.68rem] font-bold text-[var(--accent-primary-light)] uppercase tracking-wider pr-1">
-                Kg
-              </span>
-              {[-5, -2.5, -1.25].map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                    adjustWeight(d);
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                    adjustWeight(d);
-                  }}
-                  className="px-2.5 py-1.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-white font-mono font-semibold text-xs transition select-none"
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
-            <div className="h-4 w-px bg-white/20" />
-            <div className="flex items-center gap-1">
-              {[+1.25, +2.5, +5].map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                    adjustWeight(d);
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                    adjustWeight(d);
-                  }}
-                  className="px-2.5 py-1.5 rounded-lg bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 font-mono font-bold text-xs transition shadow-sm select-none"
-                >
-                  +{d}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {!isCardio && focusedField === 'reps' && (
-          <div
-            onMouseDown={(e) => {
-              e.preventDefault();
-              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-            }}
-            onTouchStart={(e) => e.stopPropagation()}
-            className="flex items-center justify-between gap-1 px-3 py-2 mt-1.5 bg-[#1C1C1E] border border-[var(--accent-primary)]/40 rounded-xl text-xs shadow-lg animate-fadeIn z-10 relative"
-          >
-            <div className="flex items-center gap-1">
-              <span className="text-[0.68rem] font-bold text-[var(--accent-primary-light)] uppercase tracking-wider pr-1">
-                Reps
-              </span>
-              {[-2, -1].map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                    adjustReps(d);
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                    adjustReps(d);
-                  }}
-                  className="px-2.5 py-1.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-white font-mono font-semibold text-xs transition select-none"
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
-            <div className="h-4 w-px bg-white/20" />
-            <div className="flex items-center gap-1">
-              {[+1, +2, +5].map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                    adjustReps(d);
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                    adjustReps(d);
-                  }}
-                  className="px-2.5 py-1.5 rounded-lg bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 font-mono font-bold text-xs transition shadow-sm select-none"
-                >
-                  +{d}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Accessible delete button (supports keyboard focus + Enter/Space and swipe reveal) */}
-        <button
-          type="button"
-          aria-label={`Eliminar serie ${i + 1}`}
-          onFocus={() => setDeleteFocused(true)}
-          onBlur={() => setDeleteFocused(false)}
-          onClick={(e) => {
-            e.stopPropagation();
-            haptics.warning();
-            removeSet(rowId, s.id);
-          }}
-          style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            bottom: 0,
-            width: '72px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#ef4444',
-            border: 'none',
-            borderRadius: '0 8px 8px 0',
-            cursor: 'pointer',
-            opacity: offsetX < -10 || deleteFocused ? 1 : 0,
-            pointerEvents: offsetX < -10 || deleteFocused ? 'auto' : 'none',
-            zIndex: deleteFocused ? 10 : 0,
-            transition: 'opacity 0.15s ease',
-            outline: deleteFocused ? '2px solid var(--accent-primary, #ffffff)' : 'none',
-            outlineOffset: '-2px',
-          }}
-        >
-          <Trash2 size={18} color="white" />
-        </button>
-      </div>
-    );
-  },
-  (prev, next) => {
-    return (
-      prev.setId === next.setId &&
-      prev.rowId === next.rowId &&
-      prev.i === next.i &&
-      prev.workingIndex === next.workingIndex &&
-      prev.showRpe === next.showRpe &&
-      prev.isCardio === next.isCardio &&
-      prev.cols === next.cols &&
-      prev.exerciseId === next.exerciseId &&
-      matchVariant(prev.variant, next.variant) &&
-      prev.recentWorkouts === next.recentWorkouts
-    );
-  },
-);
+import { SwipeableSetRow, type SwipeableSetRowProps } from './swipeable-set-row';
+export { SwipeableSetRow, type SwipeableSetRowProps };
 
 export interface ExerciseCardProps {
   rowId?: string;
@@ -524,6 +61,40 @@ export const ExerciseCard = React.memo(function ExerciseCard({
   const customGifs = prefs?.exerciseGifs || {};
   const [editingVariant, setEditingVariant] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
+  const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showActionsMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node) &&
+        menuButtonRef.current &&
+        !menuButtonRef.current.contains(e.target as Node)
+      ) {
+        setShowActionsMenu(false);
+      }
+    };
+    const handleScrollOrResize = () => {
+      setShowActionsMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+    window.addEventListener('resize', handleScrollOrResize);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [showActionsMenu]);
+
+  const [activeStepper, setActiveStepper] = useState<{
+    setId: string;
+    field: 'weight' | 'reps';
+  } | null>(null);
 
   const catalog = getExerciseMap(customExercises);
   const meta = row ? catalog.get(row.exerciseId) : undefined;
@@ -683,11 +254,18 @@ export const ExerciseCard = React.memo(function ExerciseCard({
         </div>
         <div className="exercise-card-actions" onClick={(e) => e.stopPropagation()}>
           <button
+            ref={menuButtonRef}
             type="button"
             aria-label="Opciones del ejercicio"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               haptics.light();
-              setShowActionsMenu(!showActionsMenu);
+              if (!showActionsMenu && menuButtonRef.current) {
+                setMenuRect(menuButtonRef.current.getBoundingClientRect());
+                setShowActionsMenu(true);
+              } else {
+                setShowActionsMenu(false);
+              }
             }}
             className="exercise-card-action-btn"
             title="Opciones del ejercicio"
@@ -713,51 +291,72 @@ export const ExerciseCard = React.memo(function ExerciseCard({
             />
           </button>
 
-          {showActionsMenu && (
-            <div className="exercise-card-menu-dropdown fade-in">
-              <button
-                type="button"
-                disabled={index === 0}
-                aria-label="Subir"
-                onClick={() => {
-                  haptics.light();
-                  moveExercise(row.id, -1);
-                  setShowActionsMenu(false);
+          {showActionsMenu &&
+            menuRect &&
+            createPortal(
+              <div
+                ref={menuRef}
+                className="exercise-card-menu-dropdown fade-in"
+                style={{
+                  position: 'fixed',
+                  top:
+                    menuRect.bottom + 140 > window.innerHeight
+                      ? Math.max(10, menuRect.top - 130)
+                      : menuRect.bottom + 6,
+                  right: Math.max(12, window.innerWidth - menuRect.right),
+                  zIndex: 9999,
                 }}
-                className="exercise-card-menu-item"
+                onClick={(e) => e.stopPropagation()}
               >
-                <ChevronUp size={16} />
-                <span>Mover arriba</span>
-              </button>
-              <button
-                type="button"
-                disabled={index === total - 1}
-                aria-label="Bajar"
-                onClick={() => {
-                  haptics.light();
-                  moveExercise(row.id, 1);
-                  setShowActionsMenu(false);
-                }}
-                className="exercise-card-menu-item"
-              >
-                <ChevronDown size={16} />
-                <span>Mover abajo</span>
-              </button>
-              <button
-                type="button"
-                aria-label="Quitar ejercicio"
-                onClick={() => {
-                  haptics.warning();
-                  removeExercise(row.id);
-                  setShowActionsMenu(false);
-                }}
-                className="exercise-card-menu-item danger"
-              >
-                <Trash2 size={16} />
-                <span>Quitar ejercicio</span>
-              </button>
-            </div>
-          )}
+                <button
+                  type="button"
+                  disabled={index === 0}
+                  aria-label="Subir"
+                  onClick={() => {
+                    haptics.light();
+                    moveExercise(row.id, -1);
+                    setShowActionsMenu(false);
+                  }}
+                  className="exercise-card-menu-item"
+                >
+                  <ChevronUp size={16} />
+                  <span>Mover arriba</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={index === total - 1}
+                  aria-label="Bajar"
+                  onClick={() => {
+                    haptics.light();
+                    moveExercise(row.id, 1);
+                    setShowActionsMenu(false);
+                  }}
+                  className="exercise-card-menu-item"
+                >
+                  <ChevronDown size={16} />
+                  <span>Mover abajo</span>
+                </button>
+                <button
+                  type="button"
+                  aria-label="Quitar ejercicio"
+                  onClick={() => {
+                    setShowActionsMenu(false);
+                    const hasCompletedSets = row.sets.some((s) => s.completed);
+                    if (hasCompletedSets) {
+                      setConfirmRemoveOpen(true);
+                    } else {
+                      haptics.warning();
+                      removeExercise(row.id);
+                    }
+                  }}
+                  className="exercise-card-menu-item danger"
+                >
+                  <Trash2 size={16} />
+                  <span>Quitar ejercicio</span>
+                </button>
+              </div>,
+              document.body,
+            )}
         </div>
       </div>
 
@@ -880,6 +479,8 @@ export const ExerciseCard = React.memo(function ExerciseCard({
                     isCardio={isCardio}
                     cols={cols}
                     recentWorkouts={recentWorkouts}
+                    activeStepper={activeStepper}
+                    setActiveStepper={setActiveStepper}
                   />
                 );
               })}
@@ -898,6 +499,51 @@ export const ExerciseCard = React.memo(function ExerciseCard({
           </div>
         </>
       )}
+
+      <AlertDialog open={confirmRemoveOpen} onOpenChange={setConfirmRemoveOpen}>
+        <AlertDialogContent
+          className="card"
+          style={{
+            maxWidth: '380px',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-medium)',
+            borderRadius: '16px',
+            padding: '1.25rem',
+          }}
+        >
+          <AlertDialogHeader>
+            <AlertDialogTitle
+              style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}
+            >
+              ¿Quitar {meta?.name || 'ejercicio'}?
+            </AlertDialogTitle>
+            <AlertDialogDescription style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+              Ya has completado series en este ejercicio. Si lo quitas ahora, esas series se
+              descartarán de la sesión actual.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter
+            style={{
+              marginTop: '1rem',
+              display: 'flex',
+              gap: '0.5rem',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <AlertDialogCancel className="btn btn-secondary">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="btn btn-danger btn-press"
+              style={{ color: 'var(--color-danger)' }}
+              onClick={() => {
+                haptics.warning();
+                if (row) removeExercise(row.id);
+              }}
+            >
+              Quitar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </article>
   );
 });
