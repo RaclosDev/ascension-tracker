@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import { User, Scale, Activity } from 'lucide-react';
@@ -16,6 +17,7 @@ interface OnboardingForm extends MacroForm {
 }
 
 export default function OnboardingScreen({ onComplete }: { onComplete: () => void }) {
+  const { logout } = useAuth();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<OnboardingForm>({
     sex: 'M',
@@ -119,6 +121,22 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
           maxWidth: '420px',
         }}
       >
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
+          <button
+            type="button"
+            onClick={() => void logout()}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-secondary, #94a3b8)',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              padding: '0.25rem 0.5rem',
+            }}
+          >
+            ← Volver al login
+          </button>
+        </div>
         {step === 1 ? (
           <>
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>

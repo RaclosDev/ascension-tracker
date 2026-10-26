@@ -14,8 +14,15 @@ export default defineConfig({
       filename: 'sw.ts',
       registerType: 'autoUpdate',
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,ico,svg,png,jpg,jpeg,webp,mp3,json}'],
-        globIgnores: ['**/BarcodeScanner*', '**/CategoricalChart*'],
+        globPatterns: ['**/*.{js,css,html,ico,svg,png,jpg,jpeg,webp,mp3}'],
+        globIgnores: [
+          '**/BarcodeScanner*',
+          '**/CategoricalChart*',
+          '**/exercises*.json',
+          '**/ascension-title.png',
+          '**/pwa-logo.png',
+          '**/icon-512.png',
+        ],
       },
     }),
   ],
@@ -38,5 +45,32 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (
+              id.includes('react/') ||
+              id.includes('react-dom/') ||
+              id.includes('react-router-dom/')
+            ) {
+              return 'vendor-react';
+            }
+            if (id.includes('@tanstack/react-query')) {
+              return 'vendor-query';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-lucide';
+            }
+            if (id.includes('date-fns')) {
+              return 'vendor-date';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'vendor-radix';
+            }
+          }
+        },
+      },
+    },
   },
 });

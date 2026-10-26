@@ -78,7 +78,7 @@ app:
     secret: ${JWT_SECRET}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   auth:
-    refresh-grace-seconds: ${REFRESH_GRACE_SECONDS:300}
+    refresh-grace-seconds: ${REFRESH_GRACE_SECONDS:30}
   cookie:
     same-site: ${COOKIE_SAME_SITE:Lax}
     secure: ${COOKIE_SECURE:#{null}}

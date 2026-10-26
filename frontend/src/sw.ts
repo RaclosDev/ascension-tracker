@@ -36,6 +36,16 @@ registerRoute(
   }),
 );
 
+// Cache exercises catalog at runtime (offline-ready without bloating the installation precache)
+registerRoute(
+  ({ url }) =>
+    url.pathname.endsWith('exercises.json') || url.pathname.endsWith('exercises-base.json'),
+  new StaleWhileRevalidate({
+    cacheName: 'exercises-catalog-cache',
+    plugins: [new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 30 })],
+  }),
+);
+
 // Ascension Service Worker: handles push notifications
 self.addEventListener('push', (event: PushEvent) => {
   let data = { title: '¡Descanso terminado!', body: 'Es hora de la siguiente serie.' };

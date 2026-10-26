@@ -530,7 +530,24 @@ export const useWorkoutStore = create<WorkoutState>()(
       version: 1,
 
       migrate: (persistedState: unknown) => {
-        return persistedState as WorkoutState;
+        const state =
+          persistedState && typeof persistedState === 'object'
+            ? (persistedState as Partial<WorkoutState>)
+            : {};
+        return {
+          tab: state.tab ?? 'home',
+          active: state.active ?? null,
+          restUntil: state.restUntil ?? null,
+          restPreset: typeof state.restPreset === 'number' ? state.restPreset : 90,
+          restTimers: state.restTimers ?? {},
+          pickerOpen: false,
+          detailId: null,
+          settings: {
+            showRpe: false,
+            ...(state.settings ?? {}),
+          },
+          hiddenEquipments: Array.isArray(state.hiddenEquipments) ? state.hiddenEquipments : [],
+        } as WorkoutState;
       },
     },
   ),

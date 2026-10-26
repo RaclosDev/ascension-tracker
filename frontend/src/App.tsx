@@ -6,7 +6,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import api from './api/client';
 import { applyThemeColor } from './utils/colorHelper';
-import { lazyWithRetry } from './utils/lazyWithRetry';
+import { lazyWithRetry, isChunkLoadError } from './utils/lazyWithRetry';
 
 const DashboardPage = lazyWithRetry(() => import('./pages/DashboardPage'));
 const TrackingPage = lazyWithRetry(() => import('./pages/TrackingPage'));
@@ -86,8 +86,8 @@ function AppContent() {
   }
 
   return (
-    <Suspense fallback={<PageLoader />}>
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
@@ -101,8 +101,8 @@ function AppContent() {
           <Route path="/login" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </ErrorBoundary>
-    </Suspense>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
@@ -117,8 +117,12 @@ class GlobalErrorBoundary extends Component<{ children: React.ReactNode }, { has
   }
 
   componentDidCatch(error: Error) {
-    if (error.name === 'ChunkLoadError' || error.message?.includes('fetch')) {
-      window.location.reload();
+    if (isChunkLoadError(error)) {
+      const alreadyReloaded = sessionStorage.getItem('ascension_eb_reload_lock');
+      if (!alreadyReloaded) {
+        sessionStorage.setItem('ascension_eb_reload_lock', 'true');
+        window.location.reload();
+      }
     }
   }
 
