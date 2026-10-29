@@ -79,7 +79,7 @@ jobs:
         run: |
           npm run lint
           npm run typecheck
-          npm test
+          npm run test:coverage
           npm run build
 
       - name: Cache Playwright Browsers

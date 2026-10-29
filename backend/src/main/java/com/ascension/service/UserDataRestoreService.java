@@ -208,26 +208,12 @@ public class UserDataRestoreService {
     private void wipeUserData(String userEmail) {
         log.warn("Limpiando datos existentes de usuario para restauración: {}", com.ascension.util.PiiMasker.maskEmail(userEmail));
 
-        jdbcTemplate.update("DELETE FROM workout_sets WHERE workout_exercise_id IN (SELECT id FROM workout_exercises WHERE workout_id IN (SELECT id FROM workouts WHERE user_email = ?))", userEmail);
-        jdbcTemplate.update("DELETE FROM workout_exercises WHERE workout_id IN (SELECT id FROM workouts WHERE user_email = ?)", userEmail);
-        jdbcTemplate.update("DELETE FROM workouts WHERE user_email = ?", userEmail);
+        UserOwnedTables.deleteWorkoutsAndTemplates(jdbcTemplate, userEmail);
 
-        jdbcTemplate.update("DELETE FROM workout_template_exercises WHERE template_id IN (SELECT id FROM workout_templates WHERE user_email = ?)", userEmail);
-        jdbcTemplate.update("DELETE FROM workout_templates WHERE user_email = ?", userEmail);
-
-        String[] tables = {
-                "custom_exercises",
-                "food_logs",
-                "meals",
-                "recipes",
-                "saved_foods",
-                "steps_entries",
-                "weight_entries",
-                "user_settings"
-        };
-
-        for (String table : tables) {
-            jdbcTemplate.update("DELETE FROM " + table + " WHERE user_email = ?", userEmail);
+        for (UserOwnedTables.Table table : UserOwnedTables.DIRECT) {
+            if (table.restorable()) {
+                UserOwnedTables.deleteFrom(jdbcTemplate, table, userEmail);
+            }
         }
     }
 

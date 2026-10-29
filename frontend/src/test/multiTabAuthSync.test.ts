@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import api, { memoryToken, setMemoryToken, getSessionToken, isTokenValid } from '../api/client';
 
-describe('Multi-tab Session Sync & PWA Cold Start', () => {
+describe('Access token storage across tabs and reloads', () => {
   const createFakeJwt = (expSecondsFromNow: number): string => {
     const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
     const exp = Math.floor(Date.now() / 1000) + expSecondsFromNow;
@@ -12,53 +11,38 @@ describe('Multi-tab Session Sync & PWA Cold Start', () => {
   beforeEach(() => {
     sessionStorage.clear();
     localStorage.clear();
-    setMemoryToken(null);
-    delete api.defaults.headers.common['Authorization'];
-    vi.restoreAllMocks();
+    vi.resetModules();
   });
 
-  it('allows a newly opened tab with empty sessionStorage to restore session from localStorage', () => {
+  it('never writes the access token to localStorage or sessionStorage', async () => {
+    const client = await import('../api/client');
     const validToken = createFakeJwt(3600);
 
-    // Tab 1 logs in and sets memory token
-    setMemoryToken(validToken);
-    expect(sessionStorage.getItem('ascension_session_token')).toBe(validToken);
-    expect(localStorage.getItem('ascension_session_token')).toBe(validToken);
+    client.setMemoryToken(validToken);
 
-    // Tab 2 opens in a new tab: its sessionStorage is initially completely empty
-    sessionStorage.clear();
-    expect(sessionStorage.getItem('ascension_session_token')).toBeNull();
-
-    // Tab 2 calls getSessionToken()
-    const recoveredToken = getSessionToken();
-    expect(recoveredToken).toBe(validToken);
-    expect(isTokenValid(recoveredToken)).toBe(true);
-
-    // Tab 2 re-synced token to its own sessionStorage for fast local access
-    expect(sessionStorage.getItem('ascension_session_token')).toBe(validToken);
-  });
-
-  it('discards expired tokens safely without destroying storage or triggering cross-tab wipe', () => {
-    const expiredToken = createFakeJwt(-60);
-
-    localStorage.setItem('ascension_session_token', expiredToken);
-    sessionStorage.setItem('ascension_session_token', expiredToken);
-
-    const token = getSessionToken();
-    expect(token).toBeNull();
-  });
-
-  it('logout cleans up both sessionStorage and localStorage completely', () => {
-    const validToken = createFakeJwt(3600);
-    setMemoryToken(validToken);
-
-    expect(localStorage.getItem('ascension_session_token')).toBe(validToken);
-    expect(sessionStorage.getItem('ascension_session_token')).toBe(validToken);
-
-    setMemoryToken(null);
-
-    expect(memoryToken).toBeNull();
+    expect(client.memoryToken).toBe(validToken);
     expect(localStorage.getItem('ascension_session_token')).toBeNull();
     expect(sessionStorage.getItem('ascension_session_token')).toBeNull();
+  });
+
+  it('removes tokens that older builds left in Web Storage', async () => {
+    const legacyToken = createFakeJwt(3600);
+    localStorage.setItem('ascension_session_token', legacyToken);
+    sessionStorage.setItem('ascension_session_token', legacyToken);
+
+    const client = await import('../api/client');
+
+    expect(localStorage.getItem('ascension_session_token')).toBeNull();
+    expect(sessionStorage.getItem('ascension_session_token')).toBeNull();
+    expect(client.memoryToken).toBeNull();
+  });
+
+  it('logout clears the in-memory token', async () => {
+    const client = await import('../api/client');
+    client.setMemoryToken(createFakeJwt(3600));
+
+    client.setMemoryToken(null);
+
+    expect(client.memoryToken).toBeNull();
   });
 });

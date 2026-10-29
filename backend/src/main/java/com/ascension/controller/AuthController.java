@@ -44,6 +44,7 @@ import java.util.Optional;
 @RequestMapping("/api/auth")
 public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+    private static final String REFRESH_COOKIE_PATH = "/api/auth";
 
     private final GoogleIdTokenVerifier verifier;
     private final JwtEncoder jwtEncoder;
@@ -55,7 +56,7 @@ public class AuthController {
     @Value("${google.client-id:CHANGE_ME}")
     private String googleClientId;
 
-    @Value("${app.jwt.expiration-ms:86400000}")
+    @Value("${app.jwt.expiration-ms:900000}")
     private long jwtExpirationMs;
 
     @Value("${app.cookie.same-site:Lax}")
@@ -145,7 +146,7 @@ public class AuthController {
             String existingSub = userByEmail.get().googleSub();
             if (existingSub != null && !existingSub.equals(googleSub)) {
                 log.error("SECURITY ALERT: Identity mismatch for account '{}'. Stored google_sub='{}', incoming google_sub='{}'. Possible account takeover attempt.",
-                        PiiMasker.maskEmail(email), existingSub, googleSub);
+                        PiiMasker.maskEmail(email), PiiMasker.maskSubject(existingSub), PiiMasker.maskSubject(googleSub));
                 return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
             }
         }
@@ -156,7 +157,7 @@ public class AuthController {
             String existingEmail = userBySub.get().email();
             if (existingEmail != null && !existingEmail.equalsIgnoreCase(email)) {
                 log.error("SECURITY ALERT: Identity mismatch for google_sub '{}'. Already assigned to account '{}', incoming account='{}'. Rejecting login.",
-                        googleSub, PiiMasker.maskEmail(existingEmail), PiiMasker.maskEmail(email));
+                        PiiMasker.maskSubject(googleSub), PiiMasker.maskEmail(existingEmail), PiiMasker.maskEmail(email));
                 return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
             }
         }
@@ -175,7 +176,7 @@ public class AuthController {
         ResponseCookie springCookie = buildRefreshCookie(refreshToken.getPlainToken(), request);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, springCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, springCookie.toString(), buildLegacyDeleteCookie(request).toString())
                 .body(Map.of("token", customToken));
     }
 
@@ -205,7 +206,12 @@ public class AuthController {
         }
         String origin = request.getHeader("Origin");
         if (origin == null || origin.isBlank()) {
-            return true;
+            // Browsers always send Origin on a cross-site POST; fall back to Referer and
+            // reject requests that carry neither, since SameSite=Lax alone is the only other guard.
+            origin = originFromReferer(request.getHeader("Referer"));
+            if (origin == null) {
+                return false;
+            }
         }
         String trimmedOrigin = origin.trim();
         List<String> allowed = parseAllowedOrigins();
@@ -213,6 +219,22 @@ public class AuthController {
             return true;
         }
         return allowed.contains(trimmedOrigin);
+    }
+
+    private static String originFromReferer(String referer) {
+        if (referer == null || referer.isBlank()) {
+            return null;
+        }
+        try {
+            java.net.URI uri = java.net.URI.create(referer.trim());
+            if (uri.getScheme() == null || uri.getHost() == null) {
+                return null;
+            }
+            String port = uri.getPort() == -1 ? "" : ":" + uri.getPort();
+            return uri.getScheme() + "://" + uri.getHost() + port;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     @PostMapping("/refresh")
@@ -250,12 +272,12 @@ public class AuthController {
             log.info("Refresh token rotated successfully for user {}", PiiMasker.maskEmail(email));
 
             return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(newRefreshToken.getPlainToken(), request).toString())
+                    .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(newRefreshToken.getPlainToken(), request).toString(), buildLegacyDeleteCookie(request).toString())
                     .body(Map.of("token", token));
 
         } catch (TokenRefreshException e) {
             return ResponseEntity.status(401)
-                    .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString())
+                    .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString(), buildLegacyDeleteCookie(request).toString())
                     .body(Map.of("error", e.getMessage()));
         }
     }
@@ -282,17 +304,27 @@ public class AuthController {
         return ResponseCookie.from("refreshToken", value)
                 .httpOnly(true)
                 .secure(determineCookieSecure(request))
-                .path("/")
+                .path(REFRESH_COOKIE_PATH)
                 .maxAge(30L * 24 * 60 * 60)
                 .sameSite(getEffectiveSameSite())
                 .build();
     }
 
     private ResponseCookie buildDeleteCookie(HttpServletRequest request) {
+        return buildDeleteCookie(request, REFRESH_COOKIE_PATH);
+    }
+
+    // Cookies issued before the path was narrowed live at "/"; expire them so the browser
+    // does not keep sending a stale token next to the current one.
+    private ResponseCookie buildLegacyDeleteCookie(HttpServletRequest request) {
+        return buildDeleteCookie(request, "/");
+    }
+
+    private ResponseCookie buildDeleteCookie(HttpServletRequest request, String path) {
         return ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(determineCookieSecure(request))
-                .path("/")
+                .path(path)
                 .maxAge(0)
                 .sameSite(getEffectiveSameSite())
                 .build();
@@ -354,7 +386,7 @@ public class AuthController {
         }
         
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString())
+                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString(), buildLegacyDeleteCookie(request).toString())
                 .body(Map.of("message", "Log out successful"));
     }
 
@@ -368,7 +400,7 @@ public class AuthController {
         accountDeletionService.wipeAccountData(email);
         userService.evictUser(email);
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString())
+                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString(), buildLegacyDeleteCookie(request).toString())
                 .body(Collections.singletonMap("message", "Account deleted successfully"));
     }
 
