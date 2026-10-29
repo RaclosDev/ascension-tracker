@@ -20,7 +20,7 @@ Ascension Tracker no gestiona contraseñas propias. El flujo de seguridad sigue 
 2. **Verificación Servidor:** El backend valida criptográficamente el ID Token de Google contra los servidores de Google usando `google-api-client`.
 3. **Emisión de Tokens:**
    - **Access Token (JWT):** Firmado en HMAC-SHA256. Reside **estrictamente en memoria del navegador** (estado de React / módulo JS). Nunca se persiste en `localStorage` ni `sessionStorage` para neutralizar ataques XSS de extracción de credenciales.
-   - **Refresh Token:** Se almacena hasheado en base de datos (SHA-256) y se entrega al cliente **únicamente a través de una cookie `HttpOnly`, `Secure` y `SameSite`**.
+   - **Refresh Token:** Se almacena hasheado en base de datos (SHA-256) y se entrega al cliente **únicamente a través de una cookie `HttpOnly`, `Secure` y `SameSite`**. La cookie se limita a `Path=/api/auth`, así que no viaja con el resto de peticiones a la API.
 4. **Flujo de Refresco y Cierre de Sesión:**
    - Ni `/api/auth/login` ni `/api/auth/refresh` exponen jamás el refresh token en el cuerpo JSON de la respuesta.
    - Los endpoints `/api/auth/refresh` y `/api/auth/logout` leen el token de refresco **exclusivamente de la cookie `HttpOnly`**, ignorando cualquier cuerpo JSON o cabecera personalizada (`X-Refresh-Token`).
