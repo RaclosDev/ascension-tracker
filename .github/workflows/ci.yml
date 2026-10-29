@@ -37,6 +37,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
           exit-code: '1'
+          trivyignores: '.trivyignore'
 
       - name: Build Backend Docker Image
         working-directory: backend
@@ -50,6 +51,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
           exit-code: '1'
+          trivyignores: '.trivyignore'
 
   frontend:
     name: Frontend CI
@@ -108,3 +110,4 @@ jobs:
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
           exit-code: '1'
+          trivyignores: '.trivyignore'

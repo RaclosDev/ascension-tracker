@@ -1,0 +1,11 @@
+# Vulnerabilities accepted on purpose. Each entry needs a reason, a way to remove it and an
+# expiry date (exp:), after which Trivy reports it again and CI fails until it is reviewed.
+
+# spring-webmvc 6.2.x, fixed only in Spring Framework 7 (Spring Boot 4, Dependabot PR #83).
+# CVE-2026-47884: RCE through XsltView. The API serves JSON only and registers no XsltView
+#   or view resolvers (grep for "Xslt" and "ViewResolver" in backend/src/main finds nothing).
+# CVE-2026-47890: stream corruption in Server-Sent Events rendered through views. The
+#   backend uses no SseEmitter, ResponseBodyEmitter or text/event-stream endpoints.
+# Remove both lines when the backend moves to Spring Boot 4.
+CVE-2026-47884 exp:2027-03-31
+CVE-2026-47890 exp:2027-03-31
