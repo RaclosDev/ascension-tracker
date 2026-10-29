@@ -131,7 +131,11 @@ export function Dashboard() {
       {/* Start Workout Sheet */}
       {startModalOpen && (
         <>
-          <div className="workout-sheet-overlay" onClick={() => setStartModalOpen(false)} />
+          <div
+            className="workout-sheet-overlay"
+            aria-hidden="true"
+            onClick={() => setStartModalOpen(false)}
+          />
           <div className="workout-sheet">
             <div className="workout-sheet-handle" />
             <div className="workout-sheet-header">

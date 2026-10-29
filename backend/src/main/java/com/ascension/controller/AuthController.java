@@ -145,7 +145,7 @@ public class AuthController {
             String existingSub = userByEmail.get().googleSub();
             if (existingSub != null && !existingSub.equals(googleSub)) {
                 log.error("SECURITY ALERT: Identity mismatch for account '{}'. Stored google_sub='{}', incoming google_sub='{}'. Possible account takeover attempt.",
-                        PiiMasker.maskEmail(email), existingSub, googleSub);
+                        PiiMasker.maskEmail(email), PiiMasker.maskSubject(existingSub), PiiMasker.maskSubject(googleSub));
                 return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
             }
         }
@@ -156,7 +156,7 @@ public class AuthController {
             String existingEmail = userBySub.get().email();
             if (existingEmail != null && !existingEmail.equalsIgnoreCase(email)) {
                 log.error("SECURITY ALERT: Identity mismatch for google_sub '{}'. Already assigned to account '{}', incoming account='{}'. Rejecting login.",
-                        googleSub, PiiMasker.maskEmail(existingEmail), PiiMasker.maskEmail(email));
+                        PiiMasker.maskSubject(googleSub), PiiMasker.maskEmail(existingEmail), PiiMasker.maskEmail(email));
                 return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
             }
         }
