@@ -266,7 +266,7 @@ public class GeminiApiClient {
 
         List<String> discovered = new ArrayList<>();
         try {
-            String url = "https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models";
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/json");
             headers.set("x-goog-api-key", apiKey);
@@ -417,13 +417,8 @@ public class GeminiApiClient {
             headers.set("x-goog-api-key", apiKey);
         }
 
-        String callUrl = url;
-        if (apiKey != null && !apiKey.isEmpty() && !url.contains("key=")) {
-            callUrl = url.contains("?") ? url + "&key=" + apiKey : url + "?key=" + apiKey;
-        }
-
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
-        ResponseEntity<String> response = restTemplate.exchange(callUrl, HttpMethod.POST, entity, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 
         JsonNode root = objectMapper.readTree(response.getBody());
         JsonNode candidates = root.path("candidates");
