@@ -22,7 +22,7 @@
 
 Desarrollada íntegramente como proyecto de portafolio, la aplicación demuestra un dominio Full-Stack moderno mediante arquitecturas resilientes:
 - **Resiliencia Frontend:** Experiencia Offline-Ready gestionada por `Workbox` (estrategia NetworkFirst), sincronización de estado local ultrarrápida con `Zustand` + `IndexedDB` y notificaciones **Web Push** nativas.
-- **Robustez Backend:** Arquitectura Spring Boot 3.3, mitigación de ataques DDoS mediante un Rate Limiter en memoria (`Caffeine`), mapeo seguro de DTOs (`MapStruct`) y erradicación del problema N+1 de Hibernate utilizando la interfaz `Persistable<String>`.
+- **Robustez Backend:** Arquitectura Spring Boot 3.5, mitigación de ataques DDoS mediante un Rate Limiter en memoria (`Caffeine`), mapeo seguro de DTOs (`MapStruct`) y erradicación del problema N+1 de Hibernate utilizando la interfaz `Persistable<String>`.
 - **IA y APIs Integradas:** Orquestación nativa de la API de **Google Gemini** (Visión, OCR y Texto) para actuar como copiloto nutricional, y un proxy backend seguro (HMAC-SHA1) para consumir el catálogo de *FatSecret Platform*.
 
 *(Nota: UI, parseo de fechas y locale configurados estrictamente en Español `es-ES`).*
