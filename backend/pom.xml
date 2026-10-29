@@ -41,16 +41,11 @@
                 <artifactId>jose4j</artifactId>
                 <version>0.9.6</version>
             </dependency>
-            <!-- Transitive through google-api-client and web-push; pinned to patched releases. -->
+            <!-- Transitive through google-api-client; pinned to a patched release. -->
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>33.7.2-jre</version>
-            </dependency>
-            <dependency>
-                <groupId>org.asynchttpclient</groupId>
-                <artifactId>async-http-client</artifactId>
-                <version>2.12.4</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -147,6 +142,14 @@
             <groupId>nl.martijndwars</groupId>
             <artifactId>web-push</artifactId>
             <version>5.1.1</version>
+            <!-- Only PushAsyncService uses async-http-client; the app sends through PushService
+                 (Apache HttpAsyncClient), so the vulnerable AHC 2.x stack is left out entirely. -->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.asynchttpclient</groupId>
+                    <artifactId>async-http-client</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
