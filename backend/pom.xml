@@ -39,7 +39,7 @@
             <dependency>
                 <groupId>org.bitbucket.b_c</groupId>
                 <artifactId>jose4j</artifactId>
-                <version>0.9.6</version>
+                <version>0.9.7</version>
             </dependency>
             <!-- Transitive through google-api-client; pinned to a patched release. -->
             <dependency>
@@ -141,7 +141,7 @@
         <dependency>
             <groupId>nl.martijndwars</groupId>
             <artifactId>web-push</artifactId>
-            <version>5.1.1</version>
+            <version>5.1.2</version>
             <!-- Only PushAsyncService uses async-http-client; the app sends through PushService
                  (Apache HttpAsyncClient), so the vulnerable AHC 2.x stack is left out entirely. -->
             <exclusions>
@@ -160,7 +160,7 @@
         <dependency>
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client</artifactId>
-            <version>2.9.1</version>
+            <version>2.9.2</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
@@ -170,7 +170,7 @@
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
-            <version>1.5.5.Final</version>
+            <version>1.6.3</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
@@ -184,7 +184,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>3.16.0</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -192,7 +192,7 @@
                         <path>
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
-                            <version>1.5.5.Final</version>
+                            <version>1.6.3</version>
                         </path>
                         <path>
                             <groupId>org.projectlombok</groupId>
