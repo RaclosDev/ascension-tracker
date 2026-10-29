@@ -20,6 +20,11 @@
     <properties>
         <java.version>17</java.version>
         <testcontainers.version>1.20.2</testcontainers.version>
+        <!-- Patch releases ahead of what Spring Boot 3.5.16 manages, to close CVEs Trivy reports. -->
+        <jackson-bom.version>2.21.7</jackson-bom.version>
+        <netty.version>4.1.137.Final</netty.version>
+        <tomcat.version>10.1.61</tomcat.version>
+        <postgresql.version>42.7.12</postgresql.version>
     </properties>
 
     <dependencyManagement>
@@ -35,6 +40,17 @@
                 <groupId>org.bitbucket.b_c</groupId>
                 <artifactId>jose4j</artifactId>
                 <version>0.9.6</version>
+            </dependency>
+            <!-- Transitive through google-api-client and web-push; pinned to patched releases. -->
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>33.7.2-jre</version>
+            </dependency>
+            <dependency>
+                <groupId>org.asynchttpclient</groupId>
+                <artifactId>async-http-client</artifactId>
+                <version>2.12.4</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
