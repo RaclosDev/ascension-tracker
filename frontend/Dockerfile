@@ -10,6 +10,11 @@ COPY . .
 RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:alpine@sha256:378d0c32f6562f7fd9629170797f57d2b953aa09be983b3daaf4809bb039ca00
+# Pull Alpine security fixes released after the pinned base image digest,
+# then drop back to the image's unprivileged nginx user (uid 101).
+USER root
+RUN apk upgrade --no-cache
+USER 101
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY security-headers.conf /etc/nginx/security-headers.conf
