@@ -35,7 +35,7 @@ export default function CalculatorCard({
       }}
     >
       <button
-        className="accordion-header flex justify-between items-center w-full cursor-pointer select-none text-left p-0 border-none bg-transparent"
+        className="accordion-header flex justify-between items-center w-full min-h-11 cursor-pointer select-none text-left p-0 border-none bg-transparent"
         onClick={toggle}
         aria-expanded={isOpen}
         type="button"
@@ -47,11 +47,13 @@ export default function CalculatorCard({
             </div>
           )}
           <div className="min-w-0">
-            <div className="card-title m-0 text-base font-semibold text-white truncate">
+            <div className="card-title m-0 text-base font-semibold text-white leading-snug text-balance">
               {title}
             </div>
             {subtitle && (
-              <div className="text-xs text-[var(--text-secondary)] mt-0.5 truncate">{subtitle}</div>
+              <div className="text-xs text-[var(--text-secondary)] mt-0.5 leading-snug text-pretty">
+                {subtitle}
+              </div>
             )}
           </div>
         </div>
