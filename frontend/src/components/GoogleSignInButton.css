@@ -1,0 +1,30 @@
+.google-sign-in-dialog {
+  width: min(32rem, calc(100vw - 1.5rem));
+  margin: auto;
+  padding: 1.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.25rem;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.google-sign-in-dialog::backdrop {
+  background: rgb(0 0 0 / 65%);
+}
+
+.google-sign-in-dialog h2 {
+  padding-right: 2.5rem;
+  font-size: 1.25rem;
+}
+
+.google-sign-in-dialog > p {
+  margin-top: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.google-sign-in-dialog .google-sign-in-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  font-size: 1.5rem;
+}

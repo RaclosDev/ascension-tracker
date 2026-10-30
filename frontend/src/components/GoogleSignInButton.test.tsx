@@ -16,15 +16,19 @@ vi.mock('@react-oauth/google', () => ({
 }));
 
 describe('Google sign-in parity with PorrApp', () => {
-  it('mounts the official sign-in only after opening the dialog, then delivers the identity credential', async () => {
+  it('prepares Google before opening the dialog and preserves it between attempts', async () => {
     const onCredential = vi.fn().mockResolvedValue(undefined);
     render(<GoogleSignInButton onCredential={onCredential} />);
-    expect(screen.queryByText('Elegir cuenta de prueba')).not.toBeInTheDocument();
+    const googleButton = screen.getByText('Elegir cuenta de prueba');
+    expect(googleButton).not.toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
     expect(screen.getByRole('dialog')).toBeVisible();
+    expect(googleButton).toBeVisible();
     fireEvent.click(screen.getByText('Elegir cuenta de prueba'));
     await waitFor(() => expect(onCredential).toHaveBeenCalledWith('test-id-credential'));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
+    expect(screen.getByText('Elegir cuenta de prueba')).toBe(googleButton);
   });
   it('does not submit a missing Google credential', async () => {
     const onCredential = vi.fn();

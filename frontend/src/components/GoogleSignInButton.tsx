@@ -1,21 +1,15 @@
-import { useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { Button } from './ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from './ui/dialog';
+import './GoogleSignInButton.css';
 
 export default function GoogleSignInButton({
   onCredential,
 }: {
   onCredential: (credential: string) => Promise<void>;
 }) {
-  const [open, setOpen] = useState(false);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const handleSuccess = async ({ credential }: CredentialResponse) => {
@@ -27,7 +21,7 @@ export default function GoogleSignInButton({
     setPending(true);
     try {
       await onCredential(credential);
-      setOpen(false);
+      dialog.current?.close();
     } catch {
       setError('No se ha podido iniciar sesión con Google. Inténtalo de nuevo.');
     } finally {
@@ -35,27 +29,36 @@ export default function GoogleSignInButton({
     }
   };
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(value) => {
-        setOpen(value);
-        setError('');
-      }}
-    >
-      <DialogTrigger asChild>
-        <Button variant="outline" className="w-full" style={{ paddingInline: '1rem' }}>
-          Continuar con Google
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        style={{ paddingInline: '1rem' }}
+        onClick={() => dialog.current?.showModal()}
+      >
+        Continuar con Google
+      </Button>
+      <dialog
+        ref={dialog}
+        className="google-sign-in-dialog"
+        aria-labelledby={titleId}
+        onClose={() => setError('')}
+      >
+        <h2 id={titleId}>Iniciar sesión con Google</h2>
+        <p>Elige tu cuenta para continuar.</p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="google-sign-in-close"
+          aria-label="Cerrar"
+          onClick={() => dialog.current?.close()}
+        >
+          <span aria-hidden="true">×</span>
         </Button>
-      </DialogTrigger>
-      <DialogContent style={{ padding: '1.5rem' }}>
-        <DialogHeader>
-          <DialogTitle>Iniciar sesión con Google</DialogTitle>
-          <DialogDescription>Elige tu cuenta para continuar.</DialogDescription>
-        </DialogHeader>
         <div className="flex justify-center" style={{ paddingBlock: '1rem' }} aria-busy={pending}>
-          {pending ? (
-            <p role="status">Iniciando sesión…</p>
-          ) : (
+          <div hidden={pending}>
             <GoogleLogin
               onSuccess={handleSuccess}
               onError={() =>
@@ -65,14 +68,15 @@ export default function GoogleSignInButton({
               shape="pill"
               text="continue_with"
             />
-          )}
+          </div>
+          {pending && <p role="status">Iniciando sesión…</p>}
         </div>
         {error && (
           <p role="alert" className="text-sm text-destructive">
             {error}
           </p>
         )}
-      </DialogContent>
-    </Dialog>
+      </dialog>
+    </>
   );
 }
