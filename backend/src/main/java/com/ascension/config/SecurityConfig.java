@@ -18,7 +18,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import com.ascension.security.BearerTokenEntryPoint;
 import com.ascension.security.UserRevocationJwtValidator;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import com.ascension.service.UserService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.core.annotation.Order;
@@ -101,25 +103,30 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
             .sessionManagement(session -> session.sessionCreationPolicy(
                 SessionCreationPolicy.STATELESS))
-            .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.deny())
-                .httpStrictTransportSecurity(hsts -> hsts
-                    .includeSubDomains(true)
-                    .maxAgeInSeconds(31536000)
-                )
-                .contentTypeOptions(Customizer.withDefaults())
-                .referrerPolicy(referrer -> referrer
-                    .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
-                )
-                .contentSecurityPolicy(csp -> csp.policyDirectives(CSP_POLICY))
-                .permissionsPolicy(permissions -> permissions.policy(PERMISSIONS_POLICY))
-            );
+            .headers(SecurityConfig::securityHeaders);
+        return http.build();
+    }
+
+    // Spring Security 7 serves OAuth 2.0 Protected Resource Metadata (RFC 9728) from every resource
+    // server chain and offers no switch to turn it off. This API issues its own HS256 tokens and has
+    // no authorization server to advertise, so /.well-known/** gets a chain without a resource server
+    // and answers 401 as it did before Spring Security 7.
+    @Bean
+    @Order(2)
+    public SecurityFilterChain wellKnownFilterChain(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher("/.well-known/**")
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth.anyRequest().denyAll())
+            .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(new BearerTokenEntryPoint()))
+            .headers(SecurityConfig::securityHeaders);
         return http.build();
     }
 
     // Everything else: JWT-protected
     @Bean
-    @Order(2)
+    @Order(3)
     public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(Customizer.withDefaults())
@@ -131,22 +138,28 @@ public class SecurityConfig {
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().denyAll()
             )
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
-            .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.deny())
-                .httpStrictTransportSecurity(hsts -> hsts
-                    .includeSubDomains(true)
-                    .maxAgeInSeconds(31536000)
-                )
-                .contentTypeOptions(Customizer.withDefaults())
-                .referrerPolicy(referrer -> referrer
-                    .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
-                )
-                .contentSecurityPolicy(csp -> csp.policyDirectives(CSP_POLICY))
-                .permissionsPolicy(permissions -> permissions.policy(PERMISSIONS_POLICY))
-            );
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(Customizer.withDefaults())
+                .authenticationEntryPoint(new BearerTokenEntryPoint())
+            )
+            .headers(SecurityConfig::securityHeaders);
         
         return http.build();
+    }
+
+    private static void securityHeaders(HeadersConfigurer<HttpSecurity> headers) {
+        headers
+            .frameOptions(frameOptions -> frameOptions.deny())
+            .httpStrictTransportSecurity(hsts -> hsts
+                .includeSubDomains(true)
+                .maxAgeInSeconds(31536000)
+            )
+            .contentTypeOptions(Customizer.withDefaults())
+            .referrerPolicy(referrer -> referrer
+                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+            )
+            .contentSecurityPolicy(csp -> csp.policyDirectives(CSP_POLICY))
+            .permissionsPolicyHeader(permissions -> permissions.policy(PERMISSIONS_POLICY));
     }
 
     @Bean

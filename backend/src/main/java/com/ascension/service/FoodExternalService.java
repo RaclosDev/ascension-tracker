@@ -1,7 +1,7 @@
 package com.ascension.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ public class FoodExternalService {
     public String searchOpenFoodFacts(String query) {
         if (query == null || query.isBlank() || query.length() > 100) return "{\"products\": []}";
         try {
-            com.fasterxml.jackson.databind.node.ArrayNode combinedProducts = objectMapper.createArrayNode();
+            tools.jackson.databind.node.ArrayNode combinedProducts = objectMapper.createArrayNode();
 
             java.util.concurrent.CompletableFuture<JsonNode> offFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
                 try {
@@ -64,7 +64,7 @@ public class FoodExternalService {
             if (offRoot != null) {
                 JsonNode offProducts = offRoot.path("products");
                 if (offProducts.isArray()) {
-                    combinedProducts.addAll((com.fasterxml.jackson.databind.node.ArrayNode) offProducts);
+                    combinedProducts.addAll((tools.jackson.databind.node.ArrayNode) offProducts);
                     offSuccess = true;
                 }
             }
@@ -73,7 +73,7 @@ public class FoodExternalService {
             if (fsRoot != null) {
                 JsonNode fsProducts = fsRoot.path("products");
                 if (fsProducts.isArray()) {
-                    combinedProducts.addAll((com.fasterxml.jackson.databind.node.ArrayNode) fsProducts);
+                    combinedProducts.addAll((tools.jackson.databind.node.ArrayNode) fsProducts);
                     fsSuccess = true;
                 }
             }
@@ -82,7 +82,7 @@ public class FoodExternalService {
                 throw new com.ascension.exception.ExternalApiException("ExternalFoodApis", org.springframework.http.HttpStatus.BAD_GATEWAY, "Both external food APIs failed or timed out");
             }
 
-            com.fasterxml.jackson.databind.node.ObjectNode finalRoot = objectMapper.createObjectNode();
+            tools.jackson.databind.node.ObjectNode finalRoot = objectMapper.createObjectNode();
             finalRoot.set("products", combinedProducts);
             return objectMapper.writeValueAsString(finalRoot);
 
