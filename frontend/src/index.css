@@ -774,12 +774,13 @@ body {
   max-width: 100%;
   box-sizing: border-box;
   width: 100%;
+  min-height: 44px;
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
   background: var(--bg-input);
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-family: var(--font-main);
   transition: all var(--transition-fast);
   outline: none;
