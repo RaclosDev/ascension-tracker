@@ -112,7 +112,7 @@ public class SecurityConfig {
                     .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
                 )
                 .contentSecurityPolicy(csp -> csp.policyDirectives(CSP_POLICY))
-                .permissionsPolicy(permissions -> permissions.policy(PERMISSIONS_POLICY))
+                .permissionsPolicyHeader(permissions -> permissions.policy(PERMISSIONS_POLICY))
             );
         return http.build();
     }
@@ -143,7 +143,7 @@ public class SecurityConfig {
                     .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
                 )
                 .contentSecurityPolicy(csp -> csp.policyDirectives(CSP_POLICY))
-                .permissionsPolicy(permissions -> permissions.policy(PERMISSIONS_POLICY))
+                .permissionsPolicyHeader(permissions -> permissions.policy(PERMISSIONS_POLICY))
             );
         
         return http.build();

@@ -1,7 +1,7 @@
 package com.ascension.dto;
 
 import com.ascension.exception.ApiErrorResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
@@ -158,6 +158,9 @@ class JsonContractTest {
         WorkoutStatsDTO stats = objectMapper.readValue("{\"totalWorkouts\":null,\"totalVolume\":1.5}", WorkoutStatsDTO.class);
         assertThat(stats.getTotalWorkouts()).isZero();
         assertThat(stats.getTotalVolume()).isEqualTo(1.5);
+
+        // AI replies are trimmed to the outer brackets but may still carry text after the JSON.
+        assertThat(objectMapper.readTree("[{\"product\":\"Pan\"}] fin").get(0).get("product").asString()).isEqualTo("Pan");
     }
 
     private void assertMatchesGolden(String name, Object value) throws IOException {

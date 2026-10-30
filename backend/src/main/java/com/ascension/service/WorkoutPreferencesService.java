@@ -3,8 +3,8 @@ package com.ascension.service;
 import com.ascension.dto.WorkoutPreferencesDTO;
 import com.ascension.model.UserSettings;
 import com.ascension.repository.UserSettingsRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +31,7 @@ public class WorkoutPreferencesService {
         try {
             WorkoutPreferencesDTO dto = objectMapper.readValue(settings.getWorkoutData(), WorkoutPreferencesDTO.class);
             return ensureDefaults(dto);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             return getDefaultPreferences();
         }
     }
@@ -46,7 +46,7 @@ public class WorkoutPreferencesService {
             settings.setWorkoutData(json);
             userSettingsRepository.save(settings);
             return dto;
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException("Error serializing workout preferences", e);
         }
     }

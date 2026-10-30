@@ -10,7 +10,7 @@
   <img alt="CI" src="https://github.com/RaclosDev/ascension-tracker/actions/workflows/ci.yml/badge.svg">
   <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-orange.svg">
-  <img alt="Spring Boot 3.3" src="https://img.shields.io/badge/Spring%20Boot-3.3-6DB33F.svg">
+  <img alt="Spring Boot 4.1" src="https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F.svg">
   <img alt="React 19" src="https://img.shields.io/badge/React-19-61DAFB.svg">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6.svg">
   <img alt="PWA" src="https://img.shields.io/badge/PWA-ready-5A0FC8.svg">
@@ -22,7 +22,7 @@
 
 Desarrollada íntegramente como proyecto de portafolio, la aplicación demuestra un dominio Full-Stack moderno mediante arquitecturas resilientes:
 - **Resiliencia Frontend:** Experiencia Offline-Ready gestionada por `Workbox` (estrategia NetworkFirst), sincronización de estado local ultrarrápida con `Zustand` + `IndexedDB` y notificaciones **Web Push** nativas.
-- **Robustez Backend:** Arquitectura Spring Boot 3.5, mitigación de ataques DDoS mediante un Rate Limiter en memoria (`Caffeine`), mapeo seguro de DTOs (`MapStruct`) y erradicación del problema N+1 de Hibernate utilizando la interfaz `Persistable<String>`.
+- **Robustez Backend:** Arquitectura Spring Boot 4.1, mitigación de ataques DDoS mediante un Rate Limiter en memoria (`Caffeine`), mapeo seguro de DTOs (`MapStruct`) y erradicación del problema N+1 de Hibernate utilizando la interfaz `Persistable<String>`.
 - **IA y APIs Integradas:** Orquestación nativa de la API de **Google Gemini** (Visión, OCR y Texto) para actuar como copiloto nutricional, y un proxy backend seguro (HMAC-SHA1) para consumir el catálogo de *FatSecret Platform*.
 
 *(Nota: UI, parseo de fechas y locale configurados estrictamente en Español `es-ES`).*
@@ -118,7 +118,7 @@ Esta aplicación ha sido refactorizada repetidamente bajo estrictos estándares 
 
 | Capa | Tecnología |
 |---|---|
-| **Core** | Java 17 + Spring Boot 3.3 |
+| **Core** | Java 17 + Spring Boot 4.1 |
 | **Persistencia** | PostgreSQL 16 + Testcontainers (Testing) + Spring Data JPA + Hibernate + Flyway |
 | **Seguridad** | Spring Security, OAuth2 Resource Server, `google-api-client` |
 | **Rendimiento** | Caché en memoria con `Caffeine`, Compresión GZIP nativa, `MapStruct` |

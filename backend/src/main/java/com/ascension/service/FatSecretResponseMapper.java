@@ -1,9 +1,9 @@
 package com.ascension.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,7 @@ public class FatSecretResponseMapper {
     public String mapFatSecretToOpenFoodFacts(JsonNode root, boolean singleProduct) {
         try {
             if (root.has("error")) {
-                String errorMsg = root.path("error").path("message").asText("Unknown");
+                String errorMsg = root.path("error").path("message").asString("Unknown");
                 log.error("FatSecret API Error: {}", errorMsg);
                 throw new RuntimeException("FatSecret API Error: " + errorMsg);
             }
@@ -52,9 +52,9 @@ public class FatSecretResponseMapper {
 
     private ObjectNode mapSingleFood(JsonNode food) {
         ObjectNode product = objectMapper.createObjectNode();
-        product.put("product_name", food.path("food_name").asText(""));
-        product.put("brands", food.path("brand_name").asText(""));
-        product.put("code", food.path("food_id").asText(""));
+        product.put("product_name", food.path("food_name").asString(""));
+        product.put("brands", food.path("brand_name").asString(""));
+        product.put("code", food.path("food_id").asString(""));
         
         ObjectNode nutriments = objectMapper.createObjectNode();
         JsonNode servings = food.path("servings").path("serving");
@@ -63,8 +63,8 @@ public class FatSecretResponseMapper {
             JsonNode targetServing = null;
             if (servings.isArray() && servings.size() > 0) {
                 for (JsonNode serving : servings) {
-                    String unit = serving.path("metric_serving_unit").asText("");
-                    if (("g".equalsIgnoreCase(unit) || "ml".equalsIgnoreCase(unit)) && "100.000".equals(serving.path("metric_serving_amount").asText())) {
+                    String unit = serving.path("metric_serving_unit").asString("");
+                    if (("g".equalsIgnoreCase(unit) || "ml".equalsIgnoreCase(unit)) && "100.000".equals(serving.path("metric_serving_amount").asString())) {
                         targetServing = serving;
                         break;
                     }
@@ -83,7 +83,7 @@ public class FatSecretResponseMapper {
                 nutriments.put("fat_100g", targetServing.path("fat").asDouble(0) * scale);
             }
         } else {
-            String desc = food.path("food_description").asText("");
+            String desc = food.path("food_description").asString("");
             double kcal = extractRegex(desc, "(?i)Calor[íi]as?\\s*:\\s*([0-9.]+)");
             double fat = extractRegex(desc, "(?i)Grasas?\\s*:\\s*([0-9.]+)");
             double carbs = extractRegex(desc, "(?i)Carbh?\\s*:\\s*([0-9.]+)");

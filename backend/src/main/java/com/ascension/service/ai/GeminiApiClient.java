@@ -2,13 +2,13 @@ package com.ascension.service.ai;
 
 import com.ascension.config.ExternalApiProperties;
 import com.ascension.exception.ExternalApiException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -241,8 +241,8 @@ public class GeminiApiClient {
             if (body != null && !body.isBlank()) {
                 JsonNode root = objectMapper.readTree(body);
                 JsonNode msgNode = root.path("error").path("message");
-                if (!msgNode.isMissingNode() && !msgNode.asText().isBlank()) {
-                    return msgNode.asText();
+                if (!msgNode.isMissingNode() && !msgNode.asString().isBlank()) {
+                    return msgNode.asString();
                 }
             }
         } catch (Exception ignored) {
@@ -280,7 +280,7 @@ public class GeminiApiClient {
                     JsonNode supportedMethods = model.path("supportedGenerationMethods");
                     if (supportedMethods.isArray()) {
                         for (JsonNode method : supportedMethods) {
-                            if ("generateContent".equalsIgnoreCase(method.asText())) {
+                            if ("generateContent".equalsIgnoreCase(method.asString())) {
                                 supportsGenerateContent = true;
                                 break;
                             }
@@ -288,7 +288,7 @@ public class GeminiApiClient {
                     }
 
                     if (supportsGenerateContent) {
-                        String name = model.path("name").asText();
+                        String name = model.path("name").asString();
                         if (name.startsWith("models/")) {
                             name = name.substring(7);
                         }
@@ -424,19 +424,19 @@ public class GeminiApiClient {
         JsonNode candidates = root.path("candidates");
         if (candidates.isArray() && candidates.size() > 0) {
             JsonNode firstCandidate = candidates.get(0);
-            String finishReason = firstCandidate.path("finishReason").asText("");
+            String finishReason = firstCandidate.path("finishReason").asString("");
             if ("SAFETY".equalsIgnoreCase(finishReason) || "RECITATION".equalsIgnoreCase(finishReason) || "BLOCKLIST".equalsIgnoreCase(finishReason)) {
                 throw new ExternalApiException("Gemini", HttpStatus.BAD_REQUEST, "Peticion bloqueada por filtros de seguridad de Gemini (" + finishReason + ")");
             }
             JsonNode partsNode = firstCandidate.path("content").path("parts");
             if (partsNode.isArray() && partsNode.size() > 0) {
-                return partsNode.get(0).path("text").asText();
+                return partsNode.get(0).path("text").asString();
             }
         }
 
         JsonNode blockReason = root.path("promptFeedback").path("blockReason");
-        if (!blockReason.isMissingNode() && !blockReason.asText().isBlank()) {
-            throw new ExternalApiException("Gemini", HttpStatus.BAD_REQUEST, "Peticion bloqueada por filtro de contenido de Gemini (" + blockReason.asText() + ")");
+        if (!blockReason.isMissingNode() && !blockReason.asString().isBlank()) {
+            throw new ExternalApiException("Gemini", HttpStatus.BAD_REQUEST, "Peticion bloqueada por filtro de contenido de Gemini (" + blockReason.asString() + ")");
         }
 
         throw new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY, "Respuesta sin contenido generado por Gemini");
