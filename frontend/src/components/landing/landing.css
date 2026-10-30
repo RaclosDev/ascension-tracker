@@ -82,13 +82,18 @@
   color: var(--landing-blue);
 }
 
-/* Vertical neon strips behind the hero, like the vault lights in the template. */
+/* Vertical neon strips behind the hero, like the vault lights in the template. They sit in the
+   side gutter, never across the text, and behind the content. */
+.landing-hero {
+  isolation: isolate;
+}
 .landing-hero::before,
 .landing-hero::after {
   content: '';
   position: absolute;
   top: 0;
   bottom: 0;
+  z-index: -1;
   width: 2px;
   background: linear-gradient(
     to bottom,
@@ -101,10 +106,18 @@
   pointer-events: none;
 }
 .landing-hero::before {
-  left: 6%;
+  left: 8px;
 }
 .landing-hero::after {
-  right: 8%;
+  right: 8px;
+}
+@media (min-width: 1240px) {
+  .landing-hero::before {
+    left: -32px;
+  }
+  .landing-hero::after {
+    right: -32px;
+  }
 }
 
 /* Phone shot inside a steel frame. */
