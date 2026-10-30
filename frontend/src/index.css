@@ -1509,9 +1509,48 @@ input[type=number]::-webkit-outer-spin-button {
   margin-bottom: 2px;
 }
 .mobile-bottom-item.active .mobile-bottom-icon {
-  background: rgba(0, 133, 255, 0.18);
   color: var(--accent-primary-light);
   transform: translateY(-1px) scale(1.05);
+}
+/* Shared highlight: one slot wide, slides to the active tab via --nav-active.
+   It mirrors the item's column layout so the glow lands exactly behind the icon. */
+.mobile-bottom-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% / var(--nav-count, 5));
+  height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  pointer-events: none;
+  transform: translateX(calc(var(--nav-active, 0) * 100%));
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease;
+}
+.mobile-bottom-pill.is-hidden {
+  opacity: 0;
+}
+.mobile-bottom-pill-glow {
+  width: 48px;
+  height: 28px;
+  border-radius: 14px;
+  background: rgba(0, 133, 255, 0.18);
+  margin-bottom: 2px;
+  transform: translateY(-1px) scale(1.05);
+}
+.mobile-bottom-pill-ghost {
+  font-size: 0.65rem;
+  font-weight: 700;
+  visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-bottom-pill {
+    transition: opacity 0.2s ease;
+  }
 }
 .mobile-bottom-label {
   font-size: 0.65rem;
