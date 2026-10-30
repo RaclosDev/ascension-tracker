@@ -98,6 +98,7 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
             background: 'transparent',
             border: 'none',
             padding: 0,
+            minHeight: '44px',
             cursor: 'pointer',
             fontWeight: 600,
             fontSize: '1.1rem',
@@ -126,10 +127,10 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
           {meal.name}
         </button>
 
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div data-meal-actions style={{ display: 'flex', gap: '0.5rem' }}>
           <button
             type="button"
-            className="btn btn-secondary btn-sm"
+            className="btn btn-secondary btn-sm min-h-11 min-w-11"
             style={{
               padding: '0.45rem',
               borderRadius: '12px',
@@ -146,7 +147,7 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
           </button>
           <button
             type="button"
-            className="btn btn-primary btn-sm"
+            className="btn btn-primary btn-sm min-h-11 min-w-11"
             style={{
               padding: '0.45rem 0.75rem',
               borderRadius: '12px',
@@ -314,7 +315,7 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
                                   <button
                                     key={delta}
                                     type="button"
-                                    className="btn btn-secondary btn-sm"
+                                    className="btn btn-secondary btn-sm min-h-11 min-w-11"
                                     style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
                                     onClick={() => {
                                       const current = Number(editingLog.quantity) || 0;
@@ -346,8 +347,8 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
                                   )
                                 }
                                 style={{
-                                  width: '40px',
-                                  height: '40px',
+                                  width: '44px',
+                                  height: '44px',
                                   fontSize: '1.2rem',
                                   display: 'flex',
                                   alignItems: 'center',
@@ -383,8 +384,8 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
                                   onEditQuantityChange((multiplier + 1) * basePortion.amount)
                                 }
                                 style={{
-                                  width: '40px',
-                                  height: '40px',
+                                  width: '44px',
+                                  height: '44px',
                                   fontSize: '1.2rem',
                                   display: 'flex',
                                   alignItems: 'center',
@@ -420,7 +421,7 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
                     >
                       <button
                         type="button"
-                        className="btn btn-secondary btn-sm"
+                        className="btn btn-secondary btn-sm min-h-11"
                         style={{ padding: '0.3rem 0.6rem' }}
                         onClick={onCancelEdit}
                       >
@@ -428,7 +429,7 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
                       </button>
                       <button
                         type="button"
-                        className="btn btn-primary btn-sm"
+                        className="btn btn-primary btn-sm min-h-11"
                         style={{ padding: '0.3rem 0.6rem' }}
                         onClick={onUpdateLog}
                       >

@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { Suspense, useRef } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useQueryClient } from '@tanstack/react-query';
 import { FoodLog, Meal } from '../types/api';
@@ -9,6 +9,7 @@ import MacroSummaryHeader from '../components/nutrition/MacroSummaryHeader';
 import { NutritionDateBar } from '../components/nutrition/NutritionDateBar';
 import { MealFoodGroup } from '../components/nutrition/MealFoodGroup';
 import { useNutritionDiary } from '../hooks/nutrition/useNutritionDiary';
+import { useAnyInView } from '../hooks/use-any-in-view';
 
 const MyFoodsPage = lazyWithRetry(() => import('./MyFoodsPage'));
 const FoodSearchModal = lazyWithRetry(() => import('../components/FoodSearchModal'));
@@ -52,6 +53,15 @@ export default function NutritionPage() {
     handleUpdateLog,
     setEditingLog,
   } = useNutritionDiary();
+
+  // The floating "+" only appears once every meal row's own buttons are off screen,
+  // so it can never sit on top of them.
+  const mealsGridRef = useRef<HTMLDivElement>(null);
+  const mealActionsInView = useAnyInView(
+    mealsGridRef,
+    '[data-meal-actions]',
+    `${activeTab}-${loading}-${meals.length}`,
+  );
 
   if (loading) {
     return (
@@ -131,11 +141,14 @@ export default function NutritionPage() {
 
           <button
             type="button"
-            className="fixed z-40 rounded-full w-14 h-14 flex items-center justify-center bg-[var(--accent-primary)] text-white shadow-xl shadow-[var(--accent-primary)]/30 hover:scale-105 active:scale-95 transition-all duration-200"
+            className={`fixed z-40 rounded-full w-14 h-14 flex items-center justify-center bg-[var(--accent-primary)] text-white shadow-xl shadow-[var(--accent-primary)]/30 hover:scale-105 active:scale-95 transition-all duration-200 motion-reduce:transition-none ${
+              mealActionsInView ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100'
+            }`}
             style={{
-              bottom: 'calc(90px + env(safe-area-inset-bottom, 16px))',
-              right: '1.25rem',
+              bottom: 'calc(env(safe-area-inset-bottom, 12px) + 88px)',
+              right: '1rem',
             }}
+            inert={mealActionsInView}
             onClick={() => {
               const hour = new Date().getHours();
               let defaultIdx = 0;
@@ -153,8 +166,11 @@ export default function NutritionPage() {
 
           <MacroSummaryHeader consumed={consumed} macros={macros} />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-            <div className="nutrition-meals-grid">
+          <div
+            className="pb-16 min-[1025px]:pb-32"
+            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
+          >
+            <div className="nutrition-meals-grid" ref={mealsGridRef}>
               {meals.map((meal: Meal, index: number) => {
                 const logs = foodLogs.filter((log: FoodLog) => log.mealIndex === index);
                 const isCollapsed = collapsedMeals[index];
@@ -191,7 +207,7 @@ export default function NutritionPage() {
               })}
             </div>
 
-            <div className="card flex flex-col items-center p-6 mb-12">
+            <div className="card flex flex-col items-center p-6">
               <h3 className="text-xs font-semibold text-gray-300 mb-4">Distribución de macros</h3>
               <div
                 style={{
