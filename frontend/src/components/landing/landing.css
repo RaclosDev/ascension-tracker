@@ -8,8 +8,19 @@
   --landing-steel: rgba(255, 255, 255, 0.14);
   background: var(--landing-bg);
   color: var(--landing-ink);
-  min-height: 100dvh;
+  /* body has overflow: hidden for the app shell, so the landing scrolls on its own. */
+  height: 100dvh;
   overflow-x: clip;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing {
+    scroll-behavior: auto;
+  }
 }
 
 .landing-display {
