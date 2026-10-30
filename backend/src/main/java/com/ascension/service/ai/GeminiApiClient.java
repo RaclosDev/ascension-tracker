@@ -30,7 +30,7 @@ public class GeminiApiClient {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiApiClient.class);
     public static final long TOTAL_REQUEST_DEADLINE_MS = 35_000L;
-    public static final long MODEL_CACHE_TTL_MS = 3600_000L; // 1 hour TTL
+    public static final long MODEL_CACHE_TTL_MS = 3600_000L;
     public static final int MAX_MODELS_PER_REQUEST = 3;
 
     @Value("${GEMINI_API_KEY:}")
@@ -302,7 +302,8 @@ public class GeminiApiClient {
             log.warn("Failed to discover models, using configured preferred models. Error: {}", e.getMessage());
         }
 
-        // Priority 1: Configured fallback models matching discovered models or if discovery failed
+        // Candidate order: configured fallbacks that discovery found (all of them if it failed),
+        // then discovered flash models, other discovered models, and any remaining fallbacks.
         List<String> preferred = new ArrayList<>();
         if (fallbackModels != null && !fallbackModels.isBlank()) {
             Arrays.stream(fallbackModels.split(","))
@@ -317,21 +318,18 @@ public class GeminiApiClient {
             }
         }
 
-        // Priority 2: Discovered text models that contain "flash"
         for (String disc : discovered) {
             if (disc.contains("flash") && !candidates.contains(disc)) {
                 candidates.add(disc);
             }
         }
 
-        // Priority 3: Other discovered text models
         for (String disc : discovered) {
             if (!candidates.contains(disc)) {
                 candidates.add(disc);
             }
         }
 
-        // Priority 4: Ensure preferred fallbacks are included even if discovery returned non-matching models
         for (String pref : preferred) {
             if (!candidates.contains(pref)) {
                 candidates.add(pref);

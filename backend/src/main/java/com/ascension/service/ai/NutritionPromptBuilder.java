@@ -9,29 +9,18 @@ public class NutritionPromptBuilder {
 
     /**
      * Sanitizes user-controlled input before embedding it into AI prompts.
-     * Strips control characters and line breaks, normalizes whitespace, escapes quotes,
-     * and truncates to the maximum allowed length.
-     *
-     * NOTE: Regex filtering of 'IGNORE ALL...' or similar override patterns is NOT a complete
-     * or reliable defense against prompt injection and MUST NOT be solely relied upon.
-     * Structural data boundaries (such as XML-style delimiters like &lt;user_data&gt; ... &lt;/user_data&gt;)
-     * combined with input sanitization provide proper structural encapsulation.
+     * The keyword filter is defense in depth only; the &lt;user_data&gt; delimiters are the real boundary.
      */
     public String sanitizeUserInput(String input) {
         if (input == null) return "";
-        // 1. Remove control characters (ASCII 0x00-0x1F except none, plus 0x7F) and newlines/carriage returns
         String sanitized = input.replaceAll("[\\x00-\\x1F\\x7F\\r\\n]", " ");
-        // 2. Collapse multiple whitespace into a single space
         sanitized = sanitized.replaceAll("\\s+", " ").trim();
-        // 3. Truncate
         if (sanitized.length() > MAX_USER_INPUT_LENGTH) {
             sanitized = sanitized.substring(0, MAX_USER_INPUT_LENGTH);
         }
-        // 4. Escape quotes & backslashes
         sanitized = sanitized.replace("\\", "\\\\").replace("\"", "'");
-        // 5. Escape ampersands first, then structural XML delimiter characters < and > to prevent tag breakout via pre-escaped entities
+        // Escape & first so pre-escaped entities cannot break out of the delimiter tags.
         sanitized = sanitized.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-        // 6. Heuristic pattern filter (retained for defense-in-depth, but not relied upon)
         sanitized = sanitized.replaceAll("(?i)(IGNORE|OVERRIDE|FORGET|DISREGARD)(\\s+(ALL|PREVIOUS|ABOVE|PRIOR))+\\s+(INSTRUCTIONS?|RULES?|PROMPTS?)", "[filtered]");
         return sanitized;
     }

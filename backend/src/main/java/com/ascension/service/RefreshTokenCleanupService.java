@@ -20,10 +20,7 @@ public class RefreshTokenCleanupService {
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
-    /**
-     * Borra todos los refresh tokens cuya fecha de expiración ya ha pasado.
-     * Se ejecuta todos los días a las 03:00 (hora del servidor).
-     */
+    /** Runs daily at 03:00 server time. */
     @Scheduled(cron = "0 0 3 * * *")
     @Transactional
     public void cleanupExpiredTokens() {
