@@ -12,6 +12,9 @@ import com.ascension.service.UserService.UserSecurityState;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -80,8 +83,9 @@ class AuthControllerTest {
         org.mockito.Mockito.verifyNoInteractions(googleIdTokenVerifier, refreshTokenService);
     }
 
-    @Test
-    void redirectLogin_VerifiesIdentityAndReturnsSessionCookieWithoutTokensInUrl() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"https://accounts.google.com", "null"})
+    void redirectLogin_VerifiesIdentityAndReturnsSessionCookieWithoutTokensInUrl(String origin) throws Exception {
         var idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
         var payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
         payload.setEmailVerified(true);
@@ -94,7 +98,9 @@ class AuthControllerTest {
         when(refreshTokenService.createRefreshToken("pwa@example.invalid")).thenReturn(refreshToken);
 
         mockMvc.perform(post("/api/auth/login/redirect")
-                .header("Origin", "https://accounts.google.com")
+                .header("Origin", origin)
+                .header("Sec-Fetch-Mode", "navigate")
+                .header("Sec-Fetch-Dest", "document")
                 .header("X-Forwarded-Proto", "https")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .cookie(new jakarta.servlet.http.Cookie("g_csrf_token", "test-csrf"))
@@ -106,6 +112,52 @@ class AuthControllerTest {
                 .andExpect(cookie().httpOnly("refreshToken", true))
                 .andExpect(cookie().secure("refreshToken", true))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(""));
+    }
+
+    @Test
+    void redirectLogin_OpaqueNavigationStillRejectsMissingCsrfWithoutGrantingCorsAccess() throws Exception {
+        mockMvc.perform(post("/api/auth/login/redirect")
+                .header("Origin", "null")
+                .header("Sec-Fetch-Mode", "navigate")
+                .header("Sec-Fetch-Dest", "document")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("credential", "test-google-credential"))
+                .andExpect(status().isSeeOther())
+                .andExpect(header().string("Location", "/login?authError=google"))
+                .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN))
+                .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS))
+                .andExpect(cookie().doesNotExist("refreshToken"));
+        org.mockito.Mockito.verifyNoInteractions(googleIdTokenVerifier, refreshTokenService);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "/api/auth/login/redirect,cors,empty,application/x-www-form-urlencoded",
+            "/api/auth/login/redirect,navigate,iframe,application/x-www-form-urlencoded",
+            "/api/auth/login/redirect,navigate,document,application/json",
+            "/api/auth/login,navigate,document,application/x-www-form-urlencoded",
+            "/api/auth/login,navigate,document,application/json"
+    })
+    void redirectLogin_DoesNotGrantOpaqueOriginAccessToScriptsFramesOrOtherEndpoints(
+            String path, String mode, String destination, String contentType) throws Exception {
+        mockMvc.perform(post(path)
+                .header("Origin", "null")
+                .header("Sec-Fetch-Mode", mode)
+                .header("Sec-Fetch-Dest", destination)
+                .contentType(contentType))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
+        org.mockito.Mockito.verifyNoInteractions(googleIdTokenVerifier, refreshTokenService);
+    }
+
+    @Test
+    void redirectLogin_DoesNotGrantOpaqueOriginPreflightAccess() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options("/api/auth/login/redirect")
+                .header("Origin", "null")
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "Content-Type"))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
     }
 
     @Test
