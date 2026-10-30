@@ -32,6 +32,7 @@ import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -178,6 +179,38 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, springCookie.toString(), buildLegacyDeleteCookie(request).toString())
                 .body(Map.of("token", customToken));
+    }
+
+    @PostMapping(value = "/login/redirect", consumes = org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    public ResponseEntity<Void> loginRedirect(
+            @RequestParam(name = "credential", required = false) String credential,
+            @RequestParam(name = "g_csrf_token", required = false) String bodyCsrf,
+            @CookieValue(name = "g_csrf_token", required = false) String cookieCsrf,
+            HttpServletRequest request) {
+        if (credential == null || credential.isBlank() || bodyCsrf == null || bodyCsrf.isBlank()
+                || cookieCsrf == null || cookieCsrf.isBlank()
+                || !java.security.MessageDigest.isEqual(
+                        bodyCsrf.getBytes(StandardCharsets.UTF_8), cookieCsrf.getBytes(StandardCharsets.UTF_8))) {
+            log.warn("Rejected Google redirect with missing credential or invalid CSRF token");
+            return redirectLoginError();
+        }
+
+        ResponseEntity<?> result = login(Map.of("token", credential), request);
+        if (!result.getStatusCode().is2xxSuccessful()) {
+            return redirectLoginError();
+        }
+        return ResponseEntity.status(HttpStatus.SEE_OTHER)
+                .header(HttpHeaders.LOCATION, "/")
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .header(HttpHeaders.SET_COOKIE, result.getHeaders().getOrEmpty(HttpHeaders.SET_COOKIE).toArray(String[]::new))
+                .build();
+    }
+
+    private ResponseEntity<Void> redirectLoginError() {
+        return ResponseEntity.status(HttpStatus.SEE_OTHER)
+                .header(HttpHeaders.LOCATION, "/login?authError=google")
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .build();
     }
 
     private String getEffectiveSameSite() {
