@@ -84,6 +84,7 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="fade-in">
+        <h1 className="sr-only">Inicio</h1>
         {/* Skeleton for Quick Add */}
         <div className="card glass-panel-elevated p-4 sm:p-5 rounded-2xl mb-6">
           <div className="flex items-center justify-between mb-4">
@@ -145,6 +146,7 @@ export default function DashboardPage() {
 
   return (
     <div className="fade-in">
+      <h1 className="sr-only">Inicio</h1>
       <QuickWeightCard
         todayLabel={todayLabel}
         todayDateStr={todayDateStr}
