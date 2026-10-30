@@ -46,3 +46,6 @@ docker-compose.override.yml
 # Local AI Context
 ROADMAP.md
 *DIRECTRICES*.md
+
+# Knowledge graph generated locally by graphify
+graphify-out/
