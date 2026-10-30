@@ -41,21 +41,37 @@ public final class PiiMasker {
      * @return masked pseudonym, or "[anonymous]" if null/empty
      */
     public static String maskEmail(String email) {
-        if (email == null || email.isBlank()) {
+        return pseudonym(email == null ? null : email.trim().toLowerCase(), "usr_");
+    }
+
+    /**
+     * Returns the same kind of keyed pseudonym for an OAuth subject identifier (Google "sub"),
+     * so security alerts stay correlatable without logging the raw identifier.
+     * Example: "109876543210" -> "sub_5c1e0a7f9b2d3e4f"
+     *
+     * @param subject raw subject identifier
+     * @return masked pseudonym, or "[anonymous]" if null/empty
+     */
+    public static String maskSubject(String subject) {
+        return pseudonym(subject == null ? null : subject.trim(), "sub_");
+    }
+
+    private static String pseudonym(String value, String prefix) {
+        if (value == null || value.isEmpty()) {
             return "[anonymous]";
         }
         try {
             Mac mac = Mac.getInstance(HMAC_ALGORITHM);
             SecretKeySpec secretKey = new SecretKeySpec(getSalt(), HMAC_ALGORITHM);
             mac.init(secretKey);
-            byte[] digest = mac.doFinal(email.trim().toLowerCase().getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder("usr_");
+            byte[] digest = mac.doFinal(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(prefix);
             for (int i = 0; i < 8; i++) {
                 sb.append(String.format("%02x", digest[i]));
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            return "usr_masked";
+            return prefix + "masked";
         }
     }
 }

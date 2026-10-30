@@ -166,7 +166,11 @@ export default function Layout() {
       </header>
 
       {/* Capa de fondo oscurecida para cerrar el menú */}
-      <div className={`mobile-overlay ${sidebarOpen ? 'active' : ''}`} onClick={closeSidebar} />
+      <div
+        className={`mobile-overlay ${sidebarOpen ? 'active' : ''}`}
+        aria-hidden="true"
+        onClick={closeSidebar}
+      />
 
       <div className="app-container">
         {/* Barra lateral / Cajón deslizable (desktop) */}

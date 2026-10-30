@@ -537,7 +537,7 @@ export default function FoodSearchModal({
 
   return (
     <>
-      <div className="workout-sheet-overlay" onClick={onClose} />
+      <div className="workout-sheet-overlay" aria-hidden="true" onClick={onClose} />
       <div
         className="food-search-fullscreen"
         role="dialog"

@@ -267,7 +267,7 @@ export function ExercisePicker() {
 
   return (
     <>
-      <div className="workout-sheet-overlay" onClick={close} />
+      <div className="workout-sheet-overlay" aria-hidden="true" onClick={close} />
       <div className="workout-sheet" style={{ maxHeight: '95dvh' }}>
         <div className="workout-sheet-handle" />
         <div className="workout-sheet-header">
