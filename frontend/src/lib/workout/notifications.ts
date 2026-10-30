@@ -1,24 +1,16 @@
 import api from '@/api/client';
 import { haptics } from '@/lib/haptics';
-//  Notifications module
-// Handles:
-// 1. Subscribing to Web Push (so the server can send background notifications)
-// 2. Playing a bell sound when rest finishes (in-app)
-// 3. Sending rest-timer schedule/cancel requests to the backend
 
 let audio: HTMLAudioElement | null = null;
 let pushSubscribed = false;
 
 /**
- * Call this once on user interaction (e.g. completing a set) to:
- * - Preload the bell sound
- * - Request notification permission
- * - Subscribe to Web Push if not already done
+ * Call from a user gesture (e.g. completing a set): preloads the bell, asks for notification
+ * permission and subscribes to Web Push.
  */
 export async function initAudioAndNotifications() {
   if (typeof window === 'undefined') return;
 
-  // Init HTML5 Audio
   if (!audio) {
     audio = new Audio('/bell.mp3');
     audio.load();
@@ -34,7 +26,6 @@ export async function initAudioAndNotifications() {
     }
   }
 
-  // Request Notification permission + subscribe to push
   if ('Notification' in window && !pushSubscribed) {
     if (Notification.permission === 'default') {
       const perm = await Notification.requestPermission();
@@ -63,9 +54,6 @@ export function playRestSound() {
 
 export const REST_NOTIFICATION_TAG = 'ascension-rest-timer';
 
-/**
- * Dismiss any existing rest timer notifications from the system notification tray.
- */
 export async function dismissRestNotifications() {
   if (typeof window === 'undefined') return;
   try {
@@ -93,7 +81,6 @@ export async function notifyRestFinished() {
       if ('serviceWorker' in navigator) {
         const reg = await navigator.serviceWorker.ready;
         if (reg && 'showNotification' in reg) {
-          // Close previous notification first to ensure clean replacement
           const existing = await reg.getNotifications({ tag: REST_NOTIFICATION_TAG });
           existing.forEach((n) => n.close());
 
@@ -123,8 +110,6 @@ export async function notifyRestFinished() {
   }
 }
 
-//  Web Push subscription
-
 async function subscribeToPush() {
   if (pushSubscribed) return;
 
@@ -132,12 +117,9 @@ async function subscribeToPush() {
     const reg = await navigator.serviceWorker?.ready;
     if (!reg) return;
 
-    // Check if already subscribed
     let sub = await reg.pushManager.getSubscription();
 
     if (!sub) {
-      // Get VAPID public key from server
-
       const { data } = await api.get('/push/vapid-key');
       const vapidKey = data.publicKey;
 
@@ -146,7 +128,6 @@ async function subscribeToPush() {
         return;
       }
 
-      // Convert VAPID key to Uint8Array
       const applicationServerKey = urlBase64ToUint8Array(vapidKey);
 
       sub = await reg.pushManager.subscribe({
@@ -154,8 +135,6 @@ async function subscribeToPush() {
         applicationServerKey: applicationServerKey as unknown as ArrayBuffer,
       });
     }
-
-    // Send subscription to backend
 
     const subJSON = sub.toJSON();
     await api.post('/push/subscribe', {
@@ -172,11 +151,6 @@ async function subscribeToPush() {
   }
 }
 
-//  Rest timer API calls
-
-/**
- * Tell the server to send a push notification after `delaySec` seconds.
- */
 export async function scheduleServerRestTimer(delaySec: number) {
   try {
     await api.post('/push/rest-timer', { delaySec });
@@ -188,9 +162,6 @@ export async function scheduleServerRestTimer(delaySec: number) {
   }
 }
 
-/**
- * Cancel any pending server-side rest timer (e.g. user skipped rest or adjusted it).
- */
 export async function cancelServerRestTimer() {
   try {
     await api.post('/push/rest-timer/cancel');
@@ -198,8 +169,6 @@ export async function cancelServerRestTimer() {
     console.warn('Failed to cancel server rest timer', e instanceof Error ? e.message : String(e));
   }
 }
-
-//  Utility
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);

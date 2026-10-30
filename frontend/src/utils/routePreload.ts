@@ -1,7 +1,4 @@
-/**
- * Utility for background preloading of lazy-loaded route chunks.
- * Eliminates suspense flickers and black frame drops on navigation.
- */
+/** Preloads lazy route chunks so navigation does not flash the Suspense fallback. */
 
 export const preloadRoute = (path: string): Promise<unknown> => {
   const loader = (() => {

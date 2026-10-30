@@ -1,7 +1,6 @@
 /**
- * Date helper utilities in local timezone.
- * Fixes timezone shift bugs caused by `toISOString().split('T')[0]`,
- * which converts local time to UTC and returns yesterday after midnight in UTC+ timezones.
+ * Local-timezone date helpers: `toISOString().split('T')[0]` converts to UTC and returns
+ * yesterday shortly after midnight in UTC+ timezones.
  */
 
 export function getLocalDateString(d: Date | string = new Date()) {
