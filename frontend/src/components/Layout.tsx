@@ -97,27 +97,15 @@ export default function Layout() {
     return () => document.removeEventListener('pointerdown', handleClick);
   }, [moreMenuOpen]);
 
+  // The page fades in on its own (.route-fade); a whole-document View Transition used to
+  // animate the fixed header and nav too, and captured the old page because the router
+  // commits inside its own transition.
   const navigateTo = (path: string) => {
     if (location.pathname !== path) {
       haptics.light();
-      if (
-        typeof document !== 'undefined' &&
-        'startViewTransition' in document &&
-        typeof (document as unknown as { startViewTransition: (cb: () => void) => void })
-          .startViewTransition === 'function'
-      ) {
-        (
-          document as unknown as { startViewTransition: (cb: () => void) => void }
-        ).startViewTransition(() => {
-          startTransition(() => {
-            navigate(path);
-          });
-        });
-      } else {
-        startTransition(() => {
-          navigate(path);
-        });
-      }
+      startTransition(() => {
+        navigate(path);
+      });
     }
   };
 
@@ -227,7 +215,9 @@ export default function Layout() {
                 </div>
               }
             >
-              <Outlet />
+              <div key={location.pathname} className="route-fade">
+                <Outlet />
+              </div>
             </Suspense>
           </div>
         </main>
