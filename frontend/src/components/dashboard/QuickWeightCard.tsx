@@ -209,7 +209,6 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
               style={{
                 background: 'rgba(0, 0, 0, 0.45)',
                 borderColor: isDirty ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.12)',
-                boxShadow: isDirty ? '0 0 16px var(--accent-glow)' : 'none',
               }}
               value={quickWeight}
               onChange={(e) => setQuickWeight(e.target.value)}
@@ -233,7 +232,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
               isPending
                 ? 'opacity-60 cursor-not-allowed bg-white/5 border border-white/10 text-zinc-400'
                 : isDirty || !hasTodayWeight
-                  ? 'btn btn-primary text-white shadow-md shadow-[var(--accent-shadow)]'
+                  ? 'btn btn-primary text-white'
                   : 'bg-white/10 border border-white/15 text-zinc-200 hover:text-white'
             }`}
             aria-label={

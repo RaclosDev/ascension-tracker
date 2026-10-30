@@ -112,7 +112,6 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
       <div
         style={{
           background: 'var(--bg-glass-strong, rgba(18, 18, 26, 0.78))',
-          backdropFilter: 'blur(20px)',
           padding: '2rem',
           borderRadius: '24px',
           border: '1px solid var(--border-medium, rgba(255, 255, 255, 0.1))',

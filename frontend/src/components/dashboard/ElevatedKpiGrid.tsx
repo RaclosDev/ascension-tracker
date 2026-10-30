@@ -132,7 +132,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
   const currentMode = ratePref?.mode ?? 'history';
 
   return (
-    <div className="kpi-grid grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
+    <div className="kpi-grid grid grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
       {/* 1. Peso Actual */}
       <div className="card kpi-card glass-panel-elevated relative overflow-hidden rounded-2xl p-3.5 sm:p-4 border border-white/[0.08] flex flex-col justify-between">
         <div className="flex items-center justify-between mb-2">
@@ -332,7 +332,6 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
                     background: 'var(--bg-card, #1C1C1E)',
                     borderColor: 'var(--border-medium, rgba(255,255,255,0.15))',
                     boxShadow: 'var(--shadow-lg, 0 12px 36px rgba(0,0,0,0.65))',
-                    backdropFilter: 'blur(16px)',
                   }}
                 >
                   <p

@@ -234,14 +234,6 @@ export function WorkoutCelebrationModal({
       aria-labelledby="finish-dialog-title"
     >
       <div className="relative w-full h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg rounded-none sm:rounded-3xl border-0 sm:border border-white/10 flex flex-col shadow-2xl overflow-hidden bg-[#0D0D10]">
-        {/* Subtle Ambient Accent Glow at the top */}
-        <div
-          className="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-48 rounded-full pointer-events-none opacity-40"
-          style={{
-            background: 'radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)',
-          }}
-        />
-
         {/* Modal Top Navigation Bar */}
         <div className="relative flex items-center justify-between px-5 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-3.5 border-b border-white/[0.08] flex-shrink-0 z-10">
           <div className="flex items-center gap-2.5">
@@ -487,14 +479,14 @@ export function WorkoutCelebrationModal({
         </div>
 
         {/* Modal Sticky Bottom Action Footer */}
-        <div className="p-4 sm:p-5 border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl flex flex-col gap-2.5 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
+        <div className="p-4 sm:p-5 border-t border-white/10 bg-zinc-950 flex flex-col gap-2.5 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
           {isInteractiveFinish ? (
             <>
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-[var(--accent-shadow)] flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-white text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50"
               >
                 {isSaving ? (
                   <>
@@ -539,7 +531,7 @@ export function WorkoutCelebrationModal({
                   haptics.success();
                   onClose();
                 }}
-                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-[var(--accent-shadow)] flex items-center justify-center gap-2 transition-all"
+                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-white text-sm flex items-center justify-center gap-2 transition-all"
               >
                 <Check size={18} />
                 <span>Aceptar y Continuar</span>

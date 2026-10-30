@@ -63,7 +63,7 @@ const DialogContentFullScreen = React.forwardRef<
     >
       {children}
       <DialogPrimitive.Close
-        className="absolute z-50 flex items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md transition-colors hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2"
+        className="absolute z-50 flex items-center justify-center rounded-full bg-black/70 text-white transition-colors hover:bg-black/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2"
         style={{
           top: 'calc(env(safe-area-inset-top, 44px) + 0.5rem)',
           right: '1rem',

@@ -300,7 +300,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                 onClick={() => setSelectedGoal(goalKey)}
                 className={`p-3 rounded-xl border text-left transition-all ${
                   isSelected
-                    ? 'bg-[var(--accent-primary)] text-white shadow-md shadow-[var(--accent-shadow)] border-[var(--accent-primary)]'
+                    ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]'
                     : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
                 }`}
               >

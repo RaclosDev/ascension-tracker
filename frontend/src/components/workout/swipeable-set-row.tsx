@@ -319,7 +319,6 @@ export const SwipeableSetRow = React.memo(
                       background: 'var(--accent-primary)',
                       borderColor: 'var(--accent-primary)',
                       color: 'var(--accent-text, #ffffff)',
-                      boxShadow: '0 0 12px var(--accent-glow)',
                     }
                   : undefined
               }
