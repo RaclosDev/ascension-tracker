@@ -289,7 +289,7 @@ export function FoodSearchResultsList({
           <p style={{ margin: '0 0 0.75rem 0', color: 'var(--text-secondary)' }}>
             ¿No encuentras el producto exacto?
           </p>
-          <button className="btn btn-primary btn-sm" onClick={onOpenManual}>
+          <button type="button" className="btn btn-primary btn-sm min-h-11" onClick={onOpenManual}>
             Crear {query ? `"${query}"` : 'alimento'} manualmente
           </button>
         </div>

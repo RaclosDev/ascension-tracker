@@ -28,10 +28,9 @@ export function isChunkLoadError(error: unknown): boolean {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function lazyWithRetry<T extends ComponentType<any>>(
-  factory: () => Promise<{ default: T }>,
-): LazyExoticComponent<T> {
+export function lazyWithRetry<P extends object>(
+  factory: () => Promise<{ default: ComponentType<P> }>,
+): LazyExoticComponent<ComponentType<P>> {
   return lazy(async () => {
     const sessionKey = 'ascension_chunk_reload_lock';
 
@@ -58,7 +57,7 @@ export function lazyWithRetry<T extends ComponentType<any>>(
         // Never delete all Cache Storage entries here: that includes Workbox's
         // precache and can destroy the only offline app shell.
         window.location.reload();
-        return new Promise<{ default: T }>(() => {});
+        return new Promise<{ default: ComponentType<P> }>(() => {});
       }
 
       sessionStorage.removeItem(sessionKey);

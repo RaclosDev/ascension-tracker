@@ -481,7 +481,7 @@ export function ExercisePicker() {
                               <div className="picker-exercise-info">
                                 <div className="picker-exercise-name">
                                   {shortName}
-                                  {ex.custom && <span className="picker-custom-badge">Custom</span>}
+                                  {ex.custom && <span className="picker-custom-badge">Propio</span>}
                                   {active?.exercises.some((e) => e.exerciseId === ex.id) && (
                                     <span className="picker-in-workout-badge">En entreno</span>
                                   )}

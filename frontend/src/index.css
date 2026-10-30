@@ -452,6 +452,7 @@ body {
   border-radius: var(--radius-full);
   transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  overflow: hidden;
 }
 .progress-bar-fill::after {
   content: "";
@@ -461,7 +462,13 @@ body {
   right: 0;
   bottom: 0;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-  animation: shimmer 2s infinite;
+  transform: translateX(100%);
+  animation: shimmer 1.2s ease-out 1 both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress-bar-fill::after {
+    animation: none;
+  }
 }
 @keyframes shimmer {
   0% {
@@ -4561,10 +4568,11 @@ button, a, input, select, textarea, [role=button], [onclick] {
 .picker-custom-badge {
   font-size: 0.55rem;
   padding: 0.05rem 0.3rem;
-  background: var(--accent-primary);
-  color: var(--accent-text, white);
-  border-radius: 4px;
+  background: var(--accent-primary-light);
+  color: var(--bg-primary);
+  border-radius: 2px;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .picker-in-workout-badge {
@@ -5284,6 +5292,38 @@ button, a, input, select, textarea, [role=button], [onclick] {
   flex-shrink: 0;
   background: rgba(18, 18, 26, 0.5);
   border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* 44px hit area around a 36px visual chip drawn by ::before */
+.food-search-tool-btn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.food-search-tool-btn::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+.food-search-tool-btn svg {
+  position: relative;
+}
+.food-search-tool-btn--ai {
+  color: #fff;
+}
+.food-search-tool-btn--ai::before {
+  background: var(--gradient-protein-carbs, linear-gradient(90deg, #8b5cf6, #3b82f6));
 }
 
 .food-search-body {

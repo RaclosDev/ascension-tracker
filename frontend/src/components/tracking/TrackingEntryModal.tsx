@@ -94,10 +94,10 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
           </div>
           <button
             type="button"
-            className="btn btn-secondary btn-sm"
+            className="btn btn-secondary btn-sm min-w-11 min-h-11"
             onClick={onClose}
             aria-label="Cerrar modal de edición"
-            style={{ padding: '0.2rem 0.6rem', borderRadius: '50%' }}
+            style={{ padding: 0, borderRadius: '50%' }}
           >
             <X size={18} aria-hidden="true" />
           </button>
@@ -179,7 +179,7 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
                 <button
                   key={step}
                   type="button"
-                  className="btn btn-secondary btn-sm"
+                  className="btn btn-secondary btn-sm min-h-11"
                   style={{ padding: '0.25rem 0' }}
                   onClick={() => onDeltaAdjust('weight', step)}
                   aria-label={`Ajustar peso en ${step > 0 ? `+${step.toFixed(2)}` : step.toFixed(2)} kg`}
@@ -258,7 +258,7 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
                 <button
                   key={step}
                   type="button"
-                  className="btn btn-secondary btn-sm"
+                  className="btn btn-secondary btn-sm min-h-11"
                   style={{ padding: '0.25rem 0' }}
                   onClick={() => onDeltaAdjust('steps', step)}
                   aria-label={`Ajustar pasos en ${step > 0 ? `+${step}` : step}`}
@@ -308,7 +308,7 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'space-between' }}>
           <button
             type="button"
-            className="btn btn-danger btn-sm"
+            className="btn btn-danger btn-sm min-h-11"
             onClick={() => setConfirmDeleteOpen(true)}
             style={{
               display: 'flex',

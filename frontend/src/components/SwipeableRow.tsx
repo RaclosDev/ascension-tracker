@@ -204,25 +204,25 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
         >
           <button
             type="button"
-            className="icon-btn edit-btn"
+            className="icon-btn edit-btn min-w-11 min-h-11"
             onClick={(e) => {
               e.stopPropagation();
               onEdit();
             }}
             title="Editar"
           >
-            <Edit3 size={16} />
+            <Edit3 size={16} aria-hidden="true" />
           </button>
           <button
             type="button"
-            className="icon-btn delete-btn"
+            className="icon-btn delete-btn min-w-11 min-h-11"
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
             }}
             title="Eliminar"
           >
-            <Trash2 size={16} />
+            <Trash2 size={16} aria-hidden="true" />
           </button>
         </div>
       </div>

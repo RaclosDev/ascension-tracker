@@ -1,10 +1,11 @@
 import React from 'react';
-import { Dumbbell, ChevronDown, UploadCloud } from 'lucide-react';
+import { Dumbbell, UploadCloud } from 'lucide-react';
+import { SettingsAccordionHeader } from './SettingsAccordionHeader';
 import { formatRestFriendly } from '../../lib/workout/format';
 
 interface SettingsWorkoutSectionProps {
   isOpen: boolean;
-  onToggle: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onToggle: (e: React.MouseEvent<HTMLButtonElement>) => void;
   restPreset: number;
   onRestPresetChange: (val: number) => void;
   workoutSettings?: { showRpe: boolean };
@@ -46,22 +47,18 @@ export function SettingsWorkoutSection({
     <div
       className={`card accordion-card transition-all duration-300 ease-out ${isOpen ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
     >
-      <div
-        className="accordion-header flex justify-between items-center cursor-pointer select-none"
-        onClick={onToggle}
-      >
-        <div className="flex items-center gap-2">
-          <Dumbbell size={20} className="text-primary" />
-          <span className="card-title m-0 text-base font-semibold">Entrenamiento</span>
-        </div>
-        <span
-          className={`text-xs text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
-        >
-          <ChevronDown size={18} />
-        </span>
-      </div>
+      <SettingsAccordionHeader
+        panelId="settings-workout-panel"
+        title="Entrenamiento"
+        icon={Dumbbell}
+        isOpen={isOpen}
+        onToggle={onToggle}
+      />
       {isOpen && (
-        <div className="accordion-content fade-in mt-5 pt-5 border-t border-white/10">
+        <div
+          id="settings-workout-panel"
+          className="accordion-content fade-in mt-5 pt-5 border-t border-white/10"
+        >
           <div
             className="form-group"
             style={{
