@@ -1,10 +1,11 @@
 import React from 'react';
-import { User, ChevronDown } from 'lucide-react';
+import { User } from 'lucide-react';
+import { SettingsAccordionHeader } from './SettingsAccordionHeader';
 import { SettingsForm } from '../../pages/SettingsPage';
 
 interface SettingsPersonalSectionProps {
   isOpen: boolean;
-  onToggle: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onToggle: (e: React.MouseEvent<HTMLButtonElement>) => void;
   form: SettingsForm;
   setForm: React.Dispatch<React.SetStateAction<SettingsForm>>;
   onSave: () => void;
@@ -28,22 +29,18 @@ export function SettingsPersonalSection({
     <div
       className={`card accordion-card transition-all duration-300 ease-out ${isOpen ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
     >
-      <div
-        className="accordion-header flex justify-between items-center cursor-pointer select-none"
-        onClick={onToggle}
-      >
-        <div className="flex items-center gap-2">
-          <User size={20} className="text-primary" />
-          <span className="card-title m-0 text-base font-semibold">Datos Personales</span>
-        </div>
-        <span
-          className={`text-xs text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
-        >
-          <ChevronDown size={18} />
-        </span>
-      </div>
+      <SettingsAccordionHeader
+        panelId="settings-personal-panel"
+        title="Datos Personales"
+        icon={User}
+        isOpen={isOpen}
+        onToggle={onToggle}
+      />
       {isOpen && (
-        <div className="accordion-content fade-in mt-5 pt-5 border-t border-white/10">
+        <div
+          id="settings-personal-panel"
+          className="accordion-content fade-in mt-5 pt-5 border-t border-white/10"
+        >
           <h4 className="subsection-title">Métricas Corporales y Biometría</h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>

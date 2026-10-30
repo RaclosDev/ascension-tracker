@@ -398,7 +398,7 @@ export function MergeExerciseModal({
                               {ex.name}
                               {ex.custom && (
                                 <span className="text-[0.55rem] px-1 py-[0.1rem] bg-[var(--accent-primary-light)] text-[var(--bg-primary)] rounded-sm font-bold">
-                                  Custom
+                                  Propio
                                 </span>
                               )}
                             </p>
