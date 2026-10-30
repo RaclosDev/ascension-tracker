@@ -1,11 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  Scale,
-  TrendingDown,
-  TrendingUp,
-  Target,
-  Calendar,
   ArrowDownRight,
   ArrowUpRight,
   ChevronDown,
@@ -130,108 +125,70 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
   };
 
   const currentMode = ratePref?.mode ?? 'history';
+  const trendColor = isLoss ? 'var(--color-success, #34d399)' : '#f43f5e';
+
+  // The .kpi-value/.kpi-detail classes stay as test hooks; the global .kpi-value font-size
+  // would override Tailwind on that element, so the number sizes live on the inner spans.
+  const secondaryLabel = 'text-xs font-medium mb-1.5';
+  const secondaryNumber = 'text-lg sm:text-xl font-bold leading-tight text-white tabular-nums';
+  const unit = 'text-xs font-semibold text-[var(--text-secondary)]';
 
   return (
     <div className="kpi-grid grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
-      {/* 1. Peso Actual */}
+      {/* Current weight is checked daily, so it is the focal card; the other three defer to it. */}
       <div className="card kpi-card glass-panel-elevated relative overflow-hidden rounded-2xl p-3.5 sm:p-4 border border-white/[0.08] flex flex-col justify-between">
-        <div className="flex items-center justify-between mb-2">
-          <span
-            className="kpi-label text-xs font-semibold"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Peso Actual
-          </span>
-          <div
-            className="p-1.5 rounded-lg border"
-            style={{
-              background: 'var(--accent-glow)',
-              borderColor: 'rgba(255, 255, 255, 0.08)',
-              color: 'var(--accent-primary)',
-            }}
-          >
-            <Scale size={15} />
-          </div>
-        </div>
-        <div className="my-1">
-          <div className="kpi-value flex items-baseline gap-1 text-xl sm:text-2xl font-black text-white font-mono tracking-tight tabular-nums">
-            {numCurrent.toFixed(2)} kg
-          </div>
+        <span className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+          Peso actual
+        </span>
+        <div className="kpi-value flex items-baseline gap-1 my-1">
+          <span className="text-[2rem] sm:text-[2.5rem] font-extrabold leading-none tracking-tight text-white tabular-nums">
+            {numCurrent.toFixed(2)}
+          </span>{' '}
+          <span className="text-sm font-semibold text-[var(--text-secondary)]">kg</span>
         </div>
         <div
-          className="kpi-detail text-[0.68rem] font-medium truncate pt-1 border-t border-white/[0.04]"
+          className="kpi-detail text-[0.68rem] font-medium pt-1 border-t border-white/[0.04]"
           style={{ color: 'var(--text-secondary)' }}
         >
           Media semanal:{' '}
-          <span className="font-mono text-gray-200 font-semibold">
+          <span className="text-gray-200 font-semibold tabular-nums whitespace-nowrap">
             {numWeeklyAvg.toFixed(2)} kg
           </span>
         </div>
       </div>
 
-      {/* 2. Total Perdido / Ganado */}
       <div className="card kpi-card glass-panel-elevated relative overflow-hidden rounded-2xl p-3.5 sm:p-4 border border-white/[0.08] flex flex-col justify-between">
-        <div className="flex items-center justify-between mb-2">
-          <span
-            className="kpi-label text-xs font-semibold"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Total Perdido
-          </span>
-          <div
-            className="p-1.5 rounded-lg border"
-            style={{
-              background: isLoss ? 'rgba(52, 211, 153, 0.1)' : 'rgba(244, 63, 94, 0.1)',
-              borderColor: 'rgba(255, 255, 255, 0.08)',
-              color: isLoss ? 'var(--color-success, #34d399)' : '#f43f5e',
-            }}
-          >
-            {isLoss ? <TrendingDown size={15} /> : <TrendingUp size={15} />}
-          </div>
-        </div>
-        <div className="my-1">
-          <div
-            className="kpi-value flex items-baseline gap-1 text-xl sm:text-2xl font-black font-mono tracking-tight tabular-nums"
-            style={{ color: isLoss ? 'var(--color-success, #34d399)' : '#f43f5e' }}
-          >
-            {numTotalLost.toFixed(2)} kg
-          </div>
+        <span className={secondaryLabel} style={{ color: 'var(--text-secondary)' }}>
+          {isLoss ? 'Total perdido' : 'Total ganado'}
+        </span>
+        <div className="kpi-value flex items-baseline gap-1 my-1">
+          <span className={secondaryNumber}>{numTotalLost.toFixed(2)}</span>{' '}
+          <span className={unit}>kg</span>
         </div>
         <div className="kpi-detail pt-1 border-t border-white/[0.04]">
           <span
-            className="inline-flex items-center gap-0.5 text-[0.68rem] font-semibold"
-            style={{ color: isLoss ? 'var(--color-success, #34d399)' : '#f43f5e' }}
+            className="inline-flex items-center gap-0.5 text-[0.68rem] font-semibold tabular-nums"
+            style={{ color: trendColor }}
           >
-            {isLoss ? <ArrowDownRight size={12} /> : <ArrowUpRight size={12} />}
+            {isLoss ? (
+              <ArrowDownRight size={12} aria-hidden />
+            ) : (
+              <ArrowUpRight size={12} aria-hidden />
+            )}
             {numTotalLost.toFixed(1)} kg {isLoss ? 'perdidos' : 'ganados'}
           </span>
         </div>
       </div>
 
-      {/* 3. Te Falta */}
       <div className="card kpi-card glass-panel-elevated relative overflow-hidden rounded-2xl p-3.5 sm:p-4 border border-white/[0.08] flex flex-col justify-between">
-        <div className="flex items-center justify-between mb-2">
-          <span
-            className="kpi-label text-xs font-semibold"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Te Falta
-          </span>
-          <div
-            className="p-1.5 rounded-lg border"
-            style={{
-              background: 'var(--accent-glow)',
-              borderColor: 'rgba(255, 255, 255, 0.08)',
-              color: 'var(--accent-primary)',
-            }}
-          >
-            <Target size={15} />
-          </div>
-        </div>
-        <div className="my-1">
-          <div className="kpi-value flex items-baseline gap-1 text-xl sm:text-2xl font-black text-white font-mono tracking-tight tabular-nums">
-            {numRemaining > 0 ? numRemaining.toFixed(1) : '0.0'} kg
-          </div>
+        <span className={secondaryLabel} style={{ color: 'var(--text-secondary)' }}>
+          Te falta
+        </span>
+        <div className="kpi-value flex items-baseline gap-1 my-1">
+          <span className={secondaryNumber}>
+            {numRemaining > 0 ? numRemaining.toFixed(1) : '0.0'}
+          </span>{' '}
+          <span className={unit}>kg</span>
         </div>
         <div
           className="kpi-detail text-[0.68rem] font-medium truncate pt-1 border-t border-white/[0.04]"
@@ -241,33 +198,16 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
         </div>
       </div>
 
-      {/* 4. Fecha Estimada */}
       <div className="card kpi-card glass-panel-elevated relative rounded-2xl p-3.5 sm:p-4 border border-white/[0.08] flex flex-col justify-between">
-        <div className="flex items-center justify-between mb-2">
-          <span
-            className="kpi-label text-xs font-semibold"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Fecha Estimada
-          </span>
-          <div
-            className="p-1.5 rounded-lg border"
-            style={{
-              background: 'rgba(245, 158, 11, 0.1)',
-              borderColor: 'rgba(255, 255, 255, 0.08)',
-              color: '#fbbf24',
-            }}
-          >
-            <Calendar size={15} />
-          </div>
-        </div>
-        <div className="my-1">
-          <span className="kpi-value text-base sm:text-lg font-black text-white font-mono tracking-tight block truncate">
+        <span className={secondaryLabel} style={{ color: 'var(--text-secondary)' }}>
+          Fecha estimada
+        </span>
+        <div className="kpi-value my-1 min-w-0">
+          <span className="block truncate text-lg sm:text-xl font-bold leading-tight text-white">
             {estimatedDate || 'En cálculo'}
           </span>
         </div>
 
-        {/* Clickable rate trigger */}
         <div className="kpi-detail relative pt-1 border-t border-white/[0.04]">
           <button
             ref={triggerRef}
@@ -284,7 +224,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
           >
             <span>
               A ritmo de{' '}
-              <span className="font-mono font-semibold text-gray-200">
+              <span className="font-semibold text-gray-200 tabular-nums whitespace-nowrap">
                 {numWeeklyRate.toFixed(2)} kg/sem
               </span>
             </span>
@@ -377,7 +317,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
                             >
                               {label}
                               {mode === 'goal' && weeklyGoal != null && (
-                                <span className="ml-1 font-mono opacity-60">
+                                <span className="ml-1 opacity-60 tabular-nums">
                                   ({weeklyGoal.toFixed(2)} kg/sem)
                                 </span>
                               )}
@@ -421,7 +361,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
                             value={customInput}
                             onChange={(e) => setCustomInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleCustomSave()}
-                            className="w-full min-w-0 rounded-lg pl-3 pr-16 py-2 text-sm font-mono font-semibold text-[var(--text-primary)] border outline-none transition-all focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]"
+                            className="w-full min-w-0 rounded-lg pl-3 pr-16 py-2 text-sm font-semibold tabular-nums text-[var(--text-primary)] border outline-none transition-all focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]"
                             style={{
                               background: 'var(--bg-input, #2C2C2E)',
                               borderColor: 'var(--border-medium, rgba(255,255,255,0.15))',

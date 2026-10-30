@@ -30,6 +30,14 @@ export function isTodayLocal(dateStr: string) {
 }
 
 /**
+ * Uppercases only the first letter, as Spanish dates require: "Viernes, 30 de octubre de 2026".
+ * Use it instead of CSS `capitalize`, which uppercases every word ("30 De Octubre").
+ */
+export function capitalizeFirst(text: string) {
+  return text.charAt(0).toLocaleUpperCase('es-ES') + text.slice(1);
+}
+
+/**
  * Returns a human-friendly label like "Hoy (8 sep)", "Ayer (7 sep)", or "8 sep 2026".
  */
 export function formatFriendlyDate(dateStr: string) {

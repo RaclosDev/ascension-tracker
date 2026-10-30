@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, Zap } from 'lucide-react';
+import { BatteryFull, ChevronRight } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -125,7 +125,7 @@ export function MuscleRecovery({
           {musclesToRecover.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-5 text-center">
               <div className="w-9 h-9 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mb-1.5 text-emerald-400">
-                <Zap size={18} className="fill-emerald-400/20" />
+                <BatteryFull size={18} aria-hidden />
               </div>
               <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
                 100% Listo
@@ -147,7 +147,7 @@ export function MuscleRecovery({
                       <span className="font-medium truncate text-zinc-200" title={label}>
                         {label}
                       </span>
-                      <span className="text-[10.5px] font-bold font-mono tabular-nums ml-1 flex-shrink-0 text-zinc-400">
+                      <span className="text-[10.5px] font-bold tabular-nums ml-1 flex-shrink-0 text-zinc-400">
                         {recoveryPct}%
                       </span>
                     </div>
@@ -249,7 +249,7 @@ export function MuscleRecovery({
                       >
                         {statusBadge.text}
                       </span>
-                      <span className="font-mono font-bold text-xs text-[var(--text-primary)]">
+                      <span className="font-bold text-xs tabular-nums text-[var(--text-primary)]">
                         {recoveryPct}%
                       </span>
                     </div>

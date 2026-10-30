@@ -81,11 +81,9 @@ export function RestBanner() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           <span
             style={{
-              fontSize: '0.65rem',
+              fontSize: '0.75rem',
               fontWeight: 700,
               color: 'var(--accent-primary)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
             }}
           >
             Descanso

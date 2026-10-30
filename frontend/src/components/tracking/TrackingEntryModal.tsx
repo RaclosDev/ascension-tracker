@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Trash2, Scale, Footprints, Apple, X } from 'lucide-react';
 import { TrackingModalData } from '../../types/tracking';
+import { capitalizeFirst } from '../../utils/dateHelper';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,11 +83,10 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
               style={{
                 fontSize: '1.1rem',
                 fontWeight: 700,
-                textTransform: 'capitalize',
                 margin: 0,
               }}
             >
-              {modalData.fullLabel}
+              {capitalizeFirst(modalData.fullLabel)}
             </h2>
             <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
               Edita las métricas del día
