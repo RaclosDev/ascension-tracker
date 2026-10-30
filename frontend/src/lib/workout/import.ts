@@ -330,28 +330,24 @@ export function parseHevyCsv(
       return exerciseIdByName.get(normalized)!;
     }
 
-    // 1. Search in native catalog
     const catalogMatch = catalog.find((e) => e.name.toLowerCase() === normalized);
     if (catalogMatch) {
       exerciseIdByName.set(normalized, catalogMatch.id);
       return catalogMatch.id;
     }
 
-    // 2. Search in current custom exercises
     const customMatch = currentCustomExercises.find((e) => e.name.toLowerCase() === normalized);
     if (customMatch) {
       exerciseIdByName.set(normalized, customMatch.id);
       return customMatch.id;
     }
 
-    // 3. Search in newly created custom exercises
     const newlyCreated = newCustomExercises.find((e) => e.name.toLowerCase() === normalized);
     if (newlyCreated) {
       exerciseIdByName.set(normalized, newlyCreated.id);
       return newlyCreated.id;
     }
 
-    // 4. Create new custom exercise
     const { muscle, equipment } = inferExerciseMetadata(title);
     const newEx: Exercise = {
       id: uid(),

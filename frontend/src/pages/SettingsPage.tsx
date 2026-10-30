@@ -354,7 +354,6 @@ export default function SettingsPage() {
         className="settings-accordion-container"
         style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
       >
-        {/* 1. Personal Data */}
         <SettingsPersonalSection
           isOpen={openSections.personal}
           onToggle={(e) => toggleSection('personal', e)}
@@ -364,7 +363,6 @@ export default function SettingsPage() {
           isSaving={isSavingPersonal}
         />
 
-        {/* 1.5 Plan de Adelgazamiento */}
         <div
           className={`card accordion-card transition-all duration-300 ease-out ${openSections.plan ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
         >
@@ -410,7 +408,6 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* 2. Macro Strategy */}
         <div
           className={`card accordion-card transition-all duration-300 ease-out ${openSections.macros ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
         >
@@ -436,7 +433,7 @@ export default function SettingsPage() {
                 initialStartWeight={dashboard?.currentWeight || effectiveSettings?.startWeight}
               />
               <button
-                className="btn btn-primary"
+                className="btn btn-primary min-h-11"
                 style={{ width: '100%', marginTop: '0.5rem' }}
                 onClick={handleSaveMacros}
               >
@@ -446,7 +443,6 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* 3. Meals */}
         <div
           id="meals-section"
           className={`card accordion-card transition-all duration-300 ease-out ${openSections.meals ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
@@ -472,7 +468,6 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* 4. Theme & Appearance */}
         <SettingsThemeSection
           isOpen={openSections.theme}
           onToggle={(e) => toggleSection('theme', e)}
@@ -480,7 +475,6 @@ export default function SettingsPage() {
           onColorChange={handleColorChange}
         />
 
-        {/* 5. Workout */}
         <SettingsWorkoutSection
           isOpen={openSections.workout}
           onToggle={(e) => toggleSection('workout', e)}
@@ -499,7 +493,6 @@ export default function SettingsPage() {
           onOpenHevyModal={() => setIsHevyModalOpen(true)}
         />
 
-        {/* 6. Backup, Privacy & Logout */}
         <SettingsDataSection
           isExportingJson={isExportingJson}
           onExportJson={handleExportJson}

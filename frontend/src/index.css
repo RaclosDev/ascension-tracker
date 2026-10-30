@@ -86,7 +86,6 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 4px 12px rgba(0, 0, 0, 0.25);
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -174,7 +173,6 @@ body {
   font-weight: 800;
   font-size: 1.2rem;
   color: var(--accent-text, white);
-  box-shadow: var(--shadow-glow);
 }
 .logo-text {
   font-size: 1.25rem;
@@ -184,8 +182,6 @@ body {
 .logo-subtitle {
   font-size: 0.7rem;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
 }
 .sidebar-nav {
   flex: 1;
@@ -294,7 +290,6 @@ body {
   border-radius: var(--radius-lg);
   padding: var(--space-md) var(--space-xl);
   margin-bottom: var(--space-xl);
-  box-shadow: var(--shadow-glow);
   flex-wrap: wrap;
 }
 .quick-add-label {
@@ -329,22 +324,35 @@ body {
   margin-left: auto;
 }
 
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: var(--space-lg);
-  margin-bottom: var(--space-xl);
+/* In the components layer so Tailwind grid utilities on the same element win;
+   a bare .kpi-grid still gets these columns. */
+@layer components {
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+  }
+  @media (max-width: 768px) {
+    .kpi-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (max-width: 480px) {
+    .kpi-grid {
+      gap: var(--space-md);
+    }
+  }
 }
 
-.kpi-card.accent { background: linear-gradient(180deg, rgba(0, 133, 255, 0.08) 0%, rgba(0, 133, 255, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(0, 133, 255, 0.2), inset 0 0 12px rgba(0, 133, 255, 0.03); }
-.kpi-card.success { background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(16, 185, 129, 0.2), inset 0 0 12px rgba(16, 185, 129, 0.03); }
-.kpi-card.info { background: linear-gradient(180deg, rgba(0, 133, 255, 0.08) 0%, rgba(0, 133, 255, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(0, 133, 255, 0.2), inset 0 0 12px rgba(0, 133, 255, 0.03); }
-.kpi-card.warning { background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(245, 158, 11, 0.2), inset 0 0 12px rgba(245, 158, 11, 0.03); }
-.kpi-card.danger { background: linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(239, 68, 68, 0.2), inset 0 0 12px rgba(239, 68, 68, 0.03); }
+.kpi-card.accent { background: linear-gradient(180deg, rgba(0, 133, 255, 0.08) 0%, rgba(0, 133, 255, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(0, 133, 255, 0.2); }
+.kpi-card.success { background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(16, 185, 129, 0.2); }
+.kpi-card.info { background: linear-gradient(180deg, rgba(0, 133, 255, 0.08) 0%, rgba(0, 133, 255, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(0, 133, 255, 0.2); }
+.kpi-card.warning { background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(245, 158, 11, 0.2); }
+.kpi-card.danger { background: linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(239, 68, 68, 0.2); }
 
 .kpi-card {
   background: var(--bg-card);
-  backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
@@ -353,23 +361,14 @@ body {
   overflow: hidden;
 }
 
-
-
-
-
-
 @media (hover: hover) {
   .kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
     border-color: var(--border-medium);
   }
 }
 .kpi-label {
   font-size: 0.8rem;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   margin-bottom: var(--space-sm);
   font-weight: 600;
 }
@@ -452,7 +451,6 @@ body {
   background: var(--gradient-primary);
   border-radius: var(--radius-full);
   transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow-glow);
   position: relative;
 }
 .progress-bar-fill::after {
@@ -548,7 +546,6 @@ body {
 }
 .streak-dot.filled {
   background: var(--accent-primary);
-  box-shadow: 0 0 8px var(--accent-glow);
 }
 .streak-dot.empty {
   background: var(--bg-glass-strong);
@@ -556,7 +553,6 @@ body {
 }
 .streak-dot.today {
   border: 2px solid var(--accent-primary-light);
-  box-shadow: 0 0 12px var(--accent-glow);
 }
 
 .btn {
@@ -603,7 +599,6 @@ body {
 @media (hover: hover) {
   .btn-primary:hover {
     filter: brightness(1.1);
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
   }
   .btn-secondary:hover {
     background: var(--bg-surface-hover);
@@ -611,11 +606,9 @@ body {
   }
   .btn-success:hover {
     filter: brightness(1.1);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
   }
   .btn-danger:hover {
     filter: brightness(1.1);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
   }
 }
 .btn-sm {
@@ -646,9 +639,7 @@ body {
   text-align: center;
   font-weight: 700;
   color: var(--text-secondary);
-  text-transform: uppercase;
   font-size: 0.7rem;
-  letter-spacing: 0.5px;
   border-bottom: 1px solid var(--border-medium);
 }
 .data-table td {
@@ -774,12 +765,13 @@ body {
   max-width: 100%;
   box-sizing: border-box;
   width: 100%;
+  min-height: 44px;
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
   background: var(--bg-input);
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-family: var(--font-main);
   transition: all var(--transition-fast);
   outline: none;
@@ -827,12 +819,10 @@ input[type=number] {
   border-radius: var(--radius-lg);
   padding: var(--space-md);
   margin-bottom: var(--space-lg);
-  box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
 }
 .calendar-week:hover {
   border-color: var(--border-medium);
-  box-shadow: var(--shadow-md);
 }
 .calendar-week-header {
   display: flex;
@@ -898,7 +888,6 @@ input[type=number] {
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--text-secondary);
-  text-transform: uppercase;
   margin-bottom: var(--space-xs);
 }
 .calendar-day-date {
@@ -957,8 +946,12 @@ input[type=number] {
   font-size: 1.2rem;
   font-weight: 800;
   text-align: center;
-  outline: none;
   font-family: var(--font-main);
+  border-radius: var(--radius-sm);
+}
+.calendar-input:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
 }
 .calendar-input-actions {
   display: flex;
@@ -1092,9 +1085,7 @@ input[type=number] {
 }
 @media (hover: hover) {
   .meal-card:hover {
-    transform: translateY(-2px);
     border-color: var(--border-accent);
-    box-shadow: var(--shadow-glow);
   }
 }
 .meal-icon {
@@ -1188,9 +1179,6 @@ input[type=number] {
     padding: var(--space-xl) var(--space-md);
     padding-top: calc(var(--space-xl) + 44px);
   }
-  .kpi-grid {
-    grid-template-columns: 1fr 1fr;
-  }
   .charts-grid {
     grid-template-columns: 1fr;
   }
@@ -1227,18 +1215,7 @@ input[type=number] {
   }
 }
 @media (max-width: 480px) {
-  .kpi-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-md);
-  }
-  
-.kpi-card.accent { background: linear-gradient(180deg, rgba(0, 133, 255, 0.08) 0%, rgba(0, 133, 255, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(0, 133, 255, 0.2), inset 0 0 12px rgba(0, 133, 255, 0.03); }
-.kpi-card.success { background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(16, 185, 129, 0.2), inset 0 0 12px rgba(16, 185, 129, 0.03); }
-.kpi-card.info { background: linear-gradient(180deg, rgba(0, 133, 255, 0.08) 0%, rgba(0, 133, 255, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(0, 133, 255, 0.2), inset 0 0 12px rgba(0, 133, 255, 0.03); }
-.kpi-card.warning { background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(245, 158, 11, 0.2), inset 0 0 12px rgba(245, 158, 11, 0.03); }
-.kpi-card.danger { background: linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(239, 68, 68, 0.2), inset 0 0 12px rgba(239, 68, 68, 0.03); }
-
-.kpi-card {
+  .kpi-card {
     padding: var(--space-md);
   }
   .kpi-value {
@@ -1275,6 +1252,7 @@ input[type=number]::-webkit-outer-spin-button {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
+  /* Blur kept: modal and sheet scrims push the page back so the dialog reads as the only focus. */
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -1344,8 +1322,6 @@ input[type=number]::-webkit-outer-spin-button {
 .logo-subtitle {
   font-size: 0.85rem;
   color: var(--text-secondary);
-  letter-spacing: 1px;
-  text-transform: uppercase;
 }
 .sidebar-nav {
   flex: 1;
@@ -1471,6 +1447,7 @@ input[type=number]::-webkit-outer-spin-button {
   right: 1rem;
   height: 64px;
   background: rgba(18, 18, 20, 0.92);
+  /* Blur kept: the nav floats over scrolling content and the blur keeps its labels readable. */
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1574,7 +1551,6 @@ input[type=number]::-webkit-outer-spin-button {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
   z-index: 95;
   opacity: 0;
   transition: opacity var(--transition-base);
@@ -1945,17 +1921,11 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 
 @keyframes pulse-recording {
-  0% {
+  0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
   }
   50% {
     transform: scale(1.08);
-    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
   }
 }
 @keyframes pulse-dot {
@@ -1968,8 +1938,10 @@ button, a, input, select, textarea, [role=button], [onclick] {
     transform: scale(0.8);
   }
 }
+/* Live-state dots and the mic button pulse a few times when the state starts, then stay
+   solid: their colour keeps marking the state without endless motion. */
 .recording-pulse-btn {
-  animation: pulse-recording 1.5s infinite ease-in-out !important;
+  animation: pulse-recording 1.5s ease-in-out 2 !important;
   background: rgba(239, 68, 68, 0.2) !important;
   border-color: #ef4444 !important;
   color: #ef4444 !important;
@@ -1981,7 +1953,17 @@ button, a, input, select, textarea, [role=button], [onclick] {
   height: 8px;
   border-radius: 50%;
   background: #ef4444;
-  animation: pulse-dot 1s infinite ease-in-out;
+  animation: pulse-dot 1s ease-in-out 3;
+}
+@media (prefers-reduced-motion: reduce) {
+  .recording-pulse-btn,
+  .recording-dot,
+  .workout-tab .active-pulse-badge,
+  .active-workout-timer-badge .timer-pulse-dot,
+  .active-workout-timer-dot,
+  .active-workout-dot {
+    animation: none !important;
+  }
 }
 
 /* --- AI NUTRITION ASSISTANT (UTILITIES) --- */
@@ -1995,7 +1977,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   border-radius: 18px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 .ai-assistant-container::before {
   content: "";
@@ -2038,7 +2019,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   text-align: center;
   gap: 0.35rem;
   transition: all 0.25s ease;
-  backdrop-filter: blur(8px);
   position: relative;
   overflow: hidden;
 }
@@ -2127,7 +2107,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   flex-shrink: 0;
   background: var(--bg-card);
   border: 1px solid var(--border-medium);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 @media (max-width: 640px) {
   .chat-msg-row .chat-avatar {
@@ -2155,14 +2134,12 @@ button, a, input, select, textarea, [role=button], [onclick] {
   background: var(--gradient-primary);
   color: var(--accent-text, white);
   border-bottom-right-radius: 4px;
-  box-shadow: 0 4px 15px var(--accent-glow);
 }
 .chat-msg-row .chat-bubble.ai-bubble {
   background: var(--bg-glass, rgba(255, 255, 255, 0.04));
   border: 1px solid var(--border-medium);
   color: var(--text-primary);
   border-bottom-left-radius: 4px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 /* Multi-Options tabs and meal presentation */
@@ -2206,7 +2183,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   background: var(--bg-glass-strong, rgba(255, 255, 255, 0.1));
   border-color: var(--accent-primary);
   color: var(--text-primary);
-  box-shadow: 0 0 12px var(--accent-glow);
 }
 
 .suggested-meal-box {
@@ -2217,7 +2193,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 @media (max-width: 640px) {
   .suggested-meal-box {
@@ -2327,8 +2302,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   font-size: 0.76rem;
   font-weight: 700;
   color: var(--text-secondary);
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2468,8 +2441,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   height: 6px;
   border-radius: 50%;
   background: var(--color-success);
-  box-shadow: 0 0 8px var(--color-success);
-  animation: pulse-dot 1.5s ease-in-out infinite;
+  animation: pulse-dot 1.5s ease-in-out 3;
 }
 .workout-tab.active {
   background: var(--text-primary);
@@ -2503,12 +2475,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
-}
-.workout-kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
 }
 .workout-kpi-card .kpi-top-row {
   display: flex;
@@ -2555,7 +2522,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   border-radius: var(--radius-md);
   padding: 1.5rem;
   margin-bottom: 2.5rem;
-  box-shadow: var(--shadow-sm);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2583,7 +2549,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 .quick-add-card {
   background: var(--bg-card);
-  backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
@@ -2664,7 +2629,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  box-shadow: 0 4px 20px rgba(225, 29, 72, 0.4);
   transition: all var(--transition-base);
 }
 @media (max-width: 680px) {
@@ -2674,7 +2638,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 .workout-hero-card .hero-actions .hero-btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(225, 29, 72, 0.55);
 }
 .workout-hero-card .hero-actions .hero-btn-secondary {
   padding: 0.85rem 1.35rem;
@@ -2715,7 +2678,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   background: var(--bg-glass-strong);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2753,8 +2715,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   transition: all var(--transition-base);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(10px);
 }
 .workout-summary-card::before {
   content: "";
@@ -2768,8 +2728,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 .workout-summary-card:hover {
   border-color: var(--border-medium);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
 }
 .workout-summary-card .workout-summary-header {
   display: flex;
@@ -2824,8 +2782,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 .workout-summary-card .summary-chip-item .chip-val {
   font-family: var(--font-display);
@@ -2899,8 +2855,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   position: sticky;
   top: 1rem;
   z-index: 100;
-  background: rgba(14, 17, 23, 0.88);
-  backdrop-filter: blur(18px);
+  background: #0e1117;
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-xl);
   padding: 1.15rem 1.5rem;
@@ -2963,15 +2918,13 @@ button, a, input, select, textarea, [role=button], [onclick] {
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-full);
   padding: 0.5rem 1.15rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 .active-workout-timer-badge .timer-pulse-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--color-success);
-  box-shadow: 0 0 10px var(--color-success);
-  animation: pulse-dot 1.2s infinite ease-in-out;
+  animation: pulse-dot 1.2s ease-in-out 3;
 }
 .active-workout-timer-badge .timer-digits {
   font-family: var(--font-display);
@@ -3021,8 +2974,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   margin-right: 0.2rem;
 }
 .active-workout-metrics-strip .rest-timer-strip-selector .timer-preset-btn {
@@ -3057,10 +3008,8 @@ button, a, input, select, textarea, [role=button], [onclick] {
   background: var(--bg-card);
   border: 1px solid var(--border-medium);
   border-radius: 20px;
-  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(12px);
   overflow: hidden;
-  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  transition: border-color var(--transition-base);
 }
 .workout-exercise-card:hover {
   border-color: rgba(255, 255, 255, 0.16);
@@ -3096,8 +3045,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
 .workout-exercise-card .workout-exercise-card-muscle {
   font-size: 0.72rem;
   color: var(--accent-primary-light);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   background: var(--accent-glow);
   border: 1px solid var(--border-accent);
   padding: 0.2rem 0.65rem;
@@ -3182,8 +3129,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   font-size: 0.72rem;
   font-weight: 800;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.85px;
   text-align: center;
   margin-bottom: 0.25rem;
 }
@@ -3193,7 +3138,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
     gap: 6px;
     padding: 0.25rem 0.5rem;
     font-size: 0.6rem;
-    letter-spacing: 0px;
   }
 }
 .workout-exercise-card .hide-mobile {
@@ -3391,7 +3335,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   border-color: var(--accent-primary) !important;
   color: var(--accent-text, #ffffff) !important;
   font-weight: 700;
-  box-shadow: 0 0 14px var(--accent-glow) !important;
 }
 .workout-exercise-card {
   /* Delete Set Button */
@@ -3470,13 +3413,11 @@ button, a, input, select, textarea, [role=button], [onclick] {
   justify-content: center;
   gap: 0.6rem;
   margin-top: 1rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 .add-exercise-btn:hover {
   background: var(--bg-glass-strong);
   border-color: var(--accent-primary);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
 }
 
 /* --- Active Workout Sticky/Bottom Actions --- */
@@ -3488,7 +3429,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   background: var(--bg-card);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-xl);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   flex-wrap: wrap;
 }
 @media (max-width: 640px) {
@@ -3513,12 +3453,10 @@ button, a, input, select, textarea, [role=button], [onclick] {
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
   transition: all var(--transition-base);
 }
 .active-workout-footer .finish-workout-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(16, 185, 129, 0.55);
 }
 .active-workout-footer .save-template-btn {
   flex: 1;
@@ -3598,8 +3536,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   font-family: var(--font-display);
   font-size: 0.95rem;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 3px;
   font-weight: 700;
 }
 
@@ -3627,7 +3563,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   stroke-width: 7;
   stroke-linecap: round;
   transition: stroke-dashoffset 1s linear;
-  filter: drop-shadow(0 0 8px var(--accent-glow));
 }
 
 .rest-timer-time {
@@ -3761,8 +3696,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   transition: all var(--transition-fast);
   white-space: nowrap;
   font-family: var(--font-main);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
 }
 .exercise-filter-btn.active {
   background: var(--accent-glow);
@@ -3918,12 +3851,9 @@ button, a, input, select, textarea, [role=button], [onclick] {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 .template-card:hover {
   border-color: var(--border-accent);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 .template-card .template-card-header {
   display: flex;
@@ -4014,8 +3944,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   padding: 0.4rem 0.5rem;
   text-align: center;
   border-bottom: 1px solid var(--border-subtle);
@@ -4293,6 +4221,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   inset: 0;
   z-index: 200;
   background: rgba(0, 0, 0, 0.6);
+  /* Blur kept: same scrim role as .modal-backdrop. */
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   animation: sheetFadeIn 0.2s ease-out;
@@ -4305,7 +4234,8 @@ button, a, input, select, textarea, [role=button], [onclick] {
   right: 0;
   z-index: 201;
   max-height: 92dvh;
-  background: rgba(18, 18, 26, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+  background: #12121a;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
   border-radius: 20px 20px 0 0;
   display: flex;
   flex-direction: column;
@@ -4449,8 +4379,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   padding: 0.25rem 0;
 }
 
@@ -4502,8 +4430,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   margin-bottom: 0.5rem;
 }
 .picker-recents-grid {
@@ -4638,8 +4564,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   background: var(--accent-primary);
   color: var(--accent-text, white);
   border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
   font-weight: 700;
 }
 
@@ -4650,8 +4574,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   color: var(--color-success, #34d399);
   border: 1px solid rgba(52, 211, 153, 0.3);
   border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -4663,8 +4585,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   border-top: 1px solid var(--border-subtle);
   padding: 0.75rem 1.25rem;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4711,8 +4631,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 
 /* ---- Create Exercise Inline ---- */
@@ -4749,9 +4667,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
   padding: 0.35rem 0.65rem;
   border-radius: 20px;
@@ -4762,7 +4678,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   height: 7px;
   border-radius: 50%;
   background: var(--accent-primary);
-  animation: pulse-dot 1.5s ease-in-out infinite;
+  animation: pulse-dot 1.5s ease-in-out 3;
 }
 .active-workout-timer-text {
   font-size: 0.95rem;
@@ -4824,8 +4740,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   margin-top: 0.25rem;
   font-size: 0.72rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
   color: var(--text-secondary);
   display: flex;
   align-items: center;
@@ -4872,11 +4786,15 @@ button, a, input, select, textarea, [role=button], [onclick] {
 .exercise-card-rest-pill:hover {
   background: rgba(255, 255, 255, 0.09);
   border-color: var(--accent-primary);
-  box-shadow: 0 0 10px var(--accent-glow, rgba(0, 133, 255, 0.2));
 }
 .exercise-card-rest-pill:focus-within {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 2px var(--accent-glow, rgba(0, 133, 255, 0.25));
+}
+/* The select is borderless inside the pill, so the pill carries its keyboard focus ring. */
+.exercise-card-rest-pill:has(.exercise-card-rest-select:focus-visible) {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
 }
 .exercise-card-rest-icon {
   color: var(--accent-primary-light, #339cff);
@@ -4955,9 +4873,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   top: calc(100% + 6px);
   right: 0;
   min-width: 170px;
-  background: rgba(28, 28, 30, 0.96);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
@@ -5004,8 +4920,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   padding: 0.5rem 0.75rem;
   font-size: 0.62rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
   color: var(--text-muted);
   text-align: center;
 }
@@ -5108,7 +5022,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   background: var(--accent-primary) !important;
   border-color: var(--accent-primary) !important;
   color: var(--accent-text, #ffffff) !important;
-  box-shadow: 0 0 14px var(--accent-glow) !important;
 }
 .set-check-btn.checked:hover {
   background: var(--accent-primary) !important;
@@ -5171,7 +5084,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 .workout-finish-btn:hover {
   filter: brightness(1.1);
-  box-shadow: 0 4px 16px rgba(0, 133, 255, 0.3);
 }
 .workout-secondary-btn {
   width: 100%;
@@ -5263,6 +5175,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
+  /* Blur kept: same scrim role as .modal-backdrop. */
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   z-index: 1000;
@@ -5272,9 +5185,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 .bottom-sheet-content {
   width: 100%;
-  background: rgba(28, 28, 30, 0.75);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: var(--bg-card);
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 32px 32px 0 0;
   padding: 1rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
@@ -5345,8 +5256,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--accent-primary-light);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   margin-top: 1.5rem;
   margin-bottom: 1rem;
   border-bottom: 1px solid var(--border-subtle);
@@ -5364,9 +5273,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   right: 0;
   bottom: 0;
   z-index: 201;
-  background: rgba(18, 18, 26, 0.95);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
+  background: #12121a;
   display: flex;
   flex-direction: column;
   animation: sheetFadeIn 0.2s cubic-bezier(0.32, 0.72, 0, 1);
@@ -5452,9 +5359,7 @@ input[type="range"]:active::-moz-range-thumb {
   right: 1rem;
   bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 0.75rem);
   z-index: 85;
-  background: var(--bg-glass-strong, rgba(17, 24, 39, 0.95));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--bg-card);
   border: 1px solid var(--border-medium, rgba(255, 255, 255, 0.12));
   border-radius: 14px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
@@ -5516,8 +5421,7 @@ input[type="range"]:active::-moz-range-thumb {
   height: 8px;
   border-radius: 50%;
   background: var(--accent-primary);
-  box-shadow: 0 0 8px var(--accent-primary);
-  animation: pulseDot 1.5s infinite;
+  animation: pulseDot 1.5s 3;
 }
 
 @keyframes pulseDot {
@@ -5606,9 +5510,7 @@ input[type="range"]:active::-moz-range-thumb {
 
 /* Mobile & PWA Sensory Elevation: View Transitions, Haptics & Micro-Physics */
 
-/* 1. Route change: fade only the page content. Header, sidebar and bottom nav stay still.
-   Opacity only, no transform, so fixed-position modals inside pages keep the viewport
-   as their containing block. */
+/* 1. Route change: fade the page content only; opacity, not transform, so fixed modals keep the viewport. */
 .route-fade {
   animation: routeFadeIn 180ms cubic-bezier(0, 0, 0.2, 1) backwards;
 }
@@ -5652,20 +5554,16 @@ button,
   filter: none !important;
 }
 
-/* 3. Dark Glassmorphism 2.0 Utilities */
+/* 3. Opaque panel surfaces (class names kept from the earlier glass style). */
 .glass-panel-elevated {
-  background: rgba(22, 22, 24, 0.72);
-  backdrop-filter: blur(20px) saturate(190%);
-  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  background: #101011;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
 }
 
 .glass-pill {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 
 
@@ -5707,6 +5605,5 @@ button,
   .set-row .desktop-row-delete-btn:hover {
     background: #ef4444;
     color: #ffffff;
-    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
   }
 }

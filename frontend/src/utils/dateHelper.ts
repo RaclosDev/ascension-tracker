@@ -1,7 +1,6 @@
 /**
- * Date helper utilities in local timezone.
- * Fixes timezone shift bugs caused by `toISOString().split('T')[0]`,
- * which converts local time to UTC and returns yesterday after midnight in UTC+ timezones.
+ * Local-timezone date helpers: `toISOString().split('T')[0]` converts to UTC and returns
+ * yesterday shortly after midnight in UTC+ timezones.
  */
 
 export function getLocalDateString(d: Date | string = new Date()) {
@@ -27,6 +26,14 @@ export function addDaysToDateString(dateStr: string, days: number) {
 
 export function isTodayLocal(dateStr: string) {
   return dateStr === getLocalDateString();
+}
+
+/**
+ * Uppercases only the first letter, as Spanish dates require: "Viernes, 30 de octubre de 2026".
+ * Use it instead of CSS `capitalize`, which uppercases every word ("30 De Octubre").
+ */
+export function capitalizeFirst(text: string) {
+  return text.charAt(0).toLocaleUpperCase('es-ES') + text.slice(1);
 }
 
 /**

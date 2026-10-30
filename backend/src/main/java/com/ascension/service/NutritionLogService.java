@@ -246,7 +246,6 @@ public class NutritionLogService {
                 .build();
     }
 
-    // --- Saved Foods CRUD ---
     public List<SavedFoodDTO> getSavedFoods(String userEmail) {
         return savedFoodRepository.findRecentByUserEmail(userEmail, org.springframework.data.domain.PageRequest.of(0, 200)).stream()
                 .map(f -> SavedFoodDTO.builder()

@@ -138,17 +138,13 @@ public class PushNotificationService {
         restTimerService.scheduleTimer(userEmail, delaySec);
     }
 
-    /**
-     * Cancel the pending rest notification for a user (e.g. when they skip rest).
-     */
     public void cancelRestNotification(String userEmail) {
         restTimerService.cancelTimers(userEmail);
     }
 
     /**
-     * Poller @Scheduled: queries due timers using SELECT ... FOR UPDATE SKIP LOCKED
-     * via RestTimerService, updates their status, and offloads HTTP push delivery
-     * to pushExecutor without blocking or saturating the scheduler threads.
+     * Claims due timers with FOR UPDATE SKIP LOCKED and hands HTTP delivery to pushExecutor,
+     * so the scheduler thread never blocks on a push.
      */
     @Scheduled(fixedDelayString = "${app.push.timer-poll-delay-ms:1000}")
     public void pollDueTimers() {
@@ -173,9 +169,6 @@ public class PushNotificationService {
         }
     }
 
-    /**
-     * Purges expired rest timers older than 24 hours daily at 03:00 AM.
-     */
     @Scheduled(cron = "${app.push.timer-cleanup-cron:0 0 3 * * *}")
     public void cleanupOldRestTimers() {
         try {

@@ -27,6 +27,7 @@ import {
 } from '@/lib/workout/format';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { SET_TYPE_LABEL } from '@/lib/workout/types';
+import { capitalizeFirst } from '@/utils/dateHelper';
 
 import { useWorkoutHistory, useDeleteWorkout, useCustomExercises } from '@/lib/workout/api';
 
@@ -192,11 +193,10 @@ export function HistoryView() {
                     style={{
                       color: 'var(--text-muted)',
                       fontSize: '0.85rem',
-                      textTransform: 'capitalize',
                       marginTop: '0.2rem',
                     }}
                   >
-                    {formatDay(detail.finishedAt)}
+                    {capitalizeFirst(formatDay(detail.finishedAt))}
                   </p>
                 </div>
               </div>
@@ -310,13 +310,12 @@ export function HistoryView() {
                                 borderRadius: '4px',
                                 background: 'rgba(168, 85, 247, 0.15)',
                                 color: '#c084fc',
-                                letterSpacing: '0.5px',
                                 marginRight: '0.4rem',
                                 display: 'inline-block',
                                 marginBottom: '0.2rem',
                               }}
                             >
-                              SUPER
+                              Superserie
                             </span>
                           )}
                           <h3
@@ -552,10 +551,8 @@ function Stat({ label, value }: { label: string; value: string }) {
     <div>
       <p
         style={{
-          fontSize: '0.65rem',
+          fontSize: '0.75rem',
           fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
           color: 'var(--text-secondary)',
         }}
       >
@@ -644,11 +641,10 @@ const HistoryItem = React.memo(function HistoryItem({
             style={{
               marginTop: '0.15rem',
               fontSize: '0.8rem',
-              textTransform: 'capitalize',
               color: 'var(--text-secondary)',
             }}
           >
-            {formatDay(w.finishedAt)}
+            {capitalizeFirst(formatDay(w.finishedAt))}
           </p>
 
           <div
@@ -664,10 +660,8 @@ const HistoryItem = React.memo(function HistoryItem({
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span
                 style={{
-                  fontSize: '0.7rem',
+                  fontSize: '0.75rem',
                   color: 'var(--text-secondary)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
                 }}
               >
                 Volumen
@@ -679,10 +673,8 @@ const HistoryItem = React.memo(function HistoryItem({
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span
                 style={{
-                  fontSize: '0.7rem',
+                  fontSize: '0.75rem',
                   color: 'var(--text-secondary)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
                 }}
               >
                 Series
@@ -694,10 +686,8 @@ const HistoryItem = React.memo(function HistoryItem({
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span
                 style={{
-                  fontSize: '0.7rem',
+                  fontSize: '0.75rem',
                   color: 'var(--text-secondary)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
                 }}
               >
                 Tiempo

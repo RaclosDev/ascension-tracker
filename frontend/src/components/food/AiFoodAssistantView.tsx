@@ -47,7 +47,6 @@ export const AiFoodAssistantView: React.FC<AiFoodAssistantViewProps> = ({
           autoFocus
         />
 
-        {/* IMAGE PREVIEW */}
         {selectedImage && (
           <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', zIndex: 3 }}>
             <div style={{ position: 'relative', display: 'inline-block' }}>

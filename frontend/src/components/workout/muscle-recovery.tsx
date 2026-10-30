@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, Zap } from 'lucide-react';
+import { BatteryFull, ChevronRight } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -29,7 +29,7 @@ const INDIVIDUAL_MUSCLES: Record<string, { label: string }> = {
 };
 
 const MAX_SETS_FATIGUE = 100; // 10 sets * 10 max points = 100 points for 100% fatigue on a single muscle
-const RECOVERY_MS = 72 * 60 * 60 * 1000; // 72 hours
+const RECOVERY_MS = 72 * 60 * 60 * 1000;
 
 export function MuscleRecovery({
   history,
@@ -47,7 +47,6 @@ export function MuscleRecovery({
     fatigueScores[m] = 0;
   });
 
-  // Calculate fatigue
   history.forEach((workout) => {
     const timeSince = now - workout.finishedAt;
     if (timeSince > RECOVERY_MS) return;
@@ -100,7 +99,7 @@ export function MuscleRecovery({
             <button
               type="button"
               onClick={() => setModalOpen(true)}
-              className="flex items-center gap-1 text-left group cursor-pointer hover:opacity-85 transition-opacity"
+              className="flex items-center gap-1 min-h-11 -my-3 text-left group cursor-pointer hover:opacity-85 transition-opacity"
               aria-label="Ver detalle de recuperación muscular"
             >
               <h3
@@ -125,7 +124,7 @@ export function MuscleRecovery({
           {musclesToRecover.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-5 text-center">
               <div className="w-9 h-9 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mb-1.5 text-emerald-400">
-                <Zap size={18} className="fill-emerald-400/20" />
+                <BatteryFull size={18} aria-hidden />
               </div>
               <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
                 100% Listo
@@ -147,7 +146,7 @@ export function MuscleRecovery({
                       <span className="font-medium truncate text-zinc-200" title={label}>
                         {label}
                       </span>
-                      <span className="text-[10.5px] font-bold font-mono tabular-nums ml-1 flex-shrink-0 text-zinc-400">
+                      <span className="text-[10.5px] font-bold tabular-nums ml-1 flex-shrink-0 text-zinc-400">
                         {recoveryPct}%
                       </span>
                     </div>
@@ -171,7 +170,7 @@ export function MuscleRecovery({
           <button
             type="button"
             onClick={() => setModalOpen(true)}
-            className="text-[11px] font-semibold text-center mt-2.5 w-full text-[var(--accent-primary-light)] hover:underline flex items-center justify-center gap-0.5 cursor-pointer"
+            className="text-[11px] font-semibold text-center mt-0.5 -mb-3 min-h-11 w-full text-[var(--accent-primary-light)] hover:underline flex items-center justify-center gap-0.5 cursor-pointer"
           >
             +{musclesToRecover.length - 5} más · Ver todos
           </button>
@@ -180,7 +179,7 @@ export function MuscleRecovery({
             <button
               type="button"
               onClick={() => setModalOpen(true)}
-              className="text-[11px] font-medium text-center mt-2 w-full text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors cursor-pointer"
+              className="text-[11px] font-medium text-center mt-0.5 -mb-3 min-h-11 w-full text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors cursor-pointer"
             >
               Ver detalle
             </button>
@@ -249,7 +248,7 @@ export function MuscleRecovery({
                       >
                         {statusBadge.text}
                       </span>
-                      <span className="font-mono font-bold text-xs text-[var(--text-primary)]">
+                      <span className="font-bold text-xs tabular-nums text-[var(--text-primary)]">
                         {recoveryPct}%
                       </span>
                     </div>

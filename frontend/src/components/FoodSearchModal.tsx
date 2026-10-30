@@ -309,7 +309,7 @@ export default function FoodSearchModal({
           return;
         }
       }
-      toast('Producto no encontrado por código de barras', { icon: '🤔' });
+      toast('Producto no encontrado por código de barras');
       setOffResults([]);
     } catch (err) {
       console.error(
@@ -652,7 +652,7 @@ export default function FoodSearchModal({
                   onChange={(e) => setSelectedMealIndex(Number(e.target.value))}
                   style={{
                     padding: '0.5rem',
-                    fontSize: '0.9rem',
+                    fontSize: '1rem',
                     background: 'var(--bg-secondary)',
                     border: 'none',
                     borderRadius: '8px',

@@ -160,7 +160,6 @@ export const ExerciseCard = React.memo(function ExerciseCard({
     ? '50px minmax(0,1fr) minmax(0,1fr) minmax(0,0.8fr) 44px'
     : '50px minmax(0,1fr) minmax(0,1fr) 44px';
 
-  // Collapsible sets
   const [collapsed, setCollapsed] = useState(false);
   const allDone = Boolean(row && row.sets.length > 0 && row.sets.every((s) => s.completed));
   const doneCount = row ? row.sets.filter((s) => s.completed).length : 0;
@@ -185,7 +184,6 @@ export const ExerciseCard = React.memo(function ExerciseCard({
 
   return (
     <article className="card" style={{ padding: 0, overflow: 'hidden' }}>
-      {/* Header */}
       <div
         className="exercise-card-header"
         onClick={() => setCollapsed(!collapsed)}
@@ -361,7 +359,6 @@ export const ExerciseCard = React.memo(function ExerciseCard({
       </div>
 
       {collapsed ? (
-        /* Collapsed summary */
         <div className="exercise-card-summary">
           <Check
             size={14}
@@ -373,7 +370,6 @@ export const ExerciseCard = React.memo(function ExerciseCard({
         </div>
       ) : (
         <>
-          {/* Variant Editor */}
           {editingVariant && (
             <div
               style={{
@@ -450,7 +446,6 @@ export const ExerciseCard = React.memo(function ExerciseCard({
 
           {/* Sets */}
           <div style={{ padding: '0.25rem 0.5rem 0.75rem' }}>
-            {/* Header */}
             <div className="set-grid-header" style={{ gridTemplateColumns: cols }}>
               <span>#</span>
               <span>{isCardio ? 'Km' : 'Kg'}</span>

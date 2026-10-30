@@ -63,7 +63,7 @@ export function SettingsDataSection({
             }}
           >
             <button
-              className="btn btn-primary"
+              className="btn btn-primary min-h-11"
               style={{ width: '100%' }}
               onClick={onExportJson}
               disabled={isExportingJson}
@@ -82,9 +82,9 @@ export function SettingsDataSection({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.5rem',
+                minHeight: '44px',
               }}
               onClick={onOpenRestoreModal}
-              aria-label="Abrir modal para restaurar copia de seguridad desde archivo JSON"
             >
               <UploadCloud size={18} />
               Restaurar copia de seguridad (JSON)
@@ -97,7 +97,7 @@ export function SettingsDataSection({
             Descarga todos tus datos de peso registrados en un archivo CSV.
           </p>
           <button
-            className="btn btn-secondary"
+            className="btn btn-secondary min-h-11"
             style={{ width: '100%' }}
             onClick={onExportCsv}
             aria-label="Exportar datos a CSV"
@@ -143,7 +143,7 @@ export function SettingsDataSection({
             Cierra tu sesión de forma segura en este dispositivo.
           </p>
           <button
-            className="btn btn-secondary"
+            className="btn btn-secondary min-h-11"
             style={{
               width: '100%',
               borderColor: 'rgba(239, 68, 68, 0.5)',

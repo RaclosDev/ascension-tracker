@@ -83,7 +83,6 @@ export const simulateWeightChange = (params: SimParams): SimResult[] | null => {
     results.push({ week: w, weightKg, tdee });
 
     if (w < weeks) {
-      // Weight change over 1 week (7 days)
       const dailyDeficit = tdee - intakeKcal; // positive means losing weight
       const kgLost = (dailyDeficit * 7) / KCAL_PER_KG_FAT;
       weightKg -= kgLost;

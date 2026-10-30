@@ -12,7 +12,7 @@ import {
   useUpdateWorkoutPreferences,
 } from '@/lib/workout/api';
 
-// Constantes y opciones re-exportadas para retrocompatibilidad 100%
+// Re-exportadas para que los imports existentes sigan funcionando
 export { EQUIPMENT_OPTIONS, MUSCLE_OPTIONS } from '@/lib/workout/equipmentOptions';
 export type { EquipmentOption, MuscleOption } from '@/lib/workout/equipmentOptions';
 
@@ -53,7 +53,6 @@ export default function ExercisesView() {
   });
   const { filter, filteredExercises, lastUsedMap, usageCountMap } = filterState;
 
-  // Estados modales locales
   const [creating, setCreating] = useState(false);
   const [initialVariantName, setInitialVariantName] = useState<string | undefined>(undefined);
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);

@@ -95,7 +95,6 @@ export default function MyFoodsPage() {
       />
 
       <div className="flex flex-col lg:flex-row gap-5">
-        {/* MAIN CONTENT AREA: MIS ALIMENTOS */}
         {['all', 'foods'].includes(searchFilter) && (
           <div
             className={`flex flex-col gap-5 ${searchFilter === 'all' ? 'w-full lg:w-2/3' : 'w-full'}`}
@@ -155,12 +154,10 @@ export default function MyFoodsPage() {
           </div>
         )}
 
-        {/* RECIENTES Y RECETAS */}
         {['all', 'recent', 'recipes'].includes(searchFilter) && (
           <div
             className={`flex flex-col gap-5 ${searchFilter === 'all' ? 'w-full lg:w-1/3' : 'w-full'}`}
           >
-            {/* RECIENTES */}
             {['all', 'recent'].includes(searchFilter) && (
               <div className="card flex flex-col">
                 <div
@@ -199,7 +196,6 @@ export default function MyFoodsPage() {
               </div>
             )}
 
-            {/* RECETAS */}
             {['all', 'recipes'].includes(searchFilter) && (
               <div
                 className={`card ${scanner.dragOverTarget === 'recipes' ? 'border-2 border-dashed border-[var(--color-warning)]' : ''}`}
@@ -281,7 +277,7 @@ export default function MyFoodsPage() {
 
       <button
         aria-label="+"
-        className="fixed z-50 bottom-[calc(75px+env(safe-area-inset-bottom))] right-5 w-14 h-14 rounded-full flex items-center justify-center bg-[var(--accent-primary)] hover:brightness-110 active:scale-95 text-white text-2xl font-bold shadow-lg shadow-[var(--accent-shadow)] border-none transition-all cursor-pointer"
+        className="fixed z-50 bottom-[calc(75px+env(safe-area-inset-bottom))] right-5 w-14 h-14 rounded-full flex items-center justify-center bg-[var(--accent-primary)] hover:brightness-110 active:scale-95 text-white text-2xl font-bold shadow-lg border-none transition-all cursor-pointer"
         onClick={() => setIsActionMenuOpen(true)}
       >
         +

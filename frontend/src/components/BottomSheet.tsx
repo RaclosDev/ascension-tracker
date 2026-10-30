@@ -22,7 +22,6 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
     }
   }, [isOpen]);
 
-  // Cerrar al pulsar Escape
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -57,12 +56,10 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
   const handleTouchEnd = () => {
     setIsDragging(false);
     const diff = currentYRef.current - startYRef.current;
-    // Si se arrastró más de 80px hacia abajo, cerramos con háptica suave
     if (diff > 80) {
       haptics.light();
       onClose();
     } else {
-      // Si no, vuelve a la posición original
       setTranslateY(0);
     }
   };
