@@ -191,7 +191,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
           <span className={unit}>kg</span>
         </div>
         <div
-          className="kpi-detail text-[0.68rem] font-medium truncate pt-1 border-t border-white/[0.04]"
+          className="kpi-detail text-[0.68rem] font-medium leading-snug pt-1 border-t border-white/[0.04]"
           style={{ color: 'var(--text-secondary)' }}
         >
           {numRemaining <= 0 ? '¡Meta alcanzada!' : 'por perder'}
@@ -218,7 +218,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
               }
               setPopoverOpen((o) => !o);
             }}
-            className="flex items-center gap-1 text-[0.68rem] font-medium hover:opacity-100 opacity-70 transition-opacity w-full text-left group"
+            className="flex items-center gap-1 min-h-11 text-[0.68rem] font-medium hover:opacity-100 opacity-70 transition-opacity w-full text-left group"
             style={{ color: 'var(--text-secondary)' }}
             aria-label="Cambiar ritmo de proyección"
           >

@@ -141,7 +141,7 @@ export default function NutritionPage() {
 
           <button
             type="button"
-            className={`fixed z-40 rounded-full w-14 h-14 flex items-center justify-center bg-[var(--accent-primary)] text-white shadow-xl shadow-[var(--accent-primary)]/30 hover:scale-105 active:scale-95 transition-all duration-200 motion-reduce:transition-none ${
+            className={`fixed z-40 rounded-full w-14 h-14 flex items-center justify-center bg-[var(--accent-primary)] text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 motion-reduce:transition-none ${
               mealActionsInView ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100'
             }`}
             style={{
