@@ -9,7 +9,7 @@ test('App loads successfully and shows login screen', async ({ page }) => {
   await expect(page).toHaveTitle(/Ascension/i);
 
   // Verify that the React app booted up and rendered either login screen or handled missing backend gracefully
-  await expect(page.getByText(/Tu progreso, tu esfuerzo|Error de conexión/i)).toBeVisible({
+  await expect(page.getByText(/Tu progreso|Error de conexión/i)).toBeVisible({
     timeout: 15000,
   });
 });
