@@ -266,8 +266,6 @@ export function Dashboard() {
               style={{
                 fontSize: '0.8rem',
                 fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.14em',
                 color: 'var(--accent-primary)',
               }}
             >

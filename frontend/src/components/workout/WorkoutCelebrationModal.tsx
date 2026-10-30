@@ -6,13 +6,14 @@ import {
   Share2,
   Check,
   X,
-  Zap,
+  Medal,
   Layers,
   Loader2,
   FileText,
   Calendar,
 } from 'lucide-react';
 import { haptics } from '@/lib/haptics';
+import { capitalizeFirst } from '@/utils/dateHelper';
 import {
   formatKg,
   isPrSet,
@@ -247,7 +248,7 @@ export function WorkoutCelebrationModal({
               >
                 Finalizar Sesión
               </h2>
-              <p className="text-[0.7rem] text-zinc-400 capitalize">{dateLabel}</p>
+              <p className="text-[0.7rem] text-zinc-400">{capitalizeFirst(dateLabel)}</p>
             </div>
           </div>
 
@@ -323,7 +324,7 @@ export function WorkoutCelebrationModal({
                     setCustomDuration(Math.max(1, parseInt(e.target.value, 10) || 1))
                   }
                   disabled={isSaving}
-                  className="w-full bg-transparent text-white font-mono font-semibold focus:outline-none tabular-nums text-sm"
+                  className="w-full bg-transparent text-white font-semibold focus:outline-none tabular-nums text-sm"
                 />
                 <span className="text-zinc-500 text-xs">min</span>
               </div>
@@ -333,7 +334,7 @@ export function WorkoutCelebrationModal({
               <span className="block mb-1.5 text-xs font-semibold text-zinc-300">Ejercicios</span>
               <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 text-white text-sm font-semibold">
                 <Layers size={15} className="text-zinc-400 shrink-0" />
-                <span className="font-mono">{completedExercisesList.length}</span>
+                <span className="tabular-nums">{completedExercisesList.length}</span>
                 <span className="text-zinc-500 text-xs font-normal">
                   {completedExercisesList.length === 1 ? 'ejercicio' : 'ejercicios'}
                 </span>
@@ -345,21 +346,21 @@ export function WorkoutCelebrationModal({
           <div className="grid grid-cols-3 gap-2.5">
             <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/5 flex flex-col items-center justify-center text-center">
               <span className="text-[11px] font-semibold text-zinc-400 mb-1">Volumen</span>
-              <span className="text-sm sm:text-base font-extrabold text-white font-mono tabular-nums">
+              <span className="text-sm sm:text-base font-extrabold text-white tabular-nums">
                 {formatKg(totalVolumeKg)}
               </span>
             </div>
 
             <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/5 flex flex-col items-center justify-center text-center">
               <span className="text-[11px] font-semibold text-zinc-400 mb-1">Tiempo</span>
-              <span className="text-sm sm:text-base font-extrabold text-white font-mono tabular-nums">
+              <span className="text-sm sm:text-base font-extrabold text-white tabular-nums">
                 {formatWorkoutDuration(customDuration)}
               </span>
             </div>
 
             <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/5 flex flex-col items-center justify-center text-center">
               <span className="text-[11px] font-semibold text-zinc-400 mb-1">Series</span>
-              <span className="text-sm sm:text-base font-extrabold text-white font-mono tabular-nums">
+              <span className="text-sm sm:text-base font-extrabold text-white tabular-nums">
                 {totalCompletedSets} {totalCompletedSets === 1 ? 'serie' : 'series'}
               </span>
             </div>
@@ -369,7 +370,7 @@ export function WorkoutCelebrationModal({
           {totalPrsCount > 0 && (
             <div className="p-3.5 rounded-xl bg-[var(--accent-glow)] border border-[var(--accent-primary)]/20 flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-[var(--accent-primary)]/20 flex items-center justify-center text-[var(--accent-primary-light)] shrink-0">
-                <Zap size={16} />
+                <Medal size={16} aria-hidden />
               </div>
               <div>
                 <span className="text-xs font-bold text-[var(--accent-primary-light)] block">
@@ -429,7 +430,7 @@ export function WorkoutCelebrationModal({
                             {item.completedSetsCount === 1 ? 'serie' : 'series'}
                           </span>
                           <span>•</span>
-                          <span className="font-mono">{formatKg(item.volume)}</span>
+                          <span className="tabular-nums">{formatKg(item.volume)}</span>
                         </div>
                       </div>
                     </div>
@@ -439,7 +440,7 @@ export function WorkoutCelebrationModal({
                         <span className="text-[10px] text-zinc-400 font-medium block">
                           Mejor serie
                         </span>
-                        <span className="text-xs font-bold text-white font-mono tabular-nums">
+                        <span className="text-xs font-bold text-white tabular-nums">
                           {item.bestSet.weight} kg × {item.bestSet.reps}
                         </span>
                       </div>

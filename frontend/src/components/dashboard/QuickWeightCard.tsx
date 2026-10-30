@@ -5,6 +5,7 @@ import { Scale, Calendar, Check, Loader2, TrendingDown, TrendingUp, Minus } from
 import api from '../../api/client';
 import { haptics } from '../../lib/haptics';
 import { parseSafeWeight } from '../../utils/weightHelper';
+import { capitalizeFirst } from '../../utils/dateHelper';
 
 interface QuickWeightCardProps {
   todayLabel: string;
@@ -155,10 +156,10 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
               Peso Hoy
             </span>
             <span
-              className="quick-add-date text-[0.72rem] capitalize flex items-center gap-1"
+              className="quick-add-date text-[0.72rem] flex items-center gap-1"
               style={{ color: 'var(--text-secondary)' }}
             >
-              <Calendar size={11} className="opacity-70" /> {todayLabel}
+              <Calendar size={11} className="opacity-70" /> {capitalizeFirst(todayLabel)}
             </span>
           </div>
         </div>
@@ -205,7 +206,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
               inputMode="decimal"
               pattern="[0-9]*[.,]?[0-9]*"
               aria-label="Peso corporal de hoy en kilogramos"
-              className="quick-add-input text-3xl sm:text-4xl font-black font-mono text-center rounded-xl w-full py-1.5 pr-8 pl-3 outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-1 text-white border transition-all"
+              className="quick-add-input text-3xl sm:text-4xl font-black tabular-nums text-center rounded-xl w-full py-1.5 pr-8 pl-3 outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-1 text-white border transition-all"
               style={{
                 background: 'rgba(0, 0, 0, 0.45)',
                 borderColor: isDirty ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.12)',
@@ -217,7 +218,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
               disabled={isPending}
             />
             <span
-              className="absolute right-2.5 text-xs font-bold font-mono pointer-events-none"
+              className="absolute right-2.5 text-xs font-bold pointer-events-none"
               style={{ color: 'var(--text-secondary)' }}
             >
               kg
@@ -264,7 +265,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
           )}
           {DeltaIcon !== null && deltaVsYesterday !== null && (
             <span
-              className="flex items-center gap-0.5 text-[0.72rem] font-semibold font-mono"
+              className="flex items-center gap-0.5 text-[0.72rem] font-semibold tabular-nums"
               style={{ color: deltaColor }}
             >
               <DeltaIcon size={12} />

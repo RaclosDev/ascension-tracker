@@ -316,13 +316,11 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
                 style={{
                   fontSize: '0.75rem',
                   fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
                   color: 'var(--text-secondary)',
                   textAlign: 'center',
                 }}
               >
-                Peso Máximo
+                Peso máximo
               </p>
               <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 {stats?.maxWeight ? formatKg(stats.maxWeight) : ''}
@@ -347,13 +345,11 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
                   style={{
                     fontSize: '0.75rem',
                     fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em',
                     color: 'var(--text-secondary)',
                     textAlign: 'center',
                   }}
                 >
-                  Récords x Reps
+                  Récords x reps
                 </p>
               </div>
               <div

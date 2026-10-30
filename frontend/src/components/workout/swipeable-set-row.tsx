@@ -182,7 +182,6 @@ export const SwipeableSetRow = React.memo(
                     fontSize: '0.5rem',
                     fontWeight: 700,
                     color: 'var(--accent-primary-light)',
-                    textTransform: 'uppercase',
                   }}
                 >
                   PR
@@ -398,7 +397,7 @@ export const SwipeableSetRow = React.memo(
                     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
                     adjustWeight(d);
                   }}
-                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-white font-mono font-semibold text-xs transition select-none touch-manipulation"
+                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-white font-semibold tabular-nums text-xs transition select-none touch-manipulation"
                 >
                   {d}
                 </button>
@@ -423,7 +422,7 @@ export const SwipeableSetRow = React.memo(
                     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
                     adjustWeight(d);
                   }}
-                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 font-mono font-bold text-xs transition shadow-sm select-none touch-manipulation"
+                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 font-bold tabular-nums text-xs transition shadow-sm select-none touch-manipulation"
                 >
                   +{d}
                 </button>
@@ -465,7 +464,7 @@ export const SwipeableSetRow = React.memo(
                     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
                     adjustReps(d);
                   }}
-                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-white font-mono font-semibold text-xs transition select-none touch-manipulation"
+                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-white font-semibold tabular-nums text-xs transition select-none touch-manipulation"
                 >
                   {d}
                 </button>
@@ -490,7 +489,7 @@ export const SwipeableSetRow = React.memo(
                     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
                     adjustReps(d);
                   }}
-                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 font-mono font-bold text-xs transition shadow-sm select-none touch-manipulation"
+                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 font-bold tabular-nums text-xs transition shadow-sm select-none touch-manipulation"
                 >
                   +{d}
                 </button>

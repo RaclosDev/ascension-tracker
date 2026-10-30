@@ -62,7 +62,7 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
             </span>
             <p className="text-[0.72rem] font-medium" style={{ color: 'var(--text-secondary)' }}>
               Actualmente en{' '}
-              <span className="text-white font-mono font-bold">{numCurrent.toFixed(1)} kg</span>
+              <span className="text-white font-bold tabular-nums">{numCurrent.toFixed(1)} kg</span>
             </p>
           </div>
         </div>
@@ -76,7 +76,7 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
           }}
         >
           <span
-            className="progress-pct text-base sm:text-lg font-black font-mono tabular-nums leading-none"
+            className="progress-pct text-base sm:text-lg font-black tabular-nums leading-none"
             style={{ color: 'var(--accent-primary-light, #38bdf8)' }}
           >
             {safeProgress.toFixed(1)}%
@@ -102,7 +102,7 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
 
       {/* Bottom Milestone Markers */}
       <div
-        className="progress-markers flex items-center justify-between text-[0.72rem] font-mono font-medium pt-1"
+        className="progress-markers flex items-center justify-between text-[0.72rem] font-medium tabular-nums pt-1"
         style={{ color: 'var(--text-secondary)' }}
       >
         <div className="flex items-center gap-1">

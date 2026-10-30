@@ -75,7 +75,6 @@ export default function AiNutritionChef() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-      {/* REMAINING MACROS BAR */}
       <div
         style={{
           background: 'rgba(255, 255, 255, 0.03)',
@@ -90,11 +89,9 @@ export default function AiNutritionChef() {
               fontSize: '0.68rem',
               fontWeight: 700,
               color: '#D1D5DB',
-              letterSpacing: '0.06em',
-              textTransform: 'uppercase',
             }}
           >
-            Tus Macros Restantes de Hoy
+            Tus macros restantes de hoy
           </span>
           {loadingSummary && (
             <span className="text-[11px] text-gray-400">Actualizando diario...</span>
@@ -103,26 +100,25 @@ export default function AiNutritionChef() {
         <div className="grid grid-cols-4 gap-2 text-center">
           <div className="bg-white/5 p-2 rounded-lg border border-white/5">
             <div className="text-base sm:text-lg font-black text-white">{remaining.kcal}</div>
-            <div className="text-[10px] text-gray-400 uppercase font-semibold">Kcal</div>
+            <div className="text-[11px] text-gray-400 font-semibold">Kcal</div>
           </div>
           <div className="bg-white/5 p-2 rounded-lg border border-white/5">
             <div className="text-base sm:text-lg font-black text-[var(--accent-primary-light,#339cff)]">
               {remaining.protein}g
             </div>
-            <div className="text-[10px] text-gray-400 uppercase font-semibold">Prot</div>
+            <div className="text-[11px] text-gray-400 font-semibold">Prot</div>
           </div>
           <div className="bg-white/5 p-2 rounded-lg border border-white/5">
             <div className="text-base sm:text-lg font-black text-gray-200">{remaining.carbs}g</div>
-            <div className="text-[10px] text-gray-400 uppercase font-semibold">Carbs</div>
+            <div className="text-[11px] text-gray-400 font-semibold">Carbs</div>
           </div>
           <div className="bg-white/5 p-2 rounded-lg border border-white/5">
             <div className="text-base sm:text-lg font-black text-gray-300">{remaining.fat}g</div>
-            <div className="text-[10px] text-gray-400 uppercase font-semibold">Grasa</div>
+            <div className="text-[11px] text-gray-400 font-semibold">Grasa</div>
           </div>
         </div>
       </div>
 
-      {/* CHAT MESSAGES FEED */}
       {chatMessages.length === 0 ? (
         <div
           className="text-center"
@@ -397,7 +393,7 @@ export default function AiNutritionChef() {
             );
           })}
 
-          {/* QUICK PROMPTS WHEN CHAT IS FRESH */}
+          {/* Quick prompts while the chat is fresh */}
           {chatMessages.length === 1 && !sending && (
             <div className="flex flex-col gap-2 ml-8 mt-2">
               <button
@@ -421,7 +417,6 @@ export default function AiNutritionChef() {
             </div>
           )}
 
-          {/* SENDING SPINNER */}
           {sending && (
             <div className="chat-msg-row">
               <div className="chat-avatar">
@@ -438,7 +433,6 @@ export default function AiNutritionChef() {
         </div>
       )}
 
-      {/* VOICE RECORDING NOTIFICATION */}
       {isListening && (
         <div className="flex items-center justify-between text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-xl">
           <div className="flex items-center gap-2">
@@ -457,7 +451,6 @@ export default function AiNutritionChef() {
         </div>
       )}
 
-      {/* IMAGE PREVIEW */}
       {selectedImage && (
         <div className="relative inline-block mb-1">
           <img
@@ -476,7 +469,6 @@ export default function AiNutritionChef() {
         </div>
       )}
 
-      {/* INPUT FORM */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
