@@ -151,24 +151,26 @@ public class AuthController {
             }
         }
 
-        // 2. If an existing user has this google_sub, verify email matches
+        // 2. If this google_sub already owns an account under another email, the user changed the
+        //    address on their Google account: move the account unless the new email is taken.
         Optional<User> userBySub = userService.findByGoogleSub(googleSub);
         if (userBySub.isPresent()) {
             String existingEmail = userBySub.get().email();
             if (existingEmail != null && !existingEmail.equalsIgnoreCase(email)) {
-                log.error("SECURITY ALERT: Identity mismatch for google_sub '{}'. Already assigned to account '{}', incoming account='{}'. Rejecting login.",
-                        PiiMasker.maskSubject(googleSub), PiiMasker.maskEmail(existingEmail), PiiMasker.maskEmail(email));
-                return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
+                if (userByEmail.isPresent()) {
+                    log.error("SECURITY ALERT: google_sub '{}' owns account '{}' but its new address '{}' already belongs to another account. Rejecting login.",
+                            PiiMasker.maskSubject(googleSub), PiiMasker.maskEmail(existingEmail), PiiMasker.maskEmail(email));
+                    return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
+                }
+                userService.changeEmail(googleSub, existingEmail, email);
             }
         }
 
         String name = (String) tokenPayload.get("name");
         String picture = (String) tokenPayload.get("picture");
 
-        // NOTE: Future architectural roadmap:
-        // Currently user tables link via email as primary key. Migrating user-referencing tables
-        // to a surrogate UUID (or UUID v7) primary key is planned as future architectural work
-        // to decouple internal database foreign keys from mutable email addresses and OAuth subject identifiers.
+        // User tables are keyed by email; a changed address is handled above by changeEmail,
+        // which relies on the ON UPDATE CASCADE foreign keys added in V28.
         userService.ensureUserExists(email, name, picture, googleSub);
 
         String customToken = generateJwt(email, name, picture);
