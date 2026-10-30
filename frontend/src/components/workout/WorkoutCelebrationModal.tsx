@@ -34,7 +34,7 @@ import type {
 interface Props {
   open: boolean;
   onClose: () => void;
-  // Mode 1: Finishing an active session (interactive review & save)
+  // Finishing an active session: interactive review and save.
   activeWorkout?: ActiveWorkout | null;
   onSave?: (
     name: string,
@@ -44,7 +44,7 @@ interface Props {
   ) => Promise<void> | void;
   isSaving?: boolean;
   saveError?: string | null;
-  // Mode 2: Viewing a previously completed record
+  // Viewing a previously completed workout.
   workout?: CompletedWorkout | null;
 }
 
@@ -90,7 +90,6 @@ export function WorkoutCelebrationModal({
     [customExercises, catalogExercises],
   );
 
-  // Determine current workout source
   const currentWorkout = activeWorkout || workout;
 
   // Local editable form fields for active finishing flow
@@ -176,7 +175,6 @@ export function WorkoutCelebrationModal({
     })
     .filter((e) => e.completedSetsCount > 0);
 
-  // High-level real metrics
   const totalVolumeKg = sessionVolume(exercises);
   const totalCompletedSets = completedSets(exercises);
   const totalPrsCount = exercises.reduce(
@@ -366,7 +364,6 @@ export function WorkoutCelebrationModal({
             </div>
           </div>
 
-          {/* Optional PRs Highlight Card */}
           {totalPrsCount > 0 && (
             <div className="p-3.5 rounded-xl bg-[var(--accent-glow)] border border-[var(--accent-primary)]/20 flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-[var(--accent-primary)]/20 flex items-center justify-center text-[var(--accent-primary-light)] shrink-0">
@@ -471,7 +468,6 @@ export function WorkoutCelebrationModal({
             />
           </div>
 
-          {/* Error Banner */}
           {saveError && (
             <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs leading-relaxed">
               {saveError}

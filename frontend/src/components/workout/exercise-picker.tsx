@@ -311,7 +311,6 @@ export function ExercisePicker() {
           ))}
         </div>
 
-        {/* Search */}
         <div style={{ padding: '0 1.25rem' }}>
           <div className="picker-search-wrapper">
             <Search size={16} className="picker-search-icon" />
@@ -391,7 +390,6 @@ export function ExercisePicker() {
             WebkitOverflowScrolling: 'touch',
           }}
         >
-          {/* Recents Section */}
           {recentExercises.length > 0 &&
             !query &&
             filterMuscle === 'ALL' &&
@@ -504,7 +502,6 @@ export function ExercisePicker() {
                               </div>
                             </button>
 
-                            {/* Accordion Expansion */}
                             {isExpanded && (
                               <div
                                 style={{
@@ -590,7 +587,6 @@ export function ExercisePicker() {
           )}
         </div>
 
-        {/* Create Exercise */}
         <div className="picker-create-section">
           {creating ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

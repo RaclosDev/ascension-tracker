@@ -9,10 +9,8 @@ export function getSanitizedKcal(nutriments: Record<string, unknown> | undefined
   // Calculate theoretical calories from macros (Atwater system)
   const theoreticalKcal = protein * 4 + carbs * 4 + fat * 9;
 
-  // If the reported kcal is extremely off (e.g., they accidentally put kJ instead of kcal
-  // or just completely bad data), use the theoretical calculation.
-  // 1 kcal = 4.184 kJ. So if they put kJ, the value will be ~4.18x higher than theoretical.
-  // We'll replace it if the difference is more than 30% and theoretical > 0.
+  // Reported kcal more than 30% off the Atwater estimate is usually kJ entered as kcal
+  // (about 4.18x) or bad data, so the estimate wins.
   if (theoreticalKcal > 0) {
     const errorMargin = Math.abs(kcal - theoreticalKcal) / theoreticalKcal;
     if (errorMargin > 0.3) {

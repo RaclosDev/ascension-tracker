@@ -50,7 +50,6 @@ export const useSaveWorkout = () => {
         const { data } = await api.put(`/workouts/${workout.id}`, workout);
         return data;
       }
-      // New workout
       const { data } = await api.post('/workouts', workout);
       return data;
     },

@@ -26,7 +26,6 @@ export function useNutritionDiary() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Main Data Query
   const {
     data,
     isLoading: loading,

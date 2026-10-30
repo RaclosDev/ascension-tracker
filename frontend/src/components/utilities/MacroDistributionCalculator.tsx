@@ -24,7 +24,6 @@ export default function MacroDistributionCalculator({
   const [carbsPct, setCarbsPct] = useState<number>(40);
   const [fatPct, setFatPct] = useState<number>(30);
 
-  // Número de comidas al día
   const [mealsCount, setMealsCount] = useState<number>(4);
 
   const kcalId = useId();
@@ -151,7 +150,6 @@ export default function MacroDistributionCalculator({
         </div>
       </div>
 
-      {/* STRATEGY-SPECIFIC CONTROLS */}
       {strategy === 'bodyweight' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
           <div>
@@ -296,7 +294,6 @@ export default function MacroDistributionCalculator({
       )}
 
       <div role="status" aria-live="polite" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Proteína */}
         <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5">
           <div className="flex justify-between items-center text-xs text-[var(--color-protein)] font-bold">
             <span>Proteína</span>
@@ -308,7 +305,6 @@ export default function MacroDistributionCalculator({
           <div className="text-xs text-gray-400 mt-1">{result.protein.kcal} kcal (4 kcal/g)</div>
         </div>
 
-        {/* Carbohidratos */}
         <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5">
           <div className="flex justify-between items-center text-xs text-[var(--color-carbs)] font-bold">
             <span>Carbohidratos</span>
@@ -320,7 +316,6 @@ export default function MacroDistributionCalculator({
           <div className="text-xs text-gray-400 mt-1">{result.carbs.kcal} kcal (4 kcal/g)</div>
         </div>
 
-        {/* Grasas */}
         <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5">
           <div className="flex justify-between items-center text-xs text-[var(--color-fat)] font-bold">
             <span>Grasas</span>
@@ -333,7 +328,6 @@ export default function MacroDistributionCalculator({
         </div>
       </div>
 
-      {/* PER-MEAL BREAKDOWN */}
       {result.perMeal && (
         <div className="p-4 rounded-xl bg-[#161618] border border-white/10 space-y-2">
           <h4 className="text-xs font-semibold text-gray-300">

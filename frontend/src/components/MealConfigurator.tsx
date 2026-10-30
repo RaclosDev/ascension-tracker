@@ -166,7 +166,6 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                         ...provided.draggableProps.style,
                       }}
                     >
-                      {/* Primera Fila: Reordenar, Nombre y Eliminar */}
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <div
                           {...provided.dragHandleProps}
@@ -230,7 +229,6 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                         </button>
                       </div>
 
-                      {/* Tercera Fila: Macros fijos */}
                       <div
                         style={{
                           display: 'grid',

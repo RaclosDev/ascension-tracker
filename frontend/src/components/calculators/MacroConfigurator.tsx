@@ -55,7 +55,6 @@ export default function MacroConfigurator({
 
   const balancedData = React.useMemo(() => {
     const currentKcal = parseSafeFloat(form.kcal, 2000);
-    // Usar el peso inicial guardado en BD; si no está disponible, fallback a form.startWeight
     const w = parseSafeFloat(initialStartWeight ?? form.startWeight, 80);
     const bP = Math.round(w * 2);
     const bF = Math.round((currentKcal * 0.22) / 9);
@@ -79,7 +78,6 @@ export default function MacroConfigurator({
         </select>
       </div>
 
-      {/* MODE: CUSTOM_GRAMS */}
       {form.macroStrategy === 'CUSTOM_GRAMS' && (
         <div>
           <div
@@ -146,7 +144,6 @@ export default function MacroConfigurator({
             </div>
           </div>
 
-          {/* Live Calculations Summary */}
           <div
             style={{
               background: 'rgba(255,255,255,0.03)',
@@ -251,7 +248,6 @@ export default function MacroConfigurator({
         </div>
       )}
 
-      {/* MODE: CUSTOM_PCT */}
       {form.macroStrategy === 'CUSTOM_PCT' && (
         <div>
           <div className="form-group" style={{ marginBottom: 'var(--space-md)' }}>
@@ -378,7 +374,6 @@ export default function MacroConfigurator({
         </div>
       )}
 
-      {/* MODE: BALANCED */}
       {form.macroStrategy === 'BALANCED' && (
         <div>
           <div className="form-group" style={{ marginBottom: 'var(--space-md)' }}>

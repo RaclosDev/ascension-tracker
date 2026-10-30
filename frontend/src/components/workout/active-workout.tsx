@@ -572,7 +572,6 @@ function FooterActions() {
           Cancelar edición
         </button>
 
-        {/* Modal de confirmación para cancelar edición */}
         <AlertDialog open={cancelEditOpen} onOpenChange={setCancelEditOpen}>
           <AlertDialogContent
             className="card"

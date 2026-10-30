@@ -182,7 +182,6 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
         estatura, distancias y ritmos de carrera a velocidad.
       </p>
 
-      {/* CATEGORY SELECTOR */}
       <div className="flex flex-wrap gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
         <button
           type="button"
@@ -230,7 +229,6 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
         </button>
       </div>
 
-      {/* CATEGORY PANELS */}
       <div role="status" aria-live="polite">
         {category === 'weight' && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -185,10 +185,8 @@ export default function AiNutritionChef() {
                 <div className={`chat-bubble ${isUser ? 'user-bubble' : 'ai-bubble'}`}>
                   {renderMarkdown(msg.text)}
 
-                  {/* MULTI-OPTIONS DISPLAY */}
                   {hasOptions && (
                     <div style={{ marginTop: '1rem' }}>
-                      {/* Option Selector Tabs */}
                       {(msg.mealOptions?.length || 0) > 1 && (
                         <div className="options-tabs-bar">
                           {(msg.mealOptions || []).map((opt: MealOption, optIdx: number) => {
@@ -221,7 +219,6 @@ export default function AiNutritionChef() {
                         </div>
                       )}
 
-                      {/* Active Option Card */}
                       {activeOption && (
                         <div className="suggested-meal-box">
                           <div>
@@ -287,7 +284,6 @@ export default function AiNutritionChef() {
                             )}
                           </div>
 
-                          {/* Total of the meal */}
                           {activeOption.totalMacros && (
                             <div
                               style={{
@@ -347,7 +343,6 @@ export default function AiNutritionChef() {
                             </div>
                           )}
 
-                          {/* Add to Diary Button */}
                           <div className="add-option-btn-container">
                             <button
                               type="button"
@@ -393,7 +388,7 @@ export default function AiNutritionChef() {
             );
           })}
 
-          {/* Quick prompts while the chat is fresh */}
+          {/* Quick prompts while only the welcome message is shown */}
           {chatMessages.length === 1 && !sending && (
             <div className="flex flex-col gap-2 ml-8 mt-2">
               <button

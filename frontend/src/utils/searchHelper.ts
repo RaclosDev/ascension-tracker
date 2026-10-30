@@ -5,7 +5,6 @@ export function getSmartFallbackQueries(originalQuery: string): string[] {
   // Base query first
   queries.push(q);
 
-  // Remove filler words
   const fillers = ['high', 'protein', 'sabor', 'flavor', 'flavour', 'zero', 'sin', 'con'];
   const words = q.split(/\s+/).filter((w) => !fillers.includes(w));
 
@@ -24,7 +23,6 @@ export function getSmartFallbackQueries(originalQuery: string): string[] {
     queries.push(synonymWords.join(' '));
   }
 
-  // Deduplicate
   return [...new Set(queries)];
 }
 

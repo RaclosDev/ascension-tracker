@@ -40,7 +40,6 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
 
   return (
     <div className="card progress-card glass-panel-elevated relative overflow-hidden rounded-2xl p-4 sm:p-5 mb-6 border border-white/[0.08]">
-      {/* Header Info */}
       <div className="progress-info flex items-center justify-between mb-3 relative z-10">
         <div className="flex items-center gap-2.5">
           <div
@@ -84,9 +83,7 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
         </div>
       </div>
 
-      {/* Progress Track */}
       <div className="progress-bar-container relative w-full h-4 bg-black/50 border border-white/[0.08] rounded-full p-0.5 overflow-hidden my-3">
-        {/* Fill Bar */}
         <div
           className="progress-bar-fill h-full rounded-full relative transition-all duration-1000 ease-out flex items-center justify-end"
           style={{
@@ -100,7 +97,6 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
         </div>
       </div>
 
-      {/* Bottom Milestone Markers */}
       <div
         className="progress-markers flex items-center justify-between text-[0.72rem] font-medium tabular-nums pt-1"
         style={{ color: 'var(--text-secondary)' }}

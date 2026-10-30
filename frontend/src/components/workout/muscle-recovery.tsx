@@ -29,7 +29,7 @@ const INDIVIDUAL_MUSCLES: Record<string, { label: string }> = {
 };
 
 const MAX_SETS_FATIGUE = 100; // 10 sets * 10 max points = 100 points for 100% fatigue on a single muscle
-const RECOVERY_MS = 72 * 60 * 60 * 1000; // 72 hours
+const RECOVERY_MS = 72 * 60 * 60 * 1000;
 
 export function MuscleRecovery({
   history,
@@ -47,7 +47,6 @@ export function MuscleRecovery({
     fatigueScores[m] = 0;
   });
 
-  // Calculate fatigue
   history.forEach((workout) => {
     const timeSince = now - workout.finishedAt;
     if (timeSince > RECOVERY_MS) return;

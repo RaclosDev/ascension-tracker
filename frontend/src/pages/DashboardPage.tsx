@@ -17,7 +17,6 @@ const DashboardCharts = lazyWithRetry(() => import('../components/DashboardChart
 export default function DashboardPage() {
   const { pref, update: updateRatePref } = useRatePreference();
 
-  // 1. Fetch data with React Query
   const { data: dashboard, isLoading: loadingDash } = useQuery<DashboardData>({
     queryKey: ['dashboard'],
     queryFn: () => api.get('/weights/dashboard').then((res) => res.data),
@@ -61,7 +60,6 @@ export default function DashboardPage() {
   const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   const todayLabel = `${dayNames[today.getDay()]}, ${format(today, "d 'de' MMMM 'de' yyyy", { locale: es })}`;
 
-  // Memoized Chart data
   const weightChartData = useMemo(() => {
     return weights.map((w: WeightEntry) => ({
       date: w.date,
@@ -70,7 +68,6 @@ export default function DashboardPage() {
     }));
   }, [weights]);
 
-  // Memoized Delta chart data
   const deltaData = useMemo(() => {
     return weekSummaries
       .filter((w: WeekSummary): w is WeekSummary & { delta: number } => w.delta !== null)
@@ -148,7 +145,6 @@ export default function DashboardPage() {
 
   return (
     <div className="fade-in">
-      {/* 1. Quick Add / Edit Weight Card */}
       <QuickWeightCard
         todayLabel={todayLabel}
         todayDateStr={todayDateStr}
@@ -158,7 +154,6 @@ export default function DashboardPage() {
         hasTodayWeight={hasTodayWeight}
       />
 
-      {/* 2. Elevated KPI Grid */}
       <ElevatedKpiGrid
         currentWeight={dashboard.currentWeight}
         weeklyAverage={dashboard.currentWeeklyAverage}
@@ -171,7 +166,6 @@ export default function DashboardPage() {
         weeklyGoal={settings.weeklyGoal}
       />
 
-      {/* 3. Goal Progress Bar */}
       <GoalProgressBar
         progress={dashboard.progress}
         startWeight={settings.startWeight}
@@ -179,7 +173,6 @@ export default function DashboardPage() {
         currentWeight={dashboard.currentWeight}
       />
 
-      {/* 4. Charts */}
       <Suspense fallback={<DashboardChartsSkeleton />}>
         <DashboardCharts
           weightChartData={weightChartData}

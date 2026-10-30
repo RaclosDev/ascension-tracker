@@ -206,7 +206,6 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
                 }}
               >
                 {editingLog && editingLog.id === log.id ? (
-                  /* EDIT MODE */
                   <div
                     style={{
                       padding: '0.75rem',
@@ -438,7 +437,6 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
                     </div>
                   </div>
                 ) : (
-                  /* VIEW MODE */
                   <SwipeableRow
                     onEdit={() => onEditLog(log)}
                     onDelete={() => log.id !== undefined && onDeleteLog(log.id)}

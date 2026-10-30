@@ -33,7 +33,6 @@ export default function PlateLoaderCalculator({
     });
   }, [numTarget, barWeight, collarsWeight, unit]);
 
-  // Altura visual relativa para los discos en el SVG según su peso
   const getPlateVisualHeight = (weight: number): number => {
     if (weight >= 10) return 90; // Diámetro olímpico reglamentario 450mm
     if (weight === 5) return 72;
@@ -56,7 +55,6 @@ export default function PlateLoaderCalculator({
         oficial de colores de la IWF (Federación Internacional de Halterofilia).
       </p>
 
-      {/* FORM INPUTS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
           <label htmlFor={targetId} className="block text-xs font-semibold text-gray-200 mb-1.5">
@@ -141,7 +139,6 @@ export default function PlateLoaderCalculator({
         </div>
       </div>
 
-      {/* KPI STATUS */}
       <div
         role="status"
         aria-live="polite"
@@ -195,7 +192,6 @@ export default function PlateLoaderCalculator({
         </div>
       </div>
 
-      {/* SVG BARBELL VISUALIZER */}
       <div className="p-4 rounded-xl border border-white/10 bg-[#121214] flex flex-col items-center overflow-x-auto">
         <span className="text-xs font-semibold text-gray-400 mb-2 self-start">
           Esquema visual de la manga (Carga por lado)
@@ -227,7 +223,6 @@ export default function PlateLoaderCalculator({
             let currentX = 72;
             const elements: React.JSX.Element[] = [];
 
-            // Discos
             result.platesPerSide.forEach((p: PlateCount) => {
               for (let i = 0; i < p.countPerSide; i++) {
                 const h = getPlateVisualHeight(p.plate.weight);
@@ -288,7 +283,6 @@ export default function PlateLoaderCalculator({
         </svg>
       </div>
 
-      {/* DETAILED LIST BREAKDOWN */}
       <div className="space-y-2">
         <h4 className="text-xs font-semibold text-gray-300">
           Desglose para montar por cada extremo:

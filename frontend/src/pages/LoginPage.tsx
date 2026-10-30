@@ -60,7 +60,6 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* Title Logo */}
         <img
           src="/ascension-title.png"
           alt="Ascension"

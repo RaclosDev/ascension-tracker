@@ -91,7 +91,7 @@ public class RefreshTokenService {
                 refreshTokenRepository.save(refreshToken);
                 return createRefreshToken(refreshToken.getEmail(), refreshToken.getFamilyId());
             }
-            // Outside grace period (60s elapsed): token reuse detected -> revoke family
+            // Outside the grace period: token reuse detected, revoke the whole family.
             refreshTokenRepository.deleteByFamilyId(refreshToken.getFamilyId());
             throw new com.ascension.exception.TokenRefreshException("Session expired. Please log in again.");
         }
