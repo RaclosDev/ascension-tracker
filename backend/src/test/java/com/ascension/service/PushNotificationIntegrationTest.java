@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 
@@ -54,7 +54,7 @@ import static org.mockito.Mockito.*;
 })
 class PushNotificationIntegrationTest {
 
-    @MockBean
+    @MockitoBean
     private PushService pushService;
 
     @Autowired
@@ -102,13 +102,16 @@ class PushNotificationIntegrationTest {
     }
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         userService.ensureUserExists(USER_EMAIL, "Athlete User", null);
         userService.ensureUserExists(USER_EMAIL_2, "Second User", null);
         pushNotificationService.setPushService(pushService);
         restTimerRepository.deleteAll();
         pushSubscriptionRepository.deleteAll();
         reset(pushService);
+        // Mockito 5.20+ answers an unstubbed Future with a completed one; returning null keeps the
+        // service on its synchronous send() fallback, which these tests stub and verify.
+        when(pushService.sendAsync(any(Notification.class))).thenReturn(null);
     }
 
     private HttpResponse createHttpResponse(int statusCode) {

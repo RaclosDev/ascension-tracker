@@ -2,13 +2,13 @@ package com.ascension.service.ai;
 
 import com.ascension.config.ExternalApiProperties;
 import com.ascension.exception.ExternalApiException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -30,7 +30,7 @@ public class GeminiApiClient {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiApiClient.class);
     public static final long TOTAL_REQUEST_DEADLINE_MS = 35_000L;
-    public static final long MODEL_CACHE_TTL_MS = 3600_000L; // 1 hour TTL
+    public static final long MODEL_CACHE_TTL_MS = 3600_000L;
     public static final int MAX_MODELS_PER_REQUEST = 3;
 
     @Value("${GEMINI_API_KEY:}")
@@ -241,8 +241,8 @@ public class GeminiApiClient {
             if (body != null && !body.isBlank()) {
                 JsonNode root = objectMapper.readTree(body);
                 JsonNode msgNode = root.path("error").path("message");
-                if (!msgNode.isMissingNode() && !msgNode.asText().isBlank()) {
-                    return msgNode.asText();
+                if (!msgNode.isMissingNode() && !msgNode.asString().isBlank()) {
+                    return msgNode.asString();
                 }
             }
         } catch (Exception ignored) {
@@ -266,7 +266,7 @@ public class GeminiApiClient {
 
         List<String> discovered = new ArrayList<>();
         try {
-            String url = "https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models";
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/json");
             headers.set("x-goog-api-key", apiKey);
@@ -280,7 +280,7 @@ public class GeminiApiClient {
                     JsonNode supportedMethods = model.path("supportedGenerationMethods");
                     if (supportedMethods.isArray()) {
                         for (JsonNode method : supportedMethods) {
-                            if ("generateContent".equalsIgnoreCase(method.asText())) {
+                            if ("generateContent".equalsIgnoreCase(method.asString())) {
                                 supportsGenerateContent = true;
                                 break;
                             }
@@ -288,7 +288,7 @@ public class GeminiApiClient {
                     }
 
                     if (supportsGenerateContent) {
-                        String name = model.path("name").asText();
+                        String name = model.path("name").asString();
                         if (name.startsWith("models/")) {
                             name = name.substring(7);
                         }
@@ -302,7 +302,8 @@ public class GeminiApiClient {
             log.warn("Failed to discover models, using configured preferred models. Error: {}", e.getMessage());
         }
 
-        // Priority 1: Configured fallback models matching discovered models or if discovery failed
+        // Candidate order: configured fallbacks that discovery found (all of them if it failed),
+        // then discovered flash models, other discovered models, and any remaining fallbacks.
         List<String> preferred = new ArrayList<>();
         if (fallbackModels != null && !fallbackModels.isBlank()) {
             Arrays.stream(fallbackModels.split(","))
@@ -317,21 +318,18 @@ public class GeminiApiClient {
             }
         }
 
-        // Priority 2: Discovered text models that contain "flash"
         for (String disc : discovered) {
             if (disc.contains("flash") && !candidates.contains(disc)) {
                 candidates.add(disc);
             }
         }
 
-        // Priority 3: Other discovered text models
         for (String disc : discovered) {
             if (!candidates.contains(disc)) {
                 candidates.add(disc);
             }
         }
 
-        // Priority 4: Ensure preferred fallbacks are included even if discovery returned non-matching models
         for (String pref : preferred) {
             if (!candidates.contains(pref)) {
                 candidates.add(pref);
@@ -417,31 +415,26 @@ public class GeminiApiClient {
             headers.set("x-goog-api-key", apiKey);
         }
 
-        String callUrl = url;
-        if (apiKey != null && !apiKey.isEmpty() && !url.contains("key=")) {
-            callUrl = url.contains("?") ? url + "&key=" + apiKey : url + "?key=" + apiKey;
-        }
-
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
-        ResponseEntity<String> response = restTemplate.exchange(callUrl, HttpMethod.POST, entity, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 
         JsonNode root = objectMapper.readTree(response.getBody());
         JsonNode candidates = root.path("candidates");
         if (candidates.isArray() && candidates.size() > 0) {
             JsonNode firstCandidate = candidates.get(0);
-            String finishReason = firstCandidate.path("finishReason").asText("");
+            String finishReason = firstCandidate.path("finishReason").asString("");
             if ("SAFETY".equalsIgnoreCase(finishReason) || "RECITATION".equalsIgnoreCase(finishReason) || "BLOCKLIST".equalsIgnoreCase(finishReason)) {
                 throw new ExternalApiException("Gemini", HttpStatus.BAD_REQUEST, "Peticion bloqueada por filtros de seguridad de Gemini (" + finishReason + ")");
             }
             JsonNode partsNode = firstCandidate.path("content").path("parts");
             if (partsNode.isArray() && partsNode.size() > 0) {
-                return partsNode.get(0).path("text").asText();
+                return partsNode.get(0).path("text").asString();
             }
         }
 
         JsonNode blockReason = root.path("promptFeedback").path("blockReason");
-        if (!blockReason.isMissingNode() && !blockReason.asText().isBlank()) {
-            throw new ExternalApiException("Gemini", HttpStatus.BAD_REQUEST, "Peticion bloqueada por filtro de contenido de Gemini (" + blockReason.asText() + ")");
+        if (!blockReason.isMissingNode() && !blockReason.asString().isBlank()) {
+            throw new ExternalApiException("Gemini", HttpStatus.BAD_REQUEST, "Peticion bloqueada por filtro de contenido de Gemini (" + blockReason.asString() + ")");
         }
 
         throw new ExternalApiException("Gemini", HttpStatus.BAD_GATEWAY, "Respuesta sin contenido generado por Gemini");

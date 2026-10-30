@@ -41,7 +41,7 @@ class GlobalExceptionHandlerTest {
 
         ResponseEntity<ApiErrorResponse> response = handler.handleHttpMessageNotReadable(ex);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONTENT_TOO_LARGE);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getError()).contains("5MB");
     }
@@ -63,7 +63,7 @@ class GlobalExceptionHandlerTest {
                 new org.springframework.web.multipart.MaxUploadSizeExceededException(15728640);
         ResponseEntity<ApiErrorResponse> response = handler.handleMaxUploadSizeExceededException(ex);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONTENT_TOO_LARGE);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getError()).contains("tamaño máximo permitido");
     }

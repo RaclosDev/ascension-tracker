@@ -13,8 +13,8 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpHeaders;
@@ -65,19 +65,19 @@ class AuthControllerTest {
     @Autowired
     private AuthController authController;
 
-    @MockBean
+    @MockitoBean
     private RefreshTokenService refreshTokenService;
 
-    @MockBean
+    @MockitoBean
     private UserService userService;
 
-    @MockBean
+    @MockitoBean
     private AccountDeletionService accountDeletionService;
 
-    @MockBean
+    @MockitoBean
     private GoogleIdTokenVerifier googleIdTokenVerifier;
 
-    @MockBean
+    @MockitoBean
     private RateLimitInterceptor rateLimitInterceptor;
 
     @BeforeEach
@@ -91,7 +91,7 @@ class AuthControllerTest {
 
     @Test
     void refresh_WhenTokenMissing_ReturnsUnauthorized() throws Exception {
-        mockMvc.perform(post("/api/auth/refresh").with(csrf()))
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()).header("Origin", "http://localhost:5173"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -101,6 +101,7 @@ class AuthControllerTest {
                 .thenThrow(new TokenRefreshException("Refresh token not found"));
 
         mockMvc.perform(post("/api/auth/refresh")
+                .header("Origin", "http://localhost:5173")
                 .with(csrf())
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "invalid_token")))
                 .andExpect(status().isUnauthorized())
@@ -144,6 +145,7 @@ class AuthControllerTest {
         when(refreshTokenService.rotateRefreshToken(anyString())).thenReturn(graceToken);
 
         mockMvc.perform(post("/api/auth/refresh")
+                .header("Origin", "http://localhost:5173")
                 .with(csrf())
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "reused_token")))
                 .andExpect(status().isOk())
@@ -155,6 +157,7 @@ class AuthControllerTest {
     @Test
     void refresh_WhenTokenProvidedViaHeader_IsIgnoredAndReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/auth/refresh")
+                .header("Origin", "http://localhost:5173")
                 .with(csrf())
                 .header("X-Refresh-Token", "header_token"))
                 .andExpect(status().isUnauthorized())
@@ -164,6 +167,7 @@ class AuthControllerTest {
     @Test
     void refresh_WhenTokenProvidedViaBody_IsIgnoredAndReturnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/auth/refresh")
+                .header("Origin", "http://localhost:5173")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"refreshToken\":\"body_token\"}"))
@@ -174,6 +178,7 @@ class AuthControllerTest {
     @Test
     void logout_WhenNoCookieProvided_DoesNotCallDeleteEvenIfHeaderOrBodyPresent() throws Exception {
         mockMvc.perform(post("/api/auth/logout")
+                .header("Origin", "http://localhost:5173")
                 .with(csrf())
                 .header("X-Refresh-Token", "header_token")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -190,6 +195,7 @@ class AuthControllerTest {
                 .thenThrow(new TokenRefreshException("Session expired. Please log in again."));
 
         mockMvc.perform(post("/api/auth/refresh")
+                .header("Origin", "http://localhost:5173")
                 .with(csrf())
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "reused_token")))
                 .andExpect(status().isUnauthorized())
@@ -200,6 +206,7 @@ class AuthControllerTest {
     @Test
     void securityHeaders_areProperlyConfigured() throws Exception {
         mockMvc.perform(post("/api/auth/refresh")
+                .header("Origin", "http://localhost:5173")
                 .secure(true)
                 .with(csrf()))
                 .andExpect(header().string("Strict-Transport-Security", containsString("max-age=31536000")))
@@ -266,27 +273,65 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.error").exists());
     }
 
+    // A verified Google ID token cannot carry someone else's subject, so the same sub with a new
+    // email is the same Google account after its address changed.
     @Test
-    void login_WhenSubAlreadyBoundToDifferentEmail_ReturnsUnauthorized() throws Exception {
+    void login_WhenGoogleAccountEmailChanged_MovesAccountToNewEmail() throws Exception {
         com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
         com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
         payload.setEmailVerified(true);
-        payload.setEmail("attacker@example.com");
-        payload.setSubject("victim-sub");
+        payload.setEmail("renamed@example.com");
+        payload.setSubject("stable-sub");
         when(idToken.getPayload()).thenReturn(payload);
-        when(googleIdTokenVerifier.verify("token-sub-stolen")).thenReturn(idToken);
+        when(googleIdTokenVerifier.verify("token-renamed")).thenReturn(idToken);
 
-        when(userService.findByEmail("attacker@example.com")).thenReturn(Optional.empty());
-        when(userService.findByGoogleSub("victim-sub")).thenReturn(Optional.of(
-                new User("victim@example.com", "Victim Name", null, "victim-sub", null)
+        when(userService.findByEmail("renamed@example.com")).thenReturn(Optional.empty());
+        when(userService.findByGoogleSub("stable-sub")).thenReturn(Optional.of(
+                new User("original@example.com", "Athlete", null, "stable-sub", null)
+        ));
+        RefreshToken rt = new RefreshToken();
+        rt.setEmail("renamed@example.com");
+        rt.setPlainToken("plain-refresh-token");
+        when(refreshTokenService.createRefreshToken("renamed@example.com")).thenReturn(rt);
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"token-renamed\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists());
+
+        verify(userService).changeEmail("stable-sub", "original@example.com", "renamed@example.com");
+        verify(refreshTokenService).createRefreshToken("renamed@example.com");
+    }
+
+    @Test
+    void login_WhenChangedEmailBelongsToAnotherAccount_ReturnsUnauthorized() throws Exception {
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
+        payload.setEmailVerified(true);
+        payload.setEmail("taken@example.com");
+        payload.setSubject("stable-sub");
+        when(idToken.getPayload()).thenReturn(payload);
+        when(googleIdTokenVerifier.verify("token-taken")).thenReturn(idToken);
+
+        // A legacy account without google_sub already owns the new address.
+        when(userService.findByEmail("taken@example.com")).thenReturn(Optional.of(
+                new User("taken@example.com", "Someone Else", null, null, null)
+        ));
+        when(userService.findByGoogleSub("stable-sub")).thenReturn(Optional.of(
+                new User("original@example.com", "Athlete", null, "stable-sub", null)
         ));
 
         mockMvc.perform(post("/api/auth/login")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"token\":\"token-sub-stolen\"}"))
+                .content("{\"token\":\"token-taken\"}"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").exists());
+
+        verify(userService, org.mockito.Mockito.never()).changeEmail(anyString(), anyString(), anyString());
+        verify(refreshTokenService, org.mockito.Mockito.never()).createRefreshToken(anyString());
     }
 
     @Test
@@ -297,6 +342,7 @@ class AuthControllerTest {
         when(refreshTokenService.findByToken(anyString())).thenReturn(Optional.of(rt));
 
         mockMvc.perform(post("/api/auth/logout")
+                .header("Origin", "http://localhost:5173")
                 .with(csrf())
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "my_refresh_cookie")))
                 .andExpect(status().isOk())
@@ -314,6 +360,7 @@ class AuthControllerTest {
         when(refreshTokenService.findByToken(anyString())).thenReturn(Optional.of(rt));
 
         mockMvc.perform(post("/api/auth/logout")
+                .header("Origin", "http://localhost:5173")
                 .param("allDevices", "true")
                 .with(csrf())
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "my_refresh_cookie")))
@@ -445,7 +492,15 @@ class AuthControllerTest {
     }
 
     @Test
-    void refresh_WhenOriginAbsent_AllowsRequest() throws Exception {
+    void refresh_WhenOriginAndRefererAbsent_ReturnsForbidden() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(csrf())
+                .cookie(new jakarta.servlet.http.Cookie("refreshToken", "sample_token")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void refresh_WhenOriginAbsentButRefererAllowed_AllowsRequest() throws Exception {
         RefreshToken validToken = new RefreshToken();
         validToken.setEmail("test@test.com");
         validToken.setPlainToken("valid_plain_token");
@@ -454,9 +509,36 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/refresh")
                 .with(csrf())
+                .header("Referer", "http://localhost:5173/dashboard")
+                .cookie(new jakarta.servlet.http.Cookie("refreshToken", "sample_token")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void refresh_WhenRefererFromOtherSite_ReturnsForbidden() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(csrf())
+                .header("Referer", "https://malicious.evil.com/page")
+                .cookie(new jakarta.servlet.http.Cookie("refreshToken", "sample_token")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void refresh_SetsCookieOnAuthPathAndExpiresLegacyRootCookie() throws Exception {
+        RefreshToken validToken = new RefreshToken();
+        validToken.setEmail("test@test.com");
+        validToken.setPlainToken("valid_plain_token");
+
+        when(refreshTokenService.rotateRefreshToken(anyString())).thenReturn(validToken);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                .with(csrf())
+                .header("Origin", "http://localhost:5173")
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "sample_token")))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Set-Cookie", containsString("SameSite=Lax")));
+                .andExpect(header().stringValues("Set-Cookie", org.hamcrest.Matchers.hasItems(
+                        org.hamcrest.Matchers.allOf(containsString("refreshToken=valid_plain_token"), containsString("Path=/api/auth")),
+                        org.hamcrest.Matchers.allOf(containsString("Path=/;"), containsString("Max-Age=0")))));
     }
 
     @Test
@@ -483,11 +565,10 @@ class AuthControllerTest {
     }
 
     @Test
-    void logout_WhenOriginAbsent_ReturnsOk() throws Exception {
+    void logout_WhenOriginAndRefererAbsent_ReturnsForbidden() throws Exception {
         mockMvc.perform(post("/api/auth/logout")
                 .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Set-Cookie", containsString("SameSite=Lax")));
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -520,6 +601,7 @@ class AuthControllerTest {
         ReflectionTestUtils.setField(authController, "cookieSameSite", "None");
         try {
             mockMvc.perform(post("/api/auth/logout")
+                    .header("Origin", "http://localhost:5173")
                     .with(csrf()))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Set-Cookie", containsString("SameSite=None")));
@@ -634,6 +716,7 @@ class AuthControllerTest {
         ));
 
         mockMvc.perform(post("/api/auth/refresh")
+                .header("Origin", "http://localhost:5173")
                 .with(csrf())
                 .cookie(new jakarta.servlet.http.Cookie("refreshToken", "cookie-token")))
                 .andExpect(status().isOk())
