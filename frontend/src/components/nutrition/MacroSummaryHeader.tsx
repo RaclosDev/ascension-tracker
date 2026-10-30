@@ -123,7 +123,7 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
                 / {caloriesTarget} kcal
               </span>
             ) : (
-              <span className="text-xs text-gray-500">kcal consumidas</span>
+              <span className="text-xs text-gray-400">kcal consumidas</span>
             )}
           </div>
 

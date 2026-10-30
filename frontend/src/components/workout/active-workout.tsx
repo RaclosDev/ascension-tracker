@@ -73,9 +73,9 @@ export function ActiveWorkout() {
           >
             Entrenar
           </p>
-          <h1 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <h2 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
             Sin sesión activa
-          </h1>
+          </h2>
         </header>
         <EmptyCard
           title="Empieza cuando quieras"

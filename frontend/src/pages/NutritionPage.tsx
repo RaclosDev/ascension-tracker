@@ -56,6 +56,7 @@ export default function NutritionPage() {
   if (loading) {
     return (
       <div className="fade-in">
+        <h1 className="sr-only">Nutrición</h1>
         <Skeleton className="h-10 w-full max-w-sm mx-auto mb-6" />
         <div
           style={{
@@ -109,6 +110,7 @@ export default function NutritionPage() {
 
   return (
     <div className="fade-in">
+      <h1 className="sr-only">Nutrición</h1>
       <SegmentedControl
         options={[
           { label: 'Diario', value: 'diary' },
@@ -121,7 +123,7 @@ export default function NutritionPage() {
 
       {activeTab === 'foods' ? (
         <Suspense
-          fallback={<div className="p-4 text-center text-gray-500">Cargando alimentos...</div>}
+          fallback={<div className="p-4 text-center text-gray-400">Cargando alimentos...</div>}
         >
           <MyFoodsPage />
         </Suspense>
@@ -192,7 +194,7 @@ export default function NutritionPage() {
             </div>
 
             <div className="card flex flex-col items-center p-6 mb-12">
-              <h3 className="text-xs font-semibold text-gray-300 mb-4">Distribución de macros</h3>
+              <h2 className="text-xs font-semibold text-gray-300 mb-4">Distribución de macros</h2>
               <div
                 style={{
                   width: '100%',
