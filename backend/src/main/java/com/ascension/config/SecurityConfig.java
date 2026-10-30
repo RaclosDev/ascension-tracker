@@ -32,6 +32,9 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -214,7 +217,25 @@ public class SecurityConfig {
         redirectConfiguration.setAllowCredentials(true);
         source.registerCorsConfiguration("/api/auth/login/redirect", redirectConfiguration);
         source.registerCorsConfiguration("/api/**", configuration);
-        return source;
+        return request -> {
+            // Redirected form navigations can have an opaque origin. Do not grant AJAX access;
+            // the callback still requires Google's matching CSRF cookie and verified ID token.
+            if (isOpaqueGoogleRedirectNavigation(request)) {
+                return null;
+            }
+            return source.getCorsConfiguration(request);
+        };
+    }
+
+    private static boolean isOpaqueGoogleRedirectNavigation(HttpServletRequest request) {
+        String contentType = request.getContentType();
+        return "POST".equals(request.getMethod())
+                && "/api/auth/login/redirect".equals(request.getRequestURI())
+                && "null".equals(request.getHeader(HttpHeaders.ORIGIN))
+                && "navigate".equals(request.getHeader("Sec-Fetch-Mode"))
+                && "document".equals(request.getHeader("Sec-Fetch-Dest"))
+                && contentType != null
+                && MediaType.APPLICATION_FORM_URLENCODED_VALUE.equalsIgnoreCase(contentType.split(";", 2)[0].trim());
     }
 }
 
