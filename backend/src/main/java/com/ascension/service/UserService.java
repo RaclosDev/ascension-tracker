@@ -20,8 +20,8 @@ import java.util.concurrent.TimeUnit;
 public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
-    // TODO: Future architectural enhancement: Migrate user-referencing tables from email PK to a surrogate UUID
-    // to decouple internal database foreign keys from mutable email addresses and OAuth subject identifiers.
+    // Rows reference their owner by email. Every foreign key to users(email) cascades updates
+    // (V28), so changeEmail moves all of a user's data in a single UPDATE.
 
     public record User(
             String email,
@@ -147,6 +147,41 @@ public class UserService {
         } else {
             securityCache.invalidate(normalizedEmail);
         }
+    }
+
+    /**
+     * Moves an account to a new email when its Google subject is unchanged but the address is not,
+     * for example after the user renames their Google account. The update cascades to every
+     * user-owned table. Sessions issued before the change are revoked: refresh tokens are deleted
+     * and tokens_valid_after is reset, so other devices must sign in again.
+     *
+     * @return true when an account with this subject and old email was moved
+     */
+    @Transactional
+    public boolean changeEmail(String googleSub, String oldEmail, String newEmail) {
+        if (googleSub == null || googleSub.isBlank() || oldEmail == null || newEmail == null || newEmail.isBlank()) {
+            throw new IllegalArgumentException("Google subject and both emails are required");
+        }
+        String cleanOld = oldEmail.trim().toLowerCase(Locale.ROOT);
+        String cleanNew = newEmail.trim().toLowerCase(Locale.ROOT);
+        if (cleanOld.equals(cleanNew)) {
+            return false;
+        }
+
+        int moved = jdbcTemplate.update(
+                "UPDATE users SET email = ?, tokens_valid_after = NOW() - INTERVAL '1 second' "
+                        + "WHERE google_sub = ? AND LOWER(email) = ?",
+                cleanNew, googleSub.trim(), cleanOld);
+        if (moved == 0) {
+            return false;
+        }
+        jdbcTemplate.update("DELETE FROM refresh_tokens WHERE email = ?", cleanNew);
+
+        securityCache.invalidate(cleanOld);
+        securityCache.invalidate(cleanNew);
+        log.warn("Account email changed from {} to {}; old sessions revoked",
+                com.ascension.util.PiiMasker.maskEmail(cleanOld), com.ascension.util.PiiMasker.maskEmail(cleanNew));
+        return true;
     }
 
     public void evictUser(String email) {

@@ -3,13 +3,7 @@ import { googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { del } from 'idb-keyval';
 import { useQueryClient } from '@tanstack/react-query';
-import api, {
-  setMemoryToken,
-  refreshAccessToken,
-  getSessionToken,
-  authBroadcast,
-  isTokenValid,
-} from '../api/client';
+import api, { setMemoryToken, refreshAccessToken, authBroadcast } from '../api/client';
 import { useWorkoutStore } from '@/lib/workout/store';
 
 export interface User {
@@ -69,18 +63,10 @@ export const setCachedUser = (user: User | null) => {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  // No access token survives a reload; initAuth gets a fresh one from the refresh cookie.
   const getInitialSession = (): { token: string | null; user: User | null } => {
-    const sessionToken = getSessionToken();
     const cachedUser = getCachedUser();
-    if (sessionToken && cachedUser) {
-      setMemoryToken(sessionToken);
-      api.defaults.headers.common['Authorization'] = 'Bearer ' + sessionToken;
-      return { token: sessionToken, user: cachedUser };
-    }
-    if (cachedUser) {
-      return { token: null, user: cachedUser };
-    }
-    return { token: null, user: null };
+    return { token: null, user: cachedUser };
   };
 
   const initialSession = getInitialSession();
@@ -93,13 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     async function initAuth() {
-      // If we already have a valid session from getInitialSession (e.g. from shared storage),
-      // we do not need to block on network refresh or risk dropping the session.
-      if (initialSession.token && isTokenValid(initialSession.token)) {
-        setIsReady(true);
-        return;
-      }
-
       // Query any active peer tabs for a live session over BroadcastChannel
       if (authBroadcast) {
         try {
@@ -230,29 +209,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setCachedUser(null);
     };
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'ascension_session_token') {
-        if (e.newValue && isTokenValid(e.newValue)) {
-          setMemoryToken(e.newValue);
-          api.defaults.headers.common['Authorization'] = 'Bearer ' + e.newValue;
-          setToken(e.newValue);
-          const cached = getCachedUser();
-          if (cached) setUser(cached);
-        } else if (!e.newValue && !getCachedUser()) {
-          setToken(null);
-          setMemoryToken(null);
-          delete api.defaults.headers.common['Authorization'];
-          setUser(null);
-        }
-      }
-    };
     window.addEventListener('token_refresh', handleTokenRefresh);
     window.addEventListener('auth_failed', handleAuthFailed);
-    window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener('token_refresh', handleTokenRefresh);
       window.removeEventListener('auth_failed', handleAuthFailed);
-      window.removeEventListener('storage', handleStorageChange);
     };
   }, [token, queryClient]);
 

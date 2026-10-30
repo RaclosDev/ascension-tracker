@@ -12,65 +12,28 @@ const api = axios.create({
 
 export let memoryToken: string | null = null;
 
-export const setMemoryToken = (token: string | null) => {
-  memoryToken = token;
-  if (typeof window !== 'undefined') {
-    if (token && token !== 'offline-session') {
-      try {
-        sessionStorage?.setItem('ascension_session_token', token);
-      } catch {
-        // ignore storage errors
-      }
-      try {
-        localStorage?.setItem('ascension_session_token', token);
-      } catch {
-        // ignore storage errors
-      }
-    } else if (!token) {
-      try {
-        sessionStorage?.removeItem('ascension_session_token');
-      } catch {
-        // ignore
-      }
-      try {
-        localStorage?.removeItem('ascension_session_token');
-      } catch {
-        // ignore
-      }
-    }
+const LEGACY_TOKEN_KEY = 'ascension_session_token';
+
+// The access token lives only in memory; the HttpOnly refresh cookie restores it on reload.
+// Older builds persisted it in Web Storage, so drop any copy they left behind.
+const clearLegacyStoredToken = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage?.removeItem(LEGACY_TOKEN_KEY);
+  } catch {
+    // ignore storage errors
+  }
+  try {
+    sessionStorage?.removeItem(LEGACY_TOKEN_KEY);
+  } catch {
+    // ignore storage errors
   }
 };
 
-export const getSessionToken = (): string | null => {
-  if (typeof window === 'undefined') return null;
-  try {
-    let saved: string | null = null;
-    try {
-      saved = sessionStorage?.getItem('ascension_session_token') || null;
-    } catch {
-      // ignore
-    }
-    if (!saved) {
-      try {
-        saved = localStorage?.getItem('ascension_session_token') || null;
-      } catch {
-        // ignore
-      }
-    }
-    if (saved && isTokenValid(saved)) {
-      try {
-        if (!sessionStorage?.getItem('ascension_session_token')) {
-          sessionStorage?.setItem('ascension_session_token', saved);
-        }
-      } catch {
-        // ignore
-      }
-      return saved;
-    }
-    return null;
-  } catch {
-    return null;
-  }
+clearLegacyStoredToken();
+
+export const setMemoryToken = (token: string | null) => {
+  memoryToken = token;
 };
 
 export const isTokenValid = (token: string | null): boolean => {
@@ -153,13 +116,6 @@ export const refreshAccessToken = async (): Promise<string | null> => {
   if (isTokenValid(memoryToken)) {
     return memoryToken;
   }
-  const sessionToken = getSessionToken();
-  if (isTokenValid(sessionToken)) {
-    setMemoryToken(sessionToken);
-    api.defaults.headers.common['Authorization'] = 'Bearer ' + sessionToken;
-    return sessionToken;
-  }
-
   if (activeRefreshPromise) {
     return activeRefreshPromise;
   }
