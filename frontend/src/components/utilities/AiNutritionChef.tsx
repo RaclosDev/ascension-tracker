@@ -139,7 +139,7 @@ export default function AiNutritionChef() {
           <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
             <button
               type="button"
-              className="btn btn-secondary btn-sm rounded-xl text-xs py-1.5 px-3 text-gray-300 hover:text-white border border-white/10"
+              className="btn btn-secondary btn-sm min-h-11 rounded-xl text-xs py-1.5 px-3 text-gray-300 hover:text-white border border-white/10"
               onClick={() =>
                 handleQuickPrompt(
                   'Diseña varias opciones de cena equilibradas para mis macros restantes.',
@@ -150,7 +150,7 @@ export default function AiNutritionChef() {
             </button>
             <button
               type="button"
-              className="btn btn-secondary btn-sm rounded-xl text-xs py-1.5 px-3 text-gray-300 hover:text-white border border-white/10"
+              className="btn btn-secondary btn-sm min-h-11 rounded-xl text-xs py-1.5 px-3 text-gray-300 hover:text-white border border-white/10"
               onClick={() => handleQuickPrompt('Sugiéreme snacks o meriendas altas en proteína.')}
             >
               Snacks altos en proteína
@@ -398,7 +398,7 @@ export default function AiNutritionChef() {
             <div className="flex flex-col gap-2 ml-8 mt-2">
               <button
                 type="button"
-                className="btn btn-secondary btn-sm rounded-xl text-xs py-1.5 px-3 w-fit text-left text-gray-300 hover:text-white"
+                className="btn btn-secondary btn-sm min-h-11 rounded-xl text-xs py-1.5 px-3 w-fit text-left text-gray-300 hover:text-white"
                 onClick={() =>
                   handleQuickPrompt(
                     'Diseña varias opciones de cena equilibradas para mis macros restantes.',
@@ -409,7 +409,7 @@ export default function AiNutritionChef() {
               </button>
               <button
                 type="button"
-                className="btn btn-secondary btn-sm rounded-xl text-xs py-1.5 px-3 w-fit text-left text-gray-300 hover:text-white"
+                className="btn btn-secondary btn-sm min-h-11 rounded-xl text-xs py-1.5 px-3 w-fit text-left text-gray-300 hover:text-white"
                 onClick={() => handleQuickPrompt('Sugiéreme snacks o meriendas altas en proteína.')}
               >
                 Snacks altos en proteína
@@ -444,7 +444,7 @@ export default function AiNutritionChef() {
           <button
             type="button"
             onClick={stopListening}
-            className="bg-red-500 text-white rounded-md px-2 py-0.5 text-xs font-semibold cursor-pointer"
+            className="bg-red-500 text-white rounded-md min-h-11 px-4 text-xs font-semibold cursor-pointer"
           >
             Listo
           </button>
@@ -461,7 +461,7 @@ export default function AiNutritionChef() {
           <button
             type="button"
             onClick={() => setSelectedImage(null)}
-            className="absolute -top-1.5 -right-1.5 bg-black text-white border border-white/20 rounded-full w-5 h-5 flex items-center justify-center text-xs"
+            className="absolute -top-1.5 -right-1.5 bg-black text-white border border-white/20 rounded-full w-5 h-5 flex items-center justify-center text-xs before:absolute before:-inset-3"
             title="Quitar foto"
           >
             ✕
@@ -519,7 +519,7 @@ export default function AiNutritionChef() {
           id="ai-chef-user-input"
           type="text"
           aria-label="Mensaje o petición para el chef nutricional IA"
-          className="flex-1 min-h-[42px] px-3.5 rounded-xl bg-[#1C1C1E] border border-white/10 text-white text-xs placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#0085FF)]"
+          className="flex-1 min-w-0 min-h-11 px-3.5 rounded-xl bg-[#1C1C1E] border border-white/10 text-white text-base placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#0085FF)]"
           placeholder="Pide una receta o sugerencia..."
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
@@ -536,7 +536,7 @@ export default function AiNutritionChef() {
           type="submit"
           disabled={(!userInput.trim() && !selectedImage) || sending}
           aria-label="Enviar mensaje al chef IA"
-          className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+          className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
             (!userInput.trim() && !selectedImage) || sending
               ? 'bg-white/5 text-gray-500 cursor-not-allowed'
               : 'bg-[var(--accent-primary,#0085FF)] text-white hover:opacity-90 cursor-pointer shadow-md'

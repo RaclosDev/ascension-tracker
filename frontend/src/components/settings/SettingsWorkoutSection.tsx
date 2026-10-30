@@ -132,15 +132,17 @@ export function SettingsWorkoutSection({
                 Muestra una columna de RPE en los ejercicios para medir la intensidad (1-10)
               </div>
             </div>
-            <input
-              type="checkbox"
-              checked={workoutSettings?.showRpe ?? false}
-              onChange={(e) =>
-                onWorkoutSettingsChange({ ...workoutSettings, showRpe: e.target.checked })
-              }
-              aria-label="Mostrar RPE en entrenamientos"
-              style={{ transform: 'scale(1.2)' }}
-            />
+            <label className="flex items-center justify-center min-w-11 min-h-11 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={workoutSettings?.showRpe ?? false}
+                onChange={(e) =>
+                  onWorkoutSettingsChange({ ...workoutSettings, showRpe: e.target.checked })
+                }
+                aria-label="Mostrar RPE en entrenamientos"
+                style={{ transform: 'scale(1.2)' }}
+              />
+            </label>
           </div>
 
           <div
@@ -167,6 +169,7 @@ export function SettingsWorkoutSection({
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem',
+                      minHeight: '44px',
                       fontSize: '0.85rem',
                       color: isHidden ? 'var(--text-muted)' : 'var(--text-secondary)',
                       textDecoration: isHidden ? 'line-through' : 'none',
@@ -211,7 +214,7 @@ export function SettingsWorkoutSection({
             <button
               type="button"
               onClick={onOpenHevyModal}
-              className="btn btn-primary"
+              className="btn btn-primary min-h-11"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',

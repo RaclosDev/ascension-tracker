@@ -155,7 +155,7 @@ export function SettingsPersonalSection({
             </div>
           </div>
           <button
-            className="btn btn-primary"
+            className="btn btn-primary min-h-11"
             style={{ width: '100%', marginTop: '0.5rem' }}
             onClick={onSave}
             disabled={isSaving}

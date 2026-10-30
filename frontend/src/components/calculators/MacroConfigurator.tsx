@@ -214,7 +214,7 @@ export default function MacroConfigurator({
                   type="number"
                   inputMode="decimal"
                   className="form-input"
-                  style={{ height: '32px', fontSize: '0.85rem' }}
+                  style={{ height: '44px', fontSize: '1rem' }}
                   value={form.kcal || ''}
                   placeholder="Ej: 2000"
                   onChange={(e) => setForm({ ...form, kcal: e.target.value })}

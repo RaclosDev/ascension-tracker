@@ -652,7 +652,7 @@ export default function FoodSearchModal({
                   onChange={(e) => setSelectedMealIndex(Number(e.target.value))}
                   style={{
                     padding: '0.5rem',
-                    fontSize: '0.9rem',
+                    fontSize: '1rem',
                     background: 'var(--bg-secondary)',
                     border: 'none',
                     borderRadius: '8px',
