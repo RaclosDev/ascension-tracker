@@ -151,6 +151,11 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- PushService.send declares JoseException; web-push 5.1.2 only ships jose4j at runtime scope. -->
+        <dependency>
+            <groupId>org.bitbucket.b_c</groupId>
+            <artifactId>jose4j</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
