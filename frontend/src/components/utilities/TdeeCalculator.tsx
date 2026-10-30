@@ -66,7 +66,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
   const [formula, setFormula] = useState<BmrFormulaType>('mifflin');
   const [selectedGoal, setSelectedGoal] = useState<CaloricGoal>('maintenance');
 
-  // Estado para sub-calculadoras Weyand (Retrocompatibilidad total)
+  // Estado para sub-calculadoras Weyand
   const [showWeyand, setShowWeyand] = useState(false);
   const [weyandSteps, setWeyandSteps] = useState('10000');
   const [metabolicDistance, setMetabolicDistance] = useState('400');
@@ -113,7 +113,6 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
     });
   }, [sex, numWeight, numHeight, numAge, numFactor, numBodyFat, formula]);
 
-  // Weyand calculations
   const weyandStepsKcal = useMemo(() => {
     const s = parseInt(weyandSteps, 10) || 0;
     return calculateWeyandSteps({ weightKg: numWeight, steps: s });
@@ -140,7 +139,6 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
         calóricos para pérdida de grasa, mantenimiento o ganancia muscular.
       </p>
 
-      {/* FORM INPUTS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
           <label htmlFor={sexId} className="block text-xs font-semibold text-gray-200 mb-1.5">
@@ -259,7 +257,6 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
         </select>
       </div>
 
-      {/* KPI METRICS */}
       <div role="status" aria-live="polite" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="p-5 rounded-2xl bg-zinc-900/60 border border-white/5">
           <span className="text-xs font-semibold text-zinc-400">Tasa Metabólica Basal (BMR)</span>
@@ -284,7 +281,6 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
         </div>
       </div>
 
-      {/* CALORIC GOALS SELECTOR & SUMMARY */}
       <div className="space-y-3">
         <h4 className="text-sm font-bold text-white tracking-wide">
           Objetivos y Estrategias Calóricas
@@ -327,7 +323,6 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
         </div>
       </div>
 
-      {/* RETROCOMPATIBILIDAD CON CALCULADORAS BIOMECÁNICAS WEYAND */}
       <div className="pt-4 border-t border-white/10">
         <button
           type="button"
@@ -340,7 +335,6 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
 
         {showWeyand && (
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 fade-in">
-            {/* Gasto por Pasos */}
             <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
               <h5 className="text-xs font-semibold text-white">Gasto por pasos (Weyand)</h5>
               <p className="text-xs text-gray-400">
@@ -368,7 +362,6 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
               </div>
             </div>
 
-            {/* Gasto Metabólico por Tiempo */}
             <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
               <h5 className="text-xs font-semibold text-white">
                 Gasto metabólico por carrera/marcha

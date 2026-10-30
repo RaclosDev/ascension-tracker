@@ -47,7 +47,6 @@ export default function OneRepMaxCalculator({
         de intensidades y zonas de entrenamiento.
       </p>
 
-      {/* FORM INPUTS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
           <label htmlFor={weightId} className="block text-xs font-semibold text-gray-200 mb-1.5">
@@ -119,7 +118,6 @@ export default function OneRepMaxCalculator({
         </div>
       </div>
 
-      {/* KPI 1RM DISPLAY */}
       <div
         role="status"
         aria-live="polite"
@@ -140,7 +138,6 @@ export default function OneRepMaxCalculator({
           )}
         </div>
 
-        {/* COMPARISON PILLS */}
         {result.oneRepMax > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center w-full sm:w-auto">
             <div className="p-2 rounded-lg bg-white/5 border border-white/5">
@@ -171,7 +168,6 @@ export default function OneRepMaxCalculator({
         )}
       </div>
 
-      {/* PERCENTAGE BREAKDOWN TABLE */}
       {result.oneRepMax > 0 && (
         <div className="space-y-3">
           <h4 className="text-sm font-bold text-white tracking-wide">

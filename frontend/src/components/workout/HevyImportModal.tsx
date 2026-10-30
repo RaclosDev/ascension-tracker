@@ -273,7 +273,6 @@ export function HevyImportModal({ isOpen, onClose, customExercises = [] }: HevyI
           </div>
         )}
 
-        {/* Error message */}
         {error && (
           <div
             style={{
@@ -293,7 +292,6 @@ export function HevyImportModal({ isOpen, onClose, customExercises = [] }: HevyI
           </div>
         )}
 
-        {/* Parsed Preview */}
         {parsedData && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div
@@ -388,7 +386,6 @@ export function HevyImportModal({ isOpen, onClose, customExercises = [] }: HevyI
               </div>
             </div>
 
-            {/* Date Range */}
             {parsedData.firstDate && parsedData.lastDate && (
               <div
                 style={{
@@ -407,7 +404,6 @@ export function HevyImportModal({ isOpen, onClose, customExercises = [] }: HevyI
               </div>
             )}
 
-            {/* New custom exercises badge section */}
             {parsedData.newCustomExercises.length > 0 ? (
               <div
                 style={{

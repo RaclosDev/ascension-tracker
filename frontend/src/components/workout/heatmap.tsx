@@ -26,7 +26,6 @@ export function ActivityHeatmap({ history }: { history: CompletedWorkout[] }) {
     startOfMonth(addMonths(now, monthOffset - 1)),
   ];
 
-  // Prepare a fast lookup for volume per day
   const volumeByDay = new Map<string, number>();
   let maxVolume = 1;
 
