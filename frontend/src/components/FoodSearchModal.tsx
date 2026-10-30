@@ -309,7 +309,7 @@ export default function FoodSearchModal({
           return;
         }
       }
-      toast('Producto no encontrado por código de barras', { icon: '🤔' });
+      toast('Producto no encontrado por código de barras');
       setOffResults([]);
     } catch (err) {
       console.error(
