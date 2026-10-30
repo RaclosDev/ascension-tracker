@@ -4,6 +4,10 @@ import { test, expect } from '@playwright/test';
 test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
 test.beforeEach(async ({ page }) => {
+  // CI builds without VITE_GOOGLE_CLIENT_ID, so the app asks the backend for it.
+  await page.route('**/api/auth/config**', (r) =>
+    r.fulfill({ status: 200, json: { googleClientId: 'ci-mock-id' } }),
+  );
   await page.route('**/api/auth/refresh', (r) => r.fulfill({ status: 401, body: '' }));
   await page.goto('/login');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15000 });
