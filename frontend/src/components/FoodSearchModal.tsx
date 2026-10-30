@@ -547,17 +547,24 @@ export default function FoodSearchModal({
         <div className="food-search-header">
           {selectedProduct || activeOverlay !== 'none' ? (
             <button
-              className="icon-btn"
+              type="button"
+              className="icon-btn min-w-11 min-h-11"
+              aria-label="Volver"
               onClick={() => {
                 setSelectedProduct(null);
                 setActiveOverlay('none');
               }}
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={20} aria-hidden="true" />
             </button>
           ) : (
-            <button className="icon-btn" onClick={onClose}>
-              <X size={20} />
+            <button
+              type="button"
+              className="icon-btn min-w-11 min-h-11"
+              aria-label="Cerrar buscador de alimentos"
+              onClick={onClose}
+            >
+              <X size={20} aria-hidden="true" />
             </button>
           )}
 
@@ -572,7 +579,7 @@ export default function FoodSearchModal({
                     ? 'Crear Manual'
                     : 'Buscar Alimento'}
           </div>
-          <div style={{ width: 36 }}></div>
+          <div style={{ width: 44 }}></div>
         </div>
 
         <div className="food-search-body fade-in">
@@ -648,6 +655,7 @@ export default function FoodSearchModal({
               <div style={{ marginBottom: '1rem' }}>
                 <select
                   className="form-input"
+                  aria-label="Comida del registro"
                   value={selectedMealIndex}
                   onChange={(e) => setSelectedMealIndex(Number(e.target.value))}
                   style={{
@@ -689,7 +697,7 @@ export default function FoodSearchModal({
                   value={query}
                   onChange={(e) => handleQueryChange(e.target.value)}
                   style={{
-                    paddingRight: '120px',
+                    paddingRight: '144px',
                     paddingLeft: '1rem',
                     height: '50px',
                     fontSize: '1rem',
@@ -700,11 +708,11 @@ export default function FoodSearchModal({
                 <div
                   style={{
                     position: 'absolute',
-                    right: '6px',
+                    right: '2px',
                     top: '50%',
                     transform: 'translateY(-50%)',
                     display: 'flex',
-                    gap: '0.25rem',
+                    gap: '2px',
                   }}
                 >
                   <input
@@ -719,60 +727,29 @@ export default function FoodSearchModal({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                    style={{
-                      background: 'var(--bg-secondary)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      width: '36px',
-                      height: '36px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--text-primary)',
-                      cursor: 'pointer',
-                    }}
+                    className="food-search-tool-btn"
                     title="Etiqueta Nutricional (OCR)"
+                    aria-label="Etiqueta Nutricional (OCR)"
                   >
-                    <ImageIcon size={18} />
+                    <ImageIcon size={18} aria-hidden="true" />
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveOverlay('scanner')}
-                    style={{
-                      background: 'var(--bg-secondary)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      width: '36px',
-                      height: '36px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--text-primary)',
-                      cursor: 'pointer',
-                    }}
+                    className="food-search-tool-btn"
                     title="Código de barras"
+                    aria-label="Código de barras"
                   >
-                    <ScanLine size={18} />
+                    <ScanLine size={18} aria-hidden="true" />
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveOverlay('ai')}
-                    style={{
-                      background:
-                        'var(--gradient-protein-carbs, linear-gradient(90deg, #8b5cf6, #3b82f6))',
-                      border: 'none',
-                      borderRadius: '8px',
-                      width: '36px',
-                      height: '36px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#fff',
-                      cursor: 'pointer',
-                    }}
+                    className="food-search-tool-btn food-search-tool-btn--ai"
                     title="Asistente de IA"
+                    aria-label="Asistente de IA"
                   >
-                    <Mic size={18} />
+                    <Mic size={18} aria-hidden="true" />
                   </button>
                 </div>
               </form>

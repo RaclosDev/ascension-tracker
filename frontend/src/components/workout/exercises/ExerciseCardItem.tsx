@@ -102,7 +102,7 @@ export const ExerciseCardItem = React.memo(function ExerciseCardItem({
             <span className="truncate">{displayName}</span>
             {exercise.custom && (
               <span className="text-[0.6rem] px-1.5 py-0.5 bg-[var(--accent-primary-light)] text-[var(--bg-primary)] rounded-sm font-bold shrink-0">
-                Custom
+                Propio
               </span>
             )}
           </h3>
