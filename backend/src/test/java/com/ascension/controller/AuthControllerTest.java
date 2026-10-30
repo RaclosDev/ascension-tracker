@@ -273,27 +273,65 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.error").exists());
     }
 
+    // A verified Google ID token cannot carry someone else's subject, so the same sub with a new
+    // email is the same Google account after its address changed.
     @Test
-    void login_WhenSubAlreadyBoundToDifferentEmail_ReturnsUnauthorized() throws Exception {
+    void login_WhenGoogleAccountEmailChanged_MovesAccountToNewEmail() throws Exception {
         com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
         com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
         payload.setEmailVerified(true);
-        payload.setEmail("attacker@example.com");
-        payload.setSubject("victim-sub");
+        payload.setEmail("renamed@example.com");
+        payload.setSubject("stable-sub");
         when(idToken.getPayload()).thenReturn(payload);
-        when(googleIdTokenVerifier.verify("token-sub-stolen")).thenReturn(idToken);
+        when(googleIdTokenVerifier.verify("token-renamed")).thenReturn(idToken);
 
-        when(userService.findByEmail("attacker@example.com")).thenReturn(Optional.empty());
-        when(userService.findByGoogleSub("victim-sub")).thenReturn(Optional.of(
-                new User("victim@example.com", "Victim Name", null, "victim-sub", null)
+        when(userService.findByEmail("renamed@example.com")).thenReturn(Optional.empty());
+        when(userService.findByGoogleSub("stable-sub")).thenReturn(Optional.of(
+                new User("original@example.com", "Athlete", null, "stable-sub", null)
+        ));
+        RefreshToken rt = new RefreshToken();
+        rt.setEmail("renamed@example.com");
+        rt.setPlainToken("plain-refresh-token");
+        when(refreshTokenService.createRefreshToken("renamed@example.com")).thenReturn(rt);
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"token-renamed\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists());
+
+        verify(userService).changeEmail("stable-sub", "original@example.com", "renamed@example.com");
+        verify(refreshTokenService).createRefreshToken("renamed@example.com");
+    }
+
+    @Test
+    void login_WhenChangedEmailBelongsToAnotherAccount_ReturnsUnauthorized() throws Exception {
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
+        payload.setEmailVerified(true);
+        payload.setEmail("taken@example.com");
+        payload.setSubject("stable-sub");
+        when(idToken.getPayload()).thenReturn(payload);
+        when(googleIdTokenVerifier.verify("token-taken")).thenReturn(idToken);
+
+        // A legacy account without google_sub already owns the new address.
+        when(userService.findByEmail("taken@example.com")).thenReturn(Optional.of(
+                new User("taken@example.com", "Someone Else", null, null, null)
+        ));
+        when(userService.findByGoogleSub("stable-sub")).thenReturn(Optional.of(
+                new User("original@example.com", "Athlete", null, "stable-sub", null)
         ));
 
         mockMvc.perform(post("/api/auth/login")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"token\":\"token-sub-stolen\"}"))
+                .content("{\"token\":\"token-taken\"}"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").exists());
+
+        verify(userService, org.mockito.Mockito.never()).changeEmail(anyString(), anyString(), anyString());
+        verify(refreshTokenService, org.mockito.Mockito.never()).createRefreshToken(anyString());
     }
 
     @Test
