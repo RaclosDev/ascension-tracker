@@ -82,9 +82,9 @@ export function SettingsDataSection({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.5rem',
+                minHeight: '44px',
               }}
               onClick={onOpenRestoreModal}
-              aria-label="Abrir modal para restaurar copia de seguridad desde archivo JSON"
             >
               <UploadCloud size={18} />
               Restaurar copia de seguridad (JSON)

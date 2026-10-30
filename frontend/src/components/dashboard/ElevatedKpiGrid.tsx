@@ -220,13 +220,14 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
             }}
             className="flex items-center gap-1 min-h-11 text-[0.68rem] font-medium hover:opacity-100 opacity-70 transition-opacity w-full text-left group"
             style={{ color: 'var(--text-secondary)' }}
-            aria-label="Cambiar ritmo de proyección"
+            aria-expanded={popoverOpen}
           >
             <span>
               A ritmo de{' '}
               <span className="font-semibold text-gray-200 tabular-nums whitespace-nowrap">
                 {numWeeklyRate.toFixed(2)} kg/sem
               </span>
+              <span className="sr-only">, cambiar ritmo de proyección</span>
             </span>
             <ChevronDown
               size={11}
