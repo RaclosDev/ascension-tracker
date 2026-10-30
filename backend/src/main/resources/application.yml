@@ -27,6 +27,12 @@ spring:
         default_batch_fetch_size: 200
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  jackson:
+    # Jackson 3 (Spring Boot 4) turned these on by default; Jackson 2 had them off. Kept off so
+    # request bodies the frontend already sends (null for a number) and AI replies keep parsing.
+    deserialization:
+      fail-on-null-for-primitives: false
+      fail-on-trailing-tokens: false
   flyway:
     enabled: true
     baseline-on-migrate: ${SPRING_FLYWAY_BASELINE_ON_MIGRATE:false}

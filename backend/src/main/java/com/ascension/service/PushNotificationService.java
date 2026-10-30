@@ -3,7 +3,7 @@ package com.ascension.service;
 import com.ascension.model.PushSubscription;
 import com.ascension.model.RestTimer;
 import com.ascension.repository.PushSubscriptionRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import nl.martijndwars.webpush.Notification;
