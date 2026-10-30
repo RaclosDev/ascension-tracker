@@ -109,14 +109,13 @@ public class SecurityConfig {
 
     // Spring Security 7 serves OAuth 2.0 Protected Resource Metadata (RFC 9728) from every resource
     // server chain and offers no switch to turn it off. This API issues its own HS256 tokens and has
-    // no authorization server to advertise, so /.well-known/** gets a chain without a resource server
-    // and answers 401 as it did before Spring Security 7.
+    // no authorization server to advertise, so /.well-known/** gets a deny-all chain without a resource
+    // server and answers 401 as it did before Spring Security 7.
     @Bean
     @Order(2)
     public SecurityFilterChain wellKnownFilterChain(HttpSecurity http) throws Exception {
         http
             .securityMatcher("/.well-known/**")
-            .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth.anyRequest().denyAll())
             .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(new BearerTokenEntryPoint()))
