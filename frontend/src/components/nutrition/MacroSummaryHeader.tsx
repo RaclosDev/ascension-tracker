@@ -139,7 +139,6 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
 
       {/* 3 Macro Cards / Badges */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-3.5 border-t border-white/[0.08]">
-        {/* Protein */}
         <div className="flex flex-col gap-1.5 p-2 sm:p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-gray-300 text-[0.72rem] sm:text-xs">Proteínas</span>
@@ -163,7 +162,6 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
           </div>
         </div>
 
-        {/* Carbs */}
         <div className="flex flex-col gap-1.5 p-2 sm:p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-gray-300 text-[0.72rem] sm:text-xs">Hidratos</span>
@@ -187,7 +185,6 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
           </div>
         </div>
 
-        {/* Fat */}
         <div className="flex flex-col gap-1.5 p-2 sm:p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-gray-300 text-[0.72rem] sm:text-xs">Grasas</span>

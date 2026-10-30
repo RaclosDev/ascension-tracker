@@ -60,7 +60,6 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
     setLoading(true);
 
     try {
-      // 1. Guardar settings
       await api.put('/settings', {
         sex: form.sex,
         age: parseInt(form.age) || null,
@@ -74,11 +73,9 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
         startDate: getLocalDateString(),
       });
 
-      // 2. Configurar comidas
       if (mealOption === 'default') {
         await api.post('/nutrition/meals/reset');
       } else {
-        // Crear N comidas
         for (let i = 1; i <= customMealsCount; i++) {
           await api.post('/nutrition/meals', { name: `Comida ${i}`, icon: '' });
         }

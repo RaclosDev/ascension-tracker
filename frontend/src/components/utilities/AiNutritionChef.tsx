@@ -75,7 +75,6 @@ export default function AiNutritionChef() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-      {/* REMAINING MACROS BAR */}
       <div
         style={{
           background: 'rgba(255, 255, 255, 0.03)',
@@ -122,7 +121,6 @@ export default function AiNutritionChef() {
         </div>
       </div>
 
-      {/* CHAT MESSAGES FEED */}
       {chatMessages.length === 0 ? (
         <div
           className="text-center"
@@ -189,10 +187,8 @@ export default function AiNutritionChef() {
                 <div className={`chat-bubble ${isUser ? 'user-bubble' : 'ai-bubble'}`}>
                   {renderMarkdown(msg.text)}
 
-                  {/* MULTI-OPTIONS DISPLAY */}
                   {hasOptions && (
                     <div style={{ marginTop: '1rem' }}>
-                      {/* Option Selector Tabs */}
                       {(msg.mealOptions?.length || 0) > 1 && (
                         <div className="options-tabs-bar">
                           {(msg.mealOptions || []).map((opt: MealOption, optIdx: number) => {
@@ -225,7 +221,6 @@ export default function AiNutritionChef() {
                         </div>
                       )}
 
-                      {/* Active Option Card */}
                       {activeOption && (
                         <div className="suggested-meal-box">
                           <div>
@@ -291,7 +286,6 @@ export default function AiNutritionChef() {
                             )}
                           </div>
 
-                          {/* Total of the meal */}
                           {activeOption.totalMacros && (
                             <div
                               style={{
@@ -351,7 +345,6 @@ export default function AiNutritionChef() {
                             </div>
                           )}
 
-                          {/* Add to Diary Button */}
                           <div className="add-option-btn-container">
                             <button
                               type="button"
@@ -397,7 +390,7 @@ export default function AiNutritionChef() {
             );
           })}
 
-          {/* QUICK PROMPTS WHEN CHAT IS FRESH */}
+          {/* Quick prompts while only the welcome message is shown */}
           {chatMessages.length === 1 && !sending && (
             <div className="flex flex-col gap-2 ml-8 mt-2">
               <button
@@ -421,7 +414,6 @@ export default function AiNutritionChef() {
             </div>
           )}
 
-          {/* SENDING SPINNER */}
           {sending && (
             <div className="chat-msg-row">
               <div className="chat-avatar">
@@ -438,7 +430,6 @@ export default function AiNutritionChef() {
         </div>
       )}
 
-      {/* VOICE RECORDING NOTIFICATION */}
       {isListening && (
         <div className="flex items-center justify-between text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-xl">
           <div className="flex items-center gap-2">
@@ -457,7 +448,6 @@ export default function AiNutritionChef() {
         </div>
       )}
 
-      {/* IMAGE PREVIEW */}
       {selectedImage && (
         <div className="relative inline-block mb-1">
           <img
@@ -476,7 +466,6 @@ export default function AiNutritionChef() {
         </div>
       )}
 
-      {/* INPUT FORM */}
       <form
         onSubmit={(e) => {
           e.preventDefault();

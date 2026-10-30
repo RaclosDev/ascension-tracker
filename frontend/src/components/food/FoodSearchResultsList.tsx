@@ -64,7 +64,6 @@ export function FoodSearchResultsList({
 
   return (
     <div style={{ overflowY: 'auto', flex: 1, paddingBottom: '2rem' }}>
-      {/* 2. SAVED & RECENT (Default or Filtered) */}
       <div style={{ marginTop: 0 }}>
         {filteredRecent.length > 0 && (
           <div>
@@ -214,7 +213,7 @@ export function FoodSearchResultsList({
         )}
       </div>
 
-      {/* 1. SEARCH RESULTS (External API) */}
+      {/* External API search results */}
       {offResults.length > 0 && (
         <div>
           <div
@@ -276,7 +275,7 @@ export function FoodSearchResultsList({
         </div>
       )}
 
-      {/* 3. MANUAL CREATE FALLBACK */}
+      {/* Manual create fallback */}
       {(query.trim().length > 0 || offResults.length === 0) && (
         <div
           style={{

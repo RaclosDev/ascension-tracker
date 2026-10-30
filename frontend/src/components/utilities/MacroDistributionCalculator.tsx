@@ -24,7 +24,6 @@ export default function MacroDistributionCalculator({
   const [carbsPct, setCarbsPct] = useState<number>(40);
   const [fatPct, setFatPct] = useState<number>(30);
 
-  // Número de comidas al día
   const [mealsCount, setMealsCount] = useState<number>(4);
 
   const kcalId = useId();
@@ -72,7 +71,6 @@ export default function MacroDistributionCalculator({
         raciones exactas por plato según tu número de comidas.
       </p>
 
-      {/* STRATEGY TOGGLE */}
       <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10 max-w-md">
         <button
           type="button"
@@ -98,7 +96,6 @@ export default function MacroDistributionCalculator({
         </button>
       </div>
 
-      {/* TARGET INPUTS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label htmlFor={kcalId} className="block text-xs font-semibold text-gray-200 mb-1.5">
@@ -153,7 +150,6 @@ export default function MacroDistributionCalculator({
         </div>
       </div>
 
-      {/* STRATEGY-SPECIFIC CONTROLS */}
       {strategy === 'bodyweight' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
           <div>
@@ -286,7 +282,6 @@ export default function MacroDistributionCalculator({
         </div>
       )}
 
-      {/* WARNING NOTIFICATION */}
       {result.warnings && result.warnings.length > 0 && (
         <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
           {result.warnings.map((w, idx) => (
@@ -298,9 +293,7 @@ export default function MacroDistributionCalculator({
         </div>
       )}
 
-      {/* KPI MACRO CARDS */}
       <div role="status" aria-live="polite" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Proteína */}
         <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5">
           <div className="flex justify-between items-center text-xs text-[var(--color-protein)] font-bold uppercase">
             <span>Proteína</span>
@@ -312,7 +305,6 @@ export default function MacroDistributionCalculator({
           <div className="text-xs text-gray-400 mt-1">{result.protein.kcal} kcal (4 kcal/g)</div>
         </div>
 
-        {/* Carbohidratos */}
         <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5">
           <div className="flex justify-between items-center text-xs text-[var(--color-carbs)] font-bold uppercase">
             <span>Carbohidratos</span>
@@ -324,7 +316,6 @@ export default function MacroDistributionCalculator({
           <div className="text-xs text-gray-400 mt-1">{result.carbs.kcal} kcal (4 kcal/g)</div>
         </div>
 
-        {/* Grasas */}
         <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5">
           <div className="flex justify-between items-center text-xs text-[var(--color-fat)] font-bold uppercase">
             <span>Grasas</span>
@@ -337,7 +328,6 @@ export default function MacroDistributionCalculator({
         </div>
       </div>
 
-      {/* PER-MEAL BREAKDOWN */}
       {result.perMeal && (
         <div className="p-4 rounded-xl bg-[#161618] border border-white/10 space-y-2">
           <h4 className="text-xs font-semibold text-gray-300">
