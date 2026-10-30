@@ -24,14 +24,11 @@ export default function LoginPage() {
     >
       <div
         style={{
-          background: 'rgba(18, 18, 26, 0.78)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          background: '#12121a',
           padding: '2.75rem 2rem',
           borderRadius: '24px',
           border: '1px solid var(--border-medium, rgba(255, 255, 255, 0.12))',
-          boxShadow:
-            '0 24px 64px rgba(0, 0, 0, 0.85), 0 0 35px var(--accent-glow, rgba(0, 133, 255, 0.15))',
+          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.85)',
           textAlign: 'center',
           maxWidth: '420px',
           width: '100%',
@@ -48,8 +45,7 @@ export default function LoginPage() {
             overflow: 'hidden',
             margin: '0 auto 1.25rem',
             border: '1.5px solid rgba(255, 255, 255, 0.15)',
-            boxShadow:
-              '0 0 25px var(--accent-glow, rgba(0, 133, 255, 0.25)), 0 8px 24px rgba(0, 0, 0, 0.7)',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.7)',
             background: '#000',
           }}
         >

@@ -93,7 +93,6 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
             width: `${safeProgress}%`,
             background:
               'linear-gradient(90deg, var(--accent-primary), var(--accent-primary-light, #38bdf8))',
-            boxShadow: '0 0 16px var(--accent-glow)',
           }}
         >
           {/* Puck Head */}
