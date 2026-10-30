@@ -10,6 +10,12 @@ export default function GoogleSignInButton({
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const [standalone] = useState(
+    () =>
+      window.matchMedia?.('(display-mode: standalone)').matches ||
+      ('standalone' in navigator && navigator.standalone === true),
+  );
+  const redirectFailed = new URLSearchParams(window.location.search).get('authError') === 'google';
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const handleSuccess = async ({ credential }: CredentialResponse) => {
@@ -39,6 +45,11 @@ export default function GoogleSignInButton({
       >
         Continuar con Google
       </Button>
+      {redirectFailed && (
+        <p role="alert" className="text-sm text-destructive">
+          No se ha podido iniciar sesión con Google. Vuelve a intentarlo.
+        </p>
+      )}
       <dialog
         ref={dialog}
         className="google-sign-in-dialog"
@@ -60,6 +71,12 @@ export default function GoogleSignInButton({
         <div className="flex justify-center" style={{ paddingBlock: '1rem' }} aria-busy={pending}>
           <div hidden={pending}>
             <GoogleLogin
+              ux_mode={standalone ? 'redirect' : 'popup'}
+              login_uri={
+                standalone
+                  ? new URL('/api/auth/login/redirect', window.location.origin).href
+                  : undefined
+              }
               onSuccess={handleSuccess}
               onError={() =>
                 setError('Inicio de sesión cancelado o fallido. Puedes volver a intentarlo.')

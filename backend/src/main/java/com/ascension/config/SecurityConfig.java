@@ -97,7 +97,7 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain authFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/api/auth/login", "/api/auth/refresh", "/api/auth/logout", "/api/auth/config")
+            .securityMatcher("/api/auth/login", "/api/auth/login/redirect", "/api/auth/refresh", "/api/auth/logout", "/api/auth/config")
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
@@ -204,6 +204,15 @@ public class SecurityConfig {
         configuration.setExposedHeaders(Arrays.asList("Content-Type", "X-AI-Model", "Content-Disposition"));
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration redirectConfiguration = new CorsConfiguration();
+        List<String> redirectOrigins = new java.util.ArrayList<>(origins);
+        redirectOrigins.removeIf("*"::equals);
+        redirectOrigins.add("https://accounts.google.com");
+        redirectConfiguration.setAllowedOrigins(redirectOrigins);
+        redirectConfiguration.setAllowedMethods(List.of("POST"));
+        redirectConfiguration.setAllowedHeaders(List.of("Content-Type"));
+        redirectConfiguration.setAllowCredentials(true);
+        source.registerCorsConfiguration("/api/auth/login/redirect", redirectConfiguration);
         source.registerCorsConfiguration("/api/**", configuration);
         return source;
     }

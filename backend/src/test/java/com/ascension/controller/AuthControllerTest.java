@@ -56,6 +56,80 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 class AuthControllerTest {
 
+    @Test
+    void redirectLogin_RejectsMissingCsrfWithoutVerifyingIdentity() throws Exception {
+        mockMvc.perform(post("/api/auth/login/redirect")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("credential", "test-google-credential")
+                .param("g_csrf_token", "test-csrf"))
+                .andExpect(status().isSeeOther())
+                .andExpect(header().string("Location", "/login?authError=google"))
+                .andExpect(cookie().doesNotExist("refreshToken"));
+        org.mockito.Mockito.verifyNoInteractions(googleIdTokenVerifier, refreshTokenService);
+    }
+
+    @Test
+    void redirectLogin_RejectsMismatchedCsrfWithoutVerifyingIdentity() throws Exception {
+        mockMvc.perform(post("/api/auth/login/redirect")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .cookie(new jakarta.servlet.http.Cookie("g_csrf_token", "different-csrf"))
+                .param("credential", "test-google-credential")
+                .param("g_csrf_token", "test-csrf"))
+                .andExpect(status().isSeeOther())
+                .andExpect(header().string("Location", "/login?authError=google"));
+        org.mockito.Mockito.verifyNoInteractions(googleIdTokenVerifier, refreshTokenService);
+    }
+
+    @Test
+    void redirectLogin_VerifiesIdentityAndReturnsSessionCookieWithoutTokensInUrl() throws Exception {
+        var idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
+        var payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
+        payload.setEmailVerified(true);
+        payload.setEmail("pwa@example.invalid");
+        payload.setSubject("google-sub-pwa-fixture");
+        when(idToken.getPayload()).thenReturn(payload);
+        when(googleIdTokenVerifier.verify("test-google-credential")).thenReturn(idToken);
+        var refreshToken = new RefreshToken();
+        refreshToken.setPlainToken("fixture-refresh-session");
+        when(refreshTokenService.createRefreshToken("pwa@example.invalid")).thenReturn(refreshToken);
+
+        mockMvc.perform(post("/api/auth/login/redirect")
+                .header("Origin", "https://accounts.google.com")
+                .header("X-Forwarded-Proto", "https")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .cookie(new jakarta.servlet.http.Cookie("g_csrf_token", "test-csrf"))
+                .param("credential", "test-google-credential")
+                .param("g_csrf_token", "test-csrf"))
+                .andExpect(status().isSeeOther())
+                .andExpect(header().string("Location", "/"))
+                .andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(cookie().httpOnly("refreshToken", true))
+                .andExpect(cookie().secure("refreshToken", true))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(""));
+    }
+
+    @Test
+    void redirectLogin_DoesNotAllowGoogleOriginOnOrdinaryJsonLogin() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                .header("Origin", "https://accounts.google.com")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"test-google-credential\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void redirectLogin_RejectsInvalidGoogleCredentialWithoutCreatingSession() throws Exception {
+        mockMvc.perform(post("/api/auth/login/redirect")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .cookie(new jakarta.servlet.http.Cookie("g_csrf_token", "test-csrf"))
+                .param("credential", "invalid-google-credential")
+                .param("g_csrf_token", "test-csrf"))
+                .andExpect(status().isSeeOther())
+                .andExpect(header().string("Location", "/login?authError=google"))
+                .andExpect(cookie().doesNotExist("refreshToken"));
+        org.mockito.Mockito.verifyNoInteractions(refreshTokenService);
+    }
+
     @Autowired
     private MockMvc mockMvc;
 
