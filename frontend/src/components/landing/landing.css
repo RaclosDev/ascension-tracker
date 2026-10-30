@@ -1,0 +1,159 @@
+/* Public landing. Dark steel and electric blue: the page is black, the accent is the one
+   blue the app already uses, and the graffiti marks come from the brand logo. */
+.landing {
+  --landing-bg: #050507;
+  --landing-ink: #f4f4f5;
+  --landing-muted: #a1a1aa;
+  --landing-blue: var(--accent-primary, #0085ff);
+  --landing-steel: rgba(255, 255, 255, 0.14);
+  background: var(--landing-bg);
+  color: var(--landing-ink);
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+
+.landing-display {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 0.92;
+}
+
+/* Blue tag word inside the headline: italic, tilted, with a marker stroke under it. */
+.landing-tag {
+  display: inline-block;
+  color: var(--landing-blue);
+  font-style: italic;
+  transform: rotate(-2deg);
+  position: relative;
+}
+.landing-tag svg {
+  position: absolute;
+  left: -2%;
+  right: -4%;
+  bottom: -0.18em;
+  width: 106%;
+  height: 0.28em;
+}
+
+/* White block button with a blue paint drip, the template's CTA. */
+.landing-drip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 48px;
+  padding: 0 1.25rem;
+  background: #fff;
+  color: #09090b;
+  border: 1px solid #fff;
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.95rem;
+  transition: transform 160ms ease;
+}
+.landing-drip:hover {
+  transform: translateY(-1px);
+}
+.landing-drip:focus-visible {
+  outline: 2px solid var(--landing-blue);
+  outline-offset: 3px;
+}
+.landing-drip svg.drip {
+  position: absolute;
+  left: 0.6rem;
+  right: 0.6rem;
+  top: 100%;
+  width: calc(100% - 1.2rem);
+  height: 14px;
+  color: var(--landing-blue);
+}
+
+/* Vertical neon strips behind the hero, like the vault lights in the template. */
+.landing-hero::before,
+.landing-hero::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--landing-blue) 30%,
+    var(--landing-blue) 60%,
+    transparent
+  );
+  opacity: 0.55;
+  pointer-events: none;
+}
+.landing-hero::before {
+  left: 6%;
+}
+.landing-hero::after {
+  right: 8%;
+}
+
+/* Phone shot inside a steel frame. */
+.landing-vault {
+  position: relative;
+  border: 1px solid var(--landing-steel);
+  background: #0c0c10;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.8),
+    0 30px 60px rgba(0, 0, 0, 0.7);
+}
+.landing-vault::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+/* Three tilted shots, fanned like a hand of cards. */
+.landing-card {
+  border: 1px solid var(--landing-steel);
+  background: #0c0c10;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6);
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.landing-card:hover {
+  transform: translateY(-8px) rotate(0deg) !important;
+}
+
+/* Entrance: headline and shot slide up once. */
+@keyframes landing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.landing-rise {
+  animation: landing-rise 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.landing-rise-2 {
+  animation-delay: 120ms;
+}
+.landing-rise-3 {
+  animation-delay: 240ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-rise {
+    animation: none;
+  }
+  .landing-card,
+  .landing-drip {
+    transition: none;
+  }
+  .landing-card:hover {
+    transform: none !important;
+  }
+}
