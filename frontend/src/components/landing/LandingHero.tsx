@@ -1,7 +1,6 @@
 import React from 'react';
-import { GoogleLogin } from '@react-oauth/google';
+import GoogleSignInButton from '../GoogleSignInButton';
 import { Crown, ArrowDown } from 'lucide-react';
-import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
 
@@ -63,29 +62,14 @@ export default function LandingHero() {
 
         <div id="entrar" className="mt-7 flex flex-wrap items-center gap-5">
           <div className="flex min-h-11 items-center">
-            <GoogleLogin
-              onSuccess={async (credentialResponse) => {
-                try {
-                  const res = await api.post<{ token?: string }>('/auth/login', {
-                    token: credentialResponse.credential,
-                  });
-                  if (res.data?.token) {
-                    login(res.data.token);
-                  } else {
-                    toast.error('Respuesta de autenticación no válida');
-                  }
-                } catch {
-                  toast.error(
-                    'No se pudo iniciar sesión. Comprueba tu conexión o inténtalo más tarde.',
-                  );
-                }
+            <GoogleSignInButton
+              onCredential={async (credential) => {
+                const res = await api.post<{ token?: string }>('/auth/login', {
+                  token: credential,
+                });
+                if (!res.data.token) throw new Error('Invalid authentication response');
+                login(res.data.token);
               }}
-              onError={() => {
-                toast.error('Error al conectar con Google. Por favor, inténtalo de nuevo.');
-              }}
-              theme="filled_black"
-              shape="pill"
-              text="continue_with"
             />
           </div>
           <a
