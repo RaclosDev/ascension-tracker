@@ -5606,46 +5606,22 @@ input[type="range"]:active::-moz-range-thumb {
 
 /* Mobile & PWA Sensory Elevation: View Transitions, Haptics & Micro-Physics */
 
-/* 1. Native View Transitions API */
-@view-transition {
-  navigation: auto;
+/* 1. Route change: fade only the page content. Header, sidebar and bottom nav stay still.
+   Opacity only, no transform, so fixed-position modals inside pages keep the viewport
+   as their containing block. */
+.route-fade {
+  animation: routeFadeIn 180ms cubic-bezier(0, 0, 0.2, 1) backwards;
 }
 
-::view-transition-old(root) {
-  animation: 160ms cubic-bezier(0.4, 0, 1, 1) both vtPageFadeOut;
-}
-
-::view-transition-new(root) {
-  animation: 200ms cubic-bezier(0, 0, 0.2, 1) both vtPageFadeIn;
-}
-
-@keyframes vtPageFadeOut {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.985);
-  }
-}
-
-@keyframes vtPageFadeIn {
+@keyframes routeFadeIn {
   from {
     opacity: 0;
-    transform: scale(1.015);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) {
-    animation: none !important;
+  .route-fade {
+    animation: none;
   }
 }
 
