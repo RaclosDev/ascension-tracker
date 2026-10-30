@@ -49,8 +49,9 @@ export function SettingsThemeSection({
                 onChange={(e) => onColorChange(e.target.value)}
                 aria-label="Selector de color personalizado"
                 style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '44px',
+                  height: '44px',
+                  flexShrink: 0,
                   padding: '0',
                   border: 'none',
                   borderRadius: '8px',
@@ -58,25 +59,24 @@ export function SettingsThemeSection({
                   background: 'none',
                 }}
               />
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {presets.map((color) => (
                   <button
                     key={color}
                     type="button"
                     onClick={() => onColorChange(color)}
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      background: color,
-                      border: customColor === color ? '2px solid white' : '2px solid transparent',
-                      cursor: 'pointer',
-                      padding: 0,
-                      transition: 'transform 0.1s',
-                    }}
+                    className="flex items-center justify-center w-11 h-11 p-0 bg-transparent border-none cursor-pointer"
                     title={color}
                     aria-label={`Color ${color}`}
-                  />
+                  >
+                    <span
+                      className="block w-8 h-8 rounded-full"
+                      style={{
+                        background: color,
+                        border: customColor === color ? '2px solid white' : '2px solid transparent',
+                      }}
+                    />
+                  </button>
                 ))}
               </div>
             </div>

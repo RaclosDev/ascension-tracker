@@ -100,7 +100,7 @@ export function MuscleRecovery({
             <button
               type="button"
               onClick={() => setModalOpen(true)}
-              className="flex items-center gap-1 text-left group cursor-pointer hover:opacity-85 transition-opacity"
+              className="flex items-center gap-1 min-h-11 -my-3 text-left group cursor-pointer hover:opacity-85 transition-opacity"
               aria-label="Ver detalle de recuperación muscular"
             >
               <h3
@@ -171,7 +171,7 @@ export function MuscleRecovery({
           <button
             type="button"
             onClick={() => setModalOpen(true)}
-            className="text-[11px] font-semibold text-center mt-2.5 w-full text-[var(--accent-primary-light)] hover:underline flex items-center justify-center gap-0.5 cursor-pointer"
+            className="text-[11px] font-semibold text-center mt-0.5 -mb-3 min-h-11 w-full text-[var(--accent-primary-light)] hover:underline flex items-center justify-center gap-0.5 cursor-pointer"
           >
             +{musclesToRecover.length - 5} más · Ver todos
           </button>
@@ -180,7 +180,7 @@ export function MuscleRecovery({
             <button
               type="button"
               onClick={() => setModalOpen(true)}
-              className="text-[11px] font-medium text-center mt-2 w-full text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors cursor-pointer"
+              className="text-[11px] font-medium text-center mt-0.5 -mb-3 min-h-11 w-full text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors cursor-pointer"
             >
               Ver detalle
             </button>

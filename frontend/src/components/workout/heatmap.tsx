@@ -78,8 +78,12 @@ export function ActivityHeatmap({ history }: { history: CompletedWorkout[] }) {
             color: 'var(--text-secondary)',
             cursor: 'pointer',
             padding: '0.25rem',
+            minWidth: '44px',
+            minHeight: '44px',
+            margin: '-0.5rem',
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           <svg
@@ -127,8 +131,12 @@ export function ActivityHeatmap({ history }: { history: CompletedWorkout[] }) {
             color: monthOffset >= 0 ? 'var(--bg-glass-strong)' : 'var(--text-secondary)',
             cursor: monthOffset >= 0 ? 'not-allowed' : 'pointer',
             padding: '0.25rem',
+            minWidth: '44px',
+            minHeight: '44px',
+            margin: '-0.5rem',
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           <svg
