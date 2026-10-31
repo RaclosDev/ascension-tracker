@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, Suspense, startTransition } from 'react';
+import { useState, useRef, useEffect, Suspense, startTransition, CSSProperties } from 'react';
 import { UserSettings } from '../types/api';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/client';
@@ -97,27 +97,15 @@ export default function Layout() {
     return () => document.removeEventListener('pointerdown', handleClick);
   }, [moreMenuOpen]);
 
+  // The page fades in on its own (.route-fade); a whole-document View Transition used to
+  // animate the fixed header and nav too, and captured the old page because the router
+  // commits inside its own transition.
   const navigateTo = (path: string) => {
     if (location.pathname !== path) {
       haptics.light();
-      if (
-        typeof document !== 'undefined' &&
-        'startViewTransition' in document &&
-        typeof (document as unknown as { startViewTransition: (cb: () => void) => void })
-          .startViewTransition === 'function'
-      ) {
-        (
-          document as unknown as { startViewTransition: (cb: () => void) => void }
-        ).startViewTransition(() => {
-          startTransition(() => {
-            navigate(path);
-          });
-        });
-      } else {
-        startTransition(() => {
-          navigate(path);
-        });
-      }
+      startTransition(() => {
+        navigate(path);
+      });
     }
   };
 
@@ -140,6 +128,11 @@ export default function Layout() {
 
   const closeSidebar = () => setSidebarOpen(false);
   const isMoreActive = moreMenuPaths.includes(location.pathname);
+  const bottomItems = navItems.filter((i) => bottomNavPaths.includes(i.path));
+  // Index of the highlighted tab; the "Más" button is the last slot. -1 hides the pill.
+  const activeBottomIndex = isMoreActive
+    ? bottomItems.length
+    : bottomItems.findIndex((i) => i.path === location.pathname);
   if (needsOnboarding && !loadingConfig) {
     return <OnboardingScreen onComplete={() => window.location.reload()} />;
   }
@@ -222,7 +215,9 @@ export default function Layout() {
                 </div>
               }
             >
-              <Outlet />
+              <div key={location.pathname} className="route-fade">
+                <Outlet />
+              </div>
             </Suspense>
           </div>
         </main>
@@ -235,47 +230,59 @@ export default function Layout() {
       <nav
         className={`mobile-bottom-nav${hideNav ? ' nav-hidden' : ''}`}
         aria-label="Navegación inferior"
+        style={
+          {
+            '--nav-count': bottomItems.length + 1,
+            '--nav-active': Math.max(activeBottomIndex, 0),
+          } as CSSProperties
+        }
       >
-        {navItems
-          .filter((i) => bottomNavPaths.includes(i.path))
-          .map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <button
-                key={item.path}
-                type="button"
-                className={`mobile-bottom-item ${isActive ? 'active' : ''}`}
-                onMouseEnter={() => preloadRoute(item.path)}
-                onTouchStart={() => preloadRoute(item.path)}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setMoreMenuOpen(false);
-                  navigateTo(item.path);
-                }}
-                aria-label={item.label}
-                aria-current={isActive ? 'page' : undefined}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <span className="mobile-bottom-icon" style={{ pointerEvents: 'none' }}>
-                  {item.icon}
-                </span>
-                <span className="mobile-bottom-label" style={{ pointerEvents: 'none' }}>
-                  {item.shortLabel}
-                </span>
-                {isActive && (
-                  <span className="mobile-bottom-indicator" style={{ pointerEvents: 'none' }} />
-                )}
-              </button>
-            );
-          })}
+        {/* One shared highlight that slides between tabs instead of appearing on each one */}
+        <span
+          className={`mobile-bottom-pill${activeBottomIndex < 0 ? ' is-hidden' : ''}`}
+          aria-hidden="true"
+        >
+          <span className="mobile-bottom-pill-glow" />
+          <span className="mobile-bottom-pill-ghost">&nbsp;</span>
+        </span>
+        {bottomItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <button
+              key={item.path}
+              type="button"
+              className={`mobile-bottom-item ${isActive ? 'active' : ''}`}
+              onMouseEnter={() => preloadRoute(item.path)}
+              onTouchStart={() => preloadRoute(item.path)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setMoreMenuOpen(false);
+                navigateTo(item.path);
+              }}
+              aria-label={item.label}
+              aria-current={isActive ? 'page' : undefined}
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <span className="mobile-bottom-icon" style={{ pointerEvents: 'none' }}>
+                {item.icon}
+              </span>
+              <span className="mobile-bottom-label" style={{ pointerEvents: 'none' }}>
+                {item.shortLabel}
+              </span>
+              {isActive && (
+                <span className="mobile-bottom-indicator" style={{ pointerEvents: 'none' }} />
+              )}
+            </button>
+          );
+        })}
         {/* Botón 'Más' */}
         <button
           type="button"
