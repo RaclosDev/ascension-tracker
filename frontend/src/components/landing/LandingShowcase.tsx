@@ -3,7 +3,7 @@ import React from 'react';
 const shots = [
   {
     src: '/landing/workout.webp',
-    alt: 'Pestaña de entreno con el botón de empezar, la recuperación muscular y el calendario de actividad',
+    alt: 'Entrenamiento en curso: series de press de banca con kilos y repeticiones, dos completadas, y el temporizador de descanso',
     tilt: '-rotate-6 lg:-translate-y-2',
   },
   {
