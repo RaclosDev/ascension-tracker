@@ -3,6 +3,24 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { DayCellProps } from '../../types/tracking';
 
+// Below 769px .hide-on-mobile drops the visible unit, so screen readers get it in parentheses
+// instead; parentheses keep the visible text a contiguous part of the button's name (WCAG 2.5.3).
+const MetricUnit = ({ visible, spoken }: { visible: string; spoken: string }) => (
+  <>
+    <span className="hide-on-mobile" style={{ fontWeight: 400, opacity: 0.7, marginLeft: '2px' }}>
+      {' '}
+      {visible}
+    </span>
+    <span className="sr-only min-[769px]:hidden"> ({spoken})</span>
+  </>
+);
+
+const EmptyMetric = () => (
+  <span aria-hidden="true" style={{ opacity: 0.3 }}>
+    -
+  </span>
+);
+
 export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
   ({ dateStr, dayName, dayData, isToday, onOpenModal, showWeight, showSteps, showCalories }) => {
     const isFuture = dateStr > format(new Date(), 'yyyy-MM-dd');
@@ -21,22 +39,12 @@ export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
     };
 
     const formattedDate = format(new Date(dateStr + 'T00:00:00'), 'd MMM', { locale: es });
-    const metricsAria = [
-      showWeight && dayData.weight !== null ? `peso ${dayData.weight.toFixed(2)} kilos` : '',
-      showSteps && dayData.steps !== null ? `${Math.round(dayData.steps)} pasos` : '',
-      showCalories && dayData.calories !== null ? `${Math.round(dayData.calories)} calorías` : '',
-    ]
-      .filter(Boolean)
-      .join(', ');
-
-    const accessibleLabel = `${dayName} ${formattedDate}${isToday ? ', hoy' : ''}${isFuture ? ', fecha futura' : ''}${metricsAria ? `, ${metricsAria}` : ''}`;
 
     return (
       <div
         role="button"
         tabIndex={isFuture ? -1 : 0}
         aria-disabled={isFuture}
-        aria-label={accessibleLabel}
         onKeyDown={handleKeyDown}
         className={`calendar-day ${isToday ? 'is-today' : ''} ${isFuture ? 'is-future' : ''}`}
         onClick={handleClick}
@@ -47,9 +55,8 @@ export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
           flexDirection: 'column',
         }}
       >
-        <div className="calendar-day-name">{dayName}</div>
+        <div className="calendar-day-name">{dayName}</div>{' '}
         <div className="calendar-day-date">{formattedDate}</div>
-
         <div
           style={{
             display: 'flex',
@@ -82,15 +89,10 @@ export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
               {dayData.weight !== null ? (
                 <>
                   {dayData.weight.toFixed(2)}
-                  <span
-                    className="hide-on-mobile"
-                    style={{ fontWeight: 400, opacity: 0.5, marginLeft: '2px' }}
-                  >
-                    kg
-                  </span>
+                  <MetricUnit visible="kg" spoken="kilos" />
                 </>
               ) : (
-                <span style={{ opacity: 0.3 }}>-</span>
+                <EmptyMetric />
               )}
             </div>
           )}
@@ -114,15 +116,10 @@ export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
               {dayData.steps !== null ? (
                 <>
                   {Math.round(dayData.steps)}
-                  <span
-                    className="hide-on-mobile"
-                    style={{ fontWeight: 400, opacity: 0.7, marginLeft: '2px' }}
-                  >
-                    pas
-                  </span>
+                  <MetricUnit visible="pas" spoken="pasos" />
                 </>
               ) : (
-                <span style={{ opacity: 0.3 }}>-</span>
+                <EmptyMetric />
               )}
             </div>
           )}
@@ -146,19 +143,16 @@ export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
               {dayData.calories !== null ? (
                 <>
                   {Math.round(dayData.calories)}
-                  <span
-                    className="hide-on-mobile"
-                    style={{ fontWeight: 400, opacity: 0.7, marginLeft: '2px' }}
-                  >
-                    kcal
-                  </span>
+                  <MetricUnit visible="kcal" spoken="calorías" />
                 </>
               ) : (
-                <span style={{ opacity: 0.3 }}>-</span>
+                <EmptyMetric />
               )}
             </div>
           )}
         </div>
+        {isToday && <span className="sr-only">, hoy</span>}
+        {isFuture && <span className="sr-only">, fecha futura</span>}
       </div>
     );
   },

@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Single source of truth for the tables that hold a user's rows. Account deletion wipes all of
- * them; a restore only wipes the ones a backup can repopulate. UserOwnedTablesSchemaTest fails
- * when a migration adds a table with a user column that is missing here.
+ * Tables holding a user's rows: account deletion wipes all of them, a restore only the restorable ones.
+ * UserOwnedTablesSchemaTest fails when a migration adds a user table that is missing here.
  */
 final class UserOwnedTables {
 

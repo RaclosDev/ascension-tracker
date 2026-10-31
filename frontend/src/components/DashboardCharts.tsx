@@ -26,7 +26,6 @@ export default React.memo(function DashboardCharts({
 }: DashboardChartsProps) {
   return (
     <div className="charts-grid">
-      {/* Weight Evolution Chart */}
       <div className="chart-card full-width">
         <div className="chart-title">Evolución de Peso</div>
         <div className="chart-wrapper">
@@ -91,7 +90,6 @@ export default React.memo(function DashboardCharts({
         </div>
       </div>
 
-      {/* Delta Chart */}
       <div className="chart-card">
         <div className="chart-title">Variación Semanal (Δ)</div>
         <div className="chart-wrapper">

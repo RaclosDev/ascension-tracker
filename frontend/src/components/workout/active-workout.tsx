@@ -66,16 +66,14 @@ export function ActiveWorkout() {
             style={{
               fontSize: '0.85rem',
               fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '0.16em',
               color: 'var(--text-secondary)',
             }}
           >
             Entrenar
           </p>
-          <h1 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <h2 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
             Sin sesión activa
-          </h1>
+          </h2>
         </header>
         <EmptyCard
           title="Empieza cuando quieras"
@@ -194,8 +192,6 @@ function LiveSession() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.3rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
                 }}
               >
                 <Edit3 size={11} />
@@ -207,8 +203,6 @@ function LiveSession() {
                   fontSize: '0.75rem',
                   fontWeight: 600,
                   color: 'var(--accent-primary)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
                 }}
               >
                 En curso
@@ -340,11 +334,9 @@ function LiveSession() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span
                   style={{
-                    fontSize: '0.65rem',
+                    fontSize: '0.75rem',
                     color: 'var(--text-secondary)',
                     fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
                   }}
                 >
                   Fecha y hora del entreno
@@ -413,11 +405,9 @@ function LiveSession() {
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span
                   style={{
-                    fontSize: '0.65rem',
+                    fontSize: '0.75rem',
                     color: 'var(--text-secondary)',
                     fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
                   }}
                 >
                   Duración
@@ -582,7 +572,6 @@ function FooterActions() {
           Cancelar edición
         </button>
 
-        {/* Modal de confirmación para cancelar edición */}
         <AlertDialog open={cancelEditOpen} onOpenChange={setCancelEditOpen}>
           <AlertDialogContent
             className="card"

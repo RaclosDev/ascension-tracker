@@ -45,7 +45,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         String path = request.getRequestURI();
         String method = request.getMethod();
 
-        // 1. Specific endpoint bucket check (login, refresh, logout, import, restore, export, ai, food-external, push, user)
+        // A request must pass its endpoint group bucket and, for authenticated writes, the per-user bucket.
         String group = groupOf(path);
         if (group != null) {
             int capacity = capacityForGroup(group);
@@ -56,7 +56,6 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             }
         }
 
-        // 2. Generic per-user rate limit for mutating operations (writes: POST, PUT, DELETE, PATCH)
         if (isWriteMethod(method)) {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
@@ -96,7 +95,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         if (path == null) {
             return null;
         }
-        // Specific dedicated endpoint buckets
+        // Exact endpoints first: the prefix groups below would also match them.
         if (path.equals("/api/auth/login") || path.startsWith("/api/auth/login/")) {
             return "login";
         }

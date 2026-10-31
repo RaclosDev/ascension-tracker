@@ -20,8 +20,7 @@ import java.util.concurrent.TimeUnit;
 public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
-    // Rows reference their owner by email. Every foreign key to users(email) cascades updates
-    // (V28), so changeEmail moves all of a user's data in a single UPDATE.
+    // Every foreign key to users(email) cascades updates, so changeEmail moves all user data in one UPDATE.
 
     public record User(
             String email,
@@ -38,7 +37,7 @@ public class UserService {
 
     private final JdbcTemplate jdbcTemplate;
 
-    // 30-second TTL Caffeine cache to protect DB against high-frequency token checks
+    // Short-lived cache so per-request token checks do not hit the database.
     private final Cache<String, UserSecurityState> securityCache = Caffeine.newBuilder()
             .expireAfterWrite(30, TimeUnit.SECONDS)
             .maximumSize(10_000)
@@ -99,7 +98,6 @@ public class UserService {
                      "google_sub = COALESCE(users.google_sub, EXCLUDED.google_sub)";
         jdbcTemplate.update(sql, cleanEmail, name, picture, googleSub);
 
-        // Refresh cache entry
         findByEmail(cleanEmail).ifPresent(user ->
                 securityCache.put(cleanEmail.toLowerCase(Locale.ROOT), new UserSecurityState(true, user.tokensValidAfter()))
         );
@@ -150,10 +148,8 @@ public class UserService {
     }
 
     /**
-     * Moves an account to a new email when its Google subject is unchanged but the address is not,
-     * for example after the user renames their Google account. The update cascades to every
-     * user-owned table. Sessions issued before the change are revoked: refresh tokens are deleted
-     * and tokens_valid_after is reset, so other devices must sign in again.
+     * Moves an account to a new email after the user renames their Google account; the update
+     * cascades to every user-owned table and revokes earlier sessions, so other devices sign in again.
      *
      * @return true when an account with this subject and old email was moved
      */

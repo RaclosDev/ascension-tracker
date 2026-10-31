@@ -7,11 +7,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * Utility helper to mask Personally Identifiable Information (PII),
- * specifically email addresses and user identifiers, before printing to application logs.
- *
- * Uses HMAC-SHA256 with a configurable secret key (via APP_PII_SALT environment variable
- * or system property) to prevent rainbow-table and candidate dictionary attacks against logs.
+ * Masks emails and OAuth subjects for logs with HMAC-SHA256 keyed by APP_PII_SALT (env var or
+ * system property), so logged identifiers resist dictionary and rainbow-table attacks.
  */
 public final class PiiMasker {
 
@@ -33,24 +30,18 @@ public final class PiiMasker {
     }
 
     /**
-     * Returns an HMAC-SHA256 keyed, deterministic 64-bit truncated pseudonym for the provided email.
-     * Prevents dictionary and rainbow-table attacks against logged user identifiers.
-     * Example: "athlete@example.com" -> "usr_3a9f1b2c4d5e6f7a"
+     * Returns a deterministic 64-bit pseudonym, e.g. "athlete@example.com" -> "usr_3a9f1b2c4d5e6f7a".
      *
-     * @param email raw email string
-     * @return masked pseudonym, or "[anonymous]" if null/empty
+     * @return the pseudonym, or "[anonymous]" if null/empty
      */
     public static String maskEmail(String email) {
         return pseudonym(email == null ? null : email.trim().toLowerCase(), "usr_");
     }
 
     /**
-     * Returns the same kind of keyed pseudonym for an OAuth subject identifier (Google "sub"),
-     * so security alerts stay correlatable without logging the raw identifier.
-     * Example: "109876543210" -> "sub_5c1e0a7f9b2d3e4f"
+     * Same pseudonym for a Google "sub", so security alerts stay correlatable without the raw ID.
      *
-     * @param subject raw subject identifier
-     * @return masked pseudonym, or "[anonymous]" if null/empty
+     * @return the pseudonym, or "[anonymous]" if null/empty
      */
     public static String maskSubject(String subject) {
         return pseudonym(subject == null ? null : subject.trim(), "sub_");

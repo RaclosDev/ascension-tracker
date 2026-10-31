@@ -62,7 +62,6 @@ export default function RecipeFormModal({
     }
   }, [isOpen, editingRecipeId]);
 
-  // Update macros when ingredients change
   useEffect(() => {
     if (ingredients.length > 0) {
       const totals = ingredients.reduce(

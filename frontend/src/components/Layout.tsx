@@ -260,7 +260,6 @@ export default function Layout() {
                 setMoreMenuOpen(false);
                 navigateTo(item.path);
               }}
-              aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
               style={{
                 width: '100%',

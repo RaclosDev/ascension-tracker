@@ -13,46 +13,60 @@ const HistoryView = lazyWithRetry(() => import('../components/workout/history'))
 const TemplatesView = lazyWithRetry(() => import('../components/workout/templates'));
 const ExercisesView = lazyWithRetry(() => import('../components/workout/exercises-view'));
 
+const VIEW_OPTIONS = [
+  { label: 'Resumen', value: 'home' },
+  { label: 'Historial', value: 'history' },
+  { label: 'Plantillas', value: 'templates' },
+  { label: 'Ejercicios', value: 'exercises' },
+];
+
 export default function WorkoutPage() {
   const tab = useWorkoutStore((s) => s.tab);
   const { data: exercises, isLoading, isError, refetch } = useExerciseCatalog();
+  const pageTitle = <h1 className="sr-only">Entreno</h1>;
+  // Resumen and Ejercicios put their sections at h3, so the view's name fills the h2 level.
+  const viewTitle = VIEW_OPTIONS.find((o) => o.value === tab)?.label;
 
   if (isLoading) {
-    return <WorkoutPageSkeleton />;
+    return (
+      <>
+        {pageTitle}
+        <WorkoutPageSkeleton />
+      </>
+    );
   }
 
   if (isError || !exercises) {
     return (
-      <div
-        className="p-6 text-center flex flex-col items-center justify-center gap-4 my-8 bg-red-950/20 border border-red-800/40 rounded-2xl"
-        role="alert"
-        aria-live="assertive"
-      >
-        <p className="text-red-400 font-medium">No se pudo cargar el catálogo de ejercicios.</p>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="btn btn-secondary px-4 py-2 text-sm"
-          aria-label="Reintentar carga del catálogo de ejercicios"
+      <>
+        {pageTitle}
+        <div
+          className="p-6 text-center flex flex-col items-center justify-center gap-4 my-8 bg-red-950/20 border border-red-800/40 rounded-2xl"
+          role="alert"
+          aria-live="assertive"
         >
-          Reintentar
-        </button>
-      </div>
+          <p className="text-red-400 font-medium">No se pudo cargar el catálogo de ejercicios.</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="btn btn-secondary px-4 py-2 text-sm"
+            aria-label="Reintentar carga del catálogo de ejercicios"
+          >
+            Reintentar
+          </button>
+        </div>
+      </>
     );
   }
 
   return (
     <ErrorBoundary>
+      {pageTitle}
       <div className="fade-in">
         <div className="workout-page-wrapper">
           {tab !== 'train' && (
             <SegmentedControl
-              options={[
-                { label: 'Resumen', value: 'home' },
-                { label: 'Historial', value: 'history' },
-                { label: 'Plantillas', value: 'templates' },
-                { label: 'Ejercicios', value: 'exercises' },
-              ]}
+              options={VIEW_OPTIONS}
               value={tab}
               onChange={(val) =>
                 useWorkoutStore
@@ -62,6 +76,7 @@ export default function WorkoutPage() {
               className="mb-6"
             />
           )}
+          {viewTitle && <h2 className="sr-only">{viewTitle}</h2>}
 
           <Suspense
             fallback={

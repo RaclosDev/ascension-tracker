@@ -26,7 +26,6 @@ export function ActivityHeatmap({ history }: { history: CompletedWorkout[] }) {
     startOfMonth(addMonths(now, monthOffset - 1)),
   ];
 
-  // Prepare a fast lookup for volume per day
   const volumeByDay = new Map<string, number>();
   let maxVolume = 1;
 
@@ -71,15 +70,21 @@ export function ActivityHeatmap({ history }: { history: CompletedWorkout[] }) {
         }}
       >
         <button
+          type="button"
           onClick={() => setMonthOffset((prev) => prev - 1)}
+          aria-label="Mes anterior"
           style={{
             background: 'transparent',
             border: 'none',
             color: 'var(--text-secondary)',
             cursor: 'pointer',
             padding: '0.25rem',
+            minWidth: '44px',
+            minHeight: '44px',
+            margin: '-0.5rem',
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           <svg
@@ -91,6 +96,7 @@ export function ActivityHeatmap({ history }: { history: CompletedWorkout[] }) {
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
@@ -119,16 +125,22 @@ export function ActivityHeatmap({ history }: { history: CompletedWorkout[] }) {
           </span>
         </h4>
         <button
+          type="button"
           onClick={() => setMonthOffset((prev) => prev + 1)}
           disabled={monthOffset >= 0}
+          aria-label="Mes siguiente"
           style={{
             background: 'transparent',
             border: 'none',
             color: monthOffset >= 0 ? 'var(--bg-glass-strong)' : 'var(--text-secondary)',
             cursor: monthOffset >= 0 ? 'not-allowed' : 'pointer',
             padding: '0.25rem',
+            minWidth: '44px',
+            minHeight: '44px',
+            margin: '-0.5rem',
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           <svg
@@ -140,6 +152,7 @@ export function ActivityHeatmap({ history }: { history: CompletedWorkout[] }) {
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>

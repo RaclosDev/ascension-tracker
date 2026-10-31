@@ -110,7 +110,6 @@ public class WorkoutController {
         return ResponseEntity.ok(workoutService.getExerciseHistory(userEmail, exerciseId));
     }
 
-    // --- Templates ---
     @GetMapping("/templates")
     public ResponseEntity<List<WorkoutTemplateDTO>> getTemplates(@AuthenticationPrincipal Jwt jwt) {
         String userEmail = SecurityUtils.extractEmail(jwt);
@@ -137,7 +136,6 @@ public class WorkoutController {
         return ResponseEntity.noContent().build();
     }
 
-    // --- Custom Exercises ---
     @GetMapping("/custom-exercises")
     public ResponseEntity<List<CustomExerciseDTO>> getCustomExercises(@AuthenticationPrincipal Jwt jwt) {
         String userEmail = SecurityUtils.extractEmail(jwt);

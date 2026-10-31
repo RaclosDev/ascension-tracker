@@ -27,7 +27,7 @@ public class FoodLog {
     @Column(name = "log_date", nullable = false)
     private LocalDate date;
 
-    // We can just store the meal index (0 for breakfast, etc.)
+    // Index into the user's meals (0 for breakfast, etc.).
     @Column(name = "meal_index", nullable = false)
     private int mealIndex;
 

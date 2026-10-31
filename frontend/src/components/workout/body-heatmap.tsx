@@ -131,11 +131,9 @@ export function BodyHeatmap({
       </div>
 
       <div className="flex flex-row items-center justify-center gap-1.5 w-full my-auto">
-        {/* Vista Frontal */}
         <div className="flex-1 min-w-0 max-w-[76px] sm:max-w-[88px] aspect-[1/2] flex items-center justify-center">
           {isReady && <Model type="anterior" {...modelProps} />}
         </div>
-        {/* Vista Posterior */}
         <div className="flex-1 min-w-0 max-w-[76px] sm:max-w-[88px] aspect-[1/2] flex items-center justify-center">
           {isReady && <Model type="posterior" {...modelProps} />}
         </div>

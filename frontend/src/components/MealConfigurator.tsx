@@ -166,12 +166,11 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                         ...provided.draggableProps.style,
                       }}
                     >
-                      {/* Primera Fila: Reordenar, Nombre y Eliminar */}
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <div
                           {...provided.dragHandleProps}
                           style={{
-                            padding: '8px',
+                            padding: '10px',
                             cursor: 'grab',
                             color: 'var(--text-secondary)',
                             display: 'flex',
@@ -210,8 +209,8 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                         <button
                           className="btn"
                           style={{
-                            width: '36px',
-                            height: '36px',
+                            width: '44px',
+                            height: '44px',
                             padding: 0,
                             display: 'flex',
                             alignItems: 'center',
@@ -230,7 +229,6 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                         </button>
                       </div>
 
-                      {/* Tercera Fila: Macros fijos */}
                       <div
                         style={{
                           display: 'grid',
@@ -251,7 +249,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                           <input
                             type="number"
                             className="form-input"
-                            style={{ padding: '6px', fontSize: '0.85rem' }}
+                            style={{ padding: '6px', fontSize: '1rem' }}
                             value={meal.fixedProtein ?? ''}
                             onChange={(e) => {
                               const val = e.target.value;
@@ -277,7 +275,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                           <input
                             type="number"
                             className="form-input"
-                            style={{ padding: '6px', fontSize: '0.85rem' }}
+                            style={{ padding: '6px', fontSize: '1rem' }}
                             value={meal.fixedCarbs ?? ''}
                             onChange={(e) => {
                               const val = e.target.value;
@@ -299,7 +297,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                           <input
                             type="number"
                             className="form-input"
-                            style={{ padding: '6px', fontSize: '0.85rem' }}
+                            style={{ padding: '6px', fontSize: '1rem' }}
                             value={meal.fixedFat ?? ''}
                             onChange={(e) => {
                               const val = e.target.value;
@@ -361,7 +359,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
       </div>
 
       <button
-        className="btn btn-primary"
+        className="btn btn-primary min-h-11"
         onClick={handleSaveAll}
         disabled={saving || loading || meals.length === 0}
       >

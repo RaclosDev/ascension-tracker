@@ -44,7 +44,7 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
       }
 
       if (isDragging.current) {
-        // PREVENT browser's native horizontal scroll or swipe-to-go-back gesture
+        // Block the browser's horizontal scroll and swipe-back gesture.
         if (e.cancelable) {
           e.preventDefault();
         }
@@ -71,7 +71,7 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
       isDragging.current = false;
     };
 
-    // passive: false is CRITICAL here so we can call e.preventDefault()
+    // touchmove must be non-passive so preventDefault() takes effect.
     el.addEventListener('touchstart', handleTouchStart, { passive: true });
     el.addEventListener('touchmove', handleTouchMove, { passive: false });
     el.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -171,7 +171,6 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
         <Trash2 size={18} color="white" />
       </div>
 
-      {/* Swipeable content */}
       <div
         ref={contentRef}
         onClick={offsetX !== 0 ? closeSwipe : undefined}
@@ -187,7 +186,7 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
       >
         {children}
 
-        {/* Desktop overlay buttons, shown only when hovered (simulated PC experience) */}
+        {/* Desktop-only buttons, shown on hover */}
         <div
           className="desktop-swipe-actions"
           style={{
@@ -205,25 +204,25 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
         >
           <button
             type="button"
-            className="icon-btn edit-btn"
+            className="icon-btn edit-btn min-w-11 min-h-11"
             onClick={(e) => {
               e.stopPropagation();
               onEdit();
             }}
             title="Editar"
           >
-            <Edit3 size={16} />
+            <Edit3 size={16} aria-hidden="true" />
           </button>
           <button
             type="button"
-            className="icon-btn delete-btn"
+            className="icon-btn delete-btn min-w-11 min-h-11"
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
             }}
             title="Eliminar"
           >
-            <Trash2 size={16} />
+            <Trash2 size={16} aria-hidden="true" />
           </button>
         </div>
       </div>

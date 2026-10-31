@@ -33,7 +33,6 @@ export default function WeightLossPlan({
   onSave,
   saveButtonText = 'Guardar y Continuar',
 }: WeightLossPlanProps) {
-  // Recuperar último plan guardado en localStorage
   const savedPlan = (() => {
     try {
       return JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}');
@@ -46,7 +45,6 @@ export default function WeightLossPlan({
   const [weeks, setWeeks] = useState<string>(savedPlan.weeks ?? '16');
   const [stepsPct, setStepsPct] = useState<number>(savedPlan.stepsPct ?? 50); // % of deficit from steps
 
-  // Persistir cambios en localStorage
   const persistPlan = (updates: { goalWeight?: string; weeks?: string; stepsPct?: number }) => {
     try {
       const current = JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}');
@@ -56,7 +54,6 @@ export default function WeightLossPlan({
     }
   };
 
-  // Base calculations
   const pAge = parseNumber(age);
   const pHeight = parseNumber(heightCm);
   const pWeight = parseNumber(initialWeightKg);
@@ -65,7 +62,6 @@ export default function WeightLossPlan({
   const bmr = pWeight && pHeight && pAge ? calcBmr(sex, pWeight, pHeight, pAge) : null;
   const tdee = bmr ? calcTdee(bmr, pAct) : null;
 
-  // Plan calculations
   const pGoal = parseNumber(goalWeight);
   const pWeeks = parseNumber(weeks);
 
@@ -79,15 +75,12 @@ export default function WeightLossPlan({
     const dailyDeficitNeeded = totalKcalToLose / totalDays;
     const weeklyRate = totalKgToLose / pWeeks;
 
-    // Split based on slider
     const stepsKcal = dailyDeficitNeeded * (stepsPct / 100);
     const dietDeficit = dailyDeficitNeeded - stepsKcal;
     const dailyIntake = tdee - dietDeficit;
 
-    // How many steps are needed for that kcal?
     const stepsNeeded = Math.round(calcStepsFromKcal(pWeight, stepsKcal));
 
-    // Warnings
     const warnings: { level: 'warning' | 'danger'; msg: string }[] = [];
 
     const ratePct = (weeklyRate / pWeight) * 100;
@@ -245,7 +238,6 @@ export default function WeightLossPlan({
               Reparto del déficit: arrastra para ajustar
             </div>
 
-            {/* Range slider */}
             <input
               type="range"
               min={0}
@@ -358,7 +350,6 @@ export default function WeightLossPlan({
             </div>
           </div>
 
-          {/* Warnings */}
           {plan.warnings.map((w, i) => (
             <div
               key={i}

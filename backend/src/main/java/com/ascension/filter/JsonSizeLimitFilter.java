@@ -16,7 +16,7 @@ import java.io.InputStream;
 @Component
 public class JsonSizeLimitFilter extends OncePerRequestFilter {
 
-    private static final long MAX_JSON_PAYLOAD_SIZE = 5 * 1024 * 1024; // 5 MB
+    private static final long MAX_JSON_PAYLOAD_SIZE = 5 * 1024 * 1024;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -26,7 +26,6 @@ public class JsonSizeLimitFilter extends OncePerRequestFilter {
         if (contentType != null && contentType.toLowerCase().contains("application/json")) {
             long contentLength = request.getContentLengthLong();
             
-            // Fast fail si el Content-Length ya declara que es muy grande
             if (contentLength > MAX_JSON_PAYLOAD_SIZE) {
                 response.setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
                 response.getWriter().write("Payload Too Large: JSON body exceeds limit.");

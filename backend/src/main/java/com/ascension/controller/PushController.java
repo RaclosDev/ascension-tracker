@@ -21,17 +21,11 @@ public class PushController {
         this.pushService = pushService;
     }
 
-    /**
-     * Returns the VAPID public key so the frontend can subscribe.
-     */
     @GetMapping("/vapid-key")
     public ResponseEntity<Map<String, String>> getVapidKey() {
         return ResponseEntity.ok(Map.of("publicKey", pushService.getVapidPublicKey()));
     }
 
-    /**
-     * Save a push subscription for the authenticated user.
-     */
     @PostMapping("/subscribe")
     public ResponseEntity<Void> subscribe(
             @AuthenticationPrincipal Jwt jwt,
@@ -48,7 +42,7 @@ public class PushController {
     }
 
     /**
-     * Unsubscribe.
+     * Without an endpoint, removes every subscription and cancels the pending rest timer.
      */
     @PostMapping("/unsubscribe")
     public ResponseEntity<Void> unsubscribe(
@@ -66,9 +60,6 @@ public class PushController {
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * Schedule a rest timer notification after `delaySec` seconds.
-     */
     @PostMapping("/rest-timer")
     public ResponseEntity<Void> scheduleRest(
             @AuthenticationPrincipal Jwt jwt,
@@ -82,9 +73,6 @@ public class PushController {
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * Cancel a pending rest timer notification.
-     */
     @PostMapping("/rest-timer/cancel")
     public ResponseEntity<Void> cancelRest(@AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);
@@ -93,7 +81,7 @@ public class PushController {
         return ResponseEntity.ok().build();
     }
 
-    // ---- DTOs ----
+    // Request DTOs
 
     public static class SubscriptionRequest {
         @jakarta.validation.constraints.NotBlank

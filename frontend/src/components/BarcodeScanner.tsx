@@ -41,7 +41,6 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const isMountedRef = useRef(true);
 
-  // Inicializar escáner y arrancar cámara
   useEffect(() => {
     isMountedRef.current = true;
     const elementId = 'ascension-barcode-reader';
@@ -53,7 +52,6 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
       setCameraError(null);
 
       try {
-        // Consultar cámaras disponibles
         try {
           const devices = await Html5Qrcode.getCameras();
           if (devices && devices.length > 0 && isMountedRef.current) {
@@ -107,21 +105,21 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
             .stop()
             .then(() => {
               try {
-                /* empty */ scannerRef.current?.clear();
+                scannerRef.current?.clear();
               } catch {
                 /* ignore */
               }
             })
             .catch(() => {
               try {
-                /* empty */ scannerRef.current?.clear();
+                scannerRef.current?.clear();
               } catch {
                 /* ignore */
               }
             });
         } else {
           try {
-            /* empty */ scannerRef.current?.clear();
+            scannerRef.current?.clear();
           } catch {
             /* ignore */
           }
@@ -134,7 +132,6 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
     if (!scannerRef.current) return;
 
     if (isScanning) {
-      // Detener cámara
       try {
         await scannerRef.current.stop();
         setIsScanning(false);
@@ -142,7 +139,6 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
         console.error('Error al detener cámara:', e instanceof Error ? e.message : String(e));
       }
     } else {
-      // Reanudar cámara
       setIsStarting(true);
       setCameraError(null);
       try {
@@ -154,7 +150,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
           (decodedText: string, decodedResult: Html5QrcodeResult) => {
             if (onScanSuccess) {
               try {
-                /* empty */ navigator.vibrate?.(100);
+                navigator.vibrate?.(100);
               } catch {
                 /* ignore */
               }
@@ -169,7 +165,6 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
       } catch {
         setCameraError('Error al encender la cámara. Revisa los permisos.');
       } finally {
-        /* ignore */
         setIsStarting(false);
       }
     }
@@ -191,7 +186,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
         (decodedText: string, decodedResult: Html5QrcodeResult) => {
           if (onScanSuccess) {
             try {
-              /* empty */ navigator.vibrate?.(100);
+              navigator.vibrate?.(100);
             } catch {
               /* ignore */
             }
@@ -206,7 +201,6 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
     } catch (err) {
       console.error('Error al cambiar cámara:', err instanceof Error ? err.message : String(err));
     } finally {
-      /* ignore */
       setIsStarting(false);
     }
   };
@@ -226,7 +220,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
       const decodedText = await scannerRef.current.scanFile(file, true);
       if (decodedText && onScanSuccess) {
         try {
-          /* empty */ navigator.vibrate?.(100);
+          navigator.vibrate?.(100);
         } catch {
           /* ignore */
         }
@@ -238,7 +232,6 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
         duration: 4000,
       });
     } finally {
-      /* ignore */
       setScanningFile(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -246,12 +239,10 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
 
   return (
     <div className="barcode-scanner-wrapper">
-      {/* Visor de Cámara y Retícula Táctica */}
       <div className="barcode-viewport-frame">
         {/* Contenedor del video de Html5Qrcode */}
         <div id="ascension-barcode-reader"></div>
 
-        {/* Retículas y Láser de Escaneo en Crimson Forge */}
         {isScanning && (
           <>
             <div className="scanner-laser"></div>
@@ -262,7 +253,6 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
           </>
         )}
 
-        {/* Overlay de estado: Cargando */}
         {isStarting && (
           <div
             style={{
@@ -285,7 +275,6 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
           </div>
         )}
 
-        {/* Overlay de estado: Escaneando archivo */}
         {scanningFile && (
           <div
             style={{
@@ -308,7 +297,6 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
           </div>
         )}
 
-        {/* Overlay si la cámara está apagada o con error */}
         {!isScanning && !isStarting && !scanningFile && (
           <div
             style={{
@@ -344,7 +332,6 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
         )}
       </div>
 
-      {/* Input de archivo oculto */}
       <input
         type="file"
         ref={fileInputRef}
@@ -353,7 +340,6 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
         onChange={handleFileScan}
       />
 
-      {/* Botones de Control de Escáner */}
       <div className="scanner-controls">
         <button
           type="button"

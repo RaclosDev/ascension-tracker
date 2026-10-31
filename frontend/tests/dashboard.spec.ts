@@ -26,7 +26,7 @@ test.describe('Dashboard Page & KPI Metrics Suite', () => {
     const lostCard = kpiCards.filter({ hasText: /total perdido/i });
     await expect(lostCard).toBeVisible();
     await expect(lostCard.locator('.kpi-value')).toContainText('3.80 kg');
-    await expect(lostCard.locator('.kpi-detail')).toContainText(/kg (perdidos|ganados)/i);
+    await expect(lostCard.locator('.kpi-detail')).toContainText(/3\.8 kg perdidos/i);
 
     // Card 3: Te Falta
     const remainingCard = kpiCards.filter({ hasText: /te falta/i });

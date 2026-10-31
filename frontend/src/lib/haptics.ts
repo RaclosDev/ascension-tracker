@@ -1,8 +1,4 @@
-/**
- * Web Haptics Utility for PWA
- * Provides tactile physical feedback on supported mobile devices.
- * Gracefully no-ops on desktop or unsupported browsers.
- */
+/** Vibration feedback on supported mobile devices; a no-op on desktop and unsupported browsers. */
 
 function vibrate(pattern: number | number[]): boolean {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;

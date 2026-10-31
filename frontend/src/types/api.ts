@@ -7,6 +7,7 @@ export interface WeightEntry {
 export interface DashboardData {
   currentWeight: number;
   currentWeeklyAverage: number;
+  // Current weight minus start weight (WeightService): negative means weight lost.
   totalLost: number;
   remaining: number;
   progress: number;

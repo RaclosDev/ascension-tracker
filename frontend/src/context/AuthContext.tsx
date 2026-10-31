@@ -127,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 (typeof navigator !== 'undefined' && !navigator.onLine) || isNetworkOrServerError;
 
               if (cachedUser && (isOffline || initialSession.user)) {
-                // Gym / airplane mode / dead wifi / deployment reboot: allow entering offline PWA mode with cached user profile
+                // Offline, or the backend is down or redeploying: enter offline PWA mode with the cached profile.
                 setToken('offline-session');
                 setUser(cachedUser);
               } else if (!initialSession.user) {

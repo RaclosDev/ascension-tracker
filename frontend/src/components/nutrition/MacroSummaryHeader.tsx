@@ -86,10 +86,7 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
           {/* Center Content in Ring */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
             <Flame size={15} className="text-[var(--accent-primary-light)] mb-0.5" />
-            <span
-              className="text-base sm:text-lg font-black text-white font-mono leading-none tracking-tight"
-              style={{ fontVariantNumeric: 'tabular-nums' }}
-            >
+            <span className="text-base sm:text-lg font-black text-white tabular-nums leading-none tracking-tight">
               {caloriesTarget > 0
                 ? caloriesRemaining >= 0
                   ? caloriesRemaining
@@ -105,25 +102,22 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
         {/* Calorie Stats Breakdown */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-semibold text-gray-300">Calorías Totales</span>
-            <span className="text-xs font-mono font-bold text-[var(--accent-primary-light)] tabular-nums">
+            <span className="text-xs font-semibold text-gray-300">Calorías totales</span>
+            <span className="text-xs font-bold text-[var(--accent-primary-light)] tabular-nums">
               {Math.round(kcalPercent)}%
             </span>
           </div>
 
           <div className="flex items-baseline gap-1.5 mb-2">
-            <span
-              className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight"
-              style={{ fontVariantNumeric: 'tabular-nums' }}
-            >
+            <span className="text-2xl sm:text-3xl font-black text-white tabular-nums tracking-tight">
               {caloriesConsumed}
             </span>
             {caloriesTarget > 0 ? (
-              <span className="text-xs sm:text-sm font-medium text-gray-400 font-mono tabular-nums">
+              <span className="text-xs sm:text-sm font-medium text-gray-400 tabular-nums">
                 / {caloriesTarget} kcal
               </span>
             ) : (
-              <span className="text-xs text-gray-500">kcal consumidas</span>
+              <span className="text-xs text-gray-400">kcal consumidas</span>
             )}
           </div>
 
@@ -139,19 +133,18 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
 
       {/* 3 Macro Cards / Badges */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-3.5 border-t border-white/[0.08]">
-        {/* Protein */}
         <div className="flex flex-col gap-1.5 p-2 sm:p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-gray-300 text-[0.72rem] sm:text-xs">Proteínas</span>
-            <span className="text-[0.65rem] font-mono text-[var(--accent-primary-light)] font-bold tabular-nums">
+            <span className="text-[0.65rem] text-[var(--accent-primary-light)] font-bold tabular-nums">
               {Math.round(proteinPercent)}%
             </span>
           </div>
           <div className="flex items-baseline gap-1">
-            <span className="text-sm sm:text-base font-bold text-white font-mono tabular-nums">
+            <span className="text-sm sm:text-base font-bold text-white tabular-nums">
               {proteinConsumed}
             </span>
-            <span className="text-[0.68rem] text-gray-400 font-mono">
+            <span className="text-[0.68rem] text-gray-400 tabular-nums">
               {proteinTarget > 0 ? `/${proteinTarget}g` : 'g'}
             </span>
           </div>
@@ -163,19 +156,18 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
           </div>
         </div>
 
-        {/* Carbs */}
         <div className="flex flex-col gap-1.5 p-2 sm:p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-gray-300 text-[0.72rem] sm:text-xs">Hidratos</span>
-            <span className="text-[0.65rem] font-mono text-[var(--accent-primary)] font-bold tabular-nums">
+            <span className="text-[0.65rem] text-[var(--accent-primary)] font-bold tabular-nums">
               {Math.round(carbsPercent)}%
             </span>
           </div>
           <div className="flex items-baseline gap-1">
-            <span className="text-sm sm:text-base font-bold text-white font-mono tabular-nums">
+            <span className="text-sm sm:text-base font-bold text-white tabular-nums">
               {carbsConsumed}
             </span>
-            <span className="text-[0.68rem] text-gray-400 font-mono">
+            <span className="text-[0.68rem] text-gray-400 tabular-nums">
               {carbsTarget > 0 ? `/${carbsTarget}g` : 'g'}
             </span>
           </div>
@@ -187,19 +179,18 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
           </div>
         </div>
 
-        {/* Fat */}
         <div className="flex flex-col gap-1.5 p-2 sm:p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-gray-300 text-[0.72rem] sm:text-xs">Grasas</span>
-            <span className="text-[0.65rem] font-mono text-gray-400 font-bold tabular-nums">
+            <span className="text-[0.65rem] text-gray-400 font-bold tabular-nums">
               {Math.round(fatPercent)}%
             </span>
           </div>
           <div className="flex items-baseline gap-1">
-            <span className="text-sm sm:text-base font-bold text-white font-mono tabular-nums">
+            <span className="text-sm sm:text-base font-bold text-white tabular-nums">
               {fatConsumed}
             </span>
-            <span className="text-[0.68rem] text-gray-400 font-mono">
+            <span className="text-[0.68rem] text-gray-400 tabular-nums">
               {fatTarget > 0 ? `/${fatTarget}g` : 'g'}
             </span>
           </div>

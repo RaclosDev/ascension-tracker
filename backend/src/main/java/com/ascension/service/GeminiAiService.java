@@ -37,7 +37,7 @@ import java.util.Map;
 public class GeminiAiService {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiAiService.class);
-    public static final long MAX_PIXEL_COUNT = 25_000_000L; // 25 Megapixels
+    public static final long MAX_PIXEL_COUNT = 25_000_000L;
 
     private final GeminiApiClient apiClient;
     private final GeminiQuotaService quotaService;
@@ -62,7 +62,7 @@ public class GeminiAiService {
     }
 
     public List<FoodLogDTO> processNaturalLanguageLog(String userEmail, String text, String base64Image, int defaultMealIndex, LocalDate date) {
-        // Validate user inputs and base64 image BEFORE reserving quota or making external calls
+        // Validate the input and image before reserving quota or calling Gemini.
         String cleanBase64 = null;
         String mimeType = null;
         if (base64Image != null && !base64Image.isEmpty()) {
@@ -74,7 +74,6 @@ public class GeminiAiService {
         // Check data quota before calling external AI API to avoid unbilled calls
         userDataQuotaService.checkFoodLogQuota(userEmail, 1);
 
-        // Fetch user's custom foods, recipes, and meals for context
         List<SavedFoodDTO> savedFoods = nutritionLogService.getSavedFoods(userEmail);
         List<RecipeDTO> recipes = recipeService.getRecipes(userEmail);
         List<MealDTO> availableMeals = nutritionService.getMeals(userEmail);
@@ -267,14 +266,12 @@ public class GeminiAiService {
             mimeType = validateAndGetMimeType(decoded);
         }
 
-        // 1. Get targets
         MacrosDTO targetMacros = macroCalculatorService.getMacros(userEmail);
         int targetKcal = targetMacros.getKcal() != null ? targetMacros.getKcal() : 2000;
         double targetProtein = targetMacros.getProtein() != null ? targetMacros.getProtein() : 150.0;
         double targetCarbs = targetMacros.getCarbs() != null ? targetMacros.getCarbs() : 200.0;
         double targetFat = targetMacros.getFat() != null ? targetMacros.getFat() : 60.0;
 
-        // 2. Get today's consumed
         List<FoodLogDTO> todayLogs = nutritionLogService.getFoodLogsByDate(userEmail, date);
         double consumedKcal = 0, consumedProtein = 0, consumedCarbs = 0, consumedFat = 0;
         for (FoodLogDTO l : todayLogs) {
@@ -284,13 +281,11 @@ public class GeminiAiService {
             consumedFat += l.getFat();
         }
 
-        // 3. Compute remaining
         double remKcal = targetKcal - consumedKcal;
         double remProtein = Math.round((targetProtein - consumedProtein) * 10.0) / 10.0;
         double remCarbs = Math.round((targetCarbs - consumedCarbs) * 10.0) / 10.0;
         double remFat = Math.round((targetFat - consumedFat) * 10.0) / 10.0;
 
-        // 4. Meals context
         List<MealDTO> availableMeals = nutritionService.getMeals(userEmail);
         StringBuilder mealsContext = new StringBuilder();
         int resolvedMealIndex = -1;
@@ -312,7 +307,6 @@ public class GeminiAiService {
             resolvedMealName = promptBuilder.sanitizeUserInput(availableMeals.get(resolvedMealIndex).getName());
         }
 
-        // 5. User saved foods and recipes
         List<SavedFoodDTO> savedFoods = nutritionLogService.getSavedFoods(userEmail);
         List<RecipeDTO> recipes = recipeService.getRecipes(userEmail);
 
@@ -340,7 +334,6 @@ public class GeminiAiService {
                 .reduce((a, b) -> a + ";\n" + b)
                 .orElse("None");
 
-        // 6. Build history context
         StringBuilder historyContext = new StringBuilder();
         if (chatHistory != null && !chatHistory.isEmpty()) {
             historyContext.append("<chat_history>\n");

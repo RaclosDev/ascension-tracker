@@ -156,6 +156,7 @@ export function FoodFiltersBar({
         <button
           onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
           className="btn btn-secondary btn-sm"
+          aria-label={viewMode === 'grid' ? 'Ver como lista' : 'Ver como cuadrícula'}
           style={{
             padding: '0.3rem',
             width: '32px',

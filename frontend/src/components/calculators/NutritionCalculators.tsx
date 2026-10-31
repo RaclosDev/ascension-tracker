@@ -55,7 +55,6 @@ export default function NutritionCalculators() {
     }
   }, [dashboardData, settingsData]);
 
-  // Base calculations
   const pAge = parseNumber(age);
   const pHeight = parseNumber(heightCm);
   const pWeight = parseNumber(weightKg);
@@ -78,7 +77,6 @@ export default function NutritionCalculators() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-      {/* TDEE Card */}
       <CalculatorCard
         title="Gasto de mantenimiento (TDEE)"
         subtitle="Metabolismo basal y gasto calórico diario"
@@ -120,7 +118,6 @@ export default function NutritionCalculators() {
         )}
       </CalculatorCard>
 
-      {/* Body fat Card */}
       <CalculatorCard
         title="% Grasa Corporal (Marina)"
         subtitle="Estimación Navy según perímetros"

@@ -64,7 +64,6 @@ export const SwipeableSetRow = React.memo(
     const toggleSet = useWorkoutStore((s) => s.toggleSet);
     const removeSet = useWorkoutStore((s) => s.removeSet);
 
-    // Optimización Pro: Extraída la lógica táctil a un hook puro
     const { offsetX, swiped, isDragging, closeSwipe, touchHandlers } = useSwipe();
     const [deleteFocused, setDeleteFocused] = useState(false);
     const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -123,7 +122,7 @@ export const SwipeableSetRow = React.memo(
 
     return (
       <div className="set-row-wrapper" style={{ position: 'relative' }}>
-        {/* Swipeable row with trash button strictly bounded to row height */}
+        {/* Swipeable row; the trash button stays within the row height */}
         <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px' }}>
           <div
             {...touchHandlers}
@@ -182,7 +181,6 @@ export const SwipeableSetRow = React.memo(
                     fontSize: '0.5rem',
                     fontWeight: 700,
                     color: 'var(--accent-primary-light)',
-                    textTransform: 'uppercase',
                   }}
                 >
                   PR
@@ -319,7 +317,6 @@ export const SwipeableSetRow = React.memo(
                       background: 'var(--accent-primary)',
                       borderColor: 'var(--accent-primary)',
                       color: 'var(--accent-text, #ffffff)',
-                      boxShadow: '0 0 12px var(--accent-glow)',
                     }
                   : undefined
               }
@@ -328,7 +325,7 @@ export const SwipeableSetRow = React.memo(
             </button>
           </div>
 
-          {/* Accessible delete button (pinned strictly to the row height with safe swipe threshold) */}
+          {/* Accessible delete button, pinned to the row height */}
           <button
             type="button"
             aria-label={`Eliminar serie ${i + 1}`}
@@ -365,7 +362,6 @@ export const SwipeableSetRow = React.memo(
           </button>
         </div>
 
-        {/* Quick Stepper Accessory Bar for gym ergonomics */}
         {isWeightStepperOpen && (
           <div
             onMouseDown={(e) => {
@@ -399,7 +395,7 @@ export const SwipeableSetRow = React.memo(
                     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
                     adjustWeight(d);
                   }}
-                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-white font-mono font-semibold text-xs transition select-none touch-manipulation"
+                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-white font-semibold tabular-nums text-xs transition select-none touch-manipulation"
                 >
                   {d}
                 </button>
@@ -424,7 +420,7 @@ export const SwipeableSetRow = React.memo(
                     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
                     adjustWeight(d);
                   }}
-                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 font-mono font-bold text-xs transition shadow-sm select-none touch-manipulation"
+                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 font-bold tabular-nums text-xs transition shadow-sm select-none touch-manipulation"
                 >
                   +{d}
                 </button>
@@ -466,7 +462,7 @@ export const SwipeableSetRow = React.memo(
                     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
                     adjustReps(d);
                   }}
-                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-white font-mono font-semibold text-xs transition select-none touch-manipulation"
+                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-white font-semibold tabular-nums text-xs transition select-none touch-manipulation"
                 >
                   {d}
                 </button>
@@ -491,7 +487,7 @@ export const SwipeableSetRow = React.memo(
                     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
                     adjustReps(d);
                   }}
-                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 font-mono font-bold text-xs transition shadow-sm select-none touch-manipulation"
+                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 font-bold tabular-nums text-xs transition shadow-sm select-none touch-manipulation"
                 >
                   +{d}
                 </button>

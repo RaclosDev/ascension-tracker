@@ -81,7 +81,6 @@ export default function FoodCard({
           gap: '0.4rem',
         }}
       >
-        {/* Fila 1: Nombre (Izquierda) + Lápiz (Derecha) */}
         <div
           style={{
             display: 'flex',
@@ -103,7 +102,16 @@ export default function FoodCard({
           >
             {food.name}
           </div>
-          <div style={{ flexShrink: 0, marginTop: '-0.2rem', marginRight: '-0.2rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
+          <div
+            style={{
+              flexShrink: 0,
+              marginTop: '-0.2rem',
+              marginRight: '-0.2rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '2px',
+            }}
+          >
             <EditBtn onClick={() => onEdit(food)} />
             {onDelete && food.id && (
               <button
@@ -122,7 +130,6 @@ export default function FoodCard({
           </div>
         </div>
 
-        {/* Fila 2: Kcal, Porción, Marca */}
         <div
           style={{
             fontSize: '0.75rem',
@@ -168,7 +175,6 @@ export default function FoodCard({
           )}
         </div>
 
-        {/* Fila 3: Macros Restantes */}
         <div
           style={{
             fontSize: '0.75rem',
@@ -234,7 +240,9 @@ export default function FoodCard({
       <div style={{ flex: 1, textAlign: 'right' }}>{Number(food.proteinPer100g).toFixed(1)}</div>
       <div style={{ flex: 1, textAlign: 'right' }}>{Number(food.carbsPer100g).toFixed(1)}</div>
       <div style={{ flex: 1, textAlign: 'right' }}>{Number(food.fatPer100g).toFixed(1)}</div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '2px' }}>
+      <div
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '2px' }}
+      >
         <EditBtn onClick={() => onEdit(food)} />
         {onDelete && food.id && (
           <button

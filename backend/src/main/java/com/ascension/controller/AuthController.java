@@ -139,8 +139,7 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("error", "Google sub is required"));
         }
 
-        // Identity verification: enforce google sub uniqueness and detect recycled emails
-        // 1. If an existing user has this email, verify google_sub matches
+        // An email bound to a different google_sub is a recycled address: reject the login.
         Optional<User> userByEmail = userService.findByEmail(email);
         if (userByEmail.isPresent()) {
             String existingSub = userByEmail.get().googleSub();
@@ -151,8 +150,8 @@ public class AuthController {
             }
         }
 
-        // 2. If this google_sub already owns an account under another email, the user changed the
-        //    address on their Google account: move the account unless the new email is taken.
+        // A google_sub that owns an account under another email means the user changed their
+        // Google address: move the account unless the new email is taken.
         Optional<User> userBySub = userService.findByGoogleSub(googleSub);
         if (userBySub.isPresent()) {
             String existingEmail = userBySub.get().email();
@@ -169,8 +168,7 @@ public class AuthController {
         String name = (String) tokenPayload.get("name");
         String picture = (String) tokenPayload.get("picture");
 
-        // User tables are keyed by email; a changed address is handled above by changeEmail,
-        // which relies on the ON UPDATE CASCADE foreign keys added in V28.
+        // User tables are keyed by email; changeEmail above has already moved a renamed account.
         userService.ensureUserExists(email, name, picture, googleSub);
 
         String customToken = generateJwt(email, name, picture);
@@ -261,7 +259,6 @@ public class AuthController {
             RefreshToken newRefreshToken = refreshTokenService.rotateRefreshToken(requestCookieRefreshToken);
             String email = newRefreshToken.getEmail();
 
-            // Read latest profile data from users table
             String name = "";
             String picture = "";
             Optional<User> userOpt = userService.findByEmail(email);

@@ -1,11 +1,6 @@
-/**
- * fitnessCalculators.ts
- * Suite modular de funciones matemáticas y biomecánicas puras para cálculo de 1RM,
- * carga de discos en barra olímpica, metabolismo basal y gasto energético,
- * reparto de macronutrientes y conversión de unidades fitness.
- */
+/** Funciones puras de fuerza, carga de discos, metabolismo, macros y conversión de unidades. */
 
-// 1. One Rep Max (1RM) & Fuerza
+// One Rep Max (1RM) y fuerza
 
 export type OneRepMaxFormula = 'epley' | 'brzycki' | 'lombardi' | 'oconner' | 'average';
 
@@ -152,7 +147,7 @@ export function calculateOneRepMax(params: OneRepMaxParams): OneRepMaxResult {
   };
 }
 
-// 2. CARGA DE DISCOS EN BARRA (PLATE LOADER)
+// Carga de discos en barra
 
 export interface PlateDefinition {
   weight: number;
@@ -274,7 +269,7 @@ export function calculatePlateLoader(params: PlateLoaderParams): PlateLoaderResu
   };
 }
 
-// 3. TDEE, BMR Y GASTO BIOMECÁNICO (WEYAND)
+// TDEE, BMR y gasto biomecánico (Weyand)
 
 export type Sex = 'M' | 'F';
 export type BmrFormulaType = 'mifflin' | 'katch' | 'harris';
@@ -323,7 +318,7 @@ export function calculateBmr(
     return { bmr: 0, formulaUsed: formula };
   }
 
-  // Katch-McArdle si se solicita o si hay % grasa
+  // Katch-McArdle solo si se pide y hay un % de grasa válido
   if (
     formula === 'katch' &&
     bodyFatPercentage !== undefined &&
@@ -448,7 +443,7 @@ export function calculateWeyandMetabolic(params: WeyandMetabolicParams): WeyandM
   };
 }
 
-// 4. DISTRIBUCIÓN DE MACRONUTRIENTES
+// Distribución de macronutrientes
 
 export type MacroStrategy = 'bodyweight' | 'percentage';
 
@@ -587,7 +582,7 @@ export function calculateMacroDistribution(
   return result;
 }
 
-// 5. CONVERSOR DE UNIDADES FITNESS
+// Conversión de unidades
 
 export interface HeightFtIn {
   feet: number;

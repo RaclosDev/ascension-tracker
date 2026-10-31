@@ -27,7 +27,7 @@ public class SettingsController {
         if (dto == null) {
             return ResponseEntity.noContent().build();
         }
-        // CRITICAL SHIELD: Prevent old PWA from downloading the empty state and overwriting mobile data
+        // Strip workoutData so an old PWA cannot download the empty state and overwrite mobile data.
         dto.setWorkoutData(null);
         return ResponseEntity.ok(dto);
     }

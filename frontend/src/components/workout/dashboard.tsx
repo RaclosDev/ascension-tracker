@@ -128,7 +128,6 @@ export function Dashboard() {
         </button>
       )}
 
-      {/* Start Workout Sheet */}
       {startModalOpen && (
         <>
           <div
@@ -165,7 +164,6 @@ export function Dashboard() {
                   </div>
                 </button>
 
-                {/* Templates */}
                 {templates?.length > 0 && (
                   <>
                     <div className="start-workout-section-label" style={{ marginTop: '0.5rem' }}>
@@ -198,7 +196,6 @@ export function Dashboard() {
                   </>
                 )}
 
-                {/* Recent workouts */}
                 {history?.length > 0 && (
                   <>
                     <div className="start-workout-section-label" style={{ marginTop: '0.5rem' }}>
@@ -266,8 +263,6 @@ export function Dashboard() {
               style={{
                 fontSize: '0.8rem',
                 fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.14em',
                 color: 'var(--accent-primary)',
               }}
             >
@@ -292,8 +287,6 @@ export function Dashboard() {
           <ArrowRight className="size-5 text-muted-foreground" />
         </button>
       ) : null}
-
-      {/* The navigation cards for Ejercicios and Plantillas were removed since they are now top-level tabs */}
 
       <section className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6 items-stretch">
         <MuscleRecovery history={history} customExercises={customExercises} />
@@ -332,6 +325,9 @@ export function Dashboard() {
               color: 'var(--color-primary)',
               fontWeight: 600,
               cursor: 'pointer',
+              minHeight: '44px',
+              padding: '0 0.5rem',
+              margin: '-0.5rem -0.5rem -0.5rem 0',
             }}
           >
             Ver todo

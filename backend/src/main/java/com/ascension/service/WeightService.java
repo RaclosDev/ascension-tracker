@@ -102,13 +102,11 @@ public class WeightService {
                     ((startWeight - currentWeight) / totalToLose) * 100.0));
         }
 
-        // Avg weekly change
         Double avgWeeklyChange = getAvgWeeklyChange(weeks);
 
-        // Estimated date
         String estimatedDate = calculateEstimatedDate(currentWeight, goalWeight, avgWeeklyChange, settings.getWeeklyGoal());
 
-        // Best week
+        // Best week = largest drop in weekly average.
         double bestDelta = 0;
         String bestWeekDate = "--";
         for (int i = 1; i < weeks.size(); i++) {
@@ -119,7 +117,6 @@ public class WeightService {
             }
         }
 
-        // Streak
         int streak = calculateStreak(allEntries);
 
         return DashboardDTO.builder()
@@ -144,11 +141,9 @@ public class WeightService {
         List<WeightEntry> allEntries = weightEntryRepository.findAllByUserEmailOrderByDateAsc(userEmail);
         if (allEntries.isEmpty()) return List.of();
 
-        // Determine range: from first entry's Monday to current week's Monday
         LocalDate firstMonday = allEntries.get(0).getDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate currentMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
-        // Build a map for quick lookup
         Map<LocalDate, Double> entryMap = allEntries.stream()
                 .collect(Collectors.toMap(WeightEntry::getDate, WeightEntry::getWeight, (v1, v2) -> v2));
 
@@ -272,6 +267,5 @@ public class WeightService {
     private double round2(double v) { return Math.round(v * 100.0) / 100.0; }
     private double round3(double v) { return Math.round(v * 1000.0) / 1000.0; }
 
-    // Internal data class for week grouping
     private record WeekData(LocalDate mondayDate, double average, int entries) {}
 }

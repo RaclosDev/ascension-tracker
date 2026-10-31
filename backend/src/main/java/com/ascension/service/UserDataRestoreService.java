@@ -126,35 +126,25 @@ public class UserDataRestoreService {
             wipeUserData(userEmail);
         }
 
-        // 1. Custom Exercises & ID translation map
         Map<String, String> idTranslationMap = new HashMap<>();
         int customExercisesRestored = restoreCustomExercises(userEmail, backup.getCustomExercises(), idTranslationMap, isOverwrite);
 
-        // 2. Workouts
         int workoutsRestored = restoreWorkouts(userEmail, backup.getWorkouts(), idTranslationMap, isOverwrite);
 
-        // 3. Workout Templates
         int workoutTemplatesRestored = restoreWorkoutTemplates(userEmail, backup.getWorkoutTemplates(), idTranslationMap, isOverwrite);
 
-        // 4. Food Logs
         int foodLogsRestored = restoreFoodLogs(userEmail, backup.getFoodLogs(), isOverwrite);
 
-        // 5. Meals
         int mealsRestored = restoreMeals(userEmail, backup.getMeals(), isOverwrite);
 
-        // 6. Recipes
         int recipesRestored = restoreRecipes(userEmail, backup.getRecipes(), isOverwrite);
 
-        // 7. Saved Foods
         int savedFoodsRestored = restoreSavedFoods(userEmail, backup.getSavedFoods(), isOverwrite);
 
-        // 8. Steps Entries
         int stepsEntriesRestored = restoreStepsEntries(userEmail, backup.getStepsEntries(), isOverwrite);
 
-        // 9. Weight Entries
         int weightEntriesRestored = restoreWeightEntries(userEmail, backup.getWeightEntries(), isOverwrite);
 
-        // 10. User Settings
         boolean settingsRestored = restoreUserSettings(userEmail, backup.getUserSettings(), isOverwrite);
 
         log.info("Restauración completada para {}: {} entrenamientos, {} ejercicios, {} comidas",

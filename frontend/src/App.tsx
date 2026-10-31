@@ -269,11 +269,10 @@ export default function App() {
               toastOptions={{
                 duration: 3000,
                 style: {
-                  background: 'var(--bg-glass-strong, rgba(17, 24, 39, 0.95))',
+                  background: 'var(--bg-card, #1C1C1E)',
                   color: 'var(--text-primary, #f1f5f9)',
                   border: '1px solid var(--border-medium, rgba(255,255,255,0.1))',
                   borderRadius: '12px',
-                  backdropFilter: 'blur(12px)',
                 },
               }}
             />

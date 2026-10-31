@@ -122,8 +122,6 @@ export default function TemplatesView() {
                         marginTop: '0.25rem',
                         fontSize: '0.75rem',
                         fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.12em',
                         color: 'var(--text-secondary)',
                       }}
                     >

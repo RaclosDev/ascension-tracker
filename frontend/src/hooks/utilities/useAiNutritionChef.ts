@@ -69,7 +69,6 @@ export function useAiNutritionChef() {
   const [activeOptionIndices, setActiveOptionIndices] = useState<Record<string, number>>({});
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
 
-  // Speech-to-text
   const { isListening, toggleListening, stopListening } = useSpeechToText({
     onTranscript: (text) => setUserInput(text),
     lang: 'es-ES',
