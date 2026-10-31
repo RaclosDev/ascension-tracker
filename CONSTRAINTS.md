@@ -38,3 +38,4 @@ Este documento establece el contrato formal e inmutable de calidad, límites arq
 3. **Validación de Tests Obligatoria:**
    - Backend: Los 293+ tests unitarios y de integración deben mantenerse 100% en verde.
    - Frontend: Verificación de tipos (`tsc --noEmit`) obligatoria en cada Pull Request.
+   - Frontend: cobertura mínima en `vitest.config.ts` (statements 22 %, branches 18 %, functions 17 %, lines 22 %), comprobada en CI con `npm run test:coverage`. Solo puede subir.

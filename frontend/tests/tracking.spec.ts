@@ -61,7 +61,7 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await expect(firstWeekStats).toContainText('-0.50');
 
     // 3. Días lunes a domingo en la cuadrícula semanal
-    const days = firstWeek.locator('.calendar-day');
+    const days = firstWeek.locator('.calendar-day[role="button"]');
     await expect(days).toHaveCount(7);
 
     const expectedDayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -95,7 +95,7 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await expect(kcalToggle).toHaveAttribute('aria-pressed', 'true');
 
     // Celda de lunes con valores iniciales
-    const firstDayCell = page.locator('.calendar-day').first();
+    const firstDayCell = page.locator('.calendar-day[role="button"]').first();
     await expect(firstDayCell).toContainText('81.20');
     await expect(firstDayCell).toContainText('8500');
     await expect(firstDayCell).toContainText('2000');
@@ -141,7 +141,7 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await expect(reloadedStepsToggle).toHaveAttribute('aria-pressed', 'false');
     await expect(reloadedKcalToggle).toHaveAttribute('aria-pressed', 'false');
 
-    const reloadedCell = page.locator('.calendar-day').first();
+    const reloadedCell = page.locator('.calendar-day[role="button"]').first();
     await expect(reloadedCell).not.toContainText('81.20');
     await expect(reloadedCell).not.toContainText('8500');
     await expect(reloadedCell).not.toContainText('2000');
@@ -159,7 +159,7 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await page.goto('/tracking');
 
     // Click en una celda de día abre TrackingEntryModal
-    const firstDayCell = page.locator('.calendar-day').first();
+    const firstDayCell = page.locator('.calendar-day[role="button"]').first();
     await firstDayCell.click();
 
     const modal = page.locator('.modal-content');
@@ -245,7 +245,7 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
 
     await page.goto('/tracking');
 
-    const firstDayCell = page.locator('.calendar-day').first();
+    const firstDayCell = page.locator('.calendar-day[role="button"]').first();
     await firstDayCell.click();
 
     const modal = page.locator('.modal-content');
@@ -349,7 +349,7 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await page.goto('/tracking');
     await expect(page.locator('.calendar-container')).toBeVisible({ timeout: 15000 });
 
-    const firstDayCell = page.locator('.calendar-day').first();
+    const firstDayCell = page.locator('.calendar-day[role="button"]').first();
     await expect(firstDayCell).toContainText('81.20');
     await expect(firstDayCell).toContainText('8500');
 
