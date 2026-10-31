@@ -14,7 +14,7 @@ const NutritionPage = lazyWithRetry(() => import('./pages/NutritionPage'));
 const SettingsPage = lazyWithRetry(() => import('./pages/SettingsPage'));
 const WorkoutPage = lazyWithRetry(() => import('./pages/WorkoutPage'));
 const UtilitiesPage = lazyWithRetry(() => import('./pages/UtilitiesPage'));
-import LoginPage from './pages/LoginPage';
+import LandingPage from './pages/LandingPage';
 
 import { PageLoader } from './components/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -78,7 +78,7 @@ function AppContent() {
     return (
       <ErrorBoundary>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={<LandingPage />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </ErrorBoundary>
