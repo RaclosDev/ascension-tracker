@@ -18,6 +18,23 @@ export const FAKE_JWT =
  * to simulate an authenticated user with valid settings across all pages.
  */
 export async function setupAuthMocks(page: Page): Promise<void> {
+  await page.route('**/api/push/rest-timer', (route) => route.fulfill({ status: 200, body: '' }));
+  await page.route('**/api/push/rest-timer/cancel', (route) =>
+    route.fulfill({ status: 200, body: '' }),
+  );
+  await page.route('**/api/nutrition/ai/assistant-summary?*', (route) =>
+    route.fulfill({
+      status: 200,
+      json: {
+        date: new URL(route.request().url()).searchParams.get('date'),
+        target: { kcal: 2000, protein: 150, carbs: 200, fat: 66 },
+        consumed: { kcal: 0, protein: 0, carbs: 0, fat: 0 },
+        remaining: { kcal: 2000, protein: 150, carbs: 200, fat: 66 },
+        meals: NUTRITION_MEALS_FIXTURE,
+      },
+    }),
+  );
+
   // 1. Auth config (Google Client ID)
   await page.route('**/api/auth/config**', async (route) => {
     await route.fulfill({

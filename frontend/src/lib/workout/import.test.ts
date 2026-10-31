@@ -49,6 +49,15 @@ describe('parseCsvRows', () => {
 });
 
 describe('parseHevyDate', () => {
+  it.each([
+    '',
+    'not a date',
+    '12 invented 2024, 18:00',
+    '31 feb 2024, 18:00',
+    '2024-02-31 18:00:00',
+  ])('rejects invalid dates instead of silently assigning today: %s', (value) => {
+    expect(() => parseHevyDate(value)).toThrow(/fecha/i);
+  });
   it('parses Spanish month formats correctly', () => {
     const ts = parseHevyDate('12 ene 2024, 18:30');
     const d = new Date(ts);

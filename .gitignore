@@ -36,12 +36,13 @@ out.txt
 
 docker-compose.override.yml
 
-# Evitar subida accidental de scripts temporales
-/*.js
-/*.ts
-/*.py
-
-
+# Temporary maintenance scripts (keep intentional tooling visible to Git)
+/fix_*.py
+/patch_*.py
+/temp_*.py
+/tmp_*.py
+/*_temp.py
+/*_tmp.py
 
 # Local AI Context
 ROADMAP.md
@@ -49,3 +50,16 @@ ROADMAP.md
 
 # Knowledge graph generated locally by graphify
 graphify-out/
+
+# Local working notes and assistant configuration
+.local/
+.claude/
+.agents/
+/AGENTS.md
+/CLAUDE.md
+/GEMINI.md
+/HOOKS.md
+/ANTIGRAVITY_HOOKS.md
+/MCP_RECOMMENDATIONS.md
+/docs/audits/
+/anti-slop/

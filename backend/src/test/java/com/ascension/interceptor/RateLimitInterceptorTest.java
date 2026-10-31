@@ -35,6 +35,21 @@ class RateLimitInterceptorTest {
     }
 
     @Test
+    void generalAuthLimitUsesConfiguredCapacity() throws Exception {
+        var properties = new com.ascension.config.RateLimitProperties();
+        properties.setMaxRequestsPerMinute(2);
+        var configured = new RateLimitInterceptor(
+                new com.ascension.service.ratelimit.InMemoryRateLimiterService(), properties);
+        var request = new MockHttpServletRequest("GET", "/api/auth/status");
+        request.setRemoteAddr("10.0.0.99");
+        assertThat(configured.preHandle(request, new MockHttpServletResponse(), new Object())).isTrue();
+        assertThat(configured.preHandle(request, new MockHttpServletResponse(), new Object())).isTrue();
+        var rejected = new MockHttpServletResponse();
+        assertThat(configured.preHandle(request, rejected, new Object())).isFalse();
+        assertThat(rejected.getStatus()).isEqualTo(429);
+    }
+
+    @Test
     void nutritionAiEndpointsAreRateLimited() throws Exception {
         for (int i = 0; i < RateLimitInterceptor.MAX_REQUESTS_PER_MINUTE; i++) {
             assertThat(hit(AI_PATH, "10.0.0.1")).isEqualTo(200);

@@ -1,12 +1,20 @@
-import { useState, useRef, useEffect, Suspense, startTransition, CSSProperties } from 'react';
+import { QueryErrorNotice } from './QueryErrorNotice';
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  Suspense,
+  startTransition,
+  CSSProperties,
+} from 'react';
 import { UserSettings } from '../types/api';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import BottomSheet from './BottomSheet';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { useQuery } from '@tanstack/react-query';
-import { useNow } from '@/hooks/use-now';
-import { formatDuration } from '@/lib/workout/format';
+import { WorkoutElapsedTimer } from './workout/WorkoutElapsedTimer';
 import OnboardingScreen from './OnboardingScreen';
 import { preloadRoute } from '../utils/routePreload';
 
@@ -63,20 +71,24 @@ export default function Layout() {
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const activeWorkout = useWorkoutStore((s) => s.active);
-  const hideNav = activeWorkout !== null && location.pathname === '/workout';
-  const now = useNow(activeWorkout !== null, 500);
-  const elapsed = activeWorkout ? now - activeWorkout.startedAt : 0;
+  const hasActiveWorkout = useWorkoutStore((s) => s.active !== null);
+  const hideNav = hasActiveWorkout && location.pathname === '/workout';
 
-  const { data: settings, isLoading: loadingConfig } = useQuery<UserSettings>({
+  const {
+    data: settings,
+    isLoading: loadingConfig,
+    isError: configError,
+    isFetching: fetchingConfig,
+    refetch: retryConfig,
+  } = useQuery<UserSettings | null>({
     queryKey: ['settings'],
     queryFn: () =>
-      api.get('/settings').then((res) => {
+      api.get<UserSettings | null>('/settings').then((res) => {
         if (res.status === 204 || !res.data) return null;
         return res.data;
       }),
   });
-  const needsOnboarding = !loadingConfig && settings === null;
+  const needsOnboarding = !loadingConfig && !configError && settings === null;
 
   // Cerrar el menú automáticamente al cambiar de página y resetear scroll
   useEffect(() => {
@@ -100,14 +112,17 @@ export default function Layout() {
   // The page fades in on its own (.route-fade); a whole-document View Transition used to
   // animate the fixed header and nav too, and captured the old page because the router
   // commits inside its own transition.
-  const navigateTo = (path: string) => {
-    if (location.pathname !== path) {
-      haptics.light();
-      startTransition(() => {
-        navigate(path);
-      });
-    }
-  };
+  const navigateTo = useCallback(
+    (path: string) => {
+      if (location.pathname !== path) {
+        haptics.light();
+        startTransition(() => {
+          navigate(path);
+        });
+      }
+    },
+    [location.pathname, navigate],
+  );
 
   // Interceptar cualquier enlace de navegación interna en modo PWA standalone
   useEffect(() => {
@@ -124,7 +139,7 @@ export default function Layout() {
     };
     document.addEventListener('click', handleGlobalClick, { capture: true });
     return () => document.removeEventListener('click', handleGlobalClick, { capture: true });
-  }, [navigate]);
+  }, [navigateTo]);
 
   const closeSidebar = () => setSidebarOpen(false);
   const isMoreActive = moreMenuPaths.includes(location.pathname);
@@ -141,17 +156,7 @@ export default function Layout() {
     <div className="app-root">
       {/* Barra superior de app para móvil */}
       <header className="mobile-top-bar">
-        {hideNav ? (
-          <div
-            className="active-workout-timer"
-            style={{ pointerEvents: 'auto', minWidth: '48px', justifyContent: 'center' }}
-          >
-            <span className="active-workout-timer-dot" />
-            <span className="active-workout-timer-text">{formatDuration(elapsed)}</span>
-          </div>
-        ) : (
-          <div style={{ width: '48px' }} />
-        )}
+        {hideNav ? <WorkoutElapsedTimer /> : <div style={{ width: '48px' }} />}
         <div className="mobile-top-logo">
           <img src="/ascension-title.png" alt="Ascension" className="mobile-header-title-img" />
         </div>
@@ -206,6 +211,7 @@ export default function Layout() {
 
         <main className="main-content">
           <div className="main-content-inner">
+            {configError && <QueryErrorNotice retry={retryConfig} pending={fetchingConfig} />}
             <Suspense
               fallback={
                 <div className="flex flex-col gap-4 py-4">

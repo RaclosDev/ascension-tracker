@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 import { getLocalDateString } from '../../utils/dateHelper';
@@ -20,6 +20,7 @@ interface ManualFoodFormProps {
   ocrLoading: boolean;
   date?: string;
   selectedMealIndex: number | string;
+  selectedMealKey?: string;
   onLogAdded?: () => void;
   onCustomAdd?: (foodObj: {
     product: string;
@@ -41,24 +42,40 @@ export default function ManualFoodForm({
   ocrLoading,
   date,
   selectedMealIndex,
+  selectedMealKey,
   onLogAdded,
   onCustomAdd,
   onClose,
 }: ManualFoodFormProps) {
+  const submitting = useRef(false);
+  const [pending, setPending] = useState(false);
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting.current) return;
     if (!manualForm.name.trim()) {
       toast.error('El nombre del alimento es obligatorio');
       return;
     }
 
-    const qty = Number(quantity) || BASE_GRAMS;
+    const qty = Number(quantity);
+    if (!Number.isFinite(qty) || qty <= 0) {
+      toast.error('Indica una cantidad positiva en gramos.');
+      return;
+    }
     const factor = qty / BASE_GRAMS;
-    const kcalPer100 = Number(manualForm.kcal) || 0;
-    const pPer100 = Number(manualForm.protein) || 0;
-    const cPer100 = Number(manualForm.carbs) || 0;
-    const fPer100 = Number(manualForm.fat) || 0;
+    const kcalPer100 = Number(manualForm.kcal || '0');
+    const pPer100 = Number(manualForm.protein || '0');
+    const cPer100 = Number(manualForm.carbs || '0');
+    const fPer100 = Number(manualForm.fat || '0');
 
+    if (
+      ![kcalPer100, pPer100, cPer100, fPer100].every(
+        (value) => Number.isFinite(value) && value >= 0,
+      )
+    ) {
+      toast.error('Los valores nutricionales deben ser positivos o cero.');
+      return;
+    }
     const productName =
       manualForm.name.trim() + (manualForm.brand.trim() ? ` (${manualForm.brand.trim()})` : '');
 
@@ -66,6 +83,7 @@ export default function ManualFoodForm({
     const logEntry = {
       date: effectiveDate,
       mealIndex: Number(selectedMealIndex) || 0,
+      mealKey: selectedMealKey,
       product: productName,
       quantity: qty,
       kcal: Number((kcalPer100 * factor).toFixed(1)),
@@ -80,6 +98,8 @@ export default function ManualFoodForm({
       return;
     }
 
+    submitting.current = true;
+    setPending(true);
     try {
       await api.post('/nutrition/logs', logEntry);
 
@@ -93,11 +113,12 @@ export default function ManualFoodForm({
         servingSize: null,
         servingLabel: null,
       };
-      await api
-        .post('/nutrition/my-foods', myFoodDto)
-        .catch(() => console.warn('Ya existía o error al guardar en mis alimentos'));
-
-      toast.success('Alimento guardado y añadido a tus alimentos');
+      try {
+        await api.post('/nutrition/my-foods', myFoodDto);
+        toast.success('Alimento guardado y a\u00f1adido a tus alimentos');
+      } catch {
+        toast.error('Registro guardado en el diario, pero no se pudo guardar en Mis Alimentos.');
+      }
       if (onLogAdded) onLogAdded();
       onClose();
     } catch (err: unknown) {
@@ -111,6 +132,9 @@ export default function ManualFoodForm({
         (err as Error).message ||
         'Error al guardar el alimento';
       toast.error(errorMessage);
+    } finally {
+      submitting.current = false;
+      setPending(false);
     }
   };
 
@@ -264,7 +288,7 @@ export default function ManualFoodForm({
         <button type="button" className="btn btn-secondary" onClick={onClose}>
           Cancelar
         </button>
-        <button type="submit" className="btn btn-primary">
+        <button type="submit" disabled={pending} aria-busy={pending} className="btn btn-primary">
           Guardar Alimento
         </button>
       </div>

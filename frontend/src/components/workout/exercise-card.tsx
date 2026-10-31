@@ -1,6 +1,6 @@
+import { ExerciseActionsMenu } from './ExerciseActionsMenu';
 import React, { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { Check, ChevronDown, ChevronUp, Plus, Trash2, Timer, MoreVertical } from 'lucide-react';
+import { Check, ChevronDown, Plus, Timer } from 'lucide-react';
 import { getExerciseMap } from '@/lib/workout/exercises';
 import { formatVariant, formatRestFriendly } from '@/lib/workout/format';
 import { haptics } from '@/lib/haptics';
@@ -57,39 +57,13 @@ export const ExerciseCard = React.memo(function ExerciseCard({
     useWorkoutPreferencesActions();
   const globalMachines = prefs?.globalMachines || [];
   const globalGrips = prefs?.globalGrips || [];
-  const exerciseVariants = prefs?.exerciseVariants || {};
+  const exerciseVariants = React.useMemo(
+    () => prefs?.exerciseVariants || {},
+    [prefs?.exerciseVariants],
+  );
   const customGifs = prefs?.exerciseGifs || {};
   const [editingVariant, setEditingVariant] = useState(false);
-  const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
-  const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!showActionsMenu) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(e.target as Node) &&
-        menuButtonRef.current &&
-        !menuButtonRef.current.contains(e.target as Node)
-      ) {
-        setShowActionsMenu(false);
-      }
-    };
-    const handleScrollOrResize = () => {
-      setShowActionsMenu(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    window.addEventListener('scroll', handleScrollOrResize, true);
-    window.addEventListener('resize', handleScrollOrResize);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      window.removeEventListener('scroll', handleScrollOrResize, true);
-      window.removeEventListener('resize', handleScrollOrResize);
-    };
-  }, [showActionsMenu]);
 
   const [activeStepper, setActiveStepper] = useState<{
     setId: string;
@@ -251,25 +225,18 @@ export const ExerciseCard = React.memo(function ExerciseCard({
           </div>
         </div>
         <div className="exercise-card-actions" onClick={(e) => e.stopPropagation()}>
-          <button
-            ref={menuButtonRef}
-            type="button"
-            aria-label="Opciones del ejercicio"
-            onClick={(e) => {
-              e.stopPropagation();
-              haptics.light();
-              if (!showActionsMenu && menuButtonRef.current) {
-                setMenuRect(menuButtonRef.current.getBoundingClientRect());
-                setShowActionsMenu(true);
-              } else {
-                setShowActionsMenu(false);
+          <ExerciseActionsMenu
+            index={index}
+            total={total}
+            onMove={(delta) => moveExercise(row.id, delta)}
+            onRemove={() => {
+              if (row.sets.some((set) => set.completed)) setConfirmRemoveOpen(true);
+              else {
+                haptics.warning();
+                removeExercise(row.id);
               }
             }}
-            className="exercise-card-action-btn"
-            title="Opciones del ejercicio"
-          >
-            <MoreVertical size={18} />
-          </button>
+          />
           <button
             type="button"
             aria-label={collapsed ? 'Expandir ejercicio' : 'Colapsar ejercicio'}
@@ -288,73 +255,6 @@ export const ExerciseCard = React.memo(function ExerciseCard({
               }}
             />
           </button>
-
-          {showActionsMenu &&
-            menuRect &&
-            createPortal(
-              <div
-                ref={menuRef}
-                className="exercise-card-menu-dropdown fade-in"
-                style={{
-                  position: 'fixed',
-                  top:
-                    menuRect.bottom + 140 > window.innerHeight
-                      ? Math.max(10, menuRect.top - 130)
-                      : menuRect.bottom + 6,
-                  right: Math.max(12, window.innerWidth - menuRect.right),
-                  zIndex: 9999,
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  type="button"
-                  disabled={index === 0}
-                  aria-label="Subir"
-                  onClick={() => {
-                    haptics.light();
-                    moveExercise(row.id, -1);
-                    setShowActionsMenu(false);
-                  }}
-                  className="exercise-card-menu-item"
-                >
-                  <ChevronUp size={16} />
-                  <span>Mover arriba</span>
-                </button>
-                <button
-                  type="button"
-                  disabled={index === total - 1}
-                  aria-label="Bajar"
-                  onClick={() => {
-                    haptics.light();
-                    moveExercise(row.id, 1);
-                    setShowActionsMenu(false);
-                  }}
-                  className="exercise-card-menu-item"
-                >
-                  <ChevronDown size={16} />
-                  <span>Mover abajo</span>
-                </button>
-                <button
-                  type="button"
-                  aria-label="Quitar ejercicio"
-                  onClick={() => {
-                    setShowActionsMenu(false);
-                    const hasCompletedSets = row.sets.some((s) => s.completed);
-                    if (hasCompletedSets) {
-                      setConfirmRemoveOpen(true);
-                    } else {
-                      haptics.warning();
-                      removeExercise(row.id);
-                    }
-                  }}
-                  className="exercise-card-menu-item danger"
-                >
-                  <Trash2 size={16} />
-                  <span>Quitar ejercicio</span>
-                </button>
-              </div>,
-              document.body,
-            )}
         </div>
       </div>
 

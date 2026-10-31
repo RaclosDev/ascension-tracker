@@ -29,14 +29,16 @@ import java.util.stream.Collectors;
 public class NutritionLogService {
 
     private final FoodLogRepository foodLogRepository;
+    private final com.ascension.repository.MealRepository mealRepository;
     private final SavedFoodRepository savedFoodRepository;
     private final UserDataQuotaService userDataQuotaService;
 
     public List<FoodLogDTO> getRecentDistinctFoods(String userEmail) {
+        var meals = mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail);
         return foodLogRepository.findTop50ByUserEmailOrderByDateDesc(userEmail).stream()
                 .filter(distinctByKey(FoodLog::getProduct))
                 .limit(5)
-                .map(this::toFoodLogDTO)
+                .map(log -> toFoodLogDTO(log, meals))
                 .collect(Collectors.toList());
     }
 
@@ -46,8 +48,9 @@ public class NutritionLogService {
     }
 
     public List<FoodLogDTO> getFoodLogsByDate(String userEmail, LocalDate date) {
+        var meals = mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail);
         return foodLogRepository.findByUserEmailAndDateOrderByIdAsc(userEmail, date).stream()
-                .map(this::toFoodLogDTO)
+                .map(log -> toFoodLogDTO(log, meals))
                 .collect(Collectors.toList());
     }
 
@@ -55,7 +58,7 @@ public class NutritionLogService {
         List<Object[]> dailyCalorieResults = foodLogRepository.findDailyCaloriesByUserEmail(userEmail);
         if (dailyCalorieResults.isEmpty()) return List.of();
 
-        java.time.LocalDate firstMonday = ((java.time.LocalDate) dailyCalorieResults.get(0)[0]).with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+        java.time.LocalDate firstMonday = WeeklyReportingWindow.start((java.time.LocalDate) dailyCalorieResults.get(0)[0]);
         java.time.LocalDate currentMonday = java.time.LocalDate.now().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
 
         java.util.Map<java.time.LocalDate, Double> entryMap = dailyCalorieResults.stream()
@@ -104,11 +107,22 @@ public class NutritionLogService {
 
     @Transactional
     public FoodLogDTO addFoodLog(String userEmail, FoodLogDTO dto) {
-        userDataQuotaService.checkFoodLogQuota(userEmail, 1);
+        return addFoodLogs(userEmail, List.of(dto)).get(0);
+    }
+
+    @Transactional
+    public List<FoodLogDTO> addFoodLogs(String userEmail, List<FoodLogDTO> foods) {
+        if (foods.isEmpty()) return List.of();
+        userDataQuotaService.checkFoodLogQuota(userEmail, foods.size());
+        var meals = mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail);
+        return foods.stream().map(dto -> persistFoodLog(userEmail, dto, meals)).toList();
+    }
+
+    private FoodLogDTO persistFoodLog(String userEmail, FoodLogDTO dto, List<com.ascension.model.Meal> meals) {
         FoodLog log = new FoodLog();
         log.setUserEmail(userEmail);
         log.setDate(dto.getDate());
-        log.setMealIndex(dto.getMealIndex());
+        MealIdentity.assign(log, dto.getMealKey(), dto.getMealIndex(), meals);
         log.setProduct(dto.getProduct());
         log.setQuantity(dto.getQuantity());
         log.setKcal(dto.getKcal());
@@ -125,7 +139,7 @@ public class NutritionLogService {
                 savedFoodRepository.save(sf);
             });
 
-        return toFoodLogDTO(saved);
+        return toFoodLogDTO(saved, meals);
     }
 
     @Transactional
@@ -149,12 +163,11 @@ public class NutritionLogService {
         log.setCarbs(dto.getCarbs());
         log.setFat(dto.getFat());
         log.setPortionsJson(dto.getPortionsJson());
-        if (dto.getMealIndex() != null) {
-            log.setMealIndex(dto.getMealIndex());
-        }
+        var meals = mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail);
+        MealIdentity.assign(log, dto.getMealKey(), dto.getMealIndex(), meals);
 
         foodLogRepository.save(log);
-        return toFoodLogDTO(log);
+        return toFoodLogDTO(log, meals);
     }
 
     @Transactional
@@ -171,6 +184,7 @@ public class NutritionLogService {
 
         userDataQuotaService.checkFoodLogQuota(userEmail, foods.size());
 
+        var meals = mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail);
         List<FoodLog> entities = new ArrayList<>();
         for (AiApplyRequestDTO.AppliedFoodItemDTO item : foods) {
             int resolvedMeal = item.getMealIndex() != null ? item.getMealIndex() : defaultMealIndex;
@@ -196,7 +210,7 @@ public class NutritionLogService {
             FoodLog entity = new FoodLog();
             entity.setUserEmail(userEmail);
             entity.setDate(date);
-            entity.setMealIndex(resolvedMeal);
+            MealIdentity.assign(entity, item.getMealKey(), resolvedMeal, meals);
             entity.setProduct(item.getProduct().trim());
             entity.setQuantity(item.getQuantity());
             entity.setKcal(item.getKcal());
@@ -208,7 +222,7 @@ public class NutritionLogService {
         }
 
         List<FoodLog> saved = foodLogRepository.saveAll(entities);
-        return saved.stream().map(this::toFoodLogDTO).collect(Collectors.toList());
+        return saved.stream().map(log -> toFoodLogDTO(log, meals)).collect(Collectors.toList());
     }
 
     private double parseDoubleSafe(Object val, double defaultVal) {
@@ -231,11 +245,14 @@ public class NutritionLogService {
         }
     }
 
-    private FoodLogDTO toFoodLogDTO(FoodLog log) {
+    private FoodLogDTO toFoodLogDTO(FoodLog log, List<com.ascension.model.Meal> meals) {
         return FoodLogDTO.builder()
                 .id(log.getId())
                 .date(log.getDate())
-                .mealIndex(log.getMealIndex())
+                .mealIndex(MealIdentity.currentIndex(log, meals))
+                .mealKey(log.getMealKey())
+                .mealName(log.getMealName())
+                .mealIcon(log.getMealIcon())
                 .product(log.getProduct())
                 .quantity(log.getQuantity())
                 .kcal(log.getKcal())

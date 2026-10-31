@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Search, AlertTriangle, Plus, Image as ImageIcon } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import api from '@/api/client';
+import { mergeExerciseReferences } from '../../../utils/mergeExerciseReferences';
 import {
   Dialog,
   DialogContentFullScreen,
@@ -32,8 +32,6 @@ export function MergeExerciseModal({
   onClose,
   sourceExercise,
   allExercises,
-  history,
-  customExercises,
   hiddenEquipments = [],
   customGifs = {},
   aliases = {},
@@ -132,68 +130,7 @@ export function MergeExerciseModal({
     const toastId = toast.loading('Fusionando ejercicios...');
 
     try {
-      const sourceId = sourceExercise.id;
-      const toUpdate = history.filter((w) => w.exercises.some((e) => e.exerciseId === sourceId));
-
-      const workoutPromises = toUpdate.map((w) => {
-        const updated = {
-          ...w,
-          exercises: w.exercises.map((e) =>
-            e.exerciseId === sourceId ? { ...e, exerciseId: confirmTargetId } : e,
-          ),
-        };
-        if ('id' in updated && typeof updated.id === 'string' && updated.id.includes('-')) {
-          return api.put(`/workouts/${updated.id}`, updated);
-        } else {
-          return api.post('/workouts', updated);
-        }
-      });
-      await Promise.all(workoutPromises);
-
-      // Fetch and update templates containing the source exercise
-      try {
-        const { data: templates = [] } = await api.get<
-          Array<{
-            id: string;
-            name: string;
-            exercises: Array<{ exerciseId: string; variant?: unknown }>;
-          }>
-        >('/workouts/templates');
-        const templatesToUpdate = templates.filter((tpl) =>
-          tpl.exercises.some((e) => e.exerciseId === sourceId),
-        );
-        if (templatesToUpdate.length > 0) {
-          const templatePromises = templatesToUpdate.map((tpl) => {
-            const updatedTpl = {
-              ...tpl,
-              exercises: tpl.exercises.map((e) =>
-                e.exerciseId === sourceId ? { ...e, exerciseId: confirmTargetId } : e,
-              ),
-            };
-            return api.post('/workouts/templates', updatedTpl);
-          });
-          await Promise.all(templatePromises);
-          queryClient.invalidateQueries({ queryKey: ['workoutTemplates'] });
-        }
-      } catch (templateErr) {
-        console.error(
-          'Error updating templates during merge:',
-          templateErr instanceof Error ? templateErr.message : String(templateErr),
-        );
-      }
-
-      const isCustom = customExercises.some((e) => e.id === sourceId);
-      if (isCustom) {
-        await api.delete(`/workouts/custom-exercises/${sourceId}`);
-      }
-
-      queryClient.invalidateQueries({ queryKey: ['workoutHistory'] });
-      queryClient.invalidateQueries({ queryKey: ['recentWorkouts'] });
-      queryClient.invalidateQueries({ queryKey: ['workouts'] });
-      queryClient.invalidateQueries({ queryKey: ['workoutTemplates'] });
-      if (isCustom) {
-        queryClient.invalidateQueries({ queryKey: ['customExercises'] });
-      }
+      await mergeExerciseReferences(sourceExercise.id, confirmTargetId);
 
       toast.success('Fusión completada con éxito', { id: toastId });
       onClose();
@@ -201,6 +138,11 @@ export function MergeExerciseModal({
       console.error('Error merging exercises:', err instanceof Error ? err.message : String(err));
       toast.error('Error al fusionar ejercicios', { id: toastId });
     } finally {
+      await Promise.all(
+        ['workoutHistory', 'recentWorkouts', 'workouts', 'workoutTemplates', 'customExercises'].map(
+          (key) => queryClient.invalidateQueries({ queryKey: [key] }),
+        ),
+      );
       setIsMerging(false);
     }
   }

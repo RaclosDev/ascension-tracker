@@ -1,3 +1,4 @@
+import { summarizeWorkoutExercises, formatWorkoutDuration } from '../../utils/workoutSummary';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Trophy,
@@ -24,12 +25,7 @@ import {
 import { useExerciseCatalog } from '@/lib/workout/catalog-query';
 import { useCustomExercises, useRecentWorkouts } from '@/lib/workout/api';
 import { getExerciseMap } from '@/lib/workout/exercises';
-import type {
-  CompletedWorkout,
-  ActiveWorkout,
-  WorkoutExercise,
-  WorkoutSet,
-} from '@/lib/workout/types';
+import type { CompletedWorkout, ActiveWorkout, WorkoutExercise } from '@/lib/workout/types';
 
 interface Props {
   open: boolean;
@@ -65,14 +61,6 @@ function fromLocalDatetimeString(str: string): number {
   return isNaN(d.getTime()) ? Date.now() : d.getTime();
 }
 
-function formatWorkoutDuration(totalMinutes: number): string {
-  if (totalMinutes <= 0) return '0 min';
-  if (totalMinutes < 60) return `${totalMinutes} min`;
-  const hours = Math.floor(totalMinutes / 60);
-  const mins = totalMinutes % 60;
-  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-}
-
 export function WorkoutCelebrationModal({
   open,
   onClose,
@@ -86,7 +74,7 @@ export function WorkoutCelebrationModal({
   const { data: customExercises = [] } = useCustomExercises();
   const { data: recentWorkouts = [] } = useRecentWorkouts();
   const catalog = useMemo(
-    () => getExerciseMap(customExercises),
+    () => getExerciseMap(customExercises, catalogExercises),
     [customExercises, catalogExercises],
   );
 
@@ -130,50 +118,7 @@ export function WorkoutCelebrationModal({
 
   const exercises: WorkoutExercise[] = currentWorkout.exercises || [];
 
-  // Filter completed sets and exercises
-  const completedExercisesList = exercises
-    .map((ex) => {
-      const meta = catalog.get(ex.exerciseId);
-      const doneSets = ex.sets.filter((s) => s.completed);
-      const exVolume = doneSets.reduce((sum, s) => {
-        const w = parseFloat(String(s.weight || '0').replace(',', '.'));
-        const r = parseInt(String(s.reps || '0'), 10);
-        return sum + (!isNaN(w) && !isNaN(r) ? w * r : 0);
-      }, 0);
-
-      // Best set calculation (highest weight or 1RM)
-      let bestSet: WorkoutSet | null = null;
-      let maxWeight = -1;
-      let maxReps = -1;
-      for (const s of doneSets) {
-        const w = parseFloat(String(s.weight || '0').replace(',', '.')) || 0;
-        const r = parseInt(String(s.reps || '0'), 10) || 0;
-        if (w > maxWeight || (w === maxWeight && r > maxReps)) {
-          maxWeight = w;
-          maxReps = r;
-          bestSet = s;
-        }
-      }
-
-      const hasPr = doneSets.some((s) =>
-        isPrSet(ex.exerciseId, ex.variant, s.weight, recentWorkouts),
-      );
-
-      return {
-        id: ex.id,
-        exerciseId: ex.exerciseId,
-        name: meta?.name || 'Ejercicio',
-        muscle: meta?.muscle,
-        gifUrl: meta?.gifUrl,
-        variant: ex.variant,
-        completedSetsCount: doneSets.length,
-        sets: doneSets,
-        volume: exVolume,
-        bestSet,
-        hasPr,
-      };
-    })
-    .filter((e) => e.completedSetsCount > 0);
+  const completedExercisesList = summarizeWorkoutExercises(exercises, catalog, recentWorkouts);
 
   const totalVolumeKg = sessionVolume(exercises);
   const totalCompletedSets = completedSets(exercises);

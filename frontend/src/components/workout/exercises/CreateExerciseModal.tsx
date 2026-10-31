@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import {
   Dialog,
@@ -39,6 +39,16 @@ export function CreateExerciseModal({
   const [equipment, setEquipment] = useState<Equipment>('barra');
   const [image, setImage] = useState<string | undefined>(undefined);
 
+  const imageGeneration = useRef(0);
+  const imageReader = useRef<FileReader | null>(null);
+  const cancelImage = () => {
+    imageGeneration.current += 1;
+    const reader = imageReader.current;
+    imageReader.current = null;
+    if (reader?.readyState === 1) reader.abort();
+  };
+  useLayoutEffect(() => cancelImage, [isOpen, initialData, initialName]);
+
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
@@ -59,10 +69,15 @@ export function CreateExerciseModal({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    cancelImage();
+    const generation = imageGeneration.current;
     const reader = new FileReader();
+    imageReader.current = reader;
     reader.onload = (event: ProgressEvent<FileReader>) => {
+      if (generation !== imageGeneration.current) return;
       const img = new Image();
       img.onload = () => {
+        if (generation !== imageGeneration.current) return;
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 

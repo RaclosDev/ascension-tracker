@@ -51,7 +51,7 @@ public class StepsService {
         List<StepsEntry> allEntries = stepsEntryRepository.findAllByUserEmailOrderByDateAsc(userEmail);
         if (allEntries.isEmpty()) return List.of();
 
-        LocalDate firstMonday = allEntries.get(0).getDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate firstMonday = WeeklyReportingWindow.start(allEntries.get(0).getDate());
         LocalDate currentMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
         Map<LocalDate, Integer> entryMap = allEntries.stream()

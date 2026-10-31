@@ -43,6 +43,41 @@ describe('lazyWithRetry and Deployment Resilience', () => {
     expect(reloadMock).not.toHaveBeenCalled();
   });
 
+  it('renders a loaded component when session storage is denied', async () => {
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+      throw new DOMException('Denied', 'SecurityError');
+    });
+    const LazyComp = lazyWithRetry(async () => ({ default: () => <div>Available offline</div> }));
+    render(
+      <ErrorBoundary>
+        <Suspense fallback="Loading">
+          <LazyComp />
+        </Suspense>
+      </ErrorBoundary>,
+    );
+    expect(await screen.findByText('Available offline')).toBeDefined();
+    expect(reloadMock).not.toHaveBeenCalled();
+  });
+
+  it('offers manual recovery without a reload loop when storage is denied', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    for (const method of ['getItem', 'setItem', 'removeItem'] as const) {
+      vi.spyOn(Storage.prototype, method).mockImplementation(() => {
+        throw new DOMException('Denied', 'SecurityError');
+      });
+    }
+    const LazyComp = lazyWithRetry(vi.fn().mockRejectedValue(new Error('Loading chunk failed')));
+    render(
+      <ErrorBoundary>
+        <Suspense fallback="Loading">
+          <LazyComp />
+        </Suspense>
+      </ErrorBoundary>,
+    );
+    expect(await screen.findByRole('button', { name: /Actualizar aplicaci/ })).toBeDefined();
+    expect(reloadMock).not.toHaveBeenCalled();
+  });
+
   it('detects MIME type error on chunk failure and automatically reloads window', async () => {
     const mimeError = new Error(
       "Failed to fetch dynamically imported module: 'text/html' is not a valid JavaScript MIME type.",
@@ -83,8 +118,7 @@ describe('lazyWithRetry and Deployment Resilience', () => {
   });
 
   it('reloads when factory resolves with missing default export', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const invalidFactory = vi.fn().mockResolvedValue({} as any);
+    const invalidFactory = vi.fn().mockResolvedValue({});
     const LazyComp = lazyWithRetry(invalidFactory);
 
     render(

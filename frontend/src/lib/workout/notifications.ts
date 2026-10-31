@@ -1,5 +1,7 @@
 import api from '@/api/client';
 import { haptics } from '@/lib/haptics';
+import { getWorkoutAccountRevision } from './accountIdentity';
+import { showRestPush } from './pushPayload';
 
 let audio: HTMLAudioElement | null = null;
 let pushSubscribed = false;
@@ -60,8 +62,10 @@ export async function dismissRestNotifications() {
     if ('serviceWorker' in navigator) {
       const reg = await navigator.serviceWorker.ready;
       if (reg && 'getNotifications' in reg) {
-        const notifications = await reg.getNotifications({ tag: REST_NOTIFICATION_TAG });
-        notifications.forEach((n) => n.close());
+        const notifications = await reg.getNotifications();
+        notifications
+          .filter((notification) => notification.tag.startsWith(REST_NOTIFICATION_TAG))
+          .forEach((notification) => notification.close());
       }
     }
   } catch (e: unknown) {
@@ -77,22 +81,15 @@ export async function notifyRestFinished() {
   if (typeof window === 'undefined' || !('Notification' in window)) return;
 
   if (Notification.permission === 'granted') {
+    const tag =
+      activeServerTimerId !== null && activeTimerAccountRevision === getWorkoutAccountRevision()
+        ? `${REST_NOTIFICATION_TAG}-${activeServerTimerId}`
+        : REST_NOTIFICATION_TAG;
     try {
       if ('serviceWorker' in navigator) {
         const reg = await navigator.serviceWorker.ready;
         if (reg && 'showNotification' in reg) {
-          const existing = await reg.getNotifications({ tag: REST_NOTIFICATION_TAG });
-          existing.forEach((n) => n.close());
-
-          await reg.showNotification('¡Descanso terminado!', {
-            body: 'Es hora de la siguiente serie.',
-            icon: '/icon-192.png',
-            badge: '/icon-192.png',
-            vibrate: [200, 100, 200, 100, 200],
-            tag: REST_NOTIFICATION_TAG,
-            renotify: true,
-            data: { url: '/workout' },
-          } as NotificationOptions);
+          await showRestPush(reg, { tag });
           return;
         }
       }
@@ -101,8 +98,8 @@ export async function notifyRestFinished() {
         body: 'Es hora de la siguiente serie.',
         icon: '/icon-192.png',
         vibrate: [200, 100, 200, 100, 200],
-        tag: REST_NOTIFICATION_TAG,
-        renotify: true,
+        tag,
+        renotify: false,
       } as NotificationOptions);
     } catch {
       // On some devices, local Notification constructor fails; SW push will handle it
@@ -151,23 +148,53 @@ async function subscribeToPush() {
   }
 }
 
-export async function scheduleServerRestTimer(delaySec: number) {
-  try {
-    await api.post('/push/rest-timer', { delaySec });
-  } catch (e: unknown) {
-    console.warn(
-      'Failed to schedule server rest timer',
-      e instanceof Error ? e.message : String(e),
-    );
-  }
+let timerQueue: Promise<void> = Promise.resolve();
+let restIntent = 0;
+let activeServerTimerId: number | null = null;
+let activeTimerAccountRevision = 0;
+function enqueueRestTimer(update: () => Promise<unknown>): Promise<void> {
+  const revision = getWorkoutAccountRevision();
+  timerQueue = timerQueue.then(async () => {
+    if (revision !== getWorkoutAccountRevision()) return;
+    try {
+      await update();
+    } catch (error) {
+      console.warn(
+        'Failed to update server rest timer',
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  });
+  return timerQueue;
 }
 
-export async function cancelServerRestTimer() {
-  try {
-    await api.post('/push/rest-timer/cancel');
-  } catch (e: unknown) {
-    console.warn('Failed to cancel server rest timer', e instanceof Error ? e.message : String(e));
-  }
+export function scheduleServerRestTimer(delaySec: number): Promise<void> {
+  const deadline = Date.now() + delaySec * 1000;
+  const intent = ++restIntent;
+  activeServerTimerId = null;
+  const revision = getWorkoutAccountRevision();
+  return enqueueRestTimer(async () => {
+    const remaining = Math.ceil((deadline - Date.now()) / 1000);
+    if (remaining <= 0) return api.post('/push/rest-timer/cancel');
+    const { data } = await api.post<{ timerId?: number }>('/push/rest-timer', {
+      delaySec: remaining,
+    });
+    if (
+      intent === restIntent &&
+      revision === getWorkoutAccountRevision() &&
+      Number.isSafeInteger(data?.timerId) &&
+      data.timerId! > 0
+    ) {
+      activeServerTimerId = data.timerId!;
+      activeTimerAccountRevision = revision;
+    }
+  });
+}
+
+export function cancelServerRestTimer(): Promise<void> {
+  restIntent++;
+  activeServerTimerId = null;
+  return enqueueRestTimer(() => api.post('/push/rest-timer/cancel'));
 }
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {

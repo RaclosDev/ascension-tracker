@@ -5,7 +5,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import api from './api/client';
-import { applyThemeColor } from './utils/colorHelper';
+import { applyThemeColor, readThemeColor } from './utils/colorHelper';
 import { lazyWithRetry, isChunkLoadError } from './utils/lazyWithRetry';
 
 const DashboardPage = lazyWithRetry(() => import('./pages/DashboardPage'));
@@ -158,7 +158,7 @@ class GlobalErrorBoundary extends Component<{ children: React.ReactNode }, { has
 
 export default function App() {
   useEffect(() => {
-    const savedTheme = localStorage.getItem('ascension_custom_color') || '#0085FF';
+    const savedTheme = readThemeColor();
     applyThemeColor(savedTheme);
   }, []);
 

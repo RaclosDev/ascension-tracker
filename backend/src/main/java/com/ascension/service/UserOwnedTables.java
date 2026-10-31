@@ -24,6 +24,9 @@ final class UserOwnedTables {
             new Table("push_subscriptions", "user_email", false),
             new Table("rest_timers", "user_email", false),
             new Table("refresh_tokens", "email", false),
+            new Table("idempotent_requests", "user_email", false),
+            new Table("ai_quota_usage", "user_email", false),
+            new Table("ai_quota_reservations", "user_email", false),
             new Table("steps_entries", "user_email", true),
             new Table("weight_entries", "user_email", true),
             new Table("user_settings", "user_email", true));
