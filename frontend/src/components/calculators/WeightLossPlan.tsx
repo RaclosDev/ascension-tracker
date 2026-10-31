@@ -127,7 +127,7 @@ export default function WeightLossPlan({
       dailyIntake,
       warnings,
     };
-  }, [tdee, bmr, pWeight, pGoal, pWeeks, stepsPct, pAct, sex]);
+  }, [tdee, bmr, pWeight, pGoal, pWeeks, stepsPct]);
 
   const handleManualSteps = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value);

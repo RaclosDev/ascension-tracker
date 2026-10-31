@@ -683,11 +683,6 @@ export function kmhToMph(kmh: number): number {
   return Math.round((kmh / KM_PER_MILE) * 100) / 100;
 }
 
-export function mphToKmh(mph: number): number {
-  if (mph < 0) return 0;
-  return Math.round(mph * KM_PER_MILE * 100) / 100;
-}
-
 export function formatPace(paceDecimal: number): string {
   if (paceDecimal <= 0) return '0:00';
   const minutes = Math.floor(paceDecimal);

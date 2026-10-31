@@ -39,10 +39,11 @@ public class OpenFoodFactsClient {
     @PostConstruct
     public void init() {
         var cfg = externalApiProperties.getOpenfoodfacts();
-        this.restTemplate = builder
-                .connectTimeout(Duration.ofMillis(cfg.getConnectTimeoutMs()))
-                .readTimeout(Duration.ofMillis(cfg.getReadTimeoutMs()))
-                .build();
+        var httpClient = java.net.http.HttpClient.newBuilder()
+                .connectTimeout(Duration.ofMillis(cfg.getConnectTimeoutMs())).build();
+        var factory = new org.springframework.http.client.JdkClientHttpRequestFactory(httpClient);
+        factory.setReadTimeout(cfg.getReadTimeoutMs());
+        this.restTemplate = builder.requestFactory(() -> factory).build();
     }
 
     public JsonNode searchOpenFoodFacts(String query) {

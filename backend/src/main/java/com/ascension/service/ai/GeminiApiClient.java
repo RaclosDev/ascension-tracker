@@ -29,7 +29,7 @@ import java.util.Map;
 public class GeminiApiClient {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiApiClient.class);
-    public static final long TOTAL_REQUEST_DEADLINE_MS = 35_000L;
+    public static final long TOTAL_REQUEST_DEADLINE_MS = 25_000L;
     public static final long MODEL_CACHE_TTL_MS = 3600_000L;
     public static final int MAX_MODELS_PER_REQUEST = 3;
 
@@ -42,6 +42,7 @@ public class GeminiApiClient {
     @Value("${app.gemini.fallback-models:gemini-flash-lite-latest,gemini-3-flash-preview,gemini-3.5-flash-lite,gemini-flash-latest,gemini-3.8-flash}")
     private String fallbackModels = "gemini-flash-lite-latest,gemini-3-flash-preview,gemini-3.5-flash-lite,gemini-flash-latest,gemini-3.8-flash";
 
+    private final com.ascension.service.ExternalApiExecution execution;
     private final RestTemplateBuilder builder;
     private final ExternalApiProperties properties;
     private RestTemplate restTemplate;
@@ -51,7 +52,8 @@ public class GeminiApiClient {
     private volatile List<String> cachedModelCandidates = null;
     private volatile long modelCacheExpiresAt = 0L;
 
-    public GeminiApiClient(RestTemplateBuilder builder, ExternalApiProperties properties) {
+    public GeminiApiClient(RestTemplateBuilder builder, ExternalApiProperties properties, com.ascension.service.ExternalApiExecution execution) {
+        this.execution = execution;
         this.builder = builder;
         this.properties = properties != null ? properties : new ExternalApiProperties();
     }
@@ -59,8 +61,9 @@ public class GeminiApiClient {
     @PostConstruct
     public void init() {
         var cfg = properties.getGemini();
-        org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(cfg.getConnectTimeoutMs());
+        var httpClient = java.net.http.HttpClient.newBuilder()
+                .connectTimeout(java.time.Duration.ofMillis(cfg.getConnectTimeoutMs())).build();
+        var factory = new org.springframework.http.client.JdkClientHttpRequestFactory(httpClient);
         factory.setReadTimeout(cfg.getReadTimeoutMs());
         this.restTemplate = builder.requestFactory(() -> factory).build();
     }
@@ -130,6 +133,10 @@ public class GeminiApiClient {
     }
 
     public String executePrompt(String prompt, String base64Image, String mimeType) {
+        return execution.generate(() -> executeWithinDeadline(prompt, base64Image, mimeType), TOTAL_REQUEST_DEADLINE_MS);
+    }
+
+    private String executeWithinDeadline(String prompt, String base64Image, String mimeType) {
         String apiKey = sanitizeApiKey(geminiApiKey);
         if (apiKey == null || apiKey.isEmpty()) {
             throw new ExternalApiException("Gemini", HttpStatus.SERVICE_UNAVAILABLE, "GEMINI_API_KEY is not configured.");
@@ -150,12 +157,14 @@ public class GeminiApiClient {
             }
         }
 
+        checkDeadline(deadline);
         long now = System.currentTimeMillis();
         List<String> modelCandidates = cachedModelCandidates;
         if (modelCandidates == null || now > modelCacheExpiresAt) {
             synchronized (this) {
                 modelCandidates = cachedModelCandidates;
                 if (modelCandidates == null || System.currentTimeMillis() > modelCacheExpiresAt) {
+                    checkDeadline(deadline);
                     modelCandidates = discoverModels(apiKey);
                     cachedModelCandidates = modelCandidates;
                     modelCacheExpiresAt = System.currentTimeMillis() + MODEL_CACHE_TTL_MS;
@@ -252,9 +261,9 @@ public class GeminiApiClient {
     }
 
     private void checkDeadline(long deadline) {
-        if (System.currentTimeMillis() >= deadline) {
+        if (Thread.currentThread().isInterrupted() || System.currentTimeMillis() >= deadline) {
             throw new ExternalApiException("Gemini", HttpStatus.GATEWAY_TIMEOUT,
-                    "Deadline de petición excedido (35s) para Gemini API");
+                    "Deadline de petición excedido (25s) para Gemini API");
         }
     }
 
@@ -445,7 +454,7 @@ public class GeminiApiClient {
         long backoffMs = initialBackoffMs * (1L << (attempt - 1));
         if (System.currentTimeMillis() + backoffMs >= deadline) {
             throw new ExternalApiException("Gemini", HttpStatus.GATEWAY_TIMEOUT,
-                    "Deadline de petición excedido (20s) para Gemini API antes de reintento");
+                    "Deadline de petición excedido (25s) para Gemini API antes de reintento");
         }
         try {
             Thread.sleep(backoffMs);
@@ -461,28 +470,12 @@ public class GeminiApiClient {
         int firstBrace = response.indexOf('{');
         int firstBracket = response.indexOf('[');
 
-        int start = -1;
-        if (firstBrace != -1 && firstBracket != -1) {
-            start = Math.min(firstBrace, firstBracket);
-        } else if (firstBrace != -1) {
-            start = firstBrace;
-        } else if (firstBracket != -1) {
-            start = firstBracket;
-        }
+        int start = firstBrace < 0 ? firstBracket
+                : firstBracket < 0 ? firstBrace : Math.min(firstBrace, firstBracket);
 
         if (start == -1) return response.trim();
 
-        int lastBrace = response.lastIndexOf('}');
-        int lastBracket = response.lastIndexOf(']');
-
-        int end = -1;
-        if (lastBrace != -1 && lastBracket != -1) {
-            end = Math.max(lastBrace, lastBracket);
-        } else if (lastBrace != -1) {
-            end = lastBrace;
-        } else if (lastBracket != -1) {
-            end = lastBracket;
-        }
+        int end = Math.max(response.lastIndexOf('}'), response.lastIndexOf(']'));
 
         if (end != -1 && end >= start) {
             return response.substring(start, end + 1);

@@ -39,3 +39,5 @@ Este documento establece el contrato formal e inmutable de calidad, límites arq
    - Backend: Los 293+ tests unitarios y de integración deben mantenerse 100% en verde.
    - Frontend: Verificación de tipos (`tsc --noEmit`) obligatoria en cada Pull Request.
    - Frontend: cobertura mínima en `vitest.config.ts` (statements 22 %, branches 18 %, functions 17 %, lines 22 %), comprobada en CI con `npm run test:coverage`. Solo puede subir.
+
+Los límites de tamaño usan unidades decimales: 1 KB = 1.000 bytes y 1 MB = 1.000.000 bytes. El precache se mide sin comprimir; JS y CSS principales se miden con gzip. CI los verifica tras el build mediante `frontend/scripts/check-build-budgets.mjs`.

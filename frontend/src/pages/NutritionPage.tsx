@@ -1,3 +1,4 @@
+import { QueryErrorNotice } from '../components/QueryErrorNotice';
 import { Suspense, useRef } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useQueryClient } from '@tanstack/react-query';
@@ -38,6 +39,8 @@ export default function NutritionPage() {
     settings,
     loading,
     fetchData,
+    isError,
+    isFetching,
     consumed,
     pieData,
     toggleMealCollapse,
@@ -116,10 +119,13 @@ export default function NutritionPage() {
     );
   }
 
-  if (!macros || !settings) return null;
+  if (!macros || !settings) {
+    return <QueryErrorNotice retry={fetchData} pending={isFetching} />;
+  }
 
   return (
     <div className="fade-in">
+      {isError && <QueryErrorNotice retry={fetchData} pending={isFetching} />}
       <h1 className="sr-only">Nutrición</h1>
       <SegmentedControl
         options={[

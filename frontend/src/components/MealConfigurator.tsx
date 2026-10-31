@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useEffectEvent } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import toast from 'react-hot-toast';
 import api from '../api/client';
@@ -17,10 +17,6 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
   const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    fetchMeals();
-  }, []);
 
   const handleResetDefaults = async () => {
     setSaving(true);
@@ -71,6 +67,11 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
       setLoading(false);
     }
   };
+
+  const loadInitialMeals = useEffectEvent(() => fetchMeals());
+  useEffect(() => {
+    loadInitialMeals();
+  }, []);
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;

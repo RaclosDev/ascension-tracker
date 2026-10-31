@@ -57,7 +57,10 @@ export const ExerciseCard = React.memo(function ExerciseCard({
     useWorkoutPreferencesActions();
   const globalMachines = prefs?.globalMachines || [];
   const globalGrips = prefs?.globalGrips || [];
-  const exerciseVariants = prefs?.exerciseVariants || {};
+  const exerciseVariants = React.useMemo(
+    () => prefs?.exerciseVariants || {},
+    [prefs?.exerciseVariants],
+  );
   const customGifs = prefs?.exerciseGifs || {};
   const [editingVariant, setEditingVariant] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);

@@ -30,14 +30,16 @@ export function useNutritionDiary() {
     data,
     isLoading: loading,
     refetch: fetchData,
+    isError,
+    isFetching,
   } = useQuery<{ foodLogs: FoodLog[]; macros: Macros; meals: Meal[]; settings: UserSettings }>({
     queryKey: ['nutritionData', selectedDate],
     queryFn: async () => {
       const [macrosRes, mealsRes, settingsRes, logsRes] = await Promise.all([
-        api.get('/nutrition/macros').catch(() => ({ data: null })),
-        api.get('/nutrition/meals').catch(() => ({ data: [] })),
-        api.get('/settings').catch(() => ({ data: null })),
-        api.get(`/nutrition/logs?date=${selectedDate}`).catch(() => ({ data: [] })),
+        api.get<Macros>('/nutrition/macros'),
+        api.get<Meal[]>('/nutrition/meals'),
+        api.get<UserSettings>('/settings'),
+        api.get<FoodLog[]>(`/nutrition/logs?date=${selectedDate}`),
       ]);
 
       return {
@@ -52,15 +54,16 @@ export function useNutritionDiary() {
 
   const { foodLogs = [], macros = null, meals = [], settings = null } = data || {};
 
+  const mealCount = meals.length;
   useEffect(() => {
-    if (meals.length > 0) {
+    if (mealCount > 0) {
       const newCollapsed: Record<number, boolean> = {};
-      meals.forEach((_: Meal, i: number) => {
+      for (let i = 0; i < mealCount; i++) {
         newCollapsed[i] = true;
-      });
+      }
       setCollapsedMeals(newCollapsed);
     }
-  }, [meals.length]);
+  }, [mealCount]);
 
   const toggleMealCollapse = (index: number, e?: React.MouseEvent | React.KeyboardEvent) => {
     setCollapsedMeals((prev: Record<number, boolean>) => {
@@ -410,6 +413,8 @@ export function useNutritionDiary() {
   }, [macros, consumed]);
 
   return {
+    isError,
+    isFetching,
     selectedDate,
     setSelectedDate,
     searchModalOpen,

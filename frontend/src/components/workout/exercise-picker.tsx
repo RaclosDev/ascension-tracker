@@ -22,19 +22,19 @@ export function ExercisePicker() {
   const { prefs, addGripOption, addMachineOption } = useWorkoutPreferencesActions();
   const globalMachines = prefs?.globalMachines || [];
   const globalGrips = prefs?.globalGrips || [];
-  const exerciseVariants = prefs?.exerciseVariants || {};
+  const exerciseVariants = useMemo(() => prefs?.exerciseVariants || {}, [prefs?.exerciseVariants]);
 
   const { data: customExercisesData } = useCustomExercises();
-  const customExercises = customExercisesData || [];
+  const customExercises = useMemo(() => customExercisesData || [], [customExercisesData]);
   const saveExerciseMutation = useSaveCustomExercise();
   const addCustomExercise = (ex: Partial<import('@/lib/workout/types').Exercise>) => {
     const id = ex.id || Date.now().toString();
     saveExerciseMutation.mutate({ ...ex, id } as import('@/lib/workout/types').Exercise);
     return id;
   };
-  const aliases = prefs?.exerciseAliases || {};
+  const aliases = useMemo(() => prefs?.exerciseAliases || {}, [prefs?.exerciseAliases]);
   const customGifs = prefs?.exerciseGifs || {};
-  const hiddenEquipments = prefs?.hiddenEquipments || [];
+  const hiddenEquipments = useMemo(() => prefs?.hiddenEquipments || [], [prefs?.hiddenEquipments]);
   const { data: recentWorkouts = [] } = useRecentWorkouts(180);
   const history = recentWorkouts;
   const active = useWorkoutStore((s) => s.active);
@@ -120,7 +120,7 @@ export function ExercisePicker() {
   );
 
   const recentExercises = useMemo(() => {
-    const all = [...customExercises, ...EXERCISE_CATALOG, ...BASE_EXERCISES];
+    const all = [...customExercises, ...(catalogExercises ?? EXERCISE_CATALOG), ...BASE_EXERCISES];
     const exMap = new Map(all.map((ex) => [ex.id, ex]));
 
     const l = new Map<
@@ -167,7 +167,11 @@ export function ExercisePicker() {
 
   const groupedList = useMemo(() => {
     const all =
-      tab === 'base' ? BASE_EXERCISES : tab === 'custom' ? customExercises : EXERCISE_CATALOG;
+      tab === 'base'
+        ? BASE_EXERCISES
+        : tab === 'custom'
+          ? customExercises
+          : (catalogExercises ?? EXERCISE_CATALOG);
     const q = normalizeString(query.trim());
     const filtered = all
       .filter(

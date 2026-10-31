@@ -25,7 +25,7 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
   const { prefs, addGripOption, addMachineOption } = useWorkoutPreferencesActions();
   const globalMachines = prefs?.globalMachines || [];
   const globalGrips = prefs?.globalGrips || [];
-  const exerciseVariants = prefs?.exerciseVariants || {};
+  const exerciseVariants = useMemo(() => prefs?.exerciseVariants || {}, [prefs?.exerciseVariants]);
   const customGifs = prefs?.exerciseGifs || {};
   const [filterGrip, setFilterGrip] = useState<string>('ALL');
   const [filterMachine, setFilterMachine] = useState<string>('ALL');

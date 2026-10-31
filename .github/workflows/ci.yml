@@ -52,7 +52,7 @@ jobs:
           fi
           files=$(git diff --name-only "$base" "$HEAD_SHA")
           echo "$files"
-          shared='^(\.github/workflows/ci\.yml|\.trivyignore)$'
+          shared='^(\.github/workflows/ci\.yml|\.trivyignore|docker-compose\.yml|scripts/.*)$'
           has() { echo "$files" | grep -qE "$1|$shared" && echo true || echo false; }
           echo "backend=$(has '^backend/')" >> "$GITHUB_OUTPUT"
           echo "frontend=$(has '^frontend/')" >> "$GITHUB_OUTPUT"
@@ -136,10 +136,12 @@ jobs:
       - name: Lint, Typecheck and Test Frontend
         working-directory: frontend
         run: |
+          npm run check:csp
           npm run lint
           npm run typecheck
           npm run test:coverage
           npm run build
+          node scripts/check-build-budgets.mjs
 
       - name: Cache Playwright Browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -155,7 +157,9 @@ jobs:
 
       - name: Run E2E Tests
         working-directory: frontend
-        run: npx playwright test
+        run: |
+          npx playwright test
+          npx playwright test --config playwright.production.config.ts
 
       - name: Build Frontend Docker Image
         if: needs.changes.outputs.images == 'true'
@@ -172,3 +176,21 @@ jobs:
           ignore-unfixed: true
           exit-code: '1'
           trivyignores: '.trivyignore'
+
+  quality-gate:
+    name: Quality gate
+    if: always()
+    needs: [changes, backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require successful applicable checks
+        env:
+          CHANGES: ${{ needs.changes.result }}
+          BACKEND: ${{ needs.backend.result }}
+          FRONTEND: ${{ needs.frontend.result }}
+          EXPECT_BACKEND: ${{ needs.changes.outputs.backend }}
+          EXPECT_FRONTEND: ${{ needs.changes.outputs.frontend }}
+        run: |
+          test "$CHANGES" = success
+          if [ "$EXPECT_BACKEND" = true ]; then test "$BACKEND" = success; else test "$BACKEND" = skipped; fi
+          if [ "$EXPECT_FRONTEND" = true ]; then test "$FRONTEND" = success; else test "$FRONTEND" = skipped; fi

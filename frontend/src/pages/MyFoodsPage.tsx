@@ -1,3 +1,4 @@
+import { QueryErrorNotice } from '../components/QueryErrorNotice';
 import { useState, useEffect, Suspense } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { Skeleton } from '../components/ui/skeleton';
@@ -30,6 +31,8 @@ export default function MyFoodsPage() {
     recipes,
     isLoading,
     fetchData,
+    isError,
+    isFetching,
     deleteFoodsBulk,
     deleteRecipe,
     deleteSavedFood,
@@ -77,6 +80,7 @@ export default function MyFoodsPage() {
 
   return (
     <div className="fade-in">
+      {isError && <QueryErrorNotice retry={fetchData} pending={isFetching} />}
       <FoodFiltersBar
         searchQuery={filters.searchQuery}
         setSearchQuery={filters.setSearchQuery}

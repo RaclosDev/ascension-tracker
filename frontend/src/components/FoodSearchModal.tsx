@@ -1,14 +1,16 @@
-import { useState, useEffect, useRef, FormEvent, ChangeEvent, Suspense } from 'react';
+import { QueryErrorNotice } from './QueryErrorNotice';
+import { useFoodSearchLists } from '../hooks/food/useFoodSearchLists';
+import { updateManualFoodForm } from '../utils/manualFoodForm';
+import { useFoodAiEntry } from '../hooks/food/useFoodAiEntry';
+import { useState, useEffect, ChangeEvent, Suspense } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
-import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import { useSpeechToText } from '../hooks/useSpeechToText';
 
-import { normalizeText as normalizeString } from '../utils/searchHelper';
+import { useExternalFoodSearch } from '../hooks/food/useExternalFoodSearch';
 import { AiFoodAssistantView } from './food/AiFoodAssistantView';
-import { getSanitizedKcal, extractPortions } from '../utils/portionHelper';
-import { getSmartFallbackQueries } from '../utils/searchHelper';
+import { useFoodSelection } from '../hooks/food/useFoodSelection';
 const BarcodeScanner = lazyWithRetry(() => import('./BarcodeScanner'));
 import ManualFoodForm from './food/ManualFoodForm';
 import { FoodPortionEditor, SearchProduct } from './food/FoodPortionEditor';
@@ -16,7 +18,7 @@ import { FoodSearchResultsList, SavedFoodExtended } from './food/FoodSearchResul
 
 import { Mic, ImageIcon, X, ScanLine, ArrowLeft } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
-import { FoodListsData, FoodLog, Meal, Recipe } from '../types/api';
+import { FoodLog, Meal } from '../types/api';
 
 export type { SavedFoodExtended, SearchProduct };
 
@@ -39,58 +41,46 @@ export default function FoodSearchModal({
 }) {
   const [activeOverlay, setActiveOverlay] = useState<'none' | 'scanner' | 'ai' | 'manual'>('none');
   const [query, setQuery] = useState('');
-  const [selectedImage, setSelectedImage] = useState<string | ArrayBuffer | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [offResults, setOffResults] = useState<Array<Record<string, unknown>>>([]);
-  const { data: foodLists } = useQuery<FoodListsData, Error>({
-    queryKey: ['foodLists'],
-    enabled: !!isOpen,
-    queryFn: async () => {
-      const [recentRes, savedRes, recipesRes] = await Promise.all([
-        api.get('/nutrition/logs/recent').catch(() => ({ data: [] })),
-        api.get('/nutrition/my-foods').catch(() => ({ data: [] })),
-        api.get('/nutrition/recipes').catch(() => ({ data: [] })),
-      ]);
-      return { recent: recentRes.data, saved: savedRes.data, recipes: recipesRes.data };
-    },
-  });
-  const recentLogs = foodLists?.recent || [];
-  const mappedRecipes = (foodLists?.recipes || []).map((r: Recipe) => ({
-    ...r,
-    brand: 'Receta',
-    kcalPer100g: r.totalKcal, // Treat 1 serving of recipe as 100 "units" for calculation simplicity, or we can just say 1 portion = 1 "ud" = 1 serving. Let's make servingSize = 100, kcal = totalKcal.
-    servingSize: 100,
-    servingLabel: 'racion',
-    kcal: r.totalKcal,
-    protein: r.totalProtein,
-    carbs: r.totalCarbs,
-    fat: r.totalFat,
-    isRecipe: true,
-  }));
-  const savedFoods = [...(foodLists?.saved || []), ...mappedRecipes];
-  // const [searching, setSearching] = useState(false);
-  // const [hasSearched, setHasSearched] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<SearchProduct | null>(null);
-  const [quantity, setQuantity] = useState(100);
-  const [inputMode, setInputMode] = useState<'grams' | 'portions'>('grams');
+  const { recentLogs, savedFoods, isError, isFetching, refetch } = useFoodSearchLists(isOpen);
+  const {
+    selectedProduct,
+    setSelectedProduct,
+    quantity,
+    setQuantity,
+    inputMode,
+    setInputMode,
+    handleSelectOff,
+    handleSelectRecent,
+    handleSelectSaved,
+  } = useFoodSelection();
   const [selectedMealIndex, setSelectedMealIndex] = useState(
     mealIndex !== undefined && mealIndex !== null ? mealIndex : 0,
   );
   const [ocrLoading, setOcrLoading] = useState(false);
-  const [aiSubmitting, setAiSubmitting] = useState(false);
-  const [aiElapsedSeconds, setAiElapsedSeconds] = useState(0);
-
-  useEffect(() => {
-    if (selectedProduct && selectedProduct.portions && selectedProduct.portions.length > 0) {
-      setInputMode('portions');
-    } else {
-      setInputMode('grams');
-    }
-  }, [selectedProduct?.name]);
 
   const { isListening, toggleListening, stopListening } = useSpeechToText({
     onTranscript: (text) => setQuery(text),
     lang: 'es-ES',
+  });
+
+  const {
+    selectedImage,
+    setSelectedImage,
+    fileInputRef,
+    handleImageChange,
+    aiSubmitting,
+    aiElapsedSeconds,
+    getAiStatusText,
+    submitAiPrompt,
+  } = useFoodAiEntry({
+    query,
+    setQuery,
+    selectedMealIndex,
+    date,
+    stopListening,
+    onLogAdded,
+    onClose,
   });
 
   useEffect(() => {
@@ -114,31 +104,8 @@ export default function FoodSearchModal({
     fat: '',
   });
 
-  const updateManualForm = (field: string, value: string) => {
-    const newForm = { ...manualForm, [field]: value };
-    if (['protein', 'carbs', 'fat'].includes(field)) {
-      const p = parseFloat(newForm.protein) || 0;
-      const c = parseFloat(newForm.carbs) || 0;
-      const f = parseFloat(newForm.fat) || 0;
-      if (newForm.protein || newForm.carbs || newForm.fat) {
-        newForm.kcal = (Math.round((p * 4 + c * 4 + f * 9) * 10) / 10).toString();
-      } else {
-        newForm.kcal = '';
-      }
-    }
-    setManualForm(newForm);
-  };
-
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const updateManualForm = (field: string, value: string) =>
+    setManualForm((previous) => updateManualFoodForm(previous, field, value));
 
   useEffect(() => {
     if (isOpen) {
@@ -154,9 +121,9 @@ export default function FoodSearchModal({
       setSelectedMealIndex(mealIndex !== undefined && mealIndex !== null ? mealIndex : 0);
       setManualForm({ name: '', brand: '', kcal: '', protein: '', carbs: '', fat: '' });
     }
-  }, [isOpen]);
+  }, [isOpen, mealIndex, setSelectedProduct, setQuantity, setSelectedImage, fileInputRef]);
 
-  const searchRequestId = useRef(0);
+  const handleSearch = useExternalFoodSearch(query, setOffResults);
 
   if (!isOpen) return null;
 
@@ -165,74 +132,6 @@ export default function FoodSearchModal({
     if (!val.trim()) {
       setOffResults([]);
       return;
-    }
-  };
-
-  const handleSearch = async (e?: FormEvent) => {
-    if (e) e.preventDefault();
-    const q = query.trim();
-    if (!q) return;
-
-    searchRequestId.current += 1;
-    const currentRequestId = searchRequestId.current;
-
-    const queriesToTry = getSmartFallbackQueries(q);
-    let allCleanProducts: Array<Record<string, unknown>> = [];
-
-    try {
-      for (const currentQ of queriesToTry) {
-        if (currentRequestId !== searchRequestId.current) return;
-        let data: Record<string, unknown>;
-        try {
-          const res = await api.get(`/food-external/search?q=${encodeURIComponent(currentQ)}`);
-          data = res.data;
-        } catch {
-          continue;
-        }
-        if (currentRequestId !== searchRequestId.current) return;
-
-        let products: Array<Record<string, unknown>> = [];
-        if (data.product) products = [data.product as Record<string, unknown>];
-        else if (data.products) products = data.products as Array<Record<string, unknown>>;
-
-        const qWords = normalizeString(currentQ).split(/\s+/).filter(Boolean);
-        const cleanProducts = products
-          .filter((p) => {
-            const name = normalizeString((p.product_name || p.product_name_es || '') as string);
-            if (!name) return false;
-            return qWords.some((w: string) => name.includes(normalizeString(w)));
-          })
-          .sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
-            const nameA = normalizeString((a.product_name || a.product_name_es || '') as string);
-            const nameB = normalizeString((b.product_name || b.product_name_es || '') as string);
-            return nameA.length - nameB.length;
-          });
-
-        if (cleanProducts.length > 0) {
-          allCleanProducts = cleanProducts;
-          break;
-        }
-      }
-
-      if (currentRequestId !== searchRequestId.current) return;
-
-      setOffResults(allCleanProducts);
-
-      if (allCleanProducts.length === 0) {
-        toast('No se encontraron resultados exactos', { icon: 'ℹ️' });
-      }
-    } catch (err) {
-      if (currentRequestId !== searchRequestId.current) return;
-      console.error(
-        'Error al consultar base de datos de alimentos:',
-        err instanceof Error ? err.message : String(err),
-      );
-      toast.error('Error al consultar base de datos');
-    } finally {
-      /* ignore */
-      if (currentRequestId === searchRequestId.current) {
-        /* ignore */
-      } /* ignore */
     }
   };
 
@@ -275,7 +174,6 @@ export default function FoodSearchModal({
           'Error al analizar la etiqueta.',
       );
     } finally {
-      /* ignore */
       setOcrLoading(false);
       e.target.value = '';
     }
@@ -317,104 +215,6 @@ export default function FoodSearchModal({
         err instanceof Error ? err.message : String(err),
       );
       toast.error('Error al consultar código de barras');
-    } finally {
-      /* ignore */
-    }
-  };
-
-  const handleSelectOff = (p: Record<string, unknown>) => {
-    const name = (p.product_name || p.product_name_es || 'Producto') as string;
-    const brand = p.brands ? ` - ${p.brands}` : '';
-    const nut = (p.nutriments || {}) as Record<string, unknown>;
-
-    const portions = extractPortions(p);
-
-    setSelectedProduct({
-      name: `${name}${brand}`,
-      category: 'Supermercado',
-      kcal: getSanitizedKcal(nut),
-      protein: Number(nut['proteins_100g'] ?? nut['proteins'] ?? 0) || 0,
-      carbs: Number(nut['carbohydrates_100g'] ?? nut['carbohydrates'] ?? 0) || 0,
-      fat: Number(nut['fat_100g'] ?? nut['fat'] ?? 0) || 0,
-      portions: portions,
-    });
-
-    if (portions.length > 0) {
-      setQuantity(portions[0].amount);
-    } else {
-      setQuantity(100);
-    }
-  };
-
-  const handleSelectRecent = (log: FoodLog) => {
-    const q = Number(log.quantity) || 100;
-    setSelectedProduct({
-      name: log.product,
-      category: 'Reciente',
-      kcal: (Number(log.kcal) || 0) * (100 / q),
-      protein: (Number(log.protein) || 0) * (100 / q),
-      carbs: (Number(log.carbs) || 0) * (100 / q),
-      fat: (Number(log.fat) || 0) * (100 / q),
-    });
-    setQuantity(Math.round(q));
-  };
-
-  const handleSelectSaved = (food: SavedFoodExtended & { image?: string }) => {
-    let portions: Array<{ label: string; amount: number }> = [];
-    if (food.servingSize && food.servingSize > 0) {
-      const lbl = food.servingLabel || 'ud';
-      if (lbl.toLowerCase() === 'g') {
-        portions = [
-          { label: '50g', amount: 50 },
-          { label: '100g', amount: 100 },
-          { label: '150g', amount: 150 },
-          { label: '200g', amount: 200 },
-          { label: '250g', amount: 250 },
-        ];
-      } else {
-        if (food.servingSize <= 15) {
-          portions = [
-            { label: `1 ${lbl}`, amount: food.servingSize },
-            { label: `2 ${lbl}`, amount: food.servingSize * 2 },
-            { label: `3 ${lbl}`, amount: food.servingSize * 3 },
-            { label: `5 ${lbl}`, amount: food.servingSize * 5 },
-            { label: `10 ${lbl}`, amount: food.servingSize * 10 },
-            { label: `15 ${lbl}`, amount: food.servingSize * 15 },
-          ];
-        } else if (food.servingSize <= 50) {
-          portions = [
-            { label: `1 ${lbl}`, amount: food.servingSize },
-            { label: `2 ${lbl}`, amount: food.servingSize * 2 },
-            { label: `3 ${lbl}`, amount: food.servingSize * 3 },
-            { label: `4 ${lbl}`, amount: food.servingSize * 4 },
-            { label: `5 ${lbl}`, amount: food.servingSize * 5 },
-          ];
-        } else {
-          portions = [
-            { label: `0.5 ${lbl}`, amount: food.servingSize / 2 },
-            { label: `1 ${lbl}`, amount: food.servingSize },
-            { label: `2 ${lbl}`, amount: food.servingSize * 2 },
-            { label: `3 ${lbl}`, amount: food.servingSize * 3 },
-            { label: `4 ${lbl}`, amount: food.servingSize * 4 },
-          ];
-        }
-      }
-    }
-
-    setSelectedProduct({
-      name: food.name + (food.brand && food.brand !== 'Genérico' ? ` (${food.brand})` : ''),
-      category: food.brand === 'Genérico' ? 'Básico' : 'Guardado',
-      kcal: food.kcalPer100g ?? food.kcal ?? 0,
-      protein: food.proteinPer100g ?? food.protein ?? 0,
-      carbs: food.carbsPer100g ?? food.carbs ?? 0,
-      fat: food.fatPer100g ?? food.fat ?? 0,
-      portions: portions,
-    });
-
-    if (food.servingSize && food.servingSize > 0) {
-      setQuantity(food.servingSize);
-    } else {
-      setQuantity(100);
     }
   };
 
@@ -461,77 +261,6 @@ export default function FoodSearchModal({
         err instanceof Error ? err.message : String(err),
       );
       toast.error('Error al guardar el alimento');
-    }
-  };
-
-  const getAiStatusText = (seconds: number) => {
-    if (seconds < 3) return 'Interpretando alimentos y raciones...';
-    if (seconds < 8) return 'Calculando macronutrientes con IA...';
-    if (seconds < 15) return 'Estructurando desglose nutricional...';
-    return 'Finalizando registro de comidas...';
-  };
-
-  const submitAiPrompt = async () => {
-    if (!query.trim() && !selectedImage)
-      return toast.error('Escribe algo o adjunta una foto primero');
-    stopListening();
-    const queryText = query.trim();
-    setAiSubmitting(true);
-    setAiElapsedSeconds(0);
-    const startTime = Date.now();
-    const loadingToast = toast.loading('Procesando con IA...');
-    const timer = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      setAiElapsedSeconds(elapsed);
-      if (elapsed >= 3) {
-        toast.loading(`Procesando con IA (${elapsed}s)...`, { id: loadingToast });
-      }
-    }, 1000);
-
-    const payload: Record<string, unknown> = {
-      text: queryText,
-      mealIndex: selectedMealIndex,
-      date,
-    };
-    if (selectedImage) {
-      const rawImage = typeof selectedImage === 'string' ? selectedImage : '';
-      const cleanBase64 = rawImage.includes(',') ? rawImage.split(',')[1] : rawImage;
-      payload.base64Image = cleanBase64;
-    }
-
-    try {
-      const res = await api.post('/nutrition/ai/log', payload, { timeout: 45000 });
-      const count = Array.isArray(res.data) ? res.data.length : 1;
-      toast.dismiss(loadingToast);
-      if (selectedMealIndex === -1) {
-        toast.success(`¡${count} alimento(s) repartidos en tus comidas por IA!`);
-      } else {
-        toast.success(`¡${count} alimento(s) añadidos por IA!`);
-      }
-      setQuery('');
-      setSelectedImage(null);
-      if (onLogAdded) onLogAdded();
-      if (onClose) onClose();
-    } catch (e: unknown) {
-      toast.dismiss(loadingToast);
-      const axiosError = e as {
-        code?: string;
-        message?: string;
-        response?: { data?: { error?: string; message?: string } };
-      };
-      const msg =
-        axiosError.response?.data?.error ||
-        axiosError.response?.data?.message ||
-        (axiosError.code === 'ECONNABORTED' || axiosError.message?.toLowerCase().includes('timeout')
-          ? 'La IA tardó más de lo esperado en responder. Intenta de nuevo o divide los alimentos.'
-          : 'Error procesando texto con IA');
-      toast.error(msg);
-      console.error('Error procesando texto con IA:', e instanceof Error ? e.message : String(e));
-      // El texto y la imagen se conservan para que el usuario no pierda su entrada
-    } finally {
-      clearInterval(timer);
-      setAiSubmitting(false);
-      setAiElapsedSeconds(0);
     }
   };
 
@@ -583,8 +312,8 @@ export default function FoodSearchModal({
         </div>
 
         <div className="food-search-body fade-in">
+          {isError && <QueryErrorNotice retry={refetch} pending={isFetching} />}
           {selectedProduct ? (
-            /* VIEW 1: PORTION SELECTION */
             <FoodPortionEditor
               selectedProduct={selectedProduct}
               quantity={quantity}
@@ -594,7 +323,6 @@ export default function FoodSearchModal({
               onConfirmAdd={handleConfirmAdd}
             />
           ) : activeOverlay === 'manual' ? (
-            /* VIEW: MANUAL ENTRY */
             <ManualFoodForm
               manualForm={manualForm}
               updateManualForm={updateManualForm}
@@ -611,7 +339,6 @@ export default function FoodSearchModal({
               }}
             />
           ) : activeOverlay === 'scanner' ? (
-            /* VIEW: SCANNER */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <Suspense
                 fallback={
@@ -650,7 +377,6 @@ export default function FoodSearchModal({
               onSubmit={submitAiPrompt}
             />
           ) : (
-            /* VIEW: UNIFIED SEARCH & SHORTCUTS */
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <div style={{ marginBottom: '1rem' }}>
                 <select
@@ -684,8 +410,6 @@ export default function FoodSearchModal({
                   )}
                 </select>
               </div>
-
-              {/* SEARCH BAR WITH ICONS */}
               <form onSubmit={handleSearch} style={{ position: 'relative', marginBottom: '1rem' }}>
                 <input
                   type="search"
@@ -753,8 +477,6 @@ export default function FoodSearchModal({
                   </button>
                 </div>
               </form>
-
-              {/* RESULTS AREA */}
               <FoodSearchResultsList
                 query={query}
                 savedFoods={savedFoods}

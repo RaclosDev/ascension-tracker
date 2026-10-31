@@ -120,5 +120,3 @@ export const SET_TYPE_LABEL: Record<SetType, string> = {
   drop: 'D',
   failure: 'F',
 };
-
-export const REST_PRESETS = [60, 90, 180] as const;

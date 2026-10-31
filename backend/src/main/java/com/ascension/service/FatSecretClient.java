@@ -41,10 +41,11 @@ public class FatSecretClient {
     @PostConstruct
     public void init() {
         var cfg = properties.getFatsecret();
-        this.restTemplate = builder
-                .connectTimeout(Duration.ofMillis(cfg.getConnectTimeoutMs()))
-                .readTimeout(Duration.ofMillis(cfg.getReadTimeoutMs()))
-                .build();
+        var httpClient = java.net.http.HttpClient.newBuilder()
+                .connectTimeout(Duration.ofMillis(cfg.getConnectTimeoutMs())).build();
+        var factory = new org.springframework.http.client.JdkClientHttpRequestFactory(httpClient);
+        factory.setReadTimeout(cfg.getReadTimeoutMs());
+        this.restTemplate = builder.requestFactory(() -> factory).build();
     }
 
     void setRestTemplate(RestTemplate restTemplate) {

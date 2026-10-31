@@ -1,4 +1,12 @@
-import { useState, useRef, useEffect, Suspense, startTransition, CSSProperties } from 'react';
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  Suspense,
+  startTransition,
+  CSSProperties,
+} from 'react';
 import { UserSettings } from '../types/api';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/client';
@@ -100,14 +108,17 @@ export default function Layout() {
   // The page fades in on its own (.route-fade); a whole-document View Transition used to
   // animate the fixed header and nav too, and captured the old page because the router
   // commits inside its own transition.
-  const navigateTo = (path: string) => {
-    if (location.pathname !== path) {
-      haptics.light();
-      startTransition(() => {
-        navigate(path);
-      });
-    }
-  };
+  const navigateTo = useCallback(
+    (path: string) => {
+      if (location.pathname !== path) {
+        haptics.light();
+        startTransition(() => {
+          navigate(path);
+        });
+      }
+    },
+    [location.pathname, navigate],
+  );
 
   // Interceptar cualquier enlace de navegación interna en modo PWA standalone
   useEffect(() => {
@@ -124,7 +135,7 @@ export default function Layout() {
     };
     document.addEventListener('click', handleGlobalClick, { capture: true });
     return () => document.removeEventListener('click', handleGlobalClick, { capture: true });
-  }, [navigate]);
+  }, [navigateTo]);
 
   const closeSidebar = () => setSidebarOpen(false);
   const isMoreActive = moreMenuPaths.includes(location.pathname);

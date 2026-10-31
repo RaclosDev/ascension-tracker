@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, ChangeEvent } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect, ChangeEvent } from 'react';
 import { Html5Qrcode, Html5QrcodeResult, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -41,6 +41,11 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const isMountedRef = useRef(true);
 
+  const callbacksRef = useRef({ onScanSuccess, onScanError });
+  useLayoutEffect(() => {
+    callbacksRef.current = { onScanSuccess, onScanError };
+  }, [onScanSuccess, onScanError]);
+
   useEffect(() => {
     isMountedRef.current = true;
     const elementId = 'ascension-barcode-reader';
@@ -65,14 +70,12 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
           { facingMode: 'environment' },
           SCANNER_CONFIG,
           (decodedText, decodedResult) => {
-            if (onScanSuccess) {
+            if (callbacksRef.current.onScanSuccess) {
               haptics.success();
-              onScanSuccess(decodedText, decodedResult);
+              callbacksRef.current.onScanSuccess(decodedText, decodedResult);
             }
           },
-          (errorMessage) => {
-            if (onScanError) onScanError(errorMessage);
-          },
+          (errorMessage) => callbacksRef.current.onScanError?.(errorMessage),
         );
 
         if (isMountedRef.current) {
@@ -148,13 +151,13 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
           cameraId,
           SCANNER_CONFIG,
           (decodedText: string, decodedResult: Html5QrcodeResult) => {
-            if (onScanSuccess) {
+            if (callbacksRef.current.onScanSuccess) {
               try {
                 navigator.vibrate?.(100);
               } catch {
                 /* ignore */
               }
-              onScanSuccess(decodedText, decodedResult);
+              callbacksRef.current.onScanSuccess(decodedText, decodedResult);
             }
           },
           () => {
@@ -184,13 +187,13 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
         cameras[nextIndex].id,
         SCANNER_CONFIG,
         (decodedText: string, decodedResult: Html5QrcodeResult) => {
-          if (onScanSuccess) {
+          if (callbacksRef.current.onScanSuccess) {
             try {
               navigator.vibrate?.(100);
             } catch {
               /* ignore */
             }
-            onScanSuccess(decodedText, decodedResult);
+            callbacksRef.current.onScanSuccess(decodedText, decodedResult);
           }
         },
         () => {
@@ -218,13 +221,13 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
       }
 
       const decodedText = await scannerRef.current.scanFile(file, true);
-      if (decodedText && onScanSuccess) {
+      if (decodedText && callbacksRef.current.onScanSuccess) {
         try {
           navigator.vibrate?.(100);
         } catch {
           /* ignore */
         }
-        onScanSuccess(decodedText);
+        callbacksRef.current.onScanSuccess(decodedText);
       }
     } catch (err) {
       console.warn('Fallo al escanear archivo:', err);

@@ -86,7 +86,7 @@ export function WorkoutCelebrationModal({
   const { data: customExercises = [] } = useCustomExercises();
   const { data: recentWorkouts = [] } = useRecentWorkouts();
   const catalog = useMemo(
-    () => getExerciseMap(customExercises),
+    () => getExerciseMap(customExercises, catalogExercises),
     [customExercises, catalogExercises],
   );
 

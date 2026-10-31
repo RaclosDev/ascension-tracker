@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { token: null, user: cachedUser };
   };
 
-  const initialSession = getInitialSession();
+  const [initialSession] = useState(getInitialSession);
   const [token, setToken] = useState<string | null>(initialSession.token);
   const [user, setUser] = useState<User | null>(initialSession.user);
   const [isReady, setIsReady] = useState(initialSession.token !== null);
@@ -165,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cancelled = true;
       window.removeEventListener('online', handleOnline);
     };
-  }, []);
+  }, [initialSession.user]);
 
   useEffect(() => {
     if (token) {

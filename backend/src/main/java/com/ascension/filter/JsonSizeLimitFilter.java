@@ -8,10 +8,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.http.MediaType;
+import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 @Component
 public class JsonSizeLimitFilter extends OncePerRequestFilter {
@@ -23,7 +24,7 @@ public class JsonSizeLimitFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String contentType = request.getContentType();
-        if (contentType != null && contentType.toLowerCase().contains("application/json")) {
+        if (isJson(contentType)) {
             long contentLength = request.getContentLengthLong();
             
             if (contentLength > MAX_JSON_PAYLOAD_SIZE) {
@@ -44,6 +45,18 @@ public class JsonSizeLimitFilter extends OncePerRequestFilter {
         }
         
         filterChain.doFilter(request, response);
+    }
+
+    private static boolean isJson(String contentType) {
+        if (contentType == null) return false;
+        try {
+            MediaType mediaType = MediaType.parseMediaType(contentType);
+            return MediaType.APPLICATION_JSON.includes(mediaType)
+                    || new MediaType("application", "*+json").includes(mediaType);
+        } catch (InvalidMediaTypeException ignored) {
+            // The request mapping/converter remains responsible for invalid content types.
+            return false;
+        }
     }
 
     private static class LimitedServletInputStream extends ServletInputStream {
