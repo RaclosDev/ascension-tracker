@@ -5,7 +5,6 @@ export function getSmartFallbackQueries(originalQuery: string): string[] {
   // Base query first
   queries.push(q);
 
-  // Remove filler words
   const fillers = ['high', 'protein', 'sabor', 'flavor', 'flavour', 'zero', 'sin', 'con'];
   const words = q.split(/\s+/).filter((w) => !fillers.includes(w));
 
@@ -24,7 +23,6 @@ export function getSmartFallbackQueries(originalQuery: string): string[] {
     queries.push(synonymWords.join(' '));
   }
 
-  // Deduplicate
   return [...new Set(queries)];
 }
 
@@ -35,29 +33,4 @@ export function normalizeText(text: string | null | undefined): string {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim();
-}
-
-export function getWordVariants(word: string): string[] {
-  if (!word) return [];
-  const variants: string[] = [word];
-
-  // Remove simple plurals
-  if (word.endsWith('s') && word.length > 3) {
-    variants.push(word.slice(0, -1));
-  }
-  if (word.endsWith('es') && word.length > 4) {
-    variants.push(word.slice(0, -2));
-  }
-
-  // Example synonyms for word level
-  const synonyms: Record<string, string> = {
-    natillas: 'pudding',
-    pudding: 'natillas',
-  };
-
-  if (synonyms[word]) {
-    variants.push(synonyms[word]);
-  }
-
-  return [...new Set(variants)];
 }

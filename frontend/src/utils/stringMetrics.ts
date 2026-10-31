@@ -1,32 +1,22 @@
-/**
- * Calcula la distancia de Levenshtein entre dos cadenas utilizando
- * programación dinámica con optimización de memoria.
- */
+/** Distance in UTF-16 code units, using two rows: O(min(a.length, b.length)) memory. */
 export function levenshtein(a: string, b: string): number {
   if (a === b) return 0;
-  if (a.length === 0) return b.length;
-  if (b.length === 0) return a.length;
-
-  const matrix: number[][] = Array.from({ length: b.length + 1 }, (_, i) => [i]);
-  for (let i = 1; i <= a.length; i++) {
-    matrix[0][i] = i;
-  }
-
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // sustitución
-          matrix[i][j - 1] + 1, // inserción
-          matrix[i - 1][j] + 1, // eliminación
-        );
-      }
+  if (a.length > b.length) return levenshtein(b, a);
+  if (!a.length) return b.length;
+  let previous = Array.from({ length: a.length + 1 }, (_, index) => index);
+  let current = new Array<number>(a.length + 1);
+  for (let row = 1; row <= b.length; row++) {
+    current[0] = row;
+    for (let column = 1; column <= a.length; column++) {
+      current[column] = Math.min(
+        previous[column] + 1,
+        current[column - 1] + 1,
+        previous[column - 1] + (a.charAt(column - 1) === b.charAt(row - 1) ? 0 : 1),
+      );
     }
+    [previous, current] = [current, previous];
   }
-
-  return matrix[b.length][a.length];
+  return previous[a.length];
 }
 
 /**

@@ -37,6 +37,9 @@ public class AiApplyRequestDTO {
     @AllArgsConstructor
     public static class AppliedFoodItemDTO {
 
+        @Size(max = 36)
+        private String mealKey;
+
         @Min(value = 0, message = "El índice de la comida no puede ser negativo")
         @Max(value = 20, message = "El índice de la comida está fuera de rango")
         private Integer mealIndex;

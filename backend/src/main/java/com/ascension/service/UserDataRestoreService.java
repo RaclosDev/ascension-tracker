@@ -118,7 +118,9 @@ public class UserDataRestoreService {
             throw new IllegalArgumentException("No se puede realizar OVERWRITE con un backup completamente vacío sin confirmación explícita (confirmEmpty=true).");
         }
 
-        userDataQuotaService.checkRestoreQuotas(userEmail, mode, backup);
+        userDataQuotaService.acquireUserQuotaLock(userEmail);
+        BackupMealIdentity.prepare(userEmail, backup, mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail));
+        if (isOverwrite) userDataQuotaService.checkRestoreQuotas(userEmail, mode, backup);
 
         log.info("Iniciando restauración de datos en modo {} para usuario: {}", appliedMode, com.ascension.util.PiiMasker.maskEmail(userEmail));
 
@@ -126,36 +128,27 @@ public class UserDataRestoreService {
             wipeUserData(userEmail);
         }
 
-        // 1. Custom Exercises & ID translation map
         Map<String, String> idTranslationMap = new HashMap<>();
         int customExercisesRestored = restoreCustomExercises(userEmail, backup.getCustomExercises(), idTranslationMap, isOverwrite);
 
-        // 2. Workouts
         int workoutsRestored = restoreWorkouts(userEmail, backup.getWorkouts(), idTranslationMap, isOverwrite);
 
-        // 3. Workout Templates
         int workoutTemplatesRestored = restoreWorkoutTemplates(userEmail, backup.getWorkoutTemplates(), idTranslationMap, isOverwrite);
 
-        // 4. Food Logs
         int foodLogsRestored = restoreFoodLogs(userEmail, backup.getFoodLogs(), isOverwrite);
 
-        // 5. Meals
         int mealsRestored = restoreMeals(userEmail, backup.getMeals(), isOverwrite);
 
-        // 6. Recipes
         int recipesRestored = restoreRecipes(userEmail, backup.getRecipes(), isOverwrite);
 
-        // 7. Saved Foods
         int savedFoodsRestored = restoreSavedFoods(userEmail, backup.getSavedFoods(), isOverwrite);
 
-        // 8. Steps Entries
         int stepsEntriesRestored = restoreStepsEntries(userEmail, backup.getStepsEntries(), isOverwrite);
 
-        // 9. Weight Entries
         int weightEntriesRestored = restoreWeightEntries(userEmail, backup.getWeightEntries(), isOverwrite);
 
-        // 10. User Settings
         boolean settingsRestored = restoreUserSettings(userEmail, backup.getUserSettings(), isOverwrite);
+        if (!isOverwrite) userDataQuotaService.checkCurrentQuotas(userEmail);
 
         log.info("Restauración completada para {}: {} entrenamientos, {} ejercicios, {} comidas",
                 com.ascension.util.PiiMasker.maskEmail(userEmail), workoutsRestored, customExercisesRestored, foodLogsRestored);
@@ -208,26 +201,12 @@ public class UserDataRestoreService {
     private void wipeUserData(String userEmail) {
         log.warn("Limpiando datos existentes de usuario para restauración: {}", com.ascension.util.PiiMasker.maskEmail(userEmail));
 
-        jdbcTemplate.update("DELETE FROM workout_sets WHERE workout_exercise_id IN (SELECT id FROM workout_exercises WHERE workout_id IN (SELECT id FROM workouts WHERE user_email = ?))", userEmail);
-        jdbcTemplate.update("DELETE FROM workout_exercises WHERE workout_id IN (SELECT id FROM workouts WHERE user_email = ?)", userEmail);
-        jdbcTemplate.update("DELETE FROM workouts WHERE user_email = ?", userEmail);
+        UserOwnedTables.deleteWorkoutsAndTemplates(jdbcTemplate, userEmail);
 
-        jdbcTemplate.update("DELETE FROM workout_template_exercises WHERE template_id IN (SELECT id FROM workout_templates WHERE user_email = ?)", userEmail);
-        jdbcTemplate.update("DELETE FROM workout_templates WHERE user_email = ?", userEmail);
-
-        String[] tables = {
-                "custom_exercises",
-                "food_logs",
-                "meals",
-                "recipes",
-                "saved_foods",
-                "steps_entries",
-                "weight_entries",
-                "user_settings"
-        };
-
-        for (String table : tables) {
-            jdbcTemplate.update("DELETE FROM " + table + " WHERE user_email = ?", userEmail);
+        for (UserOwnedTables.Table table : UserOwnedTables.DIRECT) {
+            if (table.restorable()) {
+                UserOwnedTables.deleteFrom(jdbcTemplate, table, userEmail);
+            }
         }
     }
 
@@ -383,7 +362,7 @@ public class UserDataRestoreService {
 
                     String grip = teDTO.getVariant() != null ? teDTO.getVariant().getGrip() : null;
                     String machine = teDTO.getVariant() != null ? teDTO.getVariant().getMachine() : null;
-                    exercises.add(new TemplateExercise(resolvedExId, grip, machine));
+                    exercises.add(new TemplateExercise(resolvedExId, grip, machine, exercises.size()));
                 }
             }
 
@@ -404,24 +383,29 @@ public class UserDataRestoreService {
     private int restoreFoodLogs(String userEmail, List<FoodLogDTO> dtos, boolean isOverwrite) {
         if (dtos == null || dtos.isEmpty()) return 0;
 
-        Set<String> existingKeys = new HashSet<>();
+        Map<FoodLogIdentity, Integer> existingOccurrences = new HashMap<>();
         if (!isOverwrite) {
             for (FoodLog fl : foodLogRepository.findAllByUserEmailOrderByDateAscIdAsc(userEmail)) {
-                existingKeys.add(fl.getDate() + ":" + fl.getMealIndex() + ":" + (fl.getProduct() != null ? fl.getProduct().toLowerCase() : ""));
+                existingOccurrences.merge(FoodLogIdentity.of(fl), 1, Integer::sum);
             }
         }
 
         int count = 0;
         for (FoodLogDTO dto : dtos) {
-            String key = dto.getDate() + ":" + dto.getMealIndex() + ":" + (dto.getProduct() != null ? dto.getProduct().toLowerCase() : "");
-            if (!isOverwrite && existingKeys.contains(key)) {
+            FoodLogIdentity key = FoodLogIdentity.of(dto);
+            int occurrences = existingOccurrences.getOrDefault(key, 0);
+            if (occurrences > 0) {
+                existingOccurrences.put(key, occurrences - 1);
                 continue;
             }
 
             FoodLog logEntry = new FoodLog();
             logEntry.setUserEmail(userEmail);
             logEntry.setDate(dto.getDate());
-            logEntry.setMealIndex(dto.getMealIndex());
+            logEntry.setMealIndex(dto.getMealIndex() != null ? dto.getMealIndex() : -1);
+            logEntry.setMealKey(dto.getMealKey());
+            logEntry.setMealName(dto.getMealName());
+            logEntry.setMealIcon(dto.getMealIcon());
             logEntry.setProduct(dto.getProduct());
             logEntry.setQuantity(dto.getQuantity());
             logEntry.setKcal(dto.getKcal());
@@ -431,7 +415,6 @@ public class UserDataRestoreService {
             logEntry.setPortionsJson(dto.getPortionsJson());
 
             foodLogRepository.save(logEntry);
-            existingKeys.add(key);
             count++;
             flushAndClearBatch(count);
         }
@@ -463,6 +446,7 @@ public class UserDataRestoreService {
             processedNames.add(normalizedName);
 
             Meal meal = Meal.builder()
+                    .mealKey(dto.getMealKey())
                     .userEmail(userEmail)
                     .name(dto.getName().trim())
                     .icon(dto.getIcon())

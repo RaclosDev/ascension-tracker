@@ -37,6 +37,9 @@ class RefreshTokenRotationIntegrationTest {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private RefreshTokenCleanupService cleanupService;
+
     @Test
     @DisplayName("Reusing a rotated refresh token past grace period revokes the entire token family in database")
     void reusingRotatedTokenPastGracePeriod_revokesEntireFamilyInDatabase() {
@@ -79,4 +82,19 @@ class RefreshTokenRotationIntegrationTest {
         // Also ensure token 2 is no longer valid or present
         assertThat(refreshTokenRepository.findByToken(RefreshToken.hashToken(plainToken2))).isEmpty();
     }
+    @Test
+    void cleanupPreservesReplayDetectionUntilOriginalTokenExpires() {
+        String email = "cleanup-replay@example.com";
+        userService.ensureUserExists(email);
+        RefreshToken original = refreshTokenService.createRefreshToken(email);
+        RefreshToken successor = refreshTokenService.rotateRefreshToken(original.getPlainToken());
+        RefreshToken stored = refreshTokenRepository.findByToken(original.getToken()).orElseThrow();
+        stored.setReplacedAt(Instant.now().minusSeconds(360));
+        refreshTokenRepository.save(stored);
+        cleanupService.cleanupExpiredTokens();
+        assertThat(refreshTokenRepository.findByToken(original.getToken())).isPresent();
+        assertThrows(TokenRefreshException.class, () -> refreshTokenService.rotateRefreshToken(original.getPlainToken()));
+        assertThat(refreshTokenRepository.findByToken(successor.getToken())).isEmpty();
+    }
+
 }

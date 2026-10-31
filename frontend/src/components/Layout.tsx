@@ -1,12 +1,20 @@
-import { useState, useRef, useEffect, Suspense, startTransition } from 'react';
+import { QueryErrorNotice } from './QueryErrorNotice';
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  Suspense,
+  startTransition,
+  CSSProperties,
+} from 'react';
 import { UserSettings } from '../types/api';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import BottomSheet from './BottomSheet';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { useQuery } from '@tanstack/react-query';
-import { useNow } from '@/hooks/use-now';
-import { formatDuration } from '@/lib/workout/format';
+import { WorkoutElapsedTimer } from './workout/WorkoutElapsedTimer';
 import OnboardingScreen from './OnboardingScreen';
 import { preloadRoute } from '../utils/routePreload';
 
@@ -63,20 +71,24 @@ export default function Layout() {
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const activeWorkout = useWorkoutStore((s) => s.active);
-  const hideNav = activeWorkout !== null && location.pathname === '/workout';
-  const now = useNow(activeWorkout !== null, 500);
-  const elapsed = activeWorkout ? now - activeWorkout.startedAt : 0;
+  const hasActiveWorkout = useWorkoutStore((s) => s.active !== null);
+  const hideNav = hasActiveWorkout && location.pathname === '/workout';
 
-  const { data: settings, isLoading: loadingConfig } = useQuery<UserSettings>({
+  const {
+    data: settings,
+    isLoading: loadingConfig,
+    isError: configError,
+    isFetching: fetchingConfig,
+    refetch: retryConfig,
+  } = useQuery<UserSettings | null>({
     queryKey: ['settings'],
     queryFn: () =>
-      api.get('/settings').then((res) => {
+      api.get<UserSettings | null>('/settings').then((res) => {
         if (res.status === 204 || !res.data) return null;
         return res.data;
       }),
   });
-  const needsOnboarding = !loadingConfig && settings === null;
+  const needsOnboarding = !loadingConfig && !configError && settings === null;
 
   // Cerrar el menú automáticamente al cambiar de página y resetear scroll
   useEffect(() => {
@@ -97,29 +109,20 @@ export default function Layout() {
     return () => document.removeEventListener('pointerdown', handleClick);
   }, [moreMenuOpen]);
 
-  const navigateTo = (path: string) => {
-    if (location.pathname !== path) {
-      haptics.light();
-      if (
-        typeof document !== 'undefined' &&
-        'startViewTransition' in document &&
-        typeof (document as unknown as { startViewTransition: (cb: () => void) => void })
-          .startViewTransition === 'function'
-      ) {
-        (
-          document as unknown as { startViewTransition: (cb: () => void) => void }
-        ).startViewTransition(() => {
-          startTransition(() => {
-            navigate(path);
-          });
-        });
-      } else {
+  // The page fades in on its own (.route-fade); a whole-document View Transition used to
+  // animate the fixed header and nav too, and captured the old page because the router
+  // commits inside its own transition.
+  const navigateTo = useCallback(
+    (path: string) => {
+      if (location.pathname !== path) {
+        haptics.light();
         startTransition(() => {
           navigate(path);
         });
       }
-    }
-  };
+    },
+    [location.pathname, navigate],
+  );
 
   // Interceptar cualquier enlace de navegación interna en modo PWA standalone
   useEffect(() => {
@@ -136,10 +139,15 @@ export default function Layout() {
     };
     document.addEventListener('click', handleGlobalClick, { capture: true });
     return () => document.removeEventListener('click', handleGlobalClick, { capture: true });
-  }, [navigate]);
+  }, [navigateTo]);
 
   const closeSidebar = () => setSidebarOpen(false);
   const isMoreActive = moreMenuPaths.includes(location.pathname);
+  const bottomItems = navItems.filter((i) => bottomNavPaths.includes(i.path));
+  // Index of the highlighted tab; the "Más" button is the last slot. -1 hides the pill.
+  const activeBottomIndex = isMoreActive
+    ? bottomItems.length
+    : bottomItems.findIndex((i) => i.path === location.pathname);
   if (needsOnboarding && !loadingConfig) {
     return <OnboardingScreen onComplete={() => window.location.reload()} />;
   }
@@ -148,17 +156,7 @@ export default function Layout() {
     <div className="app-root">
       {/* Barra superior de app para móvil */}
       <header className="mobile-top-bar">
-        {hideNav ? (
-          <div
-            className="active-workout-timer"
-            style={{ pointerEvents: 'auto', minWidth: '48px', justifyContent: 'center' }}
-          >
-            <span className="active-workout-timer-dot" />
-            <span className="active-workout-timer-text">{formatDuration(elapsed)}</span>
-          </div>
-        ) : (
-          <div style={{ width: '48px' }} />
-        )}
+        {hideNav ? <WorkoutElapsedTimer /> : <div style={{ width: '48px' }} />}
         <div className="mobile-top-logo">
           <img src="/ascension-title.png" alt="Ascension" className="mobile-header-title-img" />
         </div>
@@ -166,7 +164,11 @@ export default function Layout() {
       </header>
 
       {/* Capa de fondo oscurecida para cerrar el menú */}
-      <div className={`mobile-overlay ${sidebarOpen ? 'active' : ''}`} onClick={closeSidebar} />
+      <div
+        className={`mobile-overlay ${sidebarOpen ? 'active' : ''}`}
+        aria-hidden="true"
+        onClick={closeSidebar}
+      />
 
       <div className="app-container">
         {/* Barra lateral / Cajón deslizable (desktop) */}
@@ -209,6 +211,7 @@ export default function Layout() {
 
         <main className="main-content">
           <div className="main-content-inner">
+            {configError && <QueryErrorNotice retry={retryConfig} pending={fetchingConfig} />}
             <Suspense
               fallback={
                 <div className="flex flex-col gap-4 py-4">
@@ -218,7 +221,9 @@ export default function Layout() {
                 </div>
               }
             >
-              <Outlet />
+              <div key={location.pathname} className="route-fade">
+                <Outlet />
+              </div>
             </Suspense>
           </div>
         </main>
@@ -231,47 +236,58 @@ export default function Layout() {
       <nav
         className={`mobile-bottom-nav${hideNav ? ' nav-hidden' : ''}`}
         aria-label="Navegación inferior"
+        style={
+          {
+            '--nav-count': bottomItems.length + 1,
+            '--nav-active': Math.max(activeBottomIndex, 0),
+          } as CSSProperties
+        }
       >
-        {navItems
-          .filter((i) => bottomNavPaths.includes(i.path))
-          .map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <button
-                key={item.path}
-                type="button"
-                className={`mobile-bottom-item ${isActive ? 'active' : ''}`}
-                onMouseEnter={() => preloadRoute(item.path)}
-                onTouchStart={() => preloadRoute(item.path)}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setMoreMenuOpen(false);
-                  navigateTo(item.path);
-                }}
-                aria-label={item.label}
-                aria-current={isActive ? 'page' : undefined}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <span className="mobile-bottom-icon" style={{ pointerEvents: 'none' }}>
-                  {item.icon}
-                </span>
-                <span className="mobile-bottom-label" style={{ pointerEvents: 'none' }}>
-                  {item.shortLabel}
-                </span>
-                {isActive && (
-                  <span className="mobile-bottom-indicator" style={{ pointerEvents: 'none' }} />
-                )}
-              </button>
-            );
-          })}
+        {/* One shared highlight that slides between tabs instead of appearing on each one */}
+        <span
+          className={`mobile-bottom-pill${activeBottomIndex < 0 ? ' is-hidden' : ''}`}
+          aria-hidden="true"
+        >
+          <span className="mobile-bottom-pill-glow" />
+          <span className="mobile-bottom-pill-ghost">&nbsp;</span>
+        </span>
+        {bottomItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <button
+              key={item.path}
+              type="button"
+              className={`mobile-bottom-item ${isActive ? 'active' : ''}`}
+              onMouseEnter={() => preloadRoute(item.path)}
+              onTouchStart={() => preloadRoute(item.path)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setMoreMenuOpen(false);
+                navigateTo(item.path);
+              }}
+              aria-current={isActive ? 'page' : undefined}
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <span className="mobile-bottom-icon" style={{ pointerEvents: 'none' }}>
+                {item.icon}
+              </span>
+              <span className="mobile-bottom-label" style={{ pointerEvents: 'none' }}>
+                {item.shortLabel}
+              </span>
+              {isActive && (
+                <span className="mobile-bottom-indicator" style={{ pointerEvents: 'none' }} />
+              )}
+            </button>
+          );
+        })}
         {/* Botón 'Más' */}
         <button
           type="button"

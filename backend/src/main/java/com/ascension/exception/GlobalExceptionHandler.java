@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ApiErrorResponse> handleHandlerMethodValidationException(HandlerMethodValidationException ex) {
         String traceId = UUID.randomUUID().toString();
-        String errorMessage = ex.getAllValidationResults().stream()
+        String errorMessage = ex.getParameterValidationResults().stream()
                 .flatMap(r -> r.getResolvableErrors().stream())
                 .map(MessageSourceResolvable::getDefaultMessage)
                 .filter(Objects::nonNull)
@@ -99,7 +99,7 @@ public class GlobalExceptionHandler {
         log.warn("Message not readable: {} [trace_id: {}]", ex.getMessage(), traceId);
         Throwable rootCause = ex.getMostSpecificCause();
         if (rootCause != null && rootCause.getMessage() != null && rootCause.getMessage().contains("JSON payload exceeded maximum size limit")) {
-            return buildErrorResponse("El payload supera el tamaño máximo permitido (5MB)", HttpStatus.PAYLOAD_TOO_LARGE, traceId);
+            return buildErrorResponse("El payload supera el tamaño máximo permitido (5MB)", HttpStatus.CONTENT_TOO_LARGE, traceId);
         }
         return buildErrorResponse("Entrada invalida o cuerpo de peticion malformado", HttpStatus.BAD_REQUEST, traceId);
     }
@@ -196,7 +196,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
         String traceId = UUID.randomUUID().toString();
         log.warn("Max upload size exceeded: {} [trace_id: {}]", ex.getMessage(), traceId);
-        return buildErrorResponse("El archivo supera el tamaño máximo permitido.", HttpStatus.PAYLOAD_TOO_LARGE, traceId);
+        return buildErrorResponse("El archivo supera el tamaño máximo permitido.", HttpStatus.CONTENT_TOO_LARGE, traceId);
     }
 
     private ResponseEntity<ApiErrorResponse> buildErrorResponse(String message, HttpStatus status, String traceId) {

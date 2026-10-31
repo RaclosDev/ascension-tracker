@@ -33,6 +33,13 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      # Node types follow the Node major used in CI and production (22).
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # typescript-eslint 8 does not support TypeScript 7 yet; lift once it does.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "maven"
     directory: "/backend"

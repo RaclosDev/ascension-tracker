@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 import { useSpeechToText } from '../useSpeechToText';
 
 export function useAiAssistant(fetchData: () => void) {
   const [aiQuery, setAiQuery] = useState('');
+  const pendingQueries = useRef(new Set<string>());
   const { isListening, toggleListening, stopListening } = useSpeechToText({
     onTranscript: setAiQuery,
     lang: 'es-ES',
@@ -16,6 +17,8 @@ export function useAiAssistant(fetchData: () => void) {
     e.preventDefault();
     if (!aiQuery.trim()) return;
     const queryText = aiQuery.trim();
+    if (pendingQueries.current.has(queryText)) return;
+    pendingQueries.current.add(queryText);
     stopListening();
     setAiQuery('');
     setPendingAiCount((p) => p + 1);
@@ -29,7 +32,9 @@ export function useAiAssistant(fetchData: () => void) {
       const msg =
         axiosError.response?.data?.error || axiosError.response?.data?.message || 'Error IA';
       toast.error(msg);
+      setAiQuery((current) => current || queryText);
     } finally {
+      pendingQueries.current.delete(queryText);
       setPendingAiCount((p) => Math.max(0, p - 1));
     }
   };

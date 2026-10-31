@@ -49,9 +49,7 @@ export function RestBanner() {
         left: '1rem',
         right: '1rem',
         zIndex: 110,
-        background: 'rgba(28, 28, 30, 0.7)',
-        backdropFilter: 'blur(24px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+        background: 'var(--bg-card, #1C1C1E)',
         border: '1px solid rgba(255, 255, 255, 0.12)',
         borderRadius: '20px',
         overflow: 'hidden',
@@ -81,11 +79,9 @@ export function RestBanner() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           <span
             style={{
-              fontSize: '0.65rem',
+              fontSize: '0.75rem',
               fontWeight: 700,
               color: 'var(--accent-primary)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
             }}
           >
             Descanso

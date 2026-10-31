@@ -1,7 +1,5 @@
 package com.ascension.service;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -14,14 +12,12 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
-    // TODO: Future architectural enhancement: Migrate user-referencing tables from email PK to a surrogate UUID
-    // to decouple internal database foreign keys from mutable email addresses and OAuth subject identifiers.
+    // Every foreign key to users(email) cascades updates, so changeEmail moves all user data in one UPDATE.
 
     public record User(
             String email,
@@ -37,12 +33,6 @@ public class UserService {
     ) {}
 
     private final JdbcTemplate jdbcTemplate;
-
-    // 30-second TTL Caffeine cache to protect DB against high-frequency token checks
-    private final Cache<String, UserSecurityState> securityCache = Caffeine.newBuilder()
-            .expireAfterWrite(30, TimeUnit.SECONDS)
-            .maximumSize(10_000)
-            .build();
 
     private final RowMapper<User> userRowMapper = (rs, rowNum) -> {
         Timestamp ts = rs.getTimestamp("tokens_valid_after");
@@ -99,10 +89,6 @@ public class UserService {
                      "google_sub = COALESCE(users.google_sub, EXCLUDED.google_sub)";
         jdbcTemplate.update(sql, cleanEmail, name, picture, googleSub);
 
-        // Refresh cache entry
-        findByEmail(cleanEmail).ifPresent(user ->
-                securityCache.put(cleanEmail.toLowerCase(Locale.ROOT), new UserSecurityState(true, user.tokensValidAfter()))
-        );
     }
 
     @Transactional
@@ -120,15 +106,17 @@ public class UserService {
             return new UserSecurityState(false, null);
         }
         String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
-        return securityCache.get(normalizedEmail, key -> {
-            try {
-                String sql = "SELECT tokens_valid_after FROM users WHERE LOWER(email) = ?";
-                Timestamp ts = jdbcTemplate.queryForObject(sql, Timestamp.class, key);
-                return new UserSecurityState(true, ts != null ? ts.toInstant() : null);
-            } catch (EmptyResultDataAccessException e) {
-                return new UserSecurityState(false, null);
-            }
-        });
+        return loadSecurityState(normalizedEmail);
+    }
+
+    private UserSecurityState loadSecurityState(String key) {
+        try {
+            String sql = "SELECT tokens_valid_after FROM users WHERE LOWER(email) = ?";
+            Timestamp ts = jdbcTemplate.queryForObject(sql, Timestamp.class, key);
+            return new UserSecurityState(true, ts != null ? ts.toInstant() : null);
+        } catch (EmptyResultDataAccessException e) {
+            return new UserSecurityState(false, null);
+        }
     }
 
     @Transactional
@@ -142,16 +130,39 @@ public class UserService {
 
         int updated = jdbcTemplate.update("UPDATE users SET tokens_valid_after = ? WHERE LOWER(email) = ?", ts, normalizedEmail);
         if (updated > 0) {
-            securityCache.put(normalizedEmail, new UserSecurityState(true, effectiveTime));
             log.info("Updated tokens_valid_after for user {} to {}", com.ascension.util.PiiMasker.maskEmail(normalizedEmail), effectiveTime);
-        } else {
-            securityCache.invalidate(normalizedEmail);
         }
     }
 
-    public void evictUser(String email) {
-        if (email != null && !email.isBlank()) {
-            securityCache.invalidate(email.trim().toLowerCase(Locale.ROOT));
+    /**
+     * Moves an account to a new email after the user renames their Google account; the update
+     * cascades to every user-owned table and revokes earlier sessions, so other devices sign in again.
+     *
+     * @return true when an account with this subject and old email was moved
+     */
+    @Transactional
+    public boolean changeEmail(String googleSub, String oldEmail, String newEmail) {
+        if (googleSub == null || googleSub.isBlank() || oldEmail == null || newEmail == null || newEmail.isBlank()) {
+            throw new IllegalArgumentException("Google subject and both emails are required");
         }
+        String cleanOld = oldEmail.trim().toLowerCase(Locale.ROOT);
+        String cleanNew = newEmail.trim().toLowerCase(Locale.ROOT);
+        if (cleanOld.equals(cleanNew)) {
+            return false;
+        }
+
+        int moved = jdbcTemplate.update(
+                "UPDATE users SET email = ?, tokens_valid_after = NOW() - INTERVAL '1 second' "
+                        + "WHERE google_sub = ? AND LOWER(email) = ?",
+                cleanNew, googleSub.trim(), cleanOld);
+        if (moved == 0) {
+            return false;
+        }
+        jdbcTemplate.update("DELETE FROM refresh_tokens WHERE email = ?", cleanNew);
+
+        log.warn("Account email changed from {} to {}; old sessions revoked",
+                com.ascension.util.PiiMasker.maskEmail(cleanOld), com.ascension.util.PiiMasker.maskEmail(cleanNew));
+        return true;
     }
+
 }

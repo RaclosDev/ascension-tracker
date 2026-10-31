@@ -40,7 +40,6 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
 
   return (
     <div className="card progress-card glass-panel-elevated relative overflow-hidden rounded-2xl p-4 sm:p-5 mb-6 border border-white/[0.08]">
-      {/* Header Info */}
       <div className="progress-info flex items-center justify-between mb-3 relative z-10">
         <div className="flex items-center gap-2.5">
           <div
@@ -62,7 +61,7 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
             </span>
             <p className="text-[0.72rem] font-medium" style={{ color: 'var(--text-secondary)' }}>
               Actualmente en{' '}
-              <span className="text-white font-mono font-bold">{numCurrent.toFixed(1)} kg</span>
+              <span className="text-white font-bold tabular-nums">{numCurrent.toFixed(1)} kg</span>
             </p>
           </div>
         </div>
@@ -76,7 +75,7 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
           }}
         >
           <span
-            className="progress-pct text-base sm:text-lg font-black font-mono tabular-nums leading-none"
+            className="progress-pct text-base sm:text-lg font-black tabular-nums leading-none"
             style={{ color: 'var(--accent-primary-light, #38bdf8)' }}
           >
             {safeProgress.toFixed(1)}%
@@ -84,16 +83,13 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
         </div>
       </div>
 
-      {/* Progress Track */}
       <div className="progress-bar-container relative w-full h-4 bg-black/50 border border-white/[0.08] rounded-full p-0.5 overflow-hidden my-3">
-        {/* Fill Bar */}
         <div
           className="progress-bar-fill h-full rounded-full relative transition-all duration-1000 ease-out flex items-center justify-end"
           style={{
             width: `${safeProgress}%`,
             background:
               'linear-gradient(90deg, var(--accent-primary), var(--accent-primary-light, #38bdf8))',
-            boxShadow: '0 0 16px var(--accent-glow)',
           }}
         >
           {/* Puck Head */}
@@ -101,9 +97,8 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
         </div>
       </div>
 
-      {/* Bottom Milestone Markers */}
       <div
-        className="progress-markers flex items-center justify-between text-[0.72rem] font-mono font-medium pt-1"
+        className="progress-markers flex items-center justify-between text-[0.72rem] font-medium tabular-nums pt-1"
         style={{ color: 'var(--text-secondary)' }}
       >
         <div className="flex items-center gap-1">

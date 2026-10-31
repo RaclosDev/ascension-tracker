@@ -12,6 +12,7 @@ export interface SearchProduct {
 }
 
 interface FoodPortionEditorProps {
+  pending?: boolean;
   selectedProduct: SearchProduct;
   quantity: number;
   setQuantity: (val: number) => void;
@@ -21,6 +22,7 @@ interface FoodPortionEditorProps {
 }
 
 export function FoodPortionEditor({
+  pending = false,
   selectedProduct,
   quantity,
   setQuantity,
@@ -279,6 +281,8 @@ export function FoodPortionEditor({
       <button
         className="btn btn-primary"
         style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }}
+        disabled={pending}
+        aria-busy={pending}
         onClick={onConfirmAdd}
         aria-label="Añadir a mi registro"
       >

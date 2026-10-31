@@ -5,14 +5,13 @@ declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (PrecacheEntry | s
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
+import { showRestPush } from './lib/workout/pushPayload';
 
 // Precache versioned static assets. Workbox manages old precache revisions.
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Do not serve a stale cached index.html just because mobile networking takes >3s.
-// A stale shell references deleted Vite chunk hashes and results in "Module script failed".
-// Use the network for every navigation while online; only fall back to the precached shell
-// when the network actually fails (offline).
+// Navigations always hit the network: a stale cached shell points at deleted Vite chunks
+// ("Module script failed"). Fall back to the precached shell only when the network fails.
 const navigationStrategy = new NetworkOnly({
   plugins: [
     {
@@ -46,9 +45,8 @@ registerRoute(
   }),
 );
 
-// Ascension Service Worker: handles push notifications
 self.addEventListener('push', (event: PushEvent) => {
-  let data = { title: '¡Descanso terminado!', body: 'Es hora de la siguiente serie.' };
+  let data: unknown = null;
 
   try {
     if (event.data) {
@@ -58,30 +56,9 @@ self.addEventListener('push', (event: PushEvent) => {
     // fallback to defaults
   }
 
-  const options = {
-    body: data.body || 'Es hora de la siguiente serie.',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    vibrate: [200, 100, 200, 100, 300],
-    tag: 'ascension-rest-timer',
-    renotify: true,
-    requireInteraction: false,
-    data: { url: '/workout' },
-    actions: [
-      { action: 'open', title: 'Abrir' },
-      { action: 'dismiss', title: 'OK' },
-    ],
-  };
-
-  event.waitUntil(
-    self.registration.getNotifications({ tag: 'ascension-rest-timer' }).then((existing) => {
-      existing.forEach((n) => n.close());
-      return self.registration.showNotification(data.title || '¡Descanso terminado!', options);
-    }),
-  );
+  event.waitUntil(showRestPush(self.registration, data));
 });
 
-// Notification click: open the app
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
 
@@ -101,12 +78,10 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   );
 });
 
-// Activate: claim clients immediately
 self.addEventListener('activate', (event: ExtendableEvent) => {
   event.waitUntil(self.clients.claim());
 });
 
-// Install: skip waiting
 self.addEventListener('install', () => {
   self.skipWaiting();
 });

@@ -7,6 +7,7 @@ export interface WeightEntry {
 export interface DashboardData {
   currentWeight: number;
   currentWeeklyAverage: number;
+  // Current weight minus start weight (WeightService): negative means weight lost.
   totalLost: number;
   remaining: number;
   progress: number;
@@ -52,6 +53,7 @@ export interface UserSettings {
 
 export interface Meal {
   id?: number;
+  mealKey?: string;
   name: string;
   icon?: string;
   proteinPct?: number;
@@ -77,6 +79,9 @@ export interface FoodLog {
   id?: number;
   date: string;
   mealIndex: number;
+  mealKey?: string | null;
+  mealName?: string | null;
+  mealIcon?: string | null;
   product: string;
   quantity: number;
   kcal: number;

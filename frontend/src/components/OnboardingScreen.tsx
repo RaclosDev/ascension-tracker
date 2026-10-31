@@ -60,7 +60,6 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
     setLoading(true);
 
     try {
-      // 1. Guardar settings
       await api.put('/settings', {
         sex: form.sex,
         age: parseInt(form.age) || null,
@@ -74,11 +73,9 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
         startDate: getLocalDateString(),
       });
 
-      // 2. Configurar comidas
       if (mealOption === 'default') {
         await api.post('/nutrition/meals/reset');
       } else {
-        // Crear N comidas
         for (let i = 1; i <= customMealsCount; i++) {
           await api.post('/nutrition/meals', { name: `Comida ${i}`, icon: '' });
         }
@@ -112,7 +109,6 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
       <div
         style={{
           background: 'var(--bg-glass-strong, rgba(18, 18, 26, 0.78))',
-          backdropFilter: 'blur(20px)',
           padding: '2rem',
           borderRadius: '24px',
           border: '1px solid var(--border-medium, rgba(255, 255, 255, 0.1))',

@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 
@@ -54,7 +54,7 @@ import static org.mockito.Mockito.*;
 })
 class PushNotificationIntegrationTest {
 
-    @MockBean
+    @MockitoBean
     private PushService pushService;
 
     @Autowired
@@ -71,6 +71,9 @@ class PushNotificationIntegrationTest {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     private static final String USER_EMAIL = "athlete@example.com";
     private static final String USER_EMAIL_2 = "user2@example.com";
@@ -102,13 +105,15 @@ class PushNotificationIntegrationTest {
     }
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         userService.ensureUserExists(USER_EMAIL, "Athlete User", null);
         userService.ensureUserExists(USER_EMAIL_2, "Second User", null);
         pushNotificationService.setPushService(pushService);
         restTimerRepository.deleteAll();
         pushSubscriptionRepository.deleteAll();
         reset(pushService);
+        when(pushService.sendAsync(any(Notification.class))).thenAnswer(invocation ->
+                CompletableFuture.completedFuture(pushService.send(invocation.getArgument(0))));
     }
 
     private HttpResponse createHttpResponse(int statusCode) {
@@ -228,12 +233,55 @@ class PushNotificationIntegrationTest {
         verify(pushService, timeout(5000).times(1)).send(any(Notification.class));
 
         // Verificar que el temporizador en base de datos quedó en COMPLETED
-        RestTimer updatedTimer = restTimerRepository.findById(recoveredTimer.getId()).orElseThrow();
-        assertThat(updatedTimer.getStatus()).isEqualTo(RestTimerStatus.COMPLETED);
+        org.awaitility.Awaitility.await().atMost(java.time.Duration.ofSeconds(3)).untilAsserted(() ->
+                assertThat(restTimerRepository.findById(recoveredTimer.getId()).orElseThrow().getStatus()).isEqualTo(RestTimerStatus.COMPLETED));
 
         // Una segunda ejecución del poller no debe volver a disparar el temporizador ya completado (idempotencia)
         pushNotificationService.pollDueTimers();
         verify(pushService, times(1)).send(any(Notification.class));
+    }
+
+    @Test
+    void transientProviderFailureRetriesWithTheSameNotificationTag() throws Exception {
+        pushNotificationService.saveSubscription(USER_EMAIL,
+                new Subscription(ENDPOINT_PHONE, new Subscription.Keys(validP256dh, validAuth)));
+        RestTimer timer = restTimerService.scheduleTimerAt(USER_EMAIL, Instant.now().minusSeconds(5));
+        when(pushService.send(any(Notification.class)))
+                .thenReturn(createHttpResponse(503), createHttpResponse(201));
+        pushNotificationService.pollDueTimers();
+        org.awaitility.Awaitility.await().atMost(java.time.Duration.ofSeconds(5)).untilAsserted(() -> {
+            RestTimer failed = restTimerRepository.findById(timer.getId()).orElseThrow();
+            assertThat(failed.getStatus()).isEqualTo(RestTimerStatus.PENDING);
+            assertThat(failed.getNextAttemptAt()).isNotNull();
+        });
+        pushNotificationService.pollDueTimers();
+        verify(pushService, times(1)).send(any(Notification.class));
+        jdbc.update("UPDATE rest_timers SET next_attempt_at = NOW() - INTERVAL '1 second' WHERE id = ?", timer.getId());
+        pushNotificationService.pollDueTimers();
+        org.awaitility.Awaitility.await().atMost(java.time.Duration.ofSeconds(5)).untilAsserted(() ->
+                assertThat(restTimerRepository.findById(timer.getId()).orElseThrow().getStatus())
+                        .isEqualTo(RestTimerStatus.COMPLETED));
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(pushService, times(2)).send(captor.capture());
+        assertThat(captor.getAllValues().get(0).getPayload()).isEqualTo(captor.getAllValues().get(1).getPayload());
+        assertThat(new String(captor.getValue().getPayload(), java.nio.charset.StandardCharsets.UTF_8))
+                .contains("ascension-rest-timer-" + timer.getId());
+    }
+
+    @Test
+    void exceptionTextCannotDeleteASubscriptionOrAcknowledgeItsTimer() throws Exception {
+        pushNotificationService.saveSubscription(USER_EMAIL,
+                new Subscription(ENDPOINT_PHONE, new Subscription.Keys(validP256dh, validAuth)));
+        RestTimer timer = restTimerService.scheduleTimerAt(USER_EMAIL, Instant.now().minusSeconds(5));
+        when(pushService.sendAsync(any(Notification.class))).thenReturn(
+                CompletableFuture.failedFuture(new java.io.IOException("Timeout for endpoint device-404-410")));
+        pushNotificationService.pollDueTimers();
+        org.awaitility.Awaitility.await().atMost(java.time.Duration.ofSeconds(5)).untilAsserted(() -> {
+            RestTimer failed = restTimerRepository.findById(timer.getId()).orElseThrow();
+            assertThat(failed.getStatus()).isEqualTo(RestTimerStatus.PENDING);
+            assertThat(failed.getNextAttemptAt()).isNotNull();
+        });
+        assertThat(pushSubscriptionRepository.findByEndpoint(ENDPOINT_PHONE)).isPresent();
     }
 
     @Test

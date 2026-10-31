@@ -1,0 +1,2 @@
+# Vulnerabilities accepted on purpose. Each entry needs a reason, a way to remove it and an
+# expiry date (exp:), after which Trivy reports it again and CI fails until it is reviewed.

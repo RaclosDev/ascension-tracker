@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { get, set, del } from 'idb-keyval';
+import { useSyncExternalStore } from 'react';
+import { workoutStorage, UNBOUND_WORKOUT_KEY } from './storage';
 import { uid } from '@/lib/utils';
 import { previousFill, matchVariant } from './format';
 import {
@@ -499,25 +500,9 @@ export const useWorkoutStore = create<WorkoutState>()(
       },
     }),
     {
-      name: 'ascension-workout-v1',
-      storage: createJSONStorage(() => ({
-        getItem: async (name) => {
-          const val = await get(name);
-          if (val) return val;
-          // Migración automática del nombre heredado del prototipo 'forja-v1'
-          if (name === 'ascension-workout-v1') {
-            const legacy = await get('forja-v1');
-            if (legacy) {
-              await set('ascension-workout-v1', legacy);
-              await del('forja-v1');
-              return legacy;
-            }
-          }
-          return null;
-        },
-        setItem: async (name, value) => await set(name, value),
-        removeItem: async (name) => await del(name),
-      })),
+      name: UNBOUND_WORKOUT_KEY,
+      skipHydration: true,
+      storage: createJSONStorage(() => workoutStorage),
       partialize: (s) => ({
         active: s.active,
         restUntil: s.restUntil,
@@ -552,3 +537,15 @@ export const useWorkoutStore = create<WorkoutState>()(
     },
   ),
 );
+
+const subscribeHydration = (listener: () => void) => {
+  const unsubscribeStart = useWorkoutStore.persist.onHydrate(listener);
+  const unsubscribeFinish = useWorkoutStore.persist.onFinishHydration(listener);
+  return () => {
+    unsubscribeStart();
+    unsubscribeFinish();
+  };
+};
+
+export const useWorkoutHydrated = () =>
+  useSyncExternalStore(subscribeHydration, useWorkoutStore.persist.hasHydrated, () => false);

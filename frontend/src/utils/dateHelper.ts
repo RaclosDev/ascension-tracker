@@ -1,7 +1,6 @@
 /**
- * Date helper utilities in local timezone.
- * Fixes timezone shift bugs caused by `toISOString().split('T')[0]`,
- * which converts local time to UTC and returns yesterday after midnight in UTC+ timezones.
+ * Local-timezone date helpers: `toISOString().split('T')[0]` converts to UTC and returns
+ * yesterday shortly after midnight in UTC+ timezones.
  */
 
 export function getLocalDateString(d: Date | string = new Date()) {
@@ -30,43 +29,9 @@ export function isTodayLocal(dateStr: string) {
 }
 
 /**
- * Returns a human-friendly label like "Hoy (8 sep)", "Ayer (7 sep)", or "8 sep 2026".
+ * Uppercases only the first letter, as Spanish dates require: "Viernes, 30 de octubre de 2026".
+ * Use it instead of CSS `capitalize`, which uppercases every word ("30 De Octubre").
  */
-export function formatFriendlyDate(dateStr: string) {
-  if (!dateStr) return '';
-  const today = getLocalDateString();
-  const yesterday = addDaysToDateString(today, -1);
-  const tomorrow = addDaysToDateString(today, 1);
-
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const date = new Date(y, m - 1, d);
-  const monthNames = [
-    'ene',
-    'feb',
-    'mar',
-    'abr',
-    'may',
-    'jun',
-    'jul',
-    'ago',
-    'sep',
-    'oct',
-    'nov',
-    'dic',
-  ];
-  const monthStr = monthNames[date.getMonth()];
-
-  if (dateStr === today) {
-    return `Hoy (${d} ${monthStr})`;
-  } else if (dateStr === yesterday) {
-    return `Ayer (${d} ${monthStr})`;
-  } else if (dateStr === tomorrow) {
-    return `Mañana (${d} ${monthStr})`;
-  }
-
-  const currentYear = new Date().getFullYear();
-  if (y === currentYear) {
-    return `${d} ${monthStr}`;
-  }
-  return `${d} ${monthStr} ${y}`;
+export function capitalizeFirst(text: string) {
+  return text.charAt(0).toLocaleUpperCase('es-ES') + text.slice(1);
 }

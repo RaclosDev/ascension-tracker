@@ -68,6 +68,39 @@ class UserDataRestoreServiceTest {
 
     private final String AUTH_USER = "user@example.com";
 
+    @Test
+    void mergePreservesRepeatedFoodLogsAndOnlyConsumesExistingOccurrences() {
+        FoodLogDTO first = FoodLogDTO.builder().date(LocalDate.of(2026, 10, 1)).mealIndex(0)
+                .product("Rice").quantity(100).kcal(130).build();
+        FoodLogDTO second = FoodLogDTO.builder().date(first.getDate()).mealIndex(0)
+                .product("Rice").quantity(200).kcal(260).build();
+        FoodLog existing = new FoodLog();
+        existing.setDate(first.getDate());
+        existing.setMealIndex(0);
+        existing.setProduct("Rice");
+        existing.setQuantity(100);
+        existing.setKcal(130);
+        first.setMealKey("meal-test");
+        second.setMealKey("meal-test");
+        existing.setMealKey("meal-test");
+        first.setPortionsJson("[{\"label\":\"cup\",\"amount\":100}]");
+        existing.setPortionsJson("[ { \"amount\": 100, \"label\": \"cup\" } ]");
+        when(foodLogRepository.findAllByUserEmailOrderByDateAscIdAsc(AUTH_USER)).thenReturn(List.of(existing));
+        var backup = UserDataExportDTO.builder().version("1.0")
+                .foodLogs(List.of(first, first, second)).build();
+
+        var summary = service.restoreUserData(AUTH_USER, RestoreMode.MERGE, false, backup);
+
+        assertThat(summary.getFoodLogsRestored()).isEqualTo(2);
+        var saved = ArgumentCaptor.forClass(FoodLog.class);
+        verify(foodLogRepository, times(2)).save(saved.capture());
+        assertThat(saved.getAllValues()).extracting(FoodLog::getQuantity).containsExactly(100.0, 200.0);
+        when(foodLogRepository.findAllByUserEmailOrderByDateAscIdAsc(AUTH_USER))
+                .thenReturn(List.of(existing, saved.getAllValues().get(0), saved.getAllValues().get(1)));
+        assertThat(service.restoreUserData(AUTH_USER, RestoreMode.MERGE, false, backup)
+                .getFoodLogsRestored()).isZero();
+    }
+
     private UserDataExportDTO createSampleBackup() {
         CustomExerciseDTO customEx = CustomExerciseDTO.builder()
                 .id("client-ex-1")
@@ -213,6 +246,7 @@ class UserDataRestoreServiceTest {
         WorkoutTemplate savedTpl = tplCaptor.getValue();
         assertThat(savedTpl.getUserEmail()).isEqualTo(AUTH_USER);
         assertThat(savedTpl.getExercises().get(0).getExerciseId()).isEqualTo(savedEx.getId());
+        assertThat(savedTpl.getExercises().get(0).getOrderIndex()).isZero();
 
         // Verify other entities
         verify(foodLogRepository).save(any(FoodLog.class));

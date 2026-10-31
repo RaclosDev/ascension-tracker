@@ -5,7 +5,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import api from './api/client';
-import { applyThemeColor } from './utils/colorHelper';
+import { applyThemeColor, readThemeColor } from './utils/colorHelper';
 import { lazyWithRetry, isChunkLoadError } from './utils/lazyWithRetry';
 
 const DashboardPage = lazyWithRetry(() => import('./pages/DashboardPage'));
@@ -14,7 +14,7 @@ const NutritionPage = lazyWithRetry(() => import('./pages/NutritionPage'));
 const SettingsPage = lazyWithRetry(() => import('./pages/SettingsPage'));
 const WorkoutPage = lazyWithRetry(() => import('./pages/WorkoutPage'));
 const UtilitiesPage = lazyWithRetry(() => import('./pages/UtilitiesPage'));
-import LoginPage from './pages/LoginPage';
+import LandingPage from './pages/LandingPage';
 
 import { PageLoader } from './components/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -78,7 +78,7 @@ function AppContent() {
     return (
       <ErrorBoundary>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={<LandingPage />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </ErrorBoundary>
@@ -158,7 +158,7 @@ class GlobalErrorBoundary extends Component<{ children: React.ReactNode }, { has
 
 export default function App() {
   useEffect(() => {
-    const savedTheme = localStorage.getItem('ascension_custom_color') || '#0085FF';
+    const savedTheme = readThemeColor();
     applyThemeColor(savedTheme);
   }, []);
 
@@ -269,11 +269,10 @@ export default function App() {
               toastOptions={{
                 duration: 3000,
                 style: {
-                  background: 'var(--bg-glass-strong, rgba(17, 24, 39, 0.95))',
+                  background: 'var(--bg-card, #1C1C1E)',
                   color: 'var(--text-primary, #f1f5f9)',
                   border: '1px solid var(--border-medium, rgba(255,255,255,0.1))',
                   borderRadius: '12px',
-                  backdropFilter: 'blur(12px)',
                 },
               }}
             />

@@ -28,6 +28,13 @@ public class RestTimer {
     @Column(name = "status", nullable = false, length = 32)
     private RestTimerStatus status;
 
+    @Column(name = "claim_token")
+    private String claimToken;
+    @Column(name = "lease_until")
+    private Instant leaseUntil;
+    @Column(name = "next_attempt_at")
+    private Instant nextAttemptAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();

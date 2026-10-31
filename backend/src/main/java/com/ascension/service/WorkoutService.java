@@ -149,7 +149,6 @@ public class WorkoutService {
         return workoutMapper.toDTO(s);
     }
 
-    // --- Custom Exercises ---
     @Transactional(readOnly = true)
     public List<CustomExerciseDTO> getCustomExercises(String userEmail) {
         return customExerciseService.getCustomExercises(userEmail);

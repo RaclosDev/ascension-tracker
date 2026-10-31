@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 import { getSanitizedKcal, extractPortions } from '../../utils/portionHelper';
@@ -37,6 +37,16 @@ export function useScannerAndOCR(
   setIsFoodFormOpen: (v: boolean) => void,
 ) {
   const ocrFileRef = useRef<HTMLInputElement>(null);
+  const barcodeRequest = useRef<AbortController | null>(null);
+  const ocrRequest = useRef<AbortController | null>(null);
+  const ocrFile = useRef<File | null>(null);
+  useEffect(
+    () => () => {
+      barcodeRequest.current?.abort();
+      ocrRequest.current?.abort();
+    },
+    [],
+  );
 
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isLookingUpCode, setIsLookingUpCode] = useState(false);
@@ -48,6 +58,11 @@ export function useScannerAndOCR(
   const handleOcrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (ocrFile.current === file) return;
+    ocrFile.current = file;
+    ocrRequest.current?.abort();
+    const controller = new AbortController();
+    ocrRequest.current = controller;
     e.target.value = '';
     setIsActionMenuOpen(false);
 
@@ -62,7 +77,9 @@ export function useScannerAndOCR(
       const { data } = await api.post('/nutrition/ai/ocr', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 45000,
+        signal: controller.signal,
       });
+      if (controller.signal.aborted) return;
 
       toast.dismiss(loadingToast);
       toast.success('¡Datos extraídos correctamente!');
@@ -83,18 +100,27 @@ export function useScannerAndOCR(
       });
       setIsFoodFormOpen(true);
     } catch (err: unknown) {
+      if (controller.signal.aborted) return;
       toast.dismiss(loadingToast);
       toast.error(
         'Error al escanear: ' +
           ((err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
             (err as Error).message),
       );
+    } finally {
+      toast.dismiss(loadingToast);
+      if (ocrRequest.current === controller) ocrFile.current = null;
     }
   };
 
   const handleScanBarcode = async (decodedText: string) => {
     let code = (decodedText || '').trim();
     if (!code) return;
+    barcodeRequest.current?.abort();
+    const controller = new AbortController();
+    barcodeRequest.current = controller;
+    setIsLookingUpCode(false);
+    setLookupError(null);
 
     const urlBarcodeMatch = code.match(/\/product\/(\d+)/i) || code.match(/[?&]code=(\d+)/i);
     if (urlBarcodeMatch) code = urlBarcodeMatch[1];
@@ -126,7 +152,10 @@ export function useScannerAndOCR(
     setScannedProduct(null);
 
     try {
-      const res = await api.get(`/food-external/barcode?code=${encodeURIComponent(code)}`);
+      const res = await api.get(`/food-external/barcode?code=${encodeURIComponent(code)}`, {
+        signal: controller.signal,
+      });
+      if (controller.signal.aborted) return;
       if (res.status === 200) {
         const data = res.data;
         const p = data.product;
@@ -160,9 +189,10 @@ export function useScannerAndOCR(
         `No se encontró ningún producto para el código "${code}". Puedes añadirlo manualmente.`,
       );
     } catch {
+      if (controller.signal.aborted) return;
       setLookupError('Error al consultar la base de datos de alimentos.');
     } finally {
-      setIsLookingUpCode(false);
+      if (!controller.signal.aborted) setIsLookingUpCode(false);
     }
   };
 

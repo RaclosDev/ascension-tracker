@@ -32,6 +32,7 @@ public class NutritionService {
 
     @Transactional
     public List<MealDTO> updateMeals(List<MealDTO> dtos, String userEmail) {
+        userDataQuotaService.acquireUserQuotaLock(userEmail);
         for (MealDTO dto : dtos) {
             if (dto.getId() != null) {
                 mealRepository.findByIdAndUserEmail(dto.getId(), userEmail).ifPresent(meal -> {
@@ -57,6 +58,7 @@ public class NutritionService {
 
     @Transactional
     public MealDTO addMeal(MealDTO dto, String userEmail) {
+        userDataQuotaService.acquireUserQuotaLock(userEmail);
         Integer maxOrder = mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail).stream()
                 .map(Meal::getSortOrder)
                 .max(Integer::compareTo)
@@ -66,6 +68,12 @@ public class NutritionService {
                 .name(dto.getName() != null ? dto.getName() : "Nueva Comida")
                 .icon(dto.getIcon() != null ? dto.getIcon() : "🍽️")
                 .sortOrder(maxOrder + 1)
+                .proteinPct(dto.getProteinPct())
+                .fixedProtein(dto.getFixedProtein())
+                .carbsPct(dto.getCarbsPct())
+                .fixedCarbs(dto.getFixedCarbs())
+                .fatPct(dto.getFatPct())
+                .fixedFat(dto.getFixedFat())
                 .startTime(dto.getStartTime())
                 .endTime(dto.getEndTime())
                 .isDefault(dto.getIsDefault())
@@ -77,6 +85,7 @@ public class NutritionService {
 
     @Transactional
     public void deleteMeal(Long id, String userEmail) {
+        userDataQuotaService.acquireUserQuotaLock(userEmail);
         mealRepository.deleteByIdAndUserEmail(id, userEmail);
         List<Meal> remaining = mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail);
         if (remaining.isEmpty()) {
@@ -86,6 +95,7 @@ public class NutritionService {
 
     @Transactional
     public List<MealDTO> resetDefaultMeals(String userEmail) {
+        userDataQuotaService.acquireUserQuotaLock(userEmail);
         mealRepository.deleteAllByUserEmail(userEmail);
         seedDefaultMeals(userEmail);
         return getMeals(userEmail);
@@ -115,6 +125,7 @@ public class NutritionService {
     private MealDTO toDTO(Meal meal) {
         return MealDTO.builder()
                 .id(meal.getId())
+                .mealKey(meal.getMealKey())
                 .name(meal.getName())
                 .icon(meal.getIcon())
                 .proteinPct(meal.getProteinPct())

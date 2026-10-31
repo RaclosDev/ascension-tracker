@@ -1,16 +1,30 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  ReactNode,
+} from 'react';
 import { googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-import { del } from 'idb-keyval';
 import { useQueryClient } from '@tanstack/react-query';
 import api, {
   setMemoryToken,
   refreshAccessToken,
-  getSessionToken,
   authBroadcast,
-  isTokenValid,
+  logoutSession,
+  invalidateAuthSession,
 } from '../api/client';
-import { useWorkoutStore } from '@/lib/workout/store';
+import { switchWorkoutAccount, getWorkoutAccount } from '@/lib/workout/account';
+import { registerLegacyWorkoutOwner } from '@/lib/workout/storage';
+import {
+  clearSessionLogoutPending,
+  isSessionLogoutPending,
+  markSessionLogoutPending,
+} from '@/auth/sessionBoundary';
+import { clearIdempotencyIntents } from '@/api/idempotency';
 
 export interface User {
   email: string;
@@ -21,9 +35,9 @@ export interface User {
 export interface AuthContextType {
   token: string | null;
   user: User | null;
-  login: (jwtToken: string) => void;
-  logout: () => void;
-  updateToken: (newToken: string) => void;
+  login: (jwtToken: string) => Promise<void>;
+  logout: () => Promise<void>;
+  updateToken: (newToken: string) => Promise<void>;
   isReady: boolean;
 }
 
@@ -34,7 +48,9 @@ export const purgeAllCaches = async () => {
     try {
       const cacheNames = await window.caches.keys();
       // Preserve workbox precache to keep PWA offline app shell intact
-      const runtimeCaches = cacheNames.filter((name) => !name.startsWith('workbox-precache'));
+      const runtimeCaches = cacheNames.filter((name) =>
+        ['api-cache', 'food-search-cache'].includes(name),
+      );
       await Promise.all(runtimeCaches.map((name) => window.caches.delete(name)));
     } catch {
       // ignore
@@ -44,11 +60,52 @@ export const purgeAllCaches = async () => {
 
 const CACHED_USER_KEY = 'ascension_cached_user';
 
+const clearLocalSessionData = async () => {
+  clearIdempotencyIntents();
+  await switchWorkoutAccount(null);
+  for (const kind of ['localStorage', 'sessionStorage'] as const) {
+    try {
+      const storage = window[kind];
+      const preserved = new Set([
+        'ascension_logout_pending',
+        'ascension_workout_legacy_owner',
+        'ascension_custom_color',
+        'ascension_theme',
+      ]);
+      for (const key of Object.keys(storage)) {
+        if ((key.startsWith('ascension_') || key.startsWith('ascension:')) && !preserved.has(key))
+          storage.removeItem(key);
+      }
+    } catch {
+      /* Continue clearing remaining stores when one storage is blocked. */
+    }
+  }
+  await purgeAllCaches();
+};
+
 export const getCachedUser = (): User | null => {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(CACHED_USER_KEY);
-    return raw ? JSON.parse(raw) : null;
+    const value: unknown = raw ? JSON.parse(raw) : null;
+    if (
+      !value ||
+      typeof value !== 'object' ||
+      !('email' in value) ||
+      !('name' in value) ||
+      typeof value.email !== 'string' ||
+      !value.email.trim() ||
+      typeof value.name !== 'string' ||
+      ('picture' in value && value.picture != null && typeof value.picture !== 'string')
+    )
+      return null;
+    return {
+      email: value.email,
+      name: value.name,
+      ...('picture' in value && typeof value.picture === 'string'
+        ? { picture: value.picture }
+        : {}),
+    };
   } catch {
     return null;
   }
@@ -69,37 +126,51 @@ export const setCachedUser = (user: User | null) => {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const activationRevision = useRef(0);
+  const cleanupInFlight = useRef<Promise<void> | null>(null);
+  // No access token survives a reload; initAuth gets a fresh one from the refresh cookie.
   const getInitialSession = (): { token: string | null; user: User | null } => {
-    const sessionToken = getSessionToken();
     const cachedUser = getCachedUser();
-    if (sessionToken && cachedUser) {
-      setMemoryToken(sessionToken);
-      api.defaults.headers.common['Authorization'] = 'Bearer ' + sessionToken;
-      return { token: sessionToken, user: cachedUser };
-    }
-    if (cachedUser) {
-      return { token: null, user: cachedUser };
-    }
-    return { token: null, user: null };
+    registerLegacyWorkoutOwner(cachedUser?.email ?? null);
+    return { token: null, user: isSessionLogoutPending() ? null : cachedUser };
   };
 
-  const initialSession = getInitialSession();
+  const [initialSession] = useState(getInitialSession);
   const [token, setToken] = useState<string | null>(initialSession.token);
   const [user, setUser] = useState<User | null>(initialSession.user);
   const [isReady, setIsReady] = useState(initialSession.token !== null);
+
+  const beginSessionCleanup = useCallback((serverLogout?: Promise<unknown>) => {
+    setIsReady(false);
+    const revision = activationRevision.current;
+    const previous = cleanupInFlight.current ?? Promise.resolve();
+    const pending = previous
+      .then(clearLocalSessionData)
+      .then(() => serverLogout)
+      .then(() => {});
+    cleanupInFlight.current = pending;
+    void pending.then(
+      () => {
+        if (cleanupInFlight.current === pending) cleanupInFlight.current = null;
+        if (activationRevision.current === revision) setIsReady(true);
+      },
+      () => {
+        // Keep the account gate closed if an unexpected cleanup failure occurs.
+        if (cleanupInFlight.current === pending) cleanupInFlight.current = null;
+      },
+    );
+    return pending;
+  }, []);
 
   // On mount: proactively attempt to refresh to get an access token in memory via HttpOnly cookie
   useEffect(() => {
     let cancelled = false;
 
     async function initAuth() {
-      // If we already have a valid session from getInitialSession (e.g. from shared storage),
-      // we do not need to block on network refresh or risk dropping the session.
-      if (initialSession.token && isTokenValid(initialSession.token)) {
-        setIsReady(true);
+      if (isSessionLogoutPending()) {
+        await beginSessionCleanup();
         return;
       }
-
       // Query any active peer tabs for a live session over BroadcastChannel
       if (authBroadcast) {
         try {
@@ -117,7 +188,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const freshToken = await refreshAccessToken();
 
           if (freshToken && !cancelled) {
-            setToken(freshToken);
             try {
               const payload = jwtDecode<Record<string, unknown>>(freshToken);
               const u: User = {
@@ -125,6 +195,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 name: payload.name as string,
                 picture: payload.picture as string,
               };
+              const revision = ++activationRevision.current;
+              await switchWorkoutAccount(u.email);
+              if (cancelled || revision !== activationRevision.current || isSessionLogoutPending())
+                return;
+              setToken(freshToken);
               setUser(u);
               setCachedUser(u);
             } catch {
@@ -147,8 +222,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               const isOffline =
                 (typeof navigator !== 'undefined' && !navigator.onLine) || isNetworkOrServerError;
 
-              if (cachedUser && (isOffline || initialSession.user)) {
-                // Gym / airplane mode / dead wifi / deployment reboot: allow entering offline PWA mode with cached user profile
+              if (cachedUser && isOffline) {
+                // Offline, or the backend is down or redeploying: enter offline PWA mode with the cached profile.
+                const revision = ++activationRevision.current;
+                await switchWorkoutAccount(cachedUser.email);
+                if (
+                  cancelled ||
+                  revision !== activationRevision.current ||
+                  isSessionLogoutPending()
+                )
+                  return;
                 setToken('offline-session');
                 setUser(cachedUser);
               } else if (!initialSession.user) {
@@ -164,7 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      if (!cancelled) setIsReady(true);
+      if (!cancelled && !isSessionLogoutPending()) setIsReady(true);
     }
 
     initAuth();
@@ -173,7 +256,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const freshToken = await refreshAccessToken();
         if (freshToken && !cancelled) {
+          const payload = jwtDecode<{ email: string }>(freshToken);
+          const revision = ++activationRevision.current;
+          if (getWorkoutAccount() !== payload.email?.trim().toLowerCase()) {
+            setIsReady(false);
+            queryClient.clear();
+          }
+          await switchWorkoutAccount(payload.email);
+          if (cancelled || revision !== activationRevision.current || isSessionLogoutPending())
+            return;
           setToken(freshToken);
+          setIsReady(true);
         }
       } catch {
         // Still recovering network
@@ -186,7 +279,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cancelled = true;
       window.removeEventListener('online', handleOnline);
     };
-  }, []);
+  }, [initialSession.user, queryClient, beginSessionCleanup]);
 
   useEffect(() => {
     if (token) {
@@ -218,49 +311,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
     }
 
-    const handleTokenRefresh = (e: Event) => {
+    const handleTokenRefresh = async (e: Event) => {
       if (e instanceof CustomEvent && e.detail) {
-        setToken(e.detail);
+        try {
+          const payload = jwtDecode<{ email: string }>(e.detail);
+          const revision = ++activationRevision.current;
+          if (getWorkoutAccount() !== payload.email?.trim().toLowerCase()) {
+            setIsReady(false);
+            queryClient.clear();
+          }
+          await switchWorkoutAccount(payload.email);
+          if (revision !== activationRevision.current || isSessionLogoutPending()) return;
+          setToken(e.detail);
+          setIsReady(true);
+        } catch {
+          /* Ignore malformed refresh notifications. */
+        }
       }
     };
-    const handleAuthFailed = () => {
+    const handleAuthFailed = (event: Event) => {
+      activationRevision.current++;
       setToken(null);
-      setMemoryToken(null);
+      invalidateAuthSession();
       delete api.defaults.headers.common['Authorization'];
       setUser(null);
       setCachedUser(null);
-    };
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'ascension_session_token') {
-        if (e.newValue && isTokenValid(e.newValue)) {
-          setMemoryToken(e.newValue);
-          api.defaults.headers.common['Authorization'] = 'Bearer ' + e.newValue;
-          setToken(e.newValue);
-          const cached = getCachedUser();
-          if (cached) setUser(cached);
-        } else if (!e.newValue && !getCachedUser()) {
-          setToken(null);
-          setMemoryToken(null);
-          delete api.defaults.headers.common['Authorization'];
-          setUser(null);
-        }
+      queryClient.clear();
+      if (event instanceof CustomEvent && event.detail?.reason === 'logout') {
+        markSessionLogoutPending();
+        void beginSessionCleanup();
       }
     };
     window.addEventListener('token_refresh', handleTokenRefresh);
     window.addEventListener('auth_failed', handleAuthFailed);
-    window.addEventListener('storage', handleStorageChange);
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'ascension_logout_pending' && isSessionLogoutPending()) {
+        handleAuthFailed(new CustomEvent('auth_failed', { detail: { reason: 'logout' } }));
+      }
+    };
+    window.addEventListener('storage', handleStorage);
     return () => {
       window.removeEventListener('token_refresh', handleTokenRefresh);
       window.removeEventListener('auth_failed', handleAuthFailed);
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('storage', handleStorage);
     };
-  }, [token, queryClient]);
+  }, [token, queryClient, beginSessionCleanup]);
 
-  const login = (jwtToken: string) => {
+  const login = async (jwtToken: string) => {
+    const revision = ++activationRevision.current;
+    setIsReady(false);
+    await cleanupInFlight.current;
+    if (revision !== activationRevision.current) return;
+    const payload = jwtDecode<{ email: string; name: string; picture?: string }>(jwtToken);
+    if (typeof payload.email !== 'string' || !payload.email.trim()) return;
+    clearSessionLogoutPending();
     queryClient.clear();
     setMemoryToken(jwtToken);
     api.defaults.headers.common['Authorization'] = 'Bearer ' + jwtToken;
+    await switchWorkoutAccount(payload.email);
+    if (revision !== activationRevision.current || isSessionLogoutPending()) return;
     setToken(jwtToken);
+    setIsReady(true);
     try {
       const payload = jwtDecode<Record<string, unknown>>(jwtToken);
       const u: User = {
@@ -282,12 +393,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateToken = (newToken: string) => {
+  const updateToken = async (newToken: string) => {
+    const revision = ++activationRevision.current;
+    await cleanupInFlight.current;
+    if (revision !== activationRevision.current || isSessionLogoutPending()) return;
+    const payload = jwtDecode<{ email: string }>(newToken);
+    if (getWorkoutAccount() !== payload.email?.trim().toLowerCase()) {
+      setIsReady(false);
+      queryClient.clear();
+    }
+    await switchWorkoutAccount(payload.email);
+    if (revision !== activationRevision.current || isSessionLogoutPending()) return;
     setToken(newToken);
+    setIsReady(true);
   };
 
   const logout = async () => {
-    await api.post('/auth/logout').catch(() => {});
+    activationRevision.current++;
+    setIsReady(false);
+    markSessionLogoutPending();
+    const serverLogout = logoutSession().catch(() => {});
     googleLogout();
     setToken(null);
     setUser(null);
@@ -302,27 +427,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    await purgeAllCaches();
-
-    // Save custom theme, clear local storage to prevent data leaks between accounts, and reload
-    const theme = localStorage.getItem('ascension_custom_color');
-    localStorage.clear();
-    if (typeof window !== 'undefined' && window.sessionStorage) {
-      sessionStorage.clear();
-    }
-    if (theme) localStorage.setItem('ascension_custom_color', theme);
-
-    try {
-      await del('ascension-workout-v1');
-      await del('forja-v1');
-    } catch (e) {
-      console.error(
-        'Error clearing IndexedDB on logout:',
-        e instanceof Error ? e.message : String(e),
-      );
-    }
     queryClient.clear();
-    useWorkoutStore.setState({ active: null, restUntil: null, restTimers: {} });
+    await beginSessionCleanup(serverLogout);
 
     window.location.href = '/login';
   };

@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 
 import WeightLossPlan from '../components/calculators/WeightLossPlan';
 import MacroConfigurator, { MacroForm } from '../components/calculators/MacroConfigurator';
-import MealConfigurator from '../components/MealConfigurator';
+import { SettingsMealsSection } from '../components/settings/SettingsMealsSection';
 import { haptics } from '../lib/haptics';
 import { useWorkoutStore } from '../lib/workout/store';
 import { useCustomExercises, useWorkoutPreferencesActions } from '../lib/workout/api';
@@ -17,9 +17,10 @@ import { SettingsThemeSection } from '../components/settings/SettingsThemeSectio
 import { SettingsWorkoutSection } from '../components/settings/SettingsWorkoutSection';
 import { SettingsDataSection } from '../components/settings/SettingsDataSection';
 import { useAuth } from '../context/AuthContext';
-import { applyThemeColor } from '../utils/colorHelper';
+import { applyThemeColor, readThemeColor } from '../utils/colorHelper';
 import { Skeleton } from '../components/ui/skeleton';
-import { Scale, Activity, Utensils, ChevronDown } from 'lucide-react';
+import { Scale, Activity } from 'lucide-react';
+import { SettingsAccordionHeader } from '../components/settings/SettingsAccordionHeader';
 
 export interface SettingsForm {
   startDate: string;
@@ -157,9 +158,7 @@ export default function SettingsPage() {
     }
   };
 
-  const [customColor, setCustomColor] = useState(
-    localStorage.getItem('ascension_custom_color') || '#0085FF',
-  );
+  const [customColor, setCustomColor] = useState(readThemeColor());
   const handleColorChange = (color: string) => {
     setCustomColor(color);
     applyThemeColor(color);
@@ -175,7 +174,7 @@ export default function SettingsPage() {
     }
   }, [location.hash]);
 
-  const toggleSection = (key: string, e?: React.MouseEvent<HTMLDivElement>) => {
+  const toggleSection = (key: string, e?: React.MouseEvent<HTMLButtonElement>) => {
     haptics.medium();
     if (!openSections[key] && e?.currentTarget) {
       const el = e.currentTarget;
@@ -354,7 +353,6 @@ export default function SettingsPage() {
         className="settings-accordion-container"
         style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
       >
-        {/* 1. Personal Data */}
         <SettingsPersonalSection
           isOpen={openSections.personal}
           onToggle={(e) => toggleSection('personal', e)}
@@ -364,26 +362,21 @@ export default function SettingsPage() {
           isSaving={isSavingPersonal}
         />
 
-        {/* 1.5 Plan de Adelgazamiento */}
         <div
           className={`card accordion-card transition-all duration-300 ease-out ${openSections.plan ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
         >
-          <div
-            className="accordion-header flex justify-between items-center cursor-pointer select-none"
-            onClick={(e) => toggleSection('plan', e)}
-          >
-            <div className="flex items-center gap-2">
-              <Activity size={20} className="text-primary" />
-              <span className="card-title m-0 text-base font-semibold">Plan de Adelgazamiento</span>
-            </div>
-            <span
-              className={`text-xs text-gray-400 transition-transform duration-300 ${openSections.plan ? 'rotate-180' : 'rotate-0'}`}
-            >
-              <ChevronDown size={18} />
-            </span>
-          </div>
+          <SettingsAccordionHeader
+            panelId="settings-plan-panel"
+            title="Plan de Adelgazamiento"
+            icon={Activity}
+            isOpen={openSections.plan}
+            onToggle={(e) => toggleSection('plan', e)}
+          />
           {openSections.plan && (
-            <div className="accordion-content fade-in mt-5 pt-5 border-t border-white/10">
+            <div
+              id="settings-plan-panel"
+              className="accordion-content fade-in mt-5 pt-5 border-t border-white/10"
+            >
               <WeightLossPlan
                 initialWeightKg={String(
                   dashboard?.currentWeight ||
@@ -410,33 +403,28 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* 2. Macro Strategy */}
         <div
           className={`card accordion-card transition-all duration-300 ease-out ${openSections.macros ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
         >
-          <div
-            className="accordion-header flex justify-between items-center cursor-pointer select-none"
-            onClick={(e) => toggleSection('macros', e)}
-          >
-            <div className="flex items-center gap-2">
-              <Scale size={20} className="text-primary" />
-              <span className="card-title m-0 text-base font-semibold">Estrategia de Macros</span>
-            </div>
-            <span
-              className={`text-xs text-gray-400 transition-transform duration-300 ${openSections.macros ? 'rotate-180' : 'rotate-0'}`}
-            >
-              <ChevronDown size={18} />
-            </span>
-          </div>
+          <SettingsAccordionHeader
+            panelId="settings-macros-panel"
+            title="Estrategia de Macros"
+            icon={Scale}
+            isOpen={openSections.macros}
+            onToggle={(e) => toggleSection('macros', e)}
+          />
           {openSections.macros && (
-            <div className="accordion-content fade-in mt-5 pt-5 border-t border-white/10">
+            <div
+              id="settings-macros-panel"
+              className="accordion-content fade-in mt-5 pt-5 border-t border-white/10"
+            >
               <MacroConfigurator
                 form={form}
                 setForm={setForm as unknown as React.Dispatch<React.SetStateAction<MacroForm>>}
                 initialStartWeight={dashboard?.currentWeight || effectiveSettings?.startWeight}
               />
               <button
-                className="btn btn-primary"
+                className="btn btn-primary min-h-11"
                 style={{ width: '100%', marginTop: '0.5rem' }}
                 onClick={handleSaveMacros}
               >
@@ -446,33 +434,12 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* 3. Meals */}
-        <div
-          id="meals-section"
-          className={`card accordion-card transition-all duration-300 ease-out ${openSections.meals ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
-        >
-          <div
-            className="accordion-header flex justify-between items-center cursor-pointer select-none"
-            onClick={(e) => toggleSection('meals', e)}
-          >
-            <div className="flex items-center gap-2">
-              <Utensils size={20} className="text-primary" />
-              <span className="card-title m-0 text-base font-semibold">Configurar Comidas</span>
-            </div>
-            <span
-              className={`text-xs text-gray-400 transition-transform duration-300 ${openSections.meals ? 'rotate-180' : 'rotate-0'}`}
-            >
-              <ChevronDown size={18} />
-            </span>
-          </div>
-          {openSections.meals && (
-            <div className="accordion-content fade-in mt-5 pt-5 border-t border-white/10">
-              <MealConfigurator onSaved={refetchSettings} />
-            </div>
-          )}
-        </div>
+        <SettingsMealsSection
+          isOpen={openSections.meals}
+          onToggle={(event) => toggleSection('meals', event)}
+          onSaved={refetchSettings}
+        />
 
-        {/* 4. Theme & Appearance */}
         <SettingsThemeSection
           isOpen={openSections.theme}
           onToggle={(e) => toggleSection('theme', e)}
@@ -480,7 +447,6 @@ export default function SettingsPage() {
           onColorChange={handleColorChange}
         />
 
-        {/* 5. Workout */}
         <SettingsWorkoutSection
           isOpen={openSections.workout}
           onToggle={(e) => toggleSection('workout', e)}
@@ -499,7 +465,6 @@ export default function SettingsPage() {
           onOpenHevyModal={() => setIsHevyModalOpen(true)}
         />
 
-        {/* 6. Backup, Privacy & Logout */}
         <SettingsDataSection
           isExportingJson={isExportingJson}
           onExportJson={handleExportJson}

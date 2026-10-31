@@ -7,11 +7,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * Utility helper to mask Personally Identifiable Information (PII),
- * specifically email addresses and user identifiers, before printing to application logs.
- *
- * Uses HMAC-SHA256 with a configurable secret key (via APP_PII_SALT environment variable
- * or system property) to prevent rainbow-table and candidate dictionary attacks against logs.
+ * Masks emails and OAuth subjects for logs with HMAC-SHA256 keyed by APP_PII_SALT (env var or
+ * system property), so logged identifiers resist dictionary and rainbow-table attacks.
  */
 public final class PiiMasker {
 
@@ -33,29 +30,39 @@ public final class PiiMasker {
     }
 
     /**
-     * Returns an HMAC-SHA256 keyed, deterministic 64-bit truncated pseudonym for the provided email.
-     * Prevents dictionary and rainbow-table attacks against logged user identifiers.
-     * Example: "athlete@example.com" -> "usr_3a9f1b2c4d5e6f7a"
+     * Returns a deterministic 64-bit pseudonym, e.g. "athlete@example.com" -> "usr_3a9f1b2c4d5e6f7a".
      *
-     * @param email raw email string
-     * @return masked pseudonym, or "[anonymous]" if null/empty
+     * @return the pseudonym, or "[anonymous]" if null/empty
      */
     public static String maskEmail(String email) {
-        if (email == null || email.isBlank()) {
+        return pseudonym(email == null ? null : email.trim().toLowerCase(java.util.Locale.ROOT), "usr_");
+    }
+
+    /**
+     * Same pseudonym for a Google "sub", so security alerts stay correlatable without the raw ID.
+     *
+     * @return the pseudonym, or "[anonymous]" if null/empty
+     */
+    public static String maskSubject(String subject) {
+        return pseudonym(subject == null ? null : subject.trim(), "sub_");
+    }
+
+    private static String pseudonym(String value, String prefix) {
+        if (value == null || value.isEmpty()) {
             return "[anonymous]";
         }
         try {
             Mac mac = Mac.getInstance(HMAC_ALGORITHM);
             SecretKeySpec secretKey = new SecretKeySpec(getSalt(), HMAC_ALGORITHM);
             mac.init(secretKey);
-            byte[] digest = mac.doFinal(email.trim().toLowerCase().getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder("usr_");
+            byte[] digest = mac.doFinal(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(prefix);
             for (int i = 0; i < 8; i++) {
                 sb.append(String.format("%02x", digest[i]));
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            return "usr_masked";
+            return prefix + "masked";
         }
     }
 }

@@ -19,12 +19,20 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class FoodLogDTO {
     private Long id;
+    @Size(max = 36)
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private String mealKey;
+    @Size(max = 100)
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private String mealName;
+    @Size(max = 50)
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private String mealIcon;
     
     @NotNull(message = "La fecha no puede ser nula")
     private LocalDate date;
     
-    @NotNull(message = "El indice de la comida es requerido")
-    @Min(value = 0, message = "El índice de la comida no puede ser negativo")
+    @Min(value = -1, message = "El índice de la comida está fuera de rango")
     @Max(value = 20, message = "El índice de la comida está fuera de rango")
     private Integer mealIndex;
     

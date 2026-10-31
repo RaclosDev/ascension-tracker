@@ -200,7 +200,7 @@ class GeminiAiServiceTest {
         when(jsonParser.parseFoodLogs(eq("[{\"product\":\"Apple\"}]"), anyInt(), anyInt(), any(), any()))
                 .thenReturn(List.of(parsedDto));
         doThrow(new UserDataQuotaExceededException("Quota exceeded on save"))
-                .when(nutritionLogService).addFoodLog(eq(email), any());
+                .when(nutritionLogService).addFoodLogs(eq(email), any());
 
         assertThrows(
                 UserDataQuotaExceededException.class,
@@ -250,7 +250,7 @@ class GeminiAiServiceTest {
         );
 
         verify(quotaService).checkAndReserveQuota(email);
-        verify(quotaService).releaseQuota(email);
+        verify(quotaService).releaseQuota(isNull());
         verify(quotaService).recordFailure(any());
     }
 

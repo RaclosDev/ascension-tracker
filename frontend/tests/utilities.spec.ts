@@ -143,7 +143,7 @@ test.describe('Utilities & Biomechanical Calculators Flows', () => {
     await aiHeader.click();
 
     // Comprobar que se expande el contenedor del asistente
-    await expect(page.getByText('Tus Macros Restantes de Hoy', { exact: true })).toBeVisible({
+    await expect(page.getByText('Tus macros restantes de hoy', { exact: true })).toBeVisible({
       timeout: 15000,
     });
   });

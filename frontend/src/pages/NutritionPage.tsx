@@ -1,7 +1,9 @@
-import { Suspense } from 'react';
+import { groupMealLogs } from '../utils/mealGroups';
+import { QueryErrorNotice } from '../components/QueryErrorNotice';
+import { Suspense, useRef, useMemo } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useQueryClient } from '@tanstack/react-query';
-import { FoodLog, Meal } from '../types/api';
+import { Meal } from '../types/api';
 import { Loader2, Plus } from 'lucide-react';
 import { SegmentedControl } from '../components/ui/segmented-control';
 import { Skeleton } from '../components/ui/skeleton';
@@ -9,6 +11,7 @@ import MacroSummaryHeader from '../components/nutrition/MacroSummaryHeader';
 import { NutritionDateBar } from '../components/nutrition/NutritionDateBar';
 import { MealFoodGroup } from '../components/nutrition/MealFoodGroup';
 import { useNutritionDiary } from '../hooks/nutrition/useNutritionDiary';
+import { useAnyInView } from '../hooks/use-any-in-view';
 
 const MyFoodsPage = lazyWithRetry(() => import('./MyFoodsPage'));
 const FoodSearchModal = lazyWithRetry(() => import('../components/FoodSearchModal'));
@@ -37,6 +40,8 @@ export default function NutritionPage() {
     settings,
     loading,
     fetchData,
+    isError,
+    isFetching,
     consumed,
     pieData,
     toggleMealCollapse,
@@ -53,9 +58,21 @@ export default function NutritionPage() {
     setEditingLog,
   } = useNutritionDiary();
 
+  const mealGroups = useMemo(() => groupMealLogs(meals, foodLogs), [meals, foodLogs]);
+
+  // The floating "+" only appears once every meal row's own buttons are off screen,
+  // so it can never sit on top of them.
+  const mealsGridRef = useRef<HTMLDivElement>(null);
+  const mealActionsInView = useAnyInView(
+    mealsGridRef,
+    '[data-meal-actions]',
+    `${activeTab}-${loading}-${meals.length}`,
+  );
+
   if (loading) {
     return (
       <div className="fade-in">
+        <h1 className="sr-only">Nutrición</h1>
         <Skeleton className="h-10 w-full max-w-sm mx-auto mb-6" />
         <div
           style={{
@@ -105,10 +122,14 @@ export default function NutritionPage() {
     );
   }
 
-  if (!macros || !settings) return null;
+  if (!macros || !settings) {
+    return <QueryErrorNotice retry={fetchData} pending={isFetching} />;
+  }
 
   return (
     <div className="fade-in">
+      {isError && <QueryErrorNotice retry={fetchData} pending={isFetching} />}
+      <h1 className="sr-only">Nutrición</h1>
       <SegmentedControl
         options={[
           { label: 'Diario', value: 'diary' },
@@ -121,7 +142,7 @@ export default function NutritionPage() {
 
       {activeTab === 'foods' ? (
         <Suspense
-          fallback={<div className="p-4 text-center text-gray-500">Cargando alimentos...</div>}
+          fallback={<div className="p-4 text-center text-gray-400">Cargando alimentos...</div>}
         >
           <MyFoodsPage />
         </Suspense>
@@ -131,11 +152,14 @@ export default function NutritionPage() {
 
           <button
             type="button"
-            className="fixed z-40 rounded-full w-14 h-14 flex items-center justify-center bg-[var(--accent-primary)] text-white shadow-xl shadow-[var(--accent-primary)]/30 hover:scale-105 active:scale-95 transition-all duration-200"
+            className={`fixed z-40 rounded-full w-14 h-14 flex items-center justify-center bg-[var(--accent-primary)] text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 motion-reduce:transition-none ${
+              mealActionsInView ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100'
+            }`}
             style={{
-              bottom: 'calc(90px + env(safe-area-inset-bottom, 16px))',
-              right: '1.25rem',
+              bottom: 'calc(env(safe-area-inset-bottom, 12px) + 88px)',
+              right: '1rem',
             }}
+            inert={mealActionsInView}
             onClick={() => {
               const hour = new Date().getHours();
               let defaultIdx = 0;
@@ -153,15 +177,18 @@ export default function NutritionPage() {
 
           <MacroSummaryHeader consumed={consumed} macros={macros} />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-            <div className="nutrition-meals-grid">
+          <div
+            className="pb-16 min-[1025px]:pb-32"
+            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
+          >
+            <div className="nutrition-meals-grid" ref={mealsGridRef}>
               {meals.map((meal: Meal, index: number) => {
-                const logs = foodLogs.filter((log: FoodLog) => log.mealIndex === index);
+                const logs = mealGroups.active[index];
                 const isCollapsed = collapsedMeals[index];
 
                 return (
                   <MealFoodGroup
-                    key={meal.id || index}
+                    key={meal.mealKey || meal.id || index}
                     meal={meal}
                     mealIndex={index}
                     logs={logs}
@@ -189,10 +216,37 @@ export default function NutritionPage() {
                   />
                 );
               })}
+              {mealGroups.historical.map((group, historicalIndex) => (
+                <MealFoodGroup
+                  key={group.key}
+                  historical
+                  meal={group.meal}
+                  mealIndex={-historicalIndex - 1}
+                  logs={group.logs}
+                  isCollapsed={Boolean(collapsedMeals[-historicalIndex - 1])}
+                  isDragOver={false}
+                  editingLog={editingLog}
+                  editInputMode={editInputMode}
+                  onToggleCollapse={toggleMealCollapse}
+                  onCopyFromYesterday={handleCopyFromYesterday}
+                  onOpenAddFoodModal={() => {}}
+                  onDragStart={handleDragStart}
+                  onDrag={handleDrag}
+                  onDragOver={() => {}}
+                  onDragLeave={handleDragLeave}
+                  onDrop={() => {}}
+                  onEditLog={handleEditLog}
+                  onDeleteLog={handleDeleteLog}
+                  onEditInputModeChange={setEditInputMode}
+                  onEditQuantityChange={handleEditQuantityChange}
+                  onUpdateLog={handleUpdateLog}
+                  onCancelEdit={() => setEditingLog(null)}
+                />
+              ))}
             </div>
 
-            <div className="card flex flex-col items-center p-6 mb-12">
-              <h3 className="text-xs font-semibold text-gray-300 mb-4">Distribución de macros</h3>
+            <div className="card flex flex-col items-center p-6">
+              <h2 className="text-xs font-semibold text-gray-300 mb-4">Distribución de macros</h2>
               <div
                 style={{
                   width: '100%',

@@ -41,13 +41,20 @@ public class PushConfig {
         if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.addProvider(new BouncyCastleProvider());
         }
-        try {
-            if (vapidPublicKey != null && !vapidPublicKey.isBlank() && !"CHANGE_ME".equals(vapidPublicKey)
-                    && vapidPrivateKey != null && !vapidPrivateKey.isBlank() && !"CHANGE_ME".equals(vapidPrivateKey)) {
-                return new PushService(vapidPublicKey, vapidPrivateKey, vapidSubject);
-            }
-        } catch (Exception ignored) {
+        boolean publicConfigured = configured(vapidPublicKey);
+        boolean privateConfigured = configured(vapidPrivateKey);
+        if (!publicConfigured && !privateConfigured) return null;
+        if (!publicConfigured || !privateConfigured) {
+            throw new IllegalStateException("Both VAPID keys must be configured to enable push notifications");
         }
-        return new PushService();
+        try {
+            return new PushService(vapidPublicKey, vapidPrivateKey, vapidSubject);
+        } catch (Exception exception) {
+            throw new IllegalStateException("Invalid VAPID configuration", exception);
+        }
+    }
+
+    private static boolean configured(String value) {
+        return value != null && !value.isBlank() && !"CHANGE_ME".equals(value);
     }
 }

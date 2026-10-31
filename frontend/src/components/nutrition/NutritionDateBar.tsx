@@ -53,7 +53,7 @@ export const NutritionDateBar: React.FC<NutritionDateBarProps> = ({
     >
       <button
         type="button"
-        className="btn btn-secondary btn-sm"
+        className="btn btn-secondary btn-sm min-h-11 min-w-11"
         onClick={() => onDateChange(addDaysToDateString(selectedDate, -1))}
         style={{ padding: '0.4rem 1rem', borderRadius: '24px' }}
         aria-label="Día anterior"
@@ -61,7 +61,7 @@ export const NutritionDateBar: React.FC<NutritionDateBarProps> = ({
         &larr;
       </button>
 
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+      <div className="relative flex items-center min-h-11">
         <input
           type="date"
           value={selectedDate}
@@ -91,7 +91,7 @@ export const NutritionDateBar: React.FC<NutritionDateBarProps> = ({
 
       <button
         type="button"
-        className="btn btn-secondary btn-sm"
+        className="btn btn-secondary btn-sm min-h-11 min-w-11"
         onClick={() => onDateChange(addDaysToDateString(selectedDate, 1))}
         style={{ padding: '0.4rem 1rem', borderRadius: '24px' }}
         aria-label="Día siguiente"

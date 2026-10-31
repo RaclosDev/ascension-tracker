@@ -64,4 +64,21 @@ class PiiMaskerTest {
         assertThat(customMasked).startsWith("usr_");
         assertThat(customMasked).isNotEqualTo(defaultMasked);
     }
+
+    @Test
+    void maskSubject_hidesRawSubjectAndIsDeterministic() {
+        String subject = "109876543210";
+        String masked = PiiMasker.maskSubject(subject);
+
+        assertThat(masked).startsWith("sub_");
+        assertThat(masked).doesNotContain(subject);
+        assertThat(masked).hasSize("sub_".length() + 16);
+        assertThat(PiiMasker.maskSubject(" 109876543210 ")).isEqualTo(masked);
+    }
+
+    @Test
+    void maskSubject_whenNullOrBlank_returnsAnonymous() {
+        assertThat(PiiMasker.maskSubject(null)).isEqualTo("[anonymous]");
+        assertThat(PiiMasker.maskSubject("  ")).isEqualTo("[anonymous]");
+    }
 }

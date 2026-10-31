@@ -11,8 +11,10 @@ interface SwipeableRowProps {
 export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) {
   const [offsetX, setOffsetX] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [hasFocus, setHasFocus] = useState(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const isDragging = useRef(false);
+  const dragOffset = useRef(0);
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
         y: e.touches[0].clientY,
       };
       isDragging.current = false;
+      dragOffset.current = 0;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
@@ -44,44 +47,47 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
       }
 
       if (isDragging.current) {
-        // PREVENT browser's native horizontal scroll or swipe-to-go-back gesture
+        // Block the browser's horizontal scroll and swipe-back gesture.
         if (e.cancelable) {
           e.preventDefault();
         }
         const clamped = Math.max(-85, Math.min(85, dx));
+        dragOffset.current = clamped;
         setOffsetX(clamped);
       }
     };
 
-    const handleTouchEnd = () => {
-      if (!touchStart.current) return;
-
-      setOffsetX((currentOffset) => {
-        if (currentOffset < -60) {
-          haptics.warning();
-          onDelete();
-        } else if (currentOffset > 60) {
-          haptics.light();
-          onEdit();
-        }
-        return 0;
-      });
-
+    const resetGesture = () => {
       touchStart.current = null;
       isDragging.current = false;
+      dragOffset.current = 0;
+      setOffsetX(0);
+    };
+    const handleTouchEnd = () => {
+      const completed = touchStart.current !== null && isDragging.current;
+      const finalOffset = dragOffset.current;
+      resetGesture();
+      if (!completed) return;
+      if (finalOffset < -60) {
+        haptics.warning();
+        onDelete();
+      } else if (finalOffset > 60) {
+        haptics.light();
+        onEdit();
+      }
     };
 
-    // passive: false is CRITICAL here so we can call e.preventDefault()
+    // touchmove must be non-passive so preventDefault() takes effect.
     el.addEventListener('touchstart', handleTouchStart, { passive: true });
     el.addEventListener('touchmove', handleTouchMove, { passive: false });
     el.addEventListener('touchend', handleTouchEnd, { passive: true });
-    el.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+    el.addEventListener('touchcancel', resetGesture, { passive: true });
 
     return () => {
       el.removeEventListener('touchstart', handleTouchStart);
       el.removeEventListener('touchmove', handleTouchMove);
       el.removeEventListener('touchend', handleTouchEnd);
-      el.removeEventListener('touchcancel', handleTouchEnd);
+      el.removeEventListener('touchcancel', resetGesture);
     };
   }, [onDelete, onEdit]);
 
@@ -91,6 +97,13 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
 
   return (
     <div
+      role="group"
+      aria-label="Acciones del registro"
+      tabIndex={0}
+      onFocusCapture={() => setHasFocus(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setHasFocus(false);
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
@@ -103,19 +116,7 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
     >
       {/* Edit button behind (left side) */}
       <div
-        role="button"
-        tabIndex={0}
-        onClick={() => {
-          haptics.light();
-          onEdit();
-          setOffsetX(0);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            onEdit();
-            setOffsetX(0);
-          }
-        }}
+        aria-hidden="true"
         style={{
           position: 'absolute',
           top: 0,
@@ -138,19 +139,7 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
 
       {/* Delete button behind (right side) */}
       <div
-        role="button"
-        tabIndex={0}
-        onClick={() => {
-          haptics.warning();
-          onDelete();
-          setOffsetX(0);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            onDelete();
-            setOffsetX(0);
-          }
-        }}
+        aria-hidden="true"
         style={{
           position: 'absolute',
           top: 0,
@@ -171,7 +160,6 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
         <Trash2 size={18} color="white" />
       </div>
 
-      {/* Swipeable content */}
       <div
         ref={contentRef}
         onClick={offsetX !== 0 ? closeSwipe : undefined}
@@ -187,7 +175,7 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
       >
         {children}
 
-        {/* Desktop overlay buttons, shown only when hovered (simulated PC experience) */}
+        {/* Available to keyboard users as soon as the row receives focus. */}
         <div
           className="desktop-swipe-actions"
           style={{
@@ -195,7 +183,7 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
             right: '0.5rem',
             top: '50%',
             transform: 'translateY(-50%)',
-            display: isHovered && offsetX === 0 ? 'flex' : 'none',
+            display: (isHovered || hasFocus) && offsetX === 0 ? 'flex' : 'none',
             gap: '0.2rem',
             background: 'var(--bg-primary)',
             padding: '0.2rem',
@@ -205,25 +193,25 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
         >
           <button
             type="button"
-            className="icon-btn edit-btn"
+            className="icon-btn edit-btn min-w-11 min-h-11"
             onClick={(e) => {
               e.stopPropagation();
               onEdit();
             }}
             title="Editar"
           >
-            <Edit3 size={16} />
+            <Edit3 size={16} aria-hidden="true" />
           </button>
           <button
             type="button"
-            className="icon-btn delete-btn"
+            className="icon-btn delete-btn min-w-11 min-h-11"
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
             }}
             title="Eliminar"
           >
-            <Trash2 size={16} />
+            <Trash2 size={16} aria-hidden="true" />
           </button>
         </div>
       </div>
