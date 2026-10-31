@@ -1,115 +1,88 @@
 # Ascension Tracker
 
-Aplicación web de entrenamiento y nutrición, desarrollada como proyecto personal full-stack. Permite registrar sesiones, consultar progresos y llevar un diario de alimentación. Interfaz en español y soporte de instalación como PWA.
+**Entrenamiento, nutrición y progreso en una aplicación web instalable.**
 
-[Aplicación](https://ascension.raclos.es) · [CI](https://github.com/RaclosDev/ascension-tracker/actions) · [Seguridad](SECURITY.md)
+Proyecto personal full-stack con interfaz en español. Reúne el registro de sesiones de fuerza, el diario de alimentación y el seguimiento de peso y pasos, con persistencia local del entrenamiento en curso.
 
-![CI](https://github.com/RaclosDev/ascension-tracker/actions/workflows/ci.yml/badge.svg)
+[Ver aplicación](https://ascension.raclos.es) · [Arquitectura](docs/architecture.md) · [Desarrollo y pruebas](docs/development.md) · [Seguridad](SECURITY.md)
 
-## Qué puedes probar
+[![CI](https://github.com/RaclosDev/ascension-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/RaclosDev/ascension-tracker/actions/workflows/ci.yml)
 
-- Entrenamientos con series, variantes de ejercicio, plantillas e historial.
-- Diario nutricional, alimentos guardados, recetas y búsqueda en catálogos externos.
-- Evolución de peso y pasos, objetivos y calculadoras.
-- Asistencia nutricional con Gemini y notificaciones de descanso, cuando sus servicios están configurados.
-
-El acceso utiliza Google. Las estimaciones generadas por IA requieren revisión del usuario.
-
-## Capturas
+## La aplicación
 
 <p align="center">
-  <img src="docs/screenshots/dashboard.png" alt="Panel de progreso" width="32%">
-  <img src="docs/screenshots/workout.png" alt="Registro de entrenamiento" width="32%">
-  <img src="docs/screenshots/nutrition.png" alt="Diario nutricional" width="32%">
+  <img src="docs/screenshots/dashboard.png" alt="Inicio: peso actual y progreso hacia el objetivo" width="32%">
+  <img src="docs/screenshots/workout.png" alt="Entrenamiento: ejercicios y registro de series" width="32%">
+  <img src="docs/screenshots/nutrition.png" alt="Nutrición: comidas y macronutrientes del día" width="32%">
 </p>
 
-## Arquitectura
+- **Entrenamiento:** ejercicios, series, variantes, temporizador de descanso, plantillas e historial. Importación de sesiones desde CSV de Hevy.
+- **Nutrición:** diario por comidas, alimentos guardados, recetas, búsqueda de productos y lectura de códigos de barras.
+- **Progreso:** evolución de peso y pasos, resúmenes semanales, objetivos y calculadoras.
+- **Datos propios:** exportación y restauración de copias de seguridad, con modos de fusión y sustitución.
+- **Integraciones opcionales:** asistencia nutricional con Gemini y avisos de descanso mediante Web Push.
 
-| Capa | Implementación |
+El acceso requiere una cuenta de Google. Las funciones de IA y push necesitan sus servicios configurados. Puedes consultar [más capturas](docs/screenshots) sin iniciar sesión.
+
+## Stack
+
+| Área | Tecnología |
 | --- | --- |
-| Interfaz | React 19, TypeScript, Vite y Tailwind CSS |
-| Datos del cliente | TanStack Query para consultas; Zustand e IndexedDB para estado de entrenamiento |
-| API | Java 17 y Spring Boot 4.1 |
-| Persistencia | PostgreSQL, JPA y migraciones Flyway |
-| Autenticación | Identidad Google validada en backend, JWT y refresh token en cookie HttpOnly |
-| Integraciones | Gemini, OpenFoodFacts, FatSecret y Web Push |
+| Interfaz | React 19, TypeScript, Vite, Tailwind CSS |
+| Estado y consultas | TanStack Query, Zustand, IndexedDB |
+| API | Java 17, Spring Boot 4.1, Spring Security |
+| Persistencia | PostgreSQL 16, Spring Data JPA, Flyway |
+| Pruebas | JUnit, Testcontainers, Vitest, Testing Library, Playwright |
+| Automatización | GitHub Actions, CodeQL, Trivy, Docker Compose |
 
-El backend organiza controladores, servicios, repositorios y DTOs. Las migraciones viven en `backend/src/main/resources/db/migration` y son la fuente de verdad del esquema.
+## Decisiones de ingeniería
 
-Decisiones y límites relevantes:
+- **Conservar el entrenamiento al recargar.** El estado activo se guarda en IndexedDB por cuenta. La hidratación y los cambios de usuario están protegidos frente a respuestas tardías. Esto no convierte toda la aplicación en offline.
+- **Reintentar sin duplicar escrituras.** Las operaciones compatibles usan `Idempotency-Key`: PostgreSQL confirma la escritura y su respuesta en una misma transacción, y reproduce el resultado en los reintentos.
+- **Mantener el significado del historial.** Los registros de comida conservan una identidad estable y una copia de su nombre; reordenar o eliminar comidas no los reasigna a otra posición.
+- **Compartir límites entre instancias.** Las cuotas HTTP e IA se almacenan en PostgreSQL. Los temporizadores push usan reclamaciones con caducidad y reintentos acotados.
+- **Comprobar fallos, además del caso correcto.** Hay regresiones para rollback, respuestas perdidas, cambios de cuenta, revocación de sesiones, almacenamiento bloqueado y envíos concurrentes.
 
-- `Persistable` evita determinadas consultas previas a insertar entidades con identificador asignado. Las consultas de lectura y sus relaciones requieren su propia estrategia de carga.
-- El rate limiting en memoria limita solicitudes por instancia; un despliegue con varias réplicas necesitaría coordinación de límites.
-- La persistencia local protege el estado del entrenamiento, pero no supone que todas las operaciones de la aplicación funcionen sin conexión.
-- Los E2E usan respuestas de API simuladas. Complementan las pruebas de integración del backend, no verifican las integraciones externas reales.
+La [guía de arquitectura](docs/architecture.md) conecta estas decisiones con su implementación y explica sus límites.
 
-## Ejecutar con Docker Compose
+## Arranque local
 
-Requisitos: Git, Docker con Compose y un cliente OAuth de Google configurado para el origen local.
+Necesitas Git, Docker con Compose y un cliente OAuth de Google para una aplicación web.
 
 ```bash
 git clone https://github.com/RaclosDev/ascension-tracker.git
 cd ascension-tracker
 cp .env.example .env
-# Completar las variables antes de continuar.
+```
+
+En PowerShell, sustituye el último comando por `Copy-Item .env.example .env`.
+
+Completa `POSTGRES_PASSWORD`, `JWT_SECRET`, `APP_PII_SALT`, `GOOGLE_CLIENT_ID` y `VITE_GOOGLE_CLIENT_ID`. Los dos identificadores de Google deben corresponder al mismo cliente; autoriza `http://localhost:3000` como origen JavaScript. `JWT_SECRET` necesita al menos 32 bytes. Mantén `VITE_API_URL` vacío y las integraciones que no uses también vacías.
+
+```bash
 docker compose up --build
 ```
 
-En PowerShell, usa `Copy-Item .env.example .env`.
+Abre [localhost:3000](http://localhost:3000). Nginx sirve el frontend y redirige `/api/` al backend; PostgreSQL conserva sus datos en un volumen. La [guía de desarrollo](docs/development.md) incluye configuración, ejecución con recarga en caliente y resolución de problemas.
 
-Configura `POSTGRES_PASSWORD`, `JWT_SECRET` (al menos 32 bytes), `APP_PII_SALT`, `GOOGLE_CLIENT_ID` y `VITE_GOOGLE_CLIENT_ID`. Ambos identificadores de Google corresponden al mismo cliente. Registra `http://localhost:3000` como origen autorizado. Mantén `VITE_API_URL` vacío para usar el proxy del frontend.
+## Calidad y verificación
 
-Las claves de Gemini, FatSecret y VAPID habilitan sus respectivas funciones. Sustituye los valores de ejemplo por credenciales válidas; si no usas una integración, deja sus campos vacíos. No subas `.env` al repositorio.
+GitHub Actions ejecuta las comprobaciones aplicables a cada cambio: pruebas del backend con PostgreSQL real mediante Testcontainers; lint, tipos, cobertura y build del frontend; presupuestos de assets y pruebas de navegador. También hay análisis de dependencias e imágenes y un workflow de CodeQL.
 
-Abre [localhost:3000](http://localhost:3000). Nginx sirve la interfaz y redirige `/api/` al backend. El contenedor backend no publica el puerto 8080 en el host. PostgreSQL solo publica su puerto en la interfaz local.
+Los E2E usan API simulada. Las pruebas de integración del backend comprueban persistencia y transacciones; ninguna de estas suites equivale a probar proveedores privados o todos los dispositivos físicos.
 
-Compose es una configuración de desarrollo local. Un despliegue público requiere HTTPS y configuración de secretos, cookies, orígenes y proxies adecuada a su infraestructura.
+Consulta los [comandos y resultados locales de referencia](docs/development.md#verificación) y los [umbrales del proyecto](CONSTRAINTS.md). El badge muestra el estado del workflow, no certifica cambios locales aún sin publicar.
 
-## Desarrollo sin contenedores de aplicación
+## Estructura
 
-Necesitas Java 17, Node.js 22 y PostgreSQL 16. Configura las variables del backend en su proceso: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `JWT_SECRET`, `APP_PII_SALT` y `GOOGLE_CLIENT_ID`. Spring no carga automáticamente el `.env` de Compose.
-
-```bash
-cd backend
-./mvnw spring-boot:run
+```text
+backend/       API, dominio, migraciones y pruebas de integración
+frontend/      Aplicación React, service worker y pruebas de navegador
+scripts/       Generación y comprobación de la política CSP
+docs/          Arquitectura, desarrollo y capturas de la aplicación
+.github/       Integración continua y análisis de seguridad
 ```
 
-En Windows usa `mvnw.cmd`. En otra terminal:
+## Autor y licencia
 
-```bash
-cd frontend
-cp .env.example .env
-npm ci
-npm run dev
-```
-
-El `.env` del frontend contiene el origen del backend en `VITE_API_URL` (por ejemplo, `http://localhost:8080`, sin `/api`) y el identificador público de Google. Autoriza también `http://localhost:5173` en Google para este flujo.
-
-## Verificación
-
-```bash
-cd backend
-./mvnw -B verify
-```
-
-Los tests de integración requieren Docker para Testcontainers.
-
-```bash
-cd frontend
-npm ci
-npm run lint
-npm run typecheck
-npm run test:coverage
-npm run build
-npx playwright install chromium
-npm run test:e2e
-npx playwright test --config playwright.production.config.ts
-```
-
-Los umbrales y presupuestos están en [CONSTRAINTS.md](CONSTRAINTS.md). Las revisiones y sus limitaciones están en [docs/audits](docs/audits). Los checks de GitHub deben consultarse para conocer el estado de una revisión concreta.
-
-El endpoint `/api/version` conserva el identificador de arranque en `version` y añade `commit`. Configura `APP_BUILD_COMMIT` en el despliegue o habilita `HEROKU_SLUG_COMMIT`; si falta, devuelve `unknown`.
-
-## Licencia
-
-[MIT](LICENSE). Proyecto de [RaclosDev](https://github.com/RaclosDev).
+Desarrollado por [RaclosDev](https://github.com/RaclosDev). Código publicado bajo [licencia MIT](LICENSE).
