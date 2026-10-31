@@ -2,12 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 
 /**
- * Robust Speech-to-Text hook using Web Speech API (SpeechRecognition / webkitSpeechRecognition).
- * Solves common browser issues:
- * - Premature cutoff on silence (uses continuous=true + seamless auto-restart on silence timeouts)
- * - Freezing / InvalidStateError when starting or stopping
- * - Text duplication across restarts
- * - Clean teardown on unmount / modal close
+ * Speech-to-text over the Web Speech API. Restarts on silence timeouts instead of cutting off,
+ * and avoids InvalidStateError and duplicated text across restarts.
  */
 interface SpeechToTextOptions {
   onTranscript?: (text: string) => void;
@@ -189,8 +185,7 @@ export function useSpeechToText({ onTranscript, lang = 'es-ES' }: SpeechToTextOp
           recognition.onend = () => {
             isStartingRef.current = false;
 
-            // If the user did not click stop, the browser stopped due to silence timeout
-            // We seamlessly restart so the user can continue talking without losing anything
+            // The browser stopped on a silence timeout, not the user: restart without losing text.
             if (shouldListenRef.current) {
               baseTextRef.current = latestTranscriptRef.current
                 ? latestTranscriptRef.current.trim()
@@ -240,7 +235,6 @@ export function useSpeechToText({ onTranscript, lang = 'es-ES' }: SpeechToTextOp
     [isListening, startSession, stopListening],
   );
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       shouldListenRef.current = false;

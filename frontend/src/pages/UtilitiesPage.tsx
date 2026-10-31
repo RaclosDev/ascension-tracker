@@ -81,21 +81,18 @@ export default function UtilitiesPage() {
         </p>
       </header>
 
-      {/* 1. CHEF NUTRICIONAL */}
       <section style={{ marginBottom: '1.75rem', marginTop: '1.25rem' }}>
-        <div
+        <h2
           style={{
-            fontSize: '0.72rem',
+            fontSize: '0.8rem',
             fontWeight: 700,
-            letterSpacing: '0.08em',
             color: '#9CA3AF',
             marginBottom: '0.65rem',
             paddingLeft: '0.25rem',
-            textTransform: 'uppercase',
           }}
         >
-          Chef Nutricional
-        </div>
+          Chef nutricional
+        </h2>
         <CalculatorCard
           title="Estratega Nutricional IA"
           subtitle="Chef culinario y recetas según tus macros de hoy"
@@ -105,22 +102,18 @@ export default function UtilitiesPage() {
           <AiNutritionChef />
         </CalculatorCard>
       </section>
-
-      {/* 2. CALCULADORAS BIOMECÁNICAS */}
       <section style={{ marginBottom: '1.75rem' }}>
-        <div
+        <h2
           style={{
-            fontSize: '0.72rem',
+            fontSize: '0.8rem',
             fontWeight: 700,
-            letterSpacing: '0.08em',
             color: '#9CA3AF',
             marginBottom: '0.65rem',
             paddingLeft: '0.25rem',
-            textTransform: 'uppercase',
           }}
         >
-          Calculadoras Biomecánicas
-        </div>
+          Calculadoras biomecánicas
+        </h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           {/* Calculator 1: Steps */}
           <CalculatorCard
@@ -313,25 +306,20 @@ export default function UtilitiesPage() {
           </CalculatorCard>
         </div>
       </section>
-
-      {/* 3. CALCULADORAS DE NUTRICIÓN */}
       <section style={{ marginBottom: '1.75rem' }}>
-        <div
+        <h2
           style={{
-            fontSize: '0.72rem',
+            fontSize: '0.8rem',
             fontWeight: 700,
-            letterSpacing: '0.08em',
             color: '#9CA3AF',
             marginBottom: '0.65rem',
             paddingLeft: '0.25rem',
-            textTransform: 'uppercase',
           }}
         >
-          Calculadoras de Nutrición
-        </div>
+          Calculadoras de nutrición
+        </h2>
         <NutritionCalculators />
       </section>
-
       {/* DISCLAIMER */}
       <p className="text-xs text-[var(--text-secondary)] text-center mt-10 mb-4 px-4 opacity-75">
         Las calculadoras proporcionan estimaciones orientativas basadas en fórmulas estándar. No

@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { QueryErrorNotice } from './QueryErrorNotice';
+import { useState, useEffect, useEffectEvent } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import toast from 'react-hot-toast';
 import api from '../api/client';
@@ -6,47 +8,26 @@ import { Meal } from '../types/api';
 
 import { Trash2 } from 'lucide-react';
 
-const DEFAULT_MEALS = [
-  { name: 'Desayuno', icon: '', sortOrder: 0 },
-  { name: 'Comida', icon: '', sortOrder: 1 },
-  { name: 'Cena', icon: '', sortOrder: 2 },
-  { name: 'Snacks', icon: '', sortOrder: 3 },
-];
-
 export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) {
+  const queryClient = useQueryClient();
+  const [loadError, setLoadError] = useState(false);
+  const notifySaved = () => {
+    void queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
+    void queryClient.invalidateQueries({ queryKey: ['userMeals'] });
+    onSaved?.();
+  };
   const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchMeals();
-  }, []);
-
   const handleResetDefaults = async () => {
     setSaving(true);
     try {
-      try {
-        const res = await api.post('/nutrition/meals/reset');
-        const sorted = (res.data || []).sort(
-          (a: Meal, b: Meal) => (a.sortOrder || 0) - (b.sortOrder || 0),
-        );
-        setMeals(sorted);
-        toast.success('Comidas por defecto restablecidas (Desayuno, Comida, Cena, Snacks)');
-        if (onSaved) onSaved();
-        return;
-      } catch {
-        // Fallback si el backend todavía no se ha reiniciado
-        for (const m of DEFAULT_MEALS) {
-          await api.post('/nutrition/meals', m);
-        }
-        const res = await api.get('/nutrition/meals');
-        const sorted = (res.data || []).sort(
-          (a: Meal, b: Meal) => (a.sortOrder || 0) - (b.sortOrder || 0),
-        );
-        setMeals(sorted);
-        toast.success('Comidas por defecto restablecidas');
-        if (onSaved) onSaved();
-      }
+      const res = await api.post<Meal[]>('/nutrition/meals/reset');
+      setMeals([...res.data].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)));
+      setLoadError(false);
+      toast.success('Comidas por defecto restablecidas');
+      notifySaved();
     } catch {
       toast.error('Error al restablecer comidas');
     } finally {
@@ -57,20 +38,22 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
 
   const fetchMeals = async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const res = await api.get('/nutrition/meals');
-      if (!res.data || res.data.length === 0) {
-        await handleResetDefaults();
-        return;
-      }
       const sorted = res.data.sort((a: Meal, b: Meal) => (a.sortOrder || 0) - (b.sortOrder || 0));
       setMeals(sorted);
     } catch {
-      toast.error('Error al cargar comidas');
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
   };
+
+  const loadInitialMeals = useEffectEvent(() => fetchMeals());
+  useEffect(() => {
+    loadInitialMeals();
+  }, []);
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -91,7 +74,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
         }));
       await api.put('/nutrition/meals', payload);
       toast.success('Comidas y macros actualizados');
-      if (onSaved) onSaved();
+      notifySaved();
     } catch {
       toast.error('Error al guardar comidas');
     } finally {
@@ -104,6 +87,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
     try {
       await api.post('/nutrition/meals', { name: 'Nueva Comida', icon: '' });
       await fetchMeals();
+      notifySaved();
     } catch {
       toast.error('Error al añadir comida');
     } finally {
@@ -112,12 +96,17 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
   };
 
   const handleDeleteMeal = async (id: number) => {
-    if (!window.confirm('¿Eliminar esta comida? Los registros de esta comida se perderán.')) return;
+    if (
+      !window.confirm(
+        '¿Eliminar esta comida? Sus registros anteriores seguirán disponibles en el historial.',
+      )
+    )
+      return;
     setSaving(true);
     try {
       await api.delete(`/nutrition/meals/${id}`);
       await fetchMeals();
-      if (onSaved) onSaved();
+      notifySaved();
     } catch {
       toast.error('Error al eliminar comida');
     } finally {
@@ -135,6 +124,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+      {loadError && <QueryErrorNotice retry={fetchMeals} pending={loading} />}
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="mealsList">
           {(provided) => (
@@ -166,12 +156,11 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                         ...provided.draggableProps.style,
                       }}
                     >
-                      {/* Primera Fila: Reordenar, Nombre y Eliminar */}
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <div
                           {...provided.dragHandleProps}
                           style={{
-                            padding: '8px',
+                            padding: '10px',
                             cursor: 'grab',
                             color: 'var(--text-secondary)',
                             display: 'flex',
@@ -210,8 +199,8 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                         <button
                           className="btn"
                           style={{
-                            width: '36px',
-                            height: '36px',
+                            width: '44px',
+                            height: '44px',
                             padding: 0,
                             display: 'flex',
                             alignItems: 'center',
@@ -230,7 +219,6 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                         </button>
                       </div>
 
-                      {/* Tercera Fila: Macros fijos */}
                       <div
                         style={{
                           display: 'grid',
@@ -251,7 +239,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                           <input
                             type="number"
                             className="form-input"
-                            style={{ padding: '6px', fontSize: '0.85rem' }}
+                            style={{ padding: '6px', fontSize: '1rem' }}
                             value={meal.fixedProtein ?? ''}
                             onChange={(e) => {
                               const val = e.target.value;
@@ -277,7 +265,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                           <input
                             type="number"
                             className="form-input"
-                            style={{ padding: '6px', fontSize: '0.85rem' }}
+                            style={{ padding: '6px', fontSize: '1rem' }}
                             value={meal.fixedCarbs ?? ''}
                             onChange={(e) => {
                               const val = e.target.value;
@@ -299,7 +287,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                           <input
                             type="number"
                             className="form-input"
-                            style={{ padding: '6px', fontSize: '0.85rem' }}
+                            style={{ padding: '6px', fontSize: '1rem' }}
                             value={meal.fixedFat ?? ''}
                             onChange={(e) => {
                               const val = e.target.value;
@@ -361,7 +349,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
       </div>
 
       <button
-        className="btn btn-primary"
+        className="btn btn-primary min-h-11"
         onClick={handleSaveAll}
         disabled={saving || loading || meals.length === 0}
       >

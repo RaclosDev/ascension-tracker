@@ -3,7 +3,7 @@ export const WEIGHTS_DASHBOARD_FIXTURE = {
   currentWeight: 81.2,
   currentWeeklyAverage: 81.2,
   totalEntries: 15,
-  totalLost: 3.8,
+  totalLost: -3.8,
   remaining: 3.2,
   progress: 54.3,
   estimatedDate: '2026-12-01',
@@ -15,9 +15,7 @@ export const WEIGHTS_DASHBOARD_FIXTURE = {
   streakDays: [],
 };
 
-export const WEIGHTS_LIST_FIXTURE = [
-  { id: 1, date: '2026-10-12', weight: 81.2 },
-];
+export const WEIGHTS_LIST_FIXTURE = [{ id: 1, date: '2026-10-12', weight: 81.2 }];
 
 export const WEIGHTS_WEEKLY_FIXTURE = [
   {

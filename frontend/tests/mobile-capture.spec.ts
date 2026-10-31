@@ -2,8 +2,7 @@ import { test, expect } from '@playwright/test';
 import { setupAuthMocks } from './helpers/auth';
 import path from 'path';
 
-const SCREENSHOT_DIR =
-  'C:/Users/raclo/.gemini/antigravity/brain/38f6353b-c749-4508-bcf3-d33dcd0ce257/mobile_screenshots';
+const SCREENSHOT_DIR = path.resolve('test-results', 'mobile-screenshots');
 
 test.describe('Visual Screenshots Capture Suite', () => {
   test.describe('Mobile Viewport (iPhone 390x844)', () => {

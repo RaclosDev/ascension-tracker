@@ -14,7 +14,7 @@ describe('Auth storage & memory tokens (Audit #1)', () => {
     setMemoryToken(fakeJwt);
 
     expect(memoryToken).toBe(fakeJwt);
-    expect(localStorage.getItem('ascension_token')).toBeNull();
+    expect(localStorage.getItem('ascension_session_token')).toBeNull();
     expect(localStorage.getItem('ascension_refresh_token')).toBeNull();
   });
 
@@ -36,7 +36,7 @@ describe('Auth storage & memory tokens (Audit #1)', () => {
 
     expect(res.data.token).toBe(fakeNewToken);
     expect(memoryToken).toBe(fakeNewToken);
-    expect(localStorage.getItem('ascension_token')).toBeNull();
+    expect(localStorage.getItem('ascension_session_token')).toBeNull();
     expect(localStorage.getItem('ascension_refresh_token')).toBeNull();
   });
 
@@ -47,11 +47,11 @@ describe('Auth storage & memory tokens (Audit #1)', () => {
     // Simulate logout action
     setMemoryToken(null);
     delete api.defaults.headers.common['Authorization'];
-    localStorage.removeItem('ascension_token');
+    localStorage.removeItem('ascension_session_token');
     localStorage.removeItem('ascension_refresh_token');
 
     expect(memoryToken).toBeNull();
-    expect(localStorage.getItem('ascension_token')).toBeNull();
+    expect(localStorage.getItem('ascension_session_token')).toBeNull();
     expect(localStorage.getItem('ascension_refresh_token')).toBeNull();
   });
 });

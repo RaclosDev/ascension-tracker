@@ -105,7 +105,7 @@ export function ExerciseFilterBar({
             aria-selected={filter === tab.id}
             onClick={() => setFilter(tab.id)}
             className={`flex-1 py-1 px-3 rounded-md text-xs font-semibold transition-all ${
-              filter === tab.id ? 'bg-primary text-white' : 'text-secondary'
+              filter === tab.id ? 'bg-primary text-white' : 'text-[var(--text-secondary)]'
             }`}
           >
             {tab.label}

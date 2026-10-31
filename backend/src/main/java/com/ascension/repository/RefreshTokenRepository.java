@@ -29,9 +29,8 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     @Query("DELETE FROM RefreshToken r WHERE r.familyId = :familyId")
     void deleteByFamilyId(@Param("familyId") String familyId);
 
-    void deleteByExpiryDateBefore(Instant instant);
-
     @Modifying
-    @Query("DELETE FROM RefreshToken r WHERE r.replacedAt IS NOT NULL AND r.replacedAt < :instant")
-    void deleteByReplacedAtBefore(@Param("instant") Instant instant);
+    @Query("DELETE FROM RefreshToken r WHERE r.expiryDate < :instant")
+    void deleteByExpiryDateBefore(@Param("instant") Instant instant);
+
 }

@@ -1,3 +1,4 @@
+import { readWeightPlan, persistWeightPlan } from '../../utils/weightPlanPreferences';
 import { useState, useMemo } from 'react';
 import { Footprints, Utensils } from 'lucide-react';
 import {
@@ -21,8 +22,6 @@ interface WeightLossPlanProps {
   saveButtonText?: string;
 }
 
-const PLAN_STORAGE_KEY = 'ascension_weight_loss_plan';
-
 export default function WeightLossPlan({
   initialWeightKg,
   initialGoalWeight,
@@ -33,30 +32,12 @@ export default function WeightLossPlan({
   onSave,
   saveButtonText = 'Guardar y Continuar',
 }: WeightLossPlanProps) {
-  // Recuperar último plan guardado en localStorage
-  const savedPlan = (() => {
-    try {
-      return JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}');
-    } catch {
-      return {};
-    }
-  })();
+  const [savedPlan] = useState(readWeightPlan);
 
   const [goalWeight, setGoalWeight] = useState<string>(savedPlan.goalWeight ?? initialGoalWeight);
   const [weeks, setWeeks] = useState<string>(savedPlan.weeks ?? '16');
   const [stepsPct, setStepsPct] = useState<number>(savedPlan.stepsPct ?? 50); // % of deficit from steps
 
-  // Persistir cambios en localStorage
-  const persistPlan = (updates: { goalWeight?: string; weeks?: string; stepsPct?: number }) => {
-    try {
-      const current = JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}');
-      localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify({ ...current, ...updates }));
-    } catch {
-      /* ignore */
-    }
-  };
-
-  // Base calculations
   const pAge = parseNumber(age);
   const pHeight = parseNumber(heightCm);
   const pWeight = parseNumber(initialWeightKg);
@@ -65,7 +46,6 @@ export default function WeightLossPlan({
   const bmr = pWeight && pHeight && pAge ? calcBmr(sex, pWeight, pHeight, pAge) : null;
   const tdee = bmr ? calcTdee(bmr, pAct) : null;
 
-  // Plan calculations
   const pGoal = parseNumber(goalWeight);
   const pWeeks = parseNumber(weeks);
 
@@ -79,15 +59,12 @@ export default function WeightLossPlan({
     const dailyDeficitNeeded = totalKcalToLose / totalDays;
     const weeklyRate = totalKgToLose / pWeeks;
 
-    // Split based on slider
     const stepsKcal = dailyDeficitNeeded * (stepsPct / 100);
     const dietDeficit = dailyDeficitNeeded - stepsKcal;
     const dailyIntake = tdee - dietDeficit;
 
-    // How many steps are needed for that kcal?
     const stepsNeeded = Math.round(calcStepsFromKcal(pWeight, stepsKcal));
 
-    // Warnings
     const warnings: { level: 'warning' | 'danger'; msg: string }[] = [];
 
     const ratePct = (weeklyRate / pWeight) * 100;
@@ -134,7 +111,7 @@ export default function WeightLossPlan({
       dailyIntake,
       warnings,
     };
-  }, [tdee, bmr, pWeight, pGoal, pWeeks, stepsPct, pAct, sex]);
+  }, [tdee, bmr, pWeight, pGoal, pWeeks, stepsPct]);
 
   const handleManualSteps = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value);
@@ -178,7 +155,7 @@ export default function WeightLossPlan({
             value={goalWeight}
             onChange={(e) => {
               setGoalWeight(e.target.value);
-              persistPlan({ goalWeight: e.target.value });
+              persistWeightPlan({ goalWeight: e.target.value });
             }}
           />
         </div>
@@ -193,7 +170,7 @@ export default function WeightLossPlan({
             value={weeks}
             onChange={(e) => {
               setWeeks(e.target.value);
-              persistPlan({ weeks: e.target.value });
+              persistWeightPlan({ weeks: e.target.value });
             }}
             min={1}
             max={104}
@@ -245,7 +222,6 @@ export default function WeightLossPlan({
               Reparto del déficit: arrastra para ajustar
             </div>
 
-            {/* Range slider */}
             <input
               type="range"
               min={0}
@@ -254,7 +230,7 @@ export default function WeightLossPlan({
               onChange={(e) => {
                 const v = Number(e.target.value);
                 setStepsPct(v);
-                persistPlan({ stepsPct: v });
+                persistWeightPlan({ stepsPct: v });
               }}
               style={{
                 width: '100%',
@@ -358,7 +334,6 @@ export default function WeightLossPlan({
             </div>
           </div>
 
-          {/* Warnings */}
           {plan.warnings.map((w, i) => (
             <div
               key={i}

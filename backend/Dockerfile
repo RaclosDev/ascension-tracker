@@ -8,6 +8,8 @@ RUN mvn package -DskipTests -B
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-alpine@sha256:3c472129dc75a8d1d7a3f2df5b2093a8077e4493deff046754d4764d0371de63
+# Pull Alpine security fixes released after the pinned base image digest.
+RUN apk upgrade --no-cache
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 WORKDIR /app

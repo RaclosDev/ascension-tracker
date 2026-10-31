@@ -57,7 +57,7 @@ test.describe('Backup, Restore & Hevy Import Flows', () => {
 
     // Open Restore Modal
     const openRestoreBtn = page.getByRole('button', {
-      name: /Abrir modal para restaurar copia de seguridad/i,
+      name: /Restaurar copia de seguridad \(JSON\)/i,
     });
     await expect(openRestoreBtn).toBeVisible({ timeout: 15000 });
     await openRestoreBtn.click();
@@ -127,7 +127,7 @@ test.describe('Backup, Restore & Hevy Import Flows', () => {
     await page.goto('/settings');
 
     const openRestoreBtn = page.getByRole('button', {
-      name: /Abrir modal para restaurar copia de seguridad/i,
+      name: /Restaurar copia de seguridad \(JSON\)/i,
     });
     await expect(openRestoreBtn).toBeVisible({ timeout: 15000 });
     await openRestoreBtn.click();

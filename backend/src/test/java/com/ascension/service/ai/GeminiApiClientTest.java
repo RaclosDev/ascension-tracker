@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -38,10 +38,15 @@ class GeminiApiClientTest {
     private RestTemplate restTemplate;
 
     private GeminiApiClient geminiApiClient;
+    private com.ascension.service.ExternalApiExecution execution;
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() { execution.close(); }
 
     @BeforeEach
     void setUp() {
-        geminiApiClient = new GeminiApiClient(restTemplateBuilder, new com.ascension.config.ExternalApiProperties());
+        execution = new com.ascension.service.ExternalApiExecution();
+        geminiApiClient = new GeminiApiClient(restTemplateBuilder, new com.ascension.config.ExternalApiProperties(), execution);
         geminiApiClient.setRestTemplate(restTemplate);
         geminiApiClient.invalidateModelCache();
     }

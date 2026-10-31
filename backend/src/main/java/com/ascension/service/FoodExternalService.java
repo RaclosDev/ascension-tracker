@@ -1,7 +1,7 @@
 package com.ascension.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 import lombok.RequiredArgsConstructor;
@@ -18,53 +18,26 @@ public class FoodExternalService {
     private final FatSecretClient fatSecretClient;
     private final FatSecretResponseMapper fatSecretMapper;
     private final ObjectMapper objectMapper;
+    private final ExternalApiExecution execution;
 
     @Cacheable(value = "foodSearch", key = "'q:' + #query", unless = "#result == null or #result.contains('error')")
     public String searchOpenFoodFacts(String query) {
         if (query == null || query.isBlank() || query.length() > 100) return "{\"products\": []}";
         try {
-            com.fasterxml.jackson.databind.node.ArrayNode combinedProducts = objectMapper.createArrayNode();
+            tools.jackson.databind.node.ArrayNode combinedProducts = objectMapper.createArrayNode();
 
-            java.util.concurrent.CompletableFuture<JsonNode> offFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-                try {
-                    return offClient.searchOpenFoodFacts(query);
-                } catch (Exception e) {
-                    log.warn("OFF Search Failed: {}", e.getMessage());
-                    return null;
-                }
-            });
-
-            java.util.concurrent.CompletableFuture<JsonNode> fsFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-                try {
-                    JsonNode fsRawRoot = fatSecretClient.searchFatSecret(query);
-                    String fsMapped = fatSecretMapper.mapFatSecretToOpenFoodFacts(fsRawRoot, false);
-                    return objectMapper.readTree(fsMapped);
-                } catch (Exception e) {
-                    log.warn("FatSecret Search Failed: {}", e.getMessage());
-                    return null;
-                }
-            });
-
-            try {
-                java.util.concurrent.CompletableFuture.allOf(offFuture, fsFuture).get(4, java.util.concurrent.TimeUnit.SECONDS);
-            } catch (Exception e) {
-                log.warn("External food APIs timeout or interrupted: {}", e.getMessage());
-                if (!offFuture.isDone()) {
-                    offFuture.cancel(true);
-                }
-                if (!fsFuture.isDone()) {
-                    fsFuture.cancel(true);
-                }
-            }
-
-            JsonNode offRoot = (!offFuture.isCancelled() && !offFuture.isCompletedExceptionally()) ? offFuture.getNow(null) : null;
-            JsonNode fsRoot = (!fsFuture.isCancelled() && !fsFuture.isCompletedExceptionally()) ? fsFuture.getNow(null) : null;
+            var results = execution.<JsonNode>search(java.util.List.of(
+                    () -> offClient.searchOpenFoodFacts(query),
+                    () -> objectMapper.readTree(fatSecretMapper.mapFatSecretToOpenFoodFacts(
+                            fatSecretClient.searchFatSecret(query), false))), 4000);
+            JsonNode offRoot = completedResult(results.get(0));
+            JsonNode fsRoot = completedResult(results.get(1));
 
             boolean offSuccess = false;
             if (offRoot != null) {
                 JsonNode offProducts = offRoot.path("products");
                 if (offProducts.isArray()) {
-                    combinedProducts.addAll((com.fasterxml.jackson.databind.node.ArrayNode) offProducts);
+                    combinedProducts.addAll((tools.jackson.databind.node.ArrayNode) offProducts);
                     offSuccess = true;
                 }
             }
@@ -73,7 +46,7 @@ public class FoodExternalService {
             if (fsRoot != null) {
                 JsonNode fsProducts = fsRoot.path("products");
                 if (fsProducts.isArray()) {
-                    combinedProducts.addAll((com.fasterxml.jackson.databind.node.ArrayNode) fsProducts);
+                    combinedProducts.addAll((tools.jackson.databind.node.ArrayNode) fsProducts);
                     fsSuccess = true;
                 }
             }
@@ -82,15 +55,28 @@ public class FoodExternalService {
                 throw new com.ascension.exception.ExternalApiException("ExternalFoodApis", org.springframework.http.HttpStatus.BAD_GATEWAY, "Both external food APIs failed or timed out");
             }
 
-            com.fasterxml.jackson.databind.node.ObjectNode finalRoot = objectMapper.createObjectNode();
+            tools.jackson.databind.node.ObjectNode finalRoot = objectMapper.createObjectNode();
             finalRoot.set("products", combinedProducts);
             return objectMapper.writeValueAsString(finalRoot);
 
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new com.ascension.exception.ExternalApiException("ExternalFoodApis", org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE, "Food search interrupted", ex);
         } catch (com.ascension.exception.ExternalApiException eae) {
             throw eae;
         } catch (Exception e) {
             log.error("Error combining external APIs", e);
             throw new RuntimeException("External API Error: " + e.getMessage(), e);
+        }
+    }
+
+    private JsonNode completedResult(java.util.concurrent.Future<JsonNode> result) throws InterruptedException {
+        if (result.isCancelled()) return null;
+        try {
+            return result.get();
+        } catch (java.util.concurrent.ExecutionException ex) {
+            log.warn("Food provider failed: {}", ex.getCause().getClass().getSimpleName());
+            return null;
         }
     }
 

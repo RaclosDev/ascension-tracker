@@ -18,7 +18,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import com.ascension.security.BearerTokenEntryPoint;
 import com.ascension.security.UserRevocationJwtValidator;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import com.ascension.service.UserService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.core.annotation.Order;
@@ -30,6 +32,9 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -90,36 +95,41 @@ public class SecurityConfig {
         return entropy;
     }
 
-    // Auth endpoints: NO JWT filter at all: pure cookie-based refresh
+    // Auth endpoints skip the JWT filter; refresh relies on the cookie alone.
     @Bean
     @Order(1)
     public SecurityFilterChain authFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/api/auth/login", "/api/auth/refresh", "/api/auth/logout", "/api/auth/config")
+            .securityMatcher("/api/auth/login", "/api/auth/login/redirect", "/api/auth/refresh", "/api/auth/logout", "/api/auth/config")
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
             .sessionManagement(session -> session.sessionCreationPolicy(
                 SessionCreationPolicy.STATELESS))
-            .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.deny())
-                .httpStrictTransportSecurity(hsts -> hsts
-                    .includeSubDomains(true)
-                    .maxAgeInSeconds(31536000)
-                )
-                .contentTypeOptions(Customizer.withDefaults())
-                .referrerPolicy(referrer -> referrer
-                    .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
-                )
-                .contentSecurityPolicy(csp -> csp.policyDirectives(CSP_POLICY))
-                .permissionsPolicy(permissions -> permissions.policy(PERMISSIONS_POLICY))
-            );
+            .headers(SecurityConfig::securityHeaders);
+        return http.build();
+    }
+
+    // Spring Security 7 serves OAuth 2.0 Protected Resource Metadata (RFC 9728) from every resource
+    // server chain and offers no switch to turn it off. This API issues its own HS256 tokens and has
+    // no authorization server to advertise, so /.well-known/** gets a chain without a resource server
+    // and answers 401 as it did before Spring Security 7.
+    @Bean
+    @Order(2)
+    public SecurityFilterChain wellKnownFilterChain(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher("/.well-known/**")
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth.anyRequest().denyAll())
+            .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(new BearerTokenEntryPoint()))
+            .headers(SecurityConfig::securityHeaders);
         return http.build();
     }
 
     // Everything else: JWT-protected
     @Bean
-    @Order(2)
+    @Order(3)
     public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(Customizer.withDefaults())
@@ -131,22 +141,28 @@ public class SecurityConfig {
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().denyAll()
             )
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
-            .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.deny())
-                .httpStrictTransportSecurity(hsts -> hsts
-                    .includeSubDomains(true)
-                    .maxAgeInSeconds(31536000)
-                )
-                .contentTypeOptions(Customizer.withDefaults())
-                .referrerPolicy(referrer -> referrer
-                    .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
-                )
-                .contentSecurityPolicy(csp -> csp.policyDirectives(CSP_POLICY))
-                .permissionsPolicy(permissions -> permissions.policy(PERMISSIONS_POLICY))
-            );
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(Customizer.withDefaults())
+                .authenticationEntryPoint(new BearerTokenEntryPoint())
+            )
+            .headers(SecurityConfig::securityHeaders);
         
         return http.build();
+    }
+
+    private static void securityHeaders(HeadersConfigurer<HttpSecurity> headers) {
+        headers
+            .frameOptions(frameOptions -> frameOptions.deny())
+            .httpStrictTransportSecurity(hsts -> hsts
+                .includeSubDomains(true)
+                .maxAgeInSeconds(31536000)
+            )
+            .contentTypeOptions(Customizer.withDefaults())
+            .referrerPolicy(referrer -> referrer
+                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+            )
+            .contentSecurityPolicy(csp -> csp.policyDirectives(CSP_POLICY))
+            .permissionsPolicyHeader(permissions -> permissions.policy(PERMISSIONS_POLICY));
     }
 
     @Bean
@@ -191,8 +207,35 @@ public class SecurityConfig {
         configuration.setExposedHeaders(Arrays.asList("Content-Type", "X-AI-Model", "Content-Disposition"));
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration redirectConfiguration = new CorsConfiguration();
+        List<String> redirectOrigins = new java.util.ArrayList<>(origins);
+        redirectOrigins.removeIf("*"::equals);
+        redirectOrigins.add("https://accounts.google.com");
+        redirectConfiguration.setAllowedOrigins(redirectOrigins);
+        redirectConfiguration.setAllowedMethods(List.of("POST"));
+        redirectConfiguration.setAllowedHeaders(List.of("Content-Type"));
+        redirectConfiguration.setAllowCredentials(true);
+        source.registerCorsConfiguration("/api/auth/login/redirect", redirectConfiguration);
         source.registerCorsConfiguration("/api/**", configuration);
-        return source;
+        return request -> {
+            // Redirected form navigations can have an opaque origin. Do not grant AJAX access;
+            // the callback still requires Google's matching CSRF cookie and verified ID token.
+            if (isOpaqueGoogleRedirectNavigation(request)) {
+                return null;
+            }
+            return source.getCorsConfiguration(request);
+        };
+    }
+
+    private static boolean isOpaqueGoogleRedirectNavigation(HttpServletRequest request) {
+        String contentType = request.getContentType();
+        return "POST".equals(request.getMethod())
+                && "/api/auth/login/redirect".equals(request.getRequestURI())
+                && "null".equals(request.getHeader(HttpHeaders.ORIGIN))
+                && "navigate".equals(request.getHeader("Sec-Fetch-Mode"))
+                && "document".equals(request.getHeader("Sec-Fetch-Dest"))
+                && contentType != null
+                && MediaType.APPLICATION_FORM_URLENCODED_VALUE.equalsIgnoreCase(contentType.split(";", 2)[0].trim());
     }
 }
 

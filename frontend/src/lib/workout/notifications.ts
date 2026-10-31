@@ -1,24 +1,18 @@
 import api from '@/api/client';
 import { haptics } from '@/lib/haptics';
-//  Notifications module
-// Handles:
-// 1. Subscribing to Web Push (so the server can send background notifications)
-// 2. Playing a bell sound when rest finishes (in-app)
-// 3. Sending rest-timer schedule/cancel requests to the backend
+import { getWorkoutAccountRevision } from './accountIdentity';
+import { showRestPush } from './pushPayload';
 
 let audio: HTMLAudioElement | null = null;
 let pushSubscribed = false;
 
 /**
- * Call this once on user interaction (e.g. completing a set) to:
- * - Preload the bell sound
- * - Request notification permission
- * - Subscribe to Web Push if not already done
+ * Call from a user gesture (e.g. completing a set): preloads the bell, asks for notification
+ * permission and subscribes to Web Push.
  */
 export async function initAudioAndNotifications() {
   if (typeof window === 'undefined') return;
 
-  // Init HTML5 Audio
   if (!audio) {
     audio = new Audio('/bell.mp3');
     audio.load();
@@ -34,7 +28,6 @@ export async function initAudioAndNotifications() {
     }
   }
 
-  // Request Notification permission + subscribe to push
   if ('Notification' in window && !pushSubscribed) {
     if (Notification.permission === 'default') {
       const perm = await Notification.requestPermission();
@@ -63,17 +56,16 @@ export function playRestSound() {
 
 export const REST_NOTIFICATION_TAG = 'ascension-rest-timer';
 
-/**
- * Dismiss any existing rest timer notifications from the system notification tray.
- */
 export async function dismissRestNotifications() {
   if (typeof window === 'undefined') return;
   try {
     if ('serviceWorker' in navigator) {
       const reg = await navigator.serviceWorker.ready;
       if (reg && 'getNotifications' in reg) {
-        const notifications = await reg.getNotifications({ tag: REST_NOTIFICATION_TAG });
-        notifications.forEach((n) => n.close());
+        const notifications = await reg.getNotifications();
+        notifications
+          .filter((notification) => notification.tag.startsWith(REST_NOTIFICATION_TAG))
+          .forEach((notification) => notification.close());
       }
     }
   } catch (e: unknown) {
@@ -89,23 +81,15 @@ export async function notifyRestFinished() {
   if (typeof window === 'undefined' || !('Notification' in window)) return;
 
   if (Notification.permission === 'granted') {
+    const tag =
+      activeServerTimerId !== null && activeTimerAccountRevision === getWorkoutAccountRevision()
+        ? `${REST_NOTIFICATION_TAG}-${activeServerTimerId}`
+        : REST_NOTIFICATION_TAG;
     try {
       if ('serviceWorker' in navigator) {
         const reg = await navigator.serviceWorker.ready;
         if (reg && 'showNotification' in reg) {
-          // Close previous notification first to ensure clean replacement
-          const existing = await reg.getNotifications({ tag: REST_NOTIFICATION_TAG });
-          existing.forEach((n) => n.close());
-
-          await reg.showNotification('¡Descanso terminado!', {
-            body: 'Es hora de la siguiente serie.',
-            icon: '/icon-192.png',
-            badge: '/icon-192.png',
-            vibrate: [200, 100, 200, 100, 200],
-            tag: REST_NOTIFICATION_TAG,
-            renotify: true,
-            data: { url: '/workout' },
-          } as NotificationOptions);
+          await showRestPush(reg, { tag });
           return;
         }
       }
@@ -114,16 +98,14 @@ export async function notifyRestFinished() {
         body: 'Es hora de la siguiente serie.',
         icon: '/icon-192.png',
         vibrate: [200, 100, 200, 100, 200],
-        tag: REST_NOTIFICATION_TAG,
-        renotify: true,
+        tag,
+        renotify: false,
       } as NotificationOptions);
     } catch {
       // On some devices, local Notification constructor fails; SW push will handle it
     }
   }
 }
-
-//  Web Push subscription
 
 async function subscribeToPush() {
   if (pushSubscribed) return;
@@ -132,12 +114,9 @@ async function subscribeToPush() {
     const reg = await navigator.serviceWorker?.ready;
     if (!reg) return;
 
-    // Check if already subscribed
     let sub = await reg.pushManager.getSubscription();
 
     if (!sub) {
-      // Get VAPID public key from server
-
       const { data } = await api.get('/push/vapid-key');
       const vapidKey = data.publicKey;
 
@@ -146,7 +125,6 @@ async function subscribeToPush() {
         return;
       }
 
-      // Convert VAPID key to Uint8Array
       const applicationServerKey = urlBase64ToUint8Array(vapidKey);
 
       sub = await reg.pushManager.subscribe({
@@ -154,8 +132,6 @@ async function subscribeToPush() {
         applicationServerKey: applicationServerKey as unknown as ArrayBuffer,
       });
     }
-
-    // Send subscription to backend
 
     const subJSON = sub.toJSON();
     await api.post('/push/subscribe', {
@@ -172,34 +148,54 @@ async function subscribeToPush() {
   }
 }
 
-//  Rest timer API calls
-
-/**
- * Tell the server to send a push notification after `delaySec` seconds.
- */
-export async function scheduleServerRestTimer(delaySec: number) {
-  try {
-    await api.post('/push/rest-timer', { delaySec });
-  } catch (e: unknown) {
-    console.warn(
-      'Failed to schedule server rest timer',
-      e instanceof Error ? e.message : String(e),
-    );
-  }
+let timerQueue: Promise<void> = Promise.resolve();
+let restIntent = 0;
+let activeServerTimerId: number | null = null;
+let activeTimerAccountRevision = 0;
+function enqueueRestTimer(update: () => Promise<unknown>): Promise<void> {
+  const revision = getWorkoutAccountRevision();
+  timerQueue = timerQueue.then(async () => {
+    if (revision !== getWorkoutAccountRevision()) return;
+    try {
+      await update();
+    } catch (error) {
+      console.warn(
+        'Failed to update server rest timer',
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  });
+  return timerQueue;
 }
 
-/**
- * Cancel any pending server-side rest timer (e.g. user skipped rest or adjusted it).
- */
-export async function cancelServerRestTimer() {
-  try {
-    await api.post('/push/rest-timer/cancel');
-  } catch (e: unknown) {
-    console.warn('Failed to cancel server rest timer', e instanceof Error ? e.message : String(e));
-  }
+export function scheduleServerRestTimer(delaySec: number): Promise<void> {
+  const deadline = Date.now() + delaySec * 1000;
+  const intent = ++restIntent;
+  activeServerTimerId = null;
+  const revision = getWorkoutAccountRevision();
+  return enqueueRestTimer(async () => {
+    const remaining = Math.ceil((deadline - Date.now()) / 1000);
+    if (remaining <= 0) return api.post('/push/rest-timer/cancel');
+    const { data } = await api.post<{ timerId?: number }>('/push/rest-timer', {
+      delaySec: remaining,
+    });
+    if (
+      intent === restIntent &&
+      revision === getWorkoutAccountRevision() &&
+      Number.isSafeInteger(data?.timerId) &&
+      data.timerId! > 0
+    ) {
+      activeServerTimerId = data.timerId!;
+      activeTimerAccountRevision = revision;
+    }
+  });
 }
 
-//  Utility
+export function cancelServerRestTimer(): Promise<void> {
+  restIntent++;
+  activeServerTimerId = null;
+  return enqueueRestTimer(() => api.post('/push/rest-timer/cancel'));
+}
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);

@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
@@ -19,6 +20,7 @@ export default tseslint.config(
     files: ['src/**/*.{ts,tsx}'],
     plugins: {
       react,
+      'react-hooks': reactHooks,
     },
     languageOptions: {
       parser: tseslint.parser,
@@ -29,6 +31,8 @@ export default tseslint.config(
       },
     },
     rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'error',
       'react/jsx-uses-react': 'error',
       'react/jsx-uses-vars': 'error',
       '@typescript-eslint/no-unused-vars': 'error',

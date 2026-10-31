@@ -18,6 +18,6 @@ public final class SecurityUtils {
         if (email == null || email.isBlank()) {
             return null;
         }
-        return email.trim().toLowerCase();
+        return email.trim().toLowerCase(java.util.Locale.ROOT);
     }
 }

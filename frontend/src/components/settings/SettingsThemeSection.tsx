@@ -1,9 +1,10 @@
 import React from 'react';
-import { Palette, ChevronDown } from 'lucide-react';
+import { Palette } from 'lucide-react';
+import { SettingsAccordionHeader } from './SettingsAccordionHeader';
 
 interface SettingsThemeSectionProps {
   isOpen: boolean;
-  onToggle: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onToggle: (e: React.MouseEvent<HTMLButtonElement>) => void;
   customColor: string;
   onColorChange: (color: string) => void;
   presets?: string[];
@@ -22,22 +23,18 @@ export function SettingsThemeSection({
     <div
       className={`card accordion-card transition-all duration-300 ease-out ${isOpen ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
     >
-      <div
-        className="accordion-header flex justify-between items-center cursor-pointer select-none"
-        onClick={onToggle}
-      >
-        <div className="flex items-center gap-2">
-          <Palette size={20} className="text-primary" />
-          <span className="card-title m-0 text-base font-semibold">Tema y Apariencia</span>
-        </div>
-        <span
-          className={`text-xs text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
-        >
-          <ChevronDown size={18} />
-        </span>
-      </div>
+      <SettingsAccordionHeader
+        panelId="settings-theme-panel"
+        title="Tema y Apariencia"
+        icon={Palette}
+        isOpen={isOpen}
+        onToggle={onToggle}
+      />
       {isOpen && (
-        <div className="accordion-content fade-in mt-5 pt-5 border-t border-white/10">
+        <div
+          id="settings-theme-panel"
+          className="accordion-content fade-in mt-5 pt-5 border-t border-white/10"
+        >
           <div className="form-group">
             <label className="form-label" style={{ marginBottom: '0.5rem', display: 'block' }}>
               Color Principal
@@ -49,8 +46,9 @@ export function SettingsThemeSection({
                 onChange={(e) => onColorChange(e.target.value)}
                 aria-label="Selector de color personalizado"
                 style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '44px',
+                  height: '44px',
+                  flexShrink: 0,
                   padding: '0',
                   border: 'none',
                   borderRadius: '8px',
@@ -58,25 +56,24 @@ export function SettingsThemeSection({
                   background: 'none',
                 }}
               />
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {presets.map((color) => (
                   <button
                     key={color}
                     type="button"
                     onClick={() => onColorChange(color)}
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      background: color,
-                      border: customColor === color ? '2px solid white' : '2px solid transparent',
-                      cursor: 'pointer',
-                      padding: 0,
-                      transition: 'transform 0.1s',
-                    }}
+                    className="flex items-center justify-center w-11 h-11 p-0 bg-transparent border-none cursor-pointer"
                     title={color}
                     aria-label={`Color ${color}`}
-                  />
+                  >
+                    <span
+                      className="block w-8 h-8 rounded-full"
+                      style={{
+                        background: color,
+                        border: customColor === color ? '2px solid white' : '2px solid transparent',
+                      }}
+                    />
+                  </button>
                 ))}
               </div>
             </div>

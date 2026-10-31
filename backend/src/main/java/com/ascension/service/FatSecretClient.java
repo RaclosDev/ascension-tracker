@@ -2,8 +2,8 @@ package com.ascension.service;
 
 import com.ascension.config.ExternalApiProperties;
 import com.ascension.exception.ExternalApiException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,10 +41,11 @@ public class FatSecretClient {
     @PostConstruct
     public void init() {
         var cfg = properties.getFatsecret();
-        this.restTemplate = builder
-                .setConnectTimeout(Duration.ofMillis(cfg.getConnectTimeoutMs()))
-                .setReadTimeout(Duration.ofMillis(cfg.getReadTimeoutMs()))
-                .build();
+        var httpClient = java.net.http.HttpClient.newBuilder()
+                .connectTimeout(Duration.ofMillis(cfg.getConnectTimeoutMs())).build();
+        var factory = new org.springframework.http.client.JdkClientHttpRequestFactory(httpClient);
+        factory.setReadTimeout(cfg.getReadTimeoutMs());
+        this.restTemplate = builder.requestFactory(() -> factory).build();
     }
 
     void setRestTemplate(RestTemplate restTemplate) {

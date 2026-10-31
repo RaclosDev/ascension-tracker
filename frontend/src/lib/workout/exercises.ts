@@ -20,10 +20,10 @@ export const fetchExerciseCatalog = async () => {
   return EXERCISE_CATALOG;
 };
 
-export function getExerciseMap(custom: Exercise[] = []) {
+export function getExerciseMap(custom: Exercise[] = [], catalog: Exercise[] = EXERCISE_CATALOG) {
   const map = new Map<string, Exercise>();
   for (const ex of BASE_EXERCISES) map.set(ex.id, ex);
-  for (const ex of EXERCISE_CATALOG) map.set(ex.id, ex);
+  for (const ex of catalog) map.set(ex.id, ex);
   for (const customEx of custom) map.set(customEx.id, customEx);
   return map;
 }

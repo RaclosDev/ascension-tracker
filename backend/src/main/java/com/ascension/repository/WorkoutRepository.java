@@ -47,7 +47,7 @@ public interface WorkoutRepository extends JpaRepository<Workout, String> {
              FROM workout_sets s
              JOIN workout_exercises e ON s.workout_exercise_id = e.id
              JOIN workouts w ON e.workout_id = w.id
-             WHERE w.user_email = :userEmail) AS totalSets,
+             WHERE w.user_email = :userEmail AND s.completed = true) AS totalSets,
             (SELECT COALESCE(SUM(
                 CASE
                     WHEN s.weight > 0 AND s.reps > 0 THEN s.weight * s.reps
@@ -57,7 +57,7 @@ public interface WorkoutRepository extends JpaRepository<Workout, String> {
              FROM workout_sets s
              JOIN workout_exercises e ON s.workout_exercise_id = e.id
              JOIN workouts w ON e.workout_id = w.id
-             WHERE w.user_email = :userEmail) AS totalVolume
+             WHERE w.user_email = :userEmail AND s.completed = true) AS totalVolume
         """, nativeQuery = true)
     WorkoutStatsProjection getWorkoutStats(@Param("userEmail") String userEmail);
 }

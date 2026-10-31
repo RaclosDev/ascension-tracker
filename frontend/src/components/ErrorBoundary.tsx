@@ -1,5 +1,6 @@
+import toast from 'react-hot-toast';
 import React, { Component, ReactNode, ErrorInfo } from 'react';
-import { isChunkLoadError } from '../utils/lazyWithRetry';
+import { isChunkLoadError, claimChunkReload, clearChunkReloadLocks } from '../utils/lazyWithRetry';
 
 interface Props {
   children: ReactNode;
@@ -19,13 +20,8 @@ export class ErrorBoundary extends Component<Props, State> {
   static getDerivedStateFromError(error: Error): State {
     const isChunkOrMimeError = isChunkLoadError(error);
 
-    if (isChunkOrMimeError) {
-      const alreadyReloaded = sessionStorage.getItem('ascension_eb_reload_lock');
-      if (!alreadyReloaded) {
-        sessionStorage.setItem('ascension_eb_reload_lock', 'true');
-        // Preserve the Workbox precache; the service worker owns its lifecycle.
-        window.location.reload();
-      }
+    if (isChunkOrMimeError && claimChunkReload('ascension_eb_reload_lock')) {
+      window.location.reload();
     }
 
     return { hasError: true, error };
@@ -88,23 +84,18 @@ export class ErrorBoundary extends Component<Props, State> {
             <button
               className="btn btn-primary"
               onClick={async () => {
-                sessionStorage.removeItem('ascension_chunk_reload_lock');
-                sessionStorage.removeItem('ascension_eb_reload_lock');
-                sessionStorage.removeItem('ascension_global_chunk_reload_at');
+                clearChunkReloadLocks();
                 try {
                   if ('serviceWorker' in navigator) {
-                    const registrations = await navigator.serviceWorker.getRegistrations();
-                    await Promise.all(registrations.map((r) => r.unregister()));
-                  }
-                  if ('caches' in window) {
-                    const keys = await caches.keys();
-                    await Promise.all(keys.map((k) => caches.delete(k)));
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    await registration?.update();
                   }
                 } catch {
-                  // Reload is still useful when service worker cleanup fails.
+                  // Reload remains available offline or when the worker update fails.
                 }
-                window.location.href =
-                  window.location.origin + window.location.pathname + '?v=' + Date.now();
+                const next = new URL(window.location.href);
+                next.searchParams.set('v', String(Date.now()));
+                window.location.href = next.href;
               }}
             >
               {isChunkOrMimeError ? 'Actualizar aplicación' : 'Recargar'}
@@ -112,10 +103,14 @@ export class ErrorBoundary extends Component<Props, State> {
             {!isChunkOrMimeError && (
               <button
                 className="btn btn-secondary"
-                onClick={() => {
+                onClick={async () => {
                   const text = `${this.state.error?.message || ''}\n\n${this.state.error?.stack || ''}`;
-                  navigator.clipboard.writeText(text);
-                  alert('Error copiado al portapapeles');
+                  try {
+                    await navigator.clipboard.writeText(text);
+                    toast.success('Error copiado al portapapeles');
+                  } catch {
+                    toast.error('No se pudo copiar. Puedes seleccionar el texto del error.');
+                  }
                 }}
               >
                 Copiar Error

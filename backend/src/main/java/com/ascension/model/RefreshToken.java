@@ -20,6 +20,9 @@ public class RefreshToken {
     @Transient
     private String plainToken;
 
+    @Transient
+    private String accessTokenSecurityVersion;
+
     @Column(nullable = false)
     private String email;
 
@@ -64,6 +67,8 @@ public class RefreshToken {
     public Long getId() { return id; }
     public String getToken() { return token; }
     public String getPlainToken() { return plainToken; }
+    public String getAccessTokenSecurityVersion() { return accessTokenSecurityVersion; }
+    public void setAccessTokenSecurityVersion(String version) { this.accessTokenSecurityVersion = version; }
     public void setToken(String token) { this.token = token; }
     public void setPlainToken(String plainToken) { this.plainToken = plainToken; }
     public String getEmail() { return email; }

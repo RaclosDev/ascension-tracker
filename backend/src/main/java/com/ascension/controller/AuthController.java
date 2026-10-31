@@ -32,6 +32,7 @@ import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -44,6 +45,7 @@ import java.util.Optional;
 @RequestMapping("/api/auth")
 public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+    private static final String REFRESH_COOKIE_PATH = "/api/auth";
 
     private final GoogleIdTokenVerifier verifier;
     private final JwtEncoder jwtEncoder;
@@ -55,7 +57,7 @@ public class AuthController {
     @Value("${google.client-id:CHANGE_ME}")
     private String googleClientId;
 
-    @Value("${app.jwt.expiration-ms:86400000}")
+    @Value("${app.jwt.expiration-ms:900000}")
     private long jwtExpirationMs;
 
     @Value("${app.cookie.same-site:Lax}")
@@ -83,6 +85,24 @@ public class AuthController {
     }
 
     private String generateJwt(String email, String name, String picture) {
+        return encodeJwt(email, name, picture, currentSecurityVersion(email));
+    }
+
+    private String generateJwt(String email, String name, String picture, String authorizedVersion) {
+        String expected = authorizedVersion != null ? authorizedVersion : "";
+        if (!expected.equals(currentSecurityVersion(email))) {
+            throw new TokenRefreshException("Session was revoked during refresh. Please log in again.");
+        }
+        return encodeJwt(email, name, picture, expected);
+    }
+
+    private String currentSecurityVersion(String email) {
+        var state = userService.getUserSecurityState(email);
+        if (!state.exists()) throw new TokenRefreshException("User account no longer exists");
+        return state.tokensValidAfter() != null ? state.tokensValidAfter().toString() : "";
+    }
+
+    private String encodeJwt(String email, String name, String picture, String securityVersion) {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("ascension-backend")
@@ -90,6 +110,7 @@ public class AuthController {
                 .expiresAt(now.plus(jwtExpirationMs, ChronoUnit.MILLIS))
                 .subject(email)
                 .claim("email", email)
+                .claim("securityVersion", securityVersion)
                 .claim("name", name != null ? name : "")
                 .claim("picture", picture != null ? picture : "")
                 .build();
@@ -138,36 +159,36 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("error", "Google sub is required"));
         }
 
-        // Identity verification: enforce google sub uniqueness and detect recycled emails
-        // 1. If an existing user has this email, verify google_sub matches
+        // An email bound to a different google_sub is a recycled address: reject the login.
         Optional<User> userByEmail = userService.findByEmail(email);
         if (userByEmail.isPresent()) {
             String existingSub = userByEmail.get().googleSub();
             if (existingSub != null && !existingSub.equals(googleSub)) {
                 log.error("SECURITY ALERT: Identity mismatch for account '{}'. Stored google_sub='{}', incoming google_sub='{}'. Possible account takeover attempt.",
-                        PiiMasker.maskEmail(email), existingSub, googleSub);
+                        PiiMasker.maskEmail(email), PiiMasker.maskSubject(existingSub), PiiMasker.maskSubject(googleSub));
                 return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
             }
         }
 
-        // 2. If an existing user has this google_sub, verify email matches
+        // A google_sub that owns an account under another email means the user changed their
+        // Google address: move the account unless the new email is taken.
         Optional<User> userBySub = userService.findByGoogleSub(googleSub);
         if (userBySub.isPresent()) {
             String existingEmail = userBySub.get().email();
             if (existingEmail != null && !existingEmail.equalsIgnoreCase(email)) {
-                log.error("SECURITY ALERT: Identity mismatch for google_sub '{}'. Already assigned to account '{}', incoming account='{}'. Rejecting login.",
-                        googleSub, PiiMasker.maskEmail(existingEmail), PiiMasker.maskEmail(email));
-                return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
+                if (userByEmail.isPresent()) {
+                    log.error("SECURITY ALERT: google_sub '{}' owns account '{}' but its new address '{}' already belongs to another account. Rejecting login.",
+                            PiiMasker.maskSubject(googleSub), PiiMasker.maskEmail(existingEmail), PiiMasker.maskEmail(email));
+                    return ResponseEntity.status(401).body(Map.of("error", "Security identity mismatch"));
+                }
+                userService.changeEmail(googleSub, existingEmail, email);
             }
         }
 
         String name = (String) tokenPayload.get("name");
         String picture = (String) tokenPayload.get("picture");
 
-        // NOTE: Future architectural roadmap:
-        // Currently user tables link via email as primary key. Migrating user-referencing tables
-        // to a surrogate UUID (or UUID v7) primary key is planned as future architectural work
-        // to decouple internal database foreign keys from mutable email addresses and OAuth subject identifiers.
+        // User tables are keyed by email; changeEmail above has already moved a renamed account.
         userService.ensureUserExists(email, name, picture, googleSub);
 
         String customToken = generateJwt(email, name, picture);
@@ -175,8 +196,40 @@ public class AuthController {
         ResponseCookie springCookie = buildRefreshCookie(refreshToken.getPlainToken(), request);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, springCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, springCookie.toString(), buildLegacyDeleteCookie(request).toString())
                 .body(Map.of("token", customToken));
+    }
+
+    @PostMapping(value = "/login/redirect", consumes = org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    public ResponseEntity<Void> loginRedirect(
+            @RequestParam(name = "credential", required = false) String credential,
+            @RequestParam(name = "g_csrf_token", required = false) String bodyCsrf,
+            @CookieValue(name = "g_csrf_token", required = false) String cookieCsrf,
+            HttpServletRequest request) {
+        if (credential == null || credential.isBlank() || bodyCsrf == null || bodyCsrf.isBlank()
+                || cookieCsrf == null || cookieCsrf.isBlank()
+                || !java.security.MessageDigest.isEqual(
+                        bodyCsrf.getBytes(StandardCharsets.UTF_8), cookieCsrf.getBytes(StandardCharsets.UTF_8))) {
+            log.warn("Rejected Google redirect with missing credential or invalid CSRF token");
+            return redirectLoginError();
+        }
+
+        ResponseEntity<?> result = login(Map.of("token", credential), request);
+        if (!result.getStatusCode().is2xxSuccessful()) {
+            return redirectLoginError();
+        }
+        return ResponseEntity.status(HttpStatus.SEE_OTHER)
+                .header(HttpHeaders.LOCATION, "/")
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .header(HttpHeaders.SET_COOKIE, result.getHeaders().getOrEmpty(HttpHeaders.SET_COOKIE).toArray(String[]::new))
+                .build();
+    }
+
+    private ResponseEntity<Void> redirectLoginError() {
+        return ResponseEntity.status(HttpStatus.SEE_OTHER)
+                .header(HttpHeaders.LOCATION, "/login?authError=google")
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .build();
     }
 
     private String getEffectiveSameSite() {
@@ -205,7 +258,12 @@ public class AuthController {
         }
         String origin = request.getHeader("Origin");
         if (origin == null || origin.isBlank()) {
-            return true;
+            // Browsers always send Origin on a cross-site POST; fall back to Referer and
+            // reject requests that carry neither, since SameSite=Lax alone is the only other guard.
+            origin = originFromReferer(request.getHeader("Referer"));
+            if (origin == null) {
+                return false;
+            }
         }
         String trimmedOrigin = origin.trim();
         List<String> allowed = parseAllowedOrigins();
@@ -213,6 +271,22 @@ public class AuthController {
             return true;
         }
         return allowed.contains(trimmedOrigin);
+    }
+
+    private static String originFromReferer(String referer) {
+        if (referer == null || referer.isBlank()) {
+            return null;
+        }
+        try {
+            java.net.URI uri = java.net.URI.create(referer.trim());
+            if (uri.getScheme() == null || uri.getHost() == null) {
+                return null;
+            }
+            String port = uri.getPort() == -1 ? "" : ":" + uri.getPort();
+            return uri.getScheme() + "://" + uri.getHost() + port;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     @PostMapping("/refresh")
@@ -237,7 +311,6 @@ public class AuthController {
             RefreshToken newRefreshToken = refreshTokenService.rotateRefreshToken(requestCookieRefreshToken);
             String email = newRefreshToken.getEmail();
 
-            // Read latest profile data from users table
             String name = "";
             String picture = "";
             Optional<User> userOpt = userService.findByEmail(email);
@@ -246,16 +319,16 @@ public class AuthController {
                 picture = userOpt.get().picture() != null ? userOpt.get().picture() : "";
             }
 
-            String token = generateJwt(email, name, picture);
+            String token = generateJwt(email, name, picture, newRefreshToken.getAccessTokenSecurityVersion());
             log.info("Refresh token rotated successfully for user {}", PiiMasker.maskEmail(email));
 
             return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(newRefreshToken.getPlainToken(), request).toString())
+                    .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(newRefreshToken.getPlainToken(), request).toString(), buildLegacyDeleteCookie(request).toString())
                     .body(Map.of("token", token));
 
         } catch (TokenRefreshException e) {
             return ResponseEntity.status(401)
-                    .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString())
+                    .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString(), buildLegacyDeleteCookie(request).toString())
                     .body(Map.of("error", e.getMessage()));
         }
     }
@@ -282,17 +355,27 @@ public class AuthController {
         return ResponseCookie.from("refreshToken", value)
                 .httpOnly(true)
                 .secure(determineCookieSecure(request))
-                .path("/")
+                .path(REFRESH_COOKIE_PATH)
                 .maxAge(30L * 24 * 60 * 60)
                 .sameSite(getEffectiveSameSite())
                 .build();
     }
 
     private ResponseCookie buildDeleteCookie(HttpServletRequest request) {
+        return buildDeleteCookie(request, REFRESH_COOKIE_PATH);
+    }
+
+    // Cookies issued before the path was narrowed live at "/"; expire them so the browser
+    // does not keep sending a stale token next to the current one.
+    private ResponseCookie buildLegacyDeleteCookie(HttpServletRequest request) {
+        return buildDeleteCookie(request, "/");
+    }
+
+    private ResponseCookie buildDeleteCookie(HttpServletRequest request, String path) {
         return ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(determineCookieSecure(request))
-                .path("/")
+                .path(path)
                 .maxAge(0)
                 .sameSite(getEffectiveSameSite())
                 .build();
@@ -354,7 +437,7 @@ public class AuthController {
         }
         
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString())
+                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString(), buildLegacyDeleteCookie(request).toString())
                 .body(Map.of("message", "Log out successful"));
     }
 
@@ -366,9 +449,8 @@ public class AuthController {
         }
         userService.updateTokensValidAfter(email, Instant.now());
         accountDeletionService.wipeAccountData(email);
-        userService.evictUser(email);
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString())
+                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString(), buildLegacyDeleteCookie(request).toString())
                 .body(Collections.singletonMap("message", "Account deleted successfully"));
     }
 

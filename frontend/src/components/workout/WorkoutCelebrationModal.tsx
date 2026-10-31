@@ -1,3 +1,4 @@
+import { summarizeWorkoutExercises, formatWorkoutDuration } from '../../utils/workoutSummary';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Trophy,
@@ -6,13 +7,14 @@ import {
   Share2,
   Check,
   X,
-  Zap,
+  Medal,
   Layers,
   Loader2,
   FileText,
   Calendar,
 } from 'lucide-react';
 import { haptics } from '@/lib/haptics';
+import { capitalizeFirst } from '@/utils/dateHelper';
 import {
   formatKg,
   isPrSet,
@@ -23,17 +25,12 @@ import {
 import { useExerciseCatalog } from '@/lib/workout/catalog-query';
 import { useCustomExercises, useRecentWorkouts } from '@/lib/workout/api';
 import { getExerciseMap } from '@/lib/workout/exercises';
-import type {
-  CompletedWorkout,
-  ActiveWorkout,
-  WorkoutExercise,
-  WorkoutSet,
-} from '@/lib/workout/types';
+import type { CompletedWorkout, ActiveWorkout, WorkoutExercise } from '@/lib/workout/types';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  // Mode 1: Finishing an active session (interactive review & save)
+  // Finishing an active session: interactive review and save.
   activeWorkout?: ActiveWorkout | null;
   onSave?: (
     name: string,
@@ -43,7 +40,7 @@ interface Props {
   ) => Promise<void> | void;
   isSaving?: boolean;
   saveError?: string | null;
-  // Mode 2: Viewing a previously completed record
+  // Viewing a previously completed workout.
   workout?: CompletedWorkout | null;
 }
 
@@ -64,14 +61,6 @@ function fromLocalDatetimeString(str: string): number {
   return isNaN(d.getTime()) ? Date.now() : d.getTime();
 }
 
-function formatWorkoutDuration(totalMinutes: number): string {
-  if (totalMinutes <= 0) return '0 min';
-  if (totalMinutes < 60) return `${totalMinutes} min`;
-  const hours = Math.floor(totalMinutes / 60);
-  const mins = totalMinutes % 60;
-  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-}
-
 export function WorkoutCelebrationModal({
   open,
   onClose,
@@ -85,11 +74,10 @@ export function WorkoutCelebrationModal({
   const { data: customExercises = [] } = useCustomExercises();
   const { data: recentWorkouts = [] } = useRecentWorkouts();
   const catalog = useMemo(
-    () => getExerciseMap(customExercises),
+    () => getExerciseMap(customExercises, catalogExercises),
     [customExercises, catalogExercises],
   );
 
-  // Determine current workout source
   const currentWorkout = activeWorkout || workout;
 
   // Local editable form fields for active finishing flow
@@ -130,52 +118,8 @@ export function WorkoutCelebrationModal({
 
   const exercises: WorkoutExercise[] = currentWorkout.exercises || [];
 
-  // Filter completed sets and exercises
-  const completedExercisesList = exercises
-    .map((ex) => {
-      const meta = catalog.get(ex.exerciseId);
-      const doneSets = ex.sets.filter((s) => s.completed);
-      const exVolume = doneSets.reduce((sum, s) => {
-        const w = parseFloat(String(s.weight || '0').replace(',', '.'));
-        const r = parseInt(String(s.reps || '0'), 10);
-        return sum + (!isNaN(w) && !isNaN(r) ? w * r : 0);
-      }, 0);
+  const completedExercisesList = summarizeWorkoutExercises(exercises, catalog, recentWorkouts);
 
-      // Best set calculation (highest weight or 1RM)
-      let bestSet: WorkoutSet | null = null;
-      let maxWeight = -1;
-      let maxReps = -1;
-      for (const s of doneSets) {
-        const w = parseFloat(String(s.weight || '0').replace(',', '.')) || 0;
-        const r = parseInt(String(s.reps || '0'), 10) || 0;
-        if (w > maxWeight || (w === maxWeight && r > maxReps)) {
-          maxWeight = w;
-          maxReps = r;
-          bestSet = s;
-        }
-      }
-
-      const hasPr = doneSets.some((s) =>
-        isPrSet(ex.exerciseId, ex.variant, s.weight, recentWorkouts),
-      );
-
-      return {
-        id: ex.id,
-        exerciseId: ex.exerciseId,
-        name: meta?.name || 'Ejercicio',
-        muscle: meta?.muscle,
-        gifUrl: meta?.gifUrl,
-        variant: ex.variant,
-        completedSetsCount: doneSets.length,
-        sets: doneSets,
-        volume: exVolume,
-        bestSet,
-        hasPr,
-      };
-    })
-    .filter((e) => e.completedSetsCount > 0);
-
-  // High-level real metrics
   const totalVolumeKg = sessionVolume(exercises);
   const totalCompletedSets = completedSets(exercises);
   const totalPrsCount = exercises.reduce(
@@ -234,14 +178,6 @@ export function WorkoutCelebrationModal({
       aria-labelledby="finish-dialog-title"
     >
       <div className="relative w-full h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg rounded-none sm:rounded-3xl border-0 sm:border border-white/10 flex flex-col shadow-2xl overflow-hidden bg-[#0D0D10]">
-        {/* Subtle Ambient Accent Glow at the top */}
-        <div
-          className="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-48 rounded-full pointer-events-none opacity-40"
-          style={{
-            background: 'radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)',
-          }}
-        />
-
         {/* Modal Top Navigation Bar */}
         <div className="relative flex items-center justify-between px-5 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-3.5 border-b border-white/[0.08] flex-shrink-0 z-10">
           <div className="flex items-center gap-2.5">
@@ -255,7 +191,7 @@ export function WorkoutCelebrationModal({
               >
                 Finalizar Sesión
               </h2>
-              <p className="text-[0.7rem] text-zinc-400 capitalize">{dateLabel}</p>
+              <p className="text-[0.7rem] text-zinc-400">{capitalizeFirst(dateLabel)}</p>
             </div>
           </div>
 
@@ -331,7 +267,7 @@ export function WorkoutCelebrationModal({
                     setCustomDuration(Math.max(1, parseInt(e.target.value, 10) || 1))
                   }
                   disabled={isSaving}
-                  className="w-full bg-transparent text-white font-mono font-semibold focus:outline-none tabular-nums text-sm"
+                  className="w-full bg-transparent text-white font-semibold focus:outline-none tabular-nums text-sm"
                 />
                 <span className="text-zinc-500 text-xs">min</span>
               </div>
@@ -341,7 +277,7 @@ export function WorkoutCelebrationModal({
               <span className="block mb-1.5 text-xs font-semibold text-zinc-300">Ejercicios</span>
               <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 text-white text-sm font-semibold">
                 <Layers size={15} className="text-zinc-400 shrink-0" />
-                <span className="font-mono">{completedExercisesList.length}</span>
+                <span className="tabular-nums">{completedExercisesList.length}</span>
                 <span className="text-zinc-500 text-xs font-normal">
                   {completedExercisesList.length === 1 ? 'ejercicio' : 'ejercicios'}
                 </span>
@@ -353,31 +289,30 @@ export function WorkoutCelebrationModal({
           <div className="grid grid-cols-3 gap-2.5">
             <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/5 flex flex-col items-center justify-center text-center">
               <span className="text-[11px] font-semibold text-zinc-400 mb-1">Volumen</span>
-              <span className="text-sm sm:text-base font-extrabold text-white font-mono tabular-nums">
+              <span className="text-sm sm:text-base font-extrabold text-white tabular-nums">
                 {formatKg(totalVolumeKg)}
               </span>
             </div>
 
             <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/5 flex flex-col items-center justify-center text-center">
               <span className="text-[11px] font-semibold text-zinc-400 mb-1">Tiempo</span>
-              <span className="text-sm sm:text-base font-extrabold text-white font-mono tabular-nums">
+              <span className="text-sm sm:text-base font-extrabold text-white tabular-nums">
                 {formatWorkoutDuration(customDuration)}
               </span>
             </div>
 
             <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/5 flex flex-col items-center justify-center text-center">
               <span className="text-[11px] font-semibold text-zinc-400 mb-1">Series</span>
-              <span className="text-sm sm:text-base font-extrabold text-white font-mono tabular-nums">
+              <span className="text-sm sm:text-base font-extrabold text-white tabular-nums">
                 {totalCompletedSets} {totalCompletedSets === 1 ? 'serie' : 'series'}
               </span>
             </div>
           </div>
 
-          {/* Optional PRs Highlight Card */}
           {totalPrsCount > 0 && (
             <div className="p-3.5 rounded-xl bg-[var(--accent-glow)] border border-[var(--accent-primary)]/20 flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-[var(--accent-primary)]/20 flex items-center justify-center text-[var(--accent-primary-light)] shrink-0">
-                <Zap size={16} />
+                <Medal size={16} aria-hidden />
               </div>
               <div>
                 <span className="text-xs font-bold text-[var(--accent-primary-light)] block">
@@ -437,7 +372,7 @@ export function WorkoutCelebrationModal({
                             {item.completedSetsCount === 1 ? 'serie' : 'series'}
                           </span>
                           <span>•</span>
-                          <span className="font-mono">{formatKg(item.volume)}</span>
+                          <span className="tabular-nums">{formatKg(item.volume)}</span>
                         </div>
                       </div>
                     </div>
@@ -447,7 +382,7 @@ export function WorkoutCelebrationModal({
                         <span className="text-[10px] text-zinc-400 font-medium block">
                           Mejor serie
                         </span>
-                        <span className="text-xs font-bold text-white font-mono tabular-nums">
+                        <span className="text-xs font-bold text-white tabular-nums">
                           {item.bestSet.weight} kg × {item.bestSet.reps}
                         </span>
                       </div>
@@ -478,7 +413,6 @@ export function WorkoutCelebrationModal({
             />
           </div>
 
-          {/* Error Banner */}
           {saveError && (
             <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs leading-relaxed">
               {saveError}
@@ -487,14 +421,14 @@ export function WorkoutCelebrationModal({
         </div>
 
         {/* Modal Sticky Bottom Action Footer */}
-        <div className="p-4 sm:p-5 border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl flex flex-col gap-2.5 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
+        <div className="p-4 sm:p-5 border-t border-white/10 bg-zinc-950 flex flex-col gap-2.5 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
           {isInteractiveFinish ? (
             <>
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-[var(--accent-shadow)] flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-white text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50"
               >
                 {isSaving ? (
                   <>
@@ -539,7 +473,7 @@ export function WorkoutCelebrationModal({
                   haptics.success();
                   onClose();
                 }}
-                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-[var(--accent-shadow)] flex items-center justify-center gap-2 transition-all"
+                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-white text-sm flex items-center justify-center gap-2 transition-all"
               >
                 <Check size={18} />
                 <span>Aceptar y Continuar</span>

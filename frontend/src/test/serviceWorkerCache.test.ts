@@ -3,7 +3,13 @@ import { purgeAllCaches } from '../context/AuthContext';
 
 describe('Service Worker & CacheStorage purging (Audit #4)', () => {
   let deletedCaches: string[] = [];
-  const fakeCaches = ['api-cache', 'food-search-cache', 'workbox-precache-v2'];
+  const fakeCaches = [
+    'api-cache',
+    'food-search-cache',
+    'workbox-precache-v2',
+    'other-app-cache',
+    'exercises-catalog-cache',
+  ];
 
   beforeEach(() => {
     deletedCaches = [];

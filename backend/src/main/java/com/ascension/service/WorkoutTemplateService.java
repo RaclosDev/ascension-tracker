@@ -43,6 +43,9 @@ public class WorkoutTemplateService {
                         .collect(Collectors.toList())
                 : new ArrayList<>();
 
+        for (int i = 0; i < exercises.size(); i++) {
+            exercises.get(i).setOrderIndex(i);
+        }
         WorkoutTemplate template = WorkoutTemplate.builder()
                 .id(UUID.randomUUID().toString())
                 .userEmail(userEmail)

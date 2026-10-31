@@ -21,6 +21,7 @@ public class WorkoutTemplate implements Persistable<String> {
 
     @ElementCollection
     @CollectionTable(name = "workout_template_exercises", joinColumns = @JoinColumn(name = "template_id"))
+    @OrderBy("orderIndex ASC")
     private List<TemplateExercise> exercises;
 
     @Transient

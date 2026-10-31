@@ -2,9 +2,9 @@ package com.ascension.service.ai;
 
 import com.ascension.dto.FoodLogDTO;
 import com.ascension.dto.SavedFoodDTO;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -25,7 +25,7 @@ public class AiJsonParser {
             int defaultMealIndex,
             int availableMealsCount,
             LocalDate date,
-            List<SavedFoodDTO> savedFoods) throws JsonProcessingException {
+            List<SavedFoodDTO> savedFoods) throws JacksonException {
 
         JsonNode arrayNode = objectMapper.readTree(responseText);
         List<FoodLogDTO> dtoList = new ArrayList<>();
@@ -44,7 +44,7 @@ public class AiJsonParser {
 
                 dto.setMealIndex(assignedMeal);
                 dto.setDate(date);
-                dto.setProduct(node.path("product").asText("Alimento"));
+                dto.setProduct(node.path("product").asString("Alimento"));
                 dto.setQuantity(sanitizeDouble(node.path("quantity").asDouble(100.0), 0.1, 50000.0, 100.0));
                 dto.setKcal(sanitizeDouble(node.path("kcal").asDouble(0.0), 0.0, 50000.0, 0.0));
                 dto.setProtein(sanitizeDouble(node.path("protein").asDouble(0.0), 0.0, 5000.0, 0.0));
@@ -101,12 +101,12 @@ public class AiJsonParser {
         return dtoList;
     }
 
-    public SavedFoodDTO parseSavedFood(String responseText) throws JsonProcessingException {
+    public SavedFoodDTO parseSavedFood(String responseText) throws JacksonException {
         JsonNode node = objectMapper.readTree(responseText);
 
         SavedFoodDTO dto = new SavedFoodDTO();
-        dto.setName(node.path("name").asText());
-        dto.setBrand(node.path("brand").asText());
+        dto.setName(node.path("name").asString());
+        dto.setBrand(node.path("brand").asString());
         dto.setKcalPer100g(sanitizeDouble(node.path("kcalPer100g").asDouble(0.0), 0.0, 50000.0, 0.0));
         dto.setProteinPer100g(sanitizeDouble(node.path("proteinPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
         dto.setCarbsPer100g(sanitizeDouble(node.path("carbsPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
@@ -114,18 +114,18 @@ public class AiJsonParser {
         if (node.has("servingSize") && !node.path("servingSize").isNull()) {
             dto.setServingSize(sanitizeDouble(node.path("servingSize").asDouble(100.0), 0.1, 50000.0, 100.0));
         }
-        if (node.has("servingLabel") && !node.path("servingLabel").isNull() && !node.path("servingLabel").asText().isEmpty()) {
-            dto.setServingLabel(node.path("servingLabel").asText());
+        if (node.has("servingLabel") && !node.path("servingLabel").isNull() && !node.path("servingLabel").asString().isEmpty()) {
+            dto.setServingLabel(node.path("servingLabel").asString());
         }
         return dto;
     }
 
-    public Map<String, Object> parseNutritionalLabel(String responseText) throws JsonProcessingException {
+    public Map<String, Object> parseNutritionalLabel(String responseText) throws JacksonException {
         JsonNode node = objectMapper.readTree(responseText);
 
         Map<String, Object> result = new HashMap<>();
-        result.put("name", node.path("name").asText(""));
-        result.put("brand", node.path("brand").asText(""));
+        result.put("name", node.path("name").asString(""));
+        result.put("brand", node.path("brand").asString(""));
         result.put("kcalPer100g", sanitizeDouble(node.path("kcalPer100g").asDouble(0.0), 0.0, 50000.0, 0.0));
         result.put("proteinPer100g", sanitizeDouble(node.path("proteinPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
         result.put("carbsPer100g", sanitizeDouble(node.path("carbsPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
@@ -134,7 +134,7 @@ public class AiJsonParser {
             result.put("servingSize", sanitizeDouble(node.path("servingSize").asDouble(100.0), 0.1, 50000.0, 100.0));
         }
         if (node.has("servingLabel") && !node.path("servingLabel").isNull()) {
-            result.put("servingLabel", node.path("servingLabel").asText());
+            result.put("servingLabel", node.path("servingLabel").asString());
         }
         return result;
     }
@@ -147,22 +147,22 @@ public class AiJsonParser {
             String resolvedMealName,
             double remKcal, double remProtein, double remCarbs, double remFat,
             int targetKcal, double targetProtein, double targetCarbs, double targetFat,
-            double consumedKcal, double consumedProtein, double consumedCarbs, double consumedFat) throws JsonProcessingException {
+            double consumedKcal, double consumedProtein, double consumedCarbs, double consumedFat) throws JacksonException {
 
         JsonNode rootNode = objectMapper.readTree(responseText);
 
-        String reply = rootNode.path("reply").asText("Aquí tienes las mejores opciones adaptadas a tus macros.");
+        String reply = rootNode.path("reply").asString("Aquí tienes las mejores opciones adaptadas a tus macros.");
         List<Map<String, Object>> parsedOptions = new ArrayList<>();
 
         JsonNode optionsNode = rootNode.path("mealOptions");
         if (optionsNode.isArray() && optionsNode.size() > 0) {
             for (int i = 0; i < optionsNode.size(); i++) {
                 JsonNode oNode = optionsNode.get(i);
-                String optId = oNode.path("id").asText("opt-" + (i + 1));
-                String optTitle = oNode.path("title").asText("Opción " + (i + 1));
-                String optDesc = oNode.path("description").asText("");
+                String optId = oNode.path("id").asString("opt-" + (i + 1));
+                String optTitle = oNode.path("title").asString("Opción " + (i + 1));
+                String optDesc = oNode.path("description").asString("");
                 int mIdx = oNode.path("mealIndex").asInt(resolvedMealIndex);
-                String mName = oNode.path("mealName").asText(resolvedMealName);
+                String mName = oNode.path("mealName").asString(resolvedMealName);
 
                 List<FoodLogDTO> optFoods = new ArrayList<>();
                 double optKcal = 0, optP = 0, optC = 0, optF = 0;
@@ -173,7 +173,7 @@ public class AiJsonParser {
                         FoodLogDTO dto = new FoodLogDTO();
                         dto.setDate(date);
                         dto.setMealIndex(mIdx);
-                        dto.setProduct(fNode.path("product").asText());
+                        dto.setProduct(fNode.path("product").asString());
                         dto.setQuantity(sanitizeDouble(fNode.path("quantity").asDouble(100.0), 0.1, 50000.0, 100.0));
                         dto.setKcal(sanitizeDouble(fNode.path("kcal").asDouble(0.0), 0.0, 50000.0, 0.0));
                         dto.setProtein(sanitizeDouble(fNode.path("protein").asDouble(0.0), 0.0, 5000.0, 0.0));
@@ -208,7 +208,7 @@ public class AiJsonParser {
         } else if (rootNode.has("suggestedFoods") && rootNode.path("suggestedFoods").isArray()) {
             // Fallback for single option output
             int mIdx = rootNode.path("mealIndex").asInt(resolvedMealIndex);
-            String mName = rootNode.path("mealName").asText(resolvedMealName);
+            String mName = rootNode.path("mealName").asString(resolvedMealName);
             List<FoodLogDTO> optFoods = new ArrayList<>();
             double optKcal = 0, optP = 0, optC = 0, optF = 0;
 
@@ -216,7 +216,7 @@ public class AiJsonParser {
                 FoodLogDTO dto = new FoodLogDTO();
                 dto.setDate(date);
                 dto.setMealIndex(mIdx);
-                dto.setProduct(fNode.path("product").asText());
+                dto.setProduct(fNode.path("product").asString());
                 dto.setQuantity(sanitizeDouble(fNode.path("quantity").asDouble(100.0), 0.1, 50000.0, 100.0));
                 dto.setKcal(sanitizeDouble(fNode.path("kcal").asDouble(0.0), 0.0, 50000.0, 0.0));
                 dto.setProtein(sanitizeDouble(fNode.path("protein").asDouble(0.0), 0.0, 5000.0, 0.0));
