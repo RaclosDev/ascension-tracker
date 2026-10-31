@@ -4,7 +4,7 @@ import { setupAuthMocks } from './helpers/auth';
 test('tracking dialog traps focus and restores the day button on Escape', async ({ page }) => {
   await setupAuthMocks(page);
   await page.goto('/tracking');
-  const trigger = page.locator('.calendar-day').first();
+  const trigger = page.locator('.calendar-day[role="button"]').first();
   await trigger.click();
   const dialog = page.getByRole('dialog');
   const close = dialog.getByRole('button', { name: /Cerrar modal/ });
@@ -35,7 +35,7 @@ test('public headline keeps readable brand colour after a dark personal theme', 
   page,
 }) => {
   await page.route('**/api/auth/config**', (route) =>
-    route.fulfill({ json: { googleClientId: '' } }),
+    route.fulfill({ json: { googleClientId: 'fake-test-client-id' } }),
   );
   await page.route('**/api/auth/refresh**', (route) => route.fulfill({ status: 401, json: {} }));
   await page.goto('/');
