@@ -611,8 +611,9 @@ export function lbsToKg(lbs: number): number {
 export function kgToStoneLbs(kg: number): WeightStLbs {
   if (kg <= 0) return { stones: 0, pounds: 0 };
   const totalLbs = kg * LBS_PER_KG;
-  const stones = Math.floor(totalLbs / 14);
-  const pounds = Math.round((totalLbs % 14) * 10) / 10;
+  const roundedLbs = Math.round(totalLbs * 10) / 10;
+  const stones = Math.floor(roundedLbs / 14);
+  const pounds = Math.round((roundedLbs % 14) * 10) / 10;
   return { stones, pounds };
 }
 
@@ -684,9 +685,10 @@ export function kmhToMph(kmh: number): number {
 }
 
 export function formatPace(paceDecimal: number): string {
-  if (paceDecimal <= 0) return '0:00';
-  const minutes = Math.floor(paceDecimal);
-  const seconds = Math.round((paceDecimal - minutes) * 60);
+  if (!Number.isFinite(paceDecimal) || paceDecimal <= 0) return '0:00';
+  const totalSeconds = Math.round(paceDecimal * 60);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
   const formattedSec = seconds < 10 ? `0${seconds}` : `${seconds}`;
   return `${minutes}:${formattedSec}`;
 }

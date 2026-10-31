@@ -39,6 +39,43 @@ class WeightServiceTest {
 
     private static final String USER_EMAIL = "test@example.com";
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({
+            "60, 70, 60, 61, 0.5, 63",
+            "90, 80, 90, 89, 0.5, 63",
+            "60, 70, 62, 61, 0.5, -1",
+            "90, 80, 88, 89, 0.5, -1",
+            "60, 70, 69, 71, 0.5, 0",
+            "90, 80, 81, 79, 0.5, 0",
+            "80, 80, 80, 79, 0, -1",
+            "80, 80, 80, 80, 0, 0",
+            "60, 70, 61, 61, -0.5, 126",
+            "60, 70, 61, 61, 0, -1"
+    })
+    void projectedDateRespectsGoalDirectionAndObservedTrend(double start, double goal,
+            double previous, double current, double weeklyGoal, int expectedDays) {
+        LocalDate today = LocalDate.now();
+        when(settingsService.getSettings(USER_EMAIL)).thenReturn(UserSettingsDTO.builder()
+                .startWeight(start).goalWeight(goal).weeklyGoal(weeklyGoal).build());
+        when(weightEntryRepository.findAllByUserEmailOrderByDateAsc(USER_EMAIL)).thenReturn(List.of(
+                WeightEntry.builder().date(today.minusWeeks(1)).weight(previous).build(),
+                WeightEntry.builder().date(today).weight(current).build()));
+        String expected = expectedDays < 0 ? "--" : today.plusDays(expectedDays).format(
+                java.time.format.DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", java.util.Locale.forLanguageTag("es-ES")));
+        assertThat(weightService.getDashboard(USER_EMAIL).getEstimatedDate()).isEqualTo(expected);
+    }
+
+    @Test
+    void averageWeeklyChangeIncludesWeeksWithoutMeasurements() {
+        LocalDate today = LocalDate.now();
+        when(settingsService.getSettings(USER_EMAIL)).thenReturn(UserSettingsDTO.builder()
+                .startWeight(90.0).goalWeight(75.0).weeklyGoal(0.5).build());
+        when(weightEntryRepository.findAllByUserEmailOrderByDateAsc(USER_EMAIL)).thenReturn(List.of(
+                WeightEntry.builder().date(today.minusWeeks(10)).weight(90.0).build(),
+                WeightEntry.builder().date(today).weight(85.0).build()));
+        assertThat(weightService.getDashboard(USER_EMAIL).getAvgWeeklyChange()).isEqualTo(-0.5);
+    }
+
     @Test
     @DisplayName("getAllEntries returns mapped DTO list in ascending date order")
     void getAllEntries_returnsMappedList() {

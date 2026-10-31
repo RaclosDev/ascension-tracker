@@ -4,7 +4,7 @@
   --landing-bg: #050507;
   --landing-ink: #f4f4f5;
   --landing-muted: #a1a1aa;
-  --landing-blue: var(--accent-primary, #0085ff);
+  --landing-blue: #0085ff;
   --landing-steel: rgba(255, 255, 255, 0.14);
   background: var(--landing-bg);
   color: var(--landing-ink);

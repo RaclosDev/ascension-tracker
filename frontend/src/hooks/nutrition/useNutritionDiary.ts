@@ -5,9 +5,11 @@ import toast from 'react-hot-toast';
 import { FoodLog, Macros, Meal, UserSettings } from '../../types/api';
 import { EditingLog } from '../../types/nutrition';
 import { getLocalDateString, addDaysToDateString } from '../../utils/dateHelper';
+import { belongsToMeal } from '../../utils/mealGroups';
 
 export function useNutritionDiary() {
   const queryClient = useQueryClient();
+  const copyingMeals = useRef(new Set<string>());
 
   // Date and Modals State
   const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
@@ -34,12 +36,12 @@ export function useNutritionDiary() {
     isFetching,
   } = useQuery<{ foodLogs: FoodLog[]; macros: Macros; meals: Meal[]; settings: UserSettings }>({
     queryKey: ['nutritionData', selectedDate],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const [macrosRes, mealsRes, settingsRes, logsRes] = await Promise.all([
-        api.get<Macros>('/nutrition/macros'),
-        api.get<Meal[]>('/nutrition/meals'),
-        api.get<UserSettings>('/settings'),
-        api.get<FoodLog[]>(`/nutrition/logs?date=${selectedDate}`),
+        api.get<Macros>('/nutrition/macros', { signal }),
+        api.get<Meal[]>('/nutrition/meals', { signal }),
+        api.get<UserSettings>('/settings', { signal }),
+        api.get<FoodLog[]>(`/nutrition/logs?date=${selectedDate}`, { signal }),
       ]);
 
       return {
@@ -150,7 +152,14 @@ export function useNutritionDiary() {
       const rawData = e.dataTransfer.getData('application/json');
       if (!rawData) return;
       const parsed = JSON.parse(rawData);
-      if (parsed.sourceMealIndex === targetMealIndex) return;
+      const targetMeal = meals[targetMealIndex];
+      if (!targetMeal) return;
+      if (
+        parsed.mealKey
+          ? parsed.mealKey === targetMeal.mealKey
+          : parsed.sourceMealIndex === targetMealIndex
+      )
+        return;
 
       await api.put(`/nutrition/logs/${parsed.id}`, {
         date: parsed.date || selectedDate,
@@ -161,6 +170,7 @@ export function useNutritionDiary() {
         carbs: parsed.carbs,
         fat: parsed.fat,
         mealIndex: targetMealIndex,
+        mealKey: targetMeal.mealKey,
         portionsJson: parsed.portionsJson,
       });
       fetchData();
@@ -179,11 +189,20 @@ export function useNutritionDiary() {
     mealIndex: number,
   ) => {
     e.stopPropagation();
+    const copyKey = `${selectedDate}:${mealIndex}`;
+    if (copyingMeals.current.has(copyKey)) return;
+    copyingMeals.current.add(copyKey);
     const loadingToast = toast.loading('Copiando de ayer...');
     try {
       const yesterday = addDaysToDateString(selectedDate, -1);
-      const res = await api.get(`/nutrition/logs?date=${yesterday}`);
-      const logsToCopy = res.data.filter((log: FoodLog) => log.mealIndex === mealIndex);
+      const [res, current] = await Promise.all([
+        api.get<FoodLog[]>(`/nutrition/logs?date=${yesterday}`),
+        api.get<FoodLog[]>(`/nutrition/logs?date=${selectedDate}`),
+      ]);
+      const meal = meals[mealIndex];
+      const matchesMeal = (log: FoodLog) =>
+        meal ? belongsToMeal(log, meal, mealIndex) : !log.mealKey && log.mealIndex === mealIndex;
+      const logsToCopy = res.data.filter(matchesMeal);
 
       if (logsToCopy.length === 0) {
         toast.dismiss(loadingToast);
@@ -192,7 +211,7 @@ export function useNutritionDiary() {
       }
 
       // Filter out items already logged in this meal today to prevent duplicates
-      const currentLogsInMeal = foodLogs.filter((log: FoodLog) => log.mealIndex === mealIndex);
+      const currentLogsInMeal = current.data.filter(matchesMeal);
       const newLogsToCopy = logsToCopy.filter(
         (yesterdayLog: FoodLog) =>
           !currentLogsInMeal.some(
@@ -207,11 +226,12 @@ export function useNutritionDiary() {
         return;
       }
 
-      await Promise.all(
+      const results = await Promise.allSettled(
         newLogsToCopy.map((log: FoodLog) =>
           api.post('/nutrition/logs', {
             date: selectedDate,
             mealIndex: mealIndex,
+            mealKey: meal?.mealKey,
             product: log.product,
             quantity: log.quantity,
             kcal: log.kcal,
@@ -223,11 +243,18 @@ export function useNutritionDiary() {
         ),
       );
 
-      fetchData();
+      await queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
       queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
       toast.dismiss(loadingToast);
+      const failures = results.filter((result) => result.status === 'rejected').length;
+      if (failures > 0) {
+        toast.error(
+          `Se han copiado ${results.length - failures} alimentos; ${failures} no se pudieron copiar. Puedes reintentarlo.`,
+        );
+        return;
+      }
       toast.success(
         newLogsToCopy.length === logsToCopy.length
           ? '¡Comida copiada!'
@@ -237,18 +264,23 @@ export function useNutritionDiary() {
       console.error('Error al copiar la comida:', err instanceof Error ? err.message : String(err));
       toast.dismiss(loadingToast);
       toast.error('Error al copiar la comida');
+    } finally {
+      copyingMeals.current.delete(copyKey);
     }
   };
 
   // Delete Log Mutation with Undo support
-  const deleteLogMutation = useMutation<unknown, Error, { id: number | string; log: FoodLog }>({
+  const deleteLogMutation = useMutation<unknown, Error, { id: number | string; log?: FoodLog }>({
     mutationFn: ({ id }) => api.delete(`/nutrition/logs/${id}`),
     onSuccess: (_, { log }) => {
       queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
       queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
-
+      if (!log) {
+        toast.success('Alimento eliminado');
+        return;
+      }
       toast.success(
         (t) =>
           React.createElement(
@@ -267,6 +299,9 @@ export function useNutritionDiary() {
                     await api.post('/nutrition/logs', {
                       date: log.date,
                       mealIndex: log.mealIndex,
+                      mealKey: log.mealKey,
+                      mealName: log.mealName,
+                      mealIcon: log.mealIcon,
                       product: log.product,
                       quantity: log.quantity,
                       kcal: log.kcal,
@@ -298,13 +333,6 @@ export function useNutritionDiary() {
 
   const handleDeleteLog = (id: number | string) => {
     const logToDelete = foodLogs.find((l: FoodLog) => l.id === id);
-    if (!logToDelete) {
-      api.delete(`/nutrition/logs/${id}`).then(() => {
-        queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
-        toast.success('Alimento eliminado');
-      });
-      return;
-    }
     deleteLogMutation.mutate({ id, log: logToDelete });
   };
 
@@ -325,6 +353,9 @@ export function useNutritionDiary() {
       id: log.id,
       date: log.date,
       mealIndex: log.mealIndex,
+      mealKey: log.mealKey,
+      mealName: log.mealName,
+      mealIcon: log.mealIcon,
       product: log.product,
       quantity: log.quantity,
       kcal: log.kcal,
@@ -376,6 +407,9 @@ export function useNutritionDiary() {
       id: editingLog.id,
       date: editingLog.date,
       mealIndex: editingLog.mealIndex,
+      mealKey: editingLog.mealKey,
+      mealName: editingLog.mealName,
+      mealIcon: editingLog.mealIcon,
       product: editingLog.product,
       quantity: editingLog.quantity,
       kcal: editingLog.kcal,

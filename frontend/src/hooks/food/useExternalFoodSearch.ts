@@ -1,4 +1,4 @@
-import { useRef, type FormEvent, type Dispatch, type SetStateAction } from 'react';
+import { useRef, useEffect, type FormEvent, type Dispatch, type SetStateAction } from 'react';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 import {
@@ -11,25 +11,44 @@ export function useExternalFoodSearch(
   setOffResults: Dispatch<SetStateAction<Array<Record<string, unknown>>>>,
 ) {
   const searchRequestId = useRef(0);
+  const controllerRef = useRef<AbortController | null>(null);
+  useEffect(
+    () => () => {
+      searchRequestId.current++;
+      controllerRef.current?.abort();
+    },
+    [],
+  );
   const handleSearch = async (e?: FormEvent) => {
     if (e) e.preventDefault();
     const q = query.trim();
     if (!q) return;
 
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
     searchRequestId.current += 1;
     const currentRequestId = searchRequestId.current;
 
     const queriesToTry = getSmartFallbackQueries(q);
     let allCleanProducts: Array<Record<string, unknown>> = [];
 
+    let successfulResponses = 0;
+    let lastError: unknown;
     try {
       for (const currentQ of queriesToTry) {
         if (currentRequestId !== searchRequestId.current) return;
         let data: Record<string, unknown>;
         try {
-          const res = await api.get(`/food-external/search?q=${encodeURIComponent(currentQ)}`);
+          const res = await api.get<Record<string, unknown>>(
+            `/food-external/search?q=${encodeURIComponent(currentQ)}`,
+            { signal: controller.signal },
+          );
           data = res.data;
-        } catch {
+          successfulResponses++;
+        } catch (error) {
+          if (controller.signal.aborted) return;
+          lastError = error;
           continue;
         }
         if (currentRequestId !== searchRequestId.current) return;
@@ -59,6 +78,7 @@ export function useExternalFoodSearch(
 
       if (currentRequestId !== searchRequestId.current) return;
 
+      if (!successfulResponses) throw lastError ?? new Error('Food search unavailable');
       setOffResults(allCleanProducts);
 
       if (allCleanProducts.length === 0) {

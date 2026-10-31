@@ -6,9 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class GeminiQuotaService {
@@ -27,39 +24,18 @@ public class GeminiQuotaService {
     @Value("${app.gemini.circuit.cooldown-ms:30000}")
     private long circuitCooldownMs = 30000L;
 
-    private volatile LocalDate currentTrackingDate = LocalDate.now();
-    private final ConcurrentHashMap<String, AtomicInteger> userDailyUsage = new ConcurrentHashMap<>();
-    private final AtomicInteger globalDailyUsage = new AtomicInteger(0);
+    private final GeminiQuotaStore store;
 
-    private final AtomicInteger consecutiveFailures = new AtomicInteger(0);
-    private volatile long circuitOpenUntil = 0L;
+    public GeminiQuotaService(GeminiQuotaStore store) {
+        this.store = store;
+    }
 
-    public void checkAndReserveQuota(String userEmail) {
-        long now = System.currentTimeMillis();
-        if (now < circuitOpenUntil) {
-            long remainingSec = (circuitOpenUntil - now) / 1000;
-            log.warn("Gemini circuit breaker OPEN, rejecting call fast. Remaining cooldown: {}s", remainingSec);
-            throw new AiQuotaExceededException("El servicio de IA se encuentra temporalmente degradado tras multiples fallos consecutivos. Intentalo de nuevo en unos momentos.");
-        }
-
-        checkAndResetDailyQuotas();
-
-        int newGlobal = globalDailyUsage.incrementAndGet();
-        if (newGlobal > globalDailyLimit) {
-            globalDailyUsage.decrementAndGet();
-            log.warn("Global Gemini daily quota reached: {}/{}", newGlobal - 1, globalDailyLimit);
-            throw new AiQuotaExceededException("Se ha alcanzado el limite diario global del servicio de IA (" + globalDailyLimit + "). Intentalo de nuevo manana.");
-        }
-
-        if (userEmail != null && !userEmail.isBlank()) {
-            AtomicInteger userCount = userDailyUsage.computeIfAbsent(userEmail, k -> new AtomicInteger(0));
-            int newUser = userCount.incrementAndGet();
-            if (newUser > userDailyLimit) {
-                userCount.decrementAndGet();
-                globalDailyUsage.decrementAndGet();
-                log.warn("User {} reached daily Gemini quota: {}/{}", com.ascension.util.PiiMasker.maskEmail(userEmail), newUser - 1, userDailyLimit);
-                throw new AiQuotaExceededException("Has alcanzado tu limite diario de consultas de IA (" + userDailyLimit + "). Intentalo de nuevo manana.");
-            }
+    public GeminiQuotaStore.Reservation checkAndReserveQuota(String userEmail) {
+        try {
+            return store.reserve(userEmail, userDailyLimit, globalDailyLimit);
+        } catch (AiQuotaExceededException failure) {
+            log.warn("Gemini quota/circuit rejected request for {}", com.ascension.util.PiiMasker.maskEmail(userEmail));
+            throw failure;
         }
     }
 
@@ -67,31 +43,17 @@ public class GeminiQuotaService {
         checkAndReserveQuota(userEmail);
     }
 
-    public void releaseQuota(String userEmail) {
-        globalDailyUsage.updateAndGet(curr -> Math.max(0, curr - 1));
-        if (userEmail != null && !userEmail.isBlank()) {
-            AtomicInteger userCount = userDailyUsage.get(userEmail);
-            if (userCount != null) {
-                userCount.updateAndGet(curr -> Math.max(0, curr - 1));
-            }
-        }
+    public void releaseQuota(GeminiQuotaStore.Reservation reservation) {
+        store.release(reservation);
     }
 
     public void recordSuccess(String userEmail) {
-        consecutiveFailures.set(0);
-        circuitOpenUntil = 0L;
+        store.success();
     }
 
-    public void recordFailure(Throwable t) {
-        if (!isCircuitBreakerFailure(t)) {
-            log.debug("Ignoring non-upstream failure for circuit breaker: {}", t != null ? t.getMessage() : "null");
-            return;
-        }
-        int failures = consecutiveFailures.incrementAndGet();
-        log.warn("Gemini upstream call failed (consecutive: {}): {}", failures, t.getMessage());
-        if (failures >= consecutiveFailuresThreshold) {
-            circuitOpenUntil = System.currentTimeMillis() + circuitCooldownMs;
-            log.error("Gemini Circuit Breaker TRIPPED OPEN for {}ms after {} consecutive failures", circuitCooldownMs, failures);
+    public void recordFailure(Throwable failure) {
+        if (isCircuitBreakerFailure(failure)) {
+            store.failure(consecutiveFailuresThreshold, circuitCooldownMs);
         }
     }
 
@@ -119,24 +81,6 @@ public class GeminiQuotaService {
         return false;
     }
 
-    private synchronized void checkAndResetDailyQuotas() {
-        LocalDate today = LocalDate.now();
-        if (!today.equals(currentTrackingDate)) {
-            userDailyUsage.clear();
-            globalDailyUsage.set(0);
-            currentTrackingDate = today;
-        }
-    }
-
-    // Testing and configuration helpers
-    public void resetForTesting() {
-        userDailyUsage.clear();
-        globalDailyUsage.set(0);
-        consecutiveFailures.set(0);
-        circuitOpenUntil = 0L;
-        currentTrackingDate = LocalDate.now();
-    }
-
     public void setUserDailyLimit(int limit) {
         this.userDailyLimit = limit;
     }
@@ -154,10 +98,10 @@ public class GeminiQuotaService {
     }
 
     public int getConsecutiveFailures() {
-        return consecutiveFailures.get();
+        return store.failures();
     }
 
     public boolean isCircuitOpen() {
-        return System.currentTimeMillis() < circuitOpenUntil;
+        return store.isCircuitOpen();
     }
 }

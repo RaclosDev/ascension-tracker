@@ -18,6 +18,8 @@ import java.time.Duration;
 @Component
 public class RateLimitInterceptor implements HandlerInterceptor {
 
+    public static final String CHECKED_ATTRIBUTE = RateLimitInterceptor.class.getName() + ".checked";
+
     public static final int MAX_REQUESTS_PER_MINUTE = 20;
     public static final int USER_MAX_REQUESTS_PER_MINUTE = 10;
 
@@ -42,6 +44,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        if (Boolean.TRUE.equals(request.getAttribute(CHECKED_ATTRIBUTE))) return true;
         String path = request.getRequestURI();
         String method = request.getMethod();
 
@@ -87,7 +90,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             case "food-external" -> properties.getFoodExternalLimit();
             case "push" -> properties.getPushLimit();
             case "user" -> properties.getUserLimit();
-            default -> MAX_REQUESTS_PER_MINUTE;
+            default -> properties.getMaxRequestsPerMinute();
         };
     }
 

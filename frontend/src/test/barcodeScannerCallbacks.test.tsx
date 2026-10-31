@@ -14,8 +14,14 @@ vi.mock('html5-qrcode', () => ({
       { id: 'back', label: 'Back' },
       { id: 'front', label: 'Front' },
     ]);
-    start = scanner.start;
-    stop = scanner.stop;
+    start = async (...args: unknown[]) => {
+      await scanner.start(...args);
+      this.isScanning = true;
+    };
+    stop = async () => {
+      await scanner.stop();
+      this.isScanning = false;
+    };
     clear = scanner.clear;
     isScanning = scanner.isScanning;
   },
@@ -56,6 +62,7 @@ it.each(['resume', 'switch'])(
       await act(async () => {
         fireEvent.click(screen.getByRole('button', { name: 'Pausar Cámara' }));
       });
+      expect(scanner.stop).toHaveBeenCalledTimes(1);
       await act(async () => {
         fireEvent.click(screen.getByRole('button', { name: 'Iniciar Cámara' }));
       });

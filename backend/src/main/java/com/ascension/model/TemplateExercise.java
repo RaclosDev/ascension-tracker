@@ -21,4 +21,11 @@ public class TemplateExercise {
 
     @Column(name = "variant_machine")
     private String variantMachine;
+
+    @Column(name = "order_index")
+    private Integer orderIndex;
+
+    public TemplateExercise(String exerciseId, String variantGrip, String variantMachine) {
+        this(exerciseId, variantGrip, variantMachine, null);
+    }
 }

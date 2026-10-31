@@ -118,7 +118,9 @@ public class UserDataRestoreService {
             throw new IllegalArgumentException("No se puede realizar OVERWRITE con un backup completamente vacío sin confirmación explícita (confirmEmpty=true).");
         }
 
-        userDataQuotaService.checkRestoreQuotas(userEmail, mode, backup);
+        userDataQuotaService.acquireUserQuotaLock(userEmail);
+        BackupMealIdentity.prepare(userEmail, backup, mealRepository.findAllByUserEmailOrderBySortOrderAsc(userEmail));
+        if (isOverwrite) userDataQuotaService.checkRestoreQuotas(userEmail, mode, backup);
 
         log.info("Iniciando restauración de datos en modo {} para usuario: {}", appliedMode, com.ascension.util.PiiMasker.maskEmail(userEmail));
 
@@ -146,6 +148,7 @@ public class UserDataRestoreService {
         int weightEntriesRestored = restoreWeightEntries(userEmail, backup.getWeightEntries(), isOverwrite);
 
         boolean settingsRestored = restoreUserSettings(userEmail, backup.getUserSettings(), isOverwrite);
+        if (!isOverwrite) userDataQuotaService.checkCurrentQuotas(userEmail);
 
         log.info("Restauración completada para {}: {} entrenamientos, {} ejercicios, {} comidas",
                 com.ascension.util.PiiMasker.maskEmail(userEmail), workoutsRestored, customExercisesRestored, foodLogsRestored);
@@ -359,7 +362,7 @@ public class UserDataRestoreService {
 
                     String grip = teDTO.getVariant() != null ? teDTO.getVariant().getGrip() : null;
                     String machine = teDTO.getVariant() != null ? teDTO.getVariant().getMachine() : null;
-                    exercises.add(new TemplateExercise(resolvedExId, grip, machine));
+                    exercises.add(new TemplateExercise(resolvedExId, grip, machine, exercises.size()));
                 }
             }
 
@@ -380,24 +383,29 @@ public class UserDataRestoreService {
     private int restoreFoodLogs(String userEmail, List<FoodLogDTO> dtos, boolean isOverwrite) {
         if (dtos == null || dtos.isEmpty()) return 0;
 
-        Set<String> existingKeys = new HashSet<>();
+        Map<FoodLogIdentity, Integer> existingOccurrences = new HashMap<>();
         if (!isOverwrite) {
             for (FoodLog fl : foodLogRepository.findAllByUserEmailOrderByDateAscIdAsc(userEmail)) {
-                existingKeys.add(fl.getDate() + ":" + fl.getMealIndex() + ":" + (fl.getProduct() != null ? fl.getProduct().toLowerCase() : ""));
+                existingOccurrences.merge(FoodLogIdentity.of(fl), 1, Integer::sum);
             }
         }
 
         int count = 0;
         for (FoodLogDTO dto : dtos) {
-            String key = dto.getDate() + ":" + dto.getMealIndex() + ":" + (dto.getProduct() != null ? dto.getProduct().toLowerCase() : "");
-            if (!isOverwrite && existingKeys.contains(key)) {
+            FoodLogIdentity key = FoodLogIdentity.of(dto);
+            int occurrences = existingOccurrences.getOrDefault(key, 0);
+            if (occurrences > 0) {
+                existingOccurrences.put(key, occurrences - 1);
                 continue;
             }
 
             FoodLog logEntry = new FoodLog();
             logEntry.setUserEmail(userEmail);
             logEntry.setDate(dto.getDate());
-            logEntry.setMealIndex(dto.getMealIndex());
+            logEntry.setMealIndex(dto.getMealIndex() != null ? dto.getMealIndex() : -1);
+            logEntry.setMealKey(dto.getMealKey());
+            logEntry.setMealName(dto.getMealName());
+            logEntry.setMealIcon(dto.getMealIcon());
             logEntry.setProduct(dto.getProduct());
             logEntry.setQuantity(dto.getQuantity());
             logEntry.setKcal(dto.getKcal());
@@ -407,7 +415,6 @@ public class UserDataRestoreService {
             logEntry.setPortionsJson(dto.getPortionsJson());
 
             foodLogRepository.save(logEntry);
-            existingKeys.add(key);
             count++;
             flushAndClearBatch(count);
         }
@@ -439,6 +446,7 @@ public class UserDataRestoreService {
             processedNames.add(normalizedName);
 
             Meal meal = Meal.builder()
+                    .mealKey(dto.getMealKey())
                     .userEmail(userEmail)
                     .name(dto.getName().trim())
                     .icon(dto.getIcon())

@@ -6,6 +6,7 @@ type Options = {
   query: string;
   setQuery: Dispatch<SetStateAction<string>>;
   selectedMealIndex: number;
+  selectedMealKey?: string;
   date?: string;
   stopListening: () => void;
   onLogAdded?: () => void;
@@ -16,6 +17,7 @@ export function useFoodAiEntry({
   query,
   setQuery,
   selectedMealIndex,
+  selectedMealKey,
   date,
   stopListening,
   onLogAdded,
@@ -24,6 +26,7 @@ export function useFoodAiEntry({
   const [selectedImage, setSelectedImage] = useState<string | ArrayBuffer | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [aiSubmitting, setAiSubmitting] = useState(false);
+  const submitting = useRef(false);
   const [aiElapsedSeconds, setAiElapsedSeconds] = useState(0);
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -44,8 +47,10 @@ export function useFoodAiEntry({
   };
 
   const submitAiPrompt = async () => {
+    if (submitting.current) return;
     if (!query.trim() && !selectedImage)
       return toast.error('Escribe algo o adjunta una foto primero');
+    submitting.current = true;
     stopListening();
     const queryText = query.trim();
     setAiSubmitting(true);
@@ -63,6 +68,7 @@ export function useFoodAiEntry({
     const payload: Record<string, unknown> = {
       text: queryText,
       mealIndex: selectedMealIndex,
+      mealKey: selectedMealKey,
       date,
     };
     if (selectedImage) {
@@ -101,6 +107,7 @@ export function useFoodAiEntry({
       console.error('Error procesando texto con IA:', e instanceof Error ? e.message : String(e));
       // El texto y la imagen se conservan para que el usuario no pierda su entrada
     } finally {
+      submitting.current = false;
       clearInterval(timer);
       setAiSubmitting(false);
       setAiElapsedSeconds(0);

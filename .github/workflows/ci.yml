@@ -164,7 +164,7 @@ jobs:
       - name: Build Frontend Docker Image
         if: needs.changes.outputs.images == 'true'
         working-directory: frontend
-        run: docker build --build-arg VITE_API_URL=/api --build-arg VITE_GOOGLE_CLIENT_ID=ci-mock-id -t ascension-frontend:latest .
+        run: docker build --build-arg VITE_API_URL= --build-arg VITE_GOOGLE_CLIENT_ID=ci-mock-id -t ascension-frontend:latest .
 
       - name: Scan Frontend Docker Image (Trivy)
         if: needs.changes.outputs.images == 'true'

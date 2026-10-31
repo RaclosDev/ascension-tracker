@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import api from '../../api/client';
 import { getLocalDateString } from '../../utils/dateHelper';
 import { useSpeechToText } from '../useSpeechToText';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface SuggestedFood {
   foodId?: string;
@@ -20,6 +21,7 @@ export interface SuggestedFood {
 export interface MealOption {
   id?: string;
   mealIndex?: number;
+  mealKey?: string;
   title?: string;
   mealName?: string;
   description?: string;
@@ -55,6 +57,9 @@ export interface NutritionSummary {
 }
 
 export function useAiNutritionChef() {
+  const queryClient = useQueryClient();
+  const submittedOptionKeys = useRef(new Set<string>());
+  const sendingMessage = useRef(false);
   const todayStr = getLocalDateString();
   const [summary, setSummary] = useState<NutritionSummary | null>(null);
   const [loadingSummary, setLoadingSummary] = useState(true);
@@ -142,6 +147,8 @@ export function useAiNutritionChef() {
   const handleSendMessage = async (customPrompt?: string | React.MouseEvent | React.FormEvent) => {
     const promptToSend = (typeof customPrompt === 'string' ? customPrompt : userInput).trim();
     if (!promptToSend && !selectedImage) return;
+    if (sendingMessage.current) return;
+    sendingMessage.current = true;
 
     stopListening();
     setUserInput('');
@@ -188,6 +195,7 @@ export function useAiNutritionChef() {
                   title: 'Opción Recomendada',
                   description: 'Diseñada para cuadrar tus macros.',
                   mealIndex: data.mealIndex,
+                  mealKey: data.mealKey,
                   mealName: data.mealName,
                   suggestedFoods: data.suggestedFoods,
                   totalMacros: data.totalMacros,
@@ -223,6 +231,7 @@ export function useAiNutritionChef() {
         },
       ]);
     } finally {
+      sendingMessage.current = false;
       setSending(false);
       setSelectedImage(null);
     }
@@ -234,7 +243,8 @@ export function useAiNutritionChef() {
 
   const handleApplyOption = async (option: MealOption, optionKey: string) => {
     if (!option || !option.suggestedFoods || option.suggestedFoods.length === 0) return;
-    if (appliedOptionKeys.has(optionKey)) return;
+    if (submittedOptionKeys.current.has(optionKey)) return;
+    submittedOptionKeys.current.add(optionKey);
 
     setApplyingOptionKey(optionKey);
 
@@ -242,13 +252,24 @@ export function useAiNutritionChef() {
       await api.post('/nutrition/ai/assistant-apply', {
         date: todayStr,
         mealIndex: option.mealIndex,
+        mealKey: option.mealKey,
         foods: option.suggestedFoods,
       });
 
       toast.success(`${option.title || 'Opción'} añadida a tu diario de hoy.`);
       setAppliedOptionKeys((prev) => new Set([...prev, optionKey]));
+      for (const key of [
+        'nutritionData',
+        'dashboard',
+        'trackingWeeks',
+        'foodLists',
+        'myFoodsData',
+      ]) {
+        void queryClient.invalidateQueries({ queryKey: [key] });
+      }
       fetchSummary(todayStr);
     } catch (err: unknown) {
+      submittedOptionKeys.current.delete(optionKey);
       toast.error('Error al añadir la comida al diario');
       console.error(
         'Error al añadir la comida al diario:',

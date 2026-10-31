@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+import { buildWorkoutRecords, beatsWorkoutRecord, workoutVariantKey } from '@/utils/workoutRecords';
 import { Repeat2, Trash2, Dumbbell } from 'lucide-react';
 import { Dialog, DialogContentFullScreen } from '@/components/ui/dialog';
 import {
@@ -5,7 +7,6 @@ import {
   formatDay,
   formatDuration,
   formatKg,
-  isPrSet,
   sessionVolume,
 } from '@/lib/workout/format';
 import { SET_TYPE_LABEL, type CompletedWorkout, type Exercise } from '@/lib/workout/types';
@@ -30,6 +31,10 @@ export function WorkoutHistoryDetail({
   setDeletingId,
   startFromHistory,
 }: Props) {
+  const records = useMemo(
+    () => (detail ? buildWorkoutRecords(history, detail.id) : new Map<string, number>()),
+    [history, detail],
+  );
   return (
     <Dialog open={!!detail} onOpenChange={(o) => !o && setDetailId(null)}>
       {detail ? (
@@ -133,6 +138,8 @@ export function WorkoutHistoryDetail({
               {detail.exercises.map((ex: import('@/lib/workout/types').WorkoutExercise) => {
                 const meta = catalog.get(ex.exerciseId);
                 const isCardio = meta?.muscle === 'cardio';
+                const best = records.get(workoutVariantKey(ex.exerciseId, ex.variant)) ?? 0;
+                let normalCount = 0;
                 return (
                   <div
                     key={ex.id}
@@ -235,11 +242,9 @@ export function WorkoutHistoryDetail({
                         </tr>
                       </thead>
                       <tbody>
-                        {ex.sets.map((s: import('@/lib/workout/types').WorkoutSet, i: number) => {
-                          let normalCount = 0;
-                          for (let j = 0; j < i; j++) {
-                            if (ex.sets[j].type === 'normal') normalCount++;
-                          }
+                        {ex.sets.map((s: import('@/lib/workout/types').WorkoutSet) => {
+                          const setLabel = SET_TYPE_LABEL[s.type] || normalCount + 1;
+                          if (s.type === 'normal') normalCount++;
                           return (
                             <tr
                               key={s.id}
@@ -262,8 +267,7 @@ export function WorkoutHistoryDetail({
                                     color: 'var(--text-secondary)',
                                   }}
                                 >
-                                  {SET_TYPE_LABEL[s.type as keyof typeof SET_TYPE_LABEL] ||
-                                    normalCount + 1}
+                                  {setLabel}
                                 </span>
                               </td>
                               <td className="bold-val">
@@ -278,8 +282,7 @@ export function WorkoutHistoryDetail({
                                 </td>
                               )}
                               <td>
-                                {s.completed &&
-                                isPrSet(ex.exerciseId, ex.variant, s.weight, history, detail.id) ? (
+                                {s.completed && beatsWorkoutRecord(s.weight, best) ? (
                                   <span className="text-[0.65rem] font-bold text-[var(--accent-primary-light)] bg-[var(--accent-glow)] border border-[var(--accent-primary)]/30 px-1.5 py-0.5 rounded-full">
                                     PR
                                   </span>

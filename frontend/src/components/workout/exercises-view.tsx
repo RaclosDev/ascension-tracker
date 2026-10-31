@@ -126,12 +126,17 @@ export default function ExercisesView() {
             globalMachines={globalMachines}
             onAddGrip={addGlobalGrip}
             onRemoveGrip={(g) =>
-              prefs && updatePrefs({ ...prefs, globalGrips: globalGrips.filter((x) => x !== g) })
+              updatePrefs((current) => ({
+                ...current,
+                globalGrips: current.globalGrips.filter((x) => x !== g),
+              }))
             }
             onAddMachine={addGlobalMachine}
             onRemoveMachine={(m) =>
-              prefs &&
-              updatePrefs({ ...prefs, globalMachines: globalMachines.filter((x) => x !== m) })
+              updatePrefs((current) => ({
+                ...current,
+                globalMachines: current.globalMachines.filter((x) => x !== m),
+              }))
             }
           />
         ) : filteredExercises.length === 0 ? (

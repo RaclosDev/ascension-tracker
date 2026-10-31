@@ -11,11 +11,11 @@ export function useFoodSearchLists(isOpen: boolean | undefined) {
   } = useQuery<FoodListsData, Error>({
     queryKey: ['foodLists'],
     enabled: !!isOpen,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const [recentRes, savedRes, recipesRes] = await Promise.all([
-        api.get<FoodListsData['recent']>('/nutrition/logs/recent'),
-        api.get<FoodListsData['saved']>('/nutrition/my-foods'),
-        api.get<FoodListsData['recipes']>('/nutrition/recipes'),
+        api.get<FoodListsData['recent']>('/nutrition/logs/recent', { signal }),
+        api.get<FoodListsData['saved']>('/nutrition/my-foods', { signal }),
+        api.get<FoodListsData['recipes']>('/nutrition/recipes', { signal }),
       ]);
       return { recent: recentRes.data, saved: savedRes.data, recipes: recipesRes.data };
     },

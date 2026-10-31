@@ -189,6 +189,43 @@ class AuthControllerTest {
     private JwtEncoder jwtEncoder;
 
     @Autowired
+    private org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder;
+
+    @Test
+    void accessTokenVersionSupportsImmediateLoginAndRefreshAfterRevocation() {
+        String email = "precise@example.com";
+        var cutoff = java.time.Instant.now();
+        when(userService.getUserSecurityState(email)).thenReturn(new UserSecurityState(true, cutoff));
+        String token = ReflectionTestUtils.invokeMethod(authController, "generateJwt", email, "Name", "");
+        assertEquals(cutoff.toString(), jwtDecoder.decode(token).getClaimAsString("securityVersion"));
+        var revokedAt = cutoff.plusMillis(1);
+        when(userService.getUserSecurityState(email)).thenReturn(new UserSecurityState(true, revokedAt));
+        org.junit.jupiter.api.Assertions.assertThrows(org.springframework.security.oauth2.jwt.JwtException.class,
+                () -> jwtDecoder.decode(token));
+        String replacement = ReflectionTestUtils.invokeMethod(authController, "generateJwt", email, "Name", "");
+        assertEquals(revokedAt.toString(), jwtDecoder.decode(replacement).getClaimAsString("securityVersion"));
+    }
+
+    @Test
+    void refreshCannotAdoptRevocationThatHappenedAfterRotation() throws Exception {
+        String email = "rotation-race@example.com";
+        var previous = java.time.Instant.now().minusSeconds(1);
+        when(userService.getUserSecurityState(email)).thenReturn(new UserSecurityState(true, previous));
+        when(refreshTokenService.rotateRefreshToken(anyString())).thenAnswer(call -> {
+            var rotated = new RefreshToken();
+            rotated.setEmail(email);
+            rotated.setPlainToken("rotated-but-revoked");
+            rotated.setAccessTokenSecurityVersion(previous.toString());
+            when(userService.getUserSecurityState(email))
+                    .thenReturn(new UserSecurityState(true, previous.plusMillis(1)));
+            return rotated;
+        });
+        mockMvc.perform(post("/api/auth/refresh").header("Origin", "http://localhost:5173")
+                .with(csrf()).cookie(new jakarta.servlet.http.Cookie("refreshToken", "original")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Autowired
     private AuthController authController;
 
     @MockitoBean
@@ -208,6 +245,7 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUpRateLimit() throws Exception {
+        when(userService.getUserSecurityState(anyString())).thenReturn(new UserSecurityState(true, null));
         when(rateLimitInterceptor.preHandle(
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any(),
@@ -360,7 +398,6 @@ class AuthControllerTest {
 
         verify(userService).updateTokensValidAfter(org.mockito.ArgumentMatchers.eq("athlete@example.com"), org.mockito.ArgumentMatchers.any());
         verify(accountDeletionService).wipeAccountData("athlete@example.com");
-        verify(userService).evictUser("athlete@example.com");
     }
 
     @Test
@@ -374,7 +411,6 @@ class AuthControllerTest {
 
         verify(userService).updateTokensValidAfter(org.mockito.ArgumentMatchers.eq("athlete-subject@example.com"), org.mockito.ArgumentMatchers.any());
         verify(accountDeletionService).wipeAccountData("athlete-subject@example.com");
-        verify(userService).evictUser("athlete-subject@example.com");
     }
 
     @Test

@@ -64,7 +64,7 @@ public class AppEnvValidator {
             }
         }
         
-        if (java.util.Arrays.asList(activeProfile.split(",")).contains("prod") && corsOrigins.contains("*")) {
+        if (java.util.Arrays.stream(activeProfile.split(",")).map(String::trim).anyMatch("prod"::equals) && corsOrigins.contains("*")) {
             throw new IllegalStateException("FATAL: Wildcard CORS ('*') is not allowed in production profile.");
         }
 

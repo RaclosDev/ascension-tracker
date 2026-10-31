@@ -31,6 +31,15 @@ public class FoodLog {
     @Column(name = "meal_index", nullable = false)
     private int mealIndex;
 
+    @Column(name = "meal_key", length = 36)
+    private String mealKey;
+
+    @Column(name = "meal_name", length = 100)
+    private String mealName;
+
+    @Column(name = "meal_icon", length = 50)
+    private String mealIcon;
+
     @Column(nullable = false)
     private String product;
 

@@ -37,207 +37,180 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
   const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
   const [scanningFile, setScanningFile] = useState(false);
 
-  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const sessionRef = useRef<{
+    scanner: Html5Qrcode;
+    disposed: boolean;
+    pending: Promise<void>;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const isMountedRef = useRef(true);
-
   const callbacksRef = useRef({ onScanSuccess, onScanError });
   useLayoutEffect(() => {
     callbacksRef.current = { onScanSuccess, onScanError };
   }, [onScanSuccess, onScanError]);
 
   useEffect(() => {
-    isMountedRef.current = true;
-    const elementId = 'ascension-barcode-reader';
-    const scanner = new Html5Qrcode(elementId);
-    scannerRef.current = scanner;
-
-    const initCamera = async () => {
+    const session = {
+      scanner: new Html5Qrcode('ascension-barcode-reader'),
+      disposed: false,
+      pending: Promise.resolve(),
+    };
+    sessionRef.current = session;
+    session.pending = (async () => {
       setIsStarting(true);
       setCameraError(null);
-
       try {
         try {
           const devices = await Html5Qrcode.getCameras();
-          if (devices && devices.length > 0 && isMountedRef.current) {
-            setCameras(devices);
-          }
+          if (!session.disposed) setCameras(devices);
         } catch {
-          /* empty */
+          // A facing-mode request can still work when device enumeration fails.
         }
-
-        await scanner.start(
+        if (session.disposed) return;
+        await session.scanner.start(
           { facingMode: 'environment' },
           SCANNER_CONFIG,
-          (decodedText, decodedResult) => {
-            if (callbacksRef.current.onScanSuccess) {
+          (text, result) => {
+            if (!session.disposed) {
               haptics.success();
-              callbacksRef.current.onScanSuccess(decodedText, decodedResult);
+              callbacksRef.current.onScanSuccess?.(text, result);
             }
           },
-          (errorMessage) => callbacksRef.current.onScanError?.(errorMessage),
+          (error) => {
+            if (!session.disposed) callbacksRef.current.onScanError?.(error);
+          },
         );
-
-        if (isMountedRef.current) {
-          setIsScanning(true);
-          setIsStarting(false);
-        }
-      } catch (err) {
-        console.warn('No se pudo iniciar la cámara automáticamente:', err);
-        if (isMountedRef.current) {
-          setIsStarting(false);
+        if (!session.disposed) setIsScanning(true);
+      } catch (error) {
+        if (!session.disposed) {
           setIsScanning(false);
-          const errorMsg = err instanceof Error || err instanceof DOMException ? err.message : '';
-          const errorName = err instanceof Error || err instanceof DOMException ? err.name : '';
+          const denied =
+            error instanceof Error &&
+            (error.name === 'NotAllowedError' || error.message.includes('Permission'));
           setCameraError(
-            errorName === 'NotAllowedError' || errorMsg.includes('Permission')
-              ? 'Permiso de cámara denegado. Puedes habilitarlo en los ajustes del navegador o subir una foto directamente.'
-              : 'No se encontró una cámara activa o no se pudo iniciar.',
+            denied
+              ? 'Permiso de c\u00e1mara denegado. Puedes habilitarlo en los ajustes del navegador o subir una foto directamente.'
+              : 'No se encontr\u00f3 una c\u00e1mara activa o no se pudo iniciar.',
           );
         }
+      } finally {
+        if (!session.disposed) setIsStarting(false);
       }
-    };
-
-    initCamera();
-
+    })();
     return () => {
-      isMountedRef.current = false;
-      if (scannerRef.current) {
-        if (scannerRef.current.isScanning) {
-          scannerRef.current
-            .stop()
-            .then(() => {
-              try {
-                scannerRef.current?.clear();
-              } catch {
-                /* ignore */
-              }
-            })
-            .catch(() => {
-              try {
-                scannerRef.current?.clear();
-              } catch {
-                /* ignore */
-              }
-            });
-        } else {
-          try {
-            scannerRef.current?.clear();
-          } catch {
-            /* ignore */
-          }
+      session.disposed = true;
+      // start() may resolve after unmount: wait for it before releasing its stream.
+      void session.pending.finally(async () => {
+        try {
+          if (session.scanner.isScanning) await session.scanner.stop();
+        } catch {
+          // clear may still release the scanner's DOM after stop fails.
         }
-      }
+        if (sessionRef.current === session) {
+          try {
+            session.scanner.clear();
+          } catch {
+            /* The host may already be detached. */
+          }
+          sessionRef.current = null;
+        }
+      });
     };
   }, []);
 
-  const handleToggleCamera = async () => {
-    if (!scannerRef.current) return;
-
-    if (isScanning) {
-      try {
-        await scannerRef.current.stop();
-        setIsScanning(false);
-      } catch (e) {
-        console.error('Error al detener cámara:', e instanceof Error ? e.message : String(e));
-      }
-    } else {
-      setIsStarting(true);
-      setCameraError(null);
-      try {
-        const cameraId =
-          cameras.length > 0 ? cameras[currentCameraIndex]?.id : { facingMode: 'environment' };
-        await scannerRef.current.start(
-          cameraId,
-          SCANNER_CONFIG,
-          (decodedText: string, decodedResult: Html5QrcodeResult) => {
-            if (callbacksRef.current.onScanSuccess) {
-              try {
-                navigator.vibrate?.(100);
-              } catch {
-                /* ignore */
-              }
-              callbacksRef.current.onScanSuccess(decodedText, decodedResult);
-            }
-          },
-          () => {
-            /* ignore */
-          },
-        );
-        setIsScanning(true);
-      } catch {
-        setCameraError('Error al encender la cámara. Revisa los permisos.');
-      } finally {
-        setIsStarting(false);
-      }
-    }
+  const runCameraOperation = (
+    operation: (session: NonNullable<typeof sessionRef.current>) => Promise<void>,
+  ) => {
+    const session = sessionRef.current;
+    if (!session || session.disposed) return;
+    session.pending = session.pending.then(async () => {
+      if (!session.disposed) await operation(session);
+    });
   };
 
-  const handleSwitchCamera = async () => {
-    if (!scannerRef.current || cameras.length <= 1) return;
-    const nextIndex = (currentCameraIndex + 1) % cameras.length;
-    setCurrentCameraIndex(nextIndex);
-
-    try {
-      if (scannerRef.current.isScanning) {
-        await scannerRef.current.stop();
-      }
-      setIsStarting(true);
-      await scannerRef.current.start(
-        cameras[nextIndex].id,
-        SCANNER_CONFIG,
-        (decodedText: string, decodedResult: Html5QrcodeResult) => {
-          if (callbacksRef.current.onScanSuccess) {
-            try {
-              navigator.vibrate?.(100);
-            } catch {
-              /* ignore */
-            }
-            callbacksRef.current.onScanSuccess(decodedText, decodedResult);
-          }
-        },
-        () => {
-          /* ignore */
-        },
-      );
-      setIsScanning(true);
-    } catch (err) {
-      console.error('Error al cambiar cámara:', err instanceof Error ? err.message : String(err));
-    } finally {
-      setIsStarting(false);
-    }
-  };
-
-  const handleFileScan = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !scannerRef.current) return;
-
-    setScanningFile(true);
-    try {
-      // Si la cámara está activa, detenerla primero
-      if (scannerRef.current.isScanning) {
-        await scannerRef.current.stop();
-        setIsScanning(false);
-      }
-
-      const decodedText = await scannerRef.current.scanFile(file, true);
-      if (decodedText && callbacksRef.current.onScanSuccess) {
-        try {
-          navigator.vibrate?.(100);
-        } catch {
-          /* ignore */
+  const startCamera = async (
+    session: NonNullable<typeof sessionRef.current>,
+    cameraIndex: number,
+  ) => {
+    await session.scanner.start(
+      cameras[cameraIndex]?.id ?? { facingMode: 'environment' },
+      SCANNER_CONFIG,
+      (text, result) => {
+        if (!session.disposed) {
+          haptics.success();
+          callbacksRef.current.onScanSuccess?.(text, result);
         }
-        callbacksRef.current.onScanSuccess(decodedText);
+      },
+      () => {},
+    );
+    if (!session.disposed) setIsScanning(true);
+  };
+
+  const handleToggleCamera = () => {
+    setIsStarting(true);
+    runCameraOperation(async (session) => {
+      try {
+        if (session.scanner.isScanning) {
+          await session.scanner.stop();
+          if (!session.disposed) setIsScanning(false);
+        } else {
+          setCameraError(null);
+          await startCamera(session, currentCameraIndex);
+        }
+      } catch {
+        if (!session.disposed)
+          setCameraError('Error al cambiar el estado de la c\u00e1mara. Revisa los permisos.');
+      } finally {
+        if (!session.disposed) setIsStarting(false);
       }
-    } catch (err) {
-      console.warn('Fallo al escanear archivo:', err);
-      toast.error('No se detectó un código de barras claro en la foto. Intenta con otra imagen.', {
-        duration: 4000,
-      });
-    } finally {
-      setScanningFile(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
+    });
+  };
+
+  const handleSwitchCamera = () => {
+    if (cameras.length <= 1) return;
+    const nextIndex = (currentCameraIndex + 1) % cameras.length;
+    setIsStarting(true);
+    runCameraOperation(async (session) => {
+      try {
+        if (session.scanner.isScanning) await session.scanner.stop();
+        if (session.disposed) return;
+        setIsScanning(false);
+        await startCamera(session, nextIndex);
+        if (!session.disposed) setCurrentCameraIndex(nextIndex);
+      } catch {
+        if (!session.disposed) setCameraError('No se pudo cambiar de c\u00e1mara.');
+      } finally {
+        if (!session.disposed) setIsStarting(false);
+      }
+    });
+  };
+
+  const handleFileScan = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setScanningFile(true);
+    runCameraOperation(async (session) => {
+      try {
+        if (session.scanner.isScanning) await session.scanner.stop();
+        if (session.disposed) return;
+        setIsScanning(false);
+        const text = await session.scanner.scanFile(file, true);
+        if (!session.disposed && text) {
+          haptics.success();
+          callbacksRef.current.onScanSuccess?.(text);
+        }
+      } catch {
+        if (!session.disposed)
+          toast.error(
+            'No se detect\u00f3 un c\u00f3digo de barras claro en la foto. Intenta con otra imagen.',
+            { duration: 4000 },
+          );
+      } finally {
+        if (!session.disposed) {
+          setScanningFile(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+      }
+    });
   };
 
   return (
@@ -365,6 +338,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
               alignItems: 'center',
               justifyContent: 'center',
             }}
+            disabled={isStarting || scanningFile}
             onClick={handleSwitchCamera}
             title="Cambiar Cámara"
             aria-label="Cambiar Cámara"
@@ -378,7 +352,7 @@ export default function BarcodeScanner({ onScanSuccess, onScanError }: BarcodeSc
           className="btn btn-secondary"
           style={{ flex: 1, padding: '10px 14px', fontSize: '0.85rem', borderStyle: 'dashed' }}
           onClick={() => fileInputRef.current?.click()}
-          disabled={scanningFile}
+          disabled={isStarting || scanningFile}
         >
           Subir Foto
         </button>

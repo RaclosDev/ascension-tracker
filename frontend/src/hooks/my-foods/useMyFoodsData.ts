@@ -22,11 +22,11 @@ export function useMyFoodsData() {
     Error
   >({
     queryKey: ['myFoodsData'],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const [recentRes, savedRes, recipesRes] = await Promise.all([
-        api.get<FoodLog[]>('/nutrition/logs/recent'),
-        api.get<PageFoodItem[]>('/nutrition/my-foods'),
-        api.get<Recipe[]>('/nutrition/recipes'),
+        api.get<FoodLog[]>('/nutrition/logs/recent', { signal }),
+        api.get<PageFoodItem[]>('/nutrition/my-foods', { signal }),
+        api.get<Recipe[]>('/nutrition/recipes', { signal }),
       ]);
       return { recentFoods: recentRes.data, savedFoods: savedRes.data, recipes: recipesRes.data };
     },

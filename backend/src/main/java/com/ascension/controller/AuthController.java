@@ -85,6 +85,24 @@ public class AuthController {
     }
 
     private String generateJwt(String email, String name, String picture) {
+        return encodeJwt(email, name, picture, currentSecurityVersion(email));
+    }
+
+    private String generateJwt(String email, String name, String picture, String authorizedVersion) {
+        String expected = authorizedVersion != null ? authorizedVersion : "";
+        if (!expected.equals(currentSecurityVersion(email))) {
+            throw new TokenRefreshException("Session was revoked during refresh. Please log in again.");
+        }
+        return encodeJwt(email, name, picture, expected);
+    }
+
+    private String currentSecurityVersion(String email) {
+        var state = userService.getUserSecurityState(email);
+        if (!state.exists()) throw new TokenRefreshException("User account no longer exists");
+        return state.tokensValidAfter() != null ? state.tokensValidAfter().toString() : "";
+    }
+
+    private String encodeJwt(String email, String name, String picture, String securityVersion) {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("ascension-backend")
@@ -92,6 +110,7 @@ public class AuthController {
                 .expiresAt(now.plus(jwtExpirationMs, ChronoUnit.MILLIS))
                 .subject(email)
                 .claim("email", email)
+                .claim("securityVersion", securityVersion)
                 .claim("name", name != null ? name : "")
                 .claim("picture", picture != null ? picture : "")
                 .build();
@@ -300,7 +319,7 @@ public class AuthController {
                 picture = userOpt.get().picture() != null ? userOpt.get().picture() : "";
             }
 
-            String token = generateJwt(email, name, picture);
+            String token = generateJwt(email, name, picture, newRefreshToken.getAccessTokenSecurityVersion());
             log.info("Refresh token rotated successfully for user {}", PiiMasker.maskEmail(email));
 
             return ResponseEntity.ok()
@@ -430,7 +449,6 @@ public class AuthController {
         }
         userService.updateTokensValidAfter(email, Instant.now());
         accountDeletionService.wipeAccountData(email);
-        userService.evictUser(email);
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString(), buildLegacyDeleteCookie(request).toString())
                 .body(Collections.singletonMap("message", "Account deleted successfully"));

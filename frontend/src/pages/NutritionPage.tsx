@@ -1,8 +1,9 @@
+import { groupMealLogs } from '../utils/mealGroups';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
-import { Suspense, useRef } from 'react';
+import { Suspense, useRef, useMemo } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useQueryClient } from '@tanstack/react-query';
-import { FoodLog, Meal } from '../types/api';
+import { Meal } from '../types/api';
 import { Loader2, Plus } from 'lucide-react';
 import { SegmentedControl } from '../components/ui/segmented-control';
 import { Skeleton } from '../components/ui/skeleton';
@@ -56,6 +57,8 @@ export default function NutritionPage() {
     handleUpdateLog,
     setEditingLog,
   } = useNutritionDiary();
+
+  const mealGroups = useMemo(() => groupMealLogs(meals, foodLogs), [meals, foodLogs]);
 
   // The floating "+" only appears once every meal row's own buttons are off screen,
   // so it can never sit on top of them.
@@ -180,12 +183,12 @@ export default function NutritionPage() {
           >
             <div className="nutrition-meals-grid" ref={mealsGridRef}>
               {meals.map((meal: Meal, index: number) => {
-                const logs = foodLogs.filter((log: FoodLog) => log.mealIndex === index);
+                const logs = mealGroups.active[index];
                 const isCollapsed = collapsedMeals[index];
 
                 return (
                   <MealFoodGroup
-                    key={meal.id || index}
+                    key={meal.mealKey || meal.id || index}
                     meal={meal}
                     mealIndex={index}
                     logs={logs}
@@ -213,6 +216,33 @@ export default function NutritionPage() {
                   />
                 );
               })}
+              {mealGroups.historical.map((group, historicalIndex) => (
+                <MealFoodGroup
+                  key={group.key}
+                  historical
+                  meal={group.meal}
+                  mealIndex={-historicalIndex - 1}
+                  logs={group.logs}
+                  isCollapsed={Boolean(collapsedMeals[-historicalIndex - 1])}
+                  isDragOver={false}
+                  editingLog={editingLog}
+                  editInputMode={editInputMode}
+                  onToggleCollapse={toggleMealCollapse}
+                  onCopyFromYesterday={handleCopyFromYesterday}
+                  onOpenAddFoodModal={() => {}}
+                  onDragStart={handleDragStart}
+                  onDrag={handleDrag}
+                  onDragOver={() => {}}
+                  onDragLeave={handleDragLeave}
+                  onDrop={() => {}}
+                  onEditLog={handleEditLog}
+                  onDeleteLog={handleDeleteLog}
+                  onEditInputModeChange={setEditInputMode}
+                  onEditQuantityChange={handleEditQuantityChange}
+                  onUpdateLog={handleUpdateLog}
+                  onCancelEdit={() => setEditingLog(null)}
+                />
+              ))}
             </div>
 
             <div className="card flex flex-col items-center p-6">
