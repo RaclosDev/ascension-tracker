@@ -1,6 +1,7 @@
+import { useWorkoutPersistenceError, useUnclaimedWorkoutBackup } from '../lib/workout/storage';
 import React, { Suspense } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
-import { useWorkoutStore } from '../lib/workout/store';
+import { useWorkoutStore, useWorkoutHydrated } from '../lib/workout/store';
 import { SegmentedControl } from '../components/ui/segmented-control';
 import { Loader2 } from 'lucide-react';
 import ErrorBoundary from '../components/ErrorBoundary';
@@ -21,13 +22,16 @@ const VIEW_OPTIONS = [
 ];
 
 export default function WorkoutPage() {
+  const hydrated = useWorkoutHydrated();
+  const persistenceError = useWorkoutPersistenceError();
+  const unclaimedBackup = useUnclaimedWorkoutBackup();
   const tab = useWorkoutStore((s) => s.tab);
   const { data: exercises, isLoading, isError, refetch } = useExerciseCatalog();
   const pageTitle = <h1 className="sr-only">Entreno</h1>;
   // Resumen and Ejercicios put their sections at h3, so the view's name fills the h2 level.
   const viewTitle = VIEW_OPTIONS.find((o) => o.value === tab)?.label;
 
-  if (isLoading) {
+  if (!hydrated || isLoading) {
     return (
       <>
         {pageTitle}
@@ -62,6 +66,35 @@ export default function WorkoutPage() {
   return (
     <ErrorBoundary>
       {pageTitle}
+      {persistenceError && (
+        <p role="alert" className="p-4 mb-4 border rounded-lg">
+          {persistenceError}
+        </p>
+      )}
+      {unclaimedBackup && (
+        <aside role="status" className="p-4 mb-4 border rounded-lg">
+          <p>
+            Hay una copia local de entrenamiento sin una cuenta identificada. Puedes descargarla
+            para conservarla.
+          </p>
+          <button
+            type="button"
+            className="btn btn-secondary mt-2"
+            onClick={() => {
+              const url = URL.createObjectURL(
+                new Blob([unclaimedBackup], { type: 'application/json' }),
+              );
+              const anchor = document.createElement('a');
+              anchor.href = url;
+              anchor.download = 'ascension-entrenamiento-sin-cuenta.json';
+              anchor.click();
+              setTimeout(() => URL.revokeObjectURL(url), 0);
+            }}
+          >
+            Descargar copia local
+          </button>
+        </aside>
+      )}
       <div className="fade-in">
         <div className="workout-page-wrapper">
           {tab !== 'train' && (

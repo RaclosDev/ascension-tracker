@@ -63,6 +63,16 @@ class UserDataQuotaServiceTest {
 
     private static final String USER = "user@example.com";
 
+    @Test
+    void failedQuotaLockDoesNotContinueWithAnUnlockedQuotaCheck() {
+        var failure = new org.springframework.dao.DataAccessResourceFailureException("database unavailable");
+        when(jdbcTemplate.queryForObject(org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.eq(Object.class), org.mockito.ArgumentMatchers.eq(USER)))
+                .thenThrow(failure);
+        assertThatThrownBy(() -> quotaService.checkFoodLogQuota(USER, 1)).isSameAs(failure);
+        org.mockito.Mockito.verifyNoInteractions(foodLogRepository);
+    }
+
     @BeforeEach
     void setup() {
         quotaProperties.setMaxWorkouts(10);

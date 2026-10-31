@@ -17,6 +17,10 @@ public class Meal {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "meal_key", length = 36)
+    @Builder.Default
+    private String mealKey = java.util.UUID.randomUUID().toString();
+
     @Column(nullable = false)
     private String name;
 

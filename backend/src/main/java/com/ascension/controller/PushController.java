@@ -61,14 +61,14 @@ public class PushController {
     }
 
     @PostMapping("/rest-timer")
-    public ResponseEntity<Void> scheduleRest(
+    public ResponseEntity<java.util.Map<String, Long>> scheduleRest(
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody RestTimerRequest request
     ) {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(401).build();
         if (request.delaySec > 0) {
-            pushService.scheduleRestNotification(email, request.delaySec);
+            return ResponseEntity.ok(java.util.Map.of("timerId", pushService.scheduleRestNotification(email, request.delaySec)));
         }
         return ResponseEntity.ok().build();
     }

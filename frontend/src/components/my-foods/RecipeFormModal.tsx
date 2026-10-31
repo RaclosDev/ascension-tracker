@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import FoodSearchModal from '../FoodSearchModal';
 import { Plus, Trash2 } from 'lucide-react';
 
@@ -42,64 +42,33 @@ export default function RecipeFormModal({
   handleDeleteRecipe,
 }: RecipeFormModalProps) {
   const [searchOpen, setSearchOpen] = useState(false);
-  const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
-
-  // Try to parse ingredients from description if we are editing
-  useEffect(() => {
-    if (isOpen && editingRecipeId && recipeForm.description) {
-      try {
-        const parsed = JSON.parse(recipeForm.description);
-        if (Array.isArray(parsed)) {
-          setIngredients(parsed);
-        } else {
-          setIngredients([]);
-        }
-      } catch {
-        setIngredients([]);
-      }
-    } else if (!isOpen) {
-      setIngredients([]);
+  const ingredients = useMemo<RecipeIngredient[]>(() => {
+    try {
+      const parsed: unknown = JSON.parse(recipeForm.description);
+      return Array.isArray(parsed) ? (parsed as RecipeIngredient[]) : [];
+    } catch {
+      return [];
     }
-  }, [isOpen, editingRecipeId]);
+  }, [recipeForm.description]);
 
-  useEffect(() => {
-    if (ingredients.length > 0) {
-      const totals = ingredients.reduce(
-        (acc, ing) => ({
-          kcal: acc.kcal + (ing.kcal || 0),
-          protein: acc.protein + (ing.protein || 0),
-          carbs: acc.carbs + (ing.carbs || 0),
-          fat: acc.fat + (ing.fat || 0),
-        }),
-        { kcal: 0, protein: 0, carbs: 0, fat: 0 },
-      );
-
-      updateRecipeForm(
-        {
-          kcal: Math.round(totals.kcal * 10) / 10 + '',
-          protein: Math.round(totals.protein * 10) / 10 + '',
-          carbs: Math.round(totals.carbs * 10) / 10 + '',
-          fat: Math.round(totals.fat * 10) / 10 + '',
-          description: JSON.stringify(ingredients),
-        },
-        null,
-      );
-    } else if (ingredients.length === 0 && isOpen && !editingRecipeId) {
-      // Don't auto-clear if it's an old recipe that had text description
-      if (recipeForm.description.startsWith('[')) {
-        updateRecipeForm(
-          {
-            description: '',
-            kcal: '',
-            protein: '',
-            carbs: '',
-            fat: '',
-          },
-          null,
-        );
-      }
-    }
-  }, [ingredients]);
+  const setIngredients = (next: RecipeIngredient[]) => {
+    const totals = next.reduce(
+      (acc, ing) => ({
+        kcal: acc.kcal + (ing.kcal || 0),
+        protein: acc.protein + (ing.protein || 0),
+        carbs: acc.carbs + (ing.carbs || 0),
+        fat: acc.fat + (ing.fat || 0),
+      }),
+      { kcal: 0, protein: 0, carbs: 0, fat: 0 },
+    );
+    updateRecipeForm({
+      description: JSON.stringify(next),
+      kcal: String(Math.round(totals.kcal * 10) / 10),
+      protein: String(Math.round(totals.protein * 10) / 10),
+      carbs: String(Math.round(totals.carbs * 10) / 10),
+      fat: String(Math.round(totals.fat * 10) / 10),
+    });
+  };
 
   const addIngredient = (food: Partial<RecipeIngredient>) => {
     setIngredients([
@@ -202,6 +171,7 @@ export default function RecipeFormModal({
                     <button
                       type="button"
                       onClick={() => removeIngredient(idx)}
+                      aria-label={`Eliminar ingrediente ${ing.product}`}
                       style={{
                         background: 'none',
                         border: 'none',

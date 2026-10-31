@@ -14,6 +14,10 @@ describe('weightHelper', () => {
     expect(parseSafeWeight(null)).toBeNull();
     expect(parseSafeWeight(undefined)).toBeNull();
     expect(parseSafeWeight('invalid')).toBeNull();
+    expect(parseSafeWeight('80abc')).toBeNull();
+    expect(parseSafeWeight('80 kg')).toBeNull();
+    expect(parseSafeWeight(Infinity)).toBeNull();
+    expect(parseSafeWeight('0.001')).toBeNull();
     expect(parseSafeWeight('-5')).toBeNull();
     expect(parseSafeWeight('5000')).toBeNull();
   });

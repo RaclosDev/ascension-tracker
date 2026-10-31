@@ -18,6 +18,7 @@ import java.util.List;
 public class RestTimerService {
 
     private final RestTimerRepository restTimerRepository;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     @Transactional
     public RestTimer scheduleTimer(String userEmail, int delaySec) {
@@ -26,6 +27,7 @@ public class RestTimerService {
 
     @Transactional
     public RestTimer scheduleTimerAt(String userEmail, Instant fireAt) {
+        lockUser(userEmail);
         restTimerRepository.cancelPendingTimers(userEmail, RestTimerStatus.PENDING, RestTimerStatus.CANCELLED);
 
         RestTimer timer = RestTimer.builder()
@@ -39,6 +41,7 @@ public class RestTimerService {
 
     @Transactional
     public int cancelTimers(String userEmail) {
+        lockUser(userEmail);
         return restTimerRepository.cancelPendingTimers(userEmail, RestTimerStatus.PENDING, RestTimerStatus.CANCELLED);
     }
 
@@ -51,23 +54,26 @@ public class RestTimerService {
             return Collections.emptyList();
         }
         for (RestTimer timer : due) {
-            timer.setStatus(RestTimerStatus.COMPLETED);
+            timer.setStatus(RestTimerStatus.PROCESSING);
+            timer.setClaimToken(java.util.UUID.randomUUID().toString());
+            timer.setLeaseUntil(now.plusSeconds(60));
         }
         restTimerRepository.saveAll(due);
         return due;
     }
 
     @Transactional
-    public void revertToPending(Long timerId) {
-        if (timerId == null) {
-            return;
-        }
-        restTimerRepository.findById(timerId).ifPresent(timer -> {
-            if (timer.getStatus() == RestTimerStatus.COMPLETED) {
-                timer.setStatus(RestTimerStatus.PENDING);
-                restTimerRepository.save(timer);
-            }
-        });
+    public boolean renewClaim(RestTimer timer) {
+        Instant now = Instant.now();
+        if (timer.getFireAt().isBefore(now.minusSeconds(900))) return false;
+        return restTimerRepository.renewClaim(timer.getId(), timer.getClaimToken(), now, now.plusSeconds(60)) == 1;
+    }
+
+    @Transactional
+    public void finishDelivery(RestTimer timer, boolean delivered) {
+        restTimerRepository.finishClaim(timer.getId(), timer.getClaimToken(),
+                delivered ? RestTimerStatus.COMPLETED : RestTimerStatus.PENDING,
+                delivered ? null : Instant.now().plusSeconds(30));
     }
 
     @Transactional
@@ -77,5 +83,8 @@ public class RestTimerService {
             log.info("Purged {} expired rest timers older than {}", deleted, cutoff);
         }
         return deleted;
+    }
+    private void lockUser(String email) {
+        jdbc.queryForObject("SELECT email FROM users WHERE email = ? FOR UPDATE", String.class, email);
     }
 }

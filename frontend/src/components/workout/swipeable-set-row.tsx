@@ -1,3 +1,4 @@
+import { SetAdjustmentBar } from './SetAdjustmentBar';
 import React, { useState, useRef, useEffect } from 'react';
 import { Check, Trash2 } from 'lucide-react';
 import { isPrSet, previousSetLabel, matchVariant } from '@/lib/workout/format';
@@ -363,137 +364,26 @@ export const SwipeableSetRow = React.memo(
         </div>
 
         {isWeightStepperOpen && (
-          <div
-            onMouseDown={(e) => {
-              e.preventDefault();
+          <SetAdjustmentBar
+            label="Kg"
+            negative={[-5, -2.5, -1.25]}
+            positive={[1.25, 2.5, 5]}
+            onAdjust={adjustWeight}
+            onInteract={() => {
               if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
             }}
-            onTouchStart={(e) => {
-              e.preventDefault();
-              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-            }}
-            className="flex items-center justify-between gap-1 px-3 py-2 mt-1.5 bg-[#1C1C1E] border border-[var(--accent-primary)]/40 rounded-xl text-xs shadow-lg animate-fadeIn z-10 relative select-none"
-          >
-            <div className="flex items-center gap-1">
-              <span className="text-xs font-semibold text-[var(--accent-primary-light)] pr-1">
-                Kg
-              </span>
-              {[-5, -2.5, -1.25].map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                    adjustWeight(d);
-                  }}
-                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-white font-semibold tabular-nums text-xs transition select-none touch-manipulation"
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
-            <div className="h-4 w-px bg-white/20" />
-            <div className="flex items-center gap-1">
-              {[+1.25, +2.5, +5].map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                    adjustWeight(d);
-                  }}
-                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 font-bold tabular-nums text-xs transition shadow-sm select-none touch-manipulation"
-                >
-                  +{d}
-                </button>
-              ))}
-            </div>
-          </div>
+          />
         )}
-
         {isRepsStepperOpen && (
-          <div
-            onMouseDown={(e) => {
-              e.preventDefault();
+          <SetAdjustmentBar
+            label="Reps"
+            negative={[-2, -1]}
+            positive={[1, 2, 5]}
+            onAdjust={adjustReps}
+            onInteract={() => {
               if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
             }}
-            onTouchStart={(e) => {
-              e.preventDefault();
-              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-            }}
-            className="flex items-center justify-between gap-1 px-3 py-2 mt-1.5 bg-[#1C1C1E] border border-[var(--accent-primary)]/40 rounded-xl text-xs shadow-lg animate-fadeIn z-10 relative select-none"
-          >
-            <div className="flex items-center gap-1">
-              <span className="text-xs font-semibold text-[var(--accent-primary-light)] pr-1">
-                Reps
-              </span>
-              {[-2, -1].map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                    adjustReps(d);
-                  }}
-                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-white font-semibold tabular-nums text-xs transition select-none touch-manipulation"
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
-            <div className="h-4 w-px bg-white/20" />
-            <div className="flex items-center gap-1">
-              {[+1, +2, +5].map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-                    adjustReps(d);
-                  }}
-                  className="px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 font-bold tabular-nums text-xs transition shadow-sm select-none touch-manipulation"
-                >
-                  +{d}
-                </button>
-              ))}
-            </div>
-          </div>
+          />
         )}
       </div>
     );

@@ -38,10 +38,15 @@ class GeminiApiClientTest {
     private RestTemplate restTemplate;
 
     private GeminiApiClient geminiApiClient;
+    private com.ascension.service.ExternalApiExecution execution;
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() { execution.close(); }
 
     @BeforeEach
     void setUp() {
-        geminiApiClient = new GeminiApiClient(restTemplateBuilder, new com.ascension.config.ExternalApiProperties());
+        execution = new com.ascension.service.ExternalApiExecution();
+        geminiApiClient = new GeminiApiClient(restTemplateBuilder, new com.ascension.config.ExternalApiProperties(), execution);
         geminiApiClient.setRestTemplate(restTemplate);
         geminiApiClient.invalidateModelCache();
     }

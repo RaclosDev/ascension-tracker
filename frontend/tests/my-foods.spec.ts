@@ -189,7 +189,7 @@ async function openNewFoodModal(page: Page) {
     return;
   }
   const fab = page
-    .getByRole('button', { name: '+' })
+    .getByRole('button', { name: 'Crear alimento' })
     .or(page.getByRole('button', { name: /crear nuevo alimento/i }));
   await fab.click();
   const manualBtn = page.getByRole('button', { name: /crear manualmente/i });

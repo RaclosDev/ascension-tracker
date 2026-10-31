@@ -9,6 +9,9 @@ import lombok.*;
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class MealDTO {
     private Long id;
+    @Size(max = 36)
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private String mealKey;
     
     @NotBlank(message = "El nombre de la comida es requerido")
     @Size(max = 100, message = "El nombre de la comida no puede superar 100 caracteres")

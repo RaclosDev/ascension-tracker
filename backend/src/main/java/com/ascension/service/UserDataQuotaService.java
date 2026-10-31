@@ -26,16 +26,13 @@ public class UserDataQuotaService {
 
     public void acquireUserQuotaLock(String userEmail) {
         if (userEmail != null && !userEmail.isBlank() && jdbcTemplate != null) {
-            try {
-                jdbcTemplate.queryForObject("SELECT pg_advisory_xact_lock(hashtext('ascension_quota'), hashtext(?))", Void.class, userEmail.trim().toLowerCase());
-            } catch (Exception ignored) {
-                // Graceful fallback for non-Postgres test databases
-            }
+            jdbcTemplate.queryForObject("SELECT pg_advisory_xact_lock(hashtext('ascension_quota'), hashtext(?))",
+                    Object.class, userEmail.trim().toLowerCase(java.util.Locale.ROOT));
         }
     }
 
     public void checkWorkoutQuota(String userEmail, int countToAdd) {
-        if (countToAdd <= 0) return;
+        if (countToAdd < 0) throw new IllegalArgumentException("El incremento de cuota no puede ser negativo");
         acquireUserQuotaLock(userEmail);
         long current = workoutRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxWorkouts()) {
@@ -47,7 +44,7 @@ public class UserDataQuotaService {
     }
 
     public void checkFoodLogQuota(String userEmail, int countToAdd) {
-        if (countToAdd <= 0) return;
+        if (countToAdd < 0) throw new IllegalArgumentException("El incremento de cuota no puede ser negativo");
         acquireUserQuotaLock(userEmail);
         long current = foodLogRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxFoodLogs()) {
@@ -59,7 +56,7 @@ public class UserDataQuotaService {
     }
 
     public void checkRecipeQuota(String userEmail, int countToAdd) {
-        if (countToAdd <= 0) return;
+        if (countToAdd < 0) throw new IllegalArgumentException("El incremento de cuota no puede ser negativo");
         acquireUserQuotaLock(userEmail);
         long current = recipeRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxRecipes()) {
@@ -71,7 +68,7 @@ public class UserDataQuotaService {
     }
 
     public void checkCustomExerciseQuota(String userEmail, int countToAdd) {
-        if (countToAdd <= 0) return;
+        if (countToAdd < 0) throw new IllegalArgumentException("El incremento de cuota no puede ser negativo");
         acquireUserQuotaLock(userEmail);
         long current = customExerciseRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxCustomExercises()) {
@@ -83,7 +80,7 @@ public class UserDataQuotaService {
     }
 
     public void checkWorkoutTemplateQuota(String userEmail, int countToAdd) {
-        if (countToAdd <= 0) return;
+        if (countToAdd < 0) throw new IllegalArgumentException("El incremento de cuota no puede ser negativo");
         acquireUserQuotaLock(userEmail);
         long current = workoutTemplateRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxWorkoutTemplates()) {
@@ -95,7 +92,7 @@ public class UserDataQuotaService {
     }
 
     public void checkSavedFoodQuota(String userEmail, int countToAdd) {
-        if (countToAdd <= 0) return;
+        if (countToAdd < 0) throw new IllegalArgumentException("El incremento de cuota no puede ser negativo");
         acquireUserQuotaLock(userEmail);
         long current = savedFoodRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxSavedFoods()) {
@@ -107,7 +104,7 @@ public class UserDataQuotaService {
     }
 
     public void checkWeightEntryQuota(String userEmail, int countToAdd) {
-        if (countToAdd <= 0) return;
+        if (countToAdd < 0) throw new IllegalArgumentException("El incremento de cuota no puede ser negativo");
         acquireUserQuotaLock(userEmail);
         long current = weightEntryRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxWeightEntries()) {
@@ -119,7 +116,7 @@ public class UserDataQuotaService {
     }
 
     public void checkStepsEntryQuota(String userEmail, int countToAdd) {
-        if (countToAdd <= 0) return;
+        if (countToAdd < 0) throw new IllegalArgumentException("El incremento de cuota no puede ser negativo");
         acquireUserQuotaLock(userEmail);
         long current = stepsEntryRepository.countByUserEmail(userEmail);
         if (current + countToAdd > quotaProperties.getMaxStepsEntries()) {
@@ -128,6 +125,17 @@ public class UserDataQuotaService {
                             current + countToAdd, quotaProperties.getMaxStepsEntries())
             );
         }
+    }
+
+    public void checkCurrentQuotas(String userEmail) {
+        checkWorkoutQuota(userEmail, 0);
+        checkFoodLogQuota(userEmail, 0);
+        checkRecipeQuota(userEmail, 0);
+        checkCustomExerciseQuota(userEmail, 0);
+        checkWorkoutTemplateQuota(userEmail, 0);
+        checkSavedFoodQuota(userEmail, 0);
+        checkWeightEntryQuota(userEmail, 0);
+        checkStepsEntryQuota(userEmail, 0);
     }
 
     public void checkRestoreQuotas(String userEmail, RestoreMode mode, UserDataExportDTO backup) {

@@ -104,7 +104,7 @@ public class WeightService {
 
         Double avgWeeklyChange = getAvgWeeklyChange(weeks);
 
-        String estimatedDate = calculateEstimatedDate(currentWeight, goalWeight, avgWeeklyChange, settings.getWeeklyGoal());
+        String estimatedDate = calculateEstimatedDate(startWeight, currentWeight, goalWeight, avgWeeklyChange, settings.getWeeklyGoal());
 
         // Best week = largest drop in weekly average.
         double bestDelta = 0;
@@ -141,7 +141,7 @@ public class WeightService {
         List<WeightEntry> allEntries = weightEntryRepository.findAllByUserEmailOrderByDateAsc(userEmail);
         if (allEntries.isEmpty()) return List.of();
 
-        LocalDate firstMonday = allEntries.get(0).getDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate firstMonday = WeeklyReportingWindow.start(allEntries.get(0).getDate());
         LocalDate currentMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
         Map<LocalDate, Double> entryMap = allEntries.stream()
@@ -210,20 +210,24 @@ public class WeightService {
     private Double getAvgWeeklyChange(List<WeekData> weeks) {
         if (weeks.size() < 2) return 0.0;
         double totalChange = weeks.get(weeks.size() - 1).average - weeks.get(0).average;
-        return totalChange / (weeks.size() - 1);
+        long elapsedWeeks = java.time.temporal.ChronoUnit.WEEKS.between(
+                weeks.get(0).mondayDate, weeks.get(weeks.size() - 1).mondayDate);
+        return totalChange / elapsedWeeks;
     }
 
-    private String calculateEstimatedDate(Double current, Double goal, Double avgWeekly, Double weeklyGoal) {
-        if (current == null || goal == null) return "--";
-        double remaining = current - goal;
+    private String calculateEstimatedDate(double start, double current, double goal, double avgWeekly, Double weeklyGoal) {
+        double direction = Math.signum(goal - start);
+        if (direction == 0 && current != goal) return "--";
+        double remaining = (goal - current) * direction;
         if (remaining <= 0) return LocalDate.now().format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-ES")));
-        double weeklyLoss = Math.abs(avgWeekly != null ? avgWeekly : 0.0);
-        double effectiveWeeklyGoal = (weeklyGoal != null && weeklyGoal > 0) ? weeklyGoal : 0.5;
-        if (weeklyLoss < 0.01) {
-            long days = Math.round((remaining / effectiveWeeklyGoal) * 7);
-            return LocalDate.now().plusDays(days).format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-ES")));
+
+        double weeklyProgress = avgWeekly * direction;
+        if (weeklyProgress < 0) return "--";
+        if (weeklyProgress < 0.01) {
+            weeklyProgress = weeklyGoal != null ? Math.abs(weeklyGoal) : 0.5;
         }
-        long days = Math.round((remaining / weeklyLoss) * 7);
+        if (weeklyProgress == 0) return "--";
+        long days = Math.round((remaining / weeklyProgress) * 7);
         return LocalDate.now().plusDays(days).format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-ES")));
     }
 

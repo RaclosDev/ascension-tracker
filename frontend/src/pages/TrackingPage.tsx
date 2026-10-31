@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
+import { QueryErrorNotice } from '../components/QueryErrorNotice';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { parseSafeWeight } from '../utils/weightHelper';
+import { applyTrackingChanges, parseTrackingInputs } from '../utils/trackingMutations';
 import { Skeleton } from '../components/ui/skeleton';
-import { DayData, WeekData, TrackingModalData } from '../types/tracking';
+import { DayData, WeekData, TrackingModalData, WeeklyMetricResponse } from '../types/tracking';
 import {
   DAY_NAMES,
   WEIGHT_DELTAS,
@@ -61,18 +62,22 @@ export default function TrackingPage() {
   const [modalData, setModalData] = useState<TrackingModalData | null>(null);
   const [modalWeight, setModalWeight] = useState('');
   const [modalSteps, setModalSteps] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const savingRef = useRef(false);
 
   const {
     data: weeks = [],
     isLoading,
+    isError,
+    isFetching,
     refetch: fetchData,
   } = useQuery<WeekData[]>({
     queryKey: ['trackingWeeks'],
     queryFn: async () => {
       const [weightsRes, stepsRes, caloriesRes] = await Promise.all([
-        api.get('/weights/weekly').catch(() => ({ data: [] })),
-        api.get('/steps/weekly').catch(() => ({ data: [] })),
-        api.get('/nutrition/calories/weekly').catch(() => ({ data: [] })),
+        api.get<WeeklyMetricResponse[]>('/weights/weekly'),
+        api.get<WeeklyMetricResponse[]>('/steps/weekly'),
+        api.get<WeeklyMetricResponse[]>('/nutrition/calories/weekly'),
       ]);
       return mergeWeeksData(weightsRes.data, stepsRes.data, caloriesRes.data);
     },
@@ -98,64 +103,54 @@ export default function TrackingPage() {
     setModalSteps(dayData.steps !== null ? dayData.steps.toString() : '');
   };
 
-  const handleModalSave = async () => {
-    if (!modalData) return;
-    const { dateStr, dayData: currentData } = modalData;
-
+  const saveModalChanges = async (deleting: boolean) => {
+    if (!modalData || savingRef.current) return;
+    let next: Pick<DayData, 'weight' | 'steps'>;
     try {
-      let changed = false;
-      const wVal = parseSafeWeight(modalWeight);
-      if (modalWeight === '' && currentData.weight !== null) {
-        await api.delete(`/weights/${dateStr}`);
-        changed = true;
-      } else if (wVal !== null && wVal !== currentData.weight) {
-        await api.post('/weights', { date: dateStr, weight: wVal });
-        changed = true;
-      }
-
-      const sVal = modalSteps === '' ? null : parseInt(modalSteps, 10);
-      if (modalSteps === '' && currentData.steps !== null) {
-        await api.delete(`/steps/${dateStr}`);
-        changed = true;
-      } else if (sVal !== null && !isNaN(sVal) && sVal !== currentData.steps) {
-        await api.post('/steps', { date: dateStr, steps: sVal });
-        changed = true;
-      }
-
-      if (changed) {
-        toast.success('Registros guardados');
-        await fetchData();
-        queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
-        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-        queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
-        queryClient.invalidateQueries({ queryKey: ['weights'] });
-      }
-      setModalData(null);
-    } catch (err: unknown) {
-      toast.error(
-        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
-          'Error al guardar',
-      );
+      next = deleting
+        ? { weight: null, steps: null }
+        : parseTrackingInputs(modalWeight, modalSteps);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Datos no v\u00e1lidos');
+      return;
     }
-  };
-
-  const handleModalDelete = async () => {
-    if (!modalData) return;
+    savingRef.current = true;
+    setIsSaving(true);
+    let changed = false;
     try {
-      if (modalData.dayData.weight !== null) await api.delete(`/weights/${modalData.dateStr}`);
-      if (modalData.dayData.steps !== null) await api.delete(`/steps/${modalData.dateStr}`);
-      await fetchData();
-      queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
-      queryClient.invalidateQueries({ queryKey: ['weights'] });
-      toast.success('Registros eliminados');
-      setModalData(null);
-    } catch (err: unknown) {
-      toast.error(
-        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
-          'Error al eliminar',
+      await applyTrackingChanges(
+        api,
+        modalData.dateStr,
+        modalData.dayData,
+        next,
+        (metric, value) => {
+          changed = true;
+          setModalData(
+            (current) =>
+              current && { ...current, dayData: { ...current.dayData, [metric]: value } },
+          );
+        },
       );
+      if (changed) toast.success(deleting ? 'Registros eliminados' : 'Registros guardados');
+      setModalData(null);
+    } catch {
+      toast.error(
+        changed
+          ? 'Parte de los cambios se ha guardado. Reintenta para completar el resto.'
+          : deleting
+            ? 'Error al eliminar. Puedes reintentarlo.'
+            : 'Error al guardar. Puedes reintentarlo.',
+      );
+    } finally {
+      if (changed) {
+        await Promise.all(
+          ['trackingWeeks', 'dashboard', 'weekSummaries', 'weights'].map((key) =>
+            queryClient.invalidateQueries({ queryKey: [key] }),
+          ),
+        );
+      }
+      savingRef.current = false;
+      setIsSaving(false);
     }
   };
 
@@ -244,6 +239,7 @@ export default function TrackingPage() {
 
   return (
     <div className="fade-in">
+      {isError && <QueryErrorNotice retry={fetchData} pending={isFetching} />}
       <h1 className="sr-only">Tracking semanal</h1>
       <TrackingMetricToggle
         showWeight={showWeight}
@@ -299,7 +295,7 @@ export default function TrackingPage() {
             </div>
           );
         })}
-        {weeks.length === 0 && !isLoading && (
+        {weeks.length === 0 && !isLoading && !isError && (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
             No hay datos registrados aún.
           </div>
@@ -315,9 +311,12 @@ export default function TrackingPage() {
         onWeightChange={setModalWeight}
         onStepsChange={setModalSteps}
         onDeltaAdjust={handleDeltaAdjust}
-        onSave={handleModalSave}
-        onDelete={handleModalDelete}
-        onClose={() => setModalData(null)}
+        pending={isSaving}
+        onSave={() => void saveModalChanges(false)}
+        onDelete={() => void saveModalChanges(true)}
+        onClose={() => {
+          if (!savingRef.current) setModalData(null);
+        }}
       />
     </div>
   );

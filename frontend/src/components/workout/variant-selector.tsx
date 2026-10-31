@@ -28,8 +28,11 @@ export function VariantSelector({
     }
   }, [isAdding]);
 
-  const options = new Set(historicalOptions);
-  if (value) options.add(value);
+  const options = useMemo(() => {
+    const values = new Set(historicalOptions);
+    if (value) values.add(value);
+    return values;
+  }, [historicalOptions, value]);
   const sortedOptions = Array.from(options).sort();
 
   const availableGlobals = useMemo(() => {

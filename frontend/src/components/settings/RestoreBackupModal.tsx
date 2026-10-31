@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import {
   UploadCloud,
   FileText,
@@ -14,25 +14,11 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { restoreUserData, UserDataRestoreSummary } from '@/api/client';
+import { parseBackupPreview, type BackupPreview } from '../../utils/backupPreview';
 
 interface RestoreBackupModalProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface BackupPreview {
-  version?: string;
-  exportedAt?: string;
-  userEmail?: string;
-  workoutsCount: number;
-  customExercisesCount: number;
-  workoutTemplatesCount: number;
-  foodLogsCount: number;
-  recipesCount: number;
-  weightEntriesCount: number;
-  stepsEntriesCount: number;
-  hasSettings: boolean;
-  rawPayload: unknown;
 }
 
 export function RestoreBackupModal({ isOpen, onClose }: RestoreBackupModalProps) {
@@ -48,6 +34,17 @@ export function RestoreBackupModal({ isOpen, onClose }: RestoreBackupModalProps)
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const readerRef = useRef<FileReader | null>(null);
+
+  const cancelPendingRead = () => {
+    const reader = readerRef.current;
+    readerRef.current = null;
+    if (reader?.readyState === 1) reader.abort();
+  };
+
+  useLayoutEffect(() => {
+    return cancelPendingRead;
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -95,6 +92,10 @@ export function RestoreBackupModal({ isOpen, onClose }: RestoreBackupModalProps)
   }, [isOpen, isLoading, onClose]);
 
   const processFile = (file: File) => {
+    if (isLoading || !isOpen) return;
+    cancelPendingRead();
+    setPreview(null);
+    setConfirmOverwrite(false);
     setError(null);
     setFileName(file.name);
 
@@ -104,45 +105,26 @@ export function RestoreBackupModal({ isOpen, onClose }: RestoreBackupModalProps)
     }
 
     const reader = new FileReader();
+    readerRef.current = reader;
     reader.onload = (e) => {
+      if (readerRef.current !== reader) return;
+      readerRef.current = null;
       try {
-        const text = e.target?.result as string;
-        const json = JSON.parse(text);
-
-        if (!json || typeof json !== 'object') {
-          setError('El archivo no contiene un objeto JSON válido');
-          return;
-        }
-
-        if (json.version !== '1.0') {
-          setError('Versión de copia de seguridad no compatible (se requiere versión 1.0)');
-          return;
-        }
-
-        setPreview({
-          version: json.version,
-          exportedAt: json.exportedAt,
-          userEmail: json.userEmail,
-          workoutsCount: Array.isArray(json.workouts) ? json.workouts.length : 0,
-          customExercisesCount: Array.isArray(json.customExercises)
-            ? json.customExercises.length
-            : 0,
-          workoutTemplatesCount: Array.isArray(json.workoutTemplates)
-            ? json.workoutTemplates.length
-            : 0,
-          foodLogsCount: Array.isArray(json.foodLogs) ? json.foodLogs.length : 0,
-          recipesCount: Array.isArray(json.recipes) ? json.recipes.length : 0,
-          weightEntriesCount: Array.isArray(json.weightEntries) ? json.weightEntries.length : 0,
-          stepsEntriesCount: Array.isArray(json.stepsEntries) ? json.stepsEntries.length : 0,
-          hasSettings: Boolean(json.userSettings),
-          rawPayload: json,
-        });
-      } catch {
-        setError('Error al leer el archivo. Asegúrate de que no esté dañado.');
+        const text = e.target?.result;
+        if (typeof text !== 'string') throw new Error('No se pudo leer el contenido del archivo.');
+        setPreview(parseBackupPreview(text));
+      } catch (error) {
+        setError(
+          error instanceof Error && !(error instanceof SyntaxError)
+            ? error.message
+            : 'Error al leer el archivo. Asegúrate de que no esté dañado.',
+        );
       }
     };
 
     reader.onerror = () => {
+      if (readerRef.current !== reader) return;
+      readerRef.current = null;
       setError('Error al leer el archivo desde el disco.');
     };
 
@@ -262,6 +244,15 @@ export function RestoreBackupModal({ isOpen, onClose }: RestoreBackupModalProps)
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
+                role="button"
+                tabIndex={0}
+                aria-label="Seleccionar archivo"
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
                   isDragging
@@ -312,6 +303,8 @@ export function RestoreBackupModal({ isOpen, onClose }: RestoreBackupModalProps)
                 <button
                   type="button"
                   onClick={() => {
+                    cancelPendingRead();
+                    setConfirmOverwrite(false);
                     setPreview(null);
                     setFileName(null);
                     setError(null);

@@ -4,14 +4,12 @@ import com.ascension.model.PushSubscription;
 import com.ascension.model.RestTimer;
 import com.ascension.repository.PushSubscriptionRepository;
 import tools.jackson.databind.ObjectMapper;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Subscription;
 import nl.martijndwars.webpush.Urgency;
 import org.apache.http.HttpResponse;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +18,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.Security;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -36,12 +33,6 @@ public class PushNotificationService {
 
     @Value("${app.push.vapid-public-key:CHANGE_ME}")
     private String vapidPublicKey;
-
-    @Value("${app.push.vapid-private-key:CHANGE_ME}")
-    private String vapidPrivateKey;
-
-    @Value("${app.push.vapid-subject:mailto:admin@example.com}")
-    private String vapidSubject;
 
     @Value("${app.push.http-timeout-sec:10}")
     private int httpTimeoutSec;
@@ -63,23 +54,6 @@ public class PushNotificationService {
         this.restTimerService = restTimerService;
         this.pushExecutor = pushExecutor;
         this.pushService = pushService;
-    }
-
-    @PostConstruct
-    public void init() {
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(new BouncyCastleProvider());
-        }
-        if (this.pushService == null) {
-            try {
-                if (vapidPublicKey != null && !vapidPublicKey.isBlank() && !"CHANGE_ME".equals(vapidPublicKey)
-                        && vapidPrivateKey != null && !vapidPrivateKey.isBlank() && !"CHANGE_ME".equals(vapidPrivateKey)) {
-                    this.pushService = new PushService(vapidPublicKey, vapidPrivateKey, vapidSubject);
-                }
-            } catch (Exception e) {
-                log.warn("Failed to initialize default PushService: {}", e.getMessage());
-            }
-        }
     }
 
     public void setPushService(PushService pushService) {
@@ -134,8 +108,8 @@ public class PushNotificationService {
      * Schedule a persisted rest notification to fire after `delaySec` seconds.
      * Cancels any pending rest timer for this user.
      */
-    public void scheduleRestNotification(String userEmail, int delaySec) {
-        restTimerService.scheduleTimer(userEmail, delaySec);
+    public Long scheduleRestNotification(String userEmail, int delaySec) {
+        return restTimerService.scheduleTimer(userEmail, delaySec).getId();
     }
 
     public void cancelRestNotification(String userEmail) {
@@ -153,15 +127,19 @@ public class PushNotificationService {
             try {
                 pushExecutor.submit(() -> {
                     try {
-                        sendPush(timer.getUserEmail(), "¡Descanso terminado!", "Es hora de la siguiente serie.");
+                        if (!restTimerService.renewClaim(timer)) return;
+                        boolean delivered = sendPush(timer.getUserEmail(), "¡Descanso terminado!",
+                                "Es hora de la siguiente serie.", timer);
+                        restTimerService.finishDelivery(timer, delivered);
                     } catch (Exception e) {
+                        restTimerService.finishDelivery(timer, false);
                         log.error("Failed to deliver rest timer push notification for user {}", com.ascension.util.PiiMasker.maskEmail(timer.getUserEmail()), e);
                     }
                 });
             } catch (java.util.concurrent.RejectedExecutionException e) {
                 log.warn("Push executor rejected timer {}, reverting status to PENDING", timer.getId());
                 try {
-                    restTimerService.revertToPending(timer.getId());
+                    restTimerService.finishDelivery(timer, false);
                 } catch (Exception re) {
                     log.error("Failed to revert timer {} to PENDING", timer.getId(), re);
                 }
@@ -179,34 +157,42 @@ public class PushNotificationService {
     }
 
     public void sendPush(String userEmail, String title, String body) {
+        sendPush(userEmail, title, body, null);
+    }
+
+    private boolean sendPush(String userEmail, String title, String body, RestTimer timer) {
         if (pushService == null) {
             log.warn("PushService is not initialized. Skipping push to {}", com.ascension.util.PiiMasker.maskEmail(userEmail));
-            return;
+            return false;
         }
 
         List<PushSubscription> subscriptions = subscriptionRepo.findByUserEmail(userEmail);
         if (subscriptions.isEmpty()) {
             log.debug("No push subscriptions found for {}", com.ascension.util.PiiMasker.maskEmail(userEmail));
-            return;
+            return true;
         }
 
         String payload;
         try {
             payload = objectMapper.writeValueAsString(Map.of(
                     "title", title,
-                    "body", body
+                    "body", body,
+                    "tag", timer == null ? "ascension-rest-timer" : "ascension-rest-timer-" + timer.getId()
             ));
         } catch (Exception e) {
             log.error("Failed to serialize push payload for {}", com.ascension.util.PiiMasker.maskEmail(userEmail), e);
-            return;
+            return false;
         }
 
+        boolean delivered = true;
         for (PushSubscription sub : subscriptions) {
-            deliverToSubscription(sub, payload);
+            if (timer != null && !restTimerService.renewClaim(timer)) return false;
+            delivered = deliverToSubscription(sub, payload) && delivered;
         }
+        return delivered;
     }
 
-    private void deliverToSubscription(PushSubscription sub, String payload) {
+    private boolean deliverToSubscription(PushSubscription sub, String payload) {
         try {
             Notification notification = new Notification(
                     sub.getEndpoint(),
@@ -222,43 +208,38 @@ public class PushNotificationService {
                     : -1;
 
             if (statusCode == 404 || statusCode == 410) {
-                log.warn("Subscription {} returned HTTP {}, removing dead endpoint", sub.getEndpoint(), statusCode);
+                log.warn("Subscription {} returned HTTP {}, removing dead endpoint", sub.getId(), statusCode);
                 removeSubscriptionByEndpoint(sub.getEndpoint());
+                return true;
             } else if (statusCode >= 200 && statusCode < 300) {
-                log.debug("Push successfully delivered to endpoint {}", sub.getEndpoint());
+                log.debug("Push successfully delivered to subscription {}", sub.getId());
+                return true;
             } else {
-                log.warn("Push to endpoint {} returned unexpected HTTP status {}", sub.getEndpoint(), statusCode);
+                log.warn("Push to subscription {} returned unexpected HTTP status {}", sub.getId(), statusCode);
             }
         } catch (TimeoutException te) {
-            log.warn("Push delivery to endpoint {} timed out after {}s", sub.getEndpoint(), httpTimeoutSec);
+            log.warn("Push delivery to subscription {} timed out after {}s", sub.getId(), httpTimeoutSec);
         } catch (Exception e) {
             Throwable cause = (e instanceof ExecutionException || e instanceof CompletionException) && e.getCause() != null
                     ? e.getCause()
                     : e;
-            log.error("Failed to send push to endpoint {}: {}", sub.getEndpoint(), cause.getMessage());
-            if (cause.getMessage() != null && (cause.getMessage().contains("410") || cause.getMessage().contains("404"))) {
-                log.warn("Push endpoint {} failed with 404/410 in error message, removing dead endpoint", sub.getEndpoint());
-                removeSubscriptionByEndpoint(sub.getEndpoint());
-            }
+            log.error("Failed to send push to subscription {}: {}", sub.getId(), cause.getMessage());
         }
+        return false;
     }
 
     private HttpResponse executePushSend(Notification notification) throws Exception {
-        Future<HttpResponse> future = null;
+        Future<HttpResponse> future = pushService.sendAsync(notification);
+        if (future == null) throw new IllegalStateException("Push provider did not return an asynchronous result");
         try {
-            future = pushService.sendAsync(notification);
-        } catch (UnsupportedOperationException | NoSuchMethodError ignored) {
-        }
-
-        if (future != null) {
-            try {
-                return future.get(httpTimeoutSec, TimeUnit.SECONDS);
-            } catch (TimeoutException te) {
-                future.cancel(true);
-                throw te;
-            }
-        } else {
-            return pushService.send(notification);
+            return future.get(httpTimeoutSec, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            throw e;
+        } catch (InterruptedException e) {
+            future.cancel(true);
+            Thread.currentThread().interrupt();
+            throw e;
         }
     }
 }

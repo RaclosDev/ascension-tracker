@@ -28,6 +28,30 @@ export function isChunkLoadError(error: unknown): boolean {
   );
 }
 
+export function clearChunkReloadLocks(): void {
+  try {
+    for (const key of [
+      'ascension_chunk_reload_lock',
+      'ascension_global_chunk_reload_at',
+      'ascension_eb_reload_lock',
+    ])
+      sessionStorage.removeItem(key);
+  } catch {
+    // Restricted storage must not prevent rendering or manual recovery.
+  }
+}
+
+export function claimChunkReload(key: string): boolean {
+  try {
+    if (sessionStorage.getItem(key)) return false;
+    sessionStorage.setItem(key, 'true');
+    return true;
+  } catch {
+    // Without a persistent lock, automatic reload could loop indefinitely.
+    return false;
+  }
+}
+
 export function lazyWithRetry<P extends object>(
   factory: () => Promise<{ default: ComponentType<P> }>,
 ): LazyExoticComponent<ComponentType<P>> {
@@ -44,23 +68,17 @@ export function lazyWithRetry<P extends object>(
       ) {
         throw new Error('Failed to load component chunk: invalid module or missing default export');
       }
-      sessionStorage.removeItem(sessionKey);
-      sessionStorage.removeItem('ascension_global_chunk_reload_at');
-      sessionStorage.removeItem('ascension_eb_reload_lock');
+      clearChunkReloadLocks();
       return component;
     } catch (error: unknown) {
       const isMimeOrChunkError = isChunkLoadError(error);
-      const alreadyReloaded = sessionStorage.getItem(sessionKey);
-
-      if (isMimeOrChunkError && !alreadyReloaded) {
-        sessionStorage.setItem(sessionKey, 'true');
+      if (isMimeOrChunkError && claimChunkReload(sessionKey)) {
         // Never delete all Cache Storage entries here: that includes Workbox's
         // precache and can destroy the only offline app shell.
         window.location.reload();
         return new Promise<{ default: ComponentType<P> }>(() => {});
       }
 
-      sessionStorage.removeItem(sessionKey);
       throw error;
     }
   });

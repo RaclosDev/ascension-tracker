@@ -35,7 +35,7 @@ public final class PiiMasker {
      * @return the pseudonym, or "[anonymous]" if null/empty
      */
     public static String maskEmail(String email) {
-        return pseudonym(email == null ? null : email.trim().toLowerCase(), "usr_");
+        return pseudonym(email == null ? null : email.trim().toLowerCase(java.util.Locale.ROOT), "usr_");
     }
 
     /**

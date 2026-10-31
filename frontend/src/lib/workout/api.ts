@@ -3,14 +3,15 @@ import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tansta
 import api from '@/api/client';
 import { CompletedWorkout, Template, Exercise } from './types';
 import { useWorkoutStore } from './store';
+import { getWorkoutAccountRevision } from './accountIdentity';
 import toast from 'react-hot-toast';
 
 export const useWorkoutHistory = () => {
   return useInfiniteQuery({
     queryKey: ['workoutHistory'],
     initialPageParam: 0,
-    queryFn: async ({ pageParam = 0 }) => {
-      const { data } = await api.get(`/workouts?page=${pageParam}&size=10`);
+    queryFn: async ({ pageParam = 0, signal }) => {
+      const { data } = await api.get(`/workouts?page=${pageParam}&size=10`, { signal });
       return data;
     },
     getNextPageParam: (lastPage) => {
@@ -25,9 +26,11 @@ export const useWorkoutHistory = () => {
 export const useRecentWorkouts = (days: number = 60) => {
   const q = useQuery<CompletedWorkout[], Error>({
     queryKey: ['recentWorkouts'],
-    queryFn: async (): Promise<CompletedWorkout[]> => {
+    queryFn: async ({ signal }): Promise<CompletedWorkout[]> => {
       const since = Date.now() - 365 * 24 * 60 * 60 * 1000;
-      const { data } = await api.get(`/workouts/recent?since=${since}`);
+      const { data } = await api.get<CompletedWorkout[]>(`/workouts/recent?since=${since}`, {
+        signal,
+      });
       return data;
     },
   });
@@ -84,8 +87,8 @@ export const useDeleteWorkout = () => {
 export const useWorkoutTemplates = () => {
   return useQuery<Template[], Error>({
     queryKey: ['workoutTemplates'],
-    queryFn: async (): Promise<Template[]> => {
-      const { data } = await api.get('/workouts/templates');
+    queryFn: async ({ signal }): Promise<Template[]> => {
+      const { data } = await api.get('/workouts/templates', { signal });
       return data.map(
         (dto: {
           id: string;
@@ -133,8 +136,8 @@ export const useDeleteTemplate = () => {
 export const useCustomExercises = () => {
   return useQuery<Exercise[], Error>({
     queryKey: ['customExercises'],
-    queryFn: async (): Promise<Exercise[]> => {
-      const { data } = await api.get('/workouts/custom-exercises');
+    queryFn: async ({ signal }): Promise<Exercise[]> => {
+      const { data } = await api.get('/workouts/custom-exercises', { signal });
       return data.map((ex: Exercise) => ({ ...ex, custom: true }));
     },
   });
@@ -195,8 +198,8 @@ export interface WorkoutPreferences {
 export const useWorkoutPreferences = () => {
   return useQuery<WorkoutPreferences, Error>({
     queryKey: ['workoutPreferences'],
-    queryFn: async (): Promise<WorkoutPreferences> => {
-      const { data } = await api.get('/workout-preferences');
+    queryFn: async ({ signal }): Promise<WorkoutPreferences> => {
+      const { data } = await api.get('/workout-preferences', { signal });
       return {
         globalMachines: data.globalMachines || [],
         globalGrips: data.globalGrips || [],
@@ -211,17 +214,33 @@ export const useWorkoutPreferences = () => {
   });
 };
 
+type PreferencesUpdate = WorkoutPreferences | ((current: WorkoutPreferences) => WorkoutPreferences);
+
 export const useUpdateWorkoutPreferences = () => {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (prefs: WorkoutPreferences) => {
-      const { data } = await api.put('/workout-preferences', prefs);
+  const mutation = useMutation({
+    scope: { id: 'workout-preferences' },
+    mutationFn: async ({ update, revision }: { update: PreferencesUpdate; revision: number }) => {
+      if (revision !== getWorkoutAccountRevision()) throw new Error('La cuenta ha cambiado');
+      await queryClient.cancelQueries({ queryKey: ['workoutPreferences'] });
+      const current = queryClient.getQueryData<WorkoutPreferences>(['workoutPreferences']);
+      if (typeof update === 'function' && !current)
+        throw new Error('Las preferencias aún no están disponibles');
+      const prefs = typeof update === 'function' ? update(current!) : update;
+      const { data } = await api.put<WorkoutPreferences>('/workout-preferences', prefs);
+      if (revision === getWorkoutAccountRevision())
+        queryClient.setQueryData(['workoutPreferences'], data);
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workoutPreferences'] });
-    },
+    onError: () => toast.error('No se han podido guardar las preferencias'),
   });
+  return {
+    ...mutation,
+    mutate: (update: PreferencesUpdate) =>
+      mutation.mutate({ update, revision: getWorkoutAccountRevision() }),
+    mutateAsync: (update: PreferencesUpdate) =>
+      mutation.mutateAsync({ update, revision: getWorkoutAccountRevision() }),
+  };
 };
 
 export const useWorkoutPreferencesActions = () => {
@@ -241,25 +260,33 @@ export const useWorkoutPreferencesActions = () => {
 
   const addGlobalMachine = (name: string) => {
     if (!prefs) return;
-    updatePrefs({ ...prefs, globalMachines: Array.from(new Set([...prefs.globalMachines, name])) });
+    updatePrefs((current) => ({
+      ...current,
+      globalMachines: Array.from(new Set([...current.globalMachines, name])),
+    }));
   };
 
   const addGlobalGrip = (name: string) => {
     if (!prefs) return;
-    updatePrefs({ ...prefs, globalGrips: Array.from(new Set([...prefs.globalGrips, name])) });
+    updatePrefs((current) => ({
+      ...current,
+      globalGrips: Array.from(new Set([...current.globalGrips, name])),
+    }));
   };
 
   const addExerciseVariant = (id: string, type: string, name: string) => {
     if (!prefs) return;
-    const ev = prefs.exerciseVariants[id] || {};
     const key = (type + 's') as 'grips' | 'machines';
-    const list = ev[key] || [];
-    updatePrefs({
-      ...prefs,
-      exerciseVariants: {
-        ...prefs.exerciseVariants,
-        [id]: { ...ev, [key]: Array.from(new Set([...list, name])) },
-      },
+    updatePrefs((current) => {
+      const ev = current.exerciseVariants[id] || {};
+      const list = ev[key] || [];
+      return {
+        ...current,
+        exerciseVariants: {
+          ...current.exerciseVariants,
+          [id]: { ...ev, [key]: Array.from(new Set([...list, name])) },
+        },
+      };
     });
   };
 
@@ -268,15 +295,17 @@ export const useWorkoutPreferencesActions = () => {
     if (!prefs) return;
     const trimmed = name.trim();
     if (!trimmed) return;
-    const ev = prefs.exerciseVariants[exerciseId] || {};
-    const list = ev.grips || [];
-    updatePrefs({
-      ...prefs,
-      globalGrips: Array.from(new Set([...prefs.globalGrips, trimmed])),
-      exerciseVariants: {
-        ...prefs.exerciseVariants,
-        [exerciseId]: { ...ev, grips: Array.from(new Set([...list, trimmed])) },
-      },
+    updatePrefs((current) => {
+      const ev = current.exerciseVariants[exerciseId] || {};
+      const list = ev.grips || [];
+      return {
+        ...current,
+        globalGrips: Array.from(new Set([...current.globalGrips, trimmed])),
+        exerciseVariants: {
+          ...current.exerciseVariants,
+          [exerciseId]: { ...ev, grips: Array.from(new Set([...list, trimmed])) },
+        },
+      };
     });
   };
 
@@ -284,58 +313,62 @@ export const useWorkoutPreferencesActions = () => {
     if (!prefs) return;
     const trimmed = name.trim();
     if (!trimmed) return;
-    const ev = prefs.exerciseVariants[exerciseId] || {};
-    const list = ev.machines || [];
-    updatePrefs({
-      ...prefs,
-      globalMachines: Array.from(new Set([...prefs.globalMachines, trimmed])),
-      exerciseVariants: {
-        ...prefs.exerciseVariants,
-        [exerciseId]: { ...ev, machines: Array.from(new Set([...list, trimmed])) },
-      },
+    updatePrefs((current) => {
+      const ev = current.exerciseVariants[exerciseId] || {};
+      const list = ev.machines || [];
+      return {
+        ...current,
+        globalMachines: Array.from(new Set([...current.globalMachines, trimmed])),
+        exerciseVariants: {
+          ...current.exerciseVariants,
+          [exerciseId]: { ...ev, machines: Array.from(new Set([...list, trimmed])) },
+        },
+      };
     });
   };
 
   const setExerciseRestTimerPref = (exerciseId: string, seconds: number) => {
     if (!prefs) return;
-    updatePrefs({
-      ...prefs,
+    updatePrefs((current) => ({
+      ...current,
       restTimers: {
-        ...(prefs.restTimers || {}),
+        ...(current.restTimers || {}),
         [exerciseId]: seconds,
       },
-    });
+    }));
   };
 
   const setRestPresetPref = (seconds: number) => {
     if (!prefs) return;
-    updatePrefs({
-      ...prefs,
+    updatePrefs((current) => ({
+      ...current,
       restPreset: seconds,
-    });
+    }));
   };
 
   const setExerciseAlias = (id: string, name: string) => {
     if (!prefs) return;
-    updatePrefs({
-      ...prefs,
-      exerciseAliases: { ...prefs.exerciseAliases, [id]: name },
-    });
+    updatePrefs((current) => ({
+      ...current,
+      exerciseAliases: { ...current.exerciseAliases, [id]: name },
+    }));
   };
 
   const setExerciseGif = (id: string, gifUrl: string) => {
     if (!prefs) return;
-    updatePrefs({
-      ...prefs,
-      exerciseGifs: { ...prefs.exerciseGifs, [id]: gifUrl },
-    });
+    updatePrefs((current) => ({
+      ...current,
+      exerciseGifs: { ...current.exerciseGifs, [id]: gifUrl },
+    }));
   };
 
   const toggleHiddenEquipment = (equip: string) => {
     if (!prefs) return;
-    const arr = prefs.hiddenEquipments || [];
-    const newArr = arr.includes(equip) ? arr.filter((e) => e !== equip) : [...arr, equip];
-    updatePrefs({ ...prefs, hiddenEquipments: newArr });
+    updatePrefs((current) => {
+      const arr = current.hiddenEquipments || [];
+      const newArr = arr.includes(equip) ? arr.filter((e) => e !== equip) : [...arr, equip];
+      return { ...current, hiddenEquipments: newArr };
+    });
   };
 
   return {

@@ -100,20 +100,39 @@ export function parseCsvRows(text: string): string[][] {
 }
 
 export function parseHevyDate(dateStr: string): number {
-  if (!dateStr || !dateStr.trim()) return Date.now();
+  const invalidDate = () =>
+    new Error(`Fecha de entrenamiento no válida: "${dateStr.slice(0, 80)}".`);
+  if (!dateStr || !dateStr.trim()) throw invalidDate();
   const cleaned = dateStr.trim();
-
-  // Try standard ISO or parseable format first
-  const parsedTimestamp = Date.parse(cleaned);
-  if (!Number.isNaN(parsedTimestamp)) {
-    return parsedTimestamp;
-  }
+  const validateParts = (
+    year: number,
+    month: number,
+    day: number,
+    hour: number,
+    minute: number,
+    second = 0,
+  ) => {
+    const date = new Date(Date.UTC(year, month, day, hour, minute, second));
+    if (
+      date.getUTCFullYear() !== year ||
+      date.getUTCMonth() !== month ||
+      date.getUTCDate() !== day ||
+      date.getUTCHours() !== hour ||
+      date.getUTCMinutes() !== minute ||
+      date.getUTCSeconds() !== second
+    )
+      throw invalidDate();
+  };
 
   // Format: "12 ene 2024, 18:30" or "12 Jan 2024, 18:30"
-  const matchLocale = cleaned.toLowerCase().match(/(\d+)\s+([a-záéíóú]+)\s+(\d+),\s+(\d+):(\d+)/);
+  const matchLocale = cleaned
+    .toLowerCase()
+    .match(/^(\d+)\s+([a-záéíóú]+)\s+(\d+),?\s+(\d+):(\d+)$/);
   if (matchLocale) {
     const [, day, monthStr, year, hour, minute] = matchLocale;
-    const month = MONTH_MAP[monthStr.toLowerCase()] ?? 0;
+    const month = MONTH_MAP[monthStr.toLowerCase()];
+    if (month === undefined) throw invalidDate();
+    validateParts(Number(year), month, Number(day), Number(hour), Number(minute));
     return new Date(
       parseInt(year, 10),
       month,
@@ -123,20 +142,21 @@ export function parseHevyDate(dateStr: string): number {
     ).getTime();
   }
 
-  // Format: "YYYY-MM-DD HH:mm:ss"
-  const matchIso = cleaned.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+  const matchIso = cleaned.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
   if (matchIso) {
-    const [, year, month, day, hour, minute] = matchIso;
-    return new Date(
-      parseInt(year, 10),
-      parseInt(month, 10) - 1,
-      parseInt(day, 10),
-      parseInt(hour, 10),
-      parseInt(minute, 10),
-    ).getTime();
+    const [, year, month, day, hour = '0', minute = '0', second = '0'] = matchIso;
+    validateParts(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second),
+    );
   }
-
-  return Date.now();
+  const parsedTimestamp = Date.parse(cleaned);
+  if (Number.isFinite(parsedTimestamp)) return parsedTimestamp;
+  throw invalidDate();
 }
 
 export function parseSetType(type: string): SetType {
@@ -387,6 +407,8 @@ export function parseHevyCsv(
 
     const startedAt = parseHevyDate(startTimeRaw);
     const finishedAt = endTimeRaw ? parseHevyDate(endTimeRaw) : startedAt + 3600000;
+    if (finishedAt < startedAt)
+      throw new Error(`La fecha de fin es anterior al inicio en la fila ${i + 1}.`);
 
     if (firstDate === null || startedAt < firstDate) firstDate = startedAt;
     if (lastDate === null || startedAt > lastDate) lastDate = startedAt;

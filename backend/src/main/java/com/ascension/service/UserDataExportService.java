@@ -123,6 +123,9 @@ public class UserDataExportService {
                 .id(log.getId())
                 .date(log.getDate())
                 .mealIndex(log.getMealIndex())
+                .mealKey(log.getMealKey())
+                .mealName(log.getMealName())
+                .mealIcon(log.getMealIcon())
                 .product(log.getProduct())
                 .quantity(log.getQuantity())
                 .kcal(log.getKcal())
@@ -136,6 +139,7 @@ public class UserDataExportService {
     private MealDTO toMealDTO(Meal meal) {
         return MealDTO.builder()
                 .id(meal.getId())
+                .mealKey(meal.getMealKey())
                 .name(meal.getName())
                 .icon(meal.getIcon())
                 .proteinPct(meal.getProteinPct())

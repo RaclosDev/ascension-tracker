@@ -54,7 +54,12 @@ public class UserRevocationJwtValidator implements OAuth2TokenValidator<Jwt> {
         }
 
         Instant tokensValidAfter = state.tokensValidAfter();
-        if (tokensValidAfter != null && issuedAt.getEpochSecond() < tokensValidAfter.getEpochSecond()) {
+        Object version = jwt.getClaims().get("securityVersion");
+        String expectedVersion = tokensValidAfter != null ? tokensValidAfter.toString() : "";
+        boolean revoked = jwt.getClaims().containsKey("securityVersion")
+                ? !(version instanceof String text && text.equals(expectedVersion))
+                : tokensValidAfter != null && issuedAt.isBefore(tokensValidAfter);
+        if (revoked) {
             log.warn("JWT rejected: token for '{}' issued at {} is prior to tokens_valid_after {}",
                     com.ascension.util.PiiMasker.maskEmail(email), issuedAt, tokensValidAfter);
             return OAuth2TokenValidatorResult.failure(ERROR_TOKEN_REVOKED);

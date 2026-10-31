@@ -2,6 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { getBasePortion, isFoodRegistered } from './nutritionHelpers';
 
 describe('nutritionHelpers - getBasePortion', () => {
+  it('rechaza cantidades infinitas aunque el JSON sea válido', () => {
+    expect(getBasePortion('[{"label":"1 unidad","amount":1e309}]')).toBeNull();
+  });
+
+  it('omite entradas corruptas y etiquetas vacías sin descartar una porción válida posterior', () => {
+    expect(
+      getBasePortion('[null,{"label":" ","amount":10},{"label":"1 unidad","amount":30}]'),
+    ).toEqual({ label: 'unidad', amount: 30 });
+  });
   it('retorna null para null, undefined o string vacío', () => {
     expect(getBasePortion(null)).toBeNull();
     expect(getBasePortion('')).toBeNull();

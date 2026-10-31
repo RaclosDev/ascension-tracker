@@ -40,6 +40,9 @@ class NutritionLogServiceTest {
     @Mock
     private UserDataQuotaService userDataQuotaService;
 
+    @Mock
+    private com.ascension.repository.MealRepository mealRepository;
+
     @InjectMocks
     private NutritionLogService nutritionLogService;
 

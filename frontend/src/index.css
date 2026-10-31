@@ -470,14 +470,6 @@ body {
     animation: none;
   }
 }
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
 .progress-markers {
   display: flex;
   justify-content: space-between;
@@ -934,16 +926,6 @@ input[type=number] {
   box-shadow: var(--shadow-lg);
   animation: popIn 0.2s ease-out;
 }
-@keyframes popIn {
-  0% {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
 .calendar-input {
   width: 100%;
   flex: 1;
@@ -1161,11 +1143,6 @@ input[type=number] {
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 @media (max-width: 768px) {
   .mobile-toggle {
@@ -1230,17 +1207,6 @@ input[type=number] {
   }
   .kpi-label, .kpi-detail {
     font-size: 0.7rem;
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 .fade-in {
@@ -1721,76 +1687,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
   -webkit-tap-highlight-color: transparent;
 }
 
-@media (hover: hover) {
-}
-@media (hover: hover) {
-}
-
-@media (hover: hover) {
-}
-
-@media (hover: hover) {
-}
-@media (hover: hover) {
-}
-
-@media (hover: hover) {
-}
-@keyframes popIn {
-  0% {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-@media (hover: hover) {
-}
-
-@media (hover: hover) {
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (max-width: 600px) {
-}
-
-@media (max-width: 768px) {
-}
-@media (max-width: 480px) {
-}
-
-@media (max-width: 768px) {
-}
-
-@media (max-width: 900px) {
-}
-
-@media (hover: hover) {
-}
-@media (hover: hover) {
-}
-
-@media (hover: hover) {
-}
-
 @keyframes shimmer {
   0% {
     transform: translateX(-100%);
@@ -1799,27 +1695,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
     transform: translateX(100%);
   }
 }
-
-@media (hover: hover) {
-}
-
-@media (hover: hover) {
-}
-@media (hover: hover) and (hover: hover) {
-}
-@media (hover: hover) and (hover: hover) {
-}
-
-@media (hover: hover) {
-}
-@media (hover: hover) {
-}
-
-@media (hover: hover) {
-}
-
-@media (hover: hover) {
-}
 @keyframes popIn {
   0% {
     transform: scale(0.95);
@@ -1830,21 +1705,11 @@ button, a, input, select, textarea, [role=button], [onclick] {
     opacity: 1;
   }
 }
-@media (hover: hover) {
-}
-
-@media (hover: hover) {
-}
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
-}
-
-@media (max-width: 768px) {
-}
-@media (max-width: 480px) {
 }
 
 @keyframes fadeInUp {
@@ -1856,26 +1721,6 @@ button, a, input, select, textarea, [role=button], [onclick] {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-@media (max-width: 600px) {
-}
-
-@media (hover: hover) {
-}
-@media (hover: hover) {
-}
-
-@media (max-width: 768px) {
-}
-@media (max-width: 768px) {
-}
-@media (max-width: 900px) {
-}
-@media (max-width: 768px) {
-}
-
-@media (hover: hover) {
 }
 
 .nutrition-meals-grid {

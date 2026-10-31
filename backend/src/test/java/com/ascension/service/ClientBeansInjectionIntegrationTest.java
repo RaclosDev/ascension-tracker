@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     FatSecretSignatureBuilder.class,
     FatSecretClient.class,
     GeminiApiClient.class,
+    ExternalApiExecution.class,
     ClientBeansInjectionIntegrationTest.TestConfig.class
 })
 @TestPropertySource(properties = {

@@ -178,9 +178,11 @@ class PiiLogVerificationTest {
 
     @Test
     void geminiQuotaService_masksEmailInLogs() {
-        GeminiQuotaService quotaService = new GeminiQuotaService();
+        var store = org.mockito.Mockito.mock(com.ascension.service.ai.GeminiQuotaStore.class);
+        org.mockito.Mockito.when(store.reserve(TARGET_EMAIL, 0, 500))
+                .thenThrow(new com.ascension.exception.AiQuotaExceededException("Quota exceeded"));
+        GeminiQuotaService quotaService = new GeminiQuotaService(store);
         quotaService.setUserDailyLimit(0); // Force quota trip
-        quotaService.resetForTesting();
 
         try {
             quotaService.checkQuotaAndCircuit(TARGET_EMAIL);

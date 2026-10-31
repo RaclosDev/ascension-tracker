@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 
 import WeightLossPlan from '../components/calculators/WeightLossPlan';
 import MacroConfigurator, { MacroForm } from '../components/calculators/MacroConfigurator';
-import MealConfigurator from '../components/MealConfigurator';
+import { SettingsMealsSection } from '../components/settings/SettingsMealsSection';
 import { haptics } from '../lib/haptics';
 import { useWorkoutStore } from '../lib/workout/store';
 import { useCustomExercises, useWorkoutPreferencesActions } from '../lib/workout/api';
@@ -17,9 +17,9 @@ import { SettingsThemeSection } from '../components/settings/SettingsThemeSectio
 import { SettingsWorkoutSection } from '../components/settings/SettingsWorkoutSection';
 import { SettingsDataSection } from '../components/settings/SettingsDataSection';
 import { useAuth } from '../context/AuthContext';
-import { applyThemeColor } from '../utils/colorHelper';
+import { applyThemeColor, readThemeColor } from '../utils/colorHelper';
 import { Skeleton } from '../components/ui/skeleton';
-import { Scale, Activity, Utensils } from 'lucide-react';
+import { Scale, Activity } from 'lucide-react';
 import { SettingsAccordionHeader } from '../components/settings/SettingsAccordionHeader';
 
 export interface SettingsForm {
@@ -158,9 +158,7 @@ export default function SettingsPage() {
     }
   };
 
-  const [customColor, setCustomColor] = useState(
-    localStorage.getItem('ascension_custom_color') || '#0085FF',
-  );
+  const [customColor, setCustomColor] = useState(readThemeColor());
   const handleColorChange = (color: string) => {
     setCustomColor(color);
     applyThemeColor(color);
@@ -436,26 +434,11 @@ export default function SettingsPage() {
           )}
         </div>
 
-        <div
-          id="meals-section"
-          className={`card accordion-card transition-all duration-300 ease-out ${openSections.meals ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
-        >
-          <SettingsAccordionHeader
-            panelId="settings-meals-panel"
-            title="Configurar Comidas"
-            icon={Utensils}
-            isOpen={openSections.meals}
-            onToggle={(e) => toggleSection('meals', e)}
-          />
-          {openSections.meals && (
-            <div
-              id="settings-meals-panel"
-              className="accordion-content fade-in mt-5 pt-5 border-t border-white/10"
-            >
-              <MealConfigurator onSaved={refetchSettings} />
-            </div>
-          )}
-        </div>
+        <SettingsMealsSection
+          isOpen={openSections.meals}
+          onToggle={(event) => toggleSection('meals', event)}
+          onSaved={refetchSettings}
+        />
 
         <SettingsThemeSection
           isOpen={openSections.theme}

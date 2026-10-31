@@ -8,12 +8,6 @@ export const ACTIVITY_LEVELS = [
   { value: 1.9, label: 'Muy Alto (ejercicio muy fuerte o trabajo físico)' },
 ];
 
-export const getActivityFactor = (factor?: number): number => {
-  if (!factor) return 1.2;
-  const valid = ACTIVITY_LEVELS.find((l) => l.value === factor);
-  return valid ? valid.value : 1.2;
-};
-
 export const parseNumber = (val: string | number | undefined | null): number | null => {
   if (val === undefined || val === null || val === '') return null;
   if (typeof val === 'number') return isFinite(val) ? val : null;

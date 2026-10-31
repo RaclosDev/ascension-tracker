@@ -22,6 +22,7 @@ export default defineConfig({
           '**/ascension-title.png',
           '**/pwa-logo.png',
           '**/icon-512.png',
+          '**/apple-touch-icon.png',
           '**/landing/*',
         ],
       },

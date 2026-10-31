@@ -26,9 +26,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import(TestcontainersConfiguration.class)
 @TestPropertySource(properties = {
     "GOOGLE_CLIENT_ID=test-google-client-id",
-    "GEMINI_API_KEY=test-gemini-key"
+    "GEMINI_API_KEY=test-gemini-key",
+    "spring.jpa.properties.hibernate.generate_statistics=true"
 })
 class WorkoutPerformanceIntegrationTest {
+
+    @Autowired
+    private jakarta.persistence.EntityManager entityManager;
 
     @Autowired
     private WorkoutService workoutService;
@@ -46,7 +50,7 @@ class WorkoutPerformanceIntegrationTest {
         String email = "perf-athlete@example.com";
         userService.ensureUserExists(email, "Perf Athlete", null);
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 25; i++) {
             WorkoutDTO workout = WorkoutDTO.builder()
                     .name("Workout " + i)
                     .startedAt(1700000000000L + (i * 3600000L))
@@ -64,12 +68,28 @@ class WorkoutPerformanceIntegrationTest {
             workoutService.saveWorkout(email, workout);
         }
 
+        entityManager.flush();
+        entityManager.clear();
+        var statistics = entityManager.getEntityManagerFactory()
+                .unwrap(org.hibernate.SessionFactory.class).getStatistics();
+        statistics.clear();
         // Paginate page 0, size 2
         Page<WorkoutDTO> page1 = workoutService.getWorkoutHistory(email, 0, 2);
-        assertThat(page1.getTotalElements()).isEqualTo(5);
+        assertThat(page1.getTotalElements()).isEqualTo(25);
         assertThat(page1.getContent()).hasSize(2);
         assertThat(page1.getContent().get(0).getExercises()).hasSize(1);
         assertThat(page1.getContent().get(0).getExercises().get(0).getSets()).hasSize(2);
+
+        long statements = statistics.getPrepareStatementCount();
+        System.out.println("WORKOUT_HISTORY_QUERY_COUNT=" + statements);
+        assertThat(statements).isLessThanOrEqualTo(4);
+
+        entityManager.clear();
+        statistics.clear();
+        assertThat(workoutService.getWorkoutHistory(email, 0, 20).getContent()).hasSize(20);
+        long largePageStatements = statistics.getPrepareStatementCount();
+        System.out.println("WORKOUT_HISTORY_20_QUERY_COUNT=" + largePageStatements);
+        assertThat(largePageStatements).isLessThanOrEqualTo(4);
 
         // Verify DTO formatting preserves string representation
         WorkoutSetDTO setDto = page1.getContent().get(0).getExercises().get(0).getSets().get(0);
@@ -107,7 +127,9 @@ class WorkoutPerformanceIntegrationTest {
                         WorkoutExerciseDTO.builder()
                                 .exerciseId("squat")
                                 .sets(List.of(
-                                        WorkoutSetDTO.builder().type("normal").weight("120").reps("5").completed(true).build()   // 600
+                                        WorkoutSetDTO.builder().type("normal").weight("120").reps("5").completed(true).build(), // 600
+                                        WorkoutSetDTO.builder().type("normal").weight("999").reps("99").completed(false).build(),
+                                        WorkoutSetDTO.builder().type("normal").weight("999").reps("99").build()
                                 ))
                                 .build()
                 ))

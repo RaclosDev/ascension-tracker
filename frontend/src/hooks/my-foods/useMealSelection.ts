@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useState, useRef } from 'react';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
-import { PageFoodItem } from '../../types/myfoods';
+import { SavedFood } from '../../types/api';
 import { getLocalDateString } from '../../utils/dateHelper';
 
-export function useMealSelection(savedFoods: PageFoodItem[]) {
+export function useMealSelection(savedFoods: SavedFood[]) {
+  const queryClient = useQueryClient();
+  const addingRef = useRef(false);
   const [selectedFoods, setSelectedFoods] = useState<Set<number>>(new Set());
   const [isMealSelectorOpen, setIsMealSelectorOpen] = useState(false);
   const [mealSelectorDate, setMealSelectorDate] = useState(getLocalDateString());
@@ -29,8 +32,9 @@ export function useMealSelection(savedFoods: PageFoodItem[]) {
     setIsMealSelectorOpen(true);
   };
 
-  const handleBulkAddToMeal = async (mealIndex: number) => {
-    if (selectedFoods.size === 0) return;
+  const handleBulkAddToMeal = async (mealIndex: number, mealKey?: string) => {
+    if (selectedFoods.size === 0 || addingRef.current) return;
+    addingRef.current = true;
     setIsAddingToMeal(true);
     try {
       const foodsToAdd = savedFoods.filter((f) => f.id !== undefined && selectedFoods.has(f.id));
@@ -40,6 +44,7 @@ export function useMealSelection(savedFoods: PageFoodItem[]) {
         return api.post('/nutrition/logs', {
           date: mealSelectorDate,
           mealIndex,
+          mealKey,
           product: food.name + (food.brand ? ` (${food.brand})` : ''),
           quantity: qty,
           kcal: food.kcalPer100g * factor,
@@ -48,13 +53,32 @@ export function useMealSelection(savedFoods: PageFoodItem[]) {
           fat: food.fatPer100g * factor,
         });
       });
-      await Promise.all(promises);
-      toast.success(`${selectedFoods.size} añadidos al diario`);
-      setSelectedFoods(new Set());
-      setIsMealSelectorOpen(false);
+      const results = await Promise.allSettled(promises);
+      const failedIds = new Set<number>();
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') failedIds.add(foodsToAdd[index].id!);
+      });
+      const savedCount = foodsToAdd.length - failedIds.size;
+      setSelectedFoods(failedIds);
+      if (savedCount > 0) {
+        for (const key of [
+          'nutritionData',
+          'dashboard',
+          'trackingWeeks',
+          'foodLists',
+          'myFoodsData',
+        ]) {
+          void queryClient.invalidateQueries({ queryKey: [key] });
+        }
+        toast.success(`${savedCount} añadidos al diario`);
+      }
+      if (failedIds.size > 0)
+        toast.error(`${failedIds.size} no se han guardado. Reintenta los alimentos seleccionados.`);
+      else setIsMealSelectorOpen(false);
     } catch {
       toast.error('Error al añadir al diario');
     } finally {
+      addingRef.current = false;
       setIsAddingToMeal(false);
     }
   };

@@ -5,6 +5,7 @@ declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (PrecacheEntry | s
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
+import { showRestPush } from './lib/workout/pushPayload';
 
 // Precache versioned static assets. Workbox manages old precache revisions.
 precacheAndRoute(self.__WB_MANIFEST);
@@ -45,7 +46,7 @@ registerRoute(
 );
 
 self.addEventListener('push', (event: PushEvent) => {
-  let data = { title: '¡Descanso terminado!', body: 'Es hora de la siguiente serie.' };
+  let data: unknown = null;
 
   try {
     if (event.data) {
@@ -55,27 +56,7 @@ self.addEventListener('push', (event: PushEvent) => {
     // fallback to defaults
   }
 
-  const options = {
-    body: data.body || 'Es hora de la siguiente serie.',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    vibrate: [200, 100, 200, 100, 300],
-    tag: 'ascension-rest-timer',
-    renotify: true,
-    requireInteraction: false,
-    data: { url: '/workout' },
-    actions: [
-      { action: 'open', title: 'Abrir' },
-      { action: 'dismiss', title: 'OK' },
-    ],
-  };
-
-  event.waitUntil(
-    self.registration.getNotifications({ tag: 'ascension-rest-timer' }).then((existing) => {
-      existing.forEach((n) => n.close());
-      return self.registration.showNotification(data.title || '¡Descanso terminado!', options);
-    }),
-  );
+  event.waitUntil(showRestPush(self.registration, data));
 });
 
 self.addEventListener('notificationclick', (event: NotificationEvent) => {

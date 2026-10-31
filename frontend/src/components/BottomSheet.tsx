@@ -1,3 +1,4 @@
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import React, { useState, useEffect, useRef, ReactNode } from 'react';
 import { haptics } from '@/lib/haptics';
 
@@ -13,6 +14,7 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
   const [isDragging, setIsDragging] = useState(false);
   const startYRef = useRef(0);
   const currentYRef = useRef(0);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -21,18 +23,6 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
       setTranslateY(0);
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        haptics.light();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -65,25 +55,43 @@ export default function BottomSheet({ isOpen, onClose, title, children }: Bottom
   };
 
   return (
-    <div className="bottom-sheet-overlay" onClick={onClose} role="presentation">
-      <div
-        className="bottom-sheet-content"
-        role="dialog"
-        aria-modal="true"
-        aria-label={title || 'Panel de opciones'}
-        onClick={(e) => e.stopPropagation()}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        style={{
-          transform: `translateY(${translateY}px)`,
-          transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-      >
-        <div className="bottom-sheet-drag-handle" />
-        {title && <h3 className="bottom-sheet-title">{title}</h3>}
-        {children}
-      </div>
-    </div>
+    <DialogPrimitive.Root
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="bottom-sheet-overlay">
+          <DialogPrimitive.Content
+            className="bottom-sheet-content"
+            aria-describedby={undefined}
+            onOpenAutoFocus={() => {
+              returnFocusRef.current =
+                document.activeElement instanceof HTMLElement ? document.activeElement : null;
+            }}
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              returnFocusRef.current?.focus();
+            }}
+            onEscapeKeyDown={() => haptics.light()}
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{
+              transform: `translateY(${translateY}px)`,
+              transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+          >
+            <div className="bottom-sheet-drag-handle" />
+            <DialogPrimitive.Title className={title ? 'bottom-sheet-title' : 'sr-only'}>
+              {title || 'Panel de opciones'}
+            </DialogPrimitive.Title>
+            {children}
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Overlay>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }

@@ -77,7 +77,7 @@ class UserRevocationJwtValidatorTest {
     }
 
     @Test
-    void validate_whenIssuedInSameSecondAsTokensValidAfter_returnsSuccess() {
+    void validate_legacyTokenIssuedEarlierInSameSecondIsRevoked() {
         // tokensValidAfter with milliseconds
         Instant tokensValidAfter = Instant.parse("2026-10-16T12:00:00.789Z");
         // JWT issuedAt truncated to seconds as per JWT spec
@@ -89,7 +89,36 @@ class UserRevocationJwtValidatorTest {
         Jwt jwt = createJwt("valid@example.com", issuedAt);
         OAuth2TokenValidatorResult result = validator.validate(jwt);
 
-        assertThat(result.hasErrors()).isFalse();
+        assertThat(result.hasErrors()).isTrue();
+    }
+
+    @Test
+    void stalePreciseSecurityVersionIsRejectedEvenWithLaterIssuedAt() {
+        Instant cutoff = Instant.parse("2026-10-16T12:00:00.789Z");
+        when(userService.getUserSecurityState("valid@example.com")).thenReturn(new UserSecurityState(true, cutoff));
+        Jwt jwt = Jwt.withTokenValue("signed-token").header("alg", "HS256")
+                .subject("valid@example.com").issuedAt(cutoff.plusSeconds(1)).expiresAt(cutoff.plusSeconds(900))
+                .claim("securityVersion", cutoff.minusMillis(1).toString()).build();
+        assertThat(validator.validate(jwt).hasErrors()).isTrue();
+    }
+
+    @Test
+    void matchingPreciseSecurityVersionAllowsImmediateNewLogin() {
+        Instant cutoff = Instant.parse("2026-10-16T12:00:00.789Z");
+        when(userService.getUserSecurityState("valid@example.com")).thenReturn(new UserSecurityState(true, cutoff));
+        Jwt jwt = Jwt.withTokenValue("signed-token").header("alg", "HS256")
+                .subject("valid@example.com").issuedAt(cutoff.truncatedTo(java.time.temporal.ChronoUnit.SECONDS))
+                .expiresAt(cutoff.plusSeconds(900)).claim("securityVersion", cutoff.toString()).build();
+        assertThat(validator.validate(jwt).hasErrors()).isFalse();
+    }
+
+    @Test
+    void nonStringSecurityVersionIsRejected() {
+        when(userService.getUserSecurityState("valid@example.com")).thenReturn(new UserSecurityState(true, null));
+        Jwt jwt = Jwt.withTokenValue("signed-token").header("alg", "HS256")
+                .subject("valid@example.com").issuedAt(Instant.now()).expiresAt(Instant.now().plusSeconds(900))
+                .claim("securityVersion", 123).build();
+        assertThat(validator.validate(jwt).hasErrors()).isTrue();
     }
 
     @Test

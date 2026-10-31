@@ -59,7 +59,7 @@ class UserServiceTest {
     }
 
     @Test
-    void getUserSecurityState_cachesResultAcrossCalls() {
+    void getUserSecurityState_readsAuthoritativeStateOnEveryCall() {
         Timestamp ts = Timestamp.from(Instant.parse("2026-10-16T10:00:00Z"));
         when(jdbcTemplate.queryForObject(anyString(), eq(Timestamp.class), eq("cached@test.com")))
                 .thenReturn(ts);
@@ -71,22 +71,23 @@ class UserServiceTest {
         assertThat(state1.tokensValidAfter()).isEqualTo(ts.toInstant());
         assertThat(state2).isEqualTo(state1);
 
-        // Verify DB was queried only once due to Caffeine cache
-        verify(jdbcTemplate, times(1)).queryForObject(anyString(), eq(Timestamp.class), eq("cached@test.com"));
+        verify(jdbcTemplate, times(2)).queryForObject(anyString(), eq(Timestamp.class), eq("cached@test.com"));
     }
 
     @Test
-    void updateTokensValidAfter_updatesDatabaseAndRefreshesCache() {
+    void updateTokensValidAfter_invalidatesCacheAndLoadsCommittedState() {
         when(jdbcTemplate.update(anyString(), any(Timestamp.class), eq("user@test.com"))).thenReturn(1);
 
         Instant newTime = Instant.parse("2026-10-16T15:30:00Z");
+        when(jdbcTemplate.queryForObject(anyString(), eq(Timestamp.class), eq("user@test.com")))
+                .thenReturn(Timestamp.from(newTime.minusSeconds(60)), Timestamp.from(newTime));
+        userService.getUserSecurityState("user@test.com");
         userService.updateTokensValidAfter("user@test.com", newTime);
 
         UserService.UserSecurityState state = userService.getUserSecurityState("user@test.com");
         assertThat(state.exists()).isTrue();
         assertThat(state.tokensValidAfter()).isEqualTo(newTime);
 
-        // Verify no extra SELECT was made to DB because cache was populated by updateTokensValidAfter
-        verify(jdbcTemplate, never()).queryForObject(anyString(), eq(Timestamp.class), eq("user@test.com"));
+        verify(jdbcTemplate, times(2)).queryForObject(anyString(), eq(Timestamp.class), eq("user@test.com"));
     }
 }

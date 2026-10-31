@@ -34,28 +34,3 @@ export function normalizeText(text: string | null | undefined): string {
     .toLowerCase()
     .trim();
 }
-
-export function getWordVariants(word: string): string[] {
-  if (!word) return [];
-  const variants: string[] = [word];
-
-  // Remove simple plurals
-  if (word.endsWith('s') && word.length > 3) {
-    variants.push(word.slice(0, -1));
-  }
-  if (word.endsWith('es') && word.length > 4) {
-    variants.push(word.slice(0, -2));
-  }
-
-  // Example synonyms for word level
-  const synonyms: Record<string, string> = {
-    natillas: 'pudding',
-    pudding: 'natillas',
-  };
-
-  if (synonyms[word]) {
-    variants.push(synonyms[word]);
-  }
-
-  return [...new Set(variants)];
-}

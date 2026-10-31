@@ -1,3 +1,4 @@
+import { MealSubtotal } from './MealSubtotal';
 import React, { useMemo } from 'react';
 import { ChevronDown, Copy, Plus } from 'lucide-react';
 import { MealIcon } from '../MealIcon';
@@ -8,6 +9,7 @@ import { SegmentedControl } from '../ui/segmented-control';
 import { SwipeableRow } from '../SwipeableRow';
 
 interface MealFoodGroupProps {
+  historical?: boolean;
   meal: Meal;
   mealIndex: number;
   logs: FoodLog[];
@@ -32,6 +34,7 @@ interface MealFoodGroupProps {
 }
 
 export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
+  historical = false,
   meal,
   mealIndex,
   logs,
@@ -77,9 +80,9 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
         flexDirection: 'column',
         gap: '0.5rem',
       }}
-      onDragOver={(e) => onDragOver(e, mealIndex)}
+      onDragOver={historical ? undefined : (e) => onDragOver(e, mealIndex)}
       onDragLeave={onDragLeave}
-      onDrop={(e) => onDrop(e, mealIndex)}
+      onDrop={historical ? undefined : (e) => onDrop(e, mealIndex)}
     >
       <div
         style={{
@@ -127,56 +130,53 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
           {meal.name}
         </button>
 
-        <div data-meal-actions style={{ display: 'flex', gap: '0.5rem' }}>
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm min-h-11 min-w-11"
-            style={{
-              padding: '0.45rem',
-              borderRadius: '12px',
-              color: 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            title="Copiar comida de ayer"
-            aria-label={`Copiar comida ${meal.name} de ayer`}
-            onClick={(e) => onCopyFromYesterday(e, mealIndex)}
-          >
-            <Copy size={16} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary btn-sm min-h-11 min-w-11"
-            style={{
-              padding: '0.45rem 0.75rem',
-              borderRadius: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            aria-label={`Añadir alimento a ${meal.name}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenAddFoodModal(mealIndex);
-            }}
-          >
-            <Plus size={16} />
-          </button>
-        </div>
+        {!historical && (
+          <div data-meal-actions style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm min-h-11 min-w-11"
+              style={{
+                padding: '0.45rem',
+                borderRadius: '12px',
+                color: 'var(--text-secondary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              title="Copiar comida de ayer"
+              aria-label={`Copiar comida ${meal.name} de ayer`}
+              onClick={(e) => onCopyFromYesterday(e, mealIndex)}
+            >
+              <Copy size={16} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm min-h-11 min-w-11"
+              style={{
+                padding: '0.45rem 0.75rem',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              aria-label={`Añadir alimento a ${meal.name}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenAddFoodModal(mealIndex);
+              }}
+            >
+              <Plus size={16} />
+            </button>
+          </div>
+        )}
       </div>
-
-      {logs.length > 0 && (
-        <div className="meal-subtotal-row" style={{ marginBottom: isCollapsed ? '0' : '0.75rem' }}>
-          <span className="subtotal-val kcal">{Math.round(mealSubtotal.kcal)} kcal</span>
-          <span className="subtotal-dot"></span>
-          <span className="subtotal-val">P: {mealSubtotal.protein.toFixed(1)}g</span>
-          <span className="subtotal-dot"></span>
-          <span className="subtotal-val">C: {mealSubtotal.carbs.toFixed(1)}g</span>
-          <span className="subtotal-dot"></span>
-          <span className="subtotal-val">G: {mealSubtotal.fat.toFixed(1)}g</span>
-        </div>
+      {historical && (
+        <p className="text-sm text-muted-foreground">
+          Comida del historial; ya no forma parte de tu configuración actual.
+        </p>
       )}
+
+      {logs.length > 0 && <MealSubtotal mealSubtotal={mealSubtotal} isCollapsed={isCollapsed} />}
 
       {!isCollapsed && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

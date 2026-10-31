@@ -1,10 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, renderHook, act } from '@testing-library/react';
+import { render, screen, fireEvent, renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { del } from 'idb-keyval';
 import { useWorkoutStore } from '../lib/workout/store';
-import { AuthProvider, useAuth } from '../context/AuthContext';
+import { AuthProvider, useAuth, getCachedUser } from '../context/AuthContext';
+import { switchWorkoutAccount } from '../lib/workout/account';
+import { clearSessionLogoutPending } from '../auth/sessionBoundary';
+import { refreshAccessToken } from '../api/client';
 import { SettingsWorkoutSection } from '../components/settings/SettingsWorkoutSection';
 import { ExerciseCard } from '../components/workout/exercise-card';
 
@@ -34,6 +37,8 @@ vi.mock('@/api/client', () => {
     },
     memoryToken: null,
     setMemoryToken: vi.fn(),
+    invalidateAuthSession: vi.fn(),
+    logoutSession: vi.fn().mockResolvedValue(undefined),
     refreshAccessToken: vi.fn().mockResolvedValue(null),
     isTokenValid: vi.fn().mockReturnValue(true),
     authBroadcast: {
@@ -51,12 +56,121 @@ vi.mock('jwt-decode', () => ({
 describe('Workout Session & Stepper Anti-Regression Suite', () => {
   let queryClient: QueryClient;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     localStorage.clear();
+    clearSessionLogoutPending();
+    await switchWorkoutAccount(null);
+    await switchWorkoutAccount('test@example.com');
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
+  });
+
+  it.each(['{"email":4,"name":[]}', '{"email":" ","name":"Unknown"}'])(
+    'rejects malformed cached profiles: %s',
+    (profile) => {
+      localStorage.setItem('ascension_cached_user', profile);
+      expect(getCachedUser()).toBeNull();
+    },
+  );
+
+  it('waits for remote logout cleanup before activating a new login', async () => {
+    let release: ((keys: string[]) => void) | undefined;
+    const descriptor = Object.getOwnPropertyDescriptor(window, 'caches');
+    const keys = vi.fn(
+      () =>
+        new Promise<string[]>((resolve) => {
+          release = resolve;
+        }),
+    );
+    Object.defineProperty(window, 'caches', {
+      configurable: true,
+      value: { keys, delete: vi.fn().mockResolvedValue(true) },
+    });
+    try {
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>{children}</AuthProvider>
+        </QueryClientProvider>
+      );
+      const { result } = renderHook(() => useAuth(), { wrapper });
+      act(() => {
+        window.dispatchEvent(new CustomEvent('auth_failed', { detail: { reason: 'logout' } }));
+      });
+      await waitFor(() => expect(keys).toHaveBeenCalled());
+      let signedIn = false;
+      let login: Promise<void>;
+      act(() => {
+        login = result.current.login('header.payload.signature').then(() => {
+          signedIn = true;
+        });
+      });
+      expect(result.current.isReady).toBe(false);
+      expect(signedIn).toBe(false);
+      await act(async () => {
+        release?.([]);
+        await login;
+      });
+      expect(result.current.token).toBe('header.payload.signature');
+      expect(result.current.isReady).toBe(true);
+    } finally {
+      if (descriptor) Object.defineProperty(window, 'caches', descriptor);
+      else Reflect.deleteProperty(window, 'caches');
+    }
+  });
+
+  it('finishes the auth gate when remote logout interrupts startup refresh', async () => {
+    let release: ((token: string | null) => void) | undefined;
+    vi.mocked(refreshAccessToken).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
+        }),
+    );
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>{children}</AuthProvider>
+      </QueryClientProvider>
+    );
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('auth_failed', { detail: { reason: 'logout' } }));
+    });
+    await waitFor(() => expect(result.current.isReady).toBe(true));
+    await act(async () => {
+      release?.(null);
+    });
+    expect(result.current.token).toBeNull();
+    expect(result.current.isReady).toBe(true);
+  });
+
+  it('clears remote logout data even if browser storage is unavailable', async () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>{children}</AuthProvider>
+      </QueryClientProvider>
+    );
+    renderHook(() => useAuth(), { wrapper });
+    useWorkoutStore.getState().startEmpty('Private workout');
+    queryClient.setQueryData(['private-data'], { secret: true });
+    const storage = vi.spyOn(Storage.prototype, 'clear').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    try {
+      await act(async () => {
+        window.dispatchEvent(new CustomEvent('auth_failed', { detail: { reason: 'logout' } }));
+      });
+      expect(queryClient.getQueryData(['private-data'])).toBeUndefined();
+      expect(useWorkoutStore.getState().active).toBeNull();
+      expect(del).not.toHaveBeenCalled();
+      await act(async () => {
+        await switchWorkoutAccount('test@example.com');
+      });
+      expect(useWorkoutStore.getState().active?.name).toBe('Private workout');
+    } finally {
+      storage.mockRestore();
+    }
   });
 
   it('preserves in-progress workout and localStorage when auth_failed event fires', () => {
@@ -106,7 +220,7 @@ describe('Workout Session & Stepper Anti-Regression Suite', () => {
     expect(localStorage.getItem('workout_preferences')).toContain('120');
   });
 
-  it('preserves in-progress workout when user logs in (login does not destroy active workout)', () => {
+  it('preserves in-progress workout when the same known account logs back in', async () => {
     const initialActive = {
       name: 'Espalda y Bíceps',
       startedAt: Date.now() - 30000,
@@ -132,8 +246,8 @@ describe('Workout Session & Stepper Anti-Regression Suite', () => {
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
-    act(() => {
-      result.current.login('header.payload.signature');
+    await act(async () => {
+      await result.current.login('header.payload.signature');
     });
 
     // Active workout must still exist intact

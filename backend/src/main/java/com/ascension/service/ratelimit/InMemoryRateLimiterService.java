@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
  * Suitable for standalone instances or single-container deployments.
  */
 @Service
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "app.rate-limit.store", havingValue = "memory")
 public class InMemoryRateLimiterService implements RateLimiterService {
 
     private final Cache<String, Bucket> requestBuckets = Caffeine.newBuilder()

@@ -1,3 +1,4 @@
+import { QueryErrorNotice } from '../components/QueryErrorNotice';
 import { useMemo, Suspense } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { DashboardData, WeightEntry, WeekSummary, UserSettings } from '../types/api';
@@ -17,33 +18,63 @@ const DashboardCharts = lazyWithRetry(() => import('../components/DashboardChart
 export default function DashboardPage() {
   const { pref, update: updateRatePref } = useRatePreference();
 
-  const { data: dashboard, isLoading: loadingDash } = useQuery<DashboardData>({
+  const {
+    data: dashboard,
+    isLoading: loadingDash,
+    isError: errorDash,
+    isFetching: fetchingDash,
+    refetch: refetchDash,
+  } = useQuery<DashboardData>({
     queryKey: ['dashboard'],
-    queryFn: () => api.get('/weights/dashboard').then((res) => res.data),
+    queryFn: () => api.get<DashboardData>('/weights/dashboard').then((res) => res.data),
     staleTime: 1000 * 60 * 5,
     placeholderData: keepPreviousData,
   });
 
-  const { data: weights = [], isLoading: loadingWeights } = useQuery<WeightEntry[]>({
+  const {
+    data: weights = [],
+    isLoading: loadingWeights,
+    isError: errorWeights,
+    isFetching: fetchingWeights,
+    refetch: refetchWeights,
+  } = useQuery<WeightEntry[]>({
     queryKey: ['weights'],
-    queryFn: () => api.get('/weights').then((res) => res.data),
+    queryFn: () => api.get<WeightEntry[]>('/weights').then((res) => res.data),
     staleTime: 1000 * 60 * 5,
     placeholderData: keepPreviousData,
   });
 
-  const { data: weekSummaries = [], isLoading: loadingWeekly } = useQuery<WeekSummary[]>({
+  const {
+    data: weekSummaries = [],
+    isLoading: loadingWeekly,
+    isError: errorWeekly,
+    isFetching: fetchingWeekly,
+    refetch: refetchWeekly,
+  } = useQuery<WeekSummary[]>({
     queryKey: ['weekSummaries'],
-    queryFn: () => api.get('/weights/weekly').then((res) => res.data),
+    queryFn: () => api.get<WeekSummary[]>('/weights/weekly').then((res) => res.data),
     staleTime: 1000 * 60 * 5,
     placeholderData: keepPreviousData,
   });
 
-  const { data: settings, isLoading: loadingSettings } = useQuery<UserSettings>({
+  const {
+    data: settings,
+    isLoading: loadingSettings,
+    isError: errorSettings,
+    isFetching: fetchingSettings,
+    refetch: refetchSettings,
+  } = useQuery<UserSettings>({
     queryKey: ['settings'],
-    queryFn: () => api.get('/settings').then((res) => res.data),
+    queryFn: () => api.get<UserSettings>('/settings').then((res) => res.data),
     staleTime: Infinity,
     placeholderData: keepPreviousData,
   });
+
+  const hasError = errorDash || errorWeights || errorWeekly || errorSettings;
+  const isFetching = fetchingDash || fetchingWeights || fetchingWeekly || fetchingSettings;
+  const retry = () => {
+    void Promise.all([refetchDash(), refetchWeights(), refetchWeekly(), refetchSettings()]);
+  };
 
   const isLoading = loadingDash || loadingWeights || loadingWeekly || loadingSettings;
 
@@ -128,7 +159,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (!dashboard || !settings) return null;
+  if (!dashboard || !settings) return <QueryErrorNotice retry={retry} pending={isFetching} />;
 
   // Effective rate based on user preference
   const historyRate = Math.abs(dashboard.avgWeeklyChange ?? 0);
@@ -146,6 +177,7 @@ export default function DashboardPage() {
 
   return (
     <div className="fade-in">
+      {hasError && <QueryErrorNotice retry={retry} pending={isFetching} />}
       <h1 className="sr-only">Inicio</h1>
       <QuickWeightCard
         todayLabel={todayLabel}

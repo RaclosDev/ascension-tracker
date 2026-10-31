@@ -43,7 +43,22 @@ function getContrastColor(hex: string) {
   return yiq >= 128 ? '#111111' : '#ffffff';
 }
 
-export function applyThemeColor(hexColor: string) {
+function normalizeThemeColor(value: string): string {
+  if (/^#[0-9a-f]{3}$/i.test(value))
+    return '#' + [...value.slice(1)].map((digit) => digit + digit).join('');
+  return /^#[0-9a-f]{6}$/i.test(value) ? value : '#0085FF';
+}
+
+export function readThemeColor(): string {
+  try {
+    return normalizeThemeColor(localStorage.getItem('ascension_custom_color') || '#0085FF');
+  } catch {
+    return '#0085FF';
+  }
+}
+
+export function applyThemeColor(value: string) {
+  const hexColor = normalizeThemeColor(value);
   const root = document.documentElement;
 
   const light = adjustBrightness(hexColor, 15);
@@ -63,5 +78,9 @@ export function applyThemeColor(hexColor: string) {
   // Custom text color based on contrast
   root.style.setProperty('--accent-text', textColor);
 
-  localStorage.setItem('ascension_custom_color', hexColor);
+  try {
+    localStorage.setItem('ascension_custom_color', hexColor);
+  } catch {
+    /* The current tab can still apply a theme when storage is unavailable. */
+  }
 }

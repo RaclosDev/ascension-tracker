@@ -34,6 +34,17 @@ class RefreshTokenServiceTest {
     private final String plainToken = "test-plain-token";
     private String hashedToken;
 
+    @Test
+    void refreshCreatedEarlierInRevocationSecondCannotMintNewAccessToken() {
+        Instant second = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+        activeToken.setExpiryDate(second.plusMillis(100).plus(30, ChronoUnit.DAYS));
+        when(refreshTokenRepository.findByTokenForUpdate(hashedToken)).thenReturn(Optional.of(activeToken));
+        when(userService.getUserSecurityState(activeToken.getEmail()))
+                .thenReturn(new UserService.UserSecurityState(true, second.plusMillis(789)));
+        assertThrows(TokenRefreshException.class, () -> refreshTokenService.rotateRefreshToken(plainToken));
+        verify(refreshTokenRepository).deleteByFamilyId(activeToken.getFamilyId());
+    }
+
     @BeforeEach
     void setUp() {
         hashedToken = RefreshToken.hashToken(plainToken);
@@ -61,12 +72,16 @@ class RefreshTokenServiceTest {
 
     @Test
     void rotateRefreshToken_normalRotation_marksOldTokenReplacedAndCreatesNew() {
+        Instant authorizedAt = Instant.now().minusSeconds(10);
+        when(userService.getUserSecurityState("user@example.com"))
+                .thenReturn(new UserService.UserSecurityState(true, authorizedAt));
         when(refreshTokenRepository.findByTokenForUpdate(hashedToken)).thenReturn(Optional.of(activeToken));
         when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(inv -> inv.getArgument(0));
 
         RefreshToken newRotated = refreshTokenService.rotateRefreshToken(plainToken);
 
         assertNotNull(newRotated);
+        assertEquals(authorizedAt.toString(), newRotated.getAccessTokenSecurityVersion());
         assertNotNull(activeToken.getReplacedAt());
         assertEquals("user@example.com", newRotated.getEmail());
         assertEquals(activeToken.getFamilyId(), newRotated.getFamilyId());

@@ -115,7 +115,7 @@ public class GeminiAiService {
 
         String prompt = promptBuilder.buildFoodLogPrompt(text, base64Image, mealsContext, defaultMealDesc, contextFoods, contextRecipes, defaultMealIndex);
 
-        quotaService.checkAndReserveQuota(userEmail);
+        var reservation = quotaService.checkAndReserveQuota(userEmail);
         String responseText;
         try {
             if (cleanBase64 != null && mimeType != null) {
@@ -129,12 +129,12 @@ public class GeminiAiService {
             throw e;
         } catch (ExternalApiException e) {
             if (isUpstreamInfrastructureFailure(e)) {
-                quotaService.releaseQuota(userEmail);
+                quotaService.releaseQuota(reservation);
                 quotaService.recordFailure(e);
             }
             throw e;
         } catch (Exception e) {
-            quotaService.releaseQuota(userEmail);
+            quotaService.releaseQuota(reservation);
             quotaService.recordFailure(e);
             log.error("Error calling Gemini API for natural language log", e);
             throw new AiProcessingException("Failed to process with AI", e);
@@ -144,12 +144,7 @@ public class GeminiAiService {
         // Never refund quota or record circuit breaker failure for post-call parse/business errors.
         try {
             List<FoodLogDTO> parsedLogs = jsonParser.parseFoodLogs(responseText, defaultMealIndex, availableMeals.size(), date, savedFoods);
-            List<FoodLogDTO> addedLogs = new ArrayList<>();
-            for (FoodLogDTO dto : parsedLogs) {
-                FoodLogDTO saved = nutritionLogService.addFoodLog(userEmail, dto);
-                addedLogs.add(saved);
-            }
-            return addedLogs;
+            return nutritionLogService.addFoodLogs(userEmail, parsedLogs);
         } catch (UserDataQuotaExceededException e) {
             log.warn("User data quota exceeded when saving parsed AI logs: {}", e.getMessage());
             throw e;
@@ -164,7 +159,7 @@ public class GeminiAiService {
 
     public SavedFoodDTO processNaturalLanguageFood(String userEmail, String text) {
         userDataQuotaService.checkSavedFoodQuota(userEmail, 1);
-        quotaService.checkAndReserveQuota(userEmail);
+        var reservation = quotaService.checkAndReserveQuota(userEmail);
         String prompt = promptBuilder.buildSavedFoodPrompt(text);
 
         String responseText;
@@ -176,12 +171,12 @@ public class GeminiAiService {
             throw e;
         } catch (ExternalApiException e) {
             if (isUpstreamInfrastructureFailure(e)) {
-                quotaService.releaseQuota(userEmail);
+                quotaService.releaseQuota(reservation);
                 quotaService.recordFailure(e);
             }
             throw e;
         } catch (Exception e) {
-            quotaService.releaseQuota(userEmail);
+            quotaService.releaseQuota(reservation);
             quotaService.recordFailure(e);
             log.error("Error calling Gemini API for natural language food", e);
             throw new AiProcessingException("Failed to process food with AI", e);
@@ -216,7 +211,7 @@ public class GeminiAiService {
         String base64Image = Base64.getEncoder().encodeToString(fileBytes);
 
         userDataQuotaService.checkSavedFoodQuota(userEmail, 1);
-        quotaService.checkAndReserveQuota(userEmail);
+        var reservation = quotaService.checkAndReserveQuota(userEmail);
 
         String prompt = promptBuilder.buildSavedFoodFromImagePrompt();
         String responseText;
@@ -228,12 +223,12 @@ public class GeminiAiService {
             throw e;
         } catch (ExternalApiException e) {
             if (isUpstreamInfrastructureFailure(e)) {
-                quotaService.releaseQuota(userEmail);
+                quotaService.releaseQuota(reservation);
                 quotaService.recordFailure(e);
             }
             throw e;
         } catch (Exception e) {
-            quotaService.releaseQuota(userEmail);
+            quotaService.releaseQuota(reservation);
             quotaService.recordFailure(e);
             log.error("Error calling Gemini API for nutritional label", e);
             throw new AiProcessingException("Failed to process nutritional label", e);
@@ -360,7 +355,7 @@ public class GeminiAiService {
                 promptText, base64Image
         );
 
-        quotaService.checkAndReserveQuota(userEmail);
+        var reservation = quotaService.checkAndReserveQuota(userEmail);
         String responseText;
         try {
             if (cleanBase64 != null && mimeType != null) {
@@ -374,12 +369,12 @@ public class GeminiAiService {
             throw e;
         } catch (ExternalApiException e) {
             if (isUpstreamInfrastructureFailure(e)) {
-                quotaService.releaseQuota(userEmail);
+                quotaService.releaseQuota(reservation);
                 quotaService.recordFailure(e);
             }
             throw e;
         } catch (Exception e) {
-            quotaService.releaseQuota(userEmail);
+            quotaService.releaseQuota(reservation);
             quotaService.recordFailure(e);
             log.error("Error calling Gemini API for meal assistant", e);
             throw new AiProcessingException("Error en asistente de IA", e);

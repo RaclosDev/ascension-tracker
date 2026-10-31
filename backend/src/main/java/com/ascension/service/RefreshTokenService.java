@@ -66,16 +66,18 @@ public class RefreshTokenService {
             throw new com.ascension.exception.TokenRefreshException("Refresh token expired");
         }
 
+        String securityVersion = "";
         if (userService != null) {
             var state = userService.getUserSecurityState(refreshToken.getEmail());
             if (state != null) {
+                securityVersion = state.tokensValidAfter() != null ? state.tokensValidAfter().toString() : "";
                 if (!state.exists()) {
                     refreshTokenRepository.deleteByFamilyId(refreshToken.getFamilyId());
                     throw new com.ascension.exception.TokenRefreshException("User account does not exist or has been removed.");
                 }
                 if (state.tokensValidAfter() != null) {
                     Instant createdAt = refreshToken.getExpiryDate().minus(REFRESH_TOKEN_EXPIRATION_DAYS, ChronoUnit.DAYS);
-                    if (createdAt.getEpochSecond() < state.tokensValidAfter().getEpochSecond()) {
+                    if (createdAt.isBefore(state.tokensValidAfter())) {
                         refreshTokenRepository.deleteByFamilyId(refreshToken.getFamilyId());
                         throw new com.ascension.exception.TokenRefreshException("Session has been revoked. Please log in again.");
                     }
@@ -89,7 +91,7 @@ public class RefreshTokenService {
                 // Grace period: allow concurrent cluster/tab refresh without deleting the family
                 refreshToken.setGraceUsed(true);
                 refreshTokenRepository.save(refreshToken);
-                return createRefreshToken(refreshToken.getEmail(), refreshToken.getFamilyId());
+                return createRotatedToken(refreshToken.getEmail(), refreshToken.getFamilyId(), securityVersion);
             }
             // Outside the grace period: token reuse detected, revoke the whole family.
             refreshTokenRepository.deleteByFamilyId(refreshToken.getFamilyId());
@@ -99,7 +101,13 @@ public class RefreshTokenService {
         refreshToken.setReplacedAt(Instant.now());
         refreshTokenRepository.save(refreshToken);
         
-        return createRefreshToken(refreshToken.getEmail(), refreshToken.getFamilyId());
+        return createRotatedToken(refreshToken.getEmail(), refreshToken.getFamilyId(), securityVersion);
+    }
+
+    private RefreshToken createRotatedToken(String email, String familyId, String securityVersion) {
+        RefreshToken rotated = createRefreshToken(email, familyId);
+        rotated.setAccessTokenSecurityVersion(securityVersion);
+        return rotated;
     }
 
     @Transactional

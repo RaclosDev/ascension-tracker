@@ -1,22 +1,26 @@
-import { useState, useEffect, useRef, FormEvent, ChangeEvent, Suspense } from 'react';
+import { FoodSearchHeader } from './food/FoodSearchHeader';
+import { ModalFrame } from './ui/ModalFrame';
+import { QueryErrorNotice } from './QueryErrorNotice';
+import { useFoodSearchLists } from '../hooks/food/useFoodSearchLists';
+import { updateManualFoodForm } from '../utils/manualFoodForm';
+import { useFoodAiEntry } from '../hooks/food/useFoodAiEntry';
+import { useState, useRef, useEffect, useEffectEvent, ChangeEvent, Suspense } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
-import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import { useSpeechToText } from '../hooks/useSpeechToText';
 
-import { normalizeText as normalizeString } from '../utils/searchHelper';
+import { useExternalFoodSearch } from '../hooks/food/useExternalFoodSearch';
 import { AiFoodAssistantView } from './food/AiFoodAssistantView';
-import { getSanitizedKcal, extractPortions } from '../utils/portionHelper';
-import { getSmartFallbackQueries } from '../utils/searchHelper';
+import { useFoodSelection } from '../hooks/food/useFoodSelection';
 const BarcodeScanner = lazyWithRetry(() => import('./BarcodeScanner'));
 import ManualFoodForm from './food/ManualFoodForm';
 import { FoodPortionEditor, SearchProduct } from './food/FoodPortionEditor';
 import { FoodSearchResultsList, SavedFoodExtended } from './food/FoodSearchResultsList';
 
-import { Mic, ImageIcon, X, ScanLine, ArrowLeft } from 'lucide-react';
+import { Mic, ImageIcon, ScanLine } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
-import { FoodListsData, FoodLog, Meal, Recipe } from '../types/api';
+import { FoodLog, Meal } from '../types/api';
 
 export type { SavedFoodExtended, SearchProduct };
 
@@ -39,58 +43,56 @@ export default function FoodSearchModal({
 }) {
   const [activeOverlay, setActiveOverlay] = useState<'none' | 'scanner' | 'ai' | 'manual'>('none');
   const [query, setQuery] = useState('');
-  const [selectedImage, setSelectedImage] = useState<string | ArrayBuffer | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [offResults, setOffResults] = useState<Array<Record<string, unknown>>>([]);
-  const { data: foodLists } = useQuery<FoodListsData, Error>({
-    queryKey: ['foodLists'],
-    enabled: !!isOpen,
-    queryFn: async () => {
-      const [recentRes, savedRes, recipesRes] = await Promise.all([
-        api.get('/nutrition/logs/recent').catch(() => ({ data: [] })),
-        api.get('/nutrition/my-foods').catch(() => ({ data: [] })),
-        api.get('/nutrition/recipes').catch(() => ({ data: [] })),
-      ]);
-      return { recent: recentRes.data, saved: savedRes.data, recipes: recipesRes.data };
-    },
-  });
-  const recentLogs = foodLists?.recent || [];
-  const mappedRecipes = (foodLists?.recipes || []).map((r: Recipe) => ({
-    ...r,
-    brand: 'Receta',
-    kcalPer100g: r.totalKcal, // Treat 1 serving of recipe as 100 "units" for calculation simplicity, or we can just say 1 portion = 1 "ud" = 1 serving. Let's make servingSize = 100, kcal = totalKcal.
-    servingSize: 100,
-    servingLabel: 'racion',
-    kcal: r.totalKcal,
-    protein: r.totalProtein,
-    carbs: r.totalCarbs,
-    fat: r.totalFat,
-    isRecipe: true,
-  }));
-  const savedFoods = [...(foodLists?.saved || []), ...mappedRecipes];
-  // const [searching, setSearching] = useState(false);
-  // const [hasSearched, setHasSearched] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<SearchProduct | null>(null);
-  const [quantity, setQuantity] = useState(100);
-  const [inputMode, setInputMode] = useState<'grams' | 'portions'>('grams');
-  const [selectedMealIndex, setSelectedMealIndex] = useState(
-    mealIndex !== undefined && mealIndex !== null ? mealIndex : 0,
-  );
+  const { recentLogs, savedFoods, isError, isFetching, refetch } = useFoodSearchLists(isOpen);
+  const {
+    selectedProduct,
+    setSelectedProduct,
+    quantity,
+    setQuantity,
+    inputMode,
+    setInputMode,
+    handleSelectOff,
+    handleSelectRecent,
+    handleSelectSaved,
+  } = useFoodSelection();
+  const [selectedMealIndex, setSelectedMealIndex] = useState(mealIndex ?? 0);
+  const [selectedMealKey, setSelectedMealKey] = useState(meals[mealIndex ?? 0]?.mealKey);
+  const syncMealIdentity = useEffectEvent(() => setSelectedMealKey(meals[mealIndex ?? 0]?.mealKey));
+  const selectMeal = (index: number) => {
+    setSelectedMealIndex(index);
+    setSelectedMealKey(meals[index]?.mealKey);
+  };
+  const displayedMealIndex = selectedMealKey
+    ? meals.findIndex((meal) => meal.mealKey === selectedMealKey)
+    : selectedMealIndex;
+  const addingRef = useRef(false);
+  const [adding, setAdding] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
-  const [aiSubmitting, setAiSubmitting] = useState(false);
-  const [aiElapsedSeconds, setAiElapsedSeconds] = useState(0);
-
-  useEffect(() => {
-    if (selectedProduct && selectedProduct.portions && selectedProduct.portions.length > 0) {
-      setInputMode('portions');
-    } else {
-      setInputMode('grams');
-    }
-  }, [selectedProduct?.name]);
 
   const { isListening, toggleListening, stopListening } = useSpeechToText({
     onTranscript: (text) => setQuery(text),
     lang: 'es-ES',
+  });
+
+  const {
+    selectedImage,
+    setSelectedImage,
+    fileInputRef,
+    handleImageChange,
+    aiSubmitting,
+    aiElapsedSeconds,
+    getAiStatusText,
+    submitAiPrompt,
+  } = useFoodAiEntry({
+    query,
+    setQuery,
+    selectedMealIndex,
+    selectedMealKey,
+    date,
+    stopListening,
+    onLogAdded,
+    onClose,
   });
 
   useEffect(() => {
@@ -102,6 +104,7 @@ export default function FoodSearchModal({
   useEffect(() => {
     if (mealIndex !== undefined && mealIndex !== null) {
       setSelectedMealIndex(mealIndex);
+      syncMealIdentity();
     }
   }, [mealIndex]);
 
@@ -114,31 +117,8 @@ export default function FoodSearchModal({
     fat: '',
   });
 
-  const updateManualForm = (field: string, value: string) => {
-    const newForm = { ...manualForm, [field]: value };
-    if (['protein', 'carbs', 'fat'].includes(field)) {
-      const p = parseFloat(newForm.protein) || 0;
-      const c = parseFloat(newForm.carbs) || 0;
-      const f = parseFloat(newForm.fat) || 0;
-      if (newForm.protein || newForm.carbs || newForm.fat) {
-        newForm.kcal = (Math.round((p * 4 + c * 4 + f * 9) * 10) / 10).toString();
-      } else {
-        newForm.kcal = '';
-      }
-    }
-    setManualForm(newForm);
-  };
-
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const updateManualForm = (field: string, value: string) =>
+    setManualForm((previous) => updateManualFoodForm(previous, field, value));
 
   useEffect(() => {
     if (isOpen) {
@@ -152,11 +132,12 @@ export default function FoodSearchModal({
       setQuantity(100);
       setActiveOverlay('none');
       setSelectedMealIndex(mealIndex !== undefined && mealIndex !== null ? mealIndex : 0);
+      syncMealIdentity();
       setManualForm({ name: '', brand: '', kcal: '', protein: '', carbs: '', fat: '' });
     }
-  }, [isOpen]);
+  }, [isOpen, mealIndex, setSelectedProduct, setQuantity, setSelectedImage, fileInputRef]);
 
-  const searchRequestId = useRef(0);
+  const handleSearch = useExternalFoodSearch(query, setOffResults);
 
   if (!isOpen) return null;
 
@@ -165,74 +146,6 @@ export default function FoodSearchModal({
     if (!val.trim()) {
       setOffResults([]);
       return;
-    }
-  };
-
-  const handleSearch = async (e?: FormEvent) => {
-    if (e) e.preventDefault();
-    const q = query.trim();
-    if (!q) return;
-
-    searchRequestId.current += 1;
-    const currentRequestId = searchRequestId.current;
-
-    const queriesToTry = getSmartFallbackQueries(q);
-    let allCleanProducts: Array<Record<string, unknown>> = [];
-
-    try {
-      for (const currentQ of queriesToTry) {
-        if (currentRequestId !== searchRequestId.current) return;
-        let data: Record<string, unknown>;
-        try {
-          const res = await api.get(`/food-external/search?q=${encodeURIComponent(currentQ)}`);
-          data = res.data;
-        } catch {
-          continue;
-        }
-        if (currentRequestId !== searchRequestId.current) return;
-
-        let products: Array<Record<string, unknown>> = [];
-        if (data.product) products = [data.product as Record<string, unknown>];
-        else if (data.products) products = data.products as Array<Record<string, unknown>>;
-
-        const qWords = normalizeString(currentQ).split(/\s+/).filter(Boolean);
-        const cleanProducts = products
-          .filter((p) => {
-            const name = normalizeString((p.product_name || p.product_name_es || '') as string);
-            if (!name) return false;
-            return qWords.some((w: string) => name.includes(normalizeString(w)));
-          })
-          .sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
-            const nameA = normalizeString((a.product_name || a.product_name_es || '') as string);
-            const nameB = normalizeString((b.product_name || b.product_name_es || '') as string);
-            return nameA.length - nameB.length;
-          });
-
-        if (cleanProducts.length > 0) {
-          allCleanProducts = cleanProducts;
-          break;
-        }
-      }
-
-      if (currentRequestId !== searchRequestId.current) return;
-
-      setOffResults(allCleanProducts);
-
-      if (allCleanProducts.length === 0) {
-        toast('No se encontraron resultados exactos', { icon: 'ℹ️' });
-      }
-    } catch (err) {
-      if (currentRequestId !== searchRequestId.current) return;
-      console.error(
-        'Error al consultar base de datos de alimentos:',
-        err instanceof Error ? err.message : String(err),
-      );
-      toast.error('Error al consultar base de datos');
-    } finally {
-      /* ignore */
-      if (currentRequestId === searchRequestId.current) {
-        /* ignore */
-      } /* ignore */
     }
   };
 
@@ -275,7 +188,6 @@ export default function FoodSearchModal({
           'Error al analizar la etiqueta.',
       );
     } finally {
-      /* ignore */
       setOcrLoading(false);
       e.target.value = '';
     }
@@ -317,109 +229,12 @@ export default function FoodSearchModal({
         err instanceof Error ? err.message : String(err),
       );
       toast.error('Error al consultar código de barras');
-    } finally {
-      /* ignore */
-    }
-  };
-
-  const handleSelectOff = (p: Record<string, unknown>) => {
-    const name = (p.product_name || p.product_name_es || 'Producto') as string;
-    const brand = p.brands ? ` - ${p.brands}` : '';
-    const nut = (p.nutriments || {}) as Record<string, unknown>;
-
-    const portions = extractPortions(p);
-
-    setSelectedProduct({
-      name: `${name}${brand}`,
-      category: 'Supermercado',
-      kcal: getSanitizedKcal(nut),
-      protein: Number(nut['proteins_100g'] ?? nut['proteins'] ?? 0) || 0,
-      carbs: Number(nut['carbohydrates_100g'] ?? nut['carbohydrates'] ?? 0) || 0,
-      fat: Number(nut['fat_100g'] ?? nut['fat'] ?? 0) || 0,
-      portions: portions,
-    });
-
-    if (portions.length > 0) {
-      setQuantity(portions[0].amount);
-    } else {
-      setQuantity(100);
-    }
-  };
-
-  const handleSelectRecent = (log: FoodLog) => {
-    const q = Number(log.quantity) || 100;
-    setSelectedProduct({
-      name: log.product,
-      category: 'Reciente',
-      kcal: (Number(log.kcal) || 0) * (100 / q),
-      protein: (Number(log.protein) || 0) * (100 / q),
-      carbs: (Number(log.carbs) || 0) * (100 / q),
-      fat: (Number(log.fat) || 0) * (100 / q),
-    });
-    setQuantity(Math.round(q));
-  };
-
-  const handleSelectSaved = (food: SavedFoodExtended & { image?: string }) => {
-    let portions: Array<{ label: string; amount: number }> = [];
-    if (food.servingSize && food.servingSize > 0) {
-      const lbl = food.servingLabel || 'ud';
-      if (lbl.toLowerCase() === 'g') {
-        portions = [
-          { label: '50g', amount: 50 },
-          { label: '100g', amount: 100 },
-          { label: '150g', amount: 150 },
-          { label: '200g', amount: 200 },
-          { label: '250g', amount: 250 },
-        ];
-      } else {
-        if (food.servingSize <= 15) {
-          portions = [
-            { label: `1 ${lbl}`, amount: food.servingSize },
-            { label: `2 ${lbl}`, amount: food.servingSize * 2 },
-            { label: `3 ${lbl}`, amount: food.servingSize * 3 },
-            { label: `5 ${lbl}`, amount: food.servingSize * 5 },
-            { label: `10 ${lbl}`, amount: food.servingSize * 10 },
-            { label: `15 ${lbl}`, amount: food.servingSize * 15 },
-          ];
-        } else if (food.servingSize <= 50) {
-          portions = [
-            { label: `1 ${lbl}`, amount: food.servingSize },
-            { label: `2 ${lbl}`, amount: food.servingSize * 2 },
-            { label: `3 ${lbl}`, amount: food.servingSize * 3 },
-            { label: `4 ${lbl}`, amount: food.servingSize * 4 },
-            { label: `5 ${lbl}`, amount: food.servingSize * 5 },
-          ];
-        } else {
-          portions = [
-            { label: `0.5 ${lbl}`, amount: food.servingSize / 2 },
-            { label: `1 ${lbl}`, amount: food.servingSize },
-            { label: `2 ${lbl}`, amount: food.servingSize * 2 },
-            { label: `3 ${lbl}`, amount: food.servingSize * 3 },
-            { label: `4 ${lbl}`, amount: food.servingSize * 4 },
-          ];
-        }
-      }
-    }
-
-    setSelectedProduct({
-      name: food.name + (food.brand && food.brand !== 'Genérico' ? ` (${food.brand})` : ''),
-      category: food.brand === 'Genérico' ? 'Básico' : 'Guardado',
-      kcal: food.kcalPer100g ?? food.kcal ?? 0,
-      protein: food.proteinPer100g ?? food.protein ?? 0,
-      carbs: food.carbsPer100g ?? food.carbs ?? 0,
-      fat: food.fatPer100g ?? food.fat ?? 0,
-      portions: portions,
-    });
-
-    if (food.servingSize && food.servingSize > 0) {
-      setQuantity(food.servingSize);
-    } else {
-      setQuantity(100);
     }
   };
 
   const handleConfirmAdd = async () => {
-    if (!selectedProduct || !quantity || quantity <= 0) {
+    if (addingRef.current) return;
+    if (!selectedProduct || !Number.isFinite(quantity) || quantity <= 0) {
       toast.error('Indica una cantidad válida en gramos');
       return;
     }
@@ -429,6 +244,7 @@ export default function FoodSearchModal({
     const logEntry = {
       date: date,
       mealIndex: Number(selectedMealIndex) || 0,
+      mealKey: selectedMealKey,
       product: selectedProduct.name,
       quantity: qty,
       kcal: Math.round((selectedProduct.kcal || 0) * factor * 10) / 10,
@@ -447,6 +263,8 @@ export default function FoodSearchModal({
       return;
     }
 
+    addingRef.current = true;
+    setAdding(true);
     try {
       await api.post('/nutrition/logs', logEntry);
       toast.success('Alimento añadido correctamente');
@@ -461,317 +279,222 @@ export default function FoodSearchModal({
         err instanceof Error ? err.message : String(err),
       );
       toast.error('Error al guardar el alimento');
-    }
-  };
-
-  const getAiStatusText = (seconds: number) => {
-    if (seconds < 3) return 'Interpretando alimentos y raciones...';
-    if (seconds < 8) return 'Calculando macronutrientes con IA...';
-    if (seconds < 15) return 'Estructurando desglose nutricional...';
-    return 'Finalizando registro de comidas...';
-  };
-
-  const submitAiPrompt = async () => {
-    if (!query.trim() && !selectedImage)
-      return toast.error('Escribe algo o adjunta una foto primero');
-    stopListening();
-    const queryText = query.trim();
-    setAiSubmitting(true);
-    setAiElapsedSeconds(0);
-    const startTime = Date.now();
-    const loadingToast = toast.loading('Procesando con IA...');
-    const timer = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      setAiElapsedSeconds(elapsed);
-      if (elapsed >= 3) {
-        toast.loading(`Procesando con IA (${elapsed}s)...`, { id: loadingToast });
-      }
-    }, 1000);
-
-    const payload: Record<string, unknown> = {
-      text: queryText,
-      mealIndex: selectedMealIndex,
-      date,
-    };
-    if (selectedImage) {
-      const rawImage = typeof selectedImage === 'string' ? selectedImage : '';
-      const cleanBase64 = rawImage.includes(',') ? rawImage.split(',')[1] : rawImage;
-      payload.base64Image = cleanBase64;
-    }
-
-    try {
-      const res = await api.post('/nutrition/ai/log', payload, { timeout: 45000 });
-      const count = Array.isArray(res.data) ? res.data.length : 1;
-      toast.dismiss(loadingToast);
-      if (selectedMealIndex === -1) {
-        toast.success(`¡${count} alimento(s) repartidos en tus comidas por IA!`);
-      } else {
-        toast.success(`¡${count} alimento(s) añadidos por IA!`);
-      }
-      setQuery('');
-      setSelectedImage(null);
-      if (onLogAdded) onLogAdded();
-      if (onClose) onClose();
-    } catch (e: unknown) {
-      toast.dismiss(loadingToast);
-      const axiosError = e as {
-        code?: string;
-        message?: string;
-        response?: { data?: { error?: string; message?: string } };
-      };
-      const msg =
-        axiosError.response?.data?.error ||
-        axiosError.response?.data?.message ||
-        (axiosError.code === 'ECONNABORTED' || axiosError.message?.toLowerCase().includes('timeout')
-          ? 'La IA tardó más de lo esperado en responder. Intenta de nuevo o divide los alimentos.'
-          : 'Error procesando texto con IA');
-      toast.error(msg);
-      console.error('Error procesando texto con IA:', e instanceof Error ? e.message : String(e));
-      // El texto y la imagen se conservan para que el usuario no pierda su entrada
     } finally {
-      clearInterval(timer);
-      setAiSubmitting(false);
-      setAiElapsedSeconds(0);
+      addingRef.current = false;
+      setAdding(false);
     }
   };
 
+  const title = selectedProduct
+    ? 'A\u00f1adir Registro'
+    : activeOverlay === 'scanner'
+      ? 'Escanear C\u00f3digo'
+      : activeOverlay === 'ai'
+        ? 'Asistente IA'
+        : activeOverlay === 'manual'
+          ? 'Crear Manual'
+          : 'Buscar Alimento';
   return (
-    <>
-      <div className="workout-sheet-overlay" aria-hidden="true" onClick={onClose} />
-      <div
-        className="food-search-fullscreen"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="food-search-title"
-      >
-        <div className="food-search-header">
-          {selectedProduct || activeOverlay !== 'none' ? (
-            <button
-              type="button"
-              className="icon-btn min-w-11 min-h-11"
-              aria-label="Volver"
-              onClick={() => {
-                setSelectedProduct(null);
-                setActiveOverlay('none');
-              }}
-            >
-              <ArrowLeft size={20} aria-hidden="true" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="icon-btn min-w-11 min-h-11"
-              aria-label="Cerrar buscador de alimentos"
-              onClick={onClose}
-            >
-              <X size={20} aria-hidden="true" />
-            </button>
-          )}
+    <ModalFrame
+      open={Boolean(isOpen)}
+      onClose={() => onClose?.()}
+      title={title}
+      className="food-search-fullscreen"
+    >
+      <FoodSearchHeader
+        title={title}
+        canGoBack={Boolean(selectedProduct || activeOverlay !== 'none')}
+        onBack={() => {
+          setSelectedProduct(null);
+          setActiveOverlay('none');
+        }}
+        onClose={() => onClose?.()}
+      />
 
-          <div id="food-search-title" style={{ flex: 1, textAlign: 'center', fontWeight: 600 }}>
-            {selectedProduct
-              ? 'Añadir Registro'
-              : activeOverlay === 'scanner'
-                ? 'Escanear Código'
-                : activeOverlay === 'ai'
-                  ? 'Asistente IA'
-                  : activeOverlay === 'manual'
-                    ? 'Crear Manual'
-                    : 'Buscar Alimento'}
-          </div>
-          <div style={{ width: 44 }}></div>
-        </div>
-
-        <div className="food-search-body fade-in">
-          {selectedProduct ? (
-            /* VIEW 1: PORTION SELECTION */
-            <FoodPortionEditor
-              selectedProduct={selectedProduct}
-              quantity={quantity}
-              setQuantity={setQuantity}
-              inputMode={inputMode}
-              setInputMode={setInputMode}
-              onConfirmAdd={handleConfirmAdd}
-            />
-          ) : activeOverlay === 'manual' ? (
-            /* VIEW: MANUAL ENTRY */
-            <ManualFoodForm
-              manualForm={manualForm}
-              updateManualForm={updateManualForm}
-              quantity={quantity}
-              setQuantity={setQuantity}
-              ocrLoading={ocrLoading}
-              date={date}
-              selectedMealIndex={selectedMealIndex}
-              onLogAdded={onLogAdded}
-              onCustomAdd={onCustomAdd}
-              onClose={() => {
-                setActiveOverlay('none');
-                if (onCustomAdd && onClose) onClose();
-              }}
-            />
-          ) : activeOverlay === 'scanner' ? (
-            /* VIEW: SCANNER */
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <Suspense
-                fallback={
-                  <Skeleton className="w-full h-64 rounded-lg flex flex-col items-center justify-center border border-border">
-                    <div className="w-12 h-12 border-4 border-muted-foreground/30 rounded-full border-t-muted-foreground animate-spin mb-4"></div>
-                    <span className="text-muted-foreground text-sm">Iniciando cámara...</span>
-                  </Skeleton>
-                }
-              >
-                <BarcodeScanner
-                  onScanSuccess={handleScanSuccess}
-                  onScanError={(err: string) => console.warn('Barcode scan:', err)}
-                />
-              </Suspense>
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button className="btn btn-secondary" onClick={() => setActiveOverlay('none')}>
-                  Cancelar
-                </button>
-              </div>
+      <div className="food-search-body fade-in">
+        {isError && <QueryErrorNotice retry={refetch} pending={isFetching} />}
+        {selectedProduct ? (
+          <FoodPortionEditor
+            selectedProduct={selectedProduct}
+            quantity={quantity}
+            setQuantity={setQuantity}
+            inputMode={inputMode}
+            setInputMode={setInputMode}
+            onConfirmAdd={handleConfirmAdd}
+            pending={adding}
+          />
+        ) : activeOverlay === 'manual' ? (
+          <ManualFoodForm
+            manualForm={manualForm}
+            updateManualForm={updateManualForm}
+            quantity={quantity}
+            setQuantity={setQuantity}
+            ocrLoading={ocrLoading}
+            date={date}
+            selectedMealIndex={selectedMealIndex}
+            selectedMealKey={selectedMealKey}
+            onLogAdded={onLogAdded}
+            onCustomAdd={onCustomAdd}
+            onClose={() => {
+              setActiveOverlay('none');
+              if (onCustomAdd && onClose) onClose();
+            }}
+          />
+        ) : activeOverlay === 'scanner' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <Suspense
+              fallback={
+                <Skeleton className="w-full h-64 rounded-lg flex flex-col items-center justify-center border border-border">
+                  <div className="w-12 h-12 border-4 border-muted-foreground/30 rounded-full border-t-muted-foreground animate-spin mb-4"></div>
+                  <span className="text-muted-foreground text-sm">Iniciando cámara...</span>
+                </Skeleton>
+              }
+            >
+              <BarcodeScanner
+                onScanSuccess={handleScanSuccess}
+                onScanError={(err: string) => console.warn('Barcode scan:', err)}
+              />
+            </Suspense>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button className="btn btn-secondary" onClick={() => setActiveOverlay('none')}>
+                Cancelar
+              </button>
             </div>
-          ) : activeOverlay === 'ai' ? (
-            <AiFoodAssistantView
-              query={query}
-              setQuery={setQuery}
-              selectedImage={selectedImage}
-              setSelectedImage={setSelectedImage}
-              fileInputRef={fileInputRef}
-              handleImageChange={handleImageChange}
-              isListening={isListening}
-              toggleListening={toggleListening}
-              stopListening={stopListening}
-              aiSubmitting={aiSubmitting}
-              aiElapsedSeconds={aiElapsedSeconds}
-              getAiStatusText={getAiStatusText}
-              onCancel={() => setActiveOverlay('none')}
-              onSubmit={submitAiPrompt}
-            />
-          ) : (
-            /* VIEW: UNIFIED SEARCH & SHORTCUTS */
-            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <div style={{ marginBottom: '1rem' }}>
-                <select
-                  className="form-input"
-                  aria-label="Comida del registro"
-                  value={selectedMealIndex}
-                  onChange={(e) => setSelectedMealIndex(Number(e.target.value))}
-                  style={{
-                    padding: '0.5rem',
-                    fontSize: '1rem',
-                    background: 'var(--bg-secondary)',
-                    border: 'none',
-                    borderRadius: '8px',
-                    color: 'var(--text-primary)',
-                  }}
-                >
-                  <option value={-1}> Detectar automáticamente (IA)</option>
-                  {meals && meals.length > 0 ? (
-                    meals.map((m, idx) => (
-                      <option key={m.id || idx} value={idx}>
-                        {m.name || `Comida ${idx + 1}`}
-                      </option>
-                    ))
-                  ) : (
-                    <>
-                      <option value={0}>Desayuno</option>
-                      <option value={1}>Comida</option>
-                      <option value={2}>Cena</option>
-                      <option value={3}>Snacks / Otros</option>
-                    </>
-                  )}
-                </select>
-              </div>
-
-              {/* SEARCH BAR WITH ICONS */}
-              <form onSubmit={handleSearch} style={{ position: 'relative', marginBottom: '1rem' }}>
-                <input
-                  type="search"
-                  enterKeyHint="search"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  className="form-input"
-                  placeholder="Busca comida, marca..."
-                  value={query}
-                  onChange={(e) => handleQueryChange(e.target.value)}
-                  style={{
-                    paddingRight: '144px',
-                    paddingLeft: '1rem',
-                    height: '50px',
-                    fontSize: '1rem',
-                    borderRadius: '12px',
-                  }}
-                />
-
-                <div
-                  style={{
-                    position: 'absolute',
-                    right: '2px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    display: 'flex',
-                    gap: '2px',
-                  }}
-                >
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    ref={fileInputRef}
-                    style={{ display: 'none' }}
-                    onChange={handleOcrUpload}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                    className="food-search-tool-btn"
-                    title="Etiqueta Nutricional (OCR)"
-                    aria-label="Etiqueta Nutricional (OCR)"
-                  >
-                    <ImageIcon size={18} aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveOverlay('scanner')}
-                    className="food-search-tool-btn"
-                    title="Código de barras"
-                    aria-label="Código de barras"
-                  >
-                    <ScanLine size={18} aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveOverlay('ai')}
-                    className="food-search-tool-btn food-search-tool-btn--ai"
-                    title="Asistente de IA"
-                    aria-label="Asistente de IA"
-                  >
-                    <Mic size={18} aria-hidden="true" />
-                  </button>
-                </div>
-              </form>
-
-              {/* RESULTS AREA */}
-              <FoodSearchResultsList
-                query={query}
-                savedFoods={savedFoods}
-                recentLogs={recentLogs}
-                offResults={offResults}
-                onSelectRecent={handleSelectRecent}
-                onSelectSaved={handleSelectSaved}
-                onSelectOff={handleSelectOff}
-                onOpenManual={() => {
-                  setManualForm((prev) => ({ ...prev, name: query }));
-                  setActiveOverlay('manual');
+          </div>
+        ) : activeOverlay === 'ai' ? (
+          <AiFoodAssistantView
+            query={query}
+            setQuery={setQuery}
+            selectedImage={selectedImage}
+            setSelectedImage={setSelectedImage}
+            fileInputRef={fileInputRef}
+            handleImageChange={handleImageChange}
+            isListening={isListening}
+            toggleListening={toggleListening}
+            stopListening={stopListening}
+            aiSubmitting={aiSubmitting}
+            aiElapsedSeconds={aiElapsedSeconds}
+            getAiStatusText={getAiStatusText}
+            onCancel={() => setActiveOverlay('none')}
+            onSubmit={submitAiPrompt}
+          />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <div style={{ marginBottom: '1rem' }}>
+              <select
+                className="form-input"
+                aria-label="Comida del registro"
+                value={displayedMealIndex}
+                onChange={(e) => selectMeal(Number(e.target.value))}
+                style={{
+                  padding: '0.5rem',
+                  fontSize: '1rem',
+                  background: 'var(--bg-secondary)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <option value={-1}> Detectar automáticamente (IA)</option>
+                {meals && meals.length > 0 ? (
+                  meals.map((m, idx) => (
+                    <option key={m.id || idx} value={idx}>
+                      {m.name || `Comida ${idx + 1}`}
+                    </option>
+                  ))
+                ) : (
+                  <>
+                    <option value={0}>Desayuno</option>
+                    <option value={1}>Comida</option>
+                    <option value={2}>Cena</option>
+                    <option value={3}>Snacks / Otros</option>
+                  </>
+                )}
+              </select>
+            </div>
+            <form onSubmit={handleSearch} style={{ position: 'relative', marginBottom: '1rem' }}>
+              <input
+                type="search"
+                enterKeyHint="search"
+                autoCapitalize="none"
+                autoCorrect="off"
+                className="form-input"
+                placeholder="Busca comida, marca..."
+                value={query}
+                onChange={(e) => handleQueryChange(e.target.value)}
+                style={{
+                  paddingRight: '144px',
+                  paddingLeft: '1rem',
+                  height: '50px',
+                  fontSize: '1rem',
+                  borderRadius: '12px',
                 }}
               />
-            </div>
-          )}
-        </div>
+
+              <div
+                style={{
+                  position: 'absolute',
+                  right: '2px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  display: 'flex',
+                  gap: '2px',
+                }}
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                  onChange={handleOcrUpload}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                  className="food-search-tool-btn"
+                  title="Etiqueta Nutricional (OCR)"
+                  aria-label="Etiqueta Nutricional (OCR)"
+                >
+                  <ImageIcon size={18} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveOverlay('scanner')}
+                  className="food-search-tool-btn"
+                  title="Código de barras"
+                  aria-label="Código de barras"
+                >
+                  <ScanLine size={18} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveOverlay('ai')}
+                  className="food-search-tool-btn food-search-tool-btn--ai"
+                  title="Asistente de IA"
+                  aria-label="Asistente de IA"
+                >
+                  <Mic size={18} aria-hidden="true" />
+                </button>
+              </div>
+            </form>
+            <FoodSearchResultsList
+              query={query}
+              savedFoods={savedFoods}
+              recentLogs={recentLogs}
+              offResults={offResults}
+              onSelectRecent={handleSelectRecent}
+              onSelectSaved={handleSelectSaved}
+              onSelectOff={handleSelectOff}
+              onOpenManual={() => {
+                setManualForm((prev) => ({ ...prev, name: query }));
+                setActiveOverlay('manual');
+              }}
+            />
+          </div>
+        )}
       </div>
-    </>
+    </ModalFrame>
   );
 }

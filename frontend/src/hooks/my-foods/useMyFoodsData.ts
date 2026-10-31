@@ -11,6 +11,8 @@ export function useMyFoodsData() {
     data = { recentFoods: [], savedFoods: [], recipes: [] },
     isLoading,
     refetch,
+    isError,
+    isFetching,
   } = useQuery<
     {
       recentFoods: FoodLog[];
@@ -20,17 +22,13 @@ export function useMyFoodsData() {
     Error
   >({
     queryKey: ['myFoodsData'],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const [recentRes, savedRes, recipesRes] = await Promise.all([
-        api.get('/nutrition/logs/recent').catch(() => ({ data: [] })),
-        api.get('/nutrition/my-foods').catch(() => ({ data: [] })),
-        api.get('/nutrition/recipes').catch(() => ({ data: [] })),
+        api.get<FoodLog[]>('/nutrition/logs/recent', { signal }),
+        api.get<PageFoodItem[]>('/nutrition/my-foods', { signal }),
+        api.get<Recipe[]>('/nutrition/recipes', { signal }),
       ]);
-      return {
-        recentFoods: recentRes.data,
-        savedFoods: savedRes.data,
-        recipes: recipesRes.data,
-      };
+      return { recentFoods: recentRes.data, savedFoods: savedRes.data, recipes: recipesRes.data };
     },
   });
 
@@ -80,6 +78,8 @@ export function useMyFoodsData() {
   const { recentFoods, savedFoods, recipes } = data;
 
   return {
+    isError,
+    isFetching,
     recentFoods,
     savedFoods,
     recipes,

@@ -34,6 +34,20 @@ class NutritionServiceTest {
     private static final String USER_EMAIL = "test@ascension.app";
 
     @Test
+    void addMealPersistsItsMacroConfiguration() {
+        when(mealRepository.save(any(Meal.class))).thenAnswer(call -> call.getArgument(0));
+        var dto = MealDTO.builder().name("Lunch").proteinPct(30.0).fixedProtein(25.0)
+                .carbsPct(40.0).fixedCarbs(50.0).fatPct(20.0).fixedFat(15.0).build();
+        var saved = nutritionService.addMeal(dto, USER_EMAIL);
+        assertThat(saved.getProteinPct()).isEqualTo(30.0);
+        assertThat(saved.getFixedProtein()).isEqualTo(25.0);
+        assertThat(saved.getCarbsPct()).isEqualTo(40.0);
+        assertThat(saved.getFixedCarbs()).isEqualTo(50.0);
+        assertThat(saved.getFatPct()).isEqualTo(20.0);
+        assertThat(saved.getFixedFat()).isEqualTo(15.0);
+    }
+
+    @Test
     void getMeals_whenNoMealsExist_seedsDefaultMealsAndReturnsThem() {
         Meal meal1 = Meal.builder().id(1L).userEmail(USER_EMAIL).name("Desayuno").sortOrder(0).build();
         when(mealRepository.findAllByUserEmailOrderBySortOrderAsc(USER_EMAIL))
