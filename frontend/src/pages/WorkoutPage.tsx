@@ -27,7 +27,7 @@ export default function WorkoutPage() {
   const unclaimedBackup = useUnclaimedWorkoutBackup();
   const tab = useWorkoutStore((s) => s.tab);
   const { data: exercises, isLoading, isError, refetch } = useExerciseCatalog();
-  const pageTitle = <h1 className="sr-only">Entreno</h1>;
+  const pageTitle = <h1 className={tab === 'train' ? 'sr-only' : 'app-page-title'}>Entreno</h1>;
   // Resumen and Ejercicios put their sections at h3, so the view's name fills the h2 level.
   const viewTitle = VIEW_OPTIONS.find((o) => o.value === tab)?.label;
 

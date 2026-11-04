@@ -156,7 +156,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
               Peso Hoy
             </span>
             <span
-              className="quick-add-date text-[0.72rem] flex items-center gap-1"
+              className="quick-add-date text-[0.65rem] flex items-center gap-1"
               style={{ color: 'var(--text-secondary)' }}
             >
               <Calendar size={11} className="opacity-70" /> {capitalizeFirst(todayLabel)}

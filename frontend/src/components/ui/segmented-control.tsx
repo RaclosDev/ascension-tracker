@@ -19,9 +19,10 @@ export function SegmentedControl({ options, value, onChange, className }: Segmen
       className={cn(className)}
       style={{
         display: 'flex',
-        background: 'rgba(255, 255, 255, 0.05)',
-        padding: '0.35rem',
-        borderRadius: '20px',
+        background: 'var(--bg-secondary)',
+        padding: '0.25rem',
+        border: '1px solid var(--border-medium)',
+        borderRadius: '6px',
         position: 'relative',
         width: '100%',
       }}
@@ -35,14 +36,14 @@ export function SegmentedControl({ options, value, onChange, className }: Segmen
             onClick={() => onChange(option.value)}
             style={{
               flex: 1,
-              padding: '0.65rem',
-              borderRadius: '16px',
-              background: isActive ? 'var(--bg-card)' : 'transparent',
-              color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-              fontWeight: isActive ? 600 : 500,
-              boxShadow: isActive ? '0 4px 16px rgba(0,0,0,0.4)' : 'none',
-              border: isActive ? '1px solid var(--border-medium)' : '1px solid transparent',
-              transition: 'all 0.25s ease',
+              padding: '0.6rem',
+              borderRadius: '3px',
+              background: isActive ? '#193653' : 'transparent',
+              color: isActive ? '#77bdff' : 'var(--text-secondary)',
+              fontWeight: isActive ? 700 : 500,
+              boxShadow: 'none',
+              border: '1px solid transparent',
+              transition: 'background 0.15s ease, color 0.15s ease',
               cursor: 'pointer',
               fontSize: '0.9rem',
               textAlign: 'center',

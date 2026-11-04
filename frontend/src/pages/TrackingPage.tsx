@@ -240,7 +240,7 @@ export default function TrackingPage() {
   return (
     <div className="fade-in">
       {isError && <QueryErrorNotice retry={fetchData} pending={isFetching} />}
-      <h1 className="sr-only">Tracking semanal</h1>
+      <h1 className="app-page-title">Tracking</h1>
       <TrackingMetricToggle
         showWeight={showWeight}
         showSteps={showSteps}

@@ -129,7 +129,7 @@ export default function NutritionPage() {
   return (
     <div className="fade-in">
       {isError && <QueryErrorNotice retry={fetchData} pending={isFetching} />}
-      <h1 className="sr-only">Nutrición</h1>
+      <h1 className="app-page-title">Nutrición</h1>
       <SegmentedControl
         options={[
           { label: 'Diario', value: 'diary' },
