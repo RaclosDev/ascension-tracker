@@ -508,6 +508,7 @@ body,
 }
 
 .mobile-top-bar {
+  background: var(--wall);
   border-bottom: 2px solid var(--wall-line-soft);
 }
 .mobile-brand {
