@@ -9,7 +9,7 @@
   --ink: #111827;
   --tape: rgba(255, 230, 140, 0.85);
   /* Grano de papel: ruido SVG en línea, sin imagen que precachear. */
-  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .07 0 0 0 0 .09 0 0 0 0 .15 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .07 0 0 0 0 .09 0 0 0 0 .15 0 0 0 .12 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
   --marker-ink: #0b5f74;
 
   --font-display: 'Anton', 'Arial Narrow', sans-serif;
@@ -137,11 +137,62 @@ body {
   }
 }
 
+/* Pared: el fondo de la app es oscuro y el contenido se pega encima en hojas de papel. */
 body,
 .main-content {
-  background-color: var(--paper);
+  background-color: var(--wall);
   background-image: var(--paper-grain);
   color: var(--ink);
+}
+.mobile-top-bar {
+  background: var(--wall);
+}
+
+/*
+ * La página es una hoja: rayado fino, grano, dos hojas asomando por debajo y cinta arriba.
+ * Solo sombras y pseudoelementos: el contenido no gira ni crea capas nuevas para los diálogos.
+ */
+.main-content-inner {
+  position: relative;
+  min-height: calc(100% - 8px);
+  padding: 28px 32px 32px;
+  border-radius: 4px;
+  background-color: var(--paper);
+  background-image:
+    var(--paper-grain),
+    repeating-linear-gradient(0deg, rgba(17, 24, 39, 0.03) 0 1px, transparent 1px 4px);
+  box-shadow:
+    5px 6px 0 #ddd3bd,
+    6px 7px 0 rgba(17, 24, 39, 0.3),
+    11px 12px 0 #c9bfa9,
+    12px 13px 0 rgba(17, 24, 39, 0.3),
+    0 16px 32px rgba(0, 0, 0, 0.45);
+}
+.main-content-inner::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 120px;
+  height: 28px;
+  background: var(--tape);
+  border-inline: 1px dashed rgba(17, 24, 39, 0.19);
+  transform: translateX(-50%) rotate(-3deg);
+  pointer-events: none;
+}
+@media (max-width: 768px) {
+  .main-content-inner {
+    padding: 22px 12px 20px;
+    box-shadow:
+      3px 4px 0 #ddd3bd,
+      4px 5px 0 rgba(17, 24, 39, 0.3),
+      0 10px 22px rgba(0, 0, 0, 0.4);
+  }
+  .main-content-inner::after {
+    width: 92px;
+    height: 24px;
+    top: -10px;
+  }
 }
 
 @layer base {
@@ -227,16 +278,46 @@ body,
 }
 
 /* El logotipo blanco se imprime en tinta cuando está sobre papel. */
-.mobile-header-title-img,
 .on-paper-logo {
   filter: invert(1) brightness(0.12);
 }
 
 /* Hojas de papel: canto fino y sombra desplazada, sin cristal ni desenfoque. */
 .card {
+  position: relative;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(17, 24, 39, 0.025) 0 1px,
+    transparent 1px 4px
+  );
   border: 1px solid rgba(17, 24, 39, 0.22);
   border-radius: 4px;
-  box-shadow: 2px 3px 0 rgba(17, 24, 39, 0.12);
+  box-shadow:
+    3px 4px 0 #e6dcc7,
+    4px 5px 0 rgba(17, 24, 39, 0.2);
+}
+/* Cinta en una de cada tres hojas, con anchos y giros distintos para que no parezca molde. */
+.main-content-inner .card:nth-child(3n + 1)::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: var(--tape-width, 72px);
+  height: 20px;
+  background: var(--tape);
+  border-inline: 1px dashed rgba(17, 24, 39, 0.19);
+  transform: translateX(-50%) rotate(var(--tape-angle, -4deg));
+  pointer-events: none;
+  z-index: 2;
+}
+/* Las hojas que recortan su contenido llevan la cinta pegada justo en el canto. */
+.main-content-inner .card.overflow-hidden::after {
+  top: -3px;
+}
+.main-content-inner .card:nth-child(6n + 4)::after {
+  --tape-width: 60px;
+  --tape-angle: 3deg;
+  left: 70%;
 }
 @media (hover: hover) {
   .card:hover {
