@@ -22,6 +22,7 @@ import { Skeleton } from './ui/skeleton';
 import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings, Plus } from 'lucide-react';
 import { ActiveWorkoutBanner } from './workout/ActiveWorkoutBanner';
 import { haptics } from '@/lib/haptics';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   {
@@ -71,6 +72,8 @@ export default function Layout() {
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const userInitial = (user?.name || user?.email || '?').trim().charAt(0).toUpperCase();
   const hasActiveWorkout = useWorkoutStore((s) => s.active !== null);
   const hideNav = hasActiveWorkout && location.pathname === '/workout';
 
@@ -201,13 +204,25 @@ export default function Layout() {
         </aside>
 
         <main className="main-content">
-          {/* Cabecera móvil: se desplaza con el contenido */}
+          {/* Cabecera móvil: marca a la izquierda y sesión a la derecha; se desplaza con el contenido */}
           <header className="mobile-top-bar">
-            {hideNav ? <WorkoutElapsedTimer /> : <div style={{ width: '48px' }} />}
-            <div className="mobile-top-logo">
-              <img src="/ascension-title.png" alt="Ascension" className="mobile-header-title-img" />
+            <span className="mobile-brand">Ascension</span>
+            <div className="mobile-top-actions">
+              {hideNav && <WorkoutElapsedTimer />}
+              <button
+                type="button"
+                className="mobile-avatar-btn"
+                aria-label="Cuenta y ajustes"
+                title="Cuenta y ajustes"
+                onClick={() => navigateTo('/settings')}
+              >
+                {user?.picture ? (
+                  <img src={user.picture} alt="" referrerPolicy="no-referrer" />
+                ) : (
+                  <span aria-hidden="true">{userInitial}</span>
+                )}
+              </button>
             </div>
-            <div style={{ width: '48px' }} />
           </header>
           <div className="main-content-inner">
             {configError && <QueryErrorNotice retry={retryConfig} pending={fetchingConfig} />}

@@ -479,6 +479,49 @@ body,
 
 /* ───────────── Pared: navegación, pestañas y botones ───────────── */
 
+/* Cabecera móvil como en PorrApp: marca a rotulador y avatar de la sesión. */
+.mobile-top-bar {
+  border-bottom: 2px solid rgba(243, 236, 220, 0.22);
+}
+.mobile-brand {
+  color: var(--paper);
+  font-family: var(--font-marker);
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.mobile-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.mobile-avatar-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(243, 236, 220, 0.3);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-marker);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.mobile-avatar-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mobile-avatar-btn:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 2px;
+}
+
 .sidebar,
 .mobile-bottom-nav {
   background: var(--wall);
