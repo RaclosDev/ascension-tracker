@@ -235,19 +235,6 @@ body,
   background-image: var(--paper-grain);
   color: var(--text-primary);
 }
-/* Solo la franja de la barra de estado queda fija, para que el reloj del
-   sistema no se pinte sobre las hojas; el logo se desplaza con el contenido. */
-@media (max-width: 768px) {
-  .app-root::before {
-    content: '';
-    position: fixed;
-    inset: 0 0 auto;
-    height: env(safe-area-inset-top, 0px);
-    background: var(--wall);
-    z-index: 90;
-    pointer-events: none;
-  }
-}
 .main-content-inner {
   padding-top: 18px;
 }
