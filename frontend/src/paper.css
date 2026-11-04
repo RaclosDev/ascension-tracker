@@ -298,9 +298,10 @@ body,
   --tape-angle: -5deg;
   --tape-width: 64px;
 }
-:is(.card, .chart-card, .progress-card):not(
-  :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet) *
-) {
+:is(.card, .chart-card, .progress-card):not([role='dialog'], [role='alertdialog']):not(
+    :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
+      *
+  ) {
   position: relative;
   isolation: isolate;
   background: transparent;
@@ -309,7 +310,7 @@ body,
   box-shadow: none;
   overflow: visible;
 }
-:is(.card, .chart-card, .progress-card):not(
+:is(.card, .chart-card, .progress-card):not([role='dialog'], [role='alertdialog']):not(
     :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
       *
   )::before {
@@ -327,7 +328,7 @@ body,
     0 10px 24px rgba(0, 0, 0, 0.35);
   pointer-events: none;
 }
-:is(.card, .chart-card, .progress-card):not(
+:is(.card, .chart-card, .progress-card):not([role='dialog'], [role='alertdialog']):not(
     :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
       *
   )::after {
@@ -369,6 +370,9 @@ body,
 }
 /* Las hojas que recortaban su contenido lo siguen haciendo, pero dejan asomar papel y cinta. */
 .overflow-hidden:is(.card, .chart-card, .progress-card):not(
+    [role='dialog'],
+    [role='alertdialog']
+  ):not(
     :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
       *
   ) {
@@ -392,7 +396,7 @@ body,
   :is(.card, .chart-card, .progress-card):nth-child(5n) {
     --paper-angle: -0.45deg;
   }
-  :is(.card, .chart-card, .progress-card):not(
+  :is(.card, .chart-card, .progress-card):not([role='dialog'], [role='alertdialog']):not(
       :is(
           .card,
           .chart-card,
