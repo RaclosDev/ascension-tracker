@@ -8,6 +8,8 @@ BEGIN
         SELECT schemaname, tablename
         FROM pg_tables
         WHERE schemaname = 'public'
+          -- Flyway locks its history table from a separate connection while this migration runs.
+          AND tablename <> 'flyway_schema_history'
     LOOP
         EXECUTE format('ALTER TABLE %I.%I ENABLE ROW LEVEL SECURITY',
             table_name.schemaname, table_name.tablename);

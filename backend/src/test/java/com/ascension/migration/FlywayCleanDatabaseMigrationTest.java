@@ -62,7 +62,8 @@ class FlywayCleanDatabaseMigrationTest {
     @Test
     void publicTablesRequireRowLevelSecurity() {
         var unprotectedTables = jdbcTemplate.queryForList(
-                "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND NOT rowsecurity",
+                "SELECT tablename FROM pg_tables WHERE schemaname = 'public' "
+                        + "AND tablename <> 'flyway_schema_history' AND NOT rowsecurity",
                 String.class);
 
         assertThat(unprotectedTables).isEmpty();
