@@ -72,14 +72,14 @@ export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
           {showWeight && (
             <div
               style={{
-                background: 'rgba(255,255,255,0.05)',
+                background: 'var(--bg-glass)',
                 padding: '0.2rem',
                 borderRadius: '6px',
                 fontSize: '0.75rem',
                 fontWeight: 600,
                 color: 'var(--text-primary)',
                 textAlign: 'center',
-                border: '1px solid rgba(255,255,255,0.05)',
+                border: '1px solid var(--border-subtle)',
                 minHeight: '26px',
                 display: 'flex',
                 alignItems: 'center',
@@ -99,14 +99,14 @@ export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
           {showSteps && (
             <div
               style={{
-                background: 'rgba(255,255,255,0.05)',
+                background: 'var(--bg-glass)',
                 padding: '0.2rem',
                 borderRadius: '6px',
                 fontSize: '0.75rem',
                 fontWeight: 600,
                 color: 'var(--text-primary)',
                 textAlign: 'center',
-                border: '1px solid rgba(255,255,255,0.05)',
+                border: '1px solid var(--border-subtle)',
                 minHeight: '26px',
                 display: 'flex',
                 alignItems: 'center',
@@ -126,14 +126,14 @@ export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
           {showCalories && (
             <div
               style={{
-                background: 'rgba(255,255,255,0.05)',
+                background: 'var(--bg-glass)',
                 padding: '0.2rem',
                 borderRadius: '6px',
                 fontSize: '0.75rem',
                 fontWeight: 600,
                 color: 'var(--text-primary)',
                 textAlign: 'center',
-                border: '1px solid rgba(255,255,255,0.05)',
+                border: '1px solid var(--border-subtle)',
                 minHeight: '26px',
                 display: 'flex',
                 alignItems: 'center',
