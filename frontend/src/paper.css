@@ -638,6 +638,85 @@ body,
   color: var(--wall-active-ink);
   box-shadow: 2px 3px 0 var(--wall-shadow);
 }
+/*
+ * Ajustes por secciones: en móvil una tira de pestañas que se desplaza en horizontal;
+ * desde 1024px, una columna fija a la izquierda. La activa es el mismo recorte de papel.
+ */
+.settings-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md);
+}
+.settings-section-panel {
+  min-width: 0;
+}
+.settings-nav-list {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--wall);
+  border: 1px solid var(--wall-line);
+  border-radius: 6px;
+}
+.settings-nav-list::-webkit-scrollbar {
+  display: none;
+}
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.55rem 0.85rem;
+  border-radius: 3px;
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+.settings-nav-item:focus-visible {
+  outline-color: var(--wall-highlight);
+  outline-offset: -3px;
+}
+@media (hover: hover) {
+  .settings-nav-item:not(.is-active):hover {
+    color: var(--wall-ink);
+    background: var(--bg-glass-strong);
+  }
+}
+.settings-nav-item.is-active {
+  background: var(--wall-active-bg);
+  color: var(--wall-active-ink);
+  box-shadow: 2px 3px 0 var(--wall-shadow);
+}
+@media (min-width: 1024px) {
+  .settings-layout {
+    grid-template-columns: 14rem minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-xl);
+  }
+  .settings-nav {
+    position: sticky;
+    top: var(--space-lg);
+  }
+  .settings-nav-list {
+    flex-direction: column;
+    overflow: visible;
+  }
+  .settings-nav-item {
+    white-space: normal;
+  }
+}
+
 [role='tablist'] [role='tab'] {
   font-family: var(--font-display);
   font-weight: 400;

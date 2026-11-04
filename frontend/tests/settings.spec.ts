@@ -2,32 +2,36 @@ import { test, expect } from '@playwright/test';
 import { setupAuthMocks } from './helpers/auth';
 
 test.describe('Settings Page & User Preferences Flows', () => {
-  test('renders settings accordions and can expand personal biometrics', async ({ page }) => {
+  test('shows the section menu and switches sections through the URL', async ({ page }) => {
     await setupAuthMocks(page);
 
     await page.goto('/settings');
 
-    // Verify main accordion headers
-    const personalHeader = page
-      .locator('.accordion-header')
-      .filter({ hasText: /Datos Personales/i });
-    await expect(personalHeader).toBeVisible();
-    await expect(
-      page.locator('.accordion-header').filter({ hasText: /Tema y Apariencia/i }),
-    ).toBeVisible();
-    await expect(
-      page.locator('.accordion-header').filter({ hasText: /Entrenamiento/i }),
-    ).toBeVisible();
-    await expect(page.getByText('Copia de Seguridad y Privacidad')).toBeVisible();
-    await expect(page.getByText('Cuenta', { exact: true })).toBeVisible();
+    const nav = page.getByRole('navigation', { name: 'Secciones de ajustes' });
+    const personalLink = nav.getByRole('link', { name: 'Datos personales' });
+    await expect(personalLink).toHaveAttribute('aria-current', 'page');
+    await expect(nav.getByRole('link', { name: 'Apariencia' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'Entrenamiento' })).toBeVisible();
 
-    // Click to expand Personal Data
-    await personalHeader.click();
-
-    // Verify form inputs become visible
+    // Personal data is the default section, shown without any extra click
     await expect(page.locator('.form-group select').first()).toBeVisible();
     await expect(page.locator('.form-group input[type="number"]').first()).toBeVisible();
     await expect(page.getByRole('button', { name: /Guardar Cambios/i })).toBeVisible();
+
+    // Only one section is shown at a time and the active one lives in the URL
+    await nav.getByRole('link', { name: 'Datos y cuenta' }).click();
+    await expect(page).toHaveURL(/\/settings\?section=data$/);
+    await expect(page.getByText('Copia de Seguridad y Privacidad')).toBeVisible();
+    await expect(page.getByText('Cuenta', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Guardar Cambios/i })).toHaveCount(0);
+
+    // Deep links open the requested section directly
+    await page.goto('/settings?section=theme');
+    await expect(nav.getByRole('link', { name: 'Apariencia' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await expect(page.getByRole('heading', { name: 'Tema y Apariencia' })).toBeVisible();
   });
 
   test('allows updating personal biometrics and submits PUT /api/settings', async ({ page }) => {
@@ -49,10 +53,10 @@ test.describe('Settings Page & User Preferences Flows', () => {
 
     await page.goto('/settings');
 
-    // Ensure personal accordion is open
+    // Ensure personal section is shown
     const personalHeader = page
-      .locator('.accordion-header')
-      .filter({ hasText: /Datos Personales/i });
+      .getByRole('navigation', { name: 'Secciones de ajustes' })
+      .getByRole('link', { name: 'Datos personales' });
     await personalHeader.click();
 
     // Fill new biometrics
@@ -89,7 +93,9 @@ test.describe('Settings Page & User Preferences Flows', () => {
     await page.goto('/settings');
 
     // Open Workout section
-    const workoutHeader = page.locator('.accordion-header').filter({ hasText: /Entrenamiento/i });
+    const workoutHeader = page
+      .getByRole('navigation', { name: 'Secciones de ajustes' })
+      .getByRole('link', { name: 'Entrenamiento' });
     await workoutHeader.click();
 
     // Rest preset input
@@ -135,7 +141,9 @@ test.describe('Settings Page & User Preferences Flows', () => {
     await page.goto('/settings');
 
     // Open Workout section
-    const workoutHeader = page.locator('.accordion-header').filter({ hasText: /Entrenamiento/i });
+    const workoutHeader = page
+      .getByRole('navigation', { name: 'Secciones de ajustes' })
+      .getByRole('link', { name: 'Entrenamiento' });
     await workoutHeader.click();
 
     // Toggle equipment e.g. "Multipower (Smith)" checkbox
@@ -156,7 +164,9 @@ test.describe('Settings Page & User Preferences Flows', () => {
     await page.goto('/settings');
 
     // Open Theme section
-    const themeHeader = page.locator('.accordion-header').filter({ hasText: /Tema y Apariencia/i });
+    const themeHeader = page
+      .getByRole('navigation', { name: 'Secciones de ajustes' })
+      .getByRole('link', { name: 'Apariencia' });
     await themeHeader.click();
 
     // Click on preset color #E11D48
@@ -185,7 +195,7 @@ test.describe('Settings Page & User Preferences Flows', () => {
       });
     });
 
-    await page.goto('/settings');
+    await page.goto('/settings?section=data');
 
     // Locate and click "Cerrar Sesión"
     const logoutBtn = page.getByRole('button', { name: /Cerrar Sesión/i });

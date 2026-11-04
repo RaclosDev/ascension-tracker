@@ -34,7 +34,7 @@ test.describe('Backup, Restore & Hevy Import Flows', () => {
       });
     });
 
-    await page.goto('/settings');
+    await page.goto('/settings?section=data');
 
     // Section exists
     await expect(page.getByText('Copia de Seguridad y Privacidad')).toBeVisible({ timeout: 15000 });
@@ -53,7 +53,7 @@ test.describe('Backup, Restore & Hevy Import Flows', () => {
   test('RestoreBackupModal rejects corrupted JSON and incompatible versions', async ({ page }) => {
     await setupAuthMocks(page);
 
-    await page.goto('/settings');
+    await page.goto('/settings?section=data');
 
     // Open Restore Modal
     const openRestoreBtn = page.getByRole('button', {
@@ -124,7 +124,7 @@ test.describe('Backup, Restore & Hevy Import Flows', () => {
       });
     });
 
-    await page.goto('/settings');
+    await page.goto('/settings?section=data');
 
     const openRestoreBtn = page.getByRole('button', {
       name: /Restaurar copia de seguridad \(JSON\)/i,
@@ -161,7 +161,7 @@ test.describe('Backup, Restore & Hevy Import Flows', () => {
 
     // Preview counters visible
     await expect(page.getByText('Entrenos')).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText('Comidas', { exact: true })).toBeVisible();
+    await expect(page.getByRole('dialog').getByText('Comidas', { exact: true })).toBeVisible();
 
     // Default mode is OVERWRITE. Confirm button must be disabled until safety checkbox is checked
     const confirmBtn = page.getByRole('button', { name: 'Confirmar Restauración' });
@@ -221,8 +221,10 @@ test.describe('Backup, Restore & Hevy Import Flows', () => {
 
     await page.goto('/settings');
 
-    // Open Workout Accordion
-    const workoutHeader = page.locator('.accordion-header', { hasText: 'Entrenamiento' });
+    // Open Workout section
+    const workoutHeader = page
+      .getByRole('navigation', { name: 'Secciones de ajustes' })
+      .getByRole('link', { name: 'Entrenamiento' });
     await expect(workoutHeader).toBeVisible({ timeout: 15000 });
     await workoutHeader.click();
 

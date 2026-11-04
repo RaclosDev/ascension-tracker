@@ -216,7 +216,9 @@ test.describe('Pruebas E2E de Interacción Real en Gimnasio (Interactive Gym Wor
     // 4.1 En Configuración -> Descanso Base: comprobar que borrar el último dígito ("9" de "90") no se bloquea
     await page.goto('/settings');
 
-    const workoutHeader = page.locator('.accordion-header').filter({ hasText: /Entrenamiento/i });
+    const workoutHeader = page
+      .getByRole('navigation', { name: 'Secciones de ajustes' })
+      .getByRole('link', { name: 'Entrenamiento' });
     await expect(workoutHeader).toBeVisible({ timeout: 10000 });
     await workoutHeader.click();
 
@@ -378,7 +380,9 @@ test.describe('Pruebas E2E de Interacción Real en Gimnasio (Interactive Gym Wor
 
     // 6.1 Ir a Configuración -> Ocultar multipower
     await page.goto('/settings');
-    const workoutHeader = page.locator('.accordion-header').filter({ hasText: /Entrenamiento/i });
+    const workoutHeader = page
+      .getByRole('navigation', { name: 'Secciones de ajustes' })
+      .getByRole('link', { name: 'Entrenamiento' });
     await expect(workoutHeader).toBeVisible({ timeout: 10000 });
     await workoutHeader.click();
 
@@ -393,8 +397,8 @@ test.describe('Pruebas E2E de Interacción Real en Gimnasio (Interactive Gym Wor
     // 6.2 Recargar la página y verificar que multipower SIGUE excluido (no se reseteó a vacío)
     await page.reload();
     const reloadedWorkoutHeader = page
-      .locator('.accordion-header')
-      .filter({ hasText: /Entrenamiento/i });
+      .getByRole('navigation', { name: 'Secciones de ajustes' })
+      .getByRole('link', { name: 'Entrenamiento' });
     await expect(reloadedWorkoutHeader).toBeVisible({ timeout: 10000 });
     await reloadedWorkoutHeader.click();
     const reloadedMultipowerToggle = page.locator(
