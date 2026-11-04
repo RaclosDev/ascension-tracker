@@ -228,7 +228,7 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
                 border: '1px solid rgba(255,215,0,0.2)',
               }}
             >
-              <Trophy size={20} style={{ color: '#FBBF24' }} />
+              <Trophy size={20} style={{ color: 'var(--color-warning)' }} />
               <p
                 style={{
                   fontSize: '0.75rem',

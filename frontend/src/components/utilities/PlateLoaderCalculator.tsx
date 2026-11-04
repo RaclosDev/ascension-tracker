@@ -66,7 +66,7 @@ export default function PlateLoaderCalculator({
             inputMode="decimal"
             step="0.5"
             min="0"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             placeholder={unit === 'kg' ? 'Ej: 100' : 'Ej: 225'}
             value={targetWeight}
             onChange={(e) => setTargetWeight(e.target.value)}
@@ -79,7 +79,7 @@ export default function PlateLoaderCalculator({
           </label>
           <select
             id={barId}
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             value={barWeight}
             onChange={(e) => setBarWeight(parseFloat(e.target.value))}
           >
@@ -107,7 +107,7 @@ export default function PlateLoaderCalculator({
           </label>
           <select
             id={unitId}
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             value={unit}
             onChange={(e) => {
               const newUnit = e.target.value as 'kg' | 'lbs';
@@ -123,7 +123,7 @@ export default function PlateLoaderCalculator({
         <div className="flex flex-col justify-end">
           <label
             htmlFor={collarsId}
-            className="flex items-center gap-2 px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white cursor-pointer select-none"
+            className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white cursor-pointer select-none"
           >
             <input
               id={collarsId}
@@ -192,7 +192,7 @@ export default function PlateLoaderCalculator({
         </div>
       </div>
 
-      <div className="p-4 rounded-xl border border-white/10 bg-[#121214] flex flex-col items-center overflow-x-auto">
+      <div className="p-4 rounded-xl border border-white/10 bg-[var(--bg-secondary)] flex flex-col items-center overflow-x-auto">
         <span className="text-xs font-semibold text-gray-400 mb-2 self-start">
           Esquema visual de la manga (Carga por lado)
         </span>

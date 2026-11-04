@@ -229,7 +229,7 @@ export function HevyImportModal({ isOpen, onClose, customExercises = [] }: HevyI
             borderRadius: '0.5rem',
             backgroundColor: 'rgba(239, 68, 68, 0.1)',
             border: '1px solid rgba(239, 68, 68, 0.3)',
-            color: '#ef4444',
+            color: 'var(--color-danger)',
             fontSize: '0.85rem',
             display: 'flex',
             alignItems: 'center',

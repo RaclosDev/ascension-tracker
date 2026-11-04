@@ -348,7 +348,7 @@ export function WorkoutCelebrationModal({
                         <img
                           src={item.gifUrl}
                           alt=""
-                          className="w-10 h-10 rounded-xl object-cover bg-black/40 border border-white/10 shrink-0"
+                          className="w-10 h-10 rounded-xl object-cover bg-[var(--bg-secondary)] border border-white/10 shrink-0"
                         />
                       ) : (
                         <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 shrink-0">
@@ -421,14 +421,14 @@ export function WorkoutCelebrationModal({
         </div>
 
         {/* Modal Sticky Bottom Action Footer */}
-        <div className="p-4 sm:p-5 border-t border-white/10 bg-zinc-950 flex flex-col gap-2.5 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
+        <div className="p-4 sm:p-5 border-t border-white/10 bg-[var(--bg-card)] flex flex-col gap-2.5 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
           {isInteractiveFinish ? (
             <>
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-white text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-[var(--accent-text)] text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50"
               >
                 {isSaving ? (
                   <>
@@ -473,7 +473,7 @@ export function WorkoutCelebrationModal({
                   haptics.success();
                   onClose();
                 }}
-                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-white text-sm flex items-center justify-center gap-2 transition-all"
+                className="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:brightness-110 active:scale-[0.98] font-bold text-[var(--accent-text)] text-sm flex items-center justify-center gap-2 transition-all"
               >
                 <Check size={18} />
                 <span>Aceptar y Continuar</span>

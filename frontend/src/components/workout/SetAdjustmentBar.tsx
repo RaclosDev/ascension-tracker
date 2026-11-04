@@ -34,7 +34,7 @@ export function SetAdjustmentBar({ label, negative, positive, onAdjust, onIntera
     <div
       onMouseDown={keepInputFocus}
       onTouchStart={keepInputFocus}
-      className="flex items-center justify-between gap-1 px-3 py-2 mt-1.5 bg-[#1C1C1E] border border-[var(--accent-primary)]/40 rounded-xl text-xs shadow-lg animate-fadeIn z-10 relative select-none"
+      className="flex items-center justify-between gap-1 px-3 py-2 mt-1.5 bg-[var(--bg-input)] border border-[var(--accent-primary)]/40 rounded-xl text-xs shadow-lg animate-fadeIn z-10 relative select-none"
     >
       <div className="flex items-center gap-1">
         <span className="text-xs font-semibold text-[var(--accent-primary-light)] pr-1">

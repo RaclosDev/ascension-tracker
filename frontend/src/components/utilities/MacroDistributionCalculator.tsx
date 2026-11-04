@@ -77,7 +77,7 @@ export default function MacroDistributionCalculator({
           onClick={() => setStrategy('bodyweight')}
           className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
             strategy === 'bodyweight'
-              ? 'bg-[var(--accent-primary,#e11d48)] text-white shadow'
+              ? 'bg-[var(--accent-primary,#e11d48)] text-[var(--accent-text)] shadow'
               : 'text-gray-400 hover:text-white'
           }`}
         >
@@ -88,7 +88,7 @@ export default function MacroDistributionCalculator({
           onClick={() => setStrategy('percentage')}
           className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
             strategy === 'percentage'
-              ? 'bg-[var(--accent-primary,#e11d48)] text-white shadow'
+              ? 'bg-[var(--accent-primary,#e11d48)] text-[var(--accent-text)] shadow'
               : 'text-gray-400 hover:text-white'
           }`}
         >
@@ -106,7 +106,7 @@ export default function MacroDistributionCalculator({
             type="number"
             inputMode="numeric"
             step="50"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             placeholder="2200"
             value={targetKcal}
             onChange={(e) => setTargetKcal(e.target.value)}
@@ -123,7 +123,7 @@ export default function MacroDistributionCalculator({
               type="number"
               inputMode="decimal"
               step="0.5"
-              className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+              className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
               placeholder="75.0"
               value={weightKg}
               onChange={(e) => setWeightKg(e.target.value)}
@@ -137,7 +137,7 @@ export default function MacroDistributionCalculator({
           </label>
           <select
             id={mealsId}
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             value={mealsCount}
             onChange={(e) => setMealsCount(parseInt(e.target.value, 10))}
           >
@@ -237,7 +237,7 @@ export default function MacroDistributionCalculator({
                 value={proteinPct}
                 onChange={(e) => setProteinPct(parseInt(e.target.value, 10) || 0)}
                 aria-label="Porcentaje de proteína"
-                className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
+                className="w-full px-2 py-1.5 bg-[var(--bg-input)] border border-white/10 rounded-lg text-white text-xs"
               />
             </div>
             <div>
@@ -256,7 +256,7 @@ export default function MacroDistributionCalculator({
                 value={carbsPct}
                 onChange={(e) => setCarbsPct(parseInt(e.target.value, 10) || 0)}
                 aria-label="Porcentaje de carbohidratos"
-                className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
+                className="w-full px-2 py-1.5 bg-[var(--bg-input)] border border-white/10 rounded-lg text-white text-xs"
               />
             </div>
             <div>
@@ -275,7 +275,7 @@ export default function MacroDistributionCalculator({
                 value={fatPct}
                 onChange={(e) => setFatPct(parseInt(e.target.value, 10) || 0)}
                 aria-label="Porcentaje de grasas"
-                className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
+                className="w-full px-2 py-1.5 bg-[var(--bg-input)] border border-white/10 rounded-lg text-white text-xs"
               />
             </div>
           </div>
@@ -329,7 +329,7 @@ export default function MacroDistributionCalculator({
       </div>
 
       {result.perMeal && (
-        <div className="p-4 rounded-xl bg-[#161618] border border-white/10 space-y-2">
+        <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-white/10 space-y-2">
           <h4 className="text-xs font-semibold text-gray-300">
             Reparto recomendado por plato ({result.perMeal.mealCount} comidas):
           </h4>

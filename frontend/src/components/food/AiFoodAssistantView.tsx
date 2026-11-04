@@ -129,7 +129,9 @@ export const AiFoodAssistantView: React.FC<AiFoodAssistantViewProps> = ({
             onClick={() => toggleListening(query)}
             style={{
               background: isListening ? 'rgba(239, 68, 68, 0.2)' : 'var(--bg-secondary)',
-              border: isListening ? '1px solid #ef4444' : '1px solid var(--border-color)',
+              border: isListening
+                ? '1px solid var(--color-danger)'
+                : '1px solid var(--border-color)',
               borderRadius: '50%',
               width: '34px',
               height: '34px',
@@ -137,11 +139,11 @@ export const AiFoodAssistantView: React.FC<AiFoodAssistantViewProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: isListening ? '#ef4444' : 'var(--text-primary)',
+              color: isListening ? 'var(--color-danger)' : 'var(--text-primary)',
               transition: 'all 0.2s ease',
             }}
           >
-            <Mic size={16} color={isListening ? '#ef4444' : undefined} />
+            <Mic size={16} color={isListening ? 'var(--color-danger)' : undefined} />
           </button>
         </div>
       </div>
@@ -153,7 +155,7 @@ export const AiFoodAssistantView: React.FC<AiFoodAssistantViewProps> = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             fontSize: '0.82rem',
-            color: '#ef4444',
+            color: 'var(--color-danger)',
             background: 'rgba(239, 68, 68, 0.1)',
             border: '1px solid rgba(239, 68, 68, 0.25)',
             padding: '0.45rem 0.8rem',
@@ -171,7 +173,7 @@ export const AiFoodAssistantView: React.FC<AiFoodAssistantViewProps> = ({
             type="button"
             onClick={stopListening}
             style={{
-              background: '#ef4444',
+              background: 'var(--color-danger)',
               border: 'none',
               color: '#fff',
               borderRadius: '6px',

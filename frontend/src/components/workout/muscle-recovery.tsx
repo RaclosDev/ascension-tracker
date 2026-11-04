@@ -208,7 +208,7 @@ export function MuscleRecovery({
               let statusBadge = {
                 text: 'Listo',
                 bg: 'rgba(34, 197, 94, 0.15)',
-                color: '#4ade80',
+                color: 'var(--color-success)',
               };
 
               if (recoveryPct < 30) {
@@ -216,14 +216,14 @@ export function MuscleRecovery({
                 statusBadge = {
                   text: 'Fatiga alta',
                   bg: 'rgba(239, 68, 68, 0.15)',
-                  color: '#f87171',
+                  color: 'var(--color-danger)',
                 };
               } else if (recoveryPct < 60) {
                 barColor = 'var(--color-carbs)';
                 statusBadge = {
                   text: 'En recuperación',
                   bg: 'rgba(245, 158, 11, 0.15)',
-                  color: '#fbbf24',
+                  color: 'var(--color-warning)',
                 };
               } else if (recoveryPct < 100) {
                 barColor = 'var(--accent-primary)';

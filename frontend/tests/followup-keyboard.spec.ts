@@ -42,5 +42,5 @@ test('public headline keeps readable brand colour after a dark personal theme', 
   await page.evaluate(() =>
     document.documentElement.style.setProperty('--accent-primary', '#033d74'),
   );
-  await expect(page.locator('.landing-tag')).toHaveCSS('color', 'rgb(0, 133, 255)');
+  await expect(page.locator('.landing-tag')).toHaveCSS('color', 'rgb(11, 95, 116)');
 });

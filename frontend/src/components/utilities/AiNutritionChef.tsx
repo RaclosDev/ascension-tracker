@@ -268,7 +268,7 @@ export default function AiNutritionChef() {
                                     }}
                                   >
                                     <span>
-                                      <strong style={{ color: '#FFFFFF' }}>
+                                      <strong style={{ color: 'var(--text-primary)' }}>
                                         {Math.round(food.kcal || 0)}
                                       </strong>{' '}
                                       kcal
@@ -299,7 +299,7 @@ export default function AiNutritionChef() {
                                 style={{
                                   fontSize: '0.8rem',
                                   fontWeight: 600,
-                                  color: '#FFFFFF',
+                                  color: 'var(--text-primary)',
                                   marginBottom: '0.4rem',
                                 }}
                               >
@@ -314,28 +314,28 @@ export default function AiNutritionChef() {
                                 }}
                               >
                                 <span>
-                                  <strong style={{ color: '#FFFFFF' }}>
+                                  <strong style={{ color: 'var(--text-primary)' }}>
                                     {activeOption.totalMacros.kcal}
                                   </strong>{' '}
                                   kcal
                                 </span>
                                 <span>•</span>
                                 <span>
-                                  <strong style={{ color: '#FFFFFF' }}>
+                                  <strong style={{ color: 'var(--text-primary)' }}>
                                     {activeOption.totalMacros.protein}g
                                   </strong>{' '}
                                   P
                                 </span>
                                 <span>•</span>
                                 <span>
-                                  <strong style={{ color: '#FFFFFF' }}>
+                                  <strong style={{ color: 'var(--text-primary)' }}>
                                     {activeOption.totalMacros.carbs}g
                                   </strong>{' '}
                                   C
                                 </span>
                                 <span>•</span>
                                 <span>
-                                  <strong style={{ color: '#FFFFFF' }}>
+                                  <strong style={{ color: 'var(--text-primary)' }}>
                                     {activeOption.totalMacros.fat}g
                                   </strong>{' '}
                                   G

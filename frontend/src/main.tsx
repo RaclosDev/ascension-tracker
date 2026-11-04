@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
+import './paper.css';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
