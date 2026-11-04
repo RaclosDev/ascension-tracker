@@ -71,6 +71,7 @@ const clearLocalSessionData = async () => {
         'ascension_workout_legacy_owner',
         'ascension_custom_color',
         'ascension_theme',
+        'ascension_color_mode',
       ]);
       for (const key of Object.keys(storage)) {
         if ((key.startsWith('ascension_') || key.startsWith('ascension:')) && !preserved.has(key))

@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import api from './api/client';
 import { applyThemeColor, readThemeColor } from './utils/colorHelper';
+import { applyColorMode, readColorMode, watchSystemColorMode } from './utils/colorMode';
 import { lazyWithRetry, isChunkLoadError } from './utils/lazyWithRetry';
 
 const DashboardPage = lazyWithRetry(() => import('./pages/DashboardPage'));
@@ -160,6 +161,11 @@ export default function App() {
   useEffect(() => {
     const savedTheme = readThemeColor();
     applyThemeColor(savedTheme);
+  }, []);
+
+  useEffect(() => {
+    applyColorMode(readColorMode());
+    return watchSystemColorMode();
   }, []);
 
   useEffect(() => {
