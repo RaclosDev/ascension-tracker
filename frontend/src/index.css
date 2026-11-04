@@ -3126,8 +3126,10 @@ button, a, input, select, textarea, [role=button], [onclick] {
 
 @media all and (display-mode: standalone) {
   html, body, .app-root, .app-container {
-    height: 100vh !important;
-    min-height: 100vh !important;
+    /* Sin cap de height:100vh: fijarla convertía .main-content en un scroll-view interno
+       que iOS 26/27 escarcha bajo la barra de estado (scroll edge effect) solo en la PWA.
+       Con min-height el standalone scrollea el documento como la web, igual que PorrApp. */
+    min-height: 100dvh !important;
   }
 }
 
