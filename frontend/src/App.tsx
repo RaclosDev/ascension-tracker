@@ -268,12 +268,7 @@ export default function App() {
               }}
               toastOptions={{
                 duration: 3000,
-                style: {
-                  background: 'var(--bg-card, #fffdf7)',
-                  color: 'var(--text-primary, #111827)',
-                  border: '1px solid var(--border-medium, #788076)',
-                  borderRadius: '4px',
-                },
+                className: 'paper-toast',
               }}
             />
             <AppContent />
