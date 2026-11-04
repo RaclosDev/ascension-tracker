@@ -281,14 +281,13 @@ body,
 /*
  * Cada tarjeta de primer nivel es una hoja. El papel se dibuja en ::before y es lo único que
  * se inclina: el texto, los gráficos y los controles siguen rectos y se leen igual.
- * El giro, el ancho de la cinta y su ángulo salen de ciclos de 2, 3, 5 y 7 hojas,
+ * El giro de la hoja y el ancho y ángulo de la cinta, siempre centrada, salen de ciclos de 2, 3, 4 y 5 hojas,
  * así que el patrón tarda en repetirse y parece colocado a mano.
  */
 :is(.card, .chart-card, .progress-card) {
   --paper-angle: -0.5deg;
   --tape-angle: -5deg;
   --tape-width: 64px;
-  --tape-left: 50%;
 }
 :is(.card, .chart-card, .progress-card):not(
   :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet) *
@@ -326,7 +325,7 @@ body,
   content: '';
   position: absolute;
   top: -9px;
-  left: var(--tape-left);
+  left: 50%;
   z-index: 2;
   width: var(--tape-width);
   height: 19px;
@@ -356,12 +355,8 @@ body,
 :is(.card, .chart-card, .progress-card):nth-child(2n) {
   --tape-angle: 4deg;
 }
-:is(.card, .chart-card, .progress-card):nth-child(7n + 3) {
-  --tape-left: 30%;
-  --tape-angle: -8deg;
-}
-:is(.card, .chart-card, .progress-card):nth-child(7n + 6) {
-  --tape-left: 72%;
+:is(.card, .chart-card, .progress-card):nth-child(4n + 3) {
+  --tape-angle: -2deg;
 }
 /* Las hojas que recortaban su contenido lo siguen haciendo, pero dejan asomar papel y cinta. */
 .overflow-hidden:is(.card, .chart-card, .progress-card):not(
