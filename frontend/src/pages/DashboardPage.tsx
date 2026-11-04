@@ -178,7 +178,7 @@ export default function DashboardPage() {
   return (
     <div className="fade-in">
       {hasError && <QueryErrorNotice retry={retry} pending={isFetching} />}
-      <h1 className="app-page-title">Tu progreso</h1>
+      <h1 className="sr-only">Inicio</h1>
       <QuickWeightCard
         todayLabel={todayLabel}
         todayDateStr={todayDateStr}
