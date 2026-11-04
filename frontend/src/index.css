@@ -919,30 +919,14 @@ input[type=number]::-webkit-outer-spin-button {
   display: none;
   align-items: center;
   justify-content: space-between;
-  height: 36px;
-  margin: 0.75rem 0 0.25rem;
-  padding: 0 var(--space-md);
+  height: 56px;
+  margin: 0 0 0.25rem;
+  padding: 0 0.5rem;
+  gap: 8px;
   background: transparent;
   border-bottom: none;
   position: relative;
 }
-.mobile-top-logo {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.mobile-header-title-img {
-  height: 32px;
-  width: auto;
-  opacity: 0.95;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
-  transform: scale(1.15) translateY(-2px);
-}
-
 .mobile-bottom-nav {
   display: none;
   position: fixed;
