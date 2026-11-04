@@ -133,6 +133,23 @@ body {
   touch-action: pan-y;
 }
 
+/* Franja sólida sobre la barra de estado de la PWA en iOS. Con black-translucent la
+   app ocupa toda la pantalla y los iconos de iOS son blancos; sin un fondo oscuro
+   detrás, iOS añade un difuminado para legibilidad sobre el papel claro. Esta franja
+   del alto exacto del safe-area lo evita y deja la barra limpia como en la web.
+   Mide 0 px fuera de la PWA (safe-area-inset-top = 0), así no afecta a web ni escritorio. */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top, 0px);
+  background: #0f172a;
+  z-index: 2147483000;
+  pointer-events: none;
+}
+
 .app-container {
   display: flex;
   min-height: 100vh;

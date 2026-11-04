@@ -10,6 +10,7 @@
   color: var(--landing-ink);
   /* body has overflow: hidden for the app shell, so the landing scrolls on its own. */
   height: 100dvh;
+  padding-top: env(safe-area-inset-top, 0px);
   overflow-x: clip;
   overflow-y: auto;
   overscroll-behavior-y: contain;
