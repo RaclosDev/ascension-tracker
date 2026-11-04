@@ -919,16 +919,12 @@ input[type=number]::-webkit-outer-spin-button {
   display: none;
   align-items: center;
   justify-content: space-between;
-  height: calc(36px + env(safe-area-inset-top, 44px));
-  padding: env(safe-area-inset-top, 44px) var(--space-md) 0 var(--space-md);
+  height: 36px;
+  margin: 0.75rem 0 0.25rem;
+  padding: 0 var(--space-md);
   background: transparent;
   border-bottom: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 90;
-  pointer-events: none;
+  position: relative;
 }
 .mobile-top-logo {
   position: absolute;
@@ -1141,7 +1137,7 @@ input[type=number]::-webkit-outer-spin-button {
     display: inline-block !important;
   }
   .main-content {
-    padding-top: calc(36px + env(safe-area-inset-top, 44px) + 1rem) !important;
+    padding-top: env(safe-area-inset-top, 0px) !important;
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
   }

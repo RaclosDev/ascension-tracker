@@ -154,15 +154,6 @@ export default function Layout() {
 
   return (
     <div className="app-root">
-      {/* Barra superior de app para móvil */}
-      <header className="mobile-top-bar">
-        {hideNav ? <WorkoutElapsedTimer /> : <div style={{ width: '48px' }} />}
-        <div className="mobile-top-logo">
-          <img src="/ascension-title.png" alt="Ascension" className="mobile-header-title-img" />
-        </div>
-        <div style={{ width: '48px' }} />
-      </header>
-
       {/* Capa de fondo oscurecida para cerrar el menú */}
       <div
         className={`mobile-overlay ${sidebarOpen ? 'active' : ''}`}
@@ -210,6 +201,14 @@ export default function Layout() {
         </aside>
 
         <main className="main-content">
+          {/* Cabecera móvil: se desplaza con el contenido */}
+          <header className="mobile-top-bar">
+            {hideNav ? <WorkoutElapsedTimer /> : <div style={{ width: '48px' }} />}
+            <div className="mobile-top-logo">
+              <img src="/ascension-title.png" alt="Ascension" className="mobile-header-title-img" />
+            </div>
+            <div style={{ width: '48px' }} />
+          </header>
           <div className="main-content-inner">
             {configError && <QueryErrorNotice retry={retryConfig} pending={fetchingConfig} />}
             <Suspense
