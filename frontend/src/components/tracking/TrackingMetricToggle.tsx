@@ -10,6 +10,14 @@ interface TrackingMetricToggleProps {
   onToggleCalories: () => void;
 }
 
+const OPTION_STYLE: React.CSSProperties = {
+  minWidth: '80px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '0.35rem',
+};
+
 export const TrackingMetricToggle: React.FC<TrackingMetricToggleProps> = ({
   showWeight,
   showSteps,
@@ -20,106 +28,37 @@ export const TrackingMetricToggle: React.FC<TrackingMetricToggleProps> = ({
 }) => {
   return (
     <div
-      style={{
-        display: 'flex',
-        gap: '0.3rem',
-        marginBottom: 'var(--space-xl)',
-        padding: '0.35rem',
-        background: 'rgba(255, 255, 255, 0.04)',
-        borderRadius: '14px',
-        overflowX: 'auto',
-        border: '1px solid rgba(255,255,255,0.02)',
-        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)',
-      }}
+      className="segmented"
+      style={{ marginBottom: 'var(--space-xl)', overflowX: 'auto' }}
       role="toolbar"
       aria-label="Filtro de métricas mostradas en el calendario"
     >
       <button
         type="button"
+        className="segmented-option"
         onClick={onToggleWeight}
         aria-pressed={showWeight}
-        style={{
-          flex: 1,
-          padding: '0.45rem 0.6rem',
-          borderRadius: '10px',
-          border: 'none',
-          background: showWeight ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-          color: showWeight ? 'var(--text-primary)' : 'var(--text-secondary)',
-          fontWeight: showWeight ? 700 : 500,
-          fontSize: '0.9rem',
-          cursor: 'pointer',
-          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-          minWidth: '80px',
-          minHeight: '44px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '0.35rem',
-          boxShadow: showWeight
-            ? '0 4px 12px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(255, 255, 255, 0.05) inset'
-            : 'none',
-          transform: showWeight ? 'scale(1)' : 'scale(0.98)',
-        }}
+        style={OPTION_STYLE}
       >
-        <Scale className="w-4 h-4 inline-block mr-1" aria-hidden="true" /> Peso
+        <Scale className="w-4 h-4 inline-block" aria-hidden="true" /> Peso
       </button>
       <button
         type="button"
+        className="segmented-option"
         onClick={onToggleSteps}
         aria-pressed={showSteps}
-        style={{
-          flex: 1,
-          padding: '0.45rem 0.6rem',
-          borderRadius: '10px',
-          border: 'none',
-          background: showSteps ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-          color: showSteps ? 'var(--text-primary)' : 'var(--text-secondary)',
-          fontWeight: showSteps ? 700 : 500,
-          fontSize: '0.9rem',
-          cursor: 'pointer',
-          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-          minWidth: '80px',
-          minHeight: '44px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '0.35rem',
-          boxShadow: showSteps
-            ? '0 4px 12px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(255, 255, 255, 0.05) inset'
-            : 'none',
-          transform: showSteps ? 'scale(1)' : 'scale(0.98)',
-        }}
+        style={OPTION_STYLE}
       >
-        <Footprints className="w-4 h-4 inline-block mr-1" aria-hidden="true" /> Pasos
+        <Footprints className="w-4 h-4 inline-block" aria-hidden="true" /> Pasos
       </button>
       <button
         type="button"
+        className="segmented-option"
         onClick={onToggleCalories}
         aria-pressed={showCalories}
-        style={{
-          flex: 1,
-          padding: '0.45rem 0.6rem',
-          borderRadius: '10px',
-          border: 'none',
-          background: showCalories ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-          color: showCalories ? 'var(--text-primary)' : 'var(--text-secondary)',
-          fontWeight: showCalories ? 700 : 500,
-          fontSize: '0.9rem',
-          cursor: 'pointer',
-          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-          minWidth: '80px',
-          minHeight: '44px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '0.35rem',
-          boxShadow: showCalories
-            ? '0 4px 12px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(255, 255, 255, 0.05) inset'
-            : 'none',
-          transform: showCalories ? 'scale(1)' : 'scale(0.98)',
-        }}
+        style={OPTION_STYLE}
       >
-        <Apple className="w-4 h-4 inline-block mr-1" aria-hidden="true" /> Kcal
+        <Apple className="w-4 h-4 inline-block" aria-hidden="true" /> Kcal
       </button>
     </div>
   );

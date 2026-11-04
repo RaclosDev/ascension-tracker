@@ -83,6 +83,7 @@ html {
 .food-search-fullscreen,
 .landing,
 .paper-scope,
+.calendar-week,
 .paper-toast,
 [role='dialog'],
 [role='alertdialog'],
@@ -213,6 +214,7 @@ html {
   .food-search-fullscreen,
   .landing,
   .paper-scope,
+  .calendar-week,
   .paper-toast,
   [role='dialog'],
   [role='alertdialog'],
@@ -480,6 +482,21 @@ body,
 /* ───────────── Pared: navegación, pestañas y botones ───────────── */
 
 /* Cabecera móvil como en PorrApp: marca a rotulador y avatar de la sesión. */
+/* Tracking: cada semana es una hoja de papel sobre la pared. */
+.calendar-week {
+  background: var(--paper);
+  color: var(--ink);
+  border: 0;
+  border-radius: 3px;
+  box-shadow: var(--shadow-md);
+}
+.calendar-week:hover {
+  border-color: transparent;
+}
+.calendar-day {
+  background: var(--bg-card);
+}
+
 .mobile-top-bar {
   border-bottom: 2px solid rgba(243, 236, 220, 0.22);
 }
