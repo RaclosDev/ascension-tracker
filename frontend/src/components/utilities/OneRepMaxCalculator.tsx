@@ -58,7 +58,7 @@ export default function OneRepMaxCalculator({
             inputMode="decimal"
             step="0.5"
             min="0"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             placeholder="Ej: 100"
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
@@ -75,7 +75,7 @@ export default function OneRepMaxCalculator({
             inputMode="numeric"
             min="1"
             max="36"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             placeholder="Ej: 5"
             value={reps}
             onChange={(e) => setReps(e.target.value)}
@@ -88,7 +88,7 @@ export default function OneRepMaxCalculator({
           </label>
           <select
             id={formulaId}
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             value={formula}
             onChange={(e) => setFormula(e.target.value as OneRepMaxFormula)}
           >
@@ -106,7 +106,7 @@ export default function OneRepMaxCalculator({
           </label>
           <select
             id={roundId}
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             value={roundStep}
             onChange={(e) => setRoundStep(parseFloat(e.target.value))}
           >
@@ -173,7 +173,7 @@ export default function OneRepMaxCalculator({
           <h4 className="text-sm font-bold text-white tracking-wide">
             Tabla de Zonas de Carga e Intensidad
           </h4>
-          <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#161618]">
+          <div className="overflow-x-auto rounded-xl border border-white/10 bg-[var(--bg-secondary)]">
             <table className="w-full text-left text-xs">
               <thead className="bg-white/5 text-gray-400 border-b border-white/10">
                 <tr>

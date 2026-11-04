@@ -83,7 +83,7 @@ export const GoalProgressBar = React.memo(function GoalProgressBar({
         </div>
       </div>
 
-      <div className="progress-bar-container relative w-full h-4 bg-black/50 border border-white/[0.08] rounded-full p-0.5 overflow-hidden my-3">
+      <div className="progress-bar-container relative w-full h-4 bg-[var(--bg-secondary)] border border-white/[0.08] rounded-full p-0.5 overflow-hidden my-3">
         <div
           className="progress-bar-fill h-full rounded-full relative transition-all duration-1000 ease-out flex items-center justify-end"
           style={{

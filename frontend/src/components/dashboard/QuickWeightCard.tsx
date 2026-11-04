@@ -183,7 +183,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
               style={{
                 background: 'rgba(245, 158, 11, 0.15)',
                 borderColor: 'rgba(245, 158, 11, 0.3)',
-                color: '#fbbf24',
+                color: 'var(--color-warning)',
               }}
             >
               Pendiente

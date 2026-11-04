@@ -136,8 +136,8 @@ class GlobalErrorBoundary extends Component<{ children: React.ReactNode }, { has
             height: '100vh',
             justifyContent: 'center',
             alignItems: 'center',
-            color: '#f1f5f9',
-            background: '#09090B',
+            color: 'var(--ink)',
+            background: 'var(--paper)',
             padding: '20px',
             textAlign: 'center',
           }}
@@ -232,8 +232,8 @@ export default function App() {
           height: '100vh',
           justifyContent: 'center',
           alignItems: 'center',
-          color: '#f1f5f9',
-          background: '#09090B',
+          color: 'var(--ink)',
+          background: 'var(--paper)',
           padding: '20px',
           textAlign: 'center',
         }}
@@ -269,10 +269,10 @@ export default function App() {
               toastOptions={{
                 duration: 3000,
                 style: {
-                  background: 'var(--bg-card, #1C1C1E)',
-                  color: 'var(--text-primary, #f1f5f9)',
-                  border: '1px solid var(--border-medium, rgba(255,255,255,0.1))',
-                  borderRadius: '12px',
+                  background: 'var(--bg-card, #fffdf7)',
+                  color: 'var(--text-primary, #111827)',
+                  border: '1px solid var(--border-medium, #788076)',
+                  borderRadius: '4px',
                 },
               }}
             />

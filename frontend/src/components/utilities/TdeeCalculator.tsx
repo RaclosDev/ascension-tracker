@@ -146,7 +146,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
           </label>
           <select
             id={sexId}
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             value={sex}
             onChange={(e) => setSex(e.target.value as Sex)}
           >
@@ -164,7 +164,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
             type="number"
             inputMode="decimal"
             step="0.1"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             placeholder="75.0"
             value={weightKg}
             onChange={(e) => setWeightKg(e.target.value)}
@@ -180,7 +180,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
             type="number"
             inputMode="decimal"
             step="0.5"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             placeholder="175"
             value={heightCm}
             onChange={(e) => setHeightCm(e.target.value)}
@@ -197,7 +197,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
             inputMode="numeric"
             min="10"
             max="120"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             placeholder="28"
             value={age}
             onChange={(e) => setAge(e.target.value)}
@@ -210,7 +210,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
           </label>
           <select
             id={activityId}
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             value={activityFactor}
             onChange={(e) => setActivityFactor(e.target.value)}
           >
@@ -233,7 +233,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
             step="0.5"
             min="3"
             max="60"
-            className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
+            className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#e11d48)]"
             placeholder="Ej: 15 (Para Katch-McArdle)"
             value={bodyFat}
             onChange={(e) => setBodyFat(e.target.value)}
@@ -247,7 +247,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
         </label>
         <select
           id={formulaId}
-          className="text-xs px-2.5 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white"
+          className="text-xs px-2.5 py-1.5 bg-[var(--bg-input)] border border-white/10 rounded-lg text-white"
           value={formula}
           onChange={(e) => setFormula(e.target.value as BmrFormulaType)}
         >
@@ -296,7 +296,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                 onClick={() => setSelectedGoal(goalKey)}
                 className={`p-3 rounded-xl border text-left transition-all ${
                   isSelected
-                    ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)]'
+                    ? 'bg-[var(--accent-primary)] text-[var(--accent-text)] border-[var(--accent-primary)]'
                     : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
                 }`}
               >
@@ -349,12 +349,12 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                   aria-label="Pasos totales para cálculo Weyand"
                   type="number"
                   inputMode="numeric"
-                  className="w-full px-3 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
+                  className="w-full px-3 py-1.5 bg-[var(--bg-input)] border border-white/10 rounded-lg text-white text-xs"
                   value={weyandSteps}
                   onChange={(e) => setWeyandSteps(e.target.value)}
                 />
               </div>
-              <div className="p-3 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between">
+              <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-white/5 flex items-center justify-between">
                 <span className="text-xs text-gray-400">Calorías quemadas:</span>
                 <span className="text-base font-bold text-rose-400">
                   {weyandStepsKcal.toFixed(2)} kcal
@@ -376,7 +376,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                     aria-label="Distancia en metros para gasto metabólico"
                     type="number"
                     inputMode="decimal"
-                    className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
+                    className="w-full px-2 py-1.5 bg-[var(--bg-input)] border border-white/10 rounded-lg text-white text-xs"
                     value={metabolicDistance}
                     onChange={(e) => setMetabolicDistance(e.target.value)}
                   />
@@ -390,7 +390,7 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                     aria-label="Minutos de duración"
                     type="number"
                     inputMode="numeric"
-                    className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
+                    className="w-full px-2 py-1.5 bg-[var(--bg-input)] border border-white/10 rounded-lg text-white text-xs"
                     value={metabolicMinutes}
                     onChange={(e) => setMetabolicMinutes(e.target.value)}
                   />
@@ -404,13 +404,13 @@ export default function TdeeCalculator({ userDefaults }: TdeeCalculatorProps) {
                     aria-label="Segundos de duración"
                     type="number"
                     inputMode="numeric"
-                    className="w-full px-2 py-1.5 bg-[#1C1C1E] border border-white/10 rounded-lg text-white text-xs"
+                    className="w-full px-2 py-1.5 bg-[var(--bg-input)] border border-white/10 rounded-lg text-white text-xs"
                     value={metabolicSeconds}
                     onChange={(e) => setMetabolicSeconds(e.target.value)}
                   />
                 </div>
               </div>
-              <div className="p-3 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between">
+              <div className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-white/5 flex items-center justify-between">
                 <div>
                   <span className="text-xs text-gray-400 block">VO2 Consumido:</span>
                   <span className="text-xs font-semibold text-sky-400">

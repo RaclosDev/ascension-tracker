@@ -147,7 +147,7 @@ export function SettingsDataSection({
             style={{
               width: '100%',
               borderColor: 'rgba(239, 68, 68, 0.5)',
-              color: '#ef4444',
+              color: 'var(--color-danger)',
               background: 'rgba(239, 68, 68, 0.1)',
             }}
             onClick={onLogout}
