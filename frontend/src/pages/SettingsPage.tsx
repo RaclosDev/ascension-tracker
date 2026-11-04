@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import api, { exportUserData } from '../api/client';
 import toast from 'react-hot-toast';
 
 import WeightLossPlan from '../components/calculators/WeightLossPlan';
 import MacroConfigurator, { MacroForm } from '../components/calculators/MacroConfigurator';
 import { SettingsMealsSection } from '../components/settings/SettingsMealsSection';
-import { haptics } from '../lib/haptics';
 import { useWorkoutStore } from '../lib/workout/store';
 import { useCustomExercises, useWorkoutPreferencesActions } from '../lib/workout/api';
 import { HevyImportModal } from '../components/workout/HevyImportModal';
@@ -20,7 +19,13 @@ import { useAuth } from '../context/AuthContext';
 import { applyThemeColor, readThemeColor } from '../utils/colorHelper';
 import { Skeleton } from '../components/ui/skeleton';
 import { Scale, Activity } from 'lucide-react';
-import { SettingsAccordionHeader } from '../components/settings/SettingsAccordionHeader';
+import { SettingsSectionHeader } from '../components/settings/SettingsSectionHeader';
+import {
+  SETTINGS_SECTIONS,
+  SettingsSectionNav,
+  isSettingsSection,
+  type SettingsSectionId,
+} from '../components/settings/SettingsSectionNav';
 
 export interface SettingsForm {
   startDate: string;
@@ -45,6 +50,8 @@ export interface SettingsForm {
 
 export default function SettingsPage() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const cachedSettings = queryClient.getQueryData<Partial<SettingsForm>>(['settings']);
 
@@ -79,14 +86,15 @@ export default function SettingsPage() {
 
   const effectiveSettings =
     settings || (querySettings as SettingsForm) || (cachedSettings as SettingsForm) || null;
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    personal: false,
-    plan: false,
-    macros: false,
-    theme: false,
-    workout: false,
-    meals: false,
-  });
+  // La sección visible sale de la URL (?section=). El antiguo ancla #meals sigue funcionando.
+  const sectionParam = searchParams.get('section');
+  const activeSection: SettingsSectionId = isSettingsSection(sectionParam)
+    ? sectionParam
+    : location.hash === '#meals'
+      ? 'meals'
+      : 'personal';
+  const activeSectionLabel = SETTINGS_SECTIONS.find((s) => s.id === activeSection)?.label;
+  const goToSection = (section: SettingsSectionId) => navigate({ search: `?section=${section}` });
 
   const workoutSettings = useWorkoutStore((s) => s.settings);
   const setWorkoutSettings = useWorkoutStore((s) => s.setSettings);
@@ -162,32 +170,6 @@ export default function SettingsPage() {
   const handleColorChange = (color: string) => {
     setCustomColor(color);
     applyThemeColor(color);
-  };
-
-  useEffect(() => {
-    if (location.hash === '#meals') {
-      setOpenSections((prev: Record<string, boolean>) => ({ ...prev, meals: true }));
-      setTimeout(() => {
-        const el = document.getElementById('meals-section');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      }, 300);
-    }
-  }, [location.hash]);
-
-  const toggleSection = (key: string, e?: React.MouseEvent<HTMLButtonElement>) => {
-    haptics.medium();
-    if (!openSections[key] && e?.currentTarget) {
-      const el = e.currentTarget;
-      setTimeout(() => {
-        const offset = 140;
-        const bodyRect = document.body.getBoundingClientRect().top;
-        const elementRect = el.getBoundingClientRect().top;
-        const elementPosition = elementRect - bodyRect;
-        const offsetPosition = elementPosition - offset;
-        window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-      }, 50);
-    }
-    setOpenSections((prev: Record<string, boolean>) => ({ ...prev, [key]: !prev[key] }));
   };
 
   useEffect(() => {
@@ -315,22 +297,20 @@ export default function SettingsPage() {
 
   if (loading && !effectiveSettings) {
     return (
-      <div className="fade-in">
-        <div
-          className="settings-accordion-container"
-          style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
-        >
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="card px-5 py-4 mb-4">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <Skeleton className="h-5 w-5 rounded-full" />
-                  <Skeleton className="h-5 w-32" />
-                </div>
-                <Skeleton className="h-4 w-4" />
-              </div>
+      <div className="fade-in max-w-5xl mx-auto px-4 pt-2 sm:pt-4">
+        <div className="settings-layout">
+          <div className="flex lg:flex-col gap-2 overflow-hidden">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-11 w-32 lg:w-full shrink-0" />
+            ))}
+          </div>
+          <div className="card px-5 py-4">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <Skeleton className="h-5 w-32" />
             </div>
-          ))}
+            <Skeleton className="h-40 w-full mt-5" />
+          </div>
         </div>
       </div>
     );
@@ -339,7 +319,7 @@ export default function SettingsPage() {
 
   return (
     <div
-      className="fade-in max-w-2xl mx-auto px-4 pt-2 sm:pt-4"
+      className="fade-in max-w-5xl mx-auto px-4 pt-2 sm:pt-4"
       style={{ paddingBottom: 'calc(110px + env(safe-area-inset-bottom, 24px))' }}
     >
       <header className="mb-6 pb-2 border-b border-white/5">
@@ -349,132 +329,110 @@ export default function SettingsPage() {
         </p>
       </header>
 
-      <div
-        className="settings-accordion-container"
-        style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
-      >
-        <SettingsPersonalSection
-          isOpen={openSections.personal}
-          onToggle={(e) => toggleSection('personal', e)}
-          form={form}
-          setForm={setForm}
-          onSave={handleSavePersonal}
-          isSaving={isSavingPersonal}
-        />
+      <div className="settings-layout">
+        <SettingsSectionNav active={activeSection} />
 
-        <div
-          className={`card accordion-card transition-all duration-300 ease-out ${openSections.plan ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
+        <section
+          key={activeSection}
+          className="settings-section-panel fade-in"
+          aria-label={activeSectionLabel}
         >
-          <SettingsAccordionHeader
-            panelId="settings-plan-panel"
-            title="Plan de Adelgazamiento"
-            icon={Activity}
-            isOpen={openSections.plan}
-            onToggle={(e) => toggleSection('plan', e)}
-          />
-          {openSections.plan && (
-            <div
-              id="settings-plan-panel"
-              className="accordion-content fade-in mt-5 pt-5 border-t border-white/10"
-            >
-              <WeightLossPlan
-                initialWeightKg={String(
-                  dashboard?.currentWeight ||
-                    effectiveSettings?.currentWeight ||
-                    effectiveSettings?.startWeight ||
-                    '',
-                )}
-                initialGoalWeight={String(form.goalWeight || '')}
-                age={String(form.age)}
-                heightCm={String(form.heightCm)}
-                sex={form.sex as 'M' | 'F'}
-                activityFactor={form.activityFactor}
-                onSave={(kcal) => {
-                  setForm({ ...form, kcal });
-                  setOpenSections({ ...openSections, plan: false, macros: true });
-                  toast.success(
-                    `Calorías aplicadas (${kcal} kcal). Recuerda pulsar "Guardar Macros" abajo para confirmar los cambios.`,
-                    { duration: 4500 },
-                  );
-                }}
-                saveButtonText="Aplicar Calorías a Macros"
-              />
+          {activeSection === 'personal' && (
+            <SettingsPersonalSection
+              form={form}
+              setForm={setForm}
+              onSave={handleSavePersonal}
+              isSaving={isSavingPersonal}
+            />
+          )}
+
+          {activeSection === 'plan' && (
+            <div className="card p-4 sm:p-6">
+              <SettingsSectionHeader title="Plan de Adelgazamiento" icon={Activity} />
+              <div className="mt-5 pt-5 border-t border-white/10">
+                <WeightLossPlan
+                  initialWeightKg={String(
+                    dashboard?.currentWeight ||
+                      effectiveSettings?.currentWeight ||
+                      effectiveSettings?.startWeight ||
+                      '',
+                  )}
+                  initialGoalWeight={String(form.goalWeight || '')}
+                  age={String(form.age)}
+                  heightCm={String(form.heightCm)}
+                  sex={form.sex as 'M' | 'F'}
+                  activityFactor={form.activityFactor}
+                  onSave={(kcal) => {
+                    setForm({ ...form, kcal });
+                    goToSection('macros');
+                    toast.success(
+                      `Calorías aplicadas (${kcal} kcal). Recuerda pulsar "Guardar Macros" para confirmar los cambios.`,
+                      { duration: 4500 },
+                    );
+                  }}
+                  saveButtonText="Aplicar Calorías a Macros"
+                />
+              </div>
             </div>
           )}
-        </div>
 
-        <div
-          className={`card accordion-card transition-all duration-300 ease-out ${openSections.macros ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
-        >
-          <SettingsAccordionHeader
-            panelId="settings-macros-panel"
-            title="Estrategia de Macros"
-            icon={Scale}
-            isOpen={openSections.macros}
-            onToggle={(e) => toggleSection('macros', e)}
-          />
-          {openSections.macros && (
-            <div
-              id="settings-macros-panel"
-              className="accordion-content fade-in mt-5 pt-5 border-t border-white/10"
-            >
-              <MacroConfigurator
-                form={form}
-                setForm={setForm as unknown as React.Dispatch<React.SetStateAction<MacroForm>>}
-                initialStartWeight={dashboard?.currentWeight || effectiveSettings?.startWeight}
-              />
-              <button
-                className="btn btn-primary min-h-11"
-                style={{ width: '100%', marginTop: '0.5rem' }}
-                onClick={handleSaveMacros}
-              >
-                Guardar Macros
-              </button>
+          {activeSection === 'macros' && (
+            <div className="card p-4 sm:p-6">
+              <SettingsSectionHeader title="Estrategia de Macros" icon={Scale} />
+              <div className="mt-5 pt-5 border-t border-white/10">
+                <MacroConfigurator
+                  form={form}
+                  setForm={setForm as unknown as React.Dispatch<React.SetStateAction<MacroForm>>}
+                  initialStartWeight={dashboard?.currentWeight || effectiveSettings?.startWeight}
+                />
+                <button
+                  className="btn btn-primary min-h-11"
+                  style={{ width: '100%', marginTop: '0.5rem' }}
+                  onClick={handleSaveMacros}
+                >
+                  Guardar Macros
+                </button>
+              </div>
             </div>
           )}
-        </div>
 
-        <SettingsMealsSection
-          isOpen={openSections.meals}
-          onToggle={(event) => toggleSection('meals', event)}
-          onSaved={refetchSettings}
-        />
+          {activeSection === 'meals' && <SettingsMealsSection onSaved={refetchSettings} />}
 
-        <SettingsThemeSection
-          isOpen={openSections.theme}
-          onToggle={(e) => toggleSection('theme', e)}
-          customColor={customColor}
-          onColorChange={handleColorChange}
-        />
+          {activeSection === 'theme' && (
+            <SettingsThemeSection customColor={customColor} onColorChange={handleColorChange} />
+          )}
 
-        <SettingsWorkoutSection
-          isOpen={openSections.workout}
-          onToggle={(e) => toggleSection('workout', e)}
-          restPreset={restPreset}
-          onRestPresetChange={(val) => {
-            setRestPreset(val);
-            setRestPresetPref(val);
-          }}
-          workoutSettings={workoutSettings}
-          onWorkoutSettingsChange={setWorkoutSettings}
-          hiddenEquipments={hiddenEquipments}
-          onToggleHiddenEquipment={(eq) => {
-            toggleHiddenEquipment(eq);
-            togglePrefHiddenEquipment(eq);
-          }}
-          onOpenHevyModal={() => setIsHevyModalOpen(true)}
-        />
+          {activeSection === 'workout' && (
+            <SettingsWorkoutSection
+              restPreset={restPreset}
+              onRestPresetChange={(val) => {
+                setRestPreset(val);
+                setRestPresetPref(val);
+              }}
+              workoutSettings={workoutSettings}
+              onWorkoutSettingsChange={setWorkoutSettings}
+              hiddenEquipments={hiddenEquipments}
+              onToggleHiddenEquipment={(eq) => {
+                toggleHiddenEquipment(eq);
+                togglePrefHiddenEquipment(eq);
+              }}
+              onOpenHevyModal={() => setIsHevyModalOpen(true)}
+            />
+          )}
 
-        <SettingsDataSection
-          isExportingJson={isExportingJson}
-          onExportJson={handleExportJson}
-          onOpenRestoreModal={() => setIsRestoreModalOpen(true)}
-          onExportCsv={handleExportData}
-          onLogout={() => {
-            logout();
-            toast.success('Sesión cerrada');
-          }}
-        />
+          {activeSection === 'data' && (
+            <SettingsDataSection
+              isExportingJson={isExportingJson}
+              onExportJson={handleExportJson}
+              onOpenRestoreModal={() => setIsRestoreModalOpen(true)}
+              onExportCsv={handleExportData}
+              onLogout={() => {
+                logout();
+                toast.success('Sesión cerrada');
+              }}
+            />
+          )}
+        </section>
       </div>
 
       <HevyImportModal
