@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Palette } from 'lucide-react';
 import { SettingsAccordionHeader } from './SettingsAccordionHeader';
+import { SegmentedControl } from '../ui/segmented-control';
+import { readColorMode, saveColorMode, type ColorMode } from '../../utils/colorMode';
 
 interface SettingsThemeSectionProps {
   isOpen: boolean;
@@ -12,6 +14,16 @@ interface SettingsThemeSectionProps {
 
 const DEFAULT_PRESETS = ['#0085FF', '#E11D48', '#FFFFFF', '#FF5E00', '#8B5CF6'];
 
+const MODE_OPTIONS: { label: string; value: ColorMode }[] = [
+  { label: 'Claro', value: 'light' },
+  { label: 'Oscuro', value: 'dark' },
+  { label: 'Sistema', value: 'system' },
+];
+
+function isColorMode(value: string): value is ColorMode {
+  return MODE_OPTIONS.some((option) => option.value === value);
+}
+
 export function SettingsThemeSection({
   isOpen,
   onToggle,
@@ -19,6 +31,14 @@ export function SettingsThemeSection({
   onColorChange,
   presets = DEFAULT_PRESETS,
 }: SettingsThemeSectionProps) {
+  const [colorMode, setColorMode] = useState<ColorMode>(readColorMode);
+
+  const handleModeChange = (value: string) => {
+    if (!isColorMode(value)) return;
+    setColorMode(value);
+    saveColorMode(value);
+  };
+
   return (
     <div
       className={`card accordion-card transition-all duration-300 ease-out ${isOpen ? 'p-4 sm:p-6' : 'px-5 py-4'} mb-4`}
@@ -35,6 +55,23 @@ export function SettingsThemeSection({
           id="settings-theme-panel"
           className="accordion-content fade-in mt-5 pt-5 border-t border-white/10"
         >
+          <div className="form-group" role="group" aria-labelledby="settings-color-mode-label">
+            <span
+              id="settings-color-mode-label"
+              className="form-label"
+              style={{ marginBottom: '0.5rem', display: 'block' }}
+            >
+              Modo
+            </span>
+            <SegmentedControl
+              options={MODE_OPTIONS}
+              value={colorMode}
+              onChange={handleModeChange}
+            />
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+              «Sistema» sigue el modo claro u oscuro de tu dispositivo.
+            </p>
+          </div>
           <div className="form-group">
             <label className="form-label" style={{ marginBottom: '0.5rem', display: 'block' }}>
               Color Principal

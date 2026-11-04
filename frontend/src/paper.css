@@ -10,6 +10,16 @@
   --wall: #0f172a;
   --paper: #f3ecdc;
   --ink: #111827;
+  /* Tinta y líneas de lo que se dibuja directamente sobre la pared. */
+  --wall-ink: #f3ecdc;
+  --wall-line: rgba(243, 236, 220, 0.3);
+  --wall-line-soft: rgba(243, 236, 220, 0.18);
+  --wall-highlight: #ffe68c;
+  --wall-highlight-bg: rgba(255, 230, 140, 0.16);
+  --wall-active-bg: #f3ecdc;
+  --wall-active-ink: #111827;
+  --wall-shadow: rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
   --tape: rgba(255, 230, 140, 0.8);
   /* Grano de papel: ruido SVG en línea, sin imagen que precachear. */
   --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .07 0 0 0 0 .09 0 0 0 0 .15 0 0 0 .12 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
@@ -272,7 +282,7 @@ body,
 .sidebar *:focus-visible,
 .mobile-bottom-nav *:focus-visible,
 .segmented *:focus-visible {
-  outline-color: #ffe68c;
+  outline-color: var(--wall-highlight);
 }
 
 /* ───────────── Hojas sueltas ───────────── */
@@ -498,10 +508,10 @@ body,
 }
 
 .mobile-top-bar {
-  border-bottom: 2px solid rgba(243, 236, 220, 0.22);
+  border-bottom: 2px solid var(--wall-line-soft);
 }
 .mobile-brand {
-  color: var(--paper);
+  color: var(--wall-ink);
   font-family: var(--font-marker);
   font-size: 1.35rem;
   letter-spacing: -0.03em;
@@ -521,7 +531,7 @@ body,
   height: 44px;
   padding: 0;
   overflow: hidden;
-  border: 1px solid rgba(243, 236, 220, 0.3);
+  border: 1px solid var(--wall-line);
   border-radius: 50%;
   background: var(--paper);
   color: var(--ink);
@@ -535,7 +545,7 @@ body,
   object-fit: cover;
 }
 .mobile-avatar-btn:focus-visible {
-  outline: 2px solid var(--paper);
+  outline: 2px solid var(--wall-ink);
   outline-offset: 2px;
 }
 
@@ -545,7 +555,7 @@ body,
   color: var(--text-primary);
 }
 .sidebar {
-  border-right: 1px solid rgba(243, 236, 220, 0.18);
+  border-right: 1px solid var(--wall-line-soft);
 }
 .sidebar .nav-item {
   min-height: 48px;
@@ -556,18 +566,18 @@ body,
   text-transform: uppercase;
 }
 .sidebar .nav-item.active {
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--wall-active-bg);
+  color: var(--wall-active-ink);
   border: 0;
-  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.35);
+  box-shadow: 3px 4px 0 var(--wall-shadow);
   transform: rotate(-1deg);
 }
 .mobile-bottom-nav {
-  border: 1px solid rgba(243, 236, 220, 0.3);
+  border: 1px solid var(--wall-line);
   border-radius: 10px;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 24px var(--wall-shadow);
 }
 .mobile-bottom-label {
   font-family: var(--font-display);
@@ -577,10 +587,10 @@ body,
 }
 .mobile-bottom-item.active .mobile-bottom-icon,
 .mobile-bottom-item.active .mobile-bottom-label {
-  color: #ffe68c;
+  color: var(--wall-highlight);
 }
 .mobile-bottom-pill-glow {
-  background: rgba(255, 230, 140, 0.16);
+  background: var(--wall-highlight-bg);
   border-radius: 4px;
 }
 .mobile-bottom-icon {
@@ -595,7 +605,7 @@ body,
   gap: 4px;
   padding: 4px;
   background: var(--wall);
-  border: 1px solid rgba(243, 236, 220, 0.3);
+  border: 1px solid var(--wall-line);
   border-radius: 6px;
 }
 .segmented-option {
@@ -605,7 +615,7 @@ body,
   border: 0;
   border-radius: 3px;
   background: transparent;
-  color: #ddd8ce;
+  color: var(--text-secondary);
   font-family: var(--font-display);
   font-size: 0.95rem;
   font-weight: 400;
@@ -619,14 +629,14 @@ body,
 }
 @media (hover: hover) {
   .segmented-option:hover {
-    color: #fff;
-    background: rgba(243, 236, 220, 0.08);
+    color: var(--wall-ink);
+    background: var(--bg-glass-strong);
   }
 }
 .segmented-option[aria-pressed='true'] {
-  background: var(--paper);
-  color: var(--ink);
-  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.35);
+  background: var(--wall-active-bg);
+  color: var(--wall-active-ink);
+  box-shadow: 2px 3px 0 var(--wall-shadow);
 }
 [role='tablist'] [role='tab'] {
   font-family: var(--font-display);
@@ -644,9 +654,9 @@ body,
   border-radius: 4px;
 }
 .btn-primary {
-  background: var(--paper);
-  color: var(--ink);
-  border: 2px solid var(--paper);
+  background: var(--wall-active-bg);
+  color: var(--wall-active-ink);
+  border: 2px solid var(--wall-active-bg);
   font-weight: 700;
 }
 @media (hover: hover) {
@@ -721,4 +731,122 @@ body,
   *::after {
     transition-duration: 0.01ms !important;
   }
+}
+
+/*
+ * Modo claro: la pared pasa a ser un escritorio claro y lo que va sobre ella se escribe en tinta.
+ * Las hojas no cambian; el acento se oscurece como en el papel para leerse sobre fondo claro.
+ */
+html[data-mode='light'] {
+  --wall: #e6e0d3;
+  --wall-ink: #111827;
+  --wall-line: rgba(17, 24, 39, 0.3);
+  --wall-line-soft: rgba(17, 24, 39, 0.18);
+  --wall-highlight: #7a4708;
+  --wall-highlight-bg: rgba(135, 80, 11, 0.12);
+  --wall-active-bg: #111827;
+  --wall-active-ink: #f3ecdc;
+  --wall-shadow: rgba(17, 24, 39, 0.22);
+  color-scheme: light;
+
+  --bg-main: #e6e0d3;
+  --bg-primary: #e6e0d3;
+  --bg-secondary: #ddd6c7;
+  --bg-card: #fffdf7;
+  --bg-card-hover: #f3ecdc;
+  --bg-glass: rgba(17, 24, 39, 0.05);
+  --bg-glass-strong: rgba(17, 24, 39, 0.1);
+  --bg-input: #fffdf7;
+  --bg-surface: #fffdf7;
+  --bg-surface-hover: #f3ecdc;
+
+  --border-subtle: rgba(17, 24, 39, 0.2);
+  --border-medium: #788076;
+  --border-color: rgba(17, 24, 39, 0.3);
+
+  --text-primary: #111827;
+  --text-main: #111827;
+  --text-secondary: #3f4652;
+  --text-muted: #4b515b;
+
+  --color-success: #166544;
+  --color-success-bg: rgba(22, 101, 68, 0.12);
+  --color-danger: #b91c1c;
+  --color-danger-bg: rgba(185, 28, 28, 0.1);
+  --color-warning: #7a4708;
+  --color-warning-bg: rgba(135, 80, 11, 0.12);
+  --color-protein: #0b5f74;
+  --color-carbs: #7a4708;
+  --color-fat: #166544;
+
+  --shadow-sm: 2px 3px 0 rgba(17, 24, 39, 0.12);
+  --shadow-md: 3px 4px 0 rgba(17, 24, 39, 0.16);
+  --shadow-lg: 6px 8px 0 rgba(17, 24, 39, 0.2);
+
+  /* La paleta de Tailwind se lee en tinta, igual que sobre el papel. */
+  --color-white: #111827;
+  --color-gray-100: #1f2733;
+  --color-gray-200: #2b3340;
+  --color-gray-300: #374151;
+  --color-gray-400: #565c63;
+  --color-gray-500: #565c63;
+  --color-gray-600: #565c63;
+  --color-gray-700: #e0d6c1;
+  --color-gray-800: #e9e0cd;
+  --color-gray-900: #efe7d6;
+  --color-zinc-200: #2b3340;
+  --color-zinc-300: #374151;
+  --color-zinc-400: #565c63;
+  --color-zinc-500: #565c63;
+  --color-zinc-600: #565c63;
+  --color-zinc-700: #c9bfa9;
+  --color-zinc-800: #e9e0cd;
+  --color-zinc-900: #efe7d6;
+  --color-neutral-300: #374151;
+  --color-neutral-400: #565c63;
+  --color-neutral-500: #565c63;
+  --color-slate-300: #374151;
+  --color-slate-400: #565c63;
+  --color-slate-500: #565c63;
+  --color-red-200: #991b1b;
+  --color-red-300: #991b1b;
+  --color-red-400: #b91c1c;
+  --color-red-500: #b91c1c;
+  --color-rose-400: #b91c1c;
+  --color-rose-500: #b91c1c;
+  --color-emerald-300: #166544;
+  --color-emerald-400: #166544;
+  --color-emerald-500: #166544;
+  --color-green-400: #166544;
+  --color-green-500: #166544;
+  --color-amber-200: #87500b;
+  --color-amber-300: #87500b;
+  --color-amber-400: #87500b;
+  --color-amber-500: #87500b;
+  --color-yellow-400: #87500b;
+  --color-orange-400: #87500b;
+  --color-orange-500: #87500b;
+  --color-sky-300: #0b5f74;
+  --color-sky-400: #0b5f74;
+  --color-blue-300: #0b5f74;
+  --color-blue-400: #0b5f74;
+  --color-blue-500: #0b5f74;
+  --color-cyan-400: #0b5f74;
+  --color-indigo-400: #0b5f74;
+  --color-violet-400: #5b3a8e;
+  --color-purple-400: #5b3a8e;
+}
+@supports (color: oklch(from red l c h)) {
+  html[data-mode='light'] body {
+    --accent-primary: oklch(from var(--accent-raw) min(l, 0.45) c h);
+    --accent-primary-light: oklch(from var(--accent-raw) min(l, 0.45) c h);
+    --accent-primary-dark: oklch(from var(--accent-raw) min(l, 0.36) c h);
+    --accent-glow: oklch(from var(--accent-raw) min(l, 0.45) c h / 0.12);
+    --accent-shadow: oklch(from var(--accent-raw) min(l, 0.45) c h / 0.3);
+    --accent-text: #fffdf7;
+    --gradient-primary: linear-gradient(var(--accent-primary), var(--accent-primary));
+  }
+}
+html[data-mode='light'] .btn-primary:hover {
+  background: #303a49;
 }
