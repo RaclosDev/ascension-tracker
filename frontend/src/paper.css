@@ -1,0 +1,667 @@
+/*
+ * Papel y tinta, la misma familia visual que PorrApp y LoopDeck.
+ * La pared es azul oscura; cada bloque de contenido es una hoja suelta pegada con cinta,
+ * con su propio giro, rayado fino y la hoja de debajo asomando.
+ * Permanent Marker para títulos, Anton para pestañas y sellos, Inter para datos.
+ */
+
+/* Pared: tokens claros sobre fondo oscuro. Es lo que hereda todo lo que no está en una hoja. */
+:root {
+  --wall: #0f172a;
+  --paper: #f3ecdc;
+  --ink: #111827;
+  --tape: rgba(255, 230, 140, 0.8);
+  /* Grano de papel: ruido SVG en línea, sin imagen que precachear. */
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .07 0 0 0 0 .09 0 0 0 0 .15 0 0 0 .12 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+  --paper-lines: repeating-linear-gradient(
+    0deg,
+    rgba(17, 24, 39, 0.025) 0 1px,
+    transparent 1px 3px
+  );
+  --marker-ink: #0b5f74;
+  --font-display: 'Anton', 'Arial Narrow', sans-serif;
+  --font-marker: 'Permanent Marker', 'Comic Sans MS', cursive;
+
+  --bg-main: #0f172a;
+  --bg-primary: #0f172a;
+  --bg-secondary: #172036;
+  --bg-card: #1b2438;
+  --bg-card-hover: #243049;
+  --bg-glass: rgba(243, 236, 220, 0.06);
+  --bg-glass-strong: rgba(243, 236, 220, 0.12);
+  --bg-input: #1b2438;
+  --bg-surface: #1b2438;
+  --bg-surface-hover: #243049;
+
+  --border-subtle: rgba(243, 236, 220, 0.18);
+  --border-medium: rgba(243, 236, 220, 0.32);
+  --border-color: rgba(243, 236, 220, 0.3);
+
+  --text-primary: #f3ecdc;
+  --text-main: #f3ecdc;
+  --text-secondary: #ddd8ce;
+  --text-muted: #c4c0b6;
+
+  --color-success: #5fd39a;
+  --color-success-bg: rgba(95, 211, 154, 0.14);
+  --color-danger: #f87171;
+  --color-danger-bg: rgba(248, 113, 113, 0.14);
+  --color-warning: #fbbf24;
+  --color-warning-bg: rgba(251, 191, 36, 0.14);
+  --color-protein: #67c6dc;
+  --color-carbs: #f0b45a;
+  --color-fat: #5fd39a;
+
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+
+  --shadow-sm: 2px 3px 0 rgba(0, 0, 0, 0.25);
+  --shadow-md: 3px 4px 0 rgba(0, 0, 0, 0.3);
+  --shadow-lg: 6px 8px 0 rgba(0, 0, 0, 0.35);
+  --shadow-elevated: 4px 5px 0 #d8cfb9, 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
+html {
+  font-synthesis-weight: none;
+  /* Acento elegido en Ajustes, tal cual: sobre la pared oscura se lee sin retoques. */
+  --accent-raw: var(--accent-primary);
+}
+
+/*
+ * Papel: todo lo que vive dentro de una hoja, un diálogo o un menú se escribe con tinta.
+ * Los tokens se redefinen aquí y Tailwind v4 los lee donde se usan, así que la pared no cambia.
+ */
+.card,
+.chart-card,
+.progress-card,
+.modal-content,
+.bottom-sheet-content,
+.workout-sheet,
+.exercise-card-menu-dropdown,
+.food-search-fullscreen,
+.landing,
+.paper-scope,
+.paper-toast,
+[role='dialog'],
+[role='alertdialog'],
+[role='menu'],
+[role='listbox'],
+[data-radix-popper-content-wrapper] {
+  --bg-main: #f3ecdc;
+  --bg-primary: #f3ecdc;
+  --bg-secondary: #e9e0cd;
+  --bg-card: #fffdf7;
+  --bg-card-hover: #e9e0cd;
+  --bg-glass: rgba(17, 24, 39, 0.035);
+  --bg-glass-strong: rgba(17, 24, 39, 0.07);
+  --bg-input: #fffdf7;
+  --bg-surface: #fffdf7;
+  --bg-surface-hover: #e9e0cd;
+
+  --border-subtle: rgba(17, 24, 39, 0.2);
+  --border-medium: #788076;
+  --border-color: rgba(17, 24, 39, 0.3);
+
+  --text-primary: #111827;
+  --text-main: #111827;
+  --text-secondary: #48505c;
+  --text-muted: #565c63;
+
+  --color-success: #166544;
+  --color-success-bg: rgba(22, 101, 68, 0.12);
+  --color-danger: #b91c1c;
+  --color-danger-bg: rgba(185, 28, 28, 0.1);
+  --color-warning: #87500b;
+  --color-warning-bg: rgba(135, 80, 11, 0.12);
+  --color-protein: #0b5f74;
+  --color-carbs: #87500b;
+  --color-fat: #166544;
+
+  --gradient-success: linear-gradient(#166544, #166544);
+  --gradient-danger: linear-gradient(#b91c1c, #b91c1c);
+  --gradient-card: linear-gradient(var(--bg-card), var(--bg-card));
+
+  --shadow-sm: 2px 3px 0 rgba(17, 24, 39, 0.12);
+  --shadow-md: 3px 4px 0 rgba(17, 24, 39, 0.16);
+  --shadow-lg: 6px 8px 0 rgba(0, 0, 0, 0.2);
+
+  /* Los alias de @theme se resuelven en :root; se repiten aquí para que lean la tinta. */
+  --color-background: var(--bg-main);
+  --color-foreground: var(--text-main);
+  --color-card: var(--bg-card);
+  --color-muted: var(--bg-card-hover);
+  --color-muted-foreground: var(--text-muted);
+  --color-secondary: var(--bg-card-hover);
+  --color-secondary-foreground: var(--text-main);
+  --color-border: var(--border-color);
+
+  /* Paleta de Tailwind leída sobre papel: el blanco de la versión oscura pasa a ser tinta. */
+  --color-white: #111827;
+  --color-gray-100: #1f2733;
+  --color-gray-200: #2b3340;
+  --color-gray-300: #374151;
+  --color-gray-400: #565c63;
+  --color-gray-500: #565c63;
+  --color-gray-600: #565c63;
+  --color-gray-700: #e0d6c1;
+  --color-gray-800: #e9e0cd;
+  --color-gray-900: #efe7d6;
+  --color-zinc-200: #2b3340;
+  --color-zinc-300: #374151;
+  --color-zinc-400: #565c63;
+  --color-zinc-500: #565c63;
+  --color-zinc-600: #565c63;
+  --color-zinc-700: #c9bfa9;
+  --color-zinc-800: #e9e0cd;
+  --color-zinc-900: #efe7d6;
+  --color-neutral-300: #374151;
+  --color-neutral-400: #565c63;
+  --color-neutral-500: #565c63;
+  --color-slate-300: #374151;
+  --color-slate-400: #565c63;
+  --color-slate-500: #565c63;
+  --color-red-200: #991b1b;
+  --color-red-300: #991b1b;
+  --color-red-400: #b91c1c;
+  --color-red-500: #b91c1c;
+  --color-rose-400: #b91c1c;
+  --color-rose-500: #b91c1c;
+  --color-emerald-300: #166544;
+  --color-emerald-400: #166544;
+  --color-emerald-500: #166544;
+  --color-green-400: #166544;
+  --color-green-500: #166544;
+  --color-amber-200: #87500b;
+  --color-amber-300: #87500b;
+  --color-amber-400: #87500b;
+  --color-amber-500: #87500b;
+  --color-yellow-400: #87500b;
+  --color-orange-400: #87500b;
+  --color-orange-500: #87500b;
+  --color-sky-300: #0b5f74;
+  --color-sky-400: #0b5f74;
+  --color-blue-300: #0b5f74;
+  --color-blue-400: #0b5f74;
+  --color-blue-500: #0b5f74;
+  --color-cyan-400: #0b5f74;
+  --color-indigo-400: #0b5f74;
+  --color-violet-400: #5b3a8e;
+  --color-purple-400: #5b3a8e;
+
+  /*
+   * El acento se conserva, pero su tinta se oscurece lo justo para leerse sobre papel:
+   * la luminosidad nunca pasa de 0,45 y el tono no cambia.
+   */
+  --accent-primary: var(--accent-raw);
+  --accent-primary-light: var(--accent-raw);
+  --accent-primary-dark: var(--accent-raw);
+  --accent-text: #fffdf7;
+  --border-accent: var(--accent-primary);
+  --color-success-accent: var(--accent-primary);
+  color: var(--text-primary);
+}
+@supports (color: oklch(from red l c h)) {
+  .card,
+  .chart-card,
+  .progress-card,
+  .modal-content,
+  .bottom-sheet-content,
+  .workout-sheet,
+  .exercise-card-menu-dropdown,
+  .food-search-fullscreen,
+  .landing,
+  .paper-scope,
+  .paper-toast,
+  [role='dialog'],
+  [role='alertdialog'],
+  [role='menu'],
+  [role='listbox'],
+  [data-radix-popper-content-wrapper] {
+    --accent-primary: oklch(from var(--accent-raw) min(l, 0.45) c h);
+    --accent-primary-light: oklch(from var(--accent-raw) min(l, 0.45) c h);
+    --accent-primary-dark: oklch(from var(--accent-raw) min(l, 0.36) c h);
+    --accent-glow: oklch(from var(--accent-raw) min(l, 0.45) c h / 0.12);
+    --accent-shadow: oklch(from var(--accent-raw) min(l, 0.45) c h / 0.3);
+    --gradient-primary: linear-gradient(var(--accent-primary), var(--accent-primary));
+  }
+}
+
+/* La pared: azul pizarra liso con un grano muy leve. */
+body,
+.main-content {
+  background-color: var(--wall);
+  background-image: var(--paper-grain);
+  color: var(--text-primary);
+}
+.mobile-top-bar {
+  background: var(--wall);
+}
+.main-content-inner {
+  padding-top: 18px;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-marker);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+  input:not([type='checkbox'], [type='radio'], [type='color'], [type='range']),
+  textarea,
+  select {
+    border-color: var(--border-medium);
+    color: var(--text-primary);
+    accent-color: var(--accent-primary);
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+  }
+}
+
+*:focus-visible {
+  outline: 3px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+/* En la pared, el foco va en amarillo cinta: se ve con cualquier acento. */
+.sidebar *:focus-visible,
+.mobile-bottom-nav *:focus-visible,
+.segmented *:focus-visible {
+  outline-color: #ffe68c;
+}
+
+/* ───────────── Hojas sueltas ───────────── */
+
+/*
+ * Cada tarjeta de primer nivel es una hoja. El papel se dibuja en ::before y es lo único que
+ * se inclina: el texto, los gráficos y los controles siguen rectos y se leen igual.
+ * El giro de la hoja y el ancho y ángulo de la cinta, siempre centrada, salen de ciclos de 2, 3, 4 y 5 hojas,
+ * así que el patrón tarda en repetirse y parece colocado a mano.
+ */
+:is(.card, .chart-card, .progress-card) {
+  --paper-angle: -0.5deg;
+  --tape-angle: -5deg;
+  --tape-width: 64px;
+}
+:is(.card, .chart-card, .progress-card):not(
+  :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet) *
+) {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+  box-shadow: none;
+  overflow: visible;
+}
+:is(.card, .chart-card, .progress-card):not(
+    :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
+      *
+  )::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 3px;
+  background-color: var(--paper);
+  background-image: var(--paper-lines);
+  transform: skewY(var(--paper-angle));
+  box-shadow:
+    4px 5px 0 #d8cfb9,
+    5px 6px 0 rgba(17, 24, 39, 0.25),
+    0 10px 24px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+:is(.card, .chart-card, .progress-card):not(
+    :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
+      *
+  )::after {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  z-index: 2;
+  width: var(--tape-width);
+  height: 19px;
+  background: var(--tape);
+  border-inline: 1px dashed rgba(17, 24, 39, 0.15);
+  transform: translateX(-50%) rotate(var(--tape-angle));
+  pointer-events: none;
+}
+:is(.card, .chart-card, .progress-card):nth-child(5n + 2) {
+  --paper-angle: 0.6deg;
+}
+:is(.card, .chart-card, .progress-card):nth-child(5n + 3) {
+  --paper-angle: -0.25deg;
+}
+:is(.card, .chart-card, .progress-card):nth-child(5n + 4) {
+  --paper-angle: 0.8deg;
+}
+:is(.card, .chart-card, .progress-card):nth-child(5n) {
+  --paper-angle: -0.75deg;
+}
+:is(.card, .chart-card, .progress-card):nth-child(3n + 2) {
+  --tape-width: 88px;
+}
+:is(.card, .chart-card, .progress-card):nth-child(3n) {
+  --tape-width: 96px;
+}
+:is(.card, .chart-card, .progress-card):nth-child(2n) {
+  --tape-angle: 4deg;
+}
+:is(.card, .chart-card, .progress-card):nth-child(4n + 3) {
+  --tape-angle: -2deg;
+}
+/* Las hojas que recortaban su contenido lo siguen haciendo, pero dejan asomar papel y cinta. */
+.overflow-hidden:is(.card, .chart-card, .progress-card):not(
+    :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
+      *
+  ) {
+  overflow: clip;
+  overflow-clip-margin: 24px;
+}
+/* En móvil el giro es menor: la hoja es estrecha y el borde no debe comerse el margen. */
+@media (max-width: 768px) {
+  :is(.card, .chart-card, .progress-card) {
+    --paper-angle: -0.3deg;
+  }
+  :is(.card, .chart-card, .progress-card):nth-child(5n + 2) {
+    --paper-angle: 0.4deg;
+  }
+  :is(.card, .chart-card, .progress-card):nth-child(5n + 3) {
+    --paper-angle: -0.15deg;
+  }
+  :is(.card, .chart-card, .progress-card):nth-child(5n + 4) {
+    --paper-angle: 0.5deg;
+  }
+  :is(.card, .chart-card, .progress-card):nth-child(5n) {
+    --paper-angle: -0.45deg;
+  }
+  :is(.card, .chart-card, .progress-card):not(
+      :is(
+          .card,
+          .chart-card,
+          .modal-content,
+          [role='dialog'],
+          .bottom-sheet-content,
+          .workout-sheet
+        )
+        *
+    )::before {
+    box-shadow:
+      3px 4px 0 #d8cfb9,
+      4px 5px 0 rgba(17, 24, 39, 0.25),
+      0 8px 18px rgba(0, 0, 0, 0.35);
+  }
+}
+
+.quick-add-title {
+  font-size: 1rem;
+}
+
+/* Dentro de una hoja, las tarjetas son recuadros blancos con canto de tinta, sin giro ni cinta. */
+:is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
+  .card {
+  background: #fffdf7;
+  border: 1px solid rgba(17, 24, 39, 0.35);
+  border-radius: 8px;
+  box-shadow: none;
+}
+@media (hover: hover) {
+  :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
+    .card:hover {
+    border-color: rgba(17, 24, 39, 0.6);
+  }
+}
+.card-title,
+.chart-title,
+.section-title,
+.subsection-title,
+.quick-add-title,
+.calendar-week-title,
+.workout-sheet-title,
+.bottom-sheet-title {
+  font-family: var(--font-marker);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* ───────────── Diálogos, menús y avisos ───────────── */
+
+.modal-backdrop,
+.bg-overlay {
+  background: rgba(0, 0, 0, 0.75);
+}
+.modal-content,
+.bottom-sheet-content,
+.workout-sheet,
+[role='dialog'].bg-card,
+[role='alertdialog'] {
+  background-color: var(--paper);
+  background-image: var(--paper-lines);
+  border: 0;
+  border-radius: 4px;
+  box-shadow: var(--shadow-elevated);
+}
+[role='menu'],
+[role='listbox'] {
+  background: #fffdf7;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  box-shadow: 3px 4px 0 rgba(17, 24, 39, 0.3);
+}
+.paper-toast {
+  position: relative;
+  overflow: visible !important;
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  border: 0 !important;
+  border-radius: 3px !important;
+  box-shadow:
+    3px 4px 0 #d8cfb9,
+    0 12px 24px rgba(0, 0, 0, 0.4) !important;
+}
+.paper-toast::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 54px;
+  height: 18px;
+  background: var(--tape);
+  border-inline: 1px dashed rgba(17, 24, 39, 0.15);
+  transform: translateX(-50%) rotate(-4deg);
+  pointer-events: none;
+}
+
+/* ───────────── Pared: navegación, pestañas y botones ───────────── */
+
+.sidebar,
+.mobile-bottom-nav {
+  background: var(--wall);
+  color: var(--text-primary);
+}
+.sidebar {
+  border-right: 1px solid rgba(243, 236, 220, 0.18);
+}
+.sidebar .nav-item {
+  min-height: 48px;
+  border-radius: 3px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.sidebar .nav-item.active {
+  background: var(--paper);
+  color: var(--ink);
+  border: 0;
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.35);
+  transform: rotate(-1deg);
+}
+.mobile-bottom-nav {
+  border: 1px solid rgba(243, 236, 220, 0.3);
+  border-radius: 10px;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+.mobile-bottom-label {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.mobile-bottom-item.active .mobile-bottom-icon,
+.mobile-bottom-item.active .mobile-bottom-label {
+  color: #ffe68c;
+}
+.mobile-bottom-pill-glow {
+  background: rgba(255, 230, 140, 0.16);
+  border-radius: 4px;
+}
+.mobile-bottom-icon {
+  border-radius: 4px;
+}
+
+/* Pestañas segmentadas: tira oscura con borde de papel; la activa es un recorte de papel. */
+.segmented {
+  display: flex;
+  position: relative;
+  width: 100%;
+  gap: 4px;
+  padding: 4px;
+  background: var(--wall);
+  border: 1px solid rgba(243, 236, 220, 0.3);
+  border-radius: 6px;
+}
+.segmented-option {
+  flex: 1;
+  min-height: 44px;
+  padding: 0.55rem 0.5rem;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #ddd8ce;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+@media (hover: hover) {
+  .segmented-option:hover {
+    color: #fff;
+    background: rgba(243, 236, 220, 0.08);
+  }
+}
+.segmented-option[aria-pressed='true'] {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.35);
+}
+[role='tablist'] [role='tab'] {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* El logotipo blanco se imprime en tinta cuando está sobre papel. */
+.on-paper-logo {
+  filter: invert(1) brightness(0.12);
+}
+
+.btn {
+  border-radius: 4px;
+}
+.btn-primary {
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--paper);
+  font-weight: 700;
+}
+@media (hover: hover) {
+  .btn-primary:hover {
+    background: #fffdf7;
+    filter: none;
+  }
+}
+.btn-secondary {
+  border: 2px solid var(--border-medium);
+  color: var(--text-primary);
+}
+/* Sobre papel, el botón principal es tinta. */
+:is(.card, .modal-content, [role='dialog'], [role='alertdialog'], .landing) .btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+@media (hover: hover) {
+  :is(.card, .modal-content, [role='dialog'], [role='alertdialog'], .landing) .btn-primary:hover {
+    background: #303a49;
+  }
+}
+:is(.card, .modal-content, [role='dialog'], [role='alertdialog'], .landing) .btn-secondary {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+/* ───────────── Detalles de cuaderno ───────────── */
+
+.marker-ink {
+  font-family: var(--font-marker);
+  font-weight: 400;
+  color: var(--marker-ink);
+}
+
+/* Sello de tinta: borde grueso, mayúsculas y un poco torcido, como en PorrApp. */
+.ink-stamp {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 3px solid currentColor;
+  border-radius: 4px;
+  color: #b91c1c;
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform: rotate(-4deg);
+}
+
+/* Cinta adhesiva amarilla para cualquier bloque destacado. */
+.paper-tape {
+  position: relative;
+}
+.paper-tape::after {
+  content: '';
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  width: 104px;
+  height: 28px;
+  background: var(--tape);
+  border-inline: 1px dashed rgba(17, 24, 39, 0.19);
+  transform: translateX(-50%) rotate(-3deg);
+  pointer-events: none;
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

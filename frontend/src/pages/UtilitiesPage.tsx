@@ -86,7 +86,7 @@ export default function UtilitiesPage() {
           style={{
             fontSize: '0.8rem',
             fontWeight: 700,
-            color: '#9CA3AF',
+            color: 'var(--text-muted)',
             marginBottom: '0.65rem',
             paddingLeft: '0.25rem',
           }}
@@ -107,7 +107,7 @@ export default function UtilitiesPage() {
           style={{
             fontSize: '0.8rem',
             fontWeight: 700,
-            color: '#9CA3AF',
+            color: 'var(--text-muted)',
             marginBottom: '0.65rem',
             paddingLeft: '0.25rem',
           }}
@@ -311,7 +311,7 @@ export default function UtilitiesPage() {
           style={{
             fontSize: '0.8rem',
             fontWeight: 700,
-            color: '#9CA3AF',
+            color: 'var(--text-muted)',
             marginBottom: '0.65rem',
             paddingLeft: '0.25rem',
           }}

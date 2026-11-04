@@ -57,7 +57,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
           onClick={() => setCategory('weight')}
           className={`py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
             category === 'weight'
-              ? 'bg-[var(--accent-primary,#e11d48)] text-white shadow'
+              ? 'bg-[var(--accent-primary,#e11d48)] text-[var(--accent-text)] shadow'
               : 'text-gray-400 hover:text-white'
           }`}
         >
@@ -68,7 +68,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
           onClick={() => setCategory('height')}
           className={`py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
             category === 'height'
-              ? 'bg-[var(--accent-primary,#e11d48)] text-white shadow'
+              ? 'bg-[var(--accent-primary,#e11d48)] text-[var(--accent-text)] shadow'
               : 'text-gray-400 hover:text-white'
           }`}
         >
@@ -79,7 +79,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
           onClick={() => setCategory('distance')}
           className={`py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
             category === 'distance'
-              ? 'bg-[var(--accent-primary,#e11d48)] text-white shadow'
+              ? 'bg-[var(--accent-primary,#e11d48)] text-[var(--accent-text)] shadow'
               : 'text-gray-400 hover:text-white'
           }`}
         >
@@ -90,7 +90,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
           onClick={() => setCategory('pace')}
           className={`py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
             category === 'pace'
-              ? 'bg-[var(--accent-primary,#e11d48)] text-white shadow'
+              ? 'bg-[var(--accent-primary,#e11d48)] text-[var(--accent-text)] shadow'
               : 'text-gray-400 hover:text-white'
           }`}
         >
@@ -111,7 +111,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   type="number"
                   inputMode="decimal"
                   step="0.1"
-                  className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-lg"
+                  className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-lg"
                   value={kgVal}
                   onChange={(e) => handleKgChange(e.target.value)}
                 />
@@ -136,7 +136,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   type="number"
                   inputMode="decimal"
                   step="0.1"
-                  className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-lg"
+                  className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-lg"
                   value={lbsVal}
                   onChange={(e) => handleLbsChange(e.target.value)}
                 />
@@ -165,7 +165,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     type="number"
                     inputMode="numeric"
                     aria-label="Piedras (stones)"
-                    className="w-full px-2 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-base"
+                    className="w-full px-2 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-base"
                     value={stonesVal}
                     onChange={(e) => handleStoneChange(e.target.value, stoneLbsVal)}
                   />
@@ -180,7 +180,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     inputMode="decimal"
                     step="0.1"
                     aria-label="Libras adicionales (st)"
-                    className="w-full px-2 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-base"
+                    className="w-full px-2 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-base"
                     value={stoneLbsVal}
                     onChange={(e) => handleStoneChange(stonesVal, e.target.value)}
                   />
@@ -202,7 +202,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   type="number"
                   inputMode="decimal"
                   step="0.5"
-                  className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-lg"
+                  className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-lg"
                   value={cmVal}
                   onChange={(e) => handleCmChange(e.target.value)}
                 />
@@ -227,7 +227,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   type="number"
                   inputMode="decimal"
                   step="0.1"
-                  className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-lg"
+                  className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-lg"
                   value={inVal}
                   onChange={(e) => handleInchesChange(e.target.value)}
                 />
@@ -256,7 +256,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     type="number"
                     inputMode="numeric"
                     aria-label="Pies (ft)"
-                    className="w-full px-2 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-base"
+                    className="w-full px-2 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-base"
                     value={feetVal}
                     onChange={(e) => handleFeetInchesChange(e.target.value, feetInVal)}
                   />
@@ -271,7 +271,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     inputMode="decimal"
                     step="0.1"
                     aria-label="Pulgadas adicionales (in)"
-                    className="w-full px-2 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-base"
+                    className="w-full px-2 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-base"
                     value={feetInVal}
                     onChange={(e) => handleFeetInchesChange(feetVal, e.target.value)}
                   />
@@ -293,7 +293,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   type="number"
                   inputMode="decimal"
                   step="0.1"
-                  className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-lg"
+                  className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-lg"
                   value={kmVal}
                   onChange={(e) => handleKmChange(e.target.value)}
                 />
@@ -318,7 +318,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                   type="number"
                   inputMode="decimal"
                   step="0.1"
-                  className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-lg"
+                  className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-lg"
                   value={miVal}
                   onChange={(e) => handleMilesChange(e.target.value)}
                 />
@@ -349,7 +349,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     type="number"
                     inputMode="numeric"
                     aria-label="Minutos por kilómetro"
-                    className="w-full px-2 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-base"
+                    className="w-full px-2 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-base"
                     value={paceMin}
                     onChange={(e) => handlePaceKmChange(e.target.value, paceSec)}
                   />
@@ -364,7 +364,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     inputMode="numeric"
                     max="59"
                     aria-label="Segundos por kilómetro"
-                    className="w-full px-2 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-base"
+                    className="w-full px-2 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-base"
                     value={paceSec}
                     onChange={(e) => handlePaceKmChange(paceMin, e.target.value)}
                   />
@@ -387,7 +387,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     type="number"
                     inputMode="numeric"
                     aria-label="Minutos por milla (calculado)"
-                    className="w-full px-2 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-base"
+                    className="w-full px-2 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-base"
                     value={paceMiMin}
                     readOnly
                   />
@@ -401,7 +401,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                     type="number"
                     inputMode="numeric"
                     aria-label="Segundos por milla (calculado)"
-                    className="w-full px-2 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-base"
+                    className="w-full px-2 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-base"
                     value={paceMiSec}
                     readOnly
                   />
@@ -422,7 +422,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                 type="number"
                 inputMode="decimal"
                 step="0.1"
-                className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-lg"
+                className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-lg"
                 value={speedKmhVal}
                 onChange={(e) => handleSpeedKmhChange(e.target.value)}
               />
@@ -437,7 +437,7 @@ export default function UnitConverter({ defaultCategory = 'weight' }: UnitConver
                 type="number"
                 inputMode="decimal"
                 step="0.1"
-                className="w-full px-3 py-2 bg-[#1C1C1E] border border-white/10 rounded-xl text-white font-bold text-lg"
+                className="w-full px-3 py-2 bg-[var(--bg-input)] border border-white/10 rounded-xl text-white font-bold text-lg"
                 value={speedMphVal}
                 readOnly
               />

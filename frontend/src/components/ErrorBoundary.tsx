@@ -43,8 +43,8 @@ export class ErrorBoundary extends Component<Props, State> {
             height: '100vh',
             justifyContent: 'center',
             alignItems: 'center',
-            color: '#f1f5f9',
-            background: '#09090B',
+            color: 'var(--ink)',
+            background: 'var(--paper)',
             padding: '20px',
             textAlign: 'center',
           }}
@@ -60,13 +60,13 @@ export class ErrorBoundary extends Component<Props, State> {
           {!isChunkOrMimeError && this.state.error?.message && (
             <pre
               style={{
-                color: '#ef4444',
+                color: 'var(--color-danger)',
                 marginBottom: '20px',
                 maxWidth: '80%',
                 overflowX: 'auto',
                 textAlign: 'left',
                 padding: '10px',
-                background: '#1e1e1e',
+                background: 'var(--bg-secondary)',
                 borderRadius: '8px',
               }}
             >

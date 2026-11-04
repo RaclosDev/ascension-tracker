@@ -347,7 +347,7 @@ export const SwipeableSetRow = React.memo(
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: '#ef4444',
+              background: 'var(--color-danger)',
               border: 'none',
               borderRadius: '0 8px 8px 0',
               cursor: 'pointer',
