@@ -8,6 +8,7 @@ const { post, login } = vi.hoisted(() => ({ post: vi.fn(), login: vi.fn() }));
 vi.mock('../../api/client', () => ({ default: { post } }));
 vi.mock('../../context/AuthContext', () => ({ useAuth: () => ({ login }) }));
 vi.mock('@react-oauth/google', () => ({
+  useGoogleOAuth: () => ({ clientId: 'test-client', scriptLoadedSuccessfully: false }),
   GoogleLogin: ({ onSuccess }: { onSuccess: (response: CredentialResponse) => void }) => (
     <button onClick={() => onSuccess({ credential: 'google-id-credential' })}>Elegir cuenta</button>
   ),
