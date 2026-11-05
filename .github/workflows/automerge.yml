@@ -34,12 +34,14 @@ jobs:
 
   # Lo que fusiona el bot no lanza ningún workflow (ni el push a main ni el cierre del PR),
   # así que se espera aquí a la fusión y se lanza la CI de main a mano, que sí está permitido.
+  # Tampoco se aplica el borrado automático de la rama, así que se borra aquí.
   main-ci:
     needs: enable
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
       actions: write
+      contents: write
       pull-requests: read
     steps:
       - name: Esperar la fusión y lanzar la CI de main
@@ -47,11 +49,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           PR_URL: ${{ github.event.pull_request.html_url }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           for _ in $(seq 1 110); do
             state=$(gh pr view "$PR_URL" --json state -q .state || echo UNKNOWN)
             case "$state" in
-              MERGED) gh workflow run ci.yml --ref main; exit 0 ;;
+              MERGED)
+                gh workflow run ci.yml --ref main
+                gh api -X DELETE "repos/$GH_REPO/git/refs/heads/$HEAD_REF" || echo "La rama ya no existe"
+                exit 0 ;;
               CLOSED) echo "PR cerrado sin fusionar"; exit 0 ;;
             esac
             sleep 30
