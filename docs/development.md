@@ -21,6 +21,7 @@ Copia `.env.example` a `.env` y completa los valores obligatorios. Los archivos 
 | `GEMINI_API_KEY` | Opcional; habilita las funciones de IA |
 | `FATSECRET_CLIENT_ID`, `FATSECRET_CLIENT_SECRET` | Opcionales; configura ambas para utilizar FatSecret |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Opcionales; configura el par de claves y un contacto propio para Web Push |
+| `R2_ENDPOINT`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | Opcionales; bucket privado de Cloudflare R2 para las fotos de progreso. Sin ellas, las fotos quedan desactivadas |
 
 Puedes generar secretos con `openssl rand -base64 48`. Para VAPID: `npx web-push generate-vapid-keys`. No reutilices el mismo secreto para JWT y enmascarado de logs.
 

@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   ClipboardList,
   Dumbbell,
+  Camera,
   Footprints,
   MessageSquareText,
   Scale,
@@ -33,6 +34,8 @@ import { ProgramSessions } from '../components/coach/ProgramSessions';
 import { NutritionAdherenceSection } from '../components/coach/NutritionAdherenceSection';
 import { NutritionPlanSection } from '../components/coach/NutritionPlanSection';
 import { CheckinsSection } from '../components/coach/CheckinsSection';
+import { PhotoGallery } from '../components/photos/PhotoGallery';
+import type { PhotoList } from '../lib/progressPhotos';
 import { ActivityHeatmap } from '../components/workout/heatmap';
 import { BodyHeatmap } from '../components/workout/body-heatmap';
 import { DashboardChartsSkeleton } from '../components/workout/skeletons/DashboardChartsSkeleton';
@@ -154,6 +157,7 @@ function BodySection({ linkId }: { linkId: string }) {
   const entries = useClientData<WeightEntry[]>(linkId, 'weights', true);
   const weeks = useClientData<WeekSummary[]>(linkId, 'weights/weekly', true);
   const steps = useClientData<WeekSummary[]>(linkId, 'steps/weekly', true);
+  const photos = useClientData<PhotoList>(linkId, 'progress-photos', true);
   const d = dashboard.data;
   const weightChartData = useMemo(() => toWeightChartData(entries.data ?? []), [entries.data]);
   const deltaData = useMemo(() => toWeeklyDeltaData(weeks.data ?? []), [weeks.data]);
@@ -186,6 +190,15 @@ function BodySection({ linkId }: { linkId: string }) {
       <Section title="Pasos" icon={<Footprints size={18} aria-hidden />}>
         <QueryState isLoading={steps.isLoading} isError={steps.isError} />
         {steps.data && <WeeklyList weeks={steps.data} unit=" pasos/día" />}
+      </Section>
+      <Section title="Fotos de progreso" icon={<Camera size={18} aria-hidden />}>
+        <QueryState isLoading={photos.isLoading} isError={photos.isError} />
+        {photos.data?.photos.length === 0 && (
+          <p style={{ color: 'var(--text-secondary)' }}>Tu alumno aún no ha subido fotos.</p>
+        )}
+        {photos.data && photos.data.photos.length > 0 && (
+          <PhotoGallery photos={photos.data.photos} />
+        )}
       </Section>
     </>
   );

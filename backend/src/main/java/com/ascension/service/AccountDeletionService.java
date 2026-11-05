@@ -12,12 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class AccountDeletionService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final ProgressPhotoService progressPhotoService;
 
     @Transactional
     public void wipeAccountData(String email) {
         String maskedUser = com.ascension.util.PiiMasker.maskEmail(email);
         log.warn("Initiating complete GDPR account wipe for user: {}", maskedUser);
         
+        progressPhotoService.deleteAllObjectsFor(email);
         UserOwnedTables.deleteWorkoutsAndTemplates(jdbcTemplate, email);
 
         for (UserOwnedTables.Table table : UserOwnedTables.DIRECT) {

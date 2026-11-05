@@ -5,6 +5,7 @@ import com.ascension.dto.CoachDtos.Targets;
 import com.ascension.dto.CustomExerciseDTO;
 import com.ascension.dto.DashboardDTO;
 import com.ascension.dto.FoodLogDTO;
+import com.ascension.dto.ProgressPhotoDtos.PhotoList;
 import com.ascension.dto.UserSettingsDTO;
 import com.ascension.dto.WeekSummaryDTO;
 import com.ascension.dto.WeightEntryDTO;
@@ -15,6 +16,7 @@ import com.ascension.service.CoachAccessPolicy.Action;
 import com.ascension.service.CoachSessionService;
 import com.ascension.service.CustomExerciseService;
 import com.ascension.service.NutritionLogService;
+import com.ascension.service.ProgressPhotoService;
 import com.ascension.service.SettingsService;
 import com.ascension.service.StepsService;
 import com.ascension.service.WeightService;
@@ -57,6 +59,7 @@ public class CoachClientDataController {
     private final SettingsService settingsService;
     private final CustomExerciseService customExerciseService;
     private final CoachSessionService sessionService;
+    private final ProgressPhotoService photoService;
 
     @GetMapping("/weights")
     public ResponseEntity<List<WeightEntryDTO>> weights(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
@@ -71,6 +74,11 @@ public class CoachClientDataController {
     @GetMapping("/weights/weekly")
     public ResponseEntity<List<WeekSummaryDTO>> weightWeekly(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
         return read(jwt, linkId, Action.VIEW_WEIGHT, weightService::getWeeklySummaries);
+    }
+
+    @GetMapping("/progress-photos")
+    public ResponseEntity<PhotoList> progressPhotos(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
+        return read(jwt, linkId, Action.VIEW_PHOTOS, photoService::list);
     }
 
     @GetMapping("/steps/weekly")

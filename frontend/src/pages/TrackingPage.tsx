@@ -1,5 +1,5 @@
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/client';
 import toast from 'react-hot-toast';
@@ -19,6 +19,11 @@ import { TrackingMetricToggle } from '../components/tracking/TrackingMetricToggl
 import { TrackingDayCell } from '../components/tracking/TrackingDayCell';
 import { TrackingWeeklyStats } from '../components/tracking/TrackingWeeklyStats';
 import { TrackingEntryModal } from '../components/tracking/TrackingEntryModal';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
+
+const ProgressPhotosSection = lazyWithRetry(
+  () => import('../components/photos/ProgressPhotosSection'),
+);
 
 const getInitialMetricVisibility = (key: string): boolean => {
   try {
@@ -301,6 +306,10 @@ export default function TrackingPage() {
           </div>
         )}
       </div>
+
+      <Suspense fallback={null}>
+        <ProgressPhotosSection />
+      </Suspense>
 
       <TrackingEntryModal
         modalData={modalData}
