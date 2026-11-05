@@ -58,6 +58,6 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 **Avisos en el móvil.** Quien active los avisos recibe una notificación cuando pasa algo con el check-in: el entrenador, cuando un alumno se lo envía; el alumno, cuando su entrenador le responde. El domingo por la tarde, quien aún no ha hecho el check-in de la semana recibe un recordatorio. Al tocar el aviso se abre directamente la página correspondiente. Se activan con un botón en el panel del entrenador y en la página del check-in.
 
-**Fotos de progreso.** En Seguimiento el alumno puede hacerse fotos de frente, de perfil y de espalda y guardarlas con su fecha. Antes de subirlas, el móvil las reduce para que ocupen poco y les quita los datos ocultos, como la ubicación. Se guardan en un almacén privado: solo las ve el alumno y, si comparte su cuerpo, su entrenador, que las encuentra por días en la ficha del alumno. El alumno puede borrar cualquier foto, y al borrar la cuenta se borran todas.
+**Fotos de progreso.** En Seguimiento el alumno puede hacerse fotos de frente, de perfil y de espalda y guardarlas con su fecha. Antes de subirlas, el móvil las reduce para que ocupen poco y les quita los datos ocultos, como la ubicación. Se guardan en un almacén privado: solo las ve el alumno y, si comparte su cuerpo, su entrenador, que las encuentra por días en la ficha del alumno. El alumno puede borrar cualquier foto; al borrar la cuenta se borran todas y la descarga de datos incluye la lista de fotos guardadas.
 
 *Se irá completando a medida que avance.*

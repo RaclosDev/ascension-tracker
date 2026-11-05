@@ -31,6 +31,7 @@ public class UserDataExportService {
     private final CoachService coachService;
     private final ProgramService programService;
     private final CoachRecipeService coachRecipeService;
+    private final ProgressPhotoService progressPhotoService;
 
     @Transactional(readOnly = true)
     public UserDataExportDTO exportUserData(String userEmail) {
@@ -93,6 +94,7 @@ public class UserDataExportService {
                 .coaching(coachService.exportFor(userEmail))
                 .programs(programService.exportFor(userEmail))
                 .coachRecipes(coachRecipeService.exportFor(userEmail))
+                .progressPhotos(progressPhotoService.exportFor(userEmail))
                 .build();
     }
 

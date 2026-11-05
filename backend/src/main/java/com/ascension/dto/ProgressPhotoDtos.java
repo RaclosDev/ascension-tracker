@@ -16,6 +16,11 @@ public final class ProgressPhotoDtos {
     public record Photo(UUID id, Pose pose, LocalDate takenOn, String url, int sizeBytes, Instant createdAt) {
     }
 
+    /** A photo in the data export: what was stored and when, without the short-lived URL. */
+    public record ExportedPhoto(UUID id, Pose pose, LocalDate takenOn, String contentType, int sizeBytes,
+                                Instant createdAt) {
+    }
+
     /** {@code enabled} is false while the server has no photo storage configured. */
     public record PhotoList(boolean enabled, List<Photo> photos) {
     }

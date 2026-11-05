@@ -83,6 +83,7 @@ class ProgressPhotoIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired UserService users;
     @Autowired ObjectMapper json;
+    @Autowired com.ascension.service.UserDataExportService exportService;
 
     @Test
     void theClientUploadsListsAndDeletesTheirPhotos() throws Exception {
@@ -106,6 +107,11 @@ class ProgressPhotoIntegrationTest {
                 .andExpect(jsonPath("$.photos[0].id").value(id))
                 .andExpect(jsonPath("$.photos[0].url").value(org.hamcrest.Matchers.endsWith(".webp?ttl=900")))
                 .andExpect(jsonPath("$.photos[1].url").value(org.hamcrest.Matchers.containsString(".jpg")));
+
+        assertThat(exportService.exportUserData(client).getProgressPhotos())
+                .extracting(p -> p.pose().name(), p -> p.contentType())
+                .containsExactly(org.assertj.core.groups.Tuple.tuple("SIDE", "image/jpeg"),
+                        org.assertj.core.groups.Tuple.tuple("FRONT", "image/webp"));
 
         // Another user can neither see nor delete them.
         String other = user();

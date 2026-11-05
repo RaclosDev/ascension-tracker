@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.dto.ProgressPhotoDtos.ExportedPhoto;
 import com.ascension.dto.ProgressPhotoDtos.Photo;
 import com.ascension.dto.ProgressPhotoDtos.PhotoList;
 import com.ascension.dto.ProgressPhotoDtos.Pose;
@@ -63,6 +64,22 @@ public class ProgressPhotoService {
                 storage.signedUrl(rs.getString("object_key"), URL_TTL),
                 rs.getInt("size_bytes"),
                 rs.getTimestamp("created_at").toInstant()), normalize(email)));
+    }
+
+    /** Every stored photo's details for the data export, oldest first; works with storage off too. */
+    public List<ExportedPhoto> exportFor(String email) {
+        return jdbcTemplate.query("""
+                SELECT p.id, p.pose, p.taken_on, p.content_type, p.size_bytes, p.created_at
+                FROM progress_photos p JOIN users u ON u.id = p.user_id
+                WHERE u.email = ?
+                ORDER BY p.taken_on, p.created_at
+                """, (rs, n) -> new ExportedPhoto(
+                rs.getObject("id", UUID.class),
+                Pose.valueOf(rs.getString("pose")),
+                rs.getObject("taken_on", LocalDate.class),
+                rs.getString("content_type"),
+                rs.getInt("size_bytes"),
+                rs.getTimestamp("created_at").toInstant()), normalize(email));
     }
 
     @Transactional

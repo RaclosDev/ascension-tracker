@@ -51,6 +51,9 @@ class UserDataExportServiceTest {
     @Mock
     private CoachRecipeService coachRecipeService;
 
+    @Mock
+    private ProgressPhotoService progressPhotoService;
+
     @InjectMocks
     private UserDataExportService exportService;
 
