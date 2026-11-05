@@ -8,9 +8,15 @@ export function parseRestPushPayload(value: unknown) {
         ? data.body
         : 'Es hora de la siguiente serie.',
     tag:
-      typeof data.tag === 'string' && /^ascension-rest-timer-\d+$/.test(data.tag)
+      typeof data.tag === 'string' &&
+      /^ascension-(rest-timer-\d+|checkin-[0-9a-f-]{36})$/.test(data.tag)
         ? data.tag
         : 'ascension-rest-timer',
+    // Only paths inside the app: a push must never open another site.
+    url:
+      typeof data.url === 'string' && /^\/(?!\/)[A-Za-z0-9/_-]*$/.test(data.url)
+        ? data.url
+        : '/workout',
   };
 }
 
@@ -29,12 +35,16 @@ export async function showRestPush(registration: NotificationRegistration, paylo
     tag: data.tag,
     renotify: false,
     requireInteraction: false,
-    data: { url: '/workout' },
+    data: { url: data.url },
     actions: [
       { action: 'open', title: 'Abrir' },
       { action: 'dismiss', title: 'OK' },
     ],
   };
+  if (!data.tag.startsWith('ascension-rest-timer')) {
+    await registration.showNotification(data.title, options);
+    return;
+  }
   const existing = await registration.getNotifications();
   existing
     .filter(

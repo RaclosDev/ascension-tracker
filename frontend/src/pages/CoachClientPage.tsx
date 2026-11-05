@@ -1,7 +1,15 @@
 import { Suspense, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowLeft, ClipboardList, Dumbbell, Footprints, Scale, Utensils } from 'lucide-react';
+import {
+  ArrowLeft,
+  ClipboardList,
+  Dumbbell,
+  Footprints,
+  MessageSquareText,
+  Scale,
+  Utensils,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { ReactNode } from 'react';
 import {
@@ -24,6 +32,7 @@ import { useExerciseCatalog, getExerciseMap } from '../lib/workout/exercises';
 import { ProgramSessions } from '../components/coach/ProgramSessions';
 import { NutritionAdherenceSection } from '../components/coach/NutritionAdherenceSection';
 import { NutritionPlanSection } from '../components/coach/NutritionPlanSection';
+import { CheckinsSection } from '../components/coach/CheckinsSection';
 import { ActivityHeatmap } from '../components/workout/heatmap';
 import { BodyHeatmap } from '../components/workout/body-heatmap';
 import { DashboardChartsSkeleton } from '../components/workout/skeletons/DashboardChartsSkeleton';
@@ -69,6 +78,9 @@ export default function CoachClientPage() {
             </p>
           </header>
           <div className="flex flex-col gap-6">
+            <Section title="Check-ins" icon={<MessageSquareText size={18} aria-hidden />}>
+              <CheckinsSection linkId={linkId} />
+            </Section>
             {link.permissions.body && <BodySection linkId={linkId} />}
             {link.permissions.training && (
               <ProgramsSection linkId={linkId} canAssign={link.permissions.editTraining} />

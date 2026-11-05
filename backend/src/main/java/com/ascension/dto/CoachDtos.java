@@ -72,7 +72,8 @@ public final class CoachDtos {
                                  List<AccessExport> accessesToMyData, List<AccessExport> myAccessesAsCoach,
                                  List<AssignmentExport> programAssignments,
                                  List<CommentExport> workoutComments,
-                                 List<com.ascension.dto.NutritionPlanDtos.PlanExport> nutritionPlans) {
+                                 List<com.ascension.dto.NutritionPlanDtos.PlanExport> nutritionPlans,
+                                 List<com.ascension.dto.CheckinDtos.CheckinExport> checkins) {
     }
 
     /** {@code role} is CLIENT for comments on the exporting user's workouts, COACH for comments they wrote. */

@@ -107,6 +107,18 @@ export async function notifyRestFinished() {
   }
 }
 
+/**
+ * Call from a user gesture: asks for notification permission if needed and subscribes this device
+ * to Web Push. Resolves to whether the device ends up subscribed.
+ */
+export async function enablePushNotifications(): Promise<boolean> {
+  if (typeof window === 'undefined' || !('Notification' in window)) return false;
+  if (Notification.permission === 'default') await Notification.requestPermission();
+  if (Notification.permission !== 'granted') return false;
+  await subscribeToPush();
+  return pushSubscribed;
+}
+
 async function subscribeToPush() {
   if (pushSubscribed) return;
 

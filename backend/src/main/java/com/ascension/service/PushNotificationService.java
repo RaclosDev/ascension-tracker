@@ -160,7 +160,33 @@ public class PushNotificationService {
         sendPush(userEmail, title, body, null);
     }
 
+    /**
+     * Sends a push off the caller's thread, for notifications that must never slow down or fail a request.
+     * The service worker opens {@code url} when the notification is tapped.
+     */
+    public void sendAsync(String userEmail, String title, String body, String tag, String url) {
+        try {
+            pushExecutor.submit(() -> {
+                try {
+                    deliver(userEmail, Map.of("title", title, "body", body, "tag", tag, "url", url), null);
+                } catch (Exception e) {
+                    log.error("Failed to deliver push notification for user {}", com.ascension.util.PiiMasker.maskEmail(userEmail), e);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException e) {
+            log.warn("Push executor rejected a notification for user {}", com.ascension.util.PiiMasker.maskEmail(userEmail));
+        }
+    }
+
     private boolean sendPush(String userEmail, String title, String body, RestTimer timer) {
+        return deliver(userEmail, Map.of(
+                "title", title,
+                "body", body,
+                "tag", timer == null ? "ascension-rest-timer" : "ascension-rest-timer-" + timer.getId()
+        ), timer);
+    }
+
+    private boolean deliver(String userEmail, Map<String, String> fields, RestTimer timer) {
         if (pushService == null) {
             log.warn("PushService is not initialized. Skipping push to {}", com.ascension.util.PiiMasker.maskEmail(userEmail));
             return false;
@@ -174,11 +200,7 @@ public class PushNotificationService {
 
         String payload;
         try {
-            payload = objectMapper.writeValueAsString(Map.of(
-                    "title", title,
-                    "body", body,
-                    "tag", timer == null ? "ascension-rest-timer" : "ascension-rest-timer-" + timer.getId()
-            ));
+            payload = objectMapper.writeValueAsString(fields);
         } catch (Exception e) {
             log.error("Failed to serialize push payload for {}", com.ascension.util.PiiMasker.maskEmail(userEmail), e);
             return false;

@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import { CheckinTemplateEditor } from '../components/coach/CheckinTemplateEditor';
+import { PushToggle } from '../components/coach/PushToggle';
+import { ClientStatusBadge } from '../components/coach/ClientStatusBadge';
+import { LEVEL_ORDER, useClientStatus } from '../lib/coach/clientStatus';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ChefHat, ClipboardList, Copy, Link2, Trash2, UserMinus, Users } from 'lucide-react';
@@ -31,10 +35,12 @@ export default function CoachPage() {
       {profile.data && !isCoach && <ActivateCoach />}
       {isCoach && (
         <div className="flex flex-col gap-6">
+          <PushToggle text="Activa los avisos para saber cuándo un alumno te envía su check-in." />
           <Invitations />
           <Clients />
           <ProgramsLink />
           <RecipesLink />
+          <CheckinTemplateEditor />
         </div>
       )}
     </div>
@@ -152,7 +158,15 @@ function Invitations() {
 
 function Clients() {
   const clients = useCoachClients(true);
+  const status = useClientStatus(true);
   const end = useEndClient();
+  const statusById = new Map(status.data?.map((s) => [s.linkId, s]));
+  // Who needs attention first; the rest keep the alphabetical order from the server.
+  const sorted = [...(clients.data ?? [])].sort(
+    (a, b) =>
+      LEVEL_ORDER[statusById.get(a.linkId)?.level ?? 'GREEN'] -
+      LEVEL_ORDER[statusById.get(b.linkId)?.level ?? 'GREEN'],
+  );
 
   return (
     <section className="card">
@@ -166,13 +180,16 @@ function Clients() {
         </p>
       )}
       <ul className="flex flex-col gap-3">
-        {clients.data?.map((link) => (
+        {sorted.map((link) => (
           <li key={link.linkId} className="flex items-center justify-between gap-3">
             <Link to={`/entrenador/alumnos/${link.linkId}`} className="min-w-0 flex-1">
               <div className="font-bold text-white truncate">{personName(link.client)}</div>
               <div className="text-sm truncate" style={{ color: 'var(--text-secondary)' }}>
                 {sharedScopes(link.permissions)} · desde {formatCoachDate(link.since)}
               </div>
+              {statusById.has(link.linkId) && (
+                <ClientStatusBadge status={statusById.get(link.linkId)!} />
+              )}
             </Link>
             <button
               type="button"
