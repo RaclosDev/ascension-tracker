@@ -1,7 +1,18 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowDown, ArrowLeft, ArrowUp, Copy, Plus, Save, Trash2, X } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  Copy,
+  GripVertical,
+  Plus,
+  Save,
+  Trash2,
+  X,
+} from 'lucide-react';
+import { DragDropContext, Draggable, Droppable, type DraggableProvided } from '@hello-pangea/dnd';
 import { apiErrorMessage } from '../lib/coach/api';
 import {
   MAX_EXERCISES_PER_DAY,
@@ -372,19 +383,41 @@ function DayEditor({
       />
 
       {day.exercises.length > 0 && (
-        <ol className="flex flex-col gap-2">
-          {day.exercises.map((exercise, i) => (
-            <ExerciseRow
-              key={`${i}-${exercise.exerciseId}`}
-              index={i}
-              count={day.exercises.length}
-              exercise={exercise}
-              onChange={(next) => setExercises((list) => list.map((e, j) => (j === i ? next : e)))}
-              onMove={(to) => setExercises((list) => moveItem(list, i, to))}
-              onRemove={() => setExercises((list) => list.filter((_, j) => j !== i))}
-            />
-          ))}
-        </ol>
+        <DragDropContext
+          onDragEnd={({ source, destination }) => {
+            if (destination)
+              setExercises((list) => moveItem(list, source.index, destination.index));
+          }}
+        >
+          <Droppable droppableId={`day-${day.week}-${day.dayIndex}`}>
+            {(drop) => (
+              <ol className="flex flex-col gap-2" ref={drop.innerRef} {...drop.droppableProps}>
+                {day.exercises.map((exercise, i) => (
+                  <Draggable
+                    key={`${i}-${exercise.exerciseId}`}
+                    draggableId={`${i}-${exercise.exerciseId}`}
+                    index={i}
+                  >
+                    {(drag) => (
+                      <ExerciseRow
+                        drag={drag}
+                        index={i}
+                        count={day.exercises.length}
+                        exercise={exercise}
+                        onChange={(next) =>
+                          setExercises((list) => list.map((e, j) => (j === i ? next : e)))
+                        }
+                        onMove={(to) => setExercises((list) => moveItem(list, i, to))}
+                        onRemove={() => setExercises((list) => list.filter((_, j) => j !== i))}
+                      />
+                    )}
+                  </Draggable>
+                ))}
+                {drop.placeholder}
+              </ol>
+            )}
+          </Droppable>
+        </DragDropContext>
       )}
 
       {day.exercises.length < MAX_EXERCISES_PER_DAY && (
@@ -470,6 +503,7 @@ function NumberField({
 }
 
 function ExerciseRow({
+  drag,
   index,
   count,
   exercise,
@@ -477,6 +511,7 @@ function ExerciseRow({
   onMove,
   onRemove,
 }: {
+  drag: DraggableProvided;
   index: number;
   count: number;
   exercise: ProgramExercise;
@@ -489,8 +524,21 @@ function ExerciseRow({
     onChange({ ...exercise, [key]: value });
 
   return (
-    <li className="rounded-lg border p-3 flex flex-col gap-2" style={inputStyle}>
+    <li
+      ref={drag.innerRef}
+      {...drag.draggableProps}
+      className="rounded-lg border p-3 flex flex-col gap-2"
+      style={{ ...inputStyle, ...drag.draggableProps.style }}
+    >
       <div className="flex items-center gap-2">
+        <span
+          {...drag.dragHandleProps}
+          aria-label={`Arrastrar ${name}`}
+          className="cursor-grab touch-none"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          <GripVertical size={18} aria-hidden />
+        </span>
         <span className="font-bold text-white flex-1 min-w-0 truncate">
           {index + 1}. {name}
         </span>

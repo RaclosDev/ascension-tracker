@@ -20,7 +20,7 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 ## Fase 2 — Pautar entrenos
 
-**Biblioteca de programas.** El entrenador crea sus programas de entrenamiento por semanas y días. Cada ejercicio lleva series, repeticiones, intensidad, descanso, carga orientativa, superseries y notas. Puede duplicar semanas y días, y copiar programas enteros.
+**Biblioteca de programas.** El entrenador crea sus programas de entrenamiento por semanas y días. Cada ejercicio lleva series, repeticiones, intensidad, descanso, carga orientativa, superseries y notas. Puede duplicar semanas y días, y copiar programas enteros. Los ejercicios se ordenan arrastrándolos con el ratón o el dedo, o con los botones de subir y bajar.
 
 **Asignar un programa.** Si el alumno le da permiso para pautarle entrenos, el entrenador le asigna un programa con fecha de inicio. El alumno recibe su propia copia, así que los cambios posteriores en la biblioteca no le afectan.
 

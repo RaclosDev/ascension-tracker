@@ -147,6 +147,7 @@ describe('CoachProgramEditorPage', () => {
     expect(screen.getByText('Press en polea propio')).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: /Press banca/ }));
     fireEvent.change(screen.getByLabelText('RPE'), { target: { value: '8' } });
+    expect(screen.getByLabelText('Arrastrar Press banca')).toBeDefined();
 
     fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
     await waitFor(() => expect(mockedApi.post).toHaveBeenCalledTimes(1));

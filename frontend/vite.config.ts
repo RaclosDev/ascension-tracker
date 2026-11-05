@@ -28,6 +28,9 @@ export default defineConfig({
           '**/TodayProgramCard-*',
           '**/today-*',
           '**/CoachNutritionGate-*',
+          // Drag-and-drop only appears in online editors (meals, programs).
+          '**/MealConfigurator-*',
+          '**/dnd.esm-*',
           // Progress photos only work online.
           '**/ProgressPhotosSection-*',
           '**/PhotoGallery-*',
