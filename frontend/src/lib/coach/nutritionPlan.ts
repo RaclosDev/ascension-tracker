@@ -17,6 +17,31 @@ export interface NutritionPlan {
   rest: DayTargets;
   notes: string | null;
   createdAt: string;
+  meals: PlannedMeal[];
+}
+
+export type DayType = 'TRAINING' | 'REST';
+
+/** A prescribed meal: a copy of the coach's recipe, macros for all the servings. */
+export interface PlannedMeal {
+  dayType: DayType;
+  slotName: string;
+  /** null once the coach deletes the recipe; the copy stays. */
+  recipeId: string | null;
+  name: string;
+  description: string | null;
+  servings: number;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+export interface MealRequest {
+  dayType: DayType;
+  slotName: string;
+  recipeId: string;
+  servings: number;
 }
 
 export type DayGrams = Pick<DayTargets, 'protein' | 'carbs' | 'fat'>;
@@ -25,6 +50,7 @@ export interface NutritionPlanRequest {
   training: DayGrams;
   rest: DayGrams;
   notes: string | null;
+  meals: MealRequest[];
 }
 
 export const dayKcal = ({ protein, carbs, fat }: DayGrams) => 4 * protein + 4 * carbs + 9 * fat;

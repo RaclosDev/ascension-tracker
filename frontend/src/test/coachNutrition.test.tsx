@@ -24,6 +24,7 @@ const plan: NutritionPlan = {
   rest: { kcal: 2040, protein: 180, carbs: 150, fat: 80 },
   notes: 'Bebe agua',
   createdAt: '2026-11-05T10:00:00Z',
+  meals: [],
 };
 
 function wrap(children: ReactNode) {
@@ -79,6 +80,7 @@ describe('Pauta de nutrición', () => {
         training: { protein: 180, carbs: 300, fat: 70 },
         rest: { protein: 180, carbs: 150, fat: 80 },
         notes: 'Bebe agua',
+        meals: [],
       }),
     );
     expect(await screen.findByRole('button', { name: 'Quitar pauta' })).toBeTruthy();

@@ -26,6 +26,8 @@ export default defineConfig({
           '**/today-*',
           '**/CoachNutritionGate-*',
           '**/nutritionPlan-*',
+          '**/PlannedMealsCard-*',
+          '**/InvitationPage-*',
           '**/exercises*.json',
           '**/ascension-title.png',
           '**/pwa-logo.png',

@@ -2,13 +2,18 @@ package com.ascension.service;
 
 import com.ascension.dto.CoachDtos.Person;
 import com.ascension.dto.NutritionPlanDtos.DayRequest;
+import com.ascension.dto.CoachRecipeDtos;
+import com.ascension.dto.CoachRecipeDtos.Recipe;
 import com.ascension.dto.NutritionPlanDtos.DayTargets;
+import com.ascension.dto.NutritionPlanDtos.MealRequest;
 import com.ascension.dto.NutritionPlanDtos.NutritionPlan;
 import com.ascension.dto.NutritionPlanDtos.PlanExport;
 import com.ascension.dto.NutritionPlanDtos.PlanRequest;
+import com.ascension.dto.NutritionPlanDtos.PlannedMeal;
 import com.ascension.exception.EntityNotFoundException;
 import com.ascension.exception.InvalidInputException;
 import com.ascension.service.CoachAccessPolicy.ClientAccess;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
@@ -18,8 +23,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,9 +44,12 @@ public class NutritionPlanService {
             """;
 
     private final JdbcTemplate jdbcTemplate;
+    private final CoachRecipeService recipeService;
 
-    public NutritionPlanService(JdbcTemplate jdbcTemplate) {
+    // Lazy: CoachService needs this service and the recipe service needs CoachService.
+    public NutritionPlanService(JdbcTemplate jdbcTemplate, @Lazy CoachRecipeService recipeService) {
         this.jdbcTemplate = jdbcTemplate;
+        this.recipeService = recipeService;
     }
 
     /** The plan this coach set through this link, if it is the one in force. */
@@ -49,22 +59,39 @@ public class NutritionPlanService {
                 SELECT %s, u.name, u.email, u.picture FROM nutrition_plans p
                 LEFT JOIN users u ON u.id = p.coach_user_id
                 WHERE p.coach_link_id = ? AND p.client_user_id = ? AND p.status = 'ACTIVE'
-                """.formatted(COLUMNS), PLAN, access.linkId(), access.clientUserId()).stream().findFirst();
+                """.formatted(COLUMNS), PLAN, access.linkId(), access.clientUserId()).stream().findFirst()
+                .map(this::withMeals);
     }
 
     @Transactional
     public NutritionPlan set(ClientAccess access, PlanRequest request) {
         requireCalories(request.training(), "entreno");
         requireCalories(request.rest(), "descanso");
+        List<MealRequest> meals = request.meals() == null ? List.of() : request.meals();
+        // Copies the coach's own recipes first: another coach's recipe id is a 404, as an unknown one.
+        List<Recipe> recipes = meals.stream().map(m -> recipeService.require(access.coachUserId(), m.recipeId()))
+                .toList();
         endActive(access.clientUserId());
         String notes = request.notes() == null || request.notes().isBlank() ? null : request.notes().strip();
-        jdbcTemplate.update("""
+        UUID planId = jdbcTemplate.queryForObject("""
                 INSERT INTO nutrition_plans (client_user_id, coach_user_id, coach_link_id,
                     training_protein, training_carbs, training_fat, rest_protein, rest_carbs, rest_fat, notes, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')
-                """, access.clientUserId(), access.coachUserId(), access.linkId(),
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE') RETURNING id
+                """, UUID.class, access.clientUserId(), access.coachUserId(), access.linkId(),
                 request.training().protein(), request.training().carbs(), request.training().fat(),
                 request.rest().protein(), request.rest().carbs(), request.rest().fat(), notes);
+        Map<String, Integer> positions = new HashMap<>();
+        for (int i = 0; i < meals.size(); i++) {
+            MealRequest meal = meals.get(i);
+            Recipe recipe = recipes.get(i);
+            jdbcTemplate.update("""
+                    INSERT INTO nutrition_plan_meals (plan_id, day_type, position, slot_name, recipe_id, recipe_name,
+                        recipe_description, servings, protein, carbs, fat)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, planId, meal.dayType(), positions.merge(meal.dayType(), 1, Integer::sum),
+                    meal.slotName().strip(), recipe.id(), recipe.name(), recipe.description(),
+                    Math.round(meal.servings() * 100) / 100.0, recipe.protein(), recipe.carbs(), recipe.fat());
+        }
         return current(access).orElseThrow();
     }
 
@@ -90,7 +117,7 @@ public class NutritionPlanService {
                 JOIN users co ON co.id = cc.coach_user_id
                 WHERE cu.email = ? AND p.status = 'ACTIVE'
                   AND cc.status = 'ACTIVE' AND cc.can_view_nutrition AND cc.can_edit_nutrition
-                """.formatted(COLUMNS), PLAN, normalize(email)).stream().findFirst();
+                """.formatted(COLUMNS), PLAN, normalize(email)).stream().findFirst().map(this::withMeals);
     }
 
     @Transactional(readOnly = true)
@@ -107,8 +134,33 @@ public class NutritionPlanService {
                 (rs, n) -> new PlanExport(rs.getObject("id", UUID.class), rs.getString("role"),
                         rs.getString("email") == null ? null : person(rs), training(rs), rest(rs),
                         rs.getString("notes"), rs.getString("status"), instant(rs, "created_at"),
-                        instant(rs, "ended_at")),
-                userId, userId, userId, userId);
+                        instant(rs, "ended_at"), List.of()),
+                userId, userId, userId, userId).stream()
+                .map(p -> new PlanExport(p.id(), p.role(), p.other(), p.training(), p.rest(), p.notes(), p.status(),
+                        p.createdAt(), p.endedAt(), meals(p.id())))
+                .toList();
+    }
+
+    private NutritionPlan withMeals(NutritionPlan plan) {
+        return new NutritionPlan(plan.id(), plan.coach(), plan.training(), plan.rest(), plan.notes(),
+                plan.createdAt(), meals(plan.id()));
+    }
+
+    /** Training meals first, each kind of day in the coach's order; macros cover all the servings. */
+    private List<PlannedMeal> meals(UUID planId) {
+        return jdbcTemplate.query("""
+                SELECT day_type, slot_name, recipe_id, recipe_name, recipe_description, servings, protein, carbs, fat
+                FROM nutrition_plan_meals WHERE plan_id = ? ORDER BY day_type DESC, position
+                """, (rs, n) -> {
+            double servings = rs.getDouble("servings");
+            double protein = CoachRecipeDtos.grams(rs.getDouble("protein") * servings);
+            double carbs = CoachRecipeDtos.grams(rs.getDouble("carbs") * servings);
+            double fat = CoachRecipeDtos.grams(rs.getDouble("fat") * servings);
+            return new PlannedMeal(rs.getString("day_type"), rs.getString("slot_name"),
+                    rs.getObject("recipe_id", UUID.class), rs.getString("recipe_name"),
+                    rs.getString("recipe_description"), servings, CoachRecipeDtos.kcal(protein, carbs, fat),
+                    protein, carbs, fat);
+        }, planId);
     }
 
     private void endActive(UUID clientUserId) {
@@ -126,7 +178,7 @@ public class NutritionPlanService {
 
     private static final RowMapper<NutritionPlan> PLAN = (rs, n) -> new NutritionPlan(
             rs.getObject("id", UUID.class), rs.getString("email") == null ? null : person(rs),
-            training(rs), rest(rs), rs.getString("notes"), instant(rs, "created_at"));
+            training(rs), rest(rs), rs.getString("notes"), instant(rs, "created_at"), List.of());
 
     private static DayTargets training(ResultSet rs) throws SQLException {
         return DayTargets.of(rs.getInt("training_protein"), rs.getInt("training_carbs"), rs.getInt("training_fat"));

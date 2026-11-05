@@ -173,6 +173,61 @@ class CoachNutritionIntegrationTest {
         mvc.perform(as(get("/api/coaching/nutrition-plan"), client)).andExpect(status().isNoContent());
     }
 
+    @Test
+    void mealsCopyTheCoachRecipesAndSurviveTheirDeletion() throws Exception {
+        String coach = coach();
+        String client = user();
+        String linkId = accept(client, invite(coach), EDIT_ALL);
+        String bowl = recipe(coach, "Bowl de pollo", "45", "60", "12.5");
+        String toast = recipe(coach, "Tostadas", "20", "40", "10");
+        String foreign = recipe(coach(), "Ajena", "10", "10", "10");
+
+        String meals = """
+                {"training":{"protein":180,"carbs":300,"fat":70},
+                 "rest":{"protein":180,"carbs":150,"fat":80},
+                 "meals":[{"dayType":"REST","slotName":"Cena","recipeId":"%s","servings":1},
+                          {"dayType":"TRAINING","slotName":" Comida ","recipeId":"%s","servings":1.5},
+                          {"dayType":"TRAINING","slotName":"Desayuno","recipeId":"%s","servings":2}]}
+                """;
+        mvc.perform(as(put(PATH, linkId), coach).contentType("application/json")
+                        .content(meals.formatted(bowl, bowl, foreign)))
+                .andExpect(status().isNotFound());
+        mvc.perform(as(put(PATH, linkId), coach).contentType("application/json")
+                        .content(meals.formatted(bowl, bowl, "not-a-uuid")))
+                .andExpect(status().isBadRequest());
+        mvc.perform(as(put(PATH, linkId), coach).contentType("application/json")
+                        .content(meals.formatted(bowl, bowl, toast)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.meals.length()").value(3))
+                .andExpect(jsonPath("$.meals[0].dayType").value("TRAINING"))
+                .andExpect(jsonPath("$.meals[0].slotName").value("Comida"))
+                .andExpect(jsonPath("$.meals[0].servings").value(1.5))
+                .andExpect(jsonPath("$.meals[0].protein").value(67.5))
+                .andExpect(jsonPath("$.meals[0].fat").value(18.8))
+                .andExpect(jsonPath("$.meals[1].name").value("Tostadas"))
+                .andExpect(jsonPath("$.meals[1].kcal").value(2 * (20 * 4 + 40 * 4 + 10 * 9)))
+                .andExpect(jsonPath("$.meals[2].dayType").value("REST"));
+
+        // Editing or deleting the recipe leaves the prescribed copy as it was.
+        mvc.perform(as(delete("/api/coach/recipes/{id}", bowl), coach)).andExpect(status().isNoContent());
+        mvc.perform(as(get("/api/coaching/nutrition-plan"), client))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.meals[0].name").value("Bowl de pollo"))
+                .andExpect(jsonPath("$.meals[0].recipeId").doesNotExist())
+                .andExpect(jsonPath("$.meals[0].description").value("Receta de prueba"))
+                .andExpect(jsonPath("$.meals[1].recipeId").value(toast));
+        mvc.perform(as(get("/api/user/export"), client))
+                .andExpect(jsonPath("$.coaching.nutritionPlans[0].meals.length()").value(3));
+    }
+
+    private String recipe(String coach, String name, String protein, String carbs, String fat) throws Exception {
+        String body = "{\"name\":\"" + name + "\",\"description\":\"Receta de prueba\",\"protein\":" + protein
+                + ",\"carbs\":" + carbs + ",\"fat\":" + fat + "}";
+        return json.readTree(mvc.perform(as(post("/api/coach/recipes"), coach)
+                        .contentType("application/json").content(body))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("id").asString();
+    }
+
     private void assign(String coach, String linkId, String programId, LocalDate start) throws Exception {
         mvc.perform(as(post("/api/coach/clients/{linkId}/programs", linkId), coach)
                         .contentType("application/json")
