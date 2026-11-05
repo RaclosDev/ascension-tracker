@@ -53,9 +53,9 @@ export function SettingsWorkoutSection({
           }}
         >
           <div style={{ paddingRight: '1rem' }}>
-            <label className="form-label" style={{ marginBottom: '2px' }}>
+            <span className="form-label" style={{ marginBottom: '2px' }}>
               Descanso Base (segundos)
-            </label>
+            </span>
             <div className="form-hint" style={{ marginTop: 0 }}>
               El tiempo que se aplicará por defecto a todos los ejercicios si no configuras uno
               específico.
@@ -106,9 +106,9 @@ export function SettingsWorkoutSection({
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
         >
           <div>
-            <label className="form-label" style={{ marginBottom: '2px' }}>
+            <span className="form-label" style={{ marginBottom: '2px' }}>
               Mostrar RPE (Esfuerzo Percibido)
-            </label>
+            </span>
             <div className="form-hint" style={{ marginTop: 0 }}>
               Muestra una columna de RPE en los ejercicios para medir la intensidad (1-10)
             </div>
@@ -133,9 +133,9 @@ export function SettingsWorkoutSection({
             paddingTop: '1.5rem',
           }}
         >
-          <label className="form-label" style={{ marginBottom: '2px' }}>
+          <span className="form-label" style={{ marginBottom: '2px' }}>
             Ocultar material no disponible
-          </label>
+          </span>
           <div className="form-hint" style={{ marginTop: 0, marginBottom: '1rem' }}>
             Los ejercicios que usen estos materiales no aparecerán en las búsquedas ni en los
             catálogos.
@@ -178,7 +178,7 @@ export function SettingsWorkoutSection({
             paddingTop: '1.5rem',
           }}
         >
-          <label className="form-label">Importar desde Hevy</label>
+          <span className="form-label">Importar desde Hevy</span>
           <p
             style={{
               color: 'var(--text-muted)',

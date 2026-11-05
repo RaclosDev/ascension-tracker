@@ -25,11 +25,14 @@ export function SettingsPersonalSection({
     <div className="card p-4 sm:p-6">
       <SettingsSectionHeader title="Datos Personales" icon={User} />
       <div className="mt-5 pt-5 border-t border-white/10">
-        <h4 className="subsection-title">Métricas Corporales y Biometría</h4>
+        <h3 className="subsection-title">Métricas Corporales y Biometría</h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Sexo</label>
+            <label htmlFor="settings-personal-section-sexo" className="form-label">
+              Sexo
+            </label>
             <select
+              id="settings-personal-section-sexo"
               className="form-input"
               value={form.sex || 'M'}
               onChange={(e) => setForm({ ...form, sex: e.target.value })}
@@ -40,8 +43,11 @@ export function SettingsPersonalSection({
             </select>
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Edad</label>
+            <label htmlFor="settings-personal-section-edad" className="form-label">
+              Edad
+            </label>
             <input
+              id="settings-personal-section-edad"
               type="number"
               className="form-input"
               value={form.age || ''}
@@ -50,8 +56,11 @@ export function SettingsPersonalSection({
             />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Altura (cm)</label>
+            <label htmlFor="settings-personal-section-altura-cm" className="form-label">
+              Altura (cm)
+            </label>
             <input
+              id="settings-personal-section-altura-cm"
               type="number"
               className="form-input"
               value={form.heightCm || ''}
@@ -60,8 +69,11 @@ export function SettingsPersonalSection({
             />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Actividad</label>
+            <label htmlFor="settings-personal-section-actividad" className="form-label">
+              Actividad
+            </label>
             <select
+              id="settings-personal-section-actividad"
               className="form-input"
               value={form.activityFactor || '1.2'}
               onChange={(e) => setForm({ ...form, activityFactor: e.target.value })}
@@ -75,8 +87,11 @@ export function SettingsPersonalSection({
             </select>
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Peso Inicial (kg)</label>
+            <label htmlFor="settings-personal-section-peso-inicial-kg" className="form-label">
+              Peso Inicial (kg)
+            </label>
             <input
+              id="settings-personal-section-peso-inicial-kg"
               type="number"
               inputMode="decimal"
               className="form-input"
@@ -87,8 +102,11 @@ export function SettingsPersonalSection({
             />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Peso Deseado (kg)</label>
+            <label htmlFor="settings-personal-section-peso-deseado-kg" className="form-label">
+              Peso Deseado (kg)
+            </label>
             <input
+              id="settings-personal-section-peso-deseado-kg"
               type="number"
               inputMode="decimal"
               className="form-input"
@@ -100,15 +118,16 @@ export function SettingsPersonalSection({
           </div>
         </div>
 
-        <h4 className="subsection-title" style={{ marginTop: '1.5rem' }}>
+        <h3 className="subsection-title" style={{ marginTop: '1.5rem' }}>
           Progreso y Fechas
-        </h4>
+        </h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">
+            <label htmlFor="settings-personal-section-ritmo" className="form-label">
               {isGaining ? 'Ganancia (kg/sem)' : 'Pérdida (kg/sem)'}
             </label>
             <input
+              id="settings-personal-section-ritmo"
               type="number"
               inputMode="decimal"
               className="form-input"
@@ -125,8 +144,11 @@ export function SettingsPersonalSection({
             />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Fecha de Inicio</label>
+            <label htmlFor="settings-personal-section-fecha-de-inicio" className="form-label">
+              Fecha de Inicio
+            </label>
             <input
+              id="settings-personal-section-fecha-de-inicio"
               type="date"
               className="form-input"
               value={form.startDate || ''}

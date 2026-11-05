@@ -108,6 +108,27 @@
   outline: 2px solid var(--accent-primary);
   outline-offset: 1px;
 }
+
+/* Programmatic focus target after navigating; no ring on the whole page. */
+#contenido:focus {
+  outline: none;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1000;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
 html {
   margin: 0;
   padding: 0;

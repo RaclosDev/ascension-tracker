@@ -66,8 +66,11 @@ export default function MacroConfigurator({
     <div>
       <h4 className="subsection-title">Estrategia General</h4>
       <div className="form-group" style={{ marginBottom: 'var(--space-md)' }}>
-        <label className="form-label">Modo de Cálculo</label>
+        <label htmlFor="macro-configurator-modo-de-calculo" className="form-label">
+          Modo de Cálculo
+        </label>
         <select
+          id="macro-configurator-modo-de-calculo"
           className="form-input"
           value={form.macroStrategy || 'CUSTOM_GRAMS'}
           onChange={(e) => setForm({ ...form, macroStrategy: e.target.value })}
@@ -90,6 +93,7 @@ export default function MacroConfigurator({
           >
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label
+                htmlFor="macro-configurator-proteinas-g"
                 className="form-label"
                 style={{ fontSize: '0.8rem', color: 'var(--color-protein-light, #a78bfa)' }}
               >
@@ -97,6 +101,7 @@ export default function MacroConfigurator({
                 Proteínas (g)
               </label>
               <input
+                id="macro-configurator-proteinas-g"
                 type="number"
                 inputMode="decimal"
                 className="form-input"
@@ -108,6 +113,7 @@ export default function MacroConfigurator({
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label
+                htmlFor="macro-configurator-grasas-g"
                 className="form-label"
                 style={{ fontSize: '0.8rem', color: 'var(--color-fat)' }}
               >
@@ -115,6 +121,7 @@ export default function MacroConfigurator({
                 Grasas (g)
               </label>
               <input
+                id="macro-configurator-grasas-g"
                 type="number"
                 inputMode="decimal"
                 className="form-input"
@@ -126,6 +133,7 @@ export default function MacroConfigurator({
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label
+                htmlFor="macro-configurator-hidratos-g"
                 className="form-label"
                 style={{ fontSize: '0.8rem', color: 'var(--color-warning)' }}
               >
@@ -133,6 +141,7 @@ export default function MacroConfigurator({
                 Hidratos (g)
               </label>
               <input
+                id="macro-configurator-hidratos-g"
                 type="number"
                 inputMode="decimal"
                 className="form-input"
@@ -203,11 +212,13 @@ export default function MacroConfigurator({
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <div style={{ flex: 1 }}>
                 <label
+                  htmlFor="macro-configurator-objetivo-especifico-de-kcal"
                   style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block' }}
                 >
                   ¿Objetivo específico de kcal?
                 </label>
                 <input
+                  id="macro-configurator-objetivo-especifico-de-kcal"
                   type="number"
                   inputMode="decimal"
                   className="form-input"
@@ -251,8 +262,12 @@ export default function MacroConfigurator({
       {form.macroStrategy === 'CUSTOM_PCT' && (
         <div>
           <div className="form-group" style={{ marginBottom: 'var(--space-md)' }}>
-            <label className="form-label"> Calorías Totales Objetivo</label>
+            <label htmlFor="macro-configurator-calorias-totales-objetivo" className="form-label">
+              {' '}
+              Calorías Totales Objetivo
+            </label>
             <input
+              id="macro-configurator-calorias-totales-objetivo"
               type="number"
               inputMode="decimal"
               className="form-input"
@@ -273,12 +288,14 @@ export default function MacroConfigurator({
             <>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label
+                  htmlFor="macro-configurator-proteinas"
                   className="form-label"
                   style={{ fontSize: '0.8rem', color: 'var(--color-protein-light, #a78bfa)' }}
                 >
                   % Proteínas
                 </label>
                 <input
+                  id="macro-configurator-proteinas"
                   type="number"
                   inputMode="decimal"
                   className="form-input"
@@ -292,12 +309,14 @@ export default function MacroConfigurator({
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label
+                  htmlFor="macro-configurator-grasas"
                   className="form-label"
                   style={{ fontSize: '0.8rem', color: 'var(--color-fat)' }}
                 >
                   % Grasas
                 </label>
                 <input
+                  id="macro-configurator-grasas"
                   type="number"
                   inputMode="decimal"
                   className="form-input"
@@ -311,12 +330,14 @@ export default function MacroConfigurator({
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label
+                  htmlFor="macro-configurator-hidratos"
                   className="form-label"
                   style={{ fontSize: '0.8rem', color: 'var(--color-warning)' }}
                 >
                   % Hidratos
                 </label>
                 <input
+                  id="macro-configurator-hidratos"
                   type="number"
                   inputMode="decimal"
                   className="form-input"
@@ -377,8 +398,12 @@ export default function MacroConfigurator({
       {form.macroStrategy === 'BALANCED' && (
         <div>
           <div className="form-group" style={{ marginBottom: 'var(--space-md)' }}>
-            <label className="form-label"> Calorías Totales Objetivo</label>
+            <label htmlFor="macro-configurator-calorias-totales-objetivo-2" className="form-label">
+              {' '}
+              Calorías Totales Objetivo
+            </label>
             <input
+              id="macro-configurator-calorias-totales-objetivo-2"
               type="number"
               inputMode="decimal"
               className="form-input"

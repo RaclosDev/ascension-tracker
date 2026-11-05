@@ -151,12 +151,14 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
                   <label
+                    htmlFor="onboarding-screen-sexo"
                     className="form-label"
                     style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
                     <User size={14} /> Sexo
                   </label>
                   <select
+                    id="onboarding-screen-sexo"
                     className="form-input"
                     value={form.sex}
                     onChange={(e) => setForm({ ...form, sex: e.target.value as 'M' | 'F' })}
@@ -166,8 +168,11 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
                   </select>
                 </div>
                 <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-                  <label className="form-label">Edad</label>
+                  <label htmlFor="onboarding-screen-edad" className="form-label">
+                    Edad
+                  </label>
                   <input
+                    id="onboarding-screen-edad"
                     type="number"
                     required
                     className="form-input"
@@ -179,8 +184,11 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
 
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-                  <label className="form-label">Altura (cm)</label>
+                  <label htmlFor="onboarding-screen-altura-cm" className="form-label">
+                    Altura (cm)
+                  </label>
                   <input
+                    id="onboarding-screen-altura-cm"
                     type="number"
                     required
                     className="form-input"
@@ -193,12 +201,14 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
                   <label
+                    htmlFor="onboarding-screen-peso-inicial-kg"
                     className="form-label"
                     style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
                     <Scale size={14} /> Peso Inicial (kg)
                   </label>
                   <input
+                    id="onboarding-screen-peso-inicial-kg"
                     type="number"
                     inputMode="decimal"
                     step="0.1"
@@ -209,8 +219,11 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
                   />
                 </div>
                 <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-                  <label className="form-label">Peso Objetivo (kg)</label>
+                  <label htmlFor="onboarding-screen-peso-objetivo-kg" className="form-label">
+                    Peso Objetivo (kg)
+                  </label>
                   <input
+                    id="onboarding-screen-peso-objetivo-kg"
                     type="number"
                     inputMode="decimal"
                     step="0.1"
@@ -224,12 +237,14 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
 
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label
+                  htmlFor="onboarding-screen-actividad"
                   className="form-label"
                   style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
                 >
                   <Activity size={14} /> Actividad
                 </label>
                 <select
+                  id="onboarding-screen-actividad"
                   className="form-input"
                   value={form.activityFactor}
                   onChange={(e) => setForm({ ...form, activityFactor: e.target.value })}

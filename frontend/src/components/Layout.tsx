@@ -70,6 +70,8 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const firstPathRef = useRef(true);
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -98,6 +100,12 @@ export default function Layout() {
     setSidebarOpen(false);
     setMoreMenuOpen(false);
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    // Move focus to the new page so screen readers announce it; not on the first load.
+    if (firstPathRef.current) {
+      firstPathRef.current = false;
+      return;
+    }
+    contentRef.current?.focus({ preventScroll: true });
   }, [location.pathname]);
 
   // Close more menu when clicking outside
@@ -157,6 +165,9 @@ export default function Layout() {
 
   return (
     <div className="app-root">
+      <a href="#contenido" className="skip-link">
+        Saltar al contenido
+      </a>
       {/* Capa de fondo oscurecida para cerrar el menú */}
       <div
         className={`mobile-overlay ${sidebarOpen ? 'active' : ''}`}
@@ -173,7 +184,7 @@ export default function Layout() {
               <div className="logo-subtitle">Weight Tracker</div>
             </div>
           </div>
-          <nav className="sidebar-nav">
+          <nav className="sidebar-nav" aria-label="Navegación principal">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -181,6 +192,7 @@ export default function Layout() {
                   key={item.path}
                   type="button"
                   className={`nav-item ${isActive ? 'active' : ''}`}
+                  aria-current={isActive ? 'page' : undefined}
                   onMouseEnter={() => preloadRoute(item.path)}
                   onTouchStart={() => preloadRoute(item.path)}
                   onClick={(e) => {
@@ -224,7 +236,7 @@ export default function Layout() {
               </button>
             </div>
           </header>
-          <div className="main-content-inner">
+          <div id="contenido" ref={contentRef} tabIndex={-1} className="main-content-inner">
             {configError && <QueryErrorNotice retry={retryConfig} pending={fetchingConfig} />}
             <Suspense
               fallback={
@@ -360,6 +372,7 @@ export default function Layout() {
                   key={item.path}
                   type="button"
                   className={`bottom-sheet-item ${isActive ? 'active' : ''}`}
+                  aria-current={isActive ? 'page' : undefined}
                   onMouseEnter={() => preloadRoute(item.path)}
                   onTouchStart={() => preloadRoute(item.path)}
                   onClick={(e) => {

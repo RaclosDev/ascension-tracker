@@ -99,10 +99,15 @@ export default function MealSelectorModal({
         <p>No hay comidas configuradas. Crea una en Ajustes para continuar.</p>
       )}
       <div>
-        <label className="form-label" style={{ marginBottom: '0.5rem' }}>
+        <label
+          htmlFor="meal-selector-modal-fecha"
+          className="form-label"
+          style={{ marginBottom: '0.5rem' }}
+        >
           Fecha
         </label>
         <input
+          id="meal-selector-modal-fecha"
           type="date"
           className="form-input"
           value={mealSelectorDate}
@@ -120,9 +125,9 @@ export default function MealSelectorModal({
           paddingRight: '0.5rem',
         }}
       >
-        <label className="form-label" style={{ marginBottom: '0.2rem' }}>
+        <span className="form-label" style={{ marginBottom: '0.2rem' }}>
           Cantidades (g)
-        </label>
+        </span>
         {Array.from(selectedFoods).map((id) => {
           const food = foodMap.get(id);
           if (!food) return null;
@@ -175,8 +180,14 @@ export default function MealSelectorModal({
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <label className="form-label">¿A qué comida?</label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+        <span id="meal-selector-meal" className="form-label">
+          ¿A qué comida?
+        </span>
+        <div
+          role="group"
+          aria-labelledby="meal-selector-meal"
+          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}
+        >
           {userMeals.map((m, idx) => (
             <button
               key={m.id || idx}
