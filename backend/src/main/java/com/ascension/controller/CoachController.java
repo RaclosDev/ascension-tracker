@@ -26,6 +26,7 @@ import java.util.UUID;
 public class CoachController {
 
     private final CoachService coachService;
+    private final com.ascension.service.ConsentService consentService;
     private final ClientStatusService clientStatusService;
 
     @GetMapping("/profile")
@@ -40,6 +41,8 @@ public class CoachController {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         coachService.activateCoach(email);
+        // Turning coach mode on is the act of accepting the coach terms shown on that screen.
+        consentService.grant(email, com.ascension.dto.ConsentDtos.Kind.COACH_TERMS);
         return ResponseEntity.ok(new CoachStatus(true));
     }
 

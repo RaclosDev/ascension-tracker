@@ -15,6 +15,7 @@ import { SettingsPersonalSection } from '../components/settings/SettingsPersonal
 import { SettingsThemeSection } from '../components/settings/SettingsThemeSection';
 import { SettingsWorkoutSection } from '../components/settings/SettingsWorkoutSection';
 import { SettingsDataSection } from '../components/settings/SettingsDataSection';
+import { SettingsConsentCard } from '../components/settings/SettingsConsentCard';
 import { SettingsCoachSection } from '../components/settings/SettingsCoachSection';
 import { useAuth } from '../context/AuthContext';
 
@@ -432,6 +433,7 @@ export default function SettingsPage() {
 
           {activeSection === 'coach' && <SettingsCoachSection />}
 
+          {activeSection === 'data' && <SettingsConsentCard />}
           {activeSection === 'data' && (
             <SettingsDataSection
               isExportingJson={isExportingJson}

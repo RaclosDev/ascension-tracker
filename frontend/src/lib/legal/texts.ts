@@ -40,7 +40,7 @@ export const LEGAL_TEXTS: Record<LegalDoc, LegalText> = {
         title: 'Para qué y con qué base',
         paragraphs: [
           'Para prestarte el servicio que pides al crear la cuenta (ejecución del contrato).',
-          'Los datos de salud solo se tratan con tu consentimiento explícito, que das al registrarlos. Puedes retirarlo en cualquier momento borrando esos registros o tu cuenta.',
+          'Los datos de salud solo se tratan con tu consentimiento explícito, que das marcando una casilla específica al empezar y que queda registrado con la fecha y la versión de estos textos. El envío de tus comidas a la IA tiene su propia casilla. Puedes retirar ambos en cualquier momento en Ajustes > Datos y cuenta; además puedes borrar esos registros o tu cuenta.',
           'Si te vinculas con un entrenador, solo le compartimos lo que tú eliges (cuerpo, entrenamiento o nutrición) y puedes cambiarlo o terminar la relación cuando quieras.',
           'Para atender tus mensajes de contacto y, si eres entrenador, gestionar tu plan y sus pagos (ejecución del contrato y obligaciones legales de facturación).',
           'Para mantener la seguridad del servicio y evitar abusos (interés legítimo).',
