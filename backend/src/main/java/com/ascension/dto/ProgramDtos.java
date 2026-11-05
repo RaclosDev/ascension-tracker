@@ -68,4 +68,27 @@ public final class ProgramDtos {
     public record Assignment(UUID id, UUID programId, UUID sourceProgramId, String programName, int weeks,
                              LocalDate startDate, String status, Instant createdAt, Instant endedAt) {
     }
+
+    /** The prescribed day for a given date, with the program's own day id so a workout can point at it. */
+    public record TodayDay(UUID id, int week, int dayIndex, String name, String notes, List<Exercise> exercises) {
+    }
+
+    /**
+     * One active program as the client sees it on a date. {@code phase} is UPCOMING before the start
+     * date, FINISHED after the last week and ACTIVE otherwise; {@code day} is null on a rest day.
+     * {@code otherDays} are this week's other days not done yet, so the client can move a session.
+     */
+    /**
+     * One prescribed day of a client's program next to what they did. {@code date} is the day's calendar
+     * date; the workout fields are null until the client logs a workout for that day.
+     */
+    public record Session(UUID dayId, int week, int dayIndex, LocalDate date, String name, String notes,
+                          List<Exercise> exercises, String workoutId, String workoutName, Long finishedAt,
+                          String origin, String comment) {
+    }
+
+    public record TodayPlan(UUID assignmentId, UUID programId, String programName, String coachName,
+                            LocalDate startDate, int weeks, String phase, Integer week, Integer dayIndex,
+                            TodayDay day, String completedWorkoutId, List<TodayDay> otherDays) {
+    }
 }

@@ -30,6 +30,7 @@ public class WorkoutService {
     private final CustomExerciseRepository customExerciseRepository;
     private final WorkoutMapper workoutMapper;
     private final UserDataQuotaService userDataQuotaService;
+    private final ClientProgramService programDayOwnership;
 
     @Transactional(readOnly = true)
     public Page<WorkoutDTO> getWorkoutHistory(String userEmail, int page, int size) {
@@ -67,6 +68,7 @@ public class WorkoutService {
                 .exercises(new LinkedHashSet<>())
                 .build();
 
+        applyProgramDay(userEmail, workout, dto);
         mapExercisesToWorkout(workout, dto.getExercises());
         return toFullDTO(workoutRepository.save(workout));
     }
@@ -80,6 +82,10 @@ public class WorkoutService {
         workout.setStartedAt(dto.getStartedAt());
         workout.setFinishedAt(dto.getFinishedAt());
         workout.setNotes(dto.getNotes());
+        // Older clients omit the link when editing: keep what the workout already had.
+        if (dto.getProgramDayId() != null) {
+            applyProgramDay(userEmail, workout, dto);
+        }
 
         workout.getExercises().clear();
 
@@ -135,6 +141,23 @@ public class WorkoutService {
     @Transactional
     public void deleteTemplate(String userEmail, String id) {
         workoutTemplateService.deleteTemplate(userEmail, id);
+    }
+
+    /**
+     * Links the workout to a prescribed day, which must belong to a program this user owns:
+     * a client can only claim days of their own assigned copies, never another account's.
+     */
+    private void applyProgramDay(String userEmail, Workout workout, WorkoutDTO dto) {
+        if (dto.getProgramDayId() == null) {
+            workout.setProgramDayId(null);
+            workout.setProgramOrigin(null);
+            return;
+        }
+        if (!programDayOwnership.ownsProgramDay(userEmail, dto.getProgramDayId())) {
+            throw new EntityNotFoundException("Día de programa no encontrado");
+        }
+        workout.setProgramDayId(dto.getProgramDayId());
+        workout.setProgramOrigin(dto.getProgramOrigin() != null ? dto.getProgramOrigin() : "PRESCRIBED");
     }
 
     private WorkoutDTO toFullDTO(Workout w) {

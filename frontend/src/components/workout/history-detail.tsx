@@ -11,6 +11,8 @@ import {
 } from '@/lib/workout/format';
 import { SET_TYPE_LABEL, type CompletedWorkout, type Exercise } from '@/lib/workout/types';
 import { capitalizeFirst } from '@/utils/dateHelper';
+import { useWorkoutComments } from '@/lib/coach/comments';
+import { personName } from '@/lib/coach/api';
 
 type Props = {
   detail: CompletedWorkout | null;
@@ -124,6 +126,7 @@ export function WorkoutHistoryDetail({
                 </p>
               </div>
             ) : null}
+            {detail.programOrigin ? <CoachComments workoutId={detail.id} /> : null}
           </div>
 
           <div
@@ -388,6 +391,34 @@ function Stat({ label, value }: { label: string; value: string }) {
       >
         {value}
       </p>
+    </div>
+  );
+}
+
+/** What the coach said about a workout done from their program. */
+function CoachComments({ workoutId }: { workoutId: string }) {
+  const comments = useWorkoutComments(workoutId);
+  if (!comments.data?.length) return null;
+  return (
+    <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      {comments.data.map((c) => (
+        <div
+          key={c.coach.email}
+          style={{
+            padding: '0.75rem',
+            background: 'rgba(255, 255, 255, 0.02)',
+            borderRadius: '8px',
+            borderLeft: '3px solid var(--success, #22c55e)',
+          }}
+        >
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>
+            Comentario de {personName(c.coach)}
+          </p>
+          <p style={{ fontSize: '0.9rem', color: 'white', margin: 0, whiteSpace: 'pre-wrap' }}>
+            {c.text}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }

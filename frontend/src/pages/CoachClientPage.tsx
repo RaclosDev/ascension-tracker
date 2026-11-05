@@ -21,6 +21,7 @@ import {
   useEndAssignment,
 } from '../lib/coach/coachPrograms';
 import { useExerciseCatalog, getExerciseMap } from '../lib/workout/exercises';
+import { ProgramSessions } from '../components/coach/ProgramSessions';
 import { ActivityHeatmap } from '../components/workout/heatmap';
 import { BodyHeatmap } from '../components/workout/body-heatmap';
 import { DashboardChartsSkeleton } from '../components/workout/skeletons/DashboardChartsSkeleton';
@@ -193,7 +194,15 @@ function ProgramsSection({ linkId, canAssign }: { linkId: string; canAssign: boo
   const end = useEndAssignment(linkId);
   const [programId, setProgramId] = useState('');
   const [startDate, setStartDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
+  const [openAssignment, setOpenAssignment] = useState<string | null>(null);
   const active = assignments.data?.find((a) => a.status === 'ACTIVE');
+  const custom = useClientCustomExercises(linkId);
+  const catalog = useExerciseCatalog();
+  const exerciseMap = useMemo(
+    () => getExerciseMap(custom.data ?? [], catalog.data ?? []),
+    [custom.data, catalog.data],
+  );
+  const exerciseName = (id: string) => exerciseMap.get(id)?.name ?? 'Ejercicio';
 
   const submit = () => {
     if (!programId || !startDate) return;
@@ -225,35 +234,52 @@ function ProgramsSection({ linkId, canAssign }: { linkId: string; canAssign: boo
       {assignments.data && assignments.data.length > 0 && (
         <ul className="flex flex-col gap-2 mb-4">
           {assignments.data.map((a) => (
-            <li key={a.id} className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <div className="font-bold text-white truncate">{a.programName}</div>
-                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  {a.weeks} {a.weeks === 1 ? 'semana' : 'semanas'} · empieza el{' '}
-                  {formatCoachDate(a.startDate)}
-                  {a.status === 'ENDED' &&
-                    a.endedAt &&
-                    ` · terminado el ${formatCoachDate(a.endedAt)}`}
+            <li key={a.id} className="flex flex-col gap-1">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-bold text-white truncate">{a.programName}</div>
+                  <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    {a.weeks} {a.weeks === 1 ? 'semana' : 'semanas'} · empieza el{' '}
+                    {formatCoachDate(a.startDate)}
+                    {a.status === 'ENDED' &&
+                      a.endedAt &&
+                      ` · terminado el ${formatCoachDate(a.endedAt)}`}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    aria-expanded={openAssignment === a.id}
+                    onClick={() => setOpenAssignment(openAssignment === a.id ? null : a.id)}
+                  >
+                    {openAssignment === a.id ? 'Ocultar sesiones' : 'Sesiones'}
+                  </button>
+                  {a.status === 'ACTIVE' && canAssign && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      aria-label={`Terminar ${a.programName}`}
+                      disabled={end.isPending}
+                      onClick={() => {
+                        if (
+                          !window.confirm(
+                            `¿Terminar «${a.programName}»? Tu alumno conserva su copia.`,
+                          )
+                        )
+                          return;
+                        end.mutate(a.id, {
+                          onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo terminar')),
+                        });
+                      }}
+                    >
+                      Terminar
+                    </button>
+                  )}
                 </div>
               </div>
-              {a.status === 'ACTIVE' && canAssign && (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  aria-label={`Terminar ${a.programName}`}
-                  disabled={end.isPending}
-                  onClick={() => {
-                    if (
-                      !window.confirm(`¿Terminar «${a.programName}»? Tu alumno conserva su copia.`)
-                    )
-                      return;
-                    end.mutate(a.id, {
-                      onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo terminar')),
-                    });
-                  }}
-                >
-                  Terminar
-                </button>
+              {openAssignment === a.id && (
+                <ProgramSessions linkId={linkId} assignmentId={a.id} exerciseName={exerciseName} />
               )}
             </li>
           ))}

@@ -2,8 +2,10 @@ package com.ascension.controller;
 
 import com.ascension.dto.ProgramDtos.AssignRequest;
 import com.ascension.dto.ProgramDtos.Assignment;
+import com.ascension.dto.ProgramDtos.Session;
 import com.ascension.service.CoachAccessPolicy;
 import com.ascension.service.CoachAccessPolicy.Action;
+import com.ascension.service.CoachSessionService;
 import com.ascension.service.ProgramAssignmentService;
 import com.ascension.util.SecurityUtils;
 import jakarta.validation.Valid;
@@ -25,12 +27,23 @@ public class CoachAssignmentController {
 
     private final CoachAccessPolicy accessPolicy;
     private final ProgramAssignmentService assignmentService;
+    private final CoachSessionService sessionService;
 
     @GetMapping
     public ResponseEntity<List<Assignment>> list(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.ok(assignmentService.list(accessPolicy.require(email, linkId, Action.VIEW_PROGRAMS)));
+    }
+
+    /** Each prescribed day of an assigned program next to the workout the client logged for it. */
+    @GetMapping("/{assignmentId}/sessions")
+    public ResponseEntity<List<Session>> sessions(@PathVariable UUID linkId, @PathVariable UUID assignmentId,
+                                                  @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        var access = accessPolicy.require(email, linkId, Action.VIEW_PROGRAMS);
+        return ResponseEntity.ok(sessionService.sessions(access, assignmentId));
     }
 
     @PostMapping

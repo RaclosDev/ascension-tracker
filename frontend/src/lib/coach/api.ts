@@ -83,6 +83,7 @@ const ACTION_LABELS: Record<string, string> = {
   VIEW_NUTRITION: 'Comidas',
   VIEW_TARGETS: 'Objetivos de nutrición',
   VIEW_PROGRAMS: 'Programas asignados',
+  COMMENT_WORKOUT: 'Comentar entrenamiento',
   ASSIGN_PROGRAM: 'Asignar programa',
 };
 

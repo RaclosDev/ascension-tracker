@@ -88,6 +88,15 @@ export interface WorkoutExercise {
   sets: WorkoutSet[];
 }
 
+/** How a workout relates to a coach's program: done as written, or changed by the client. */
+export type ProgramOrigin = 'PRESCRIBED' | 'PRESCRIBED_MODIFIED';
+
+/** What a prescribed day asked for, to tell on finishing whether the client changed it. */
+export interface ProgramPlanItem {
+  exerciseId: string;
+  sets: number;
+}
+
 export interface ActiveWorkout {
   name: string;
   startedAt: number;
@@ -95,6 +104,9 @@ export interface ActiveWorkout {
   exercises: WorkoutExercise[];
   editingId?: string;
   editingFinishedAt?: number;
+  programDayId?: string;
+  programOrigin?: ProgramOrigin;
+  programPlan?: ProgramPlanItem[];
 }
 
 export interface CompletedWorkout {
@@ -104,6 +116,8 @@ export interface CompletedWorkout {
   finishedAt: number;
   notes?: string;
   exercises: WorkoutExercise[];
+  programDayId?: string | null;
+  programOrigin?: ProgramOrigin | null;
 }
 
 export interface Template {

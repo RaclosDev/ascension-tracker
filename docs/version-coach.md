@@ -24,7 +24,7 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 **Asignar un programa.** Si el alumno le da permiso para pautarle entrenos, el entrenador le asigna un programa con fecha de inicio. El alumno recibe su propia copia, así que los cambios posteriores en la biblioteca no le afectan.
 
-**Pantalla «Hoy» del alumno.** El alumno ve qué le toca hoy y empieza el entreno pautado con un toque, con todo precargado. También puede entrenar libre o seguir su propia rutina.
+**Pantalla «Hoy» del alumno.** El alumno ve qué le toca hoy y empieza el entreno pautado con un toque, con todo precargado. Si le viene mejor, puede hacer hoy otro día de esa semana que aún no haya hecho. También puede entrenar libre o seguir su propia rutina.
 
 **Pautado frente a hecho.** El entrenador ve cada sesión del programa: si el alumno la hizo tal cual, con cambios o si no la registró, con lo pautado al lado de lo realizado.
 

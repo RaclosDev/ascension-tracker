@@ -30,6 +30,14 @@ public class Workout implements Persistable<String> {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    /** The prescribed program day this workout carried out; null for the client's own workouts. */
+    @Column(name = "program_day_id")
+    private java.util.UUID programDayId;
+
+    /** PRESCRIBED or PRESCRIBED_MODIFIED when {@link #programDayId} is set. */
+    @Column(name = "program_origin", length = 24)
+    private String programOrigin;
+
     @OneToMany(mappedBy = "workout", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("orderIndex ASC")
     @org.hibernate.annotations.BatchSize(size = 50)
