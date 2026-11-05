@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ArrowLeft, Dumbbell, Footprints, Scale, Utensils } from 'lucide-react';
@@ -7,14 +7,25 @@ import {
   formatCoachDate,
   personName,
   sharedScopes,
+  useClientCustomExercises,
   useClientData,
   useCoachClients,
   type CoachTargets,
 } from '../lib/coach/api';
 import { useExerciseCatalog, getExerciseMap } from '../lib/workout/exercises';
+import { ActivityHeatmap } from '../components/workout/heatmap';
+import { BodyHeatmap } from '../components/workout/body-heatmap';
+import { DashboardChartsSkeleton } from '../components/workout/skeletons/DashboardChartsSkeleton';
+import { Skeleton } from '../components/ui/skeleton';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
+import { toWeeklyDeltaData, toWeightChartData } from '../lib/weightCharts';
 import { formatDay, formatKg, sessionVolume } from '../lib/workout/format';
 import type { CompletedWorkout } from '../lib/workout/types';
-import type { DashboardData, FoodLog, WeekSummary } from '../types/api';
+import type { DashboardData, FoodLog, WeekSummary, WeightEntry } from '../types/api';
+
+const DashboardCharts = lazyWithRetry(() => import('../components/DashboardCharts'));
+const NutritionPieChart = lazyWithRetry(() => import('../components/nutrition/NutritionPieChart'));
+const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 
 const numFmt = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
 const num = (value: number | null | undefined, unit = '') =>
@@ -112,9 +123,12 @@ function WeeklyList({ weeks, unit }: { weeks: WeekSummary[]; unit: string }) {
 
 function BodySection({ linkId }: { linkId: string }) {
   const dashboard = useClientData<DashboardData>(linkId, 'weights/dashboard', true);
+  const entries = useClientData<WeightEntry[]>(linkId, 'weights', true);
   const weeks = useClientData<WeekSummary[]>(linkId, 'weights/weekly', true);
   const steps = useClientData<WeekSummary[]>(linkId, 'steps/weekly', true);
   const d = dashboard.data;
+  const weightChartData = useMemo(() => toWeightChartData(entries.data ?? []), [entries.data]);
+  const deltaData = useMemo(() => toWeeklyDeltaData(weeks.data ?? []), [weeks.data]);
 
   return (
     <>
@@ -128,7 +142,18 @@ function BodySection({ linkId }: { linkId: string }) {
             <Stat label="Cambio/semana" value={num(d.avgWeeklyChange, ' kg')} />
           </div>
         )}
-        {weeks.data && <WeeklyList weeks={weeks.data} unit=" kg" />}
+        <QueryState
+          isLoading={entries.isLoading || weeks.isLoading}
+          isError={entries.isError || weeks.isError}
+        />
+        {entries.data?.length === 0 && (
+          <p style={{ color: 'var(--text-secondary)' }}>Sin registros de peso.</p>
+        )}
+        {entries.data && entries.data.length > 0 && weeks.data && (
+          <Suspense fallback={<DashboardChartsSkeleton />}>
+            <DashboardCharts weightChartData={weightChartData} deltaData={deltaData} />
+          </Suspense>
+        )}
       </Section>
       <Section title="Pasos" icon={<Footprints size={18} aria-hidden />}>
         <QueryState isLoading={steps.isLoading} isError={steps.isError} />
@@ -152,8 +177,14 @@ interface WorkoutStats {
 function TrainingSection({ linkId }: { linkId: string }) {
   const history = useClientData<WorkoutPage>(linkId, 'workouts?page=0&size=10', true);
   const stats = useClientData<WorkoutStats>(linkId, 'workouts/stats', true);
+  const [since] = useState(() => Date.now() - YEAR_MS);
+  const recent = useClientData<CompletedWorkout[]>(linkId, `workouts/recent?since=${since}`, true);
+  const custom = useClientCustomExercises(linkId);
   const catalog = useExerciseCatalog();
-  const exerciseMap = useMemo(() => getExerciseMap([], catalog.data ?? []), [catalog.data]);
+  const exerciseMap = useMemo(
+    () => getExerciseMap(custom.data ?? [], catalog.data ?? []),
+    [custom.data, catalog.data],
+  );
   const s = stats.data;
 
   return (
@@ -166,6 +197,14 @@ function TrainingSection({ linkId }: { linkId: string }) {
           <Stat label="Volumen" value={formatKg(s.totalVolume)} />
         </div>
       )}
+      <QueryState isLoading={recent.isLoading} isError={recent.isError} />
+      {recent.data && recent.data.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2 mb-4">
+          <ActivityHeatmap history={recent.data} />
+          <BodyHeatmap history={recent.data} customExercises={custom.data ?? []} />
+        </div>
+      )}
+      <h3 className="text-sm font-bold text-white mb-2">Últimos entrenamientos</h3>
       <QueryState isLoading={history.isLoading} isError={history.isError} />
       {history.data?.content.length === 0 && (
         <p style={{ color: 'var(--text-secondary)' }}>Aún no ha registrado entrenamientos.</p>
@@ -183,7 +222,7 @@ function TrainingSection({ linkId }: { linkId: string }) {
             </div>
             <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               {(workout.exercises ?? [])
-                .map((ex) => exerciseMap.get(ex.exerciseId)?.name ?? 'Ejercicio personalizado')
+                .map((ex) => exerciseMap.get(ex.exerciseId)?.name ?? 'Ejercicio')
                 .join(' · ')}
             </div>
             <div className="text-sm text-white">
@@ -253,6 +292,11 @@ function NutritionSection({ linkId }: { linkId: string }) {
               </li>
             ))}
           </ul>
+          <div className="mx-auto mb-2" style={{ width: '100%', maxWidth: 300, height: 250 }}>
+            <Suspense fallback={<Skeleton className="w-48 h-48 rounded-full mx-auto" />}>
+              <NutritionPieChart pieData={macroPieData(totals, t?.kcal)} />
+            </Suspense>
+          </div>
           <p className="text-sm text-white">
             Total {num(totals.kcal, ' kcal')} · P {num(totals.protein, ' g')} · C{' '}
             {num(totals.carbs, ' g')} · G {num(totals.fat, ' g')}
@@ -261,4 +305,21 @@ function NutritionSection({ linkId }: { linkId: string }) {
       )}
     </Section>
   );
+}
+
+/** Same split as the client's own diary: kcal from each macro plus what is left of the target. */
+function macroPieData(
+  totals: { kcal: number; protein: number; carbs: number; fat: number },
+  targetKcal: number | null | undefined,
+) {
+  return [
+    { name: 'Proteínas', value: totals.protein * 4, color: 'var(--color-protein)' },
+    { name: 'Hidratos', value: totals.carbs * 4, color: 'var(--color-carbs)' },
+    { name: 'Grasas', value: totals.fat * 9, color: 'var(--color-fat)' },
+    {
+      name: 'Calorías restantes',
+      value: Math.max(0, (targetKcal ?? 0) - totals.kcal),
+      color: 'rgba(255,255,255,0.05)',
+    },
+  ];
 }

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
+import type { Exercise } from '../workout/types';
 
 export interface CoachPermissions {
   training: boolean;
@@ -181,6 +182,19 @@ export function useClientData<T>(linkId: string, path: string, enabled: boolean)
       (await api.get<T>(`/coach/clients/${encodeURIComponent(linkId)}/${path}`)).data,
   });
 }
+
+/** The client's own exercises, so their names show instead of a generic label. */
+export const useClientCustomExercises = (linkId: string) =>
+  useQuery({
+    queryKey: keys.client(linkId, 'workouts/custom-exercises'),
+    retry: false,
+    queryFn: async () =>
+      (
+        await api.get<Exercise[]>(
+          `/coach/clients/${encodeURIComponent(linkId)}/workouts/custom-exercises`,
+        )
+      ).data.map((ex) => ({ ...ex, custom: true })),
+  });
 
 // ---- Client side ----
 

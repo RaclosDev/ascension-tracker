@@ -1,6 +1,7 @@
 package com.ascension.controller;
 
 import com.ascension.dto.CoachDtos.Targets;
+import com.ascension.dto.CustomExerciseDTO;
 import com.ascension.dto.DashboardDTO;
 import com.ascension.dto.FoodLogDTO;
 import com.ascension.dto.UserSettingsDTO;
@@ -10,6 +11,7 @@ import com.ascension.dto.WorkoutDTO;
 import com.ascension.dto.WorkoutStatsDTO;
 import com.ascension.service.CoachAccessPolicy;
 import com.ascension.service.CoachAccessPolicy.Action;
+import com.ascension.service.CustomExerciseService;
 import com.ascension.service.NutritionLogService;
 import com.ascension.service.SettingsService;
 import com.ascension.service.StepsService;
@@ -50,6 +52,7 @@ public class CoachClientDataController {
     private final WorkoutService workoutService;
     private final NutritionLogService nutritionLogService;
     private final SettingsService settingsService;
+    private final CustomExerciseService customExerciseService;
 
     @GetMapping("/weights")
     public ResponseEntity<List<WeightEntryDTO>> weights(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
@@ -83,6 +86,25 @@ public class CoachClientDataController {
     @GetMapping("/workouts/stats")
     public ResponseEntity<WorkoutStatsDTO> workoutStats(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
         return read(jwt, linkId, Action.VIEW_WORKOUTS, workoutService::getStats);
+    }
+
+    @GetMapping("/workouts/recent")
+    public ResponseEntity<List<WorkoutDTO>> recentWorkouts(
+            @PathVariable UUID linkId,
+            @RequestParam @Min(value = 0, message = "El parámetro 'since' no puede ser negativo") Long since,
+            @AuthenticationPrincipal Jwt jwt) {
+        return read(jwt, linkId, Action.VIEW_WORKOUTS, email -> workoutService.getRecentWorkouts(email, since));
+    }
+
+    /** The client's own exercises, so the coach sees their names in workouts and charts. */
+    @GetMapping("/workouts/custom-exercises")
+    public ResponseEntity<List<CustomExerciseDTO>> customExercises(@PathVariable UUID linkId,
+                                                                   @AuthenticationPrincipal Jwt jwt) {
+        return read(jwt, linkId, Action.VIEW_WORKOUTS, email -> customExerciseService.getCustomExercises(email)
+                .stream()
+                .map(ex -> CustomExerciseDTO.builder().id(ex.getId()).name(ex.getName())
+                        .muscle(ex.getMuscle()).equipment(ex.getEquipment()).build())
+                .toList());
     }
 
     @GetMapping("/workouts/{workoutId}")

@@ -8,9 +8,39 @@ import InvitationPage from '../pages/InvitationPage';
 import { HomeRedirect, RememberInvitation } from '../components/coach/InvitationRedirects';
 import { SettingsCoachSection } from '../components/settings/SettingsCoachSection';
 import { peekPendingInvitation } from '../lib/coach/api';
+import CoachClientPage from '../pages/CoachClientPage';
+import type { CompletedWorkout, Exercise } from '../lib/workout/types';
 
 vi.mock('../api/client', () => ({
   default: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
+}));
+vi.mock('../lib/workout/catalog-query', () => ({
+  useExerciseCatalog: () => ({ data: [] }),
+}));
+vi.mock('../components/DashboardCharts', () => ({
+  default: (props: { weightChartData: unknown[]; deltaData: unknown[]; goalWeight?: number }) => (
+    <div
+      data-testid="weight-charts"
+      data-points={props.weightChartData.length}
+      data-deltas={props.deltaData.length}
+      data-goal={props.goalWeight ?? 'none'}
+    />
+  ),
+}));
+vi.mock('../components/nutrition/NutritionPieChart', () => ({
+  default: ({ pieData }: { pieData: unknown[] }) => (
+    <div data-testid="macro-pie" data-slices={pieData.length} />
+  ),
+}));
+vi.mock('../components/workout/heatmap', () => ({
+  ActivityHeatmap: ({ history }: { history: CompletedWorkout[] }) => (
+    <div data-testid="activity-heatmap" data-workouts={history.length} />
+  ),
+}));
+vi.mock('../components/workout/body-heatmap', () => ({
+  BodyHeatmap: ({ customExercises = [] }: { customExercises?: Exercise[] }) => (
+    <div data-testid="body-heatmap" data-custom={customExercises.length} />
+  ),
 }));
 vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }));
 
@@ -191,5 +221,85 @@ describe('SettingsCoachSection', () => {
 
     fireEvent.click(await screen.findByRole('checkbox', { name: /Cuerpo/ }));
     expect(mockedApi.patch).not.toHaveBeenCalled();
+  });
+});
+
+describe('CoachClientPage', () => {
+  const clientLink = {
+    linkId: 'link-9',
+    client: { name: 'Ana Alumna', email: 'ana@example.com', picture: null },
+    permissions: { training: true, nutrition: true, body: true },
+    since: '2026-11-01T10:00:00Z',
+  };
+  const workout = {
+    id: 'w-1',
+    name: 'Pecho',
+    startedAt: Date.parse('2026-11-03T10:00:00Z'),
+    finishedAt: Date.parse('2026-11-03T11:00:00Z'),
+    exercises: [{ id: 'we-1', exerciseId: 'custom-1', sets: [] }],
+  };
+
+  function mockClient(permissions = clientLink.permissions) {
+    const base = '/coach/clients/link-9/';
+    const responses: Record<string, unknown> = {
+      'weights/dashboard': { currentWeight: 80, currentWeeklyAverage: 80.2 },
+      weights: [
+        { id: 1, date: '2026-11-02', weight: 80.4 },
+        { id: 2, date: '2026-11-04', weight: 80 },
+      ],
+      'weights/weekly': [{ weekStart: '2026-11-02', average: 80.2, delta: -0.3 }],
+      'steps/weekly': [],
+      'workouts?page=0&size=10': { content: [workout] },
+      'workouts/stats': {
+        totalWorkouts: 1,
+        totalDurationSeconds: 3600,
+        totalVolume: 0,
+        totalSets: 0,
+      },
+      'workouts/custom-exercises': [{ id: 'custom-1', name: 'Press inclinado en polea' }],
+      targets: { kcal: 2200 },
+      'nutrition/calories/weekly': [],
+    };
+    mockedApi.get.mockImplementation((url: string) => {
+      if (url === '/coach/clients')
+        return Promise.resolve({ data: [{ ...clientLink, permissions }] });
+      const path = url.startsWith(base) ? url.slice(base.length) : url;
+      if (path.startsWith('workouts/recent?since=')) return Promise.resolve({ data: [workout] });
+      if (path.startsWith('nutrition/logs?date=')) {
+        return Promise.resolve({
+          data: [
+            { id: 1, product: 'Arroz', quantity: 100, kcal: 350, protein: 7, carbs: 77, fat: 1 },
+          ],
+        });
+      }
+      if (path in responses) return Promise.resolve({ data: responses[path] });
+      return Promise.reject(new Error(`unexpected ${url}`));
+    });
+  }
+
+  const routes = <Route path="/entrenador/alumnos/:linkId" element={<CoachClientPage />} />;
+
+  it('shows the real charts and the client custom exercise names', async () => {
+    mockClient();
+    renderAt('/entrenador/alumnos/link-9', routes);
+
+    expect(await screen.findByText('Press inclinado en polea')).toBeDefined();
+    const weightChart = await screen.findByTestId('weight-charts');
+    expect(weightChart.dataset.points).toBe('2');
+    expect(weightChart.dataset.deltas).toBe('1');
+    expect(weightChart.dataset.goal).toBe('none');
+    expect((await screen.findByTestId('activity-heatmap')).dataset.workouts).toBe('1');
+    expect((await screen.findByTestId('body-heatmap')).dataset.custom).toBe('1');
+    expect((await screen.findByTestId('macro-pie')).dataset.slices).toBe('4');
+  });
+
+  it('only asks for the areas the client shares', async () => {
+    mockClient({ training: false, nutrition: false, body: true });
+    renderAt('/entrenador/alumnos/link-9', routes);
+
+    expect(await screen.findByTestId('weight-charts')).toBeDefined();
+    const urls = mockedApi.get.mock.calls.map(([url]) => url as string);
+    expect(urls.some((url) => url.includes('/workouts'))).toBe(false);
+    expect(urls.some((url) => url.includes('/nutrition') || url.endsWith('/targets'))).toBe(false);
   });
 });

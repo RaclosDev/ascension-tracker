@@ -18,6 +18,8 @@ export default defineConfig({
         globIgnores: [
           '**/BarcodeScanner*',
           '**/CategoricalChart*',
+          // Coach pages need the network anyway and most users never open them.
+          '**/Coach*Page*',
           '**/exercises*.json',
           '**/ascension-title.png',
           '**/pwa-logo.png',

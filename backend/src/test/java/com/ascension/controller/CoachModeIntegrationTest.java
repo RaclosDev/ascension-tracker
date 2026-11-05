@@ -1,7 +1,9 @@
 package com.ascension.controller;
 
 import com.ascension.TestcontainersConfiguration;
+import com.ascension.dto.CustomExerciseDTO;
 import com.ascension.dto.WeightEntryDTO;
+import com.ascension.service.CustomExerciseService;
 import com.ascension.service.AccountDeletionService;
 import com.ascension.service.UserService;
 import com.ascension.service.WeightService;
@@ -45,6 +47,7 @@ class CoachModeIntegrationTest {
     @Autowired WeightService weights;
     @Autowired AccountDeletionService accountDeletion;
     @Autowired ObjectMapper json;
+    @Autowired CustomExerciseService customExercises;
 
     @Test
     void clientConsentsAndCoachReadsOnlyWhatWasGranted() throws Exception {
@@ -188,6 +191,34 @@ class CoachModeIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM coach_profiles WHERE user_id = ?",
                 Integer.class, coachId)).isZero();
         assertThat(users.findByEmail(other)).isPresent();
+    }
+
+    @Test
+    void coachSeesClientCustomExercisesAndRecentWorkoutsOnlyWithTrainingPermission() throws Exception {
+        String coach = coach();
+        String client = user();
+        customExercises.saveCustomExercise(client, CustomExerciseDTO.builder()
+                .id("custom-" + UUID.randomUUID()).name("Press inclinado en polea").muscle("Chest")
+                .equipment("Cable").build());
+        String linkId = accept(client, invite(coach), TRAINING_ONLY);
+
+        mvc.perform(as(get("/api/coach/clients/{id}/workouts/custom-exercises", linkId), coach))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Press inclinado en polea"))
+                .andExpect(jsonPath("$[0].userEmail").doesNotExist());
+        mvc.perform(as(get("/api/coach/clients/{id}/workouts/recent", linkId).param("since", "0"), coach))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        mvc.perform(as(patch("/api/coaching/coaches/{id}", linkId).contentType("application/json")
+                        .content(BODY_ONLY), client))
+                .andExpect(status().isNoContent());
+        mvc.perform(as(get("/api/coach/clients/{id}/workouts/custom-exercises", linkId), coach))
+                .andExpect(status().isForbidden());
+        mvc.perform(as(get("/api/coach/clients/{id}/workouts/recent", linkId).param("since", "0"), coach))
+                .andExpect(status().isForbidden());
+        mvc.perform(as(get("/api/coach/clients/{id}/workouts/custom-exercises", linkId), user()))
+                .andExpect(status().isNotFound());
     }
 
     @Test
