@@ -24,6 +24,7 @@ public class CoachAccessPolicy {
     public enum Action {
         VIEW_WEIGHT(Scope.BODY),
         VIEW_STEPS(Scope.BODY),
+        VIEW_PHOTOS(Scope.BODY),
         VIEW_WORKOUTS(Scope.TRAINING),
         VIEW_NUTRITION(Scope.NUTRITION),
         VIEW_TARGETS(Scope.NUTRITION),

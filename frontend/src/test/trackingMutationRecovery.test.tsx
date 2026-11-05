@@ -20,6 +20,7 @@ vi.mock('@tanstack/react-query', () => ({
     isLoading: false,
   }),
 }));
+vi.mock('../components/photos/ProgressPhotosSection', () => ({ default: () => null }));
 vi.mock('../components/tracking/TrackingWeeklyStats', () => ({ TrackingWeeklyStats: () => null }));
 vi.mock('../components/tracking/TrackingDayCell', () => ({
   TrackingDayCell: (props: ComponentProps<typeof TrackingDayCell>) => (

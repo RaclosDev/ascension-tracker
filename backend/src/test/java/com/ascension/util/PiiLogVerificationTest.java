@@ -99,7 +99,8 @@ class PiiLogVerificationTest {
 
     @Test
     void accountDeletionService_masksEmailInAllLogs() {
-        AccountDeletionService service = new AccountDeletionService(jdbcTemplate);
+        AccountDeletionService service = new AccountDeletionService(jdbcTemplate,
+                new com.ascension.service.ProgressPhotoService(jdbcTemplate, com.ascension.service.PhotoStorage.disabled()));
         service.wipeAccountData(TARGET_EMAIL);
 
         assertNoRawEmailInLogs();

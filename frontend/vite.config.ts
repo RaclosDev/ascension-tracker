@@ -28,6 +28,10 @@ export default defineConfig({
           '**/TodayProgramCard-*',
           '**/today-*',
           '**/CoachNutritionGate-*',
+          // Progress photos only work online.
+          '**/ProgressPhotosSection-*',
+          '**/PhotoGallery-*',
+          '**/progressPhotos-*',
           '**/nutritionPlan-*',
           '**/PlannedMealsCard-*',
           '**/InvitationPage-*',
