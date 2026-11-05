@@ -60,4 +60,28 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 **Fotos de progreso.** En Seguimiento el alumno puede hacerse fotos de frente, de perfil y de espalda y guardarlas con su fecha. Antes de subirlas, el móvil las reduce para que ocupen poco y les quita los datos ocultos, como la ubicación. Se guardan en un almacén privado: solo las ve el alumno y, si comparte su cuerpo, su entrenador, que las encuentra por días en la ficha del alumno. El alumno puede borrar cualquier foto; al borrar la cuenta se borran todas y la descarga de datos incluye la lista de fotos guardadas.
 
+---
+
+## Fase 5 — Planes *(en curso)*
+
+**Prueba de 14 días.** Quien activa el modo entrenador empieza una prueba gratuita de 14 días con el plan Pro, sin tarjeta. Los entrenadores que ya existían reciben la misma prueba desde hoy. Volver a activar el modo entrenador no reinicia la prueba.
+
+**Planes con límite de alumnos.** Cada plan admite un número de alumnos activos: Gratis 1, Básico 10, Pro 25 y Élite 50. Si un entrenador pasa del límite, por ejemplo al terminar la prueba, no pierde a ninguno de sus alumnos: solo no puede invitar ni aceptar a más hasta que cambie de plan o termine alguna relación.
+
+**Más IA con el plan.** Cada plan trae su propia cuota diaria de consultas a la IA. La usa el entrenador y también sus alumnos vinculados, que reciben la del plan de su entrenador si es mayor que la normal. Quien no tiene entrenador sigue igual.
+
+**Pago por transferencia.** De momento los entrenadores pagan con una transferencia mensual. Cuando llega, el administrador entra en la página «Planes de entrenadores», elige el plan y hasta qué día está pagado. Al pasar esa fecha sin renovar, el entrenador vuelve al plan gratis sin perder a ningún alumno. Solo las cuentas de administrador ven esa página.
+
+**Plan y facturación.** El entrenador tiene una página con su plan actual (días de prueba que le quedan o hasta cuándo está pagado, alumnos usados y consultas de IA al día), los precios de cada plan (Básico 19 €, Pro 39 € y Élite 69 € al mes; pagando el año entero, dos meses gratis) y cómo pagar por transferencia.
+
+**Contacto y planes a medida.** Desde esa misma página cualquiera puede escribirnos: para contratar un plan, pedir uno a medida (más de 50 alumnos, equipos, gimnasios) o cualquier otra duda. El administrador recibe un aviso en el móvil y ve los mensajes en su página, donde los marca como atendidos. Se pueden enviar hasta tres mensajes al día.
+
+**En la portada.** La página de inicio tiene una sección para entrenadores: qué pueden hacer, los precios de cada plan, la prueba de 14 días y cómo pedir un plan a medida. Se llega desde el enlace «Entrenadores» del menú.
+
+**Privacidad.** La descarga de datos del entrenador incluye su plan, sus fechas y los mensajes que nos ha enviado; al borrar la cuenta se borra todo.
+
+**Textos legales (borrador).** Ya hay política de privacidad, términos de uso y condiciones para entrenadores (con el anexo de encargo del tratamiento), enlazados desde la portada y desde Ajustes. Son borradores: les faltan los datos del titular y una revisión legal antes de darlos por definitivos.
+
+*El pago con tarjeta llegará más adelante.*
+
 *Se irá completando a medida que avance.*

@@ -157,6 +157,21 @@ export function SettingsDataSection({
           </button>
         </div>
       </div>
+      <nav
+        aria-label="Textos legales"
+        className="flex flex-wrap gap-x-4 gap-y-2 text-sm"
+        style={{ color: 'var(--text-secondary)' }}
+      >
+        <a href="/privacidad" className="flex min-h-11 items-center underline">
+          Privacidad
+        </a>
+        <a href="/terminos" className="flex min-h-11 items-center underline">
+          Términos de uso
+        </a>
+        <a href="/terminos-entrenadores" className="flex min-h-11 items-center underline">
+          Condiciones para entrenadores
+        </a>
+      </nav>
     </>
   );
 }

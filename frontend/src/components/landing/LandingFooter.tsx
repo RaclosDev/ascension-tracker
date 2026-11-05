@@ -13,6 +13,18 @@ export default function LandingFooter() {
       <p className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <span>Código abierto, licencia MIT.</span>
         <a
+          href="/privacidad"
+          className="flex min-h-11 items-center underline-offset-4 hover:text-white hover:underline focus-visible:text-white"
+        >
+          Privacidad
+        </a>
+        <a
+          href="/terminos"
+          className="flex min-h-11 items-center underline-offset-4 hover:text-white hover:underline focus-visible:text-white"
+        >
+          Términos
+        </a>
+        <a
           href="https://github.com/RaclosDev/ascension-tracker"
           className="flex min-h-11 items-center underline-offset-4 hover:text-white hover:underline focus-visible:text-white"
         >

@@ -20,11 +20,16 @@ const CoachClientPage = lazyWithRetry(() => import('./pages/CoachClientPage'));
 const CoachProgramsPage = lazyWithRetry(() => import('./pages/CoachProgramsPage'));
 const CoachProgramEditorPage = lazyWithRetry(() => import('./pages/CoachProgramEditorPage'));
 const CoachRecipesPage = lazyWithRetry(() => import('./pages/CoachRecipesPage'));
+const CoachPlanPage = lazyWithRetry(() => import('./pages/CoachPlanPage'));
+const LegalPage = lazyWithRetry(() => import('./pages/LegalPage'));
+const AdminPlansPage = lazyWithRetry(() => import('./pages/AdminPlansPage'));
+const CoachCheckinPage = lazyWithRetry(() => import('./pages/CoachCheckinPage'));
 const InvitationPage = lazyWithRetry(() => import('./pages/InvitationPage'));
 import LandingPage from './pages/LandingPage';
 import { HomeRedirect, RememberInvitation } from './components/coach/InvitationRedirects';
 
 import { PageLoader } from './components/PageLoader';
+import { LEGAL_DOCS } from './lib/legal/docs';
 import ErrorBoundary from './components/ErrorBoundary';
 import { preloadAllRoutes } from './utils/routePreload';
 import { useWorkoutStore } from './lib/workout/store';
@@ -79,8 +84,29 @@ function AppContent() {
     }
   }, [token]);
 
-  // Wait for auth to finish (proactive refresh if JWT was expired)
-  if (!isReady) return null;
+  const legalRoutes = LEGAL_DOCS.map((doc) => (
+    <Route
+      key={doc}
+      path={`/${doc}`}
+      element={
+        <Suspense fallback={<PageLoader />}>
+          <LegalPage doc={doc} />
+        </Suspense>
+      }
+    />
+  ));
+
+  // Wait for auth to finish (proactive refresh if JWT was expired); the legal pages need no session.
+  if (!isReady) {
+    return (
+      <ErrorBoundary>
+        <Routes>
+          {legalRoutes}
+          <Route path="*" element={null} />
+        </Routes>
+      </ErrorBoundary>
+    );
+  }
 
   if (!token) {
     return (
@@ -88,6 +114,7 @@ function AppContent() {
         <Routes>
           <Route path="/login" element={<LandingPage />} />
           <Route path="/invitacion/:token" element={<RememberInvitation />} />
+          {legalRoutes}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </ErrorBoundary>
@@ -111,6 +138,12 @@ function AppContent() {
             <Route path="entrenador/programas" element={<CoachProgramsPage />} />
             <Route path="entrenador/programas/:programId" element={<CoachProgramEditorPage />} />
             <Route path="entrenador/recetas" element={<CoachRecipesPage />} />
+            <Route path="entrenador/plan" element={<CoachPlanPage />} />
+            {LEGAL_DOCS.map((doc) => (
+              <Route key={doc} path={doc} element={<LegalPage doc={doc} />} />
+            ))}
+            <Route path="admin/planes" element={<AdminPlansPage />} />
+            <Route path="checkin/:linkId" element={<CoachCheckinPage />} />
             <Route path="invitacion/:token" element={<InvitationPage />} />
           </Route>
           <Route path="/login" element={<HomeRedirect />} />
