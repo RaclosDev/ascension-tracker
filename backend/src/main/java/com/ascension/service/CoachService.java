@@ -345,7 +345,7 @@ public class CoachService {
         return found.get(0);
     }
 
-    private UUID requireCoachId(String coachEmail) {
+    UUID requireCoachId(String coachEmail) {
         List<UUID> ids = jdbcTemplate.queryForList("""
                 SELECT cp.user_id FROM coach_profiles cp JOIN users u ON u.id = cp.user_id
                 WHERE u.email = ?
