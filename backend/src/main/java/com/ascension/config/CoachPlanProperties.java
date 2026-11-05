@@ -41,6 +41,14 @@ public class CoachPlanProperties {
         return free;
     }
 
+    /** The configured id matching {@code id} case-insensitively, or null when there is no such plan. */
+    public String planId(String id) {
+        if (id == null) {
+            return null;
+        }
+        return plans.keySet().stream().filter(key -> key.equalsIgnoreCase(id.trim())).findFirst().orElse(null);
+    }
+
     private Plan find(String id) {
         if (id == null) {
             return null;

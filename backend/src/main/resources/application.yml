@@ -71,6 +71,8 @@ app:
     food-external-limit: ${RATE_LIMIT_FOOD_EXTERNAL:20}
     push-limit: ${RATE_LIMIT_PUSH:20}
     max-requests-per-minute: ${RATE_LIMIT_GENERAL:20}
+  admin:
+    emails: ${APP_ADMIN_EMAILS:}
   coach:
     trial-days: ${COACH_TRIAL_DAYS:14}
     trial-plan: PRO

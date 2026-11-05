@@ -70,8 +70,10 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 **Más IA con el plan.** Cada plan trae su propia cuota diaria de consultas a la IA. La usa el entrenador y también sus alumnos vinculados, que reciben la del plan de su entrenador si es mayor que la normal. Quien no tiene entrenador sigue igual.
 
+**Pago por transferencia.** De momento los entrenadores pagan con una transferencia mensual. Cuando llega, el administrador entra en la página «Planes de entrenadores», elige el plan y hasta qué día está pagado. Al pasar esa fecha sin renovar, el entrenador vuelve al plan gratis sin perder a ningún alumno. Solo las cuentas de administrador ven esa página.
+
 **Privacidad.** La descarga de datos del entrenador incluye su plan y sus fechas, y al borrar la cuenta se borra también.
 
-*Los pagos, la página «Plan y facturación» y los textos legales llegarán cuando estén decididos los precios y quién factura.*
+*El pago con tarjeta, la página «Plan y facturación» del entrenador y los textos legales llegarán más adelante.*
 
 *Se irá completando a medida que avance.*

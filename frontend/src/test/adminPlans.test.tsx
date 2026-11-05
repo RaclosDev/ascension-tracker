@@ -1,0 +1,95 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
+
+vi.mock('../api/client', () => ({
+  default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() },
+}));
+vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }));
+
+import api from '../api/client';
+import AdminPlansPage from '../pages/AdminPlansPage';
+import type { CoachPlans } from '../lib/admin/plans';
+
+const mockedApi = vi.mocked(api);
+
+const overview: CoachPlans = {
+  plans: [
+    { id: 'FREE', maxClients: 1, aiDailyLimit: 50 },
+    { id: 'STARTER', maxClients: 10, aiDailyLimit: 100 },
+    { id: 'PRO', maxClients: 25, aiDailyLimit: 150 },
+  ],
+  coaches: [
+    {
+      coachId: 'c1',
+      name: 'Ana Coach',
+      email: 'ana@coach.test',
+      plan: 'PRO',
+      status: 'TRIALING',
+      effectivePlan: 'PRO',
+      maxClients: 25,
+      activeClients: 3,
+      trialEndsAt: '2026-11-19T10:00:00Z',
+      currentPeriodEnd: null,
+    },
+  ],
+};
+
+function renderPage() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <AdminPlansPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
+describe('Planes de entrenadores (administración)', () => {
+  beforeEach(() => {
+    mockedApi.get.mockReset();
+    mockedApi.put.mockReset();
+  });
+  afterEach(cleanup);
+
+  it('sets a paid plan until a date, and the free plan without one', async () => {
+    mockedApi.get.mockImplementation(async (url: string) =>
+      url === '/admin/me' ? { data: { admin: true } } : { data: overview },
+    );
+    mockedApi.put.mockResolvedValue({ data: overview.coaches[0] });
+    renderPage();
+
+    expect(await screen.findByText('Ana Coach')).toBeTruthy();
+    expect(screen.getByText(/3\/25 alumnos/)).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('Plan de ana@coach.test'), { target: { value: 'PRO' } });
+    fireEvent.change(screen.getByLabelText('Pagado hasta para ana@coach.test'), {
+      target: { value: '2026-12-04' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar plan' }));
+    await vi.waitFor(() =>
+      expect(mockedApi.put).toHaveBeenCalledWith('/admin/coaches/c1/plan', {
+        plan: 'PRO',
+        paidUntil: '2026-12-04',
+      }),
+    );
+
+    fireEvent.change(screen.getByLabelText('Plan de ana@coach.test'), {
+      target: { value: 'FREE' },
+    });
+    expect(screen.queryByLabelText('Pagado hasta para ana@coach.test')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar plan' }));
+    await vi.waitFor(() =>
+      expect(mockedApi.put).toHaveBeenLastCalledWith('/admin/coaches/c1/plan', { plan: 'FREE' }),
+    );
+  });
+
+  it('does not load coaches for non-admins', async () => {
+    mockedApi.get.mockResolvedValue({ data: { admin: false } });
+    renderPage();
+    expect(await screen.findByText('Esta página es solo para administradores.')).toBeTruthy();
+    expect(mockedApi.get).toHaveBeenCalledTimes(1);
+  });
+});
