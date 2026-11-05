@@ -2,6 +2,7 @@ package com.ascension.service;
 
 import com.ascension.dto.CoachDtos.AccessExport;
 import com.ascension.dto.CoachDtos.AccessLogEntry;
+import com.ascension.dto.CoachDtos.AssignmentExport;
 import com.ascension.dto.CoachDtos.CoachClient;
 import com.ascension.dto.CoachDtos.CoachingExport;
 import com.ascension.dto.CoachDtos.CreatedInvitation;
@@ -129,7 +130,7 @@ public class CoachService {
     public List<CoachClient> listClients(String coachEmail) {
         UUID coachId = requireCoachId(coachEmail);
         return jdbcTemplate.query("""
-                SELECT cc.id, cc.created_at, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body,
+                SELECT cc.id, cc.created_at, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training,
                        u.name, u.email, u.picture
                 FROM coach_clients cc JOIN users u ON u.id = cc.client_user_id
                 WHERE cc.coach_user_id = ? AND cc.status = 'ACTIVE'
@@ -187,10 +188,11 @@ public class CoachService {
         try {
             linkId = jdbcTemplate.queryForObject("""
                     INSERT INTO coach_clients (coach_user_id, client_user_id, status,
-                                               can_view_training, can_view_nutrition, can_view_body)
-                    VALUES (?, ?, 'ACTIVE', ?, ?, ?) RETURNING id
+                                               can_view_training, can_view_nutrition, can_view_body,
+                                               can_edit_training)
+                    VALUES (?, ?, 'ACTIVE', ?, ?, ?, ?) RETURNING id
                     """, UUID.class, invitation.coachUserId(), clientId,
-                    permissions.training(), permissions.nutrition(), permissions.body());
+                    permissions.training(), permissions.nutrition(), permissions.body(), permissions.grantsEdit());
         } catch (DuplicateKeyException e) {
             throw new InvalidInputException("Ya estás vinculado con este entrenador.");
         }
@@ -204,7 +206,7 @@ public class CoachService {
 
     public List<MyCoach> listMyCoaches(String clientEmail) {
         return jdbcTemplate.query("""
-                SELECT cc.id, cc.created_at, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body,
+                SELECT cc.id, cc.created_at, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training,
                        co.name, co.email, co.picture
                 FROM coach_clients cc
                 JOIN users cu ON cu.id = cc.client_user_id
@@ -224,10 +226,10 @@ public class CoachService {
         }
         int updated = jdbcTemplate.update("""
                 UPDATE coach_clients
-                SET can_view_training = ?, can_view_nutrition = ?, can_view_body = ?
+                SET can_view_training = ?, can_view_nutrition = ?, can_view_body = ?, can_edit_training = ?
                 WHERE id = ? AND status = 'ACTIVE'
                   AND client_user_id = (SELECT id FROM users WHERE email = ?)
-                """, permissions.training(), permissions.nutrition(), permissions.body(),
+                """, permissions.training(), permissions.nutrition(), permissions.body(), permissions.grantsEdit(),
                 linkId, normalize(clientEmail));
         if (updated == 0) {
             throw new EntityNotFoundException("Entrenador no encontrado");
@@ -286,19 +288,35 @@ public class CoachService {
                 userId);
         List<AccessExport> accessesToMyData = exportAccesses("client_user_id", "coach_user_id", userId);
         List<AccessExport> myAccessesAsCoach = exportAccesses("coach_user_id", "client_user_id", userId);
+        List<AssignmentExport> assignments = jdbcTemplate.query("""
+                SELECT a.id, CASE WHEN a.client_user_id = ? THEN 'CLIENT' ELSE 'COACH' END AS role,
+                       a.program_id, p.name AS program_name, a.start_date, a.status, a.created_at, a.ended_at,
+                       u.name, u.email, u.picture
+                FROM program_assignments a
+                JOIN programs p ON p.id = a.program_id
+                LEFT JOIN users u ON u.id = CASE WHEN a.client_user_id = ? THEN a.coach_user_id
+                                                 ELSE a.client_user_id END
+                WHERE a.client_user_id = ? OR a.coach_user_id = ?
+                ORDER BY a.created_at
+                """,
+                (rs, n) -> new AssignmentExport(rs.getObject("id", UUID.class), rs.getString("role"),
+                        rs.getString("email") == null ? null : person(rs), rs.getObject("program_id", UUID.class),
+                        rs.getString("program_name"), rs.getObject("start_date", LocalDate.class),
+                        rs.getString("status"), instant(rs, "created_at"), instant(rs, "ended_at")),
+                userId, userId, userId, userId);
         if (coachSince.isEmpty() && asClient.isEmpty() && asCoach.isEmpty() && invitations.isEmpty()
-                && accessesToMyData.isEmpty() && myAccessesAsCoach.isEmpty()) {
+                && accessesToMyData.isEmpty() && myAccessesAsCoach.isEmpty() && assignments.isEmpty()) {
             return null;
         }
         return new CoachingExport(coachSince.isEmpty() ? null : coachSince.get(0), asClient, asCoach,
-                invitations, accessesToMyData, myAccessesAsCoach);
+                invitations, accessesToMyData, myAccessesAsCoach, assignments);
     }
 
     // Column names come from the two callers above, never from input.
     private List<LinkExport> exportLinks(String selfColumn, String otherColumn, UUID userId) {
         return jdbcTemplate.query("""
                 SELECT cc.id, cc.status, cc.created_at, cc.ended_at,
-                       cc.can_view_training, cc.can_view_nutrition, cc.can_view_body,
+                       cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training,
                        u.name, u.email, u.picture
                 FROM coach_clients cc JOIN users u ON u.id = cc.%s
                 WHERE cc.%s = ? ORDER BY cc.created_at
@@ -393,7 +411,7 @@ public class CoachService {
 
     private static Permissions permissions(ResultSet rs) throws SQLException {
         return new Permissions(rs.getBoolean("can_view_training"), rs.getBoolean("can_view_nutrition"),
-                rs.getBoolean("can_view_body"));
+                rs.getBoolean("can_view_body"), rs.getBoolean("can_edit_training"));
     }
 
     private static Instant instant(ResultSet rs, String column) throws SQLException {

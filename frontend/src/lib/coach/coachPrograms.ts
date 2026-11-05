@@ -237,3 +237,46 @@ export function useDeleteProgram() {
     },
   });
 }
+
+// ---- Assignment to a client ----
+
+/** A program copied to a client; {@link programId} is the client's copy. */
+export interface ProgramAssignment {
+  id: string;
+  programId: string;
+  sourceProgramId: string | null;
+  programName: string;
+  weeks: number;
+  startDate: string;
+  status: 'ACTIVE' | 'ENDED';
+  createdAt: string;
+  endedAt: string | null;
+}
+
+const assignmentsKey = (linkId: string) => ['coach', 'clients', linkId, 'programs'] as const;
+const assignmentsPath = (linkId: string) => `/coach/clients/${encodeURIComponent(linkId)}/programs`;
+
+export const useClientAssignments = (linkId: string) =>
+  useQuery({
+    queryKey: assignmentsKey(linkId),
+    queryFn: async () => (await api.get<ProgramAssignment[]>(assignmentsPath(linkId))).data,
+  });
+
+export function useAssignProgram(linkId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (request: { programId: string; startDate: string }) =>
+      (await api.post<ProgramAssignment>(assignmentsPath(linkId), request)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentsKey(linkId) }),
+  });
+}
+
+export function useEndAssignment(linkId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (assignmentId: string) => {
+      await api.post(`${assignmentsPath(linkId)}/${encodeURIComponent(assignmentId)}/end`);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentsKey(linkId) }),
+  });
+}

@@ -96,9 +96,41 @@ describe('InvitationPage', () => {
         training: false,
         nutrition: false,
         body: true,
+        editTraining: false,
       }),
     );
     expect(await screen.findByText('ajustes')).toBeDefined();
+  });
+
+  it('only lets the coach prescribe when training is shared', async () => {
+    mockedApi.get.mockResolvedValue({
+      data: { coach, expiresAt: '2026-11-12T00:00:00Z', alreadyLinked: false },
+    });
+    mockedApi.post.mockResolvedValue({ data: {} });
+    renderAt(`/invitacion/${TOKEN}`, routes);
+
+    const edit = (await screen.findByRole('checkbox', {
+      name: /Pautar entrenamiento/,
+    })) as HTMLInputElement;
+    expect(edit.disabled).toBe(true);
+    const training = screen.getByRole('checkbox', { name: /^Entrenamiento/ });
+    fireEvent.click(training);
+    expect(edit.disabled).toBe(false);
+    fireEvent.click(edit);
+    fireEvent.click(training);
+    expect(edit.checked).toBe(false);
+    fireEvent.click(training);
+    fireEvent.click(edit);
+    fireEvent.click(screen.getByRole('button', { name: 'Aceptar' }));
+
+    await waitFor(() =>
+      expect(mockedApi.post).toHaveBeenCalledWith(`/coaching/invitations/${TOKEN}/accept`, {
+        training: true,
+        nutrition: false,
+        body: false,
+        editTraining: true,
+      }),
+    );
   });
 
   it('shows the server message for an invalid invitation', async () => {
@@ -175,7 +207,7 @@ describe('SettingsCoachSection', () => {
   const link = {
     linkId: 'link-1',
     coach,
-    permissions: { training: true, nutrition: false, body: true },
+    permissions: { training: true, nutrition: false, body: true, editTraining: true },
     since: '2026-11-01T10:00:00Z',
   };
 
@@ -209,14 +241,31 @@ describe('SettingsCoachSection', () => {
         training: true,
         nutrition: true,
         body: true,
+        editTraining: true,
       }),
     );
     expect(screen.getByText(/Laura Coach · Peso/)).toBeDefined();
   });
 
+  it('drops the prescribing permission along with training', async () => {
+    mockSection();
+    mockedApi.patch.mockResolvedValue({ data: undefined });
+    renderAt('/', <Route path="/" element={<SettingsCoachSection />} />);
+
+    fireEvent.click(await screen.findByRole('checkbox', { name: /^Entrenamiento/ }));
+    await waitFor(() =>
+      expect(mockedApi.patch).toHaveBeenCalledWith('/coaching/coaches/link-1', {
+        training: false,
+        nutrition: false,
+        body: true,
+        editTraining: false,
+      }),
+    );
+  });
+
   it('does not allow unsharing everything', async () => {
     mockSection();
-    link.permissions = { training: false, nutrition: false, body: true };
+    link.permissions = { training: false, nutrition: false, body: true, editTraining: false };
     renderAt('/', <Route path="/" element={<SettingsCoachSection />} />);
 
     fireEvent.click(await screen.findByRole('checkbox', { name: /Cuerpo/ }));
@@ -228,7 +277,7 @@ describe('CoachClientPage', () => {
   const clientLink = {
     linkId: 'link-9',
     client: { name: 'Ana Alumna', email: 'ana@example.com', picture: null },
-    permissions: { training: true, nutrition: true, body: true },
+    permissions: { training: true, nutrition: true, body: true, editTraining: false },
     since: '2026-11-01T10:00:00Z',
   };
   const workout = {
@@ -259,10 +308,27 @@ describe('CoachClientPage', () => {
       'workouts/custom-exercises': [{ id: 'custom-1', name: 'Press inclinado en polea' }],
       targets: { kcal: 2200 },
       'nutrition/calories/weekly': [],
+      programs: [
+        {
+          id: 'a-1',
+          programId: 'copy-1',
+          sourceProgramId: 'p-1',
+          programName: 'Fuerza',
+          weeks: 4,
+          startDate: '2026-11-02',
+          status: 'ACTIVE',
+          createdAt: '2026-11-01T10:00:00Z',
+          endedAt: null,
+        },
+      ],
     };
     mockedApi.get.mockImplementation((url: string) => {
       if (url === '/coach/clients')
         return Promise.resolve({ data: [{ ...clientLink, permissions }] });
+      if (url === '/coach/programs')
+        return Promise.resolve({
+          data: [{ id: 'p-2', name: 'Hipertrofia', weeks: 6, dayCount: 4, updatedAt: '' }],
+        });
       const path = url.startsWith(base) ? url.slice(base.length) : url;
       if (path.startsWith('workouts/recent?since=')) return Promise.resolve({ data: [workout] });
       if (path.startsWith('nutrition/logs?date=')) {
@@ -294,12 +360,44 @@ describe('CoachClientPage', () => {
   });
 
   it('only asks for the areas the client shares', async () => {
-    mockClient({ training: false, nutrition: false, body: true });
+    mockClient({ training: false, nutrition: false, body: true, editTraining: false });
     renderAt('/entrenador/alumnos/link-9', routes);
 
     expect(await screen.findByTestId('weight-charts')).toBeDefined();
     const urls = mockedApi.get.mock.calls.map(([url]) => url as string);
     expect(urls.some((url) => url.includes('/workouts'))).toBe(false);
     expect(urls.some((url) => url.includes('/nutrition') || url.endsWith('/targets'))).toBe(false);
+    expect(urls.some((url) => url.includes('programs'))).toBe(false);
+  });
+
+  it('lists assigned programs but only assigns with the edit permission', async () => {
+    mockClient();
+    renderAt('/entrenador/alumnos/link-9', routes);
+
+    expect(await screen.findByText('Fuerza')).toBeDefined();
+    expect(screen.getByText(/«Pautar entrenamiento»/)).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Asignar' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Terminar Fuerza' })).toBeNull();
+  });
+
+  it('assigns a library program from a start date', async () => {
+    mockClient({ ...clientLink.permissions, editTraining: true });
+    mockedApi.post.mockResolvedValue({ data: {} });
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    renderAt('/entrenador/alumnos/link-9', routes);
+
+    const select = await screen.findByLabelText('Programa');
+    await screen.findByRole('option', { name: 'Hipertrofia' });
+    fireEvent.change(select, { target: { value: 'p-2' } });
+    fireEvent.change(screen.getByLabelText('Empieza el'), { target: { value: '2026-11-09' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Asignar' }));
+
+    await waitFor(() =>
+      expect(mockedApi.post).toHaveBeenCalledWith('/coach/clients/link-9/programs', {
+        programId: 'p-2',
+        startDate: '2026-11-09',
+      }),
+    );
+    expect(window.confirm).toHaveBeenCalled();
   });
 });

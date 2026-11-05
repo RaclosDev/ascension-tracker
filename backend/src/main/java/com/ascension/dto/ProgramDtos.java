@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,5 +56,16 @@ public final class ProgramDtos {
             @Size(max = 60) String loadHint,
             @Min(1) @Max(20) Integer supersetGroup,
             @Size(max = 500) String notes) {
+    }
+
+    /** A coach assigns one of their library programs to a client, starting on {@code startDate}. */
+    public record AssignRequest(
+            @NotNull(message = "Elige un programa") UUID programId,
+            @NotNull(message = "Elige la fecha de inicio") LocalDate startDate) {
+    }
+
+    /** A program copied to a client. {@code programId} is the client's copy; {@code sourceProgramId} the original. */
+    public record Assignment(UUID id, UUID programId, UUID sourceProgramId, String programName, int weeks,
+                             LocalDate startDate, String status, Instant createdAt, Instant endedAt) {
     }
 }

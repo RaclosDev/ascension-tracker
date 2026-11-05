@@ -18,14 +18,16 @@ import java.util.UUID;
 @Service
 public class CoachAccessPolicy {
 
-    public enum Scope { TRAINING, NUTRITION, BODY }
+    public enum Scope { TRAINING, NUTRITION, BODY, EDIT_TRAINING }
 
     public enum Action {
         VIEW_WEIGHT(Scope.BODY),
         VIEW_STEPS(Scope.BODY),
         VIEW_WORKOUTS(Scope.TRAINING),
         VIEW_NUTRITION(Scope.NUTRITION),
-        VIEW_TARGETS(Scope.NUTRITION);
+        VIEW_TARGETS(Scope.NUTRITION),
+        VIEW_PROGRAMS(Scope.TRAINING),
+        ASSIGN_PROGRAM(Scope.EDIT_TRAINING);
 
         private final Scope scope;
 
@@ -40,12 +42,13 @@ public class CoachAccessPolicy {
 
     /** The client a coach may act on, resolved for one request. */
     public record ClientAccess(UUID linkId, UUID coachUserId, UUID clientUserId, String clientEmail,
-                               boolean training, boolean nutrition, boolean body) {
+                               boolean training, boolean nutrition, boolean body, boolean editTraining) {
         boolean grants(Scope scope) {
             return switch (scope) {
                 case TRAINING -> training;
                 case NUTRITION -> nutrition;
                 case BODY -> body;
+                case EDIT_TRAINING -> training && editTraining;
             };
         }
     }
@@ -63,7 +66,7 @@ public class CoachAccessPolicy {
         }
         List<ClientAccess> found = jdbcTemplate.query("""
                 SELECT cc.id, cc.coach_user_id, cc.client_user_id, cu.email AS client_email,
-                       cc.can_view_training, cc.can_view_nutrition, cc.can_view_body
+                       cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training
                 FROM coach_clients cc
                 JOIN users co ON co.id = cc.coach_user_id
                 JOIN users cu ON cu.id = cc.client_user_id
@@ -76,7 +79,8 @@ public class CoachAccessPolicy {
                         rs.getString("client_email"),
                         rs.getBoolean("can_view_training"),
                         rs.getBoolean("can_view_nutrition"),
-                        rs.getBoolean("can_view_body")),
+                        rs.getBoolean("can_view_body"),
+                        rs.getBoolean("can_edit_training")),
                 linkId, coachEmail.trim().toLowerCase(Locale.ROOT));
         if (found.isEmpty()) {
             throw new EntityNotFoundException("Alumno no encontrado");

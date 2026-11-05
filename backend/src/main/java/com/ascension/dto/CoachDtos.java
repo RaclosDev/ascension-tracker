@@ -11,10 +11,17 @@ public final class CoachDtos {
     private CoachDtos() {
     }
 
-    /** What the client lets a coach see. */
-    public record Permissions(boolean training, boolean nutrition, boolean body) {
+    /**
+     * What the client lets a coach see, plus whether the coach may prescribe training. Editing
+     * only counts together with seeing training: {@link #grantsEdit()} is what gets stored.
+     */
+    public record Permissions(boolean training, boolean nutrition, boolean body, boolean editTraining) {
         public boolean any() {
             return training || nutrition || body;
+        }
+
+        public boolean grantsEdit() {
+            return training && editTraining;
         }
     }
 
@@ -53,7 +60,13 @@ public final class CoachDtos {
 
     public record CoachingExport(Instant coachSince, List<LinkExport> asClient, List<LinkExport> asCoach,
                                  List<InvitationExport> invitations,
-                                 List<AccessExport> accessesToMyData, List<AccessExport> myAccessesAsCoach) {
+                                 List<AccessExport> accessesToMyData, List<AccessExport> myAccessesAsCoach,
+                                 List<AssignmentExport> programAssignments) {
+    }
+
+    /** {@code role} is CLIENT when the program was assigned to the exporting user, COACH when they assigned it. */
+    public record AssignmentExport(UUID id, String role, Person other, UUID programId, String programName,
+                                   LocalDate startDate, String status, Instant createdAt, Instant endedAt) {
     }
 
     /** {@code other} is the coach when exported as client, and the client when exported as coach. */

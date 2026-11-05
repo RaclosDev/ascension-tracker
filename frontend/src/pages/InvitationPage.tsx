@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   PERMISSION_LABELS,
+  scopeDisabled,
+  withScope,
   apiErrorMessage,
   clearPendingInvitation,
   personName,
@@ -11,7 +13,12 @@ import {
   type CoachPermissions,
 } from '../lib/coach/api';
 
-const NONE: CoachPermissions = { training: false, nutrition: false, body: false };
+const NONE: CoachPermissions = {
+  training: false,
+  nutrition: false,
+  body: false,
+  editTraining: false,
+};
 const SCOPES = Object.keys(PERMISSION_LABELS) as (keyof CoachPermissions)[];
 
 export default function InvitationPage() {
@@ -80,7 +87,8 @@ export default function InvitationPage() {
                   type="checkbox"
                   className="mt-1"
                   checked={permissions[scope]}
-                  onChange={(e) => setPermissions((p) => ({ ...p, [scope]: e.target.checked }))}
+                  disabled={scopeDisabled(permissions, scope)}
+                  onChange={(e) => setPermissions((p) => withScope(p, scope, e.target.checked))}
                 />
                 <span>
                   <span className="block text-white">{PERMISSION_LABELS[scope].title}</span>
@@ -92,8 +100,9 @@ export default function InvitationPage() {
             ))}
           </fieldset>
           <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
-            Solo podrá ver lo que marques, sin modificar nada. Puedes cambiarlo o terminar la
-            relación cuando quieras desde Ajustes → Entrenador.
+            Solo podrá ver lo que marques y nunca modificará lo que registras. Con «Pautar
+            entrenamiento» podrá asignarte programas. Puedes cambiarlo o terminar la relación cuando
+            quieras desde Ajustes → Entrenador.
           </p>
           {!anySelected && (
             <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
