@@ -7,3 +7,5 @@ CREATE TABLE checkin_reminders (
     sent_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     PRIMARY KEY (link_id, week_start)
 );
+
+ALTER TABLE checkin_reminders ENABLE ROW LEVEL SECURITY;
