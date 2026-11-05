@@ -13,6 +13,8 @@ interface MacroSummaryHeaderProps {
     protein: number;
     carbs: number;
     fat: number;
+    coachName?: string | null;
+    dayType?: 'TRAINING' | 'REST' | null;
   };
 }
 
@@ -46,6 +48,12 @@ export default function MacroSummaryHeader({ consumed, macros }: MacroSummaryHea
 
   return (
     <div className="card nutrition-summary-card glass-panel-elevated p-4 sm:p-5 rounded-2xl mb-6 relative overflow-hidden">
+      {macros?.coachName && (
+        <p className="text-[0.72rem] text-gray-400 font-medium mb-3">
+          Pautado por {macros.coachName} · Día de{' '}
+          {macros.dayType === 'TRAINING' ? 'entreno' : 'descanso'}
+        </p>
+      )}
       {/* Main Calories Header Row */}
       <div className="flex items-center gap-4 sm:gap-6 mb-4">
         {/* Animated Calorie Progress Ring */}

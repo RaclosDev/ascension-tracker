@@ -328,9 +328,9 @@ export function WorkoutCelebrationModal({
 
           {/* Exercises Breakdown Section */}
           <div>
-            <label className="block mb-2 text-xs font-semibold text-zinc-300">
+            <span className="block mb-2 text-xs font-semibold text-zinc-300">
               Desglose por ejercicios ({completedExercisesList.length})
-            </label>
+            </span>
 
             {completedExercisesList.length === 0 ? (
               <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5 text-center text-xs text-zinc-500">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { ArrowRight, Clock3, Dumbbell, Play, X } from 'lucide-react';
 import { ActivityHeatmap } from '@/components/workout/heatmap';
 import { MuscleRecovery } from '@/components/workout/muscle-recovery';
@@ -9,6 +9,13 @@ import type { Template, CompletedWorkout, WorkoutExercise } from '@/lib/workout/
 import { useWorkoutStore } from '@/lib/workout/store';
 import { useRecentWorkouts, useWorkoutTemplates, useCustomExercises } from '@/lib/workout/api';
 import { Skeleton } from '@/components/ui/skeleton';
+
+// Outside the precache like the coach pages: it needs the network, and offline it just renders nothing.
+const TodayProgramCard = lazy(() =>
+  import('@/components/workout/TodayProgramCard')
+    .then((m) => ({ default: m.TodayProgramCard }))
+    .catch(() => ({ default: () => null })),
+);
 
 export function Dashboard() {
   const { data: history = [], isLoading: isLoadingHistory } = useRecentWorkouts(60);
@@ -126,6 +133,11 @@ export function Dashboard() {
           <Play size={20} fill="currentColor" />
           Empezar Entrenamiento
         </button>
+      )}
+      {!active && (
+        <Suspense fallback={null}>
+          <TodayProgramCard history={history} exerciseName={(id) => catalog.get(id)?.name ?? id} />
+        </Suspense>
       )}
 
       {startModalOpen && (

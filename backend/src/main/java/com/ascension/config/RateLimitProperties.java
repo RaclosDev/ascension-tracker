@@ -23,5 +23,8 @@ public class RateLimitProperties {
     private int aiLimit = 20;
     private int foodExternalLimit = 20;
     private int pushLimit = 20;
+    private int coachLimit = 120;
+    private int photoLimit = 60;
+    private int publicLimit = 30;
     private int maxRequestsPerMinute = 20;
 }

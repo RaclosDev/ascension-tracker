@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import api, { exportUserData } from '../api/client';
@@ -15,7 +15,16 @@ import { SettingsPersonalSection } from '../components/settings/SettingsPersonal
 import { SettingsThemeSection } from '../components/settings/SettingsThemeSection';
 import { SettingsWorkoutSection } from '../components/settings/SettingsWorkoutSection';
 import { SettingsDataSection } from '../components/settings/SettingsDataSection';
+import { SettingsConsentCard } from '../components/settings/SettingsConsentCard';
+import { SettingsCoachSection } from '../components/settings/SettingsCoachSection';
 import { useAuth } from '../context/AuthContext';
+
+/** A coach's plan in force locks the macro editor; if its chunk fails, the editor shows as usual. */
+const CoachNutritionGate = lazy(() =>
+  import('../components/coach/CoachNutritionGate')
+    .then((m) => ({ default: m.CoachNutritionGate }))
+    .catch(() => ({ default: ({ children }: { children: ReactNode }) => <>{children}</> })),
+);
 import { applyThemeColor, readThemeColor } from '../utils/colorHelper';
 import { Skeleton } from '../components/ui/skeleton';
 import { Scale, Activity } from 'lucide-react';
@@ -380,18 +389,20 @@ export default function SettingsPage() {
             <div className="card p-4 sm:p-6">
               <SettingsSectionHeader title="Estrategia de Macros" icon={Scale} />
               <div className="mt-5 pt-5 border-t border-white/10">
-                <MacroConfigurator
-                  form={form}
-                  setForm={setForm as unknown as React.Dispatch<React.SetStateAction<MacroForm>>}
-                  initialStartWeight={dashboard?.currentWeight || effectiveSettings?.startWeight}
-                />
-                <button
-                  className="btn btn-primary min-h-11"
-                  style={{ width: '100%', marginTop: '0.5rem' }}
-                  onClick={handleSaveMacros}
-                >
-                  Guardar Macros
-                </button>
+                <MacroEditorGate>
+                  <MacroConfigurator
+                    form={form}
+                    setForm={setForm as unknown as React.Dispatch<React.SetStateAction<MacroForm>>}
+                    initialStartWeight={dashboard?.currentWeight || effectiveSettings?.startWeight}
+                  />
+                  <button
+                    className="btn btn-primary min-h-11"
+                    style={{ width: '100%', marginTop: '0.5rem' }}
+                    onClick={handleSaveMacros}
+                  >
+                    Guardar Macros
+                  </button>
+                </MacroEditorGate>
               </div>
             </div>
           )}
@@ -420,6 +431,9 @@ export default function SettingsPage() {
             />
           )}
 
+          {activeSection === 'coach' && <SettingsCoachSection />}
+
+          {activeSection === 'data' && <SettingsConsentCard />}
           {activeSection === 'data' && (
             <SettingsDataSection
               isExportingJson={isExportingJson}
@@ -445,5 +459,13 @@ export default function SettingsPage() {
         onClose={() => setIsRestoreModalOpen(false)}
       />
     </div>
+  );
+}
+
+function MacroEditorGate({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={children}>
+      <CoachNutritionGate>{children}</CoachNutritionGate>
+    </Suspense>
   );
 }

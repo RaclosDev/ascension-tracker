@@ -58,6 +58,14 @@ server:
     min-response-size: 1024
 
 app:
+  legal:
+    # Version of the legal texts; keep in step with LEGAL_VERSION in frontend/src/lib/legal/texts.ts.
+    version: 2026-11-borrador
+  consent:
+    # Health and AI writes need the user's consent; only tests turn this off.
+    enforce: ${CONSENT_ENFORCE:true}
+  # Shown on the landing and legal pages; leave empty to point people to the in-app form.
+  contact-email: ${APP_CONTACT_EMAIL:}
   rate-limit:
     login-limit: ${RATE_LIMIT_LOGIN:20}
     refresh-limit: ${RATE_LIMIT_REFRESH:30}
@@ -70,7 +78,37 @@ app:
     ai-limit: ${RATE_LIMIT_AI:20}
     food-external-limit: ${RATE_LIMIT_FOOD_EXTERNAL:20}
     push-limit: ${RATE_LIMIT_PUSH:20}
+    coach-limit: ${RATE_LIMIT_COACH:120}
+    photo-limit: ${RATE_LIMIT_PHOTOS:60}
+    public-limit: ${RATE_LIMIT_PUBLIC:30}
     max-requests-per-minute: ${RATE_LIMIT_GENERAL:20}
+  admin:
+    emails: ${APP_ADMIN_EMAILS:}
+  coach:
+    trial-days: ${COACH_TRIAL_DAYS:14}
+    trial-plan: PRO
+    free-plan: FREE
+    annual-months: 10
+    billing:
+      transfer-holder: ${COACH_BILLING_HOLDER:}
+      transfer-iban: ${COACH_BILLING_IBAN:}
+    plans:
+      FREE:
+        max-clients: 1
+        ai-daily-limit: 50
+        monthly-price-eur: 0
+      STARTER:
+        max-clients: 10
+        ai-daily-limit: 100
+        monthly-price-eur: 19
+      PRO:
+        max-clients: 25
+        ai-daily-limit: 150
+        monthly-price-eur: 39
+      ELITE:
+        max-clients: 50
+        ai-daily-limit: 250
+        monthly-price-eur: 69
   quotas:
     max-workouts: ${QUOTA_MAX_WORKOUTS:3000}
     max-food-logs: ${QUOTA_MAX_FOOD_LOGS:25000}
@@ -93,6 +131,12 @@ app:
   fatsecret:
     client-id: ${FATSECRET_CLIENT_ID}
     client-secret: ${FATSECRET_CLIENT_SECRET}
+  storage:
+    r2:
+      endpoint: ${R2_ENDPOINT:}
+      bucket: ${R2_BUCKET:}
+      access-key-id: ${R2_ACCESS_KEY_ID:}
+      secret-access-key: ${R2_SECRET_ACCESS_KEY:}
   push:
     vapid-public-key: ${VAPID_PUBLIC_KEY}
     vapid-private-key: ${VAPID_PRIVATE_KEY}

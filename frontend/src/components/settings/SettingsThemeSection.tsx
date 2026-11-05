@@ -53,9 +53,9 @@ export function SettingsThemeSection({
           </p>
         </div>
         <div className="form-group">
-          <label className="form-label" style={{ marginBottom: '0.5rem', display: 'block' }}>
+          <span className="form-label" style={{ marginBottom: '0.5rem', display: 'block' }}>
             Color Principal
-          </label>
+          </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <input
               type="color"
