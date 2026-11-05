@@ -76,7 +76,13 @@ public class R2PhotoStorage implements PhotoStorage {
         List<ObjectIdentifier> ids = keys.stream().map(k -> ObjectIdentifier.builder().key(k).build()).toList();
         for (int i = 0; i < ids.size(); i += DELETE_BATCH) {
             List<ObjectIdentifier> batch = ids.subList(i, Math.min(ids.size(), i + DELETE_BATCH));
-            client.deleteObjects(d -> d.bucket(bucket).delete(Delete.builder().objects(batch).quiet(true).build()));
+            // Quiet mode still lists the keys it could not delete; those must not pass as done.
+            var failed = client.deleteObjects(d -> d.bucket(bucket)
+                    .delete(Delete.builder().objects(batch).quiet(true).build())).errors();
+            if (!failed.isEmpty()) {
+                throw new IllegalStateException("R2 could not delete " + failed.size() + " objects: "
+                        + failed.get(0).code());
+            }
         }
     }
 }

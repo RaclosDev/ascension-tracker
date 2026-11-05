@@ -12,9 +12,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -40,12 +44,20 @@ public class ProgressPhotoService {
     private static final Duration URL_TTL = Duration.ofMinutes(15);
     private static final LocalDate OLDEST = LocalDate.of(2000, 1, 1);
 
+    static final int RETRY_BATCH = 500;
+
     private final JdbcTemplate jdbcTemplate;
     private final PhotoStorage storage;
+    private final TransactionTemplate tx;
+    private final TransactionTemplate newTx;
 
-    public ProgressPhotoService(JdbcTemplate jdbcTemplate, PhotoStorage storage) {
+    public ProgressPhotoService(JdbcTemplate jdbcTemplate, PhotoStorage storage,
+                                PlatformTransactionManager transactionManager) {
         this.jdbcTemplate = jdbcTemplate;
         this.storage = storage;
+        this.tx = new TransactionTemplate(transactionManager);
+        this.newTx = new TransactionTemplate(transactionManager);
+        this.newTx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
     public PhotoList list(String email) {
@@ -82,7 +94,10 @@ public class ProgressPhotoService {
                 rs.getTimestamp("created_at").toInstant()), normalize(email));
     }
 
-    @Transactional
+    /**
+     * The object goes up before the row and outside any transaction, so no lock is held during the
+     * network call. If the row then cannot be saved, the object is removed again.
+     */
     public Photo upload(String email, Pose pose, LocalDate takenOn, byte[] bytes, LocalDate today) {
         if (!storage.enabled()) {
             throw new ExternalApiException("R2", HttpStatus.SERVICE_UNAVAILABLE, "Las fotos no están disponibles ahora mismo.");
@@ -103,24 +118,38 @@ public class ProgressPhotoService {
         if (contentType == null) {
             throw new InvalidInputException("Formato de foto no admitido. Usa JPEG o WebP.");
         }
-        // Locking the user row serialises uploads, so two at once cannot both slip past the cap.
-        UUID userId = jdbcTemplate.queryForObject("SELECT id FROM users WHERE email = ? FOR UPDATE",
+        UUID userId = jdbcTemplate.queryForObject("SELECT id FROM users WHERE email = ?",
                 UUID.class, normalize(email));
+        // Checked first without a lock, so a full gallery never uploads anything.
+        checkPhotoCap(userId);
+        UUID id = UUID.randomUUID();
+        String key = "progress/" + userId + "/" + id + (contentType.equals("image/webp") ? ".webp" : ".jpg");
+        storage.put(key, bytes, contentType);
+        Timestamp createdAt;
+        try {
+            createdAt = tx.execute(status -> {
+                // Locking the user row serialises the inserts, so two at once cannot both pass the cap.
+                jdbcTemplate.queryForObject("SELECT id FROM users WHERE id = ? FOR UPDATE", UUID.class, userId);
+                checkPhotoCap(userId);
+                return jdbcTemplate.queryForObject("""
+                        INSERT INTO progress_photos (id, user_id, pose, taken_on, object_key, content_type, size_bytes)
+                        VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING created_at
+                        """, Timestamp.class, id, userId, pose.name(), takenOn, key, contentType, bytes.length);
+            });
+        } catch (RuntimeException e) {
+            removeObjects(List.of(key));
+            throw e;
+        }
+        return new Photo(id, pose, takenOn, storage.signedUrl(key, URL_TTL), bytes.length, createdAt.toInstant());
+    }
+
+    private void checkPhotoCap(UUID userId) {
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM progress_photos WHERE user_id = ?", Integer.class, userId);
         if (count != null && count >= MAX_PHOTOS) {
             throw new UserDataQuotaExceededException(
                     "Has llegado al máximo de " + MAX_PHOTOS + " fotos. Borra alguna antigua.");
         }
-        UUID id = UUID.randomUUID();
-        String key = "progress/" + userId + "/" + id + (contentType.equals("image/webp") ? ".webp" : ".jpg");
-        Timestamp createdAt = jdbcTemplate.queryForObject("""
-                INSERT INTO progress_photos (id, user_id, pose, taken_on, object_key, content_type, size_bytes)
-                VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING created_at
-                """, Timestamp.class, id, userId, pose.name(), takenOn, key, contentType, bytes.length);
-        // Stored last: if the upload fails the row is rolled back with it.
-        storage.put(key, bytes, contentType);
-        return new Photo(id, pose, takenOn, storage.signedUrl(key, URL_TTL), bytes.length, createdAt.toInstant());
     }
 
     @Transactional
@@ -148,13 +177,7 @@ public class ProgressPhotoService {
 
     /** Objects are removed only once the rows are gone for good, so a rollback never leaves broken rows. */
     private void deleteAfterCommit(List<String> keys) {
-        Runnable remove = () -> {
-            try {
-                storage.delete(keys);
-            } catch (RuntimeException e) {
-                log.error("Could not delete {} progress photo objects", keys.size(), e);
-            }
-        };
+        Runnable remove = () -> removeObjects(keys);
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
@@ -164,6 +187,52 @@ public class ProgressPhotoService {
             });
         } else {
             remove.run();
+        }
+    }
+
+    /** Removes the objects now; anything R2 refuses is queued and retried later instead of lost. */
+    private void removeObjects(List<String> keys) {
+        try {
+            storage.delete(keys);
+        } catch (RuntimeException e) {
+            log.warn("Could not delete {} progress photo objects, queued for retry", keys.size(), e);
+            try {
+                // Its own transaction: this can run after the caller's has already committed.
+                newTx.executeWithoutResult(status -> jdbcTemplate.batchUpdate("""
+                        INSERT INTO photo_object_deletions (object_key) VALUES (?)
+                        ON CONFLICT (object_key) DO NOTHING
+                        """, keys, keys.size(), (ps, key) -> ps.setString(1, key)));
+            } catch (RuntimeException queueError) {
+                log.error("Could not queue {} progress photo objects for deletion", keys.size(), queueError);
+            }
+        }
+    }
+
+    /** Retries queued deletions, waiting a little longer after each failure (up to a day). */
+    @Scheduled(fixedDelayString = "PT15M", initialDelayString = "PT2M")
+    public void retryPendingDeletions() {
+        if (!storage.enabled()) {
+            return;
+        }
+        List<String> keys = jdbcTemplate.queryForList("""
+                SELECT object_key FROM photo_object_deletions
+                WHERE next_try_at <= NOW() ORDER BY next_try_at LIMIT ?
+                """, String.class, RETRY_BATCH);
+        if (keys.isEmpty()) {
+            return;
+        }
+        try {
+            storage.delete(keys);
+            jdbcTemplate.batchUpdate("DELETE FROM photo_object_deletions WHERE object_key = ?",
+                    keys, keys.size(), (ps, key) -> ps.setString(1, key));
+        } catch (RuntimeException e) {
+            log.warn("Retry of {} progress photo deletions failed", keys.size(), e);
+            jdbcTemplate.batchUpdate("""
+                    UPDATE photo_object_deletions
+                    SET attempts = attempts + 1,
+                        next_try_at = NOW() + LEAST(attempts + 1, 24) * INTERVAL '1 hour'
+                    WHERE object_key = ?
+                    """, keys, keys.size(), (ps, key) -> ps.setString(1, key));
         }
     }
 

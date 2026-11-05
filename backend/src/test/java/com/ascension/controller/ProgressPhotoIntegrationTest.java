@@ -52,6 +52,7 @@ class ProgressPhotoIntegrationTest {
     @TestConfiguration
     static class MemoryStorage {
         static final Map<String, byte[]> OBJECTS = new ConcurrentHashMap<>();
+        static final java.util.concurrent.atomic.AtomicBoolean FAIL_DELETES = new java.util.concurrent.atomic.AtomicBoolean();
 
         @Bean
         @Primary
@@ -74,6 +75,9 @@ class ProgressPhotoIntegrationTest {
 
                 @Override
                 public void delete(Collection<String> keys) {
+                    if (FAIL_DELETES.get()) {
+                        throw new IllegalStateException("R2 is down");
+                    }
                     keys.forEach(OBJECTS::remove);
                 }
             };
@@ -84,6 +88,8 @@ class ProgressPhotoIntegrationTest {
     @Autowired UserService users;
     @Autowired ObjectMapper json;
     @Autowired com.ascension.service.UserDataExportService exportService;
+    @Autowired com.ascension.service.ProgressPhotoService photos;
+    @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     @Test
     void theClientUploadsListsAndDeletesTheirPhotos() throws Exception {
@@ -179,6 +185,29 @@ class ProgressPhotoIntegrationTest {
         mvc.perform(as(delete("/api/users/account"), client)).andExpect(status().isOk());
 
         assertThat(MemoryStorage.OBJECTS.keySet()).noneMatch(k -> k.contains(id));
+    }
+
+    @Test
+    void aDeletionR2RefusesIsQueuedAndRetriedLater() throws Exception {
+        String client = user();
+        String id = json.readTree(mvc.perform(upload(client, WEBP, "FRONT", LocalDate.now().toString()))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("id").asString();
+
+        MemoryStorage.FAIL_DELETES.set(true);
+        try {
+            mvc.perform(as(delete("/api/progress-photos/{id}", id), client)).andExpect(status().isNoContent());
+        } finally {
+            MemoryStorage.FAIL_DELETES.set(false);
+        }
+        assertThat(MemoryStorage.OBJECTS.keySet()).anyMatch(k -> k.contains(id));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM photo_object_deletions WHERE object_key LIKE ?",
+                Integer.class, "%" + id + "%")).isEqualTo(1);
+
+        photos.retryPendingDeletions();
+
+        assertThat(MemoryStorage.OBJECTS.keySet()).noneMatch(k -> k.contains(id));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM photo_object_deletions WHERE object_key LIKE ?",
+                Integer.class, "%" + id + "%")).isZero();
     }
 
     private RequestBuilder upload(String email, byte[] bytes, String pose, String takenOn) {
