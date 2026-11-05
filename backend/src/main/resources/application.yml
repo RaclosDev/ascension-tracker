@@ -72,6 +72,9 @@ app:
     ai-limit: ${RATE_LIMIT_AI:20}
     food-external-limit: ${RATE_LIMIT_FOOD_EXTERNAL:20}
     push-limit: ${RATE_LIMIT_PUSH:20}
+    coach-limit: ${RATE_LIMIT_COACH:120}
+    photo-limit: ${RATE_LIMIT_PHOTOS:60}
+    public-limit: ${RATE_LIMIT_PUBLIC:30}
     max-requests-per-minute: ${RATE_LIMIT_GENERAL:20}
   admin:
     emails: ${APP_ADMIN_EMAILS:}
