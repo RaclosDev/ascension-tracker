@@ -122,7 +122,8 @@ class PiiLogVerificationTest {
                 userSettingsRepository,
                 mapper,
                 org.mockito.Mockito.mock(com.ascension.service.CoachService.class),
-                org.mockito.Mockito.mock(com.ascension.service.ProgramService.class)
+                org.mockito.Mockito.mock(com.ascension.service.ProgramService.class),
+                org.mockito.Mockito.mock(com.ascension.service.CoachRecipeService.class)
         );
 
         when(workoutRepository.findAllByUserEmailOrderByStartedAtDesc(TARGET_EMAIL)).thenReturn(Collections.emptyList());
