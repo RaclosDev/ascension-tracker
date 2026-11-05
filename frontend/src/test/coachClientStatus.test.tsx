@@ -89,5 +89,8 @@ describe('Semáforo de alumnos', () => {
     expect(signalText({ reason: 'FEW_FOOD_LOGS', level: 'AMBER', value: 3 })).toBe(
       'Comida registrada 3 de 7 días',
     );
+    expect(signalText({ reason: 'WEIGHT_STALLED', level: 'AMBER', value: 3 })).toBe(
+      'Peso estancado en las últimas 3 semanas',
+    );
   });
 });

@@ -21,7 +21,12 @@ class ClientStatusServiceTest {
     private static Facts facts(LocalDate since, LocalDate lastWorkout, LocalDate lastCheckinWeek, boolean nutrition,
                                int foodDays) {
         return new Facts(UUID.randomUUID(), since, nutrition, lastWorkout, null, null, null, lastCheckinWeek, 0,
-                foodDays);
+                foodDays, null, null, null);
+    }
+
+    private static Facts weights(Double recent, Double earlier, Double goal) {
+        return new Facts(UUID.randomUUID(), LONG_AGO, false, TODAY, null, null, null, LocalDate.of(2026, 10, 26), 0,
+                0, recent, earlier, goal);
     }
 
     @Test
@@ -69,5 +74,21 @@ class ClientStatusServiceTest {
                 .isEqualTo(Level.GREEN);
         assertThat(ClientStatusService.evaluate(facts(TODAY.minusDays(3), TODAY, week, true, 0), TODAY).level())
                 .isEqualTo(Level.GREEN);
+    }
+
+    @Test
+    void weightStallsWhenItBarelyMovesTowardsAGoalStillFarAway() {
+        Signal stalled = new Signal(Reason.WEIGHT_STALLED, Level.AMBER, 3);
+        // Cutting from 85 to 75: 0.2 kg in three weeks is a stall, 0.5 kg is progress, gaining is a stall.
+        assertThat(ClientStatusService.evaluate(weights(84.8, 85.0, 75.0), TODAY).signals()).containsExactly(stalled);
+        assertThat(ClientStatusService.evaluate(weights(84.5, 85.0, 75.0), TODAY).level()).isEqualTo(Level.GREEN);
+        assertThat(ClientStatusService.evaluate(weights(85.4, 85.0, 75.0), TODAY).signals()).containsExactly(stalled);
+        // Bulking towards 70 works the other way round.
+        assertThat(ClientStatusService.evaluate(weights(65.1, 65.0, 70.0), TODAY).signals()).containsExactly(stalled);
+        assertThat(ClientStatusService.evaluate(weights(65.6, 65.0, 70.0), TODAY).level()).isEqualTo(Level.GREEN);
+        // Near the goal, without a goal or without weights from both weeks: nothing to say.
+        assertThat(ClientStatusService.evaluate(weights(75.5, 75.5, 75.0), TODAY).level()).isEqualTo(Level.GREEN);
+        assertThat(ClientStatusService.evaluate(weights(84.8, 85.0, null), TODAY).level()).isEqualTo(Level.GREEN);
+        assertThat(ClientStatusService.evaluate(weights(84.8, null, 75.0), TODAY).level()).isEqualTo(Level.GREEN);
     }
 }

@@ -54,7 +54,7 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 **Preguntas a medida.** El entrenador decide qué pregunta cada semana (hasta diez preguntas). Si las cambia, los check-ins ya enviados no se tocan.
 
-**Semáforo de alumnos.** La lista de alumnos marca a cada uno en verde (al día), ámbar (vigilar) o rojo (necesita atención), y pone primero a quien más lo necesita. Al lado se lee el motivo: varios días sin registrar nada, el check-in de la semana sin hacer o pocos días con la comida apuntada. También avisa de los check-ins que el entrenador tiene sin responder. Solo tiene en cuenta lo que el alumno comparte.
+**Semáforo de alumnos.** La lista de alumnos marca a cada uno en verde (al día), ámbar (vigilar) o rojo (necesita atención), y pone primero a quien más lo necesita. Al lado se lee el motivo: varios días sin registrar nada, el check-in de la semana sin hacer, pocos días con la comida apuntada o un peso que lleva tres semanas sin acercarse a su objetivo. También avisa de los check-ins que el entrenador tiene sin responder. Solo tiene en cuenta lo que el alumno comparte.
 
 **Avisos en el móvil.** Quien active los avisos recibe una notificación cuando pasa algo con el check-in: el entrenador, cuando un alumno se lo envía; el alumno, cuando su entrenador le responde. El domingo por la tarde, quien aún no ha hecho el check-in de la semana recibe un recordatorio. Al tocar el aviso se abre directamente la página correspondiente. Se activan con un botón en el panel del entrenador y en la página del check-in.
 

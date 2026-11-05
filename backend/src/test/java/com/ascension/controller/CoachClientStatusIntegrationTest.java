@@ -51,6 +51,14 @@ class CoachClientStatusIntegrationTest {
         mvc.perform(as(post("/api/weights"), active).contentType("application/json")
                         .content("{\"date\":\"" + today + "\",\"weight\":80}"))
                 .andExpect(status().isOk());
+        // Cutting to 70 kg, but only 0.1 kg lighter than three weeks ago.
+        mvc.perform(as(post("/api/weights"), active).contentType("application/json")
+                        .content("{\"date\":\"" + today.minusDays(22) + "\",\"weight\":80.1}"))
+                .andExpect(status().isOk());
+        jdbc.update("""
+                INSERT INTO user_settings (user_email, goal_weight, kcal, start_date, start_weight, weekly_goal)
+                VALUES (?, 70, 2000, ?, 82, -0.5)
+                """, active, today.minusDays(40));
         String path = "$[?(@.linkId == '%s')]";
         mvc.perform(as(get("/api/coach/clients/status"), coach))
                 .andExpect(status().isOk())
@@ -59,6 +67,7 @@ class CoachClientStatusIntegrationTest {
                 .andExpect(jsonPath(path.formatted(activeLink) + ".signals[?(@.reason == 'INACTIVE')]").isEmpty())
                 .andExpect(jsonPath(path.formatted(activeLink) + ".level").value("RED"))
                 .andExpect(jsonPath(path.formatted(activeLink) + ".signals[0].reason").value("CHECKIN_MISSING"))
+                .andExpect(jsonPath(path.formatted(activeLink) + ".signals[1].reason").value("WEIGHT_STALLED"))
                 .andExpect(jsonPath(path.formatted(idleLink) + ".level").value("RED"))
                 .andExpect(jsonPath(path.formatted(idleLink) + ".signals[0].reason").value("INACTIVE"))
                 .andExpect(jsonPath(path.formatted(idleLink) + ".signals[0].value").value(30));

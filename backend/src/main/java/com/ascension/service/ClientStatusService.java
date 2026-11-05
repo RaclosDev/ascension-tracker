@@ -26,6 +26,8 @@ import java.util.stream.Stream;
  *   <li>Days since the client last logged anything: amber from 3, red from 7.</li>
  *   <li>Finished weeks without a check-in since the link started: amber for one, red for two.</li>
  *   <li>With nutrition shared, days with food logged in the last seven: amber under 4.</li>
+ *   <li>With body data shared and a weight goal that is still over 1 kg away, the average weight of the last
+ *       week has moved less than 0.3 kg towards it compared with three weeks earlier: amber.</li>
  * </ul>
  * Nothing here is written to the access log: it is a summary, not a look at the client's data.
  */
@@ -35,6 +37,9 @@ public class ClientStatusService {
     static final int AMBER_INACTIVE_DAYS = 3;
     static final int RED_INACTIVE_DAYS = 7;
     static final int MIN_FOOD_DAYS = 4;
+    static final int STALL_WEEKS = 3;
+    static final double STALL_MIN_PROGRESS_KG = 0.3;
+    static final double NEAR_GOAL_KG = 1.0;
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -45,7 +50,7 @@ public class ClientStatusService {
     /** What the query returns per link; dates are null when not shared or never logged. */
     record Facts(UUID linkId, LocalDate since, boolean nutrition, LocalDate lastWorkout, LocalDate lastFood,
                  LocalDate lastWeight, LocalDate lastCheckin, LocalDate lastCheckinWeek, int pendingReplies,
-                 int foodDays) {
+                 int foodDays, Double recentWeight, Double earlierWeight, Double goalWeight) {
     }
 
     @Transactional(readOnly = true)
@@ -53,6 +58,9 @@ public class ClientStatusService {
         UUID coachId = requireCoachId(coachEmail);
         Date weekAgo = Date.valueOf(today.minusDays(7));
         Date yesterday = Date.valueOf(today.minusDays(1));
+        Date recentFrom = Date.valueOf(today.minusDays(6));
+        Date earlierFrom = Date.valueOf(today.minusDays(STALL_WEEKS * 7L + 6));
+        Date earlierTo = Date.valueOf(today.minusDays(STALL_WEEKS * 7L));
         return jdbcTemplate.query("""
                 SELECT cc.id, cc.created_at::date AS since, cc.can_view_nutrition,
                        CASE WHEN cc.can_view_training THEN (
@@ -69,7 +77,16 @@ public class ClientStatusService {
                            AS pending_replies,
                        CASE WHEN cc.can_view_nutrition THEN (
                            SELECT COUNT(DISTINCT f.log_date) FROM food_logs f
-                           WHERE f.user_email = u.email AND f.log_date BETWEEN ? AND ?) ELSE 0 END AS food_days
+                           WHERE f.user_email = u.email AND f.log_date BETWEEN ? AND ?) ELSE 0 END AS food_days,
+                       CASE WHEN cc.can_view_body THEN (
+                           SELECT AVG(we.weight) FROM weight_entries we
+                           WHERE we.user_email = u.email AND we.date BETWEEN ? AND ?) END AS recent_weight,
+                       CASE WHEN cc.can_view_body THEN (
+                           SELECT AVG(we.weight) FROM weight_entries we
+                           WHERE we.user_email = u.email AND we.date BETWEEN ? AND ?) END AS earlier_weight,
+                       CASE WHEN cc.can_view_body THEN (
+                           SELECT s.goal_weight FROM user_settings s
+                           WHERE s.user_email = u.email AND s.weekly_goal <> 0 AND s.goal_weight > 0) END AS goal_weight
                 FROM coach_clients cc JOIN users u ON u.id = cc.client_user_id
                 WHERE cc.coach_user_id = ? AND cc.status = 'ACTIVE'
                 """,
@@ -77,8 +94,10 @@ public class ClientStatusService {
                         rs.getBoolean("can_view_nutrition"), date(rs.getDate("last_workout")),
                         date(rs.getDate("last_food")), date(rs.getDate("last_weight")),
                         date(rs.getDate("last_checkin")), date(rs.getDate("last_checkin_week")),
-                        rs.getInt("pending_replies"), rs.getInt("food_days")), today),
-                weekAgo, yesterday, coachId);
+                        rs.getInt("pending_replies"), rs.getInt("food_days"),
+                        rs.getObject("recent_weight", Double.class), rs.getObject("earlier_weight", Double.class),
+                        rs.getObject("goal_weight", Double.class)), today),
+                weekAgo, yesterday, recentFrom, Date.valueOf(today), earlierFrom, earlierTo, coachId);
     }
 
     static ClientStatus evaluate(Facts facts, LocalDate today) {
@@ -105,8 +124,25 @@ public class ClientStatusService {
             signals.add(new Signal(Reason.FEW_FOOD_LOGS, Level.AMBER, facts.foodDays()));
         }
 
+        if (weightStalled(facts)) {
+            signals.add(new Signal(Reason.WEIGHT_STALLED, Level.AMBER, STALL_WEEKS));
+        }
+
         Level level = signals.stream().map(Signal::level).max(Comparator.naturalOrder()).orElse(Level.GREEN);
         return new ClientStatus(facts.linkId(), level, lastActivity, facts.pendingReplies(), signals);
+    }
+
+    /** Still over 1 kg from the goal and less than 0.3 kg closer to it than three weeks ago. */
+    private static boolean weightStalled(Facts facts) {
+        if (facts.recentWeight() == null || facts.earlierWeight() == null || facts.goalWeight() == null) {
+            return false;
+        }
+        double distance = facts.goalWeight() - facts.recentWeight();
+        if (Math.abs(distance) <= NEAR_GOAL_KG) {
+            return false;
+        }
+        double progress = (facts.recentWeight() - facts.earlierWeight()) * Math.signum(distance);
+        return progress < STALL_MIN_PROGRESS_KG;
     }
 
     /** Finished weeks (last week and the one before) without a check-in, counting only since the link started. */
