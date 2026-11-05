@@ -5,6 +5,7 @@ import { requestGoogleSignIn } from '../GoogleSignInButton';
 const links = [
   { href: '#funciones', label: 'Funciones' },
   { href: '#datos', label: 'Tus datos' },
+  { href: '#entrenadores', label: 'Entrenadores' },
   { href: '#entrar', label: 'Entrar' },
 ];
 

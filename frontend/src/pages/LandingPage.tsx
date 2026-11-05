@@ -3,6 +3,7 @@ import LandingNav from '../components/landing/LandingNav';
 import LandingHero from '../components/landing/LandingHero';
 import LandingShowcase from '../components/landing/LandingShowcase';
 import LandingFeatures from '../components/landing/LandingFeatures';
+import LandingCoaches from '../components/landing/LandingCoaches';
 import LandingFooter from '../components/landing/LandingFooter';
 import '../components/landing/landing.css';
 
@@ -15,6 +16,7 @@ export default function LandingPage() {
         <LandingHero />
         <LandingShowcase />
         <LandingFeatures />
+        <LandingCoaches />
       </main>
       <LandingFooter />
     </div>

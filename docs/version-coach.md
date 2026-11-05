@@ -76,6 +76,8 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 **Contacto y planes a medida.** Desde esa misma página cualquiera puede escribirnos: para contratar un plan, pedir uno a medida (más de 50 alumnos, equipos, gimnasios) o cualquier otra duda. El administrador recibe un aviso en el móvil y ve los mensajes en su página, donde los marca como atendidos. Se pueden enviar hasta tres mensajes al día.
 
+**En la portada.** La página de inicio tiene una sección para entrenadores: qué pueden hacer, los precios de cada plan, la prueba de 14 días y cómo pedir un plan a medida. Se llega desde el enlace «Entrenadores» del menú.
+
 **Privacidad.** La descarga de datos del entrenador incluye su plan, sus fechas y los mensajes que nos ha enviado; al borrar la cuenta se borra todo.
 
 *El pago con tarjeta y los textos legales llegarán más adelante.*
