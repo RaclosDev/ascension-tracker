@@ -32,8 +32,8 @@ import java.util.Locale;
 import java.util.UUID;
 
 /**
- * Progress photos. The phone already shrinks and re-encodes each photo (which also drops EXIF),
- * so the server only checks it really is a small JPEG or WebP before storing it privately.
+ * Progress photos. The phone already shrinks and re-encodes each photo (which also drops EXIF);
+ * the server checks it really is a small JPEG or WebP and strips any EXIF/XMP left before storing it privately.
  */
 @Slf4j
 @Service
@@ -98,7 +98,7 @@ public class ProgressPhotoService {
      * The object goes up before the row and outside any transaction, so no lock is held during the
      * network call. If the row then cannot be saved, the object is removed again.
      */
-    public Photo upload(String email, Pose pose, LocalDate takenOn, byte[] bytes, LocalDate today) {
+    public Photo upload(String email, Pose pose, LocalDate takenOn, byte[] original, LocalDate today) {
         if (!storage.enabled()) {
             throw new ExternalApiException("R2", HttpStatus.SERVICE_UNAVAILABLE, "Las fotos no están disponibles ahora mismo.");
         }
@@ -108,16 +108,17 @@ public class ProgressPhotoService {
         if (takenOn.isAfter(today) || takenOn.isBefore(OLDEST)) {
             throw new InvalidInputException("La fecha de la foto no es válida.");
         }
-        if (bytes == null || bytes.length == 0) {
+        if (original == null || original.length == 0) {
             throw new InvalidInputException("La foto está vacía.");
         }
-        if (bytes.length > MAX_BYTES) {
+        if (original.length > MAX_BYTES) {
             throw new InvalidInputException("La foto pesa demasiado (máximo 2 MB).");
         }
-        String contentType = contentType(bytes);
+        String contentType = contentType(original);
         if (contentType == null) {
             throw new InvalidInputException("Formato de foto no admitido. Usa JPEG o WebP.");
         }
+        byte[] bytes = PhotoMetadataStripper.strip(original, contentType);
         UUID userId = jdbcTemplate.queryForObject("SELECT id FROM users WHERE email = ?",
                 UUID.class, normalize(email));
         // Checked first without a lock, so a full gallery never uploads anything.
