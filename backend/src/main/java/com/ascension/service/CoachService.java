@@ -53,11 +53,14 @@ public class CoachService {
 
     private final JdbcTemplate jdbcTemplate;
     private final NutritionPlanService nutritionPlanService;
+    private final CheckinService checkinService;
     private final SecureRandom random = new SecureRandom();
 
-    public CoachService(JdbcTemplate jdbcTemplate, NutritionPlanService nutritionPlanService) {
+    public CoachService(JdbcTemplate jdbcTemplate, NutritionPlanService nutritionPlanService,
+                        CheckinService checkinService) {
         this.jdbcTemplate = jdbcTemplate;
         this.nutritionPlanService = nutritionPlanService;
+        this.checkinService = checkinService;
     }
 
     // ---- Coach side ----
@@ -324,13 +327,14 @@ public class CoachService {
                         instant(rs, "updated_at")),
                 userId, userId, userId, userId);
         var nutritionPlans = nutritionPlanService.exportFor(userId);
+        var checkins = checkinService.exportFor(userId);
         if (coachSince.isEmpty() && asClient.isEmpty() && asCoach.isEmpty() && invitations.isEmpty()
                 && accessesToMyData.isEmpty() && myAccessesAsCoach.isEmpty() && assignments.isEmpty()
-                && comments.isEmpty() && nutritionPlans.isEmpty()) {
+                && comments.isEmpty() && nutritionPlans.isEmpty() && checkins.isEmpty()) {
             return null;
         }
         return new CoachingExport(coachSince.isEmpty() ? null : coachSince.get(0), asClient, asCoach,
-                invitations, accessesToMyData, myAccessesAsCoach, assignments, comments, nutritionPlans);
+                invitations, accessesToMyData, myAccessesAsCoach, assignments, comments, nutritionPlans, checkins);
     }
 
     // Column names come from the two callers above, never from input.

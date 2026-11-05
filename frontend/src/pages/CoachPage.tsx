@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CheckinTemplateEditor } from '../components/coach/CheckinTemplateEditor';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ChefHat, ClipboardList, Copy, Link2, Trash2, UserMinus, Users } from 'lucide-react';
@@ -35,6 +36,7 @@ export default function CoachPage() {
           <Clients />
           <ProgramsLink />
           <RecipesLink />
+          <CheckinTemplateEditor />
         </div>
       )}
     </div>

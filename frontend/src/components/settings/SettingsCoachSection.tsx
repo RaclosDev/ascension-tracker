@@ -117,25 +117,30 @@ function CoachLink({ link }: { link: MyCoach }) {
           </label>
         ))}
       </fieldset>
-      <button
-        type="button"
-        className="btn btn-secondary"
-        disabled={end.isPending}
-        onClick={() => {
-          if (
-            !window.confirm(
-              `¿Terminar la relación con ${name}? Dejará de ver tus datos al momento.`,
+      <div className="flex flex-wrap gap-2">
+        <Link to={`/checkin/${encodeURIComponent(link.linkId)}`} className="btn btn-primary">
+          Check-in semanal
+        </Link>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          disabled={end.isPending}
+          onClick={() => {
+            if (
+              !window.confirm(
+                `¿Terminar la relación con ${name}? Dejará de ver tus datos al momento.`,
+              )
             )
-          )
-            return;
-          end.mutate(link.linkId, {
-            onSuccess: () => toast.success('Relación terminada'),
-            onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo terminar la relación')),
-          });
-        }}
-      >
-        Terminar relación
-      </button>
+              return;
+            end.mutate(link.linkId, {
+              onSuccess: () => toast.success('Relación terminada'),
+              onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo terminar la relación')),
+            });
+          }}
+        >
+          Terminar relación
+        </button>
+      </div>
     </li>
   );
 }

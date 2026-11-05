@@ -18,7 +18,8 @@ import java.util.UUID;
 @Service
 public class CoachAccessPolicy {
 
-    public enum Scope { TRAINING, NUTRITION, BODY, EDIT_TRAINING, EDIT_NUTRITION }
+    /** LINK is any active link: what the client sends the coach directly, such as check-ins. */
+    public enum Scope { LINK, TRAINING, NUTRITION, BODY, EDIT_TRAINING, EDIT_NUTRITION }
 
     public enum Action {
         VIEW_WEIGHT(Scope.BODY),
@@ -29,7 +30,9 @@ public class CoachAccessPolicy {
         VIEW_PROGRAMS(Scope.TRAINING),
         ASSIGN_PROGRAM(Scope.EDIT_TRAINING),
         COMMENT_WORKOUT(Scope.TRAINING),
-        SET_NUTRITION_PLAN(Scope.EDIT_NUTRITION);
+        SET_NUTRITION_PLAN(Scope.EDIT_NUTRITION),
+        VIEW_CHECKINS(Scope.LINK),
+        REPLY_CHECKIN(Scope.LINK);
 
         private final Scope scope;
 
@@ -48,6 +51,7 @@ public class CoachAccessPolicy {
                                boolean editNutrition) {
         boolean grants(Scope scope) {
             return switch (scope) {
+                case LINK -> true;
                 case TRAINING -> training;
                 case NUTRITION -> nutrition;
                 case BODY -> body;

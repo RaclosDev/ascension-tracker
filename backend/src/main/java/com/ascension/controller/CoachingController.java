@@ -1,5 +1,8 @@
 package com.ascension.controller;
 
+import com.ascension.dto.CheckinDtos.Checkin;
+import com.ascension.dto.CheckinDtos.CheckinRequest;
+import com.ascension.dto.CheckinDtos.ClientCheckin;
 import com.ascension.dto.CoachDtos.AccessLogEntry;
 import com.ascension.dto.CoachDtos.InvitationPreview;
 import com.ascension.dto.CoachDtos.MyCoach;
@@ -8,11 +11,13 @@ import com.ascension.dto.CoachDtos.WorkoutComment;
 import com.ascension.dto.NutritionPlanDtos.NutritionPlan;
 import com.ascension.dto.ProgramDtos.TodayPlan;
 import com.ascension.exception.InvalidInputException;
+import com.ascension.service.CheckinService;
 import com.ascension.service.ClientProgramService;
 import com.ascension.service.CoachSessionService;
 import com.ascension.service.CoachService;
 import com.ascension.service.NutritionPlanService;
 import com.ascension.util.SecurityUtils;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +39,7 @@ public class CoachingController {
     private final ClientProgramService clientProgramService;
     private final CoachSessionService sessionService;
     private final NutritionPlanService nutritionPlanService;
+    private final CheckinService checkinService;
 
     /**
      * What each active program prescribes on {@code date}: the client's local day, since the server's
@@ -119,6 +125,30 @@ public class CoachingController {
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         coachService.endLinkAsClient(email, linkId);
         return ResponseEntity.noContent().build();
+    }
+
+    /** This week's questions from this coach and what was already sent. */
+    @GetMapping("/coaches/{linkId}/checkin")
+    public ResponseEntity<ClientCheckin> checkin(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(checkinService.current(email, linkId, LocalDate.now()));
+    }
+
+    /** Sends this week's check-in, or changes it while the coach has not replied. */
+    @PutMapping("/coaches/{linkId}/checkin")
+    public ResponseEntity<Checkin> sendCheckin(@PathVariable UUID linkId, @Valid @RequestBody CheckinRequest request,
+                                               @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(checkinService.submit(email, linkId, request, LocalDate.now()));
+    }
+
+    @GetMapping("/coaches/{linkId}/checkins")
+    public ResponseEntity<List<Checkin>> checkins(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(checkinService.history(email, linkId));
     }
 
     @GetMapping("/access-log")

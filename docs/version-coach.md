@@ -48,4 +48,10 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 ## Fase 4 — Seguimiento y feedback *(en curso)*
 
+**Check-in semanal.** Cada semana el alumno le cuenta a su entrenador cómo le ha ido: puntúa del 1 al 5 su energía, su sueño y cuánto ha cumplido el entreno y la dieta, y responde a las preguntas que el entrenador haya preparado. Si comparte su cuerpo, se añade solo su peso medio de la semana. Puede corregirlo hasta que el entrenador conteste.
+
+**El entrenador responde.** En la ficha del alumno el entrenador ve todos sus check-ins, del más reciente al más antiguo, y contesta a cada uno. El alumno lee la respuesta en su historial, que conserva aunque la relación termine.
+
+**Preguntas a medida.** El entrenador decide qué pregunta cada semana (hasta diez preguntas). Si las cambia, los check-ins ya enviados no se tocan.
+
 *Se irá completando a medida que avance.*
