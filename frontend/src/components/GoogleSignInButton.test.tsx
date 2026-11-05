@@ -2,11 +2,15 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CredentialResponse } from '@react-oauth/google';
-import GoogleSignInButton from './GoogleSignInButton';
+import GoogleSignInButton, { requestGoogleSignIn } from './GoogleSignInButton';
 
-const { googleProps } = vi.hoisted(() => ({ googleProps: vi.fn() }));
+const { googleProps, oauth } = vi.hoisted(() => ({
+  googleProps: vi.fn(),
+  oauth: { scriptLoadedSuccessfully: false },
+}));
 
 vi.mock('@react-oauth/google', () => ({
+  useGoogleOAuth: () => ({ clientId: 'test-client', ...oauth }),
   GoogleLogin: (props: { onSuccess: (response: CredentialResponse) => void }) => {
     googleProps(props);
     const { onSuccess } = props;
@@ -25,6 +29,61 @@ describe('Google sign-in parity with PorrApp', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+    oauth.scriptLoadedSuccessfully = false;
+  });
+
+  const stubGoogle = (skipped: boolean) => {
+    oauth.scriptLoadedSuccessfully = true;
+    const id = {
+      initialize: vi.fn(),
+      prompt: vi.fn((listener: (moment: { isSkippedMoment: () => boolean }) => void) =>
+        listener({ isSkippedMoment: () => skipped }),
+      ),
+    };
+    vi.stubGlobal('google', { accounts: { id } });
+    return id;
+  };
+
+  it('opens the Google account chooser directly from any call to action', async () => {
+    const id = stubGoogle(false);
+    const onCredential = vi.fn().mockResolvedValue(undefined);
+    render(<GoogleSignInButton onCredential={onCredential} />);
+    const preventDefault = vi.fn();
+    requestGoogleSignIn({ preventDefault });
+    expect(preventDefault).toHaveBeenCalled();
+    expect(id.initialize).toHaveBeenCalledWith(
+      expect.objectContaining({ client_id: 'test-client', use_fedcm_for_prompt: true }),
+    );
+    expect(id.prompt).toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    const { callback } = id.initialize.mock.calls[0][0];
+    await callback({ credential: 'one-tap-credential' });
+    expect(onCredential).toHaveBeenCalledWith('one-tap-credential');
+  });
+
+  it('falls back to the Google button dialog when the chooser is skipped', () => {
+    stubGoogle(true);
+    render(<GoogleSignInButton onCredential={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
+    expect(screen.getByRole('dialog')).toBeVisible();
+  });
+
+  it('falls back to the dialog when Google cannot show its chooser', () => {
+    oauth.scriptLoadedSuccessfully = true;
+    vi.stubGlobal('google', { accounts: { id: { initialize: vi.fn() } } });
+    render(<GoogleSignInButton onCredential={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
+    expect(screen.getByRole('dialog')).toBeVisible();
+  });
+
+  it('falls back to the dialog when the chooser throws', () => {
+    const id = stubGoogle(false);
+    id.prompt.mockImplementation(() => {
+      throw new Error('FedCM blocked');
+    });
+    render(<GoogleSignInButton onCredential={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
+    expect(screen.getByRole('dialog')).toBeVisible();
   });
 
   it('uses a full-page redirect inside the installed iOS PWA', () => {
