@@ -21,6 +21,7 @@ const CoachProgramsPage = lazyWithRetry(() => import('./pages/CoachProgramsPage'
 const CoachProgramEditorPage = lazyWithRetry(() => import('./pages/CoachProgramEditorPage'));
 const CoachRecipesPage = lazyWithRetry(() => import('./pages/CoachRecipesPage'));
 const CoachPlanPage = lazyWithRetry(() => import('./pages/CoachPlanPage'));
+const LegalPage = lazyWithRetry(() => import('./pages/LegalPage'));
 const AdminPlansPage = lazyWithRetry(() => import('./pages/AdminPlansPage'));
 const CoachCheckinPage = lazyWithRetry(() => import('./pages/CoachCheckinPage'));
 const InvitationPage = lazyWithRetry(() => import('./pages/InvitationPage'));
@@ -28,6 +29,7 @@ import LandingPage from './pages/LandingPage';
 import { HomeRedirect, RememberInvitation } from './components/coach/InvitationRedirects';
 
 import { PageLoader } from './components/PageLoader';
+import { LEGAL_DOCS } from './lib/legal/docs';
 import ErrorBoundary from './components/ErrorBoundary';
 import { preloadAllRoutes } from './utils/routePreload';
 import { useWorkoutStore } from './lib/workout/store';
@@ -91,6 +93,17 @@ function AppContent() {
         <Routes>
           <Route path="/login" element={<LandingPage />} />
           <Route path="/invitacion/:token" element={<RememberInvitation />} />
+          {LEGAL_DOCS.map((doc) => (
+            <Route
+              key={doc}
+              path={`/${doc}`}
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <LegalPage doc={doc} />
+                </Suspense>
+              }
+            />
+          ))}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </ErrorBoundary>
@@ -115,6 +128,9 @@ function AppContent() {
             <Route path="entrenador/programas/:programId" element={<CoachProgramEditorPage />} />
             <Route path="entrenador/recetas" element={<CoachRecipesPage />} />
             <Route path="entrenador/plan" element={<CoachPlanPage />} />
+            {LEGAL_DOCS.map((doc) => (
+              <Route key={doc} path={doc} element={<LegalPage doc={doc} />} />
+            ))}
             <Route path="admin/planes" element={<AdminPlansPage />} />
             <Route path="checkin/:linkId" element={<CoachCheckinPage />} />
             <Route path="invitacion/:token" element={<InvitationPage />} />

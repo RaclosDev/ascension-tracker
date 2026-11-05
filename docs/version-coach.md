@@ -80,6 +80,8 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 **Privacidad.** La descarga de datos del entrenador incluye su plan, sus fechas y los mensajes que nos ha enviado; al borrar la cuenta se borra todo.
 
-*El pago con tarjeta y los textos legales llegarán más adelante.*
+**Textos legales (borrador).** Ya hay política de privacidad, términos de uso y condiciones para entrenadores (con el anexo de encargo del tratamiento), enlazados desde la portada y desde Ajustes. Son borradores: les faltan los datos del titular y una revisión legal antes de darlos por definitivos.
+
+*El pago con tarjeta llegará más adelante.*
 
 *Se irá completando a medida que avance.*
