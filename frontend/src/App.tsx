@@ -31,6 +31,7 @@ import { HomeRedirect, RememberInvitation } from './components/coach/InvitationR
 import { PageLoader } from './components/PageLoader';
 import { LEGAL_DOCS } from './lib/legal/docs';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ConsentGate } from './components/consent/ConsentGate';
 import { preloadAllRoutes } from './utils/routePreload';
 import { useWorkoutStore } from './lib/workout/store';
 
@@ -123,33 +124,35 @@ function AppContent() {
 
   return (
     <ErrorBoundary>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<HomeRedirect />} />
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="tracking" element={<TrackingPage />} />
-            <Route path="nutrition" element={<NutritionPage />} />
-            <Route path="workout" element={<WorkoutPage />} />
-            <Route path="utilities" element={<UtilitiesPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="entrenador" element={<CoachPage />} />
-            <Route path="entrenador/alumnos/:linkId" element={<CoachClientPage />} />
-            <Route path="entrenador/programas" element={<CoachProgramsPage />} />
-            <Route path="entrenador/programas/:programId" element={<CoachProgramEditorPage />} />
-            <Route path="entrenador/recetas" element={<CoachRecipesPage />} />
-            <Route path="entrenador/plan" element={<CoachPlanPage />} />
-            {LEGAL_DOCS.map((doc) => (
-              <Route key={doc} path={doc} element={<LegalPage doc={doc} />} />
-            ))}
-            <Route path="admin/planes" element={<AdminPlansPage />} />
-            <Route path="checkin/:linkId" element={<CoachCheckinPage />} />
-            <Route path="invitacion/:token" element={<InvitationPage />} />
-          </Route>
-          <Route path="/login" element={<HomeRedirect />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+      <ConsentGate>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<HomeRedirect />} />
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="tracking" element={<TrackingPage />} />
+              <Route path="nutrition" element={<NutritionPage />} />
+              <Route path="workout" element={<WorkoutPage />} />
+              <Route path="utilities" element={<UtilitiesPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="entrenador" element={<CoachPage />} />
+              <Route path="entrenador/alumnos/:linkId" element={<CoachClientPage />} />
+              <Route path="entrenador/programas" element={<CoachProgramsPage />} />
+              <Route path="entrenador/programas/:programId" element={<CoachProgramEditorPage />} />
+              <Route path="entrenador/recetas" element={<CoachRecipesPage />} />
+              <Route path="entrenador/plan" element={<CoachPlanPage />} />
+              {LEGAL_DOCS.map((doc) => (
+                <Route key={doc} path={doc} element={<LegalPage doc={doc} />} />
+              ))}
+              <Route path="admin/planes" element={<AdminPlansPage />} />
+              <Route path="checkin/:linkId" element={<CoachCheckinPage />} />
+              <Route path="invitacion/:token" element={<InvitationPage />} />
+            </Route>
+            <Route path="/login" element={<HomeRedirect />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </ConsentGate>
     </ErrorBoundary>
   );
 }

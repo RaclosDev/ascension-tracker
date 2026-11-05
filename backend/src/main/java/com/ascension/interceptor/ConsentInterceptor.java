@@ -78,8 +78,8 @@ public class ConsentInterceptor implements HandlerInterceptor {
 
     private static boolean reject(HttpServletResponse response, Kind kind) throws Exception {
         String message = kind == Kind.AI_HEALTH
-                ? "Para usar la IA con tus comidas, activa ese permiso en Ajustes > Privacidad."
-                : "Para guardar datos de salud, da tu consentimiento en Ajustes > Privacidad.";
+                ? "Para usar la IA con tus comidas, activa ese permiso en Ajustes > Datos y cuenta."
+                : "Para guardar datos de salud, da tu consentimiento en Ajustes > Datos y cuenta.";
         response.setStatus(HttpStatus.FORBIDDEN.value());
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write("{\"error\":\"" + message + "\",\"code\":\"CONSENT_REQUIRED\",\"consent\":\""
