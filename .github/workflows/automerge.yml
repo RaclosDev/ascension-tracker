@@ -4,7 +4,12 @@ name: Auto-merge de PRs propios
 # Los de cualquier otra persona o bot (Dependabot incluido) siguen esperando una fusión manual.
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review, closed]
+    types: [opened, reopened, ready_for_review, synchronize]
+
+# Un solo vigilante por PR: cada push nuevo sustituye al anterior.
+concurrency:
+  group: automerge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -12,8 +17,7 @@ permissions:
 jobs:
   enable:
     if: >-
-      github.event.action != 'closed'
-      && github.event.pull_request.user.login == github.repository_owner
+      github.event.pull_request.user.login == github.repository_owner
       && github.event.pull_request.head.repo.full_name == github.repository
       && !github.event.pull_request.draft
     runs-on: ubuntu-latest
@@ -28,20 +32,28 @@ jobs:
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: gh pr merge "$PR_URL" --auto --squash
 
-  # Lo que fusiona el bot no dispara el push a main, así que se lanza aquí la CI de main,
-  # igual que tras una fusión manual.
+  # Lo que fusiona el bot no lanza ningún workflow (ni el push a main ni el cierre del PR),
+  # así que se espera aquí a la fusión y se lanza la CI de main a mano, que sí está permitido.
   main-ci:
-    if: >-
-      github.event.action == 'closed'
-      && github.event.pull_request.merged
-      && github.event.pull_request.merged_by.login == 'github-actions[bot]'
+    needs: enable
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 60
     permissions:
       actions: write
+      pull-requests: read
     steps:
-      - name: Lanzar la CI de main
+      - name: Esperar la fusión y lanzar la CI de main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-        run: gh workflow run ci.yml --ref main
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          for _ in $(seq 1 110); do
+            state=$(gh pr view "$PR_URL" --json state -q .state || echo UNKNOWN)
+            case "$state" in
+              MERGED) gh workflow run ci.yml --ref main; exit 0 ;;
+              CLOSED) echo "PR cerrado sin fusionar"; exit 0 ;;
+            esac
+            sleep 30
+          done
+          echo "El PR sigue abierto; el próximo push volverá a esperar la fusión."
