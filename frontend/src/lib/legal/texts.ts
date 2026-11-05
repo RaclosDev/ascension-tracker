@@ -160,7 +160,7 @@ export const LEGAL_TEXTS: Record<LegalDoc, LegalText> = {
       {
         title: 'Planes a medida',
         paragraphs: [
-          'Para más de 50 alumnos, equipos o gimnasios, escríbenos desde Plan y facturación y acordaremos las condiciones por escrito.',
+          'Si necesitas más alumnos de los que permite el plan más alto, o eres un equipo o un gimnasio, escríbenos desde Plan y facturación y acordaremos las condiciones por escrito.',
         ],
       },
     ],

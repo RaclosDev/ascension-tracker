@@ -96,6 +96,7 @@ function CurrentPlan({ subscription }: { subscription: CoachSubscription }) {
 
 function Plans({ billing, current }: { billing: CoachBilling; current?: CoachSubscription }) {
   const free = billing.annualMonths < 12 ? 12 - billing.annualMonths : 0;
+  const top = billing.plans.reduce((max, p) => Math.max(max, p.maxClients), 0);
   return (
     <section className="card">
       <h2 className="card-title">Planes</h2>
@@ -126,8 +127,8 @@ function Plans({ billing, current }: { billing: CoachBilling; current?: CoachSub
         ))}
       </ul>
       <p className="mt-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
-        ¿Más de 50 alumnos, un equipo de entrenadores o algo a medida? Escríbenos con el formulario
-        de abajo y te preparamos un plan.
+        ¿{top > 0 ? `Más de ${top} alumnos, un` : 'Un'} equipo de entrenadores o algo a medida?
+        Escríbenos con el formulario de abajo y te preparamos un plan.
       </p>
     </section>
   );
