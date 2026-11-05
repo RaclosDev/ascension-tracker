@@ -228,7 +228,7 @@ public class ProgramService {
         }
     }
 
-    private static Exercise exercise(ResultSet rs) throws SQLException {
+    static Exercise exercise(ResultSet rs) throws SQLException {
         return new Exercise(rs.getString("exercise_id"), rs.getString("exercise_name"),
                 rs.getString("variant_grip"), rs.getString("variant_machine"), rs.getInt("sets"),
                 integer(rs, "reps_min"), integer(rs, "reps_max"), rs.getBigDecimal("target_rpe"),

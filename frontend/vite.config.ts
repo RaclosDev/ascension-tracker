@@ -21,6 +21,7 @@ export default defineConfig({
           // Coach pages need the network anyway and most users never open them.
           '**/Coach*Page*',
           '**/coachPrograms-*',
+          '**/TodayProgramCard-*',
           '**/exercises*.json',
           '**/ascension-title.png',
           '**/pwa-logo.png',

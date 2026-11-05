@@ -22,4 +22,11 @@ public class WorkoutDTO {
     @jakarta.validation.constraints.NotNull(message = "exercises no puede ser nulo")
     @jakarta.validation.constraints.Size(max = 100, message = "No se permiten más de 100 ejercicios por entrenamiento")
     private List<WorkoutExerciseDTO> exercises;
+
+    /** Set when the workout carried out a day of one of the client's own assigned programs. */
+    private java.util.UUID programDayId;
+
+    @jakarta.validation.constraints.Pattern(regexp = "PRESCRIBED|PRESCRIBED_MODIFIED",
+            message = "Origen de programa no válido")
+    private String programOrigin;
 }

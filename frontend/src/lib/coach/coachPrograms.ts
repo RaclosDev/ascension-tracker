@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
+import { WEEKDAY_LABELS } from './weekdays';
 
 /** Mirrors the backend ProgramDtos: the builder always saves the whole program at once. */
 export interface ProgramExercise {
@@ -45,15 +46,7 @@ export interface ProgramSummary {
 
 export const MAX_WEEKS = 52;
 export const MAX_EXERCISES_PER_DAY = 30;
-export const WEEKDAY_LABELS = [
-  'Lunes',
-  'Martes',
-  'Miércoles',
-  'Jueves',
-  'Viernes',
-  'Sábado',
-  'Domingo',
-];
+export { WEEKDAY_LABELS } from './weekdays';
 
 export const emptyProgram = (): Program => ({
   id: null,

@@ -12,6 +12,8 @@ import {
 import type {
   ActiveWorkout,
   CompletedWorkout,
+  ProgramOrigin,
+  ProgramPlanItem,
   SetType,
   Tab,
   Template,
@@ -30,6 +32,34 @@ function blankSet(fill?: { weight: string; reps: string }): WorkoutSet {
     reps: fill?.reps ?? '',
     completed: false,
   };
+}
+
+/** A prescribed program day as the workout store needs it to start a session. */
+export interface PrescribedDay {
+  id: string;
+  name: string;
+  exercises: {
+    exerciseId: string;
+    variant?: { grip?: string; machine?: string };
+    sets: number;
+    reps?: number | null;
+    notes: string;
+  }[];
+}
+
+/** Done as prescribed only when every exercise, in order, got exactly its prescribed completed sets. */
+export function programOrigin(
+  plan: ProgramPlanItem[],
+  exercises: WorkoutExercise[],
+): ProgramOrigin {
+  const same =
+    plan.length === exercises.length &&
+    plan.every(
+      (item, i) =>
+        exercises[i].exerciseId === item.exerciseId &&
+        exercises[i].sets.filter((s) => s.completed).length === item.sets,
+    );
+  return same ? 'PRESCRIBED' : 'PRESCRIBED_MODIFIED';
 }
 
 export type ExerciseSelection = {
@@ -73,6 +103,7 @@ interface WorkoutState {
 
   startEmpty: (name?: string) => void;
   startFromTemplate: (tpl: Template, history: CompletedWorkout[]) => void;
+  startFromProgramDay: (day: PrescribedDay, history: CompletedWorkout[]) => void;
   startFromHistory: (w: CompletedWorkout) => void;
   editWorkout: (w: CompletedWorkout) => void;
 
@@ -176,6 +207,33 @@ export const useWorkoutStore = create<WorkoutState>()(
         });
       },
 
+      startFromProgramDay: (day, history) => {
+        set({
+          active: {
+            name: day.name,
+            startedAt: Date.now(),
+            notes: '',
+            programDayId: day.id,
+            programPlan: day.exercises.map((e) => ({ exerciseId: e.exerciseId, sets: e.sets })),
+            exercises: day.exercises.map((e) => ({
+              id: uid(),
+              exerciseId: e.exerciseId,
+              variant: e.variant,
+              notes: e.notes,
+              sets: Array.from({ length: e.sets }, (_, i) => {
+                const fill = previousFill(e.exerciseId, e.variant, i, history);
+                return blankSet({
+                  weight: fill?.weight ?? '',
+                  reps: fill?.reps || (e.reps ? String(e.reps) : ''),
+                });
+              }),
+            })),
+          },
+          restUntil: null,
+          tab: 'train',
+        });
+      },
+
       editWorkout: (w: import('./types').CompletedWorkout) => {
         if (!w) return;
         set({
@@ -185,6 +243,8 @@ export const useWorkoutStore = create<WorkoutState>()(
             editingId: w.id,
             editingFinishedAt: w.finishedAt,
             notes: w.notes,
+            programDayId: w.programDayId ?? undefined,
+            programOrigin: w.programOrigin ?? undefined,
             exercises: w.exercises.map((ex: import('./types').WorkoutExercise) => ({
               ...ex,
               sets: ex.sets.map((s: import('./types').WorkoutSet) => ({ ...s })),
@@ -428,6 +488,12 @@ export const useWorkoutStore = create<WorkoutState>()(
 
         if (active.notes) {
           record.notes = active.notes;
+        }
+        if (active.programDayId) {
+          record.programDayId = active.programDayId;
+          record.programOrigin = active.programPlan
+            ? programOrigin(active.programPlan, active.exercises)
+            : active.programOrigin;
         }
 
         // Active state in IndexedDB/memory is preserved until server confirms save
