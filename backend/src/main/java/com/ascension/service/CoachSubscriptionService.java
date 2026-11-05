@@ -16,6 +16,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -140,10 +142,11 @@ public class CoachSubscriptionService implements AiDailyLimitResolver {
 
     /**
      * Sets a coach's plan by hand, e.g. after a bank transfer: a paid plan runs through {@code paidUntil}
-     * (Europe/Madrid), the free plan has no end date.
+     * (Europe/Madrid), the free plan has no end date. A paid plan is only set together with its payment,
+     * which goes to the payments ledger in the same transaction.
      */
     @Transactional
-    public AdminCoach setPlan(UUID coachId, PlanChange change) {
+    public AdminCoach setPlan(UUID coachId, PlanChange change, String adminEmail) {
         String plan = properties.planId(change.plan());
         if (plan == null) {
             throw new InvalidInputException("Ese plan no existe.");
@@ -161,7 +164,11 @@ public class CoachSubscriptionService implements AiDailyLimitResolver {
             if (paidUntil == null || paidUntil.isBefore(today) || paidUntil.isAfter(today.plusDays(MAX_PAID_DAYS))) {
                 throw new InvalidInputException("Indica hasta qué día está pagado (de hoy a un año y un mes).");
             }
+            if (change.amountCents() == null || change.vatRatePct() == null || change.method() == null) {
+                throw new InvalidInputException("Indica el importe cobrado, el IVA y la forma de pago.");
+            }
             periodEnd = Timestamp.from(paidUntil.plusDays(1).atStartOfDay(BILLING_ZONE).toInstant());
+            recordPayment(coachId, plan, change, today, adminEmail);
         }
         jdbcTemplate.update("""
                 INSERT INTO coach_subscriptions (coach_user_id, plan, status, current_period_end)
@@ -171,6 +178,19 @@ public class CoachSubscriptionService implements AiDailyLimitResolver {
                     current_period_end = EXCLUDED.current_period_end, updated_at = NOW()
                 """, coachId, plan, free ? "FREE" : "ACTIVE", periodEnd);
         return jdbcTemplate.queryForObject(ADMIN_SELECT + " WHERE cp.user_id = ?", (rs, n) -> adminCoach(rs), coachId);
+    }
+
+    private void recordPayment(UUID coachId, String plan, PlanChange change, LocalDate today, String adminEmail) {
+        BigDecimal rate = change.vatRatePct();
+        int vatCents = BigDecimal.valueOf(change.amountCents()).multiply(rate)
+                .divide(rate.add(BigDecimal.valueOf(100)), 0, RoundingMode.HALF_UP).intValueExact();
+        String reference = change.reference() == null || change.reference().isBlank() ? null : change.reference().strip();
+        jdbcTemplate.update("""
+                INSERT INTO coach_payments (coach_user_id, coach_name, coach_email, plan, amount_cents, vat_rate,
+                                            vat_cents, period_start, period_end, method, reference, created_by)
+                SELECT id, name, email, ?, ?, ?, ?, ?, ?, ?, ?, ? FROM users WHERE id = ?
+                """, plan, change.amountCents(), rate, vatCents, today, change.paidUntil(), change.method(),
+                reference, adminEmail, coachId);
     }
 
     private AdminCoach adminCoach(ResultSet rs) throws SQLException {

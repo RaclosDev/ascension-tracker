@@ -68,6 +68,15 @@ class AdminPlansIntegrationTest {
                 .andExpect(jsonPath("$.maxClients").value(50));
         assertThat(subscriptions.summary(coachId).currentPeriodEnd())
                 .isEqualTo(paidUntil.plusDays(1).atStartOfDay(ZoneId.of("Europe/Madrid")).toInstant());
+        assertThat(jdbc.queryForMap(
+                "SELECT coach_email, plan, amount_cents, vat_cents, period_end, created_by FROM coach_payments WHERE coach_user_id = ?",
+                coachId))
+                .containsEntry("coach_email", coach)
+                .containsEntry("plan", "ELITE")
+                .containsEntry("amount_cents", 12100)
+                .containsEntry("vat_cents", 2100)
+                .containsEntry("period_end", java.sql.Date.valueOf(paidUntil))
+                .containsEntry("created_by", ADMIN);
 
         jdbc.update("UPDATE coach_subscriptions SET current_period_end = NOW() - INTERVAL '1 minute' WHERE coach_user_id = ?",
                 coachId);
@@ -96,6 +105,12 @@ class AdminPlansIntegrationTest {
         mvc.perform(as(put("/api/admin/coaches/{id}/plan", coachId), ADMIN)
                         .contentType("application/json").content(change("PRO", today().plusDays(401))))
                 .andExpect(status().isBadRequest());
+        mvc.perform(as(put("/api/admin/coaches/{id}/plan", coachId), ADMIN)
+                        .contentType("application/json")
+                        .content("{\"plan\":\"PRO\",\"paidUntil\":\"" + today().plusDays(30) + "\"}"))
+                .andExpect(status().isBadRequest());
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM coach_payments WHERE coach_user_id = ?", Integer.class,
+                coachId)).isZero();
         mvc.perform(as(put("/api/admin/coaches/{id}/plan", userId(user())), ADMIN)
                         .contentType("application/json").content(change("PRO", today().plusDays(30))))
                 .andExpect(status().isNotFound());
@@ -106,7 +121,8 @@ class AdminPlansIntegrationTest {
     }
 
     private static String change(String plan, LocalDate paidUntil) {
-        return "{\"plan\":\"" + plan + "\",\"paidUntil\":\"" + paidUntil + "\"}";
+        return "{\"plan\":\"" + plan + "\",\"paidUntil\":\"" + paidUntil
+                + "\",\"amountCents\":12100,\"vatRatePct\":21,\"method\":\"TRANSFER\",\"reference\":\"F-2026-001\"}";
     }
 
     private UUID userId(String email) {

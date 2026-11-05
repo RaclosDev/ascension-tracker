@@ -50,7 +50,7 @@ public class AdminController {
     public ResponseEntity<AdminCoach> setPlan(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID coachId,
                                               @Valid @RequestBody PlanChange change) {
         String admin = requireAdmin(jwt);
-        AdminCoach updated = subscriptionService.setPlan(coachId, change);
+        AdminCoach updated = subscriptionService.setPlan(coachId, change, admin);
         log.info("Admin {} set coach {} to plan {} until {}", PiiMasker.maskEmail(admin), coachId,
                 updated.plan(), updated.currentPeriodEnd());
         return ResponseEntity.ok(updated);
