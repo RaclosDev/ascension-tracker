@@ -76,6 +76,7 @@ public final class ProgramDtos {
     /**
      * One active program as the client sees it on a date. {@code phase} is UPCOMING before the start
      * date, FINISHED after the last week and ACTIVE otherwise; {@code day} is null on a rest day.
+     * {@code otherDays} are this week's other days not done yet, so the client can move a session.
      */
     /**
      * One prescribed day of a client's program next to what they did. {@code date} is the day's calendar
@@ -88,6 +89,6 @@ public final class ProgramDtos {
 
     public record TodayPlan(UUID assignmentId, UUID programId, String programName, String coachName,
                             LocalDate startDate, int weeks, String phase, Integer week, Integer dayIndex,
-                            TodayDay day, String completedWorkoutId) {
+                            TodayDay day, String completedWorkoutId, List<TodayDay> otherDays) {
     }
 }

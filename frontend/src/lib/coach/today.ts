@@ -26,6 +26,8 @@ export interface TodayPlan {
   dayIndex: number | null;
   day: TodayDay | null;
   completedWorkoutId: string | null;
+  /** This week's other days not done yet, so a session can be moved to today. */
+  otherDays: TodayDay[];
 }
 
 /** The device's calendar day: the server's may differ near midnight. */

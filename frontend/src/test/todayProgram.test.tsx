@@ -56,6 +56,7 @@ const plan = (overrides: Partial<TodayPlan> = {}): TodayPlan => ({
   dayIndex: 4,
   day: { id: 'd1', week: 1, dayIndex: 4, name: 'Torso', notes: null, exercises: [bench] },
   completedWorkoutId: null,
+  otherDays: [],
   ...overrides,
 });
 
@@ -118,6 +119,26 @@ describe('Hoy: programa pautado', () => {
     expect(screen.getByText('Hoy es día de descanso.')).toBeTruthy();
     expect(screen.getByText(/Tu programa empieza el/)).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Empezar entreno pautado/ })).toBeNull();
+  });
+
+  it('lets the client move another day of the week to today', async () => {
+    const legs = {
+      id: 'd2',
+      week: 1,
+      dayIndex: 2,
+      name: 'Pierna',
+      notes: null,
+      exercises: [bench],
+    };
+    mockedApi.get.mockResolvedValue({ data: [plan({ day: null, otherDays: [legs] })] });
+    renderCard();
+
+    expect(await screen.findByText('Hoy es día de descanso.')).toBeTruthy();
+    fireEvent.click(screen.getByText('Hacer otro día de esta semana'));
+    fireEvent.click(screen.getByRole('button', { name: 'Empezar Pierna (martes)' }));
+    const active = useWorkoutStore.getState().active!;
+    expect(active.name).toBe('Pierna');
+    expect(active.programDayId).toBe('d2');
   });
 
   it('renders nothing without assigned programs', async () => {

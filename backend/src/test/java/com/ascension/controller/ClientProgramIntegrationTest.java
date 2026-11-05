@@ -60,7 +60,8 @@ class ClientProgramIntegrationTest {
                 .andExpect(jsonPath("$[0].day.name").value("Torso"))
                 .andExpect(jsonPath("$[0].day.exercises[0].exerciseId").value("bench-press"))
                 .andExpect(jsonPath("$[0].day.exercises[0].sets").value(4))
-                .andExpect(jsonPath("$[0].completedWorkoutId").doesNotExist());
+                .andExpect(jsonPath("$[0].completedWorkoutId").doesNotExist())
+                .andExpect(jsonPath("$[0].otherDays.length()").value(0));
 
         JsonNode saved = json.readTree(mvc.perform(saveWorkout(client, dayId, "PRESCRIBED_MODIFIED"))
                 .andExpect(status().isOk())
@@ -108,11 +109,21 @@ class ClientProgramIntegrationTest {
                 .andExpect(jsonPath("$[0].phase").value("FINISHED"));
 
         String rest = user();
-        assign(coach, accept(rest, invite(coach)), otherWeekday, today);
+        String restCopy = assign(coach, accept(rest, invite(coach)), otherWeekday, today);
+        String movableDay = dayOf(restCopy);
         mvc.perform(as(get("/api/coaching/today").param("date", today.toString()), rest))
                 .andExpect(jsonPath("$[0].phase").value("ACTIVE"))
                 .andExpect(jsonPath("$[0].week").value(1))
-                .andExpect(jsonPath("$[0].day").doesNotExist());
+                .andExpect(jsonPath("$[0].day").doesNotExist())
+                .andExpect(jsonPath("$[0].otherDays.length()").value(1))
+                .andExpect(jsonPath("$[0].otherDays[0].id").value(movableDay))
+                .andExpect(jsonPath("$[0].otherDays[0].dayIndex").value(weekday % 7 + 1))
+                .andExpect(jsonPath("$[0].otherDays[0].exercises[0].exerciseId").value("bench-press"));
+
+        // Doing that day today takes it off the list.
+        mvc.perform(saveWorkout(rest, movableDay, "PRESCRIBED")).andExpect(status().isOk());
+        mvc.perform(as(get("/api/coaching/today").param("date", today.toString()), rest))
+                .andExpect(jsonPath("$[0].otherDays.length()").value(0));
 
         mvc.perform(as(get("/api/coaching/today").param("date", today.plusDays(5).toString()), rest))
                 .andExpect(status().isBadRequest());

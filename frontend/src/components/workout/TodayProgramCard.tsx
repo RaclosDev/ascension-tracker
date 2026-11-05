@@ -144,6 +144,31 @@ function PlanCard({
         </>
       )}
 
+      {plan.phase === 'ACTIVE' && plan.otherDays.length > 0 && (
+        <details>
+          <summary className="text-sm cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
+            Hacer otro día de esta semana
+          </summary>
+          <ul className="flex flex-col gap-2 mt-2">
+            {plan.otherDays.map((day) => {
+              const label = `${day.name} (${WEEKDAY_LABELS[day.dayIndex - 1].toLowerCase()})`;
+              return (
+                <li key={day.id}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary w-full justify-start"
+                    aria-label={`Empezar ${label}`}
+                    onClick={() => startFromProgramDay(toPrescribedDay(day), history)}
+                  >
+                    <Play size={16} aria-hidden /> {label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </details>
+      )}
+
       {plan.phase !== 'FINISHED' && (
         <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
           <CalendarCheck size={14} aria-hidden />

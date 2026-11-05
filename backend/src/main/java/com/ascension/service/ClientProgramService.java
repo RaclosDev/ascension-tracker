@@ -88,13 +88,13 @@ public class ClientProgramService {
     private TodayPlan plan(String email, Active a, LocalDate date) {
         if (date.isBefore(a.startDate())) {
             return new TodayPlan(a.assignmentId(), a.programId(), a.programName(), a.coachName(), a.startDate(),
-                    a.weeks(), "UPCOMING", null, null, null, null);
+                    a.weeks(), "UPCOMING", null, null, null, null, List.of());
         }
         LocalDate firstMonday = a.startDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         int week = (int) (ChronoUnit.DAYS.between(firstMonday, date) / 7) + 1;
         if (week > a.weeks()) {
             return new TodayPlan(a.assignmentId(), a.programId(), a.programName(), a.coachName(), a.startDate(),
-                    a.weeks(), "FINISHED", null, null, null, null);
+                    a.weeks(), "FINISHED", null, null, null, null, List.of());
         }
         int dayIndex = date.getDayOfWeek().getValue();
         TodayDay day = jdbcTemplate.query("""
@@ -107,8 +107,17 @@ public class ClientProgramService {
                 SELECT id FROM workouts WHERE program_day_id = ? AND user_email = ?
                 ORDER BY started_at DESC LIMIT 1
                 """, String.class, day.id(), email).stream().findFirst().orElse(null);
+        List<TodayDay> otherDays = jdbcTemplate.query("""
+                SELECT d.id, d.day_index, d.name, d.notes FROM program_days d
+                WHERE d.program_id = ? AND d.week = ? AND d.day_index <> ?
+                  AND NOT EXISTS (SELECT 1 FROM workouts w WHERE w.program_day_id = d.id AND w.user_email = ?)
+                ORDER BY d.day_index
+                """,
+                (rs, n) -> new TodayDay(rs.getObject("id", UUID.class), week, rs.getInt("day_index"),
+                        rs.getString("name"), rs.getString("notes"), exercises(rs.getObject("id", UUID.class))),
+                a.programId(), week, dayIndex, email);
         return new TodayPlan(a.assignmentId(), a.programId(), a.programName(), a.coachName(), a.startDate(),
-                a.weeks(), "ACTIVE", week, dayIndex, day, completed);
+                a.weeks(), "ACTIVE", week, dayIndex, day, completed, otherDays);
     }
 
     private List<Exercise> exercises(UUID programDayId) {
