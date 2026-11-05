@@ -20,6 +20,7 @@ export default defineConfig({
           '**/CategoricalChart*',
           // Coach pages need the network anyway and most users never open them.
           '**/Coach*Page*',
+          '**/coachPrograms-*',
           '**/exercises*.json',
           '**/ascension-title.png',
           '**/pwa-logo.png',

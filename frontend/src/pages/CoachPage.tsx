@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Copy, Link2, Trash2, UserMinus, Users } from 'lucide-react';
+import { ClipboardList, Copy, Link2, Trash2, UserMinus, Users } from 'lucide-react';
 import {
   apiErrorMessage,
   formatCoachDate,
@@ -33,6 +33,7 @@ export default function CoachPage() {
         <div className="flex flex-col gap-6">
           <Invitations />
           <Clients />
+          <ProgramsLink />
         </div>
       )}
     </div>
@@ -195,6 +196,24 @@ function Clients() {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+function ProgramsLink() {
+  return (
+    <section className="card flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <h2 className="card-title flex items-center gap-2">
+          <ClipboardList size={18} aria-hidden /> Programas
+        </h2>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          Tu biblioteca de programas de entrenamiento, por semanas y días.
+        </p>
+      </div>
+      <Link to="/entrenador/programas" className="btn btn-secondary">
+        Abrir
+      </Link>
     </section>
   );
 }
