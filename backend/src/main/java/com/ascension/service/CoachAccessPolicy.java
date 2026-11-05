@@ -18,7 +18,7 @@ import java.util.UUID;
 @Service
 public class CoachAccessPolicy {
 
-    public enum Scope { TRAINING, NUTRITION, BODY, EDIT_TRAINING }
+    public enum Scope { TRAINING, NUTRITION, BODY, EDIT_TRAINING, EDIT_NUTRITION }
 
     public enum Action {
         VIEW_WEIGHT(Scope.BODY),
@@ -28,7 +28,8 @@ public class CoachAccessPolicy {
         VIEW_TARGETS(Scope.NUTRITION),
         VIEW_PROGRAMS(Scope.TRAINING),
         ASSIGN_PROGRAM(Scope.EDIT_TRAINING),
-        COMMENT_WORKOUT(Scope.TRAINING);
+        COMMENT_WORKOUT(Scope.TRAINING),
+        SET_NUTRITION_PLAN(Scope.EDIT_NUTRITION);
 
         private final Scope scope;
 
@@ -43,13 +44,15 @@ public class CoachAccessPolicy {
 
     /** The client a coach may act on, resolved for one request. */
     public record ClientAccess(UUID linkId, UUID coachUserId, UUID clientUserId, String clientEmail,
-                               boolean training, boolean nutrition, boolean body, boolean editTraining) {
+                               boolean training, boolean nutrition, boolean body, boolean editTraining,
+                               boolean editNutrition) {
         boolean grants(Scope scope) {
             return switch (scope) {
                 case TRAINING -> training;
                 case NUTRITION -> nutrition;
                 case BODY -> body;
                 case EDIT_TRAINING -> training && editTraining;
+                case EDIT_NUTRITION -> nutrition && editNutrition;
             };
         }
     }
@@ -67,7 +70,8 @@ public class CoachAccessPolicy {
         }
         List<ClientAccess> found = jdbcTemplate.query("""
                 SELECT cc.id, cc.coach_user_id, cc.client_user_id, cu.email AS client_email,
-                       cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training
+                       cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training,
+                       cc.can_edit_nutrition
                 FROM coach_clients cc
                 JOIN users co ON co.id = cc.coach_user_id
                 JOIN users cu ON cu.id = cc.client_user_id
@@ -81,7 +85,8 @@ public class CoachAccessPolicy {
                         rs.getBoolean("can_view_training"),
                         rs.getBoolean("can_view_nutrition"),
                         rs.getBoolean("can_view_body"),
-                        rs.getBoolean("can_edit_training")),
+                        rs.getBoolean("can_edit_training"),
+                        rs.getBoolean("can_edit_nutrition")),
                 linkId, coachEmail.trim().toLowerCase(Locale.ROOT));
         if (found.isEmpty()) {
             throw new EntityNotFoundException("Alumno no encontrado");

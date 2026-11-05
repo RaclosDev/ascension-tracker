@@ -53,6 +53,12 @@ public class ClientProgramService {
         return active.stream().map(a -> plan(email, a, date)).toList();
     }
 
+    /** True when an active program prescribes a session on {@code date}. */
+    @Transactional(readOnly = true)
+    public boolean isTrainingDay(String email, LocalDate date) {
+        return today(email, date).stream().anyMatch(plan -> plan.day() != null);
+    }
+
     /** True when the day belongs to an assigned program copy this user owns. */
     @Transactional(readOnly = true)
     public boolean ownsProgramDay(String email, UUID programDayId) {

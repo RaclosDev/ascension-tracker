@@ -18,6 +18,7 @@ const NONE: CoachPermissions = {
   nutrition: false,
   body: false,
   editTraining: false,
+  editNutrition: false,
 };
 const SCOPES = Object.keys(PERMISSION_LABELS) as (keyof CoachPermissions)[];
 

@@ -5,11 +5,13 @@ import com.ascension.dto.CoachDtos.InvitationPreview;
 import com.ascension.dto.CoachDtos.MyCoach;
 import com.ascension.dto.CoachDtos.Permissions;
 import com.ascension.dto.CoachDtos.WorkoutComment;
+import com.ascension.dto.NutritionPlanDtos.NutritionPlan;
 import com.ascension.dto.ProgramDtos.TodayPlan;
 import com.ascension.exception.InvalidInputException;
 import com.ascension.service.ClientProgramService;
 import com.ascension.service.CoachSessionService;
 import com.ascension.service.CoachService;
+import com.ascension.service.NutritionPlanService;
 import com.ascension.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,7 @@ public class CoachingController {
     private final CoachService coachService;
     private final ClientProgramService clientProgramService;
     private final CoachSessionService sessionService;
+    private final NutritionPlanService nutritionPlanService;
 
     /**
      * What each active program prescribes on {@code date}: the client's local day, since the server's
@@ -50,6 +53,16 @@ public class CoachingController {
             throw new InvalidInputException("La fecha debe ser la de hoy");
         }
         return ResponseEntity.ok(clientProgramService.today(email, day));
+    }
+
+    /** The nutrition targets a coach sets for this user, while in force; 204 when there are none. */
+    @GetMapping("/nutrition-plan")
+    public ResponseEntity<NutritionPlan> nutritionPlan(@AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return nutritionPlanService.inForce(email)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @PostMapping("/programs/{assignmentId}/end")

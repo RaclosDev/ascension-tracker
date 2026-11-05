@@ -22,6 +22,7 @@ import {
 } from '../lib/coach/coachPrograms';
 import { useExerciseCatalog, getExerciseMap } from '../lib/workout/exercises';
 import { ProgramSessions } from '../components/coach/ProgramSessions';
+import { NutritionPlanSection } from '../components/coach/NutritionPlanSection';
 import { ActivityHeatmap } from '../components/workout/heatmap';
 import { BodyHeatmap } from '../components/workout/body-heatmap';
 import { DashboardChartsSkeleton } from '../components/workout/skeletons/DashboardChartsSkeleton';
@@ -72,7 +73,9 @@ export default function CoachClientPage() {
               <ProgramsSection linkId={linkId} canAssign={link.permissions.editTraining} />
             )}
             {link.permissions.training && <TrainingSection linkId={linkId} />}
-            {link.permissions.nutrition && <NutritionSection linkId={linkId} />}
+            {link.permissions.nutrition && (
+              <NutritionSection linkId={linkId} canEditPlan={link.permissions.editNutrition} />
+            )}
           </div>
         </>
       )}
@@ -388,7 +391,7 @@ function TrainingSection({ linkId }: { linkId: string }) {
   );
 }
 
-function NutritionSection({ linkId }: { linkId: string }) {
+function NutritionSection({ linkId, canEditPlan }: { linkId: string; canEditPlan: boolean }) {
   const [date, setDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
   const targets = useClientData<CoachTargets>(linkId, 'targets', true);
   const weekly = useClientData<WeekSummary[]>(linkId, 'nutrition/calories/weekly', true);
@@ -406,6 +409,9 @@ function NutritionSection({ linkId }: { linkId: string }) {
 
   return (
     <Section title="Nutrición" icon={<Utensils size={18} aria-hidden />}>
+      <h3 className="font-semibold text-white mb-2">Pauta de nutrición</h3>
+      <NutritionPlanSection linkId={linkId} canEdit={canEditPlan} />
+      <h3 className="font-semibold text-white mt-6 mb-2">Sus objetivos y registro</h3>
       {t && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
           <Stat label="Objetivo" value={num(t.kcal, ' kcal')} />

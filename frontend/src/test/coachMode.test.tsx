@@ -97,6 +97,7 @@ describe('InvitationPage', () => {
         nutrition: false,
         body: true,
         editTraining: false,
+        editNutrition: false,
       }),
     );
     expect(await screen.findByText('ajustes')).toBeDefined();
@@ -129,6 +130,7 @@ describe('InvitationPage', () => {
         nutrition: false,
         body: false,
         editTraining: true,
+        editNutrition: false,
       }),
     );
   });
@@ -207,7 +209,13 @@ describe('SettingsCoachSection', () => {
   const link = {
     linkId: 'link-1',
     coach,
-    permissions: { training: true, nutrition: false, body: true, editTraining: true },
+    permissions: {
+      training: true,
+      nutrition: false,
+      body: true,
+      editTraining: true,
+      editNutrition: false,
+    },
     since: '2026-11-01T10:00:00Z',
   };
 
@@ -242,6 +250,7 @@ describe('SettingsCoachSection', () => {
         nutrition: true,
         body: true,
         editTraining: true,
+        editNutrition: false,
       }),
     );
     expect(screen.getByText(/Laura Coach · Peso/)).toBeDefined();
@@ -259,13 +268,20 @@ describe('SettingsCoachSection', () => {
         nutrition: false,
         body: true,
         editTraining: false,
+        editNutrition: false,
       }),
     );
   });
 
   it('does not allow unsharing everything', async () => {
     mockSection();
-    link.permissions = { training: false, nutrition: false, body: true, editTraining: false };
+    link.permissions = {
+      training: false,
+      nutrition: false,
+      body: true,
+      editTraining: false,
+      editNutrition: false,
+    };
     renderAt('/', <Route path="/" element={<SettingsCoachSection />} />);
 
     fireEvent.click(await screen.findByRole('checkbox', { name: /Cuerpo/ }));
@@ -277,7 +293,13 @@ describe('CoachClientPage', () => {
   const clientLink = {
     linkId: 'link-9',
     client: { name: 'Ana Alumna', email: 'ana@example.com', picture: null },
-    permissions: { training: true, nutrition: true, body: true, editTraining: false },
+    permissions: {
+      training: true,
+      nutrition: true,
+      body: true,
+      editTraining: false,
+      editNutrition: false,
+    },
     since: '2026-11-01T10:00:00Z',
   };
   const workout = {
@@ -360,7 +382,13 @@ describe('CoachClientPage', () => {
   });
 
   it('only asks for the areas the client shares', async () => {
-    mockClient({ training: false, nutrition: false, body: true, editTraining: false });
+    mockClient({
+      training: false,
+      nutrition: false,
+      body: true,
+      editTraining: false,
+      editNutrition: false,
+    });
     renderAt('/entrenador/alumnos/link-9', routes);
 
     expect(await screen.findByTestId('weight-charts')).toBeDefined();
@@ -381,7 +409,7 @@ describe('CoachClientPage', () => {
   });
 
   it('assigns a library program from a start date', async () => {
-    mockClient({ ...clientLink.permissions, editTraining: true });
+    mockClient({ ...clientLink.permissions, editTraining: true, editNutrition: false });
     mockedApi.post.mockResolvedValue({ data: {} });
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     renderAt('/entrenador/alumnos/link-9', routes);
