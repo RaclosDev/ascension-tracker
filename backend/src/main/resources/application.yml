@@ -58,6 +58,12 @@ server:
     min-response-size: 1024
 
 app:
+  legal:
+    # Version of the legal texts; keep in step with LEGAL_VERSION in frontend/src/lib/legal/texts.ts.
+    version: 2026-11-borrador
+  consent:
+    # Health and AI writes need the user's consent; only tests turn this off.
+    enforce: ${CONSENT_ENFORCE:true}
   # Shown on the landing and legal pages; leave empty to point people to the in-app form.
   contact-email: ${APP_CONTACT_EMAIL:}
   rate-limit:
