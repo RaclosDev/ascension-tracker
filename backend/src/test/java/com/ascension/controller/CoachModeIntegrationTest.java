@@ -191,6 +191,41 @@ class CoachModeIntegrationTest {
     }
 
     @Test
+    void gdprExportIncludesCoachingDataForBothSidesWithoutTokens() throws Exception {
+        String coach = coach();
+        String client = user();
+        String linkId = accept(client, invite(coach), BODY_ONLY);
+        mvc.perform(as(get("/api/coach/clients/{id}/weights", linkId), coach)).andExpect(status().isOk());
+
+        String clientExport = mvc.perform(as(get("/api/user/export"), client))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coaching.coachSince").doesNotExist())
+                .andExpect(jsonPath("$.coaching.asClient[0].linkId").value(linkId))
+                .andExpect(jsonPath("$.coaching.asClient[0].other.email").value(coach))
+                .andExpect(jsonPath("$.coaching.asClient[0].status").value("ACTIVE"))
+                .andExpect(jsonPath("$.coaching.asClient[0].permissions.body").value(true))
+                .andExpect(jsonPath("$.coaching.asCoach.length()").value(0))
+                .andExpect(jsonPath("$.coaching.accessesToMyData[0].action").value("VIEW_WEIGHT"))
+                .andExpect(jsonPath("$.coaching.accessesToMyData[0].other.email").value(coach))
+                .andReturn().getResponse().getContentAsString();
+        assertThat(clientExport).doesNotContain("token");
+
+        String coachExport = mvc.perform(as(get("/api/user/export"), coach))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coaching.coachSince").exists())
+                .andExpect(jsonPath("$.coaching.asCoach[0].other.email").value(client))
+                .andExpect(jsonPath("$.coaching.invitations[0].acceptedAt").exists())
+                .andExpect(jsonPath("$.coaching.myAccessesAsCoach[0].other.email").value(client))
+                .andReturn().getResponse().getContentAsString();
+        assertThat(coachExport).doesNotContain("token");
+
+        // Users without coach-mode data get no coaching section at all.
+        mvc.perform(as(get("/api/user/export"), user()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coaching").doesNotExist());
+    }
+
+    @Test
     void everyReferenceToAUserIdLetsTheAccountBeDeleted() {
         List<String> rules = jdbc.queryForList("""
                 SELECT tc.table_name || '.' || kcu.column_name || ' ' || rc.delete_rule

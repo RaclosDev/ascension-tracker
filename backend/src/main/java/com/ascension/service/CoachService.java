@@ -1,9 +1,13 @@
 package com.ascension.service;
 
+import com.ascension.dto.CoachDtos.AccessExport;
 import com.ascension.dto.CoachDtos.AccessLogEntry;
 import com.ascension.dto.CoachDtos.CoachClient;
+import com.ascension.dto.CoachDtos.CoachingExport;
 import com.ascension.dto.CoachDtos.CreatedInvitation;
+import com.ascension.dto.CoachDtos.InvitationExport;
 import com.ascension.dto.CoachDtos.InvitationPreview;
+import com.ascension.dto.CoachDtos.LinkExport;
 import com.ascension.dto.CoachDtos.MyCoach;
 import com.ascension.dto.CoachDtos.PendingInvitation;
 import com.ascension.dto.CoachDtos.Permissions;
@@ -255,6 +259,65 @@ public class CoachService {
                 (rs, n) -> new AccessLogEntry(person(rs), rs.getString("action"),
                         rs.getObject("access_date", LocalDate.class), instant(rs, "last_at"), rs.getInt("hits")),
                 normalize(clientEmail), ACCESS_LOG_DAYS, ACCESS_LOG_LIMIT);
+    }
+
+    // ---- GDPR export ----
+
+    /** Everything coach mode keeps about this user, as coach and as client. Null when there is nothing. */
+    @Transactional(readOnly = true)
+    public CoachingExport exportFor(String email) {
+        List<UUID> ids = jdbcTemplate.queryForList("SELECT id FROM users WHERE email = ?", UUID.class,
+                normalize(email));
+        if (ids.isEmpty()) {
+            return null;
+        }
+        UUID userId = ids.get(0);
+        List<Instant> coachSince = jdbcTemplate.query(
+                "SELECT created_at FROM coach_profiles WHERE user_id = ?",
+                (rs, n) -> instant(rs, "created_at"), userId);
+        List<LinkExport> asClient = exportLinks("client_user_id", "coach_user_id", userId);
+        List<LinkExport> asCoach = exportLinks("coach_user_id", "client_user_id", userId);
+        List<InvitationExport> invitations = jdbcTemplate.query("""
+                SELECT id, created_at, expires_at, accepted_at, revoked_at FROM coach_invitations
+                WHERE coach_user_id = ? ORDER BY created_at
+                """,
+                (rs, n) -> new InvitationExport(rs.getObject("id", UUID.class), instant(rs, "created_at"),
+                        instant(rs, "expires_at"), instant(rs, "accepted_at"), instant(rs, "revoked_at")),
+                userId);
+        List<AccessExport> accessesToMyData = exportAccesses("client_user_id", "coach_user_id", userId);
+        List<AccessExport> myAccessesAsCoach = exportAccesses("coach_user_id", "client_user_id", userId);
+        if (coachSince.isEmpty() && asClient.isEmpty() && asCoach.isEmpty() && invitations.isEmpty()
+                && accessesToMyData.isEmpty() && myAccessesAsCoach.isEmpty()) {
+            return null;
+        }
+        return new CoachingExport(coachSince.isEmpty() ? null : coachSince.get(0), asClient, asCoach,
+                invitations, accessesToMyData, myAccessesAsCoach);
+    }
+
+    // Column names come from the two callers above, never from input.
+    private List<LinkExport> exportLinks(String selfColumn, String otherColumn, UUID userId) {
+        return jdbcTemplate.query("""
+                SELECT cc.id, cc.status, cc.created_at, cc.ended_at,
+                       cc.can_view_training, cc.can_view_nutrition, cc.can_view_body,
+                       u.name, u.email, u.picture
+                FROM coach_clients cc JOIN users u ON u.id = cc.%s
+                WHERE cc.%s = ? ORDER BY cc.created_at
+                """.formatted(otherColumn, selfColumn),
+                (rs, n) -> new LinkExport(rs.getObject("id", UUID.class), person(rs), rs.getString("status"),
+                        permissions(rs), instant(rs, "created_at"), instant(rs, "ended_at")),
+                userId);
+    }
+
+    private List<AccessExport> exportAccesses(String selfColumn, String otherColumn, UUID userId) {
+        return jdbcTemplate.query("""
+                SELECT u.name, u.email, u.picture, l.action, l.access_date, l.first_at, l.last_at, l.hits
+                FROM coach_access_log l JOIN users u ON u.id = l.%s
+                WHERE l.%s = ? ORDER BY l.access_date, l.first_at
+                """.formatted(otherColumn, selfColumn),
+                (rs, n) -> new AccessExport(person(rs), rs.getString("action"),
+                        rs.getObject("access_date", LocalDate.class), instant(rs, "first_at"),
+                        instant(rs, "last_at"), rs.getInt("hits")),
+                userId);
     }
 
     // ---- Helpers ----
