@@ -15,7 +15,11 @@ const NutritionPage = lazyWithRetry(() => import('./pages/NutritionPage'));
 const SettingsPage = lazyWithRetry(() => import('./pages/SettingsPage'));
 const WorkoutPage = lazyWithRetry(() => import('./pages/WorkoutPage'));
 const UtilitiesPage = lazyWithRetry(() => import('./pages/UtilitiesPage'));
+const CoachPage = lazyWithRetry(() => import('./pages/CoachPage'));
+const CoachClientPage = lazyWithRetry(() => import('./pages/CoachClientPage'));
+const InvitationPage = lazyWithRetry(() => import('./pages/InvitationPage'));
 import LandingPage from './pages/LandingPage';
+import { HomeRedirect, RememberInvitation } from './components/coach/InvitationRedirects';
 
 import { PageLoader } from './components/PageLoader';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -80,6 +84,7 @@ function AppContent() {
       <ErrorBoundary>
         <Routes>
           <Route path="/login" element={<LandingPage />} />
+          <Route path="/invitacion/:token" element={<RememberInvitation />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </ErrorBoundary>
@@ -91,15 +96,18 @@ function AppContent() {
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route index element={<HomeRedirect />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="tracking" element={<TrackingPage />} />
             <Route path="nutrition" element={<NutritionPage />} />
             <Route path="workout" element={<WorkoutPage />} />
             <Route path="utilities" element={<UtilitiesPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="entrenador" element={<CoachPage />} />
+            <Route path="entrenador/alumnos/:linkId" element={<CoachClientPage />} />
+            <Route path="invitacion/:token" element={<InvitationPage />} />
           </Route>
-          <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/login" element={<HomeRedirect />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

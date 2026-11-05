@@ -15,6 +15,7 @@ import { SettingsPersonalSection } from '../components/settings/SettingsPersonal
 import { SettingsThemeSection } from '../components/settings/SettingsThemeSection';
 import { SettingsWorkoutSection } from '../components/settings/SettingsWorkoutSection';
 import { SettingsDataSection } from '../components/settings/SettingsDataSection';
+import { SettingsCoachSection } from '../components/settings/SettingsCoachSection';
 import { useAuth } from '../context/AuthContext';
 import { applyThemeColor, readThemeColor } from '../utils/colorHelper';
 import { Skeleton } from '../components/ui/skeleton';
@@ -419,6 +420,8 @@ export default function SettingsPage() {
               onOpenHevyModal={() => setIsHevyModalOpen(true)}
             />
           )}
+
+          {activeSection === 'coach' && <SettingsCoachSection />}
 
           {activeSection === 'data' && (
             <SettingsDataSection
