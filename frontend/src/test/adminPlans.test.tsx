@@ -55,9 +55,11 @@ describe('Planes de entrenadores (administración)', () => {
   afterEach(cleanup);
 
   it('sets a paid plan until a date, and the free plan without one', async () => {
-    mockedApi.get.mockImplementation(async (url: string) =>
-      url === '/admin/me' ? { data: { admin: true } } : { data: overview },
-    );
+    mockedApi.get.mockImplementation(async (url: string) => {
+      if (url === '/admin/me') return { data: { admin: true } };
+      if (url === '/admin/contact-requests') return { data: [] };
+      return { data: overview };
+    });
     mockedApi.put.mockResolvedValue({ data: overview.coaches[0] });
     renderPage();
 
@@ -83,6 +85,39 @@ describe('Planes de entrenadores (administración)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Guardar plan' }));
     await vi.waitFor(() =>
       expect(mockedApi.put).toHaveBeenLastCalledWith('/admin/coaches/c1/plan', { plan: 'FREE' }),
+    );
+  });
+
+  it('lists contact requests and marks one as handled', async () => {
+    mockedApi.get.mockImplementation(async (url: string) => {
+      if (url === '/admin/me') return { data: { admin: true } };
+      if (url === '/admin/contact-requests')
+        return {
+          data: [
+            {
+              id: 'r1',
+              name: 'Luis',
+              email: 'luis@gym.test',
+              topic: 'CUSTOM',
+              message: 'Tengo 80 alumnos',
+              desiredClients: 80,
+              createdAt: '2026-11-05T10:00:00Z',
+              handledAt: null,
+            },
+          ],
+        };
+      return { data: { plans: overview.plans, coaches: [] } };
+    });
+    mockedApi.put.mockResolvedValue({ data: undefined });
+    renderPage();
+
+    expect(await screen.findByText('Tengo 80 alumnos')).toBeTruthy();
+    expect(screen.getByText(/Plan a medida · .* · 80 alumnos/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Marcar como atendida' }));
+    await vi.waitFor(() =>
+      expect(mockedApi.put).toHaveBeenCalledWith('/admin/contact-requests/r1/handled', {
+        handled: true,
+      }),
     );
   });
 

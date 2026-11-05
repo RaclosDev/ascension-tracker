@@ -8,6 +8,11 @@ import {
   type AdminCoach,
   type PlanInfo,
 } from '../lib/admin/plans';
+import {
+  useAdminContactRequests,
+  useSetContactHandled,
+  type AdminContactRequest,
+} from '../lib/coach/plan';
 
 const PLAN_NAMES: Record<string, string> = {
   FREE: 'Gratis',
@@ -71,7 +76,71 @@ export default function AdminPlansPage() {
           <CoachRow key={coach.coachId} coach={coach} plans={overview.data.plans} />
         ))}
       </ul>
+      {isAdmin.data === true && <ContactRequests />}
     </div>
+  );
+}
+
+const TOPIC_NAMES: Record<string, string> = {
+  PLAN: 'Plan',
+  CUSTOM: 'Plan a medida',
+  OTHER: 'Otra consulta',
+};
+
+/** Messages from the in-app contact form, open ones first. */
+function ContactRequests() {
+  const requests = useAdminContactRequests(true);
+  return (
+    <section className="mt-8">
+      <h2 className="text-xl font-black text-white mb-3">Solicitudes de contacto</h2>
+      {requests.isLoading && <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>}
+      {requests.isError && (
+        <p role="alert">
+          {apiErrorMessage(requests.error, 'No se pudieron cargar las solicitudes.')}
+        </p>
+      )}
+      {requests.data?.length === 0 && (
+        <p style={{ color: 'var(--text-secondary)' }}>No hay solicitudes.</p>
+      )}
+      <ul className="flex flex-col gap-3">
+        {requests.data?.map((request) => (
+          <ContactRow key={request.id} request={request} />
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function ContactRow({ request }: { request: AdminContactRequest }) {
+  const setHandled = useSetContactHandled();
+  const handled = request.handledAt !== null;
+  const toggle = () =>
+    setHandled.mutate(
+      { id: request.id, handled: !handled },
+      { onError: (error) => toast.error(apiErrorMessage(error, 'No se pudo guardar.')) },
+    );
+  return (
+    <li className="card flex flex-col gap-2" style={handled ? { opacity: 0.6 } : undefined}>
+      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+        {TOPIC_NAMES[request.topic] ?? request.topic} · {formatDate(request.createdAt)}
+        {request.desiredClients !== null && ` · ${request.desiredClients} alumnos`}
+      </p>
+      <p className="font-bold text-white truncate">
+        {request.name ? `${request.name} · ` : ''}
+        <a href={`mailto:${request.email}`} className="underline">
+          {request.email}
+        </a>
+      </p>
+      <p className="whitespace-pre-wrap break-words">{request.message}</p>
+      <button
+        type="button"
+        className="btn btn-secondary self-start"
+        disabled={setHandled.isPending}
+        onClick={toggle}
+      >
+        {handled ? 'Marcar como pendiente' : 'Marcar como atendida'}
+      </button>
+    </li>
   );
 }
 

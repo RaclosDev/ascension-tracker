@@ -5,6 +5,8 @@ import com.ascension.dto.AdminDtos.AdminCoach;
 import com.ascension.dto.AdminDtos.CoachPlans;
 import com.ascension.dto.AdminDtos.PlanChange;
 import com.ascension.dto.AdminDtos.PlanInfo;
+import com.ascension.dto.CoachSubscriptionDtos.Billing;
+import com.ascension.dto.CoachSubscriptionDtos.PlanOffer;
 import com.ascension.dto.CoachSubscriptionDtos.Subscription;
 import com.ascension.dto.CoachSubscriptionDtos.SubscriptionExport;
 import com.ascension.exception.EntityNotFoundException;
@@ -108,6 +110,22 @@ public class CoachSubscriptionService implements AiDailyLimitResolver {
             limit = Math.max(limit, properties.plan(effectivePlan(row)).getAiDailyLimit());
         }
         return limit;
+    }
+
+    /** The plans with their prices and the bank transfer details, blank ones as null. */
+    public Billing billing() {
+        int months = properties.getAnnualMonths();
+        List<PlanOffer> offers = properties.getPlans().entrySet().stream()
+                .map(e -> new PlanOffer(e.getKey(), e.getValue().getMaxClients(), e.getValue().getAiDailyLimit(),
+                        e.getValue().getMonthlyPriceEur(), e.getValue().getMonthlyPriceEur() * months))
+                .toList();
+        CoachPlanProperties.Billing billing = properties.getBilling();
+        return new Billing(offers, months, blankToNull(billing.getTransferHolder()),
+                blankToNull(billing.getTransferIban()));
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     /** Every coach with their plan, for the back office. */

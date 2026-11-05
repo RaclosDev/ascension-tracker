@@ -78,4 +78,7 @@ public class UserDataExportDTO {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
     @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
     private List<com.ascension.dto.ProgressPhotoDtos.ExportedPhoto> progressPhotos;
+    /** Messages the user sent us from the contact form. Export only, like {@link #coaching}. */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+    private List<com.ascension.dto.ContactDtos.ContactRequestExport> contactRequests;
 }

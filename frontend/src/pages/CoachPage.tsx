@@ -5,7 +5,16 @@ import { ClientStatusBadge } from '../components/coach/ClientStatusBadge';
 import { LEVEL_ORDER, useClientStatus } from '../lib/coach/clientStatus';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ChefHat, ClipboardList, Copy, Link2, Trash2, UserMinus, Users } from 'lucide-react';
+import {
+  ChefHat,
+  ClipboardList,
+  Copy,
+  CreditCard,
+  Link2,
+  Trash2,
+  UserMinus,
+  Users,
+} from 'lucide-react';
 import {
   apiErrorMessage,
   formatCoachDate,
@@ -40,6 +49,7 @@ export default function CoachPage() {
           <Clients />
           <ProgramsLink />
           <RecipesLink />
+          <PlanLink />
           <CheckinTemplateEditor />
         </div>
       )}
@@ -248,6 +258,24 @@ function RecipesLink() {
         </p>
       </div>
       <Link to="/entrenador/recetas" className="btn btn-secondary">
+        Abrir
+      </Link>
+    </section>
+  );
+}
+
+function PlanLink() {
+  return (
+    <section className="card flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <h2 className="card-title flex items-center gap-2">
+          <CreditCard size={18} aria-hidden /> Plan y facturación
+        </h2>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          Tu plan, los precios y cómo pagar. ¿Quieres un plan a medida? Escríbenos desde ahí.
+        </p>
+      </div>
+      <Link to="/entrenador/plan" className="btn btn-secondary">
         Abrir
       </Link>
     </section>

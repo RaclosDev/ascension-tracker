@@ -5,7 +5,9 @@ import com.ascension.dto.AdminDtos.AdminCoach;
 import com.ascension.dto.AdminDtos.AdminStatus;
 import com.ascension.dto.AdminDtos.CoachPlans;
 import com.ascension.dto.AdminDtos.PlanChange;
+import com.ascension.dto.ContactDtos.AdminContactRequest;
 import com.ascension.service.CoachSubscriptionService;
+import com.ascension.service.ContactRequestService;
 import com.ascension.util.PiiMasker;
 import com.ascension.util.SecurityUtils;
 import jakarta.validation.Valid;
@@ -17,6 +19,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 /** Back office: coaches' plans, set by hand while billing is a monthly bank transfer. */
@@ -28,6 +31,7 @@ public class AdminController {
 
     private final AdminProperties adminProperties;
     private final CoachSubscriptionService subscriptionService;
+    private final ContactRequestService contactRequestService;
 
     @GetMapping("/me")
     public ResponseEntity<AdminStatus> me(@AuthenticationPrincipal Jwt jwt) {
@@ -50,6 +54,23 @@ public class AdminController {
         log.info("Admin {} set coach {} to plan {} until {}", PiiMasker.maskEmail(admin), coachId,
                 updated.plan(), updated.currentPeriodEnd());
         return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/contact-requests")
+    public ResponseEntity<List<AdminContactRequest>> contactRequests(@AuthenticationPrincipal Jwt jwt) {
+        requireAdmin(jwt);
+        return ResponseEntity.ok(contactRequestService.listForAdmin());
+    }
+
+    @PutMapping("/contact-requests/{id}/handled")
+    public ResponseEntity<Void> setHandled(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id,
+                                           @RequestBody HandledChange change) {
+        requireAdmin(jwt);
+        contactRequestService.setHandled(id, change.handled());
+        return ResponseEntity.noContent().build();
+    }
+
+    public record HandledChange(boolean handled) {
     }
 
     private String requireAdmin(Jwt jwt) {

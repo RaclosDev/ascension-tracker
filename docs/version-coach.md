@@ -72,8 +72,12 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 **Pago por transferencia.** De momento los entrenadores pagan con una transferencia mensual. Cuando llega, el administrador entra en la página «Planes de entrenadores», elige el plan y hasta qué día está pagado. Al pasar esa fecha sin renovar, el entrenador vuelve al plan gratis sin perder a ningún alumno. Solo las cuentas de administrador ven esa página.
 
-**Privacidad.** La descarga de datos del entrenador incluye su plan y sus fechas, y al borrar la cuenta se borra también.
+**Plan y facturación.** El entrenador tiene una página con su plan actual (días de prueba que le quedan o hasta cuándo está pagado, alumnos usados y consultas de IA al día), los precios de cada plan (Básico 19 €, Pro 39 € y Élite 69 € al mes; pagando el año entero, dos meses gratis) y cómo pagar por transferencia.
 
-*El pago con tarjeta, la página «Plan y facturación» del entrenador y los textos legales llegarán más adelante.*
+**Contacto y planes a medida.** Desde esa misma página cualquiera puede escribirnos: para contratar un plan, pedir uno a medida (más de 50 alumnos, equipos, gimnasios) o cualquier otra duda. El administrador recibe un aviso en el móvil y ve los mensajes en su página, donde los marca como atendidos. Se pueden enviar hasta tres mensajes al día.
+
+**Privacidad.** La descarga de datos del entrenador incluye su plan, sus fechas y los mensajes que nos ha enviado; al borrar la cuenta se borra todo.
+
+*El pago con tarjeta y los textos legales llegarán más adelante.*
 
 *Se irá completando a medida que avance.*

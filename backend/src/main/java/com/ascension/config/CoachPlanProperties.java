@@ -21,11 +21,22 @@ public class CoachPlanProperties {
     private String trialPlan = "PRO";
     private String freePlan = "FREE";
     private Map<String, Plan> plans = new LinkedHashMap<>();
+    /** Months charged for a year paid upfront. */
+    private int annualMonths = 10;
+    private Billing billing = new Billing();
 
     @Data
     public static class Plan {
         private int maxClients;
         private int aiDailyLimit;
+        private int monthlyPriceEur;
+    }
+
+    /** Where coaches send the monthly bank transfer while there is no card payment. */
+    @Data
+    public static class Billing {
+        private String transferHolder;
+        private String transferIban;
     }
 
     /** The limits of a plan id, matched case-insensitively; unknown ids fall back to the free plan. */

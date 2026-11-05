@@ -76,6 +76,11 @@ public class CoachService {
         subscriptionService.startTrial(requireCoachId(coachEmail));
     }
 
+    public com.ascension.dto.CoachSubscriptionDtos.Billing billing(String coachEmail) {
+        requireCoachId(coachEmail);
+        return subscriptionService.billing();
+    }
+
     public com.ascension.dto.CoachSubscriptionDtos.Subscription subscription(String coachEmail) {
         return subscriptionService.summary(requireCoachId(coachEmail));
     }

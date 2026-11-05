@@ -51,6 +51,13 @@ public class CoachController {
         return ResponseEntity.ok(coachService.subscription(email));
     }
 
+    @GetMapping("/billing")
+    public ResponseEntity<com.ascension.dto.CoachSubscriptionDtos.Billing> billing(@AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(coachService.billing(email));
+    }
+
     @GetMapping("/invitations")
     public ResponseEntity<List<PendingInvitation>> invitations(@AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);

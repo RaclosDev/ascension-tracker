@@ -77,19 +77,27 @@ app:
     trial-days: ${COACH_TRIAL_DAYS:14}
     trial-plan: PRO
     free-plan: FREE
+    annual-months: 10
+    billing:
+      transfer-holder: ${COACH_BILLING_HOLDER:}
+      transfer-iban: ${COACH_BILLING_IBAN:}
     plans:
       FREE:
         max-clients: 1
         ai-daily-limit: 50
+        monthly-price-eur: 0
       STARTER:
         max-clients: 10
         ai-daily-limit: 100
+        monthly-price-eur: 19
       PRO:
         max-clients: 25
         ai-daily-limit: 150
+        monthly-price-eur: 39
       ELITE:
         max-clients: 50
         ai-daily-limit: 250
+        monthly-price-eur: 69
   quotas:
     max-workouts: ${QUOTA_MAX_WORKOUTS:3000}
     max-food-logs: ${QUOTA_MAX_FOOD_LOGS:25000}

@@ -17,6 +17,14 @@ public final class CoachSubscriptionDtos {
                                Instant currentPeriodEnd) {
     }
 
+    public record PlanOffer(String id, int maxClients, int aiDailyLimit, int monthlyPriceEur, int annualPriceEur) {
+    }
+
+    /** The plans on offer and, when configured, the account to pay by bank transfer. */
+    public record Billing(java.util.List<PlanOffer> plans, int annualMonths, String transferHolder,
+                          String transferIban) {
+    }
+
     public record SubscriptionExport(String plan, String status, Instant trialEndsAt, Instant currentPeriodEnd,
                                      String stripeCustomerId, String stripeSubscriptionId,
                                      Instant createdAt, Instant updatedAt) {
