@@ -68,6 +68,24 @@ describe('Google sign-in parity with PorrApp', () => {
     expect(screen.getByRole('dialog')).toBeVisible();
   });
 
+  it('falls back to the dialog when Google cannot show its chooser', () => {
+    oauth.scriptLoadedSuccessfully = true;
+    vi.stubGlobal('google', { accounts: { id: { initialize: vi.fn() } } });
+    render(<GoogleSignInButton onCredential={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
+    expect(screen.getByRole('dialog')).toBeVisible();
+  });
+
+  it('falls back to the dialog when the chooser throws', () => {
+    const id = stubGoogle(false);
+    id.prompt.mockImplementation(() => {
+      throw new Error('FedCM blocked');
+    });
+    render(<GoogleSignInButton onCredential={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
+    expect(screen.getByRole('dialog')).toBeVisible();
+  });
+
   it('uses a full-page redirect inside the installed iOS PWA', () => {
     Object.defineProperty(navigator, 'standalone', { configurable: true, value: true });
     try {

@@ -67,22 +67,29 @@ export default function GoogleSignInButton({
   // Google button when the browser can't show it (cooldown, blocked FedCM, script missing).
   const start = useCallback(() => {
     const identity = googleIdentity();
-    if (!identity || !clientId || !scriptLoadedSuccessfully) {
-      dialog.current?.showModal();
+    const fallback = () => {
+      if (!dialog.current?.open) dialog.current?.showModal();
+    };
+    if (typeof identity?.prompt !== 'function' || !clientId || !scriptLoadedSuccessfully) {
+      fallback();
       return;
     }
-    identity.initialize({
-      client_id: clientId,
-      callback: handleSuccess,
-      ux_mode: uxMode,
-      login_uri: loginUri,
-      context: 'signin',
-      itp_support: true,
-      use_fedcm_for_prompt: true,
-    });
-    identity.prompt((moment) => {
-      if (moment.isSkippedMoment?.()) dialog.current?.showModal();
-    });
+    try {
+      identity.initialize({
+        client_id: clientId,
+        callback: handleSuccess,
+        ux_mode: uxMode,
+        login_uri: loginUri,
+        context: 'signin',
+        itp_support: true,
+        use_fedcm_for_prompt: true,
+      });
+      identity.prompt((moment) => {
+        if (moment.isSkippedMoment?.()) fallback();
+      });
+    } catch {
+      fallback();
+    }
   }, [clientId, scriptLoadedSuccessfully, handleSuccess, uxMode, loginUri]);
 
   useEffect(() => {
