@@ -4,9 +4,11 @@ import com.ascension.dto.CoachDtos.AccessLogEntry;
 import com.ascension.dto.CoachDtos.InvitationPreview;
 import com.ascension.dto.CoachDtos.MyCoach;
 import com.ascension.dto.CoachDtos.Permissions;
+import com.ascension.dto.CoachDtos.WorkoutComment;
 import com.ascension.dto.ProgramDtos.TodayPlan;
 import com.ascension.exception.InvalidInputException;
 import com.ascension.service.ClientProgramService;
+import com.ascension.service.CoachSessionService;
 import com.ascension.service.CoachService;
 import com.ascension.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class CoachingController {
 
     private final CoachService coachService;
     private final ClientProgramService clientProgramService;
+    private final CoachSessionService sessionService;
 
     /**
      * What each active program prescribes on {@code date}: the client's local day, since the server's
@@ -55,6 +58,15 @@ public class CoachingController {
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         clientProgramService.end(email, assignmentId);
         return ResponseEntity.noContent().build();
+    }
+
+    /** What the client's coaches said about one of the client's own workouts. */
+    @GetMapping("/workouts/{workoutId}/comments")
+    public ResponseEntity<List<WorkoutComment>> workoutComments(@PathVariable String workoutId,
+                                                                @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(sessionService.commentsFor(email, workoutId));
     }
 
     @GetMapping("/invitations/{token}")

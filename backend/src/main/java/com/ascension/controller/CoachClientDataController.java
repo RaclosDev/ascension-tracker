@@ -1,5 +1,6 @@
 package com.ascension.controller;
 
+import com.ascension.dto.CoachDtos.CommentRequest;
 import com.ascension.dto.CoachDtos.Targets;
 import com.ascension.dto.CustomExerciseDTO;
 import com.ascension.dto.DashboardDTO;
@@ -11,6 +12,7 @@ import com.ascension.dto.WorkoutDTO;
 import com.ascension.dto.WorkoutStatsDTO;
 import com.ascension.service.CoachAccessPolicy;
 import com.ascension.service.CoachAccessPolicy.Action;
+import com.ascension.service.CoachSessionService;
 import com.ascension.service.CustomExerciseService;
 import com.ascension.service.NutritionLogService;
 import com.ascension.service.SettingsService;
@@ -18,6 +20,7 @@ import com.ascension.service.StepsService;
 import com.ascension.service.WeightService;
 import com.ascension.service.WorkoutService;
 import com.ascension.util.SecurityUtils;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +41,7 @@ import java.util.function.Function;
 /**
  * Read-only view of a client's data for their coach. Every endpoint resolves the client through
  * {@link CoachAccessPolicy#require}, then reuses the client's own read path with the client's email,
- * so a coach never sees more than the client would and never writes anything.
+ * so a coach never sees more than the client would. The only write is the coach's own comment on a workout.
  */
 @Validated
 @RestController
@@ -53,6 +56,7 @@ public class CoachClientDataController {
     private final NutritionLogService nutritionLogService;
     private final SettingsService settingsService;
     private final CustomExerciseService customExerciseService;
+    private final CoachSessionService sessionService;
 
     @GetMapping("/weights")
     public ResponseEntity<List<WeightEntryDTO>> weights(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
@@ -111,6 +115,27 @@ public class CoachClientDataController {
     public ResponseEntity<WorkoutDTO> workout(@PathVariable UUID linkId, @PathVariable String workoutId,
                                               @AuthenticationPrincipal Jwt jwt) {
         return read(jwt, linkId, Action.VIEW_WORKOUTS, email -> workoutService.getWorkoutDetail(email, workoutId));
+    }
+
+    /** The coach's comment on one of the client's workouts; saving again replaces it. */
+    @PutMapping("/workouts/{workoutId}/comment")
+    public ResponseEntity<Void> comment(@PathVariable UUID linkId, @PathVariable String workoutId,
+                                        @Valid @RequestBody CommentRequest request,
+                                        @AuthenticationPrincipal Jwt jwt) {
+        String coachEmail = SecurityUtils.extractEmail(jwt);
+        if (coachEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        sessionService.comment(accessPolicy.require(coachEmail, linkId, Action.COMMENT_WORKOUT), workoutId,
+                request.text());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/workouts/{workoutId}/comment")
+    public ResponseEntity<Void> deleteComment(@PathVariable UUID linkId, @PathVariable String workoutId,
+                                              @AuthenticationPrincipal Jwt jwt) {
+        String coachEmail = SecurityUtils.extractEmail(jwt);
+        if (coachEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        sessionService.deleteComment(accessPolicy.require(coachEmail, linkId, Action.COMMENT_WORKOUT), workoutId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/nutrition/logs")

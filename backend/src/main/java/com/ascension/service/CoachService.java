@@ -3,6 +3,7 @@ package com.ascension.service;
 import com.ascension.dto.CoachDtos.AccessExport;
 import com.ascension.dto.CoachDtos.AccessLogEntry;
 import com.ascension.dto.CoachDtos.AssignmentExport;
+import com.ascension.dto.CoachDtos.CommentExport;
 import com.ascension.dto.CoachDtos.CoachClient;
 import com.ascension.dto.CoachDtos.CoachingExport;
 import com.ascension.dto.CoachDtos.CreatedInvitation;
@@ -304,12 +305,27 @@ public class CoachService {
                         rs.getString("program_name"), rs.getObject("start_date", LocalDate.class),
                         rs.getString("status"), instant(rs, "created_at"), instant(rs, "ended_at")),
                 userId, userId, userId, userId);
+        List<CommentExport> comments = jdbcTemplate.query("""
+                SELECT c.id, CASE WHEN c.coach_user_id = ? THEN 'COACH' ELSE 'CLIENT' END AS role,
+                       c.workout_id, c.body, c.created_at, c.updated_at, u.name, u.email, u.picture
+                FROM workout_comments c
+                JOIN workouts w ON w.id = c.workout_id
+                JOIN users u ON u.email = CASE WHEN c.coach_user_id = ? THEN w.user_email
+                                               ELSE (SELECT email FROM users WHERE id = c.coach_user_id) END
+                WHERE c.coach_user_id = ? OR w.user_email = (SELECT email FROM users WHERE id = ?)
+                ORDER BY c.created_at
+                """,
+                (rs, n) -> new CommentExport(rs.getObject("id", UUID.class), rs.getString("role"), person(rs),
+                        rs.getString("workout_id"), rs.getString("body"), instant(rs, "created_at"),
+                        instant(rs, "updated_at")),
+                userId, userId, userId, userId);
         if (coachSince.isEmpty() && asClient.isEmpty() && asCoach.isEmpty() && invitations.isEmpty()
-                && accessesToMyData.isEmpty() && myAccessesAsCoach.isEmpty() && assignments.isEmpty()) {
+                && accessesToMyData.isEmpty() && myAccessesAsCoach.isEmpty() && assignments.isEmpty()
+                && comments.isEmpty()) {
             return null;
         }
         return new CoachingExport(coachSince.isEmpty() ? null : coachSince.get(0), asClient, asCoach,
-                invitations, accessesToMyData, myAccessesAsCoach, assignments);
+                invitations, accessesToMyData, myAccessesAsCoach, assignments, comments);
     }
 
     // Column names come from the two callers above, never from input.

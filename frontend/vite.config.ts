@@ -22,6 +22,7 @@ export default defineConfig({
           '**/Coach*Page*',
           '**/coachPrograms-*',
           '**/TodayProgramCard-*',
+          '**/today-*',
           '**/exercises*.json',
           '**/ascension-title.png',
           '**/pwa-logo.png',

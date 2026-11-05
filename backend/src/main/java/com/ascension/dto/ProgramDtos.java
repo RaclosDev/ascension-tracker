@@ -77,6 +77,15 @@ public final class ProgramDtos {
      * One active program as the client sees it on a date. {@code phase} is UPCOMING before the start
      * date, FINISHED after the last week and ACTIVE otherwise; {@code day} is null on a rest day.
      */
+    /**
+     * One prescribed day of a client's program next to what they did. {@code date} is the day's calendar
+     * date; the workout fields are null until the client logs a workout for that day.
+     */
+    public record Session(UUID dayId, int week, int dayIndex, LocalDate date, String name, String notes,
+                          List<Exercise> exercises, String workoutId, String workoutName, Long finishedAt,
+                          String origin, String comment) {
+    }
+
     public record TodayPlan(UUID assignmentId, UUID programId, String programName, String coachName,
                             LocalDate startDate, int weeks, String phase, Integer week, Integer dayIndex,
                             TodayDay day, String completedWorkoutId) {

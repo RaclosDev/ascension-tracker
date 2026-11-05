@@ -27,7 +27,8 @@ public class CoachAccessPolicy {
         VIEW_NUTRITION(Scope.NUTRITION),
         VIEW_TARGETS(Scope.NUTRITION),
         VIEW_PROGRAMS(Scope.TRAINING),
-        ASSIGN_PROGRAM(Scope.EDIT_TRAINING);
+        ASSIGN_PROGRAM(Scope.EDIT_TRAINING),
+        COMMENT_WORKOUT(Scope.TRAINING);
 
         private final Scope scope;
 
