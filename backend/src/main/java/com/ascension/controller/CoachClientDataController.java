@@ -62,8 +62,12 @@ public class CoachClientDataController {
     private final ProgressPhotoService photoService;
 
     @GetMapping("/weights")
-    public ResponseEntity<List<WeightEntryDTO>> weights(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
-        return read(jwt, linkId, Action.VIEW_WEIGHT, weightService::getAllEntries);
+    public ResponseEntity<List<WeightEntryDTO>> weights(
+            @PathVariable UUID linkId,
+            @RequestParam(defaultValue = "365") @Min(value = 1, message = "Indica al menos 1 día") @Max(value = 3660, message = "Como mucho 10 años") int days,
+            @AuthenticationPrincipal Jwt jwt) {
+        LocalDate from = LocalDate.now().minusDays(days);
+        return read(jwt, linkId, Action.VIEW_WEIGHT, email -> weightService.getEntriesSince(email, from));
     }
 
     @GetMapping("/weights/dashboard")

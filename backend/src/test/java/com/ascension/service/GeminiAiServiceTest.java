@@ -108,7 +108,7 @@ class GeminiAiServiceTest {
                 () -> geminiAiService.validateAndGetMimeType(hugeImageBytes)
         );
 
-        assertThat(ex.getMessage()).contains("25 megapixels");
+        assertThat(ex.getMessage()).contains("25 megapíxeles");
     }
 
     @Test
@@ -282,6 +282,6 @@ class GeminiAiServiceTest {
                 IllegalArgumentException.class,
                 () -> geminiAiService.validateAndGetMimeType(oversizedWebp)
         );
-        org.junit.jupiter.api.Assertions.assertTrue(ex.getMessage().contains("exceeds maximum allowed limit of 25 megapixels"));
+        org.junit.jupiter.api.Assertions.assertTrue(ex.getMessage().contains("supera el máximo de 25 megapíxeles"));
     }
 }

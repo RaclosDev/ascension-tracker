@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.exception.InvalidInputException;
 import com.ascension.dto.*;
 import com.ascension.model.*;
 import com.ascension.repository.*;
@@ -99,23 +100,23 @@ public class UserDataRestoreService {
     @Transactional
     public UserDataRestoreSummaryDTO restoreUserData(String userEmail, RestoreMode mode, boolean confirmEmpty, UserDataExportDTO backup) {
         if (userEmail == null || userEmail.trim().isEmpty()) {
-            throw new IllegalArgumentException("El email de usuario autenticado es obligatorio");
+            throw new InvalidInputException("El email de usuario autenticado es obligatorio");
         }
         if (mode == null) {
-            throw new IllegalArgumentException("El modo de restauración es obligatorio (MERGE o OVERWRITE)");
+            throw new InvalidInputException("El modo de restauración es obligatorio (MERGE o OVERWRITE)");
         }
         if (backup == null) {
-            throw new IllegalArgumentException("El archivo de copia de seguridad no puede ser nulo");
+            throw new InvalidInputException("El archivo de copia de seguridad no puede ser nulo");
         }
         if (backup.getVersion() == null || !"1.0".equals(backup.getVersion())) {
-            throw new IllegalArgumentException("Versión de copia de seguridad incompatible: " + backup.getVersion());
+            throw new InvalidInputException("Versión de copia de seguridad incompatible: " + backup.getVersion());
         }
 
         boolean isOverwrite = (mode == RestoreMode.OVERWRITE);
         String appliedMode = mode.name();
 
         if (isOverwrite && isBackupEmpty(backup) && !confirmEmpty) {
-            throw new IllegalArgumentException("No se puede realizar OVERWRITE con un backup completamente vacío sin confirmación explícita (confirmEmpty=true).");
+            throw new InvalidInputException("No se puede realizar OVERWRITE con un backup completamente vacío sin confirmación explícita (confirmEmpty=true).");
         }
 
         userDataQuotaService.acquireUserQuotaLock(userEmail);
@@ -172,13 +173,13 @@ public class UserDataRestoreService {
     @Transactional
     public UserDataRestoreSummaryDTO restoreUserData(String userEmail, String mode, UserDataExportDTO backup) {
         if (mode == null || mode.trim().isEmpty()) {
-            throw new IllegalArgumentException("El modo de restauración es obligatorio (MERGE o OVERWRITE)");
+            throw new InvalidInputException("El modo de restauración es obligatorio (MERGE o OVERWRITE)");
         }
         RestoreMode restoreMode;
         try {
             restoreMode = RestoreMode.valueOf(mode.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Modo de restauración inválido: " + mode);
+            throw new InvalidInputException("Modo de restauración inválido: " + mode);
         }
         return restoreUserData(userEmail, restoreMode, false, backup);
     }

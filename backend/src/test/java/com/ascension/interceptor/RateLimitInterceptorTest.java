@@ -130,6 +130,19 @@ class RateLimitInterceptorTest {
     }
 
     @Test
+    void coachPhotoAndPublicEndpointsHaveTheirOwnGroups() throws Exception {
+        assertThat(RateLimitInterceptor.groupOf("/api/coach/clients/x/weights")).isEqualTo("coach");
+        assertThat(RateLimitInterceptor.groupOf("/api/coaching/invitations/t")).isEqualTo("coach");
+        assertThat(RateLimitInterceptor.groupOf("/api/progress-photos")).isEqualTo("photos");
+        assertThat(RateLimitInterceptor.groupOf("/api/public/info")).isEqualTo("public");
+        for (int i = 0; i < 30; i++) {
+            assertThat(hit("/api/public/info", "10.0.2.1")).isEqualTo(200);
+        }
+        assertThat(hit("/api/public/info", "10.0.2.1")).isEqualTo(429);
+        assertThat(hit("/api/public/info", "10.0.2.2")).isEqualTo(200);
+    }
+
+    @Test
     void refreshEndpointsAreRateLimitedPerIp() throws Exception {
         for (int i = 0; i < 30; i++) {
             assertThat(hit("/api/auth/refresh", "10.0.1.1")).isEqualTo(200);

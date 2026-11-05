@@ -53,7 +53,8 @@ class CoachModeIntegrationTest {
     void clientConsentsAndCoachReadsOnlyWhatWasGranted() throws Exception {
         String coach = coach();
         String client = user();
-        weights.saveEntry(client, WeightEntryDTO.builder().date(LocalDate.of(2026, 1, 5)).weight(81.4).build());
+        weights.saveEntry(client, WeightEntryDTO.builder().date(LocalDate.now().minusDays(10)).weight(81.4).build());
+        weights.saveEntry(client, WeightEntryDTO.builder().date(LocalDate.now().minusDays(400)).weight(90.0).build());
         String token = invite(coach);
 
         mvc.perform(as(get("/api/coaching/invitations/{token}", token), client))
@@ -69,9 +70,14 @@ class CoachModeIntegrationTest {
                 .andExpect(jsonPath("$[0].permissions.body").value(true));
         mvc.perform(as(get("/api/coach/clients/{id}/weights", linkId), coach))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].weight").value(81.4));
-        mvc.perform(as(get("/api/coach/clients/{id}/weights", linkId), coach))
-                .andExpect(status().isOk());
+        mvc.perform(as(get("/api/coach/clients/{id}/weights", linkId).param("days", "3650"), coach))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].weight").value(90.0));
+        mvc.perform(as(get("/api/coach/clients/{id}/weights", linkId).param("days", "0"), coach))
+                .andExpect(status().isBadRequest());
         mvc.perform(as(get("/api/coach/clients/{id}/workouts", linkId), coach))
                 .andExpect(status().isForbidden());
         mvc.perform(as(get("/api/coach/clients/{id}/nutrition/logs", linkId).param("date", "2026-01-05"), coach))
