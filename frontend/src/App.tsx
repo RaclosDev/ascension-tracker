@@ -84,8 +84,29 @@ function AppContent() {
     }
   }, [token]);
 
-  // Wait for auth to finish (proactive refresh if JWT was expired)
-  if (!isReady) return null;
+  const legalRoutes = LEGAL_DOCS.map((doc) => (
+    <Route
+      key={doc}
+      path={`/${doc}`}
+      element={
+        <Suspense fallback={<PageLoader />}>
+          <LegalPage doc={doc} />
+        </Suspense>
+      }
+    />
+  ));
+
+  // Wait for auth to finish (proactive refresh if JWT was expired); the legal pages need no session.
+  if (!isReady) {
+    return (
+      <ErrorBoundary>
+        <Routes>
+          {legalRoutes}
+          <Route path="*" element={null} />
+        </Routes>
+      </ErrorBoundary>
+    );
+  }
 
   if (!token) {
     return (
@@ -93,17 +114,7 @@ function AppContent() {
         <Routes>
           <Route path="/login" element={<LandingPage />} />
           <Route path="/invitacion/:token" element={<RememberInvitation />} />
-          {LEGAL_DOCS.map((doc) => (
-            <Route
-              key={doc}
-              path={`/${doc}`}
-              element={
-                <Suspense fallback={<PageLoader />}>
-                  <LegalPage doc={doc} />
-                </Suspense>
-              }
-            />
-          ))}
+          {legalRoutes}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </ErrorBoundary>
