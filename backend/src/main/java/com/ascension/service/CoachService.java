@@ -45,7 +45,6 @@ public class CoachService {
 
     static final Duration INVITATION_TTL = Duration.ofDays(7);
     static final int MAX_OPEN_INVITATIONS = 20;
-    static final int MAX_ACTIVE_CLIENTS = 200;
     private static final int ACCESS_LOG_DAYS = 90;
     private static final int ACCESS_LOG_LIMIT = 500;
     // 32 random bytes as unpadded base64url.
@@ -54,13 +53,15 @@ public class CoachService {
     private final JdbcTemplate jdbcTemplate;
     private final NutritionPlanService nutritionPlanService;
     private final CheckinService checkinService;
+    private final CoachSubscriptionService subscriptionService;
     private final SecureRandom random = new SecureRandom();
 
     public CoachService(JdbcTemplate jdbcTemplate, NutritionPlanService nutritionPlanService,
-                        CheckinService checkinService) {
+                        CheckinService checkinService, CoachSubscriptionService subscriptionService) {
         this.jdbcTemplate = jdbcTemplate;
         this.nutritionPlanService = nutritionPlanService;
         this.checkinService = checkinService;
+        this.subscriptionService = subscriptionService;
     }
 
     // ---- Coach side ----
@@ -72,6 +73,11 @@ public class CoachService {
                 SELECT id FROM users WHERE email = ?
                 ON CONFLICT (user_id) DO NOTHING
                 """, normalize(coachEmail));
+        subscriptionService.startTrial(requireCoachId(coachEmail));
+    }
+
+    public com.ascension.dto.CoachSubscriptionDtos.Subscription subscription(String coachEmail) {
+        return subscriptionService.summary(requireCoachId(coachEmail));
     }
 
     public boolean isCoach(String email) {
@@ -95,8 +101,11 @@ public class CoachService {
         if (open != null && open >= MAX_OPEN_INVITATIONS) {
             throw new InvalidInputException("Tienes demasiadas invitaciones pendientes. Revoca alguna antes de crear otra.");
         }
-        if (activeClientCount(coachId) >= MAX_ACTIVE_CLIENTS) {
-            throw new InvalidInputException("Has alcanzado el máximo de alumnos activos.");
+        int maxClients = subscriptionService.maxClients(coachId);
+        if (activeClientCount(coachId) >= maxClients) {
+            throw new InvalidInputException("Tu plan admite " + maxClients
+                    + (maxClients == 1 ? " alumno activo" : " alumnos activos")
+                    + ". Cambia de plan o termina la relación con algún alumno para invitar a otro.");
         }
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
@@ -187,7 +196,7 @@ public class CoachService {
         if (activeLinkExists(invitation.coachUserId(), clientId)) {
             throw new InvalidInputException("Ya estás vinculado con este entrenador.");
         }
-        if (activeClientCount(invitation.coachUserId()) >= MAX_ACTIVE_CLIENTS) {
+        if (activeClientCount(invitation.coachUserId()) >= subscriptionService.maxClients(invitation.coachUserId())) {
             throw new InvalidInputException("Este entrenador no admite más alumnos ahora mismo.");
         }
         UUID linkId;
@@ -328,12 +337,13 @@ public class CoachService {
                 userId, userId, userId, userId);
         var nutritionPlans = nutritionPlanService.exportFor(userId);
         var checkins = checkinService.exportFor(userId);
-        if (coachSince.isEmpty() && asClient.isEmpty() && asCoach.isEmpty() && invitations.isEmpty()
+        var subscription = subscriptionService.exportFor(userId);
+        if (coachSince.isEmpty() && subscription == null && asClient.isEmpty() && asCoach.isEmpty() && invitations.isEmpty()
                 && accessesToMyData.isEmpty() && myAccessesAsCoach.isEmpty() && assignments.isEmpty()
                 && comments.isEmpty() && nutritionPlans.isEmpty() && checkins.isEmpty()) {
             return null;
         }
-        return new CoachingExport(coachSince.isEmpty() ? null : coachSince.get(0), asClient, asCoach,
+        return new CoachingExport(coachSince.isEmpty() ? null : coachSince.get(0), subscription, asClient, asCoach,
                 invitations, accessesToMyData, myAccessesAsCoach, assignments, comments, nutritionPlans, checkins);
     }
 

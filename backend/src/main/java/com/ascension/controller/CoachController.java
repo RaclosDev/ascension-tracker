@@ -43,6 +43,14 @@ public class CoachController {
         return ResponseEntity.ok(new CoachStatus(true));
     }
 
+    @GetMapping("/subscription")
+    public ResponseEntity<com.ascension.dto.CoachSubscriptionDtos.Subscription> subscription(
+            @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(coachService.subscription(email));
+    }
+
     @GetMapping("/invitations")
     public ResponseEntity<List<PendingInvitation>> invitations(@AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);

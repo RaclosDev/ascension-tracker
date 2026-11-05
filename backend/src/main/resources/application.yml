@@ -71,6 +71,23 @@ app:
     food-external-limit: ${RATE_LIMIT_FOOD_EXTERNAL:20}
     push-limit: ${RATE_LIMIT_PUSH:20}
     max-requests-per-minute: ${RATE_LIMIT_GENERAL:20}
+  coach:
+    trial-days: ${COACH_TRIAL_DAYS:14}
+    trial-plan: PRO
+    free-plan: FREE
+    plans:
+      FREE:
+        max-clients: 1
+        ai-daily-limit: 50
+      STARTER:
+        max-clients: 10
+        ai-daily-limit: 100
+      PRO:
+        max-clients: 25
+        ai-daily-limit: 150
+      ELITE:
+        max-clients: 50
+        ai-daily-limit: 250
   quotas:
     max-workouts: ${QUOTA_MAX_WORKOUTS:3000}
     max-food-logs: ${QUOTA_MAX_FOOD_LOGS:25000}
