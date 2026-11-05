@@ -5,6 +5,7 @@ import com.ascension.service.ConsentService;
 import com.ascension.util.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -26,10 +27,11 @@ public class ConsentInterceptor implements HandlerInterceptor {
 
     private static final Pattern CHECKIN = Pattern.compile("/api/coaching/coaches/[^/]+/checkin");
 
-    private final ConsentService consentService;
+    /** Resolved per call, so web slices that switch enforcement off do not need the service. */
+    private final ObjectProvider<ConsentService> consentService;
     private final boolean enforce;
 
-    public ConsentInterceptor(ConsentService consentService,
+    public ConsentInterceptor(ObjectProvider<ConsentService> consentService,
                               @Value("${app.consent.enforce:true}") boolean enforce) {
         this.consentService = consentService;
         this.enforce = enforce;
@@ -49,8 +51,9 @@ public class ConsentInterceptor implements HandlerInterceptor {
         if (email == null) {
             return true; // Security has already refused anonymous calls to these paths.
         }
+        ConsentService consents = consentService.getObject();
         for (Kind kind : needed) {
-            if (!consentService.isGranted(email, kind)) {
+            if (!consents.isGranted(email, kind)) {
                 return reject(response, kind);
             }
         }

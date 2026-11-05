@@ -2,7 +2,7 @@
 -- added, never changed, so the history proves what was accepted and when (GDPR art. 7.1).
 CREATE TABLE user_consents (
     id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
     kind       VARCHAR(32) NOT NULL CHECK (kind IN ('TERMS', 'PRIVACY', 'HEALTH_DATA', 'AI_HEALTH', 'COACH_TERMS')),
     version    VARCHAR(32) NOT NULL,
     granted    BOOLEAN NOT NULL,

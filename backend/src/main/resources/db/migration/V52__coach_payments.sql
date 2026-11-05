@@ -3,7 +3,7 @@
 -- snapshot. Invoices are issued with external software; only their reference is stored here.
 CREATE TABLE coach_payments (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    coach_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    coach_user_id UUID REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE,
     coach_name    VARCHAR(255),
     coach_email   VARCHAR(255) NOT NULL,
     plan          VARCHAR(20) NOT NULL,
