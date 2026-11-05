@@ -70,11 +70,23 @@ describe('Planes de entrenadores (administración)', () => {
     fireEvent.change(screen.getByLabelText('Pagado hasta para ana@coach.test'), {
       target: { value: '2026-12-04' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar plan' }));
+    const saveButton = screen.getByRole('button', { name: 'Guardar plan' }) as HTMLButtonElement;
+    expect(saveButton.disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText('Importe cobrado a ana@coach.test'), {
+      target: { value: '36,30' },
+    });
+    fireEvent.change(screen.getByLabelText('Número de factura de ana@coach.test'), {
+      target: { value: ' F-2026-007 ' },
+    });
+    fireEvent.click(saveButton);
     await vi.waitFor(() =>
       expect(mockedApi.put).toHaveBeenCalledWith('/admin/coaches/c1/plan', {
         plan: 'PRO',
         paidUntil: '2026-12-04',
+        amountCents: 3630,
+        vatRatePct: 21,
+        method: 'TRANSFER',
+        reference: 'F-2026-007',
       }),
     );
 

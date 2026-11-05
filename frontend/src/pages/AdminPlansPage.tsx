@@ -6,6 +6,8 @@ import {
   useIsAdmin,
   useSetCoachPlan,
   type AdminCoach,
+  eurosToCents,
+  type PaymentMethod,
   type PlanInfo,
 } from '../lib/admin/plans';
 import {
@@ -148,12 +150,32 @@ function CoachRow({ coach, plans }: { coach: AdminCoach; plans: PlanInfo[] }) {
   const setPlan = useSetCoachPlan();
   const [plan, setPlanId] = useState(coach.status === 'ACTIVE' ? coach.plan : 'STARTER');
   const [paidUntil, setPaidUntil] = useState(defaultPaidUntil());
+  const [amount, setAmount] = useState('');
+  const [vatRate, setVatRate] = useState('21');
+  const [method, setMethod] = useState<PaymentMethod>('TRANSFER');
+  const [reference, setReference] = useState('');
   const free = plan === FREE_PLAN;
+  const amountCents = eurosToCents(amount);
+  const vatRatePct = Number(vatRate.replace(',', '.'));
+  const paymentValid =
+    amountCents !== null && vatRate.trim() !== '' && vatRatePct >= 0 && vatRatePct <= 100;
   const until = coach.status === 'TRIALING' ? coach.trialEndsAt : coach.currentPeriodEnd;
 
   const save = () =>
     setPlan.mutate(
-      { coachId: coach.coachId, change: free ? { plan } : { plan, paidUntil } },
+      {
+        coachId: coach.coachId,
+        change: free
+          ? { plan }
+          : {
+              plan,
+              paidUntil,
+              amountCents: amountCents ?? undefined,
+              vatRatePct,
+              method,
+              reference: reference.trim() || undefined,
+            },
+      },
       {
         onSuccess: () => toast.success('Plan guardado'),
         onError: (error) => toast.error(apiErrorMessage(error, 'No se pudo guardar el plan.')),
@@ -203,10 +225,62 @@ function CoachRow({ coach, plans }: { coach: AdminCoach; plans: PlanInfo[] }) {
             />
           </label>
         )}
+        {!free && (
+          <>
+            <label className="flex flex-col gap-1 text-sm">
+              <span style={{ color: 'var(--text-secondary)' }}>Cobrado (€, IVA incl.)</span>
+              <input
+                inputMode="decimal"
+                className="rounded-lg px-3 py-2 bg-black/20 border w-28"
+                style={{ borderColor: 'var(--border-subtle)' }}
+                aria-label={`Importe cobrado a ${coach.email}`}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span style={{ color: 'var(--text-secondary)' }}>IVA %</span>
+              <input
+                inputMode="decimal"
+                className="rounded-lg px-3 py-2 bg-black/20 border w-20"
+                style={{ borderColor: 'var(--border-subtle)' }}
+                aria-label={`IVA aplicado a ${coach.email}`}
+                value={vatRate}
+                onChange={(e) => setVatRate(e.target.value)}
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span style={{ color: 'var(--text-secondary)' }}>Forma de pago</span>
+              <select
+                className="rounded-lg px-3 py-2 bg-black/20 border"
+                style={{ borderColor: 'var(--border-subtle)' }}
+                aria-label={`Forma de pago de ${coach.email}`}
+                value={method}
+                onChange={(e) => setMethod(e.target.value as PaymentMethod)}
+              >
+                <option value="TRANSFER">Transferencia</option>
+                <option value="CARD">Tarjeta</option>
+                <option value="CASH">Efectivo</option>
+                <option value="OTHER">Otra</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span style={{ color: 'var(--text-secondary)' }}>Nº de factura</span>
+              <input
+                className="rounded-lg px-3 py-2 bg-black/20 border w-32"
+                style={{ borderColor: 'var(--border-subtle)' }}
+                aria-label={`Número de factura de ${coach.email}`}
+                maxLength={100}
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+              />
+            </label>
+          </>
+        )}
         <button
           type="button"
           className="btn btn-primary"
-          disabled={setPlan.isPending || (!free && !paidUntil)}
+          disabled={setPlan.isPending || (!free && (!paidUntil || !paymentValid))}
           onClick={save}
         >
           Guardar plan
