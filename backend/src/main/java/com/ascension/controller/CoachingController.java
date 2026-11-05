@@ -11,6 +11,7 @@ import com.ascension.dto.CoachDtos.WorkoutComment;
 import com.ascension.dto.NutritionPlanDtos.NutritionPlan;
 import com.ascension.dto.ProgramDtos.TodayPlan;
 import com.ascension.exception.InvalidInputException;
+import com.ascension.service.CheckinNotifier;
 import com.ascension.service.CheckinService;
 import com.ascension.service.ClientProgramService;
 import com.ascension.service.CoachSessionService;
@@ -40,6 +41,7 @@ public class CoachingController {
     private final CoachSessionService sessionService;
     private final NutritionPlanService nutritionPlanService;
     private final CheckinService checkinService;
+    private final CheckinNotifier checkinNotifier;
 
     /**
      * What each active program prescribes on {@code date}: the client's local day, since the server's
@@ -141,7 +143,9 @@ public class CoachingController {
                                                @AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(checkinService.submit(email, linkId, request, LocalDate.now()));
+        Checkin sent = checkinService.submit(email, linkId, request, LocalDate.now());
+        checkinNotifier.submitted(linkId, sent);
+        return ResponseEntity.ok(sent);
     }
 
     @GetMapping("/coaches/{linkId}/checkins")

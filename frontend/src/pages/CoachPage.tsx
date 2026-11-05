@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CheckinTemplateEditor } from '../components/coach/CheckinTemplateEditor';
+import { PushToggle } from '../components/coach/PushToggle';
 import { ClientStatusBadge } from '../components/coach/ClientStatusBadge';
 import { LEVEL_ORDER, useClientStatus } from '../lib/coach/clientStatus';
 import { Link } from 'react-router-dom';
@@ -34,6 +35,7 @@ export default function CoachPage() {
       {profile.data && !isCoach && <ActivateCoach />}
       {isCoach && (
         <div className="flex flex-col gap-6">
+          <PushToggle text="Activa los avisos para saber cuándo un alumno te envía su check-in." />
           <Invitations />
           <Clients />
           <ProgramsLink />

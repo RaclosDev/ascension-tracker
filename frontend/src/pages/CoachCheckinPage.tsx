@@ -13,6 +13,7 @@ import {
   type Scores,
 } from '../lib/coach/checkins';
 import { CheckinCard } from '../components/coach/CheckinCard';
+import { PushToggle } from '../components/coach/PushToggle';
 
 const muted = { color: 'var(--text-secondary)' };
 
@@ -40,6 +41,9 @@ export default function CoachCheckinPage() {
       <div className="flex flex-col gap-6">
         {current.isLoading && <p style={muted}>Cargando…</p>}
         {current.isError && <p role="alert">Ya no estás vinculado con este entrenador.</p>}
+        {current.data && (
+          <PushToggle text="Activa los avisos para recibir el recordatorio del domingo y saber cuándo te responde tu entrenador." />
+        )}
         {current.data &&
           (current.data.current?.coachReply ? (
             <section className="card">

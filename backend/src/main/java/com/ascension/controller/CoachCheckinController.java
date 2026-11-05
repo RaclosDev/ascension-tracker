@@ -4,6 +4,7 @@ import com.ascension.dto.CheckinDtos.Checkin;
 import com.ascension.dto.CheckinDtos.ReplyRequest;
 import com.ascension.dto.CheckinDtos.Template;
 import com.ascension.dto.CheckinDtos.TemplateRequest;
+import com.ascension.service.CheckinNotifier;
 import com.ascension.service.CheckinService;
 import com.ascension.service.CoachAccessPolicy;
 import com.ascension.service.CoachAccessPolicy.Action;
@@ -27,6 +28,7 @@ public class CoachCheckinController {
 
     private final CoachAccessPolicy accessPolicy;
     private final CheckinService checkinService;
+    private final CheckinNotifier notifier;
 
     @GetMapping("/checkin-template")
     public ResponseEntity<Template> template(@AuthenticationPrincipal Jwt jwt) {
@@ -55,7 +57,9 @@ public class CoachCheckinController {
                                          @Valid @RequestBody ReplyRequest request, @AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(checkinService.reply(accessPolicy.require(email, linkId, Action.REPLY_CHECKIN),
-                checkinId, request.reply()));
+        Checkin replied = checkinService.reply(accessPolicy.require(email, linkId, Action.REPLY_CHECKIN),
+                checkinId, request.reply());
+        notifier.replied(linkId);
+        return ResponseEntity.ok(replied);
     }
 }

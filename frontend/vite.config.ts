@@ -22,6 +22,7 @@ export default defineConfig({
           '**/Coach*Page*',
           '**/checkins-*',
           '**/CheckinCard-*',
+          '**/PushToggle-*',
           '**/coachPrograms-*',
           '**/coachRecipes-*',
           '**/TodayProgramCard-*',
