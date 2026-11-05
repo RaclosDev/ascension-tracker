@@ -54,4 +54,6 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 **Preguntas a medida.** El entrenador decide qué pregunta cada semana (hasta diez preguntas). Si las cambia, los check-ins ya enviados no se tocan.
 
+**Semáforo de alumnos.** La lista de alumnos marca a cada uno en verde (al día), ámbar (vigilar) o rojo (necesita atención), y pone primero a quien más lo necesita. Al lado se lee el motivo: varios días sin registrar nada, el check-in de la semana sin hacer o pocos días con la comida apuntada. También avisa de los check-ins que el entrenador tiene sin responder. Solo tiene en cuenta lo que el alumno comparte.
+
 *Se irá completando a medida que avance.*

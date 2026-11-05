@@ -98,7 +98,11 @@ export function useReplyCheckin(linkId: string) {
           reply,
         })
       ).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.client(linkId) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: keys.client(linkId) });
+      // The pending replies count on the client list.
+      queryClient.invalidateQueries({ queryKey: ['coach', 'clients', 'status'] });
+    },
   });
 }
 

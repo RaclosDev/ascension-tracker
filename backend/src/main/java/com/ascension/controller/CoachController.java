@@ -1,9 +1,11 @@
 package com.ascension.controller;
 
+import com.ascension.dto.ClientStatusDtos.ClientStatus;
 import com.ascension.dto.CoachDtos.CoachClient;
 import com.ascension.dto.CoachDtos.CoachStatus;
 import com.ascension.dto.CoachDtos.CreatedInvitation;
 import com.ascension.dto.CoachDtos.PendingInvitation;
+import com.ascension.service.ClientStatusService;
 import com.ascension.service.CoachService;
 import com.ascension.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,6 +26,7 @@ import java.util.UUID;
 public class CoachController {
 
     private final CoachService coachService;
+    private final ClientStatusService clientStatusService;
 
     @GetMapping("/profile")
     public ResponseEntity<CoachStatus> profile(@AuthenticationPrincipal Jwt jwt) {
@@ -66,6 +70,14 @@ public class CoachController {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.ok(coachService.listClients(email));
+    }
+
+    /** The traffic light for every active client: who needs attention today and why. */
+    @GetMapping("/clients/status")
+    public ResponseEntity<List<ClientStatus>> clientStatus(@AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(clientStatusService.forCoach(email, LocalDate.now()));
     }
 
     @PostMapping("/clients/{linkId}/end")
