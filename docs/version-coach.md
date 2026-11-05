@@ -60,4 +60,18 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 **Fotos de progreso.** En Seguimiento el alumno puede hacerse fotos de frente, de perfil y de espalda y guardarlas con su fecha. Antes de subirlas, el móvil las reduce para que ocupen poco y les quita los datos ocultos, como la ubicación. Se guardan en un almacén privado: solo las ve el alumno y, si comparte su cuerpo, su entrenador, que las encuentra por días en la ficha del alumno. El alumno puede borrar cualquier foto; al borrar la cuenta se borran todas y la descarga de datos incluye la lista de fotos guardadas.
 
+---
+
+## Fase 5 — Planes *(en curso)*
+
+**Prueba de 14 días.** Quien activa el modo entrenador empieza una prueba gratuita de 14 días con el plan Pro, sin tarjeta. Los entrenadores que ya existían reciben la misma prueba desde hoy. Volver a activar el modo entrenador no reinicia la prueba.
+
+**Planes con límite de alumnos.** Cada plan admite un número de alumnos activos: Gratis 1, Básico 10, Pro 25 y Élite 50. Si un entrenador pasa del límite, por ejemplo al terminar la prueba, no pierde a ninguno de sus alumnos: solo no puede invitar ni aceptar a más hasta que cambie de plan o termine alguna relación.
+
+**Más IA con el plan.** Cada plan trae su propia cuota diaria de consultas a la IA. La usa el entrenador y también sus alumnos vinculados, que reciben la del plan de su entrenador si es mayor que la normal. Quien no tiene entrenador sigue igual.
+
+**Privacidad.** La descarga de datos del entrenador incluye su plan y sus fechas, y al borrar la cuenta se borra también.
+
+*Los pagos, la página «Plan y facturación» y los textos legales llegarán cuando estén decididos los precios y quién factura.*
+
 *Se irá completando a medida que avance.*
