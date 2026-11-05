@@ -17,6 +17,8 @@ const WorkoutPage = lazyWithRetry(() => import('./pages/WorkoutPage'));
 const UtilitiesPage = lazyWithRetry(() => import('./pages/UtilitiesPage'));
 const CoachPage = lazyWithRetry(() => import('./pages/CoachPage'));
 const CoachClientPage = lazyWithRetry(() => import('./pages/CoachClientPage'));
+const CoachProgramsPage = lazyWithRetry(() => import('./pages/CoachProgramsPage'));
+const CoachProgramEditorPage = lazyWithRetry(() => import('./pages/CoachProgramEditorPage'));
 const InvitationPage = lazyWithRetry(() => import('./pages/InvitationPage'));
 import LandingPage from './pages/LandingPage';
 import { HomeRedirect, RememberInvitation } from './components/coach/InvitationRedirects';
@@ -105,6 +107,8 @@ function AppContent() {
             <Route path="settings" element={<SettingsPage />} />
             <Route path="entrenador" element={<CoachPage />} />
             <Route path="entrenador/alumnos/:linkId" element={<CoachClientPage />} />
+            <Route path="entrenador/programas" element={<CoachProgramsPage />} />
+            <Route path="entrenador/programas/:programId" element={<CoachProgramEditorPage />} />
             <Route path="invitacion/:token" element={<InvitationPage />} />
           </Route>
           <Route path="/login" element={<HomeRedirect />} />

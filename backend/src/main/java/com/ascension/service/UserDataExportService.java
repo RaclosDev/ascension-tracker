@@ -29,6 +29,7 @@ public class UserDataExportService {
     private final UserSettingsRepository userSettingsRepository;
     private final WorkoutMapper workoutMapper;
     private final CoachService coachService;
+    private final ProgramService programService;
 
     @Transactional(readOnly = true)
     public UserDataExportDTO exportUserData(String userEmail) {
@@ -89,6 +90,7 @@ public class UserDataExportService {
                 .weightEntries(weightEntries)
                 .userSettings(userSettings)
                 .coaching(coachService.exportFor(userEmail))
+                .programs(programService.exportFor(userEmail))
                 .build();
     }
 

@@ -4,6 +4,8 @@ import { GraduationCap } from 'lucide-react';
 import { SettingsSectionHeader } from './SettingsSectionHeader';
 import {
   PERMISSION_LABELS,
+  scopeDisabled,
+  withScope,
   accessActionLabel,
   apiErrorMessage,
   formatCoachDate,
@@ -81,7 +83,7 @@ function CoachLink({ link }: { link: MyCoach }) {
   const name = personName(link.coach);
 
   const toggle = (scope: keyof CoachPermissions, checked: boolean) => {
-    const permissions = { ...link.permissions, [scope]: checked };
+    const permissions = withScope(link.permissions, scope, checked);
     if (!SCOPES.some((s) => permissions[s])) {
       toast.error('Comparte al menos una cosa o termina la relación');
       return;
@@ -105,7 +107,7 @@ function CoachLink({ link }: { link: MyCoach }) {
             <input
               type="checkbox"
               checked={link.permissions[scope]}
-              disabled={update.isPending}
+              disabled={update.isPending || scopeDisabled(link.permissions, scope)}
               onChange={(e) => toggle(scope, e.target.checked)}
             />
             <span>{PERMISSION_LABELS[scope].title}</span>

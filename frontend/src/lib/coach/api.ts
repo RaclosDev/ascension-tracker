@@ -6,6 +6,8 @@ export interface CoachPermissions {
   training: boolean;
   nutrition: boolean;
   body: boolean;
+  /** Lets the coach assign programs. Only meaningful together with {@link training}. */
+  editTraining: boolean;
 }
 
 export interface CoachPerson {
@@ -64,6 +66,10 @@ export const PERMISSION_LABELS: Record<keyof CoachPermissions, { title: string; 
   {
     body: { title: 'Cuerpo', detail: 'Peso y pasos.' },
     training: { title: 'Entrenamiento', detail: 'Entrenamientos registrados y estadísticas.' },
+    editTraining: {
+      title: 'Pautar entrenamiento',
+      detail: 'Asignarte programas de entrenamiento. Nunca cambia lo que registras.',
+    },
     nutrition: {
       title: 'Nutrición',
       detail: 'Comidas registradas y objetivos de calorías y macros.',
@@ -76,6 +82,8 @@ const ACTION_LABELS: Record<string, string> = {
   VIEW_WORKOUTS: 'Entrenamientos',
   VIEW_NUTRITION: 'Comidas',
   VIEW_TARGETS: 'Objetivos de nutrición',
+  VIEW_PROGRAMS: 'Programas asignados',
+  ASSIGN_PROGRAM: 'Asignar programa',
 };
 
 export const accessActionLabel = (action: string) => ACTION_LABELS[action] ?? action;
@@ -92,6 +100,20 @@ export const sharedScopes = (permissions: CoachPermissions) =>
     .filter((scope) => permissions[scope])
     .map((scope) => PERMISSION_LABELS[scope].title)
     .join(' · ');
+
+/** Pautar needs seeing training: dropping training drops the edit permission too. */
+export const withScope = (
+  permissions: CoachPermissions,
+  scope: keyof CoachPermissions,
+  checked: boolean,
+): CoachPermissions => {
+  const next = { ...permissions, [scope]: checked };
+  if (!next.training) next.editTraining = false;
+  return next;
+};
+
+export const scopeDisabled = (permissions: CoachPermissions, scope: keyof CoachPermissions) =>
+  scope === 'editTraining' && !permissions.training;
 
 export const personName = (person: CoachPerson) => person.name?.trim() || person.email;
 
