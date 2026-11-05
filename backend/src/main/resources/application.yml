@@ -58,6 +58,8 @@ server:
     min-response-size: 1024
 
 app:
+  # Shown on the landing and legal pages; leave empty to point people to the in-app form.
+  contact-email: ${APP_CONTACT_EMAIL:}
   rate-limit:
     login-limit: ${RATE_LIMIT_LOGIN:20}
     refresh-limit: ${RATE_LIMIT_REFRESH:30}

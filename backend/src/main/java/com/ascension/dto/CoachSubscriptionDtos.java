@@ -25,6 +25,10 @@ public final class CoachSubscriptionDtos {
                           String transferIban) {
     }
 
+    /** Public, no sign-in: the plans on offer and where to write to us. Never bank details. */
+    public record PublicInfo(java.util.List<PlanOffer> plans, int annualMonths, String contactEmail) {
+    }
+
     public record SubscriptionExport(String plan, String status, Instant trialEndsAt, Instant currentPeriodEnd,
                                      String stripeCustomerId, String stripeSubscriptionId,
                                      Instant createdAt, Instant updatedAt) {

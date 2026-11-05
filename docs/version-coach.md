@@ -76,11 +76,11 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 **Contacto y planes a medida.** Desde esa misma página cualquiera puede escribirnos: para contratar un plan, pedir uno a medida (más de 50 alumnos, equipos, gimnasios) o cualquier otra duda. El administrador recibe un aviso en el móvil y ve los mensajes en su página, donde los marca como atendidos. Se pueden enviar hasta tres mensajes al día.
 
-**En la portada.** La página de inicio tiene una sección para entrenadores: qué pueden hacer, los precios de cada plan, la prueba de 14 días y cómo pedir un plan a medida. Se llega desde el enlace «Entrenadores» del menú.
+**En la portada.** La página de inicio tiene una sección para entrenadores: qué pueden hacer, los precios de cada plan, la prueba de 14 días y cómo pedir un plan a medida. Se llega desde el enlace «Entrenadores» del menú. Los precios salen de la misma configuración que usa la app, así que al cambiarlos se actualizan solos en la portada. Si hay un correo de contacto configurado, aparece ahí para que los entrenadores escriban sin necesidad de tener cuenta.
 
 **Privacidad.** La descarga de datos del entrenador incluye su plan, sus fechas y los mensajes que nos ha enviado; al borrar la cuenta se borra todo.
 
-**Textos legales (borrador).** Ya hay política de privacidad, términos de uso y condiciones para entrenadores (con el anexo de encargo del tratamiento), enlazados desde la portada y desde Ajustes. Son borradores: les faltan los datos del titular y una revisión legal antes de darlos por definitivos.
+**Textos legales (borrador).** Ya hay política de privacidad, términos de uso y condiciones para entrenadores (con el anexo de encargo del tratamiento), enlazados desde la portada y desde Ajustes. Como contacto muestran solo el correo configurado (o el formulario de la app si no hay). Son borradores pendientes de revisión legal.
 
 *El pago con tarjeta llegará más adelante.*
 

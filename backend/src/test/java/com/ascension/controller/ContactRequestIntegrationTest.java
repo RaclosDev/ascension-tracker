@@ -19,13 +19,15 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = {
         "app.admin.emails=boss@contact.test",
         "app.coach.billing.transfer-holder=Ascension Test",
-        "app.coach.billing.transfer-iban="})
+        "app.coach.billing.transfer-iban=ES00 TEST",
+        "app.contact-email=hola@contact.test"})
 @org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 @DisabledIfDockerUnavailable
 @Import(TestcontainersConfiguration.class)
@@ -49,6 +51,20 @@ class ContactRequestIntegrationTest {
                 .andExpect(jsonPath("$.plans[?(@.id == 'PRO')].monthlyPriceEur").value(39))
                 .andExpect(jsonPath("$.plans[?(@.id == 'PRO')].annualPriceEur").value(390))
                 .andExpect(jsonPath("$.transferHolder").value("Ascension Test"))
+                .andExpect(jsonPath("$.transferIban").value("ES00 TEST"));
+    }
+
+    @Test
+    void anyoneSeesPricesAndTheContactEmailButNoBankDetails() throws Exception {
+        mvc.perform(get("/api/public/info"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", org.hamcrest.Matchers.containsString("max-age=3600")))
+                .andExpect(jsonPath("$.annualMonths").value(10))
+                .andExpect(jsonPath("$.plans[0].id").value("FREE"))
+                .andExpect(jsonPath("$.plans[?(@.id == 'ELITE')].monthlyPriceEur").value(69))
+                .andExpect(jsonPath("$.plans[?(@.id == 'ELITE')].maxClients").value(50))
+                .andExpect(jsonPath("$.contactEmail").value("hola@contact.test"))
+                .andExpect(jsonPath("$.transferHolder").doesNotExist())
                 .andExpect(jsonPath("$.transferIban").doesNotExist());
     }
 
