@@ -1,6 +1,6 @@
 /**
- * Draft legal texts, pending external legal review before launch. Bracketed fields such as
- * [TITULAR] are placeholders for the data of whoever ends up running the service.
+ * Draft legal texts, pending external legal review before launch. Bracketed fields are still to
+ * be decided; CONTACT is replaced on screen by the contact email (or the in-app form).
  */
 export type LegalDoc = 'privacidad' | 'terminos' | 'terminos-entrenadores';
 
@@ -17,15 +17,16 @@ export interface LegalText {
 
 export const LEGAL_VERSION = '2026-11-borrador';
 
-const owner =
-  'El servicio Ascension lo presta [TITULAR], con NIF [NIF] y domicilio en [DOMICILIO]. Puedes escribirnos a [EMAIL DE CONTACTO] o desde el formulario de contacto de la app.';
+export const CONTACT = '[CONTACTO]';
+
+const owner = `Ascension es un proyecto independiente. Para cualquier duda sobre estos textos o sobre tus datos, escríbenos a ${CONTACT}.`;
 
 export const LEGAL_TEXTS: Record<LegalDoc, LegalText> = {
   privacidad: {
     title: 'Política de privacidad',
     version: LEGAL_VERSION,
     sections: [
-      { title: 'Quién trata tus datos', paragraphs: [owner] },
+      { title: 'Responsable y contacto', paragraphs: [owner] },
       {
         title: 'Qué datos tratamos',
         paragraphs: [
@@ -78,7 +79,7 @@ export const LEGAL_TEXTS: Record<LegalDoc, LegalText> = {
     title: 'Términos de uso',
     version: LEGAL_VERSION,
     sections: [
-      { title: 'Quiénes somos', paragraphs: [owner] },
+      { title: 'Contacto', paragraphs: [owner] },
       {
         title: 'El servicio',
         paragraphs: [
@@ -123,7 +124,7 @@ export const LEGAL_TEXTS: Record<LegalDoc, LegalText> = {
     title: 'Condiciones para entrenadores',
     version: LEGAL_VERSION,
     sections: [
-      { title: 'Quiénes somos', paragraphs: [owner] },
+      { title: 'Contacto', paragraphs: [owner] },
       {
         title: 'Planes y prueba',
         paragraphs: [
@@ -159,7 +160,7 @@ export const LEGAL_TEXTS: Record<LegalDoc, LegalText> = {
       {
         title: 'Planes a medida',
         paragraphs: [
-          'Para más de 50 alumnos, equipos o gimnasios, escríbenos desde Plan y facturación y acordaremos las condiciones por escrito.',
+          'Si necesitas más alumnos de los que permite el plan más alto, o eres un equipo o un gimnasio, escríbenos desde Plan y facturación y acordaremos las condiciones por escrito.',
         ],
       },
     ],

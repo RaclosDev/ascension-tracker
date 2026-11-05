@@ -26,13 +26,26 @@ public class GeminiQuotaService {
 
     private final GeminiQuotaStore store;
 
+    /** Raises a user's daily limit, e.g. through a coach plan. Optional so the service also works alone. */
+    private AiDailyLimitResolver dailyLimitResolver = email -> 0;
+
     public GeminiQuotaService(GeminiQuotaStore store) {
         this.store = store;
     }
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setDailyLimitResolver(AiDailyLimitResolver dailyLimitResolver) {
+        this.dailyLimitResolver = dailyLimitResolver;
+    }
+
+    /** The user's daily limit: the default one, or a higher one granted by their or their coach's plan. */
+    int dailyLimitFor(String userEmail) {
+        return Math.max(userDailyLimit, dailyLimitResolver.dailyLimitFor(userEmail));
+    }
+
     public GeminiQuotaStore.Reservation checkAndReserveQuota(String userEmail) {
         try {
-            return store.reserve(userEmail, userDailyLimit, globalDailyLimit);
+            return store.reserve(userEmail, dailyLimitFor(userEmail), globalDailyLimit);
         } catch (AiQuotaExceededException failure) {
             log.warn("Gemini quota/circuit rejected request for {}", com.ascension.util.PiiMasker.maskEmail(userEmail));
             throw failure;

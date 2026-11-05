@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { LEGAL_TEXTS, type LegalDoc } from '../lib/legal/texts';
+import { CONTACT, LEGAL_TEXTS, type LegalDoc } from '../lib/legal/texts';
+import { usePublicInfo } from '../lib/publicInfo';
 
 const OTHERS: { doc: LegalDoc; label: string }[] = [
   { doc: 'privacidad', label: 'Privacidad' },
@@ -10,6 +11,7 @@ const OTHERS: { doc: LegalDoc; label: string }[] = [
 /** A public legal text; readable signed in or out. */
 export default function LegalPage({ doc }: { doc: LegalDoc }) {
   const text = LEGAL_TEXTS[doc];
+  const email = usePublicInfo().data?.contactEmail ?? null;
   return (
     <div className="fade-in max-w-3xl mx-auto px-4 pt-2 pb-12 sm:pt-4">
       <header className="mb-6 pb-2 border-b border-white/5">
@@ -32,7 +34,7 @@ export default function LegalPage({ doc }: { doc: LegalDoc }) {
                 className="mb-2 leading-relaxed"
                 style={{ color: 'var(--text-secondary)' }}
               >
-                {p}
+                <WithContact text={p} email={email} />
               </p>
             ))}
           </section>
@@ -49,5 +51,24 @@ export default function LegalPage({ doc }: { doc: LegalDoc }) {
         </Link>
       </nav>
     </div>
+  );
+}
+
+/** Swaps the contact placeholder for a mailto link, or for the in-app form when no email is set. */
+function WithContact({ text, email }: { text: string; email: string | null }) {
+  const at = text.indexOf(CONTACT);
+  if (at < 0) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, at)}
+      {email ? (
+        <a href={`mailto:${email}`} className="underline">
+          {email}
+        </a>
+      ) : (
+        'través del formulario de contacto de la app'
+      )}
+      {text.slice(at + CONTACT.length)}
+    </>
   );
 }

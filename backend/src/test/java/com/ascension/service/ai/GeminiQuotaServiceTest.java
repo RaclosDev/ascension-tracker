@@ -95,6 +95,19 @@ class GeminiQuotaServiceTest {
         assertThrows(AiQuotaExceededException.class, () -> otherInstance.checkAndReserveQuota("shared@example.com"));
     }
 
+    @Test
+    void aPlanCanRaiseButNeverLowerTheDailyLimit() {
+        quotaService.setDailyLimitResolver(email -> email.startsWith("user0") ? 3 : 1);
+        for (int i = 0; i < 3; i++) {
+            assertDoesNotThrow(() -> quotaService.checkAndReserveQuota("user0@example.com"));
+        }
+        assertThrows(AiQuotaExceededException.class, () -> quotaService.checkAndReserveQuota("user0@example.com"));
+
+        quotaService.checkAndReserveQuota("user1@example.com");
+        assertDoesNotThrow(() -> quotaService.checkAndReserveQuota("user1@example.com"));
+        assertThrows(AiQuotaExceededException.class, () -> quotaService.checkAndReserveQuota("user1@example.com"));
+    }
+
     @BeforeEach
     void setUp() {
         quotaService = new GeminiQuotaService(store);

@@ -54,6 +54,9 @@ class UserDataExportServiceTest {
     @Mock
     private ProgressPhotoService progressPhotoService;
 
+    @Mock
+    private ContactRequestService contactRequestService;
+
     @InjectMocks
     private UserDataExportService exportService;
 

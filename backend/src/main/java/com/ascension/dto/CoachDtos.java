@@ -67,7 +67,9 @@ public final class CoachDtos {
 
     // ---- GDPR export: everything coach mode stores about the exporting user, never token hashes ----
 
-    public record CoachingExport(Instant coachSince, List<LinkExport> asClient, List<LinkExport> asCoach,
+    public record CoachingExport(Instant coachSince,
+                                 com.ascension.dto.CoachSubscriptionDtos.SubscriptionExport subscription,
+                                 List<LinkExport> asClient, List<LinkExport> asCoach,
                                  List<InvitationExport> invitations,
                                  List<AccessExport> accessesToMyData, List<AccessExport> myAccessesAsCoach,
                                  List<AssignmentExport> programAssignments,
