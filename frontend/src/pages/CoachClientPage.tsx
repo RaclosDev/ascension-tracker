@@ -22,6 +22,7 @@ import {
 } from '../lib/coach/coachPrograms';
 import { useExerciseCatalog, getExerciseMap } from '../lib/workout/exercises';
 import { ProgramSessions } from '../components/coach/ProgramSessions';
+import { NutritionAdherenceSection } from '../components/coach/NutritionAdherenceSection';
 import { NutritionPlanSection } from '../components/coach/NutritionPlanSection';
 import { ActivityHeatmap } from '../components/workout/heatmap';
 import { BodyHeatmap } from '../components/workout/body-heatmap';
@@ -411,6 +412,8 @@ function NutritionSection({ linkId, canEditPlan }: { linkId: string; canEditPlan
     <Section title="Nutrición" icon={<Utensils size={18} aria-hidden />}>
       <h3 className="font-semibold text-white mb-2">Pauta de nutrición</h3>
       <NutritionPlanSection linkId={linkId} canEdit={canEditPlan} />
+      <h3 className="font-semibold text-white mt-6 mb-2">Adherencia a la pauta</h3>
+      <NutritionAdherenceSection linkId={linkId} />
       <h3 className="font-semibold text-white mt-6 mb-2">Sus objetivos y registro</h3>
       {t && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">

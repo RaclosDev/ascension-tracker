@@ -1,9 +1,11 @@
 package com.ascension.controller;
 
+import com.ascension.dto.NutritionPlanDtos.AdherenceWeek;
 import com.ascension.dto.NutritionPlanDtos.NutritionPlan;
 import com.ascension.dto.NutritionPlanDtos.PlanRequest;
 import com.ascension.service.CoachAccessPolicy;
 import com.ascension.service.CoachAccessPolicy.Action;
+import com.ascension.service.NutritionAdherenceService;
 import com.ascension.service.NutritionPlanService;
 import com.ascension.util.SecurityUtils;
 import jakarta.validation.Valid;
@@ -14,6 +16,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /** The nutrition targets a coach sets for one client. Setting them needs the client's edit consent. */
@@ -24,6 +28,7 @@ public class CoachNutritionController {
 
     private final CoachAccessPolicy accessPolicy;
     private final NutritionPlanService planService;
+    private final NutritionAdherenceService adherenceService;
 
     /** The plan this coach set, while it is in force; 204 when there is none. */
     @GetMapping
@@ -42,6 +47,17 @@ public class CoachNutritionController {
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.ok(planService.set(accessPolicy.require(email, linkId, Action.SET_NUTRITION_PLAN),
                 request));
+    }
+
+    /** Logged against prescribed, per day and week, over the last {@code weeks} weeks (1 to 12). */
+    @GetMapping("/adherence")
+    public ResponseEntity<List<AdherenceWeek>> adherence(@PathVariable UUID linkId,
+                                                         @RequestParam(defaultValue = "4") int weeks,
+                                                         @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(adherenceService.weeks(accessPolicy.require(email, linkId, Action.VIEW_NUTRITION),
+                Math.max(1, Math.min(12, weeks)), LocalDate.now()));
     }
 
     @DeleteMapping

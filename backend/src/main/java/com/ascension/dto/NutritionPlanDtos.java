@@ -12,6 +12,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -68,6 +69,25 @@ public final class NutritionPlanDtos {
             @Valid @NotNull(message = "Faltan los objetivos de día de descanso") DayRequest rest,
             @Size(max = 1000, message = "Las notas no pueden pasar de 1000 caracteres") String notes,
             @Size(max = 20, message = "Máximo 20 comidas pautadas") List<@Valid @NotNull MealRequest> meals) {
+    }
+
+    /** What the client logged on one day. */
+    public record Intake(int kcal, double protein, double carbs, double fat) {
+    }
+
+    /**
+     * One day of adherence: {@code target} is null when no plan from this coach applied that day,
+     * {@code intake} when nothing was logged.
+     */
+    public record AdherenceDay(LocalDate date, String dayType, DayTargets target, Intake intake, boolean onTarget) {
+    }
+
+    /**
+     * A Monday-to-Sunday week up to today. Percentages compare the logged days that had a plan with
+     * their targets; null when there is no such day.
+     */
+    public record AdherenceWeek(LocalDate weekStart, int plannedDays, int loggedDays, int onTargetDays,
+                                Integer kcalPct, Integer proteinPct, List<AdherenceDay> days) {
     }
 
     /** {@code role} is CLIENT for plans set for the exporting user, COACH for plans they set. */

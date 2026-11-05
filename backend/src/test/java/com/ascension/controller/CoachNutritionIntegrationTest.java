@@ -220,6 +220,56 @@ class CoachNutritionIntegrationTest {
                 .andExpect(jsonPath("$.coaching.nutritionPlans[0].meals.length()").value(3));
     }
 
+    @Test
+    void adherenceComparesWhatTheClientLoggedWithThePlanOfEachDay() throws Exception {
+        String coach = coach();
+        String client = user();
+        String linkId = accept(client, invite(coach), EDIT_ALL);
+        LocalDate today = LocalDate.now();
+        log(client, today.minusDays(1), 2500, 100);
+
+        // Before any plan the days carry no target and nothing counts.
+        mvc.perform(as(get(PATH + "/adherence", linkId).param("weeks", "2"), coach))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[1].plannedDays").value(0))
+                .andExpect(jsonPath("$[1].kcalPct").doesNotExist());
+
+        mvc.perform(as(put(PATH, linkId), coach).contentType("application/json").content(PLAN))
+                .andExpect(status().isOk());
+        // Rest day without a program: 2040 kcal and 180 g of protein.
+        log(client, today, 1500, 120);
+        log(client, today, 500, 50);
+        String body = mvc.perform(as(get(PATH + "/adherence", linkId), coach))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(4))
+                .andExpect(jsonPath("$[3].plannedDays").value(1))
+                .andExpect(jsonPath("$[3].loggedDays").value(1))
+                .andExpect(jsonPath("$[3].onTargetDays").value(1))
+                .andExpect(jsonPath("$[3].kcalPct").value(Math.round(2000 * 100.0 / 2040)))
+                .andExpect(jsonPath("$[3].proteinPct").value(Math.round(170 * 100.0 / 180)))
+                .andReturn().getResponse().getContentAsString();
+        var days = json.readTree(body).get(3).get("days");
+        var last = days.get(days.size() - 1);
+        assertThat(last.get("date").asString()).isEqualTo(today.toString());
+        assertThat(last.get("dayType").asString()).isEqualTo("REST");
+        assertThat(last.get("target").get("kcal").asInt()).isEqualTo(2040);
+        assertThat(last.get("intake").get("kcal").asInt()).isEqualTo(2000);
+        assertThat(last.get("onTarget").asBoolean()).isTrue();
+
+        // Without the consent to see nutrition the coach cannot read it.
+        String other = accept(user(), invite(coach), VIEW_ONLY.replace("\"nutrition\":true", "\"nutrition\":false"));
+        mvc.perform(as(get(PATH + "/adherence", other), coach)).andExpect(status().isForbidden());
+    }
+
+    private void log(String client, LocalDate date, int kcal, int protein) throws Exception {
+        mvc.perform(as(post("/api/nutrition/logs"), client).contentType("application/json")
+                        .content("{\"date\":\"" + date + "\",\"mealIndex\":0,\"product\":\"Prueba\","
+                                + "\"quantity\":100,\"kcal\":" + kcal + ",\"protein\":" + protein
+                                + ",\"carbs\":10,\"fat\":5}"))
+                .andExpect(status().is2xxSuccessful());
+    }
+
     private String recipe(String coach, String name, String protein, String carbs, String fat) throws Exception {
         String body = "{\"name\":\"" + name + "\",\"description\":\"Receta de prueba\",\"protein\":" + protein
                 + ",\"carbs\":" + carbs + ",\"fat\":" + fat + "}";
