@@ -58,4 +58,9 @@ public class UserDataExportDTO {
 
     @jakarta.validation.Valid
     private UserSettingsDTO userSettings;
+
+    /** Coach-mode links, invitations and access log. Export only: a restore never reads it back. */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    private com.ascension.dto.CoachDtos.CoachingExport coaching;
 }

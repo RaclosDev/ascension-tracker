@@ -120,7 +120,8 @@ class PiiLogVerificationTest {
                 stepsEntryRepository,
                 weightEntryRepository,
                 userSettingsRepository,
-                mapper
+                mapper,
+                org.mockito.Mockito.mock(com.ascension.service.CoachService.class)
         );
 
         when(workoutRepository.findAllByUserEmailOrderByStartedAtDesc(TARGET_EMAIL)).thenReturn(Collections.emptyList());

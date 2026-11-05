@@ -14,12 +14,13 @@ type Props = {
   href: string;
   children: React.ReactNode;
   className?: string;
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
 };
 
 // The template's CTA: a white block with a blue paint drip. Always a real anchor.
-export default function DripButton({ href, children, className = '' }: Props) {
+export default function DripButton({ href, children, className = '', onClick }: Props) {
   return (
-    <a href={href} className={`landing-drip ${className}`}>
+    <a href={href} className={`landing-drip ${className}`} onClick={onClick}>
       <span>{children}</span>
       <ArrowRight size={18} aria-hidden="true" />
       <Drip />

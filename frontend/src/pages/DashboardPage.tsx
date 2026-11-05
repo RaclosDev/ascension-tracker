@@ -1,6 +1,7 @@
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
 import { useMemo, Suspense } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
+import { toWeeklyDeltaData, toWeightChartData } from '../lib/weightCharts';
 import { DashboardData, WeightEntry, WeekSummary, UserSettings } from '../types/api';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import api from '../api/client';
@@ -91,26 +92,8 @@ export default function DashboardPage() {
   const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   const todayLabel = `${dayNames[today.getDay()]}, ${format(today, "d 'de' MMMM 'de' yyyy", { locale: es })}`;
 
-  const weightChartData = useMemo(() => {
-    return weights.map((w: WeightEntry) => ({
-      date: w.date,
-      weight: w.weight,
-      label: format(new Date(w.date + 'T00:00:00'), 'd MMM', { locale: es }),
-    }));
-  }, [weights]);
-
-  const deltaData = useMemo(() => {
-    return weekSummaries
-      .filter((w: WeekSummary): w is WeekSummary & { delta: number } => w.delta !== null)
-      .map((w) => ({
-        week: format(new Date(w.weekStart + 'T00:00:00'), 'd MMM', { locale: es }),
-        delta: w.delta,
-        fill:
-          w.delta <= 0
-            ? 'var(--color-success-strong, rgba(52, 211, 153, 0.8))'
-            : 'var(--color-fat-strong, rgba(248, 113, 113, 0.8))',
-      }));
-  }, [weekSummaries]);
+  const weightChartData = useMemo(() => toWeightChartData(weights), [weights]);
+  const deltaData = useMemo(() => toWeeklyDeltaData(weekSummaries), [weekSummaries]);
 
   if (isLoading) {
     return (

@@ -4,6 +4,7 @@ import {
   Activity,
   Database,
   Dumbbell,
+  GraduationCap,
   LucideIcon,
   Palette,
   Scale,
@@ -18,6 +19,7 @@ export const SETTINGS_SECTIONS = [
   { id: 'meals', label: 'Comidas', icon: Utensils },
   { id: 'theme', label: 'Apariencia', icon: Palette },
   { id: 'workout', label: 'Entrenamiento', icon: Dumbbell },
+  { id: 'coach', label: 'Entrenador', icon: GraduationCap },
   { id: 'data', label: 'Datos y cuenta', icon: Database },
 ] as const satisfies readonly { id: string; label: string; icon: LucideIcon }[];
 

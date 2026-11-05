@@ -16,7 +16,8 @@ import {
 interface DashboardChartsProps {
   weightChartData: Array<{ label: string; weight: number; [key: string]: unknown }>;
   deltaData: Array<{ week: string; delta: number; fill: string; [key: string]: unknown }>;
-  goalWeight: number;
+  /** Omitted in the coach's view: the client's goal weight is not shared. */
+  goalWeight?: number;
 }
 
 export default React.memo(function DashboardCharts({
@@ -65,17 +66,19 @@ export default React.memo(function DashboardCharts({
                   'Peso',
                 ]}
               />
-              <ReferenceLine
-                y={goalWeight}
-                stroke="rgba(52, 211, 153, 0.5)"
-                strokeDasharray="8 4"
-                label={{
-                  value: 'Obj.',
-                  fill: 'var(--color-success)',
-                  fontSize: 12,
-                  position: 'insideTopLeft',
-                }}
-              />
+              {goalWeight != null && (
+                <ReferenceLine
+                  y={goalWeight}
+                  stroke="rgba(52, 211, 153, 0.5)"
+                  strokeDasharray="8 4"
+                  label={{
+                    value: 'Obj.',
+                    fill: 'var(--color-success)',
+                    fontSize: 12,
+                    position: 'insideTopLeft',
+                  }}
+                />
+              )}
               <Area
                 type="monotone"
                 dataKey="weight"

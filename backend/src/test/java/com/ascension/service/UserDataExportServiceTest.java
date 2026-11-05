@@ -44,6 +44,8 @@ class UserDataExportServiceTest {
     private UserSettingsRepository userSettingsRepository;
     @Mock
     private WorkoutMapper workoutMapper;
+    @Mock
+    private CoachService coachService;
 
     @InjectMocks
     private UserDataExportService exportService;
