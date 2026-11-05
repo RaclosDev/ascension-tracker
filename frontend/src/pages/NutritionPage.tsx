@@ -16,6 +16,7 @@ import { useAnyInView } from '../hooks/use-any-in-view';
 const MyFoodsPage = lazyWithRetry(() => import('./MyFoodsPage'));
 const FoodSearchModal = lazyWithRetry(() => import('../components/FoodSearchModal'));
 const NutritionPieChart = lazyWithRetry(() => import('../components/nutrition/NutritionPieChart'));
+const PlannedMealsCard = lazyWithRetry(() => import('../components/coach/PlannedMealsCard'));
 
 export default function NutritionPage() {
   const queryClient = useQueryClient();
@@ -176,6 +177,11 @@ export default function NutritionPage() {
           </button>
 
           <MacroSummaryHeader consumed={consumed} macros={macros} />
+          {macros.coachName && (
+            <Suspense fallback={null}>
+              <PlannedMealsCard date={selectedDate} dayType={macros.dayType} meals={meals} />
+            </Suspense>
+          )}
 
           <div
             className="pb-16 min-[1025px]:pb-32"

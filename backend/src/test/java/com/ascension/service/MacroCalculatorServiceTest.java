@@ -28,6 +28,13 @@ class MacroCalculatorServiceTest {
     @Mock
     private ApplicationContext applicationContext;
 
+    /** No coach plan in force: Mockito answers Optional.empty(), so the user's own settings apply. */
+    @Mock
+    private NutritionPlanService nutritionPlanService;
+
+    @Mock
+    private ClientProgramService clientProgramService;
+
     @InjectMocks
     private MacroCalculatorService macroCalculatorService;
 

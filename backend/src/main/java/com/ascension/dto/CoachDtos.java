@@ -15,16 +15,22 @@ public final class CoachDtos {
     }
 
     /**
-     * What the client lets a coach see, plus whether the coach may prescribe training. Editing
-     * only counts together with seeing training: {@link #grantsEdit()} is what gets stored.
+     * What the client lets a coach see, plus whether the coach may prescribe training and set
+     * nutrition targets. Editing only counts together with seeing that area: {@link #grantsEdit()}
+     * and {@link #grantsEditNutrition()} are what get stored.
      */
-    public record Permissions(boolean training, boolean nutrition, boolean body, boolean editTraining) {
+    public record Permissions(boolean training, boolean nutrition, boolean body, boolean editTraining,
+                              boolean editNutrition) {
         public boolean any() {
             return training || nutrition || body;
         }
 
         public boolean grantsEdit() {
             return training && editTraining;
+        }
+
+        public boolean grantsEditNutrition() {
+            return nutrition && editNutrition;
         }
     }
 
@@ -65,7 +71,8 @@ public final class CoachDtos {
                                  List<InvitationExport> invitations,
                                  List<AccessExport> accessesToMyData, List<AccessExport> myAccessesAsCoach,
                                  List<AssignmentExport> programAssignments,
-                                 List<CommentExport> workoutComments) {
+                                 List<CommentExport> workoutComments,
+                                 List<com.ascension.dto.NutritionPlanDtos.PlanExport> nutritionPlans) {
     }
 
     /** {@code role} is CLIENT for comments on the exporting user's workouts, COACH for comments they wrote. */

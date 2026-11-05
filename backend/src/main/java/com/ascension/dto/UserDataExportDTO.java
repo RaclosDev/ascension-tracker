@@ -68,4 +68,9 @@ public class UserDataExportDTO {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
     @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
     private List<com.ascension.dto.ProgramDtos.Program> programs;
+
+    /** The recipe library the user keeps as a coach. Export only, like {@link #coaching}. */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    private List<com.ascension.dto.CoachRecipeDtos.Recipe> coachRecipes;
 }

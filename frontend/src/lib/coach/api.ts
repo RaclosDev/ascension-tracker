@@ -8,6 +8,8 @@ export interface CoachPermissions {
   body: boolean;
   /** Lets the coach assign programs. Only meaningful together with {@link training}. */
   editTraining: boolean;
+  /** Lets the coach set calorie and macro targets. Only meaningful together with {@link nutrition}. */
+  editNutrition: boolean;
 }
 
 export interface CoachPerson {
@@ -74,6 +76,11 @@ export const PERMISSION_LABELS: Record<keyof CoachPermissions, { title: string; 
       title: 'Nutrición',
       detail: 'Comidas registradas y objetivos de calorías y macros.',
     },
+    editNutrition: {
+      title: 'Pautar nutrición',
+      detail:
+        'Fijarte calorías y macros para días de entreno y de descanso. Sustituye tus objetivos mientras esté activo.',
+    },
   };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -85,6 +92,7 @@ const ACTION_LABELS: Record<string, string> = {
   VIEW_PROGRAMS: 'Programas asignados',
   COMMENT_WORKOUT: 'Comentar entrenamiento',
   ASSIGN_PROGRAM: 'Asignar programa',
+  SET_NUTRITION_PLAN: 'Pautar nutrición',
 };
 
 export const accessActionLabel = (action: string) => ACTION_LABELS[action] ?? action;
@@ -102,7 +110,7 @@ export const sharedScopes = (permissions: CoachPermissions) =>
     .map((scope) => PERMISSION_LABELS[scope].title)
     .join(' · ');
 
-/** Pautar needs seeing training: dropping training drops the edit permission too. */
+/** Pautar needs seeing the data: dropping a scope drops its edit permission too. */
 export const withScope = (
   permissions: CoachPermissions,
   scope: keyof CoachPermissions,
@@ -110,11 +118,13 @@ export const withScope = (
 ): CoachPermissions => {
   const next = { ...permissions, [scope]: checked };
   if (!next.training) next.editTraining = false;
+  if (!next.nutrition) next.editNutrition = false;
   return next;
 };
 
 export const scopeDisabled = (permissions: CoachPermissions, scope: keyof CoachPermissions) =>
-  scope === 'editTraining' && !permissions.training;
+  (scope === 'editTraining' && !permissions.training) ||
+  (scope === 'editNutrition' && !permissions.nutrition);
 
 export const personName = (person: CoachPerson) => person.name?.trim() || person.email;
 

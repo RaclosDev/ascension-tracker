@@ -52,10 +52,12 @@ public class CoachService {
     private static final Pattern TOKEN_FORMAT = Pattern.compile("[A-Za-z0-9_-]{43}");
 
     private final JdbcTemplate jdbcTemplate;
+    private final NutritionPlanService nutritionPlanService;
     private final SecureRandom random = new SecureRandom();
 
-    public CoachService(JdbcTemplate jdbcTemplate) {
+    public CoachService(JdbcTemplate jdbcTemplate, NutritionPlanService nutritionPlanService) {
         this.jdbcTemplate = jdbcTemplate;
+        this.nutritionPlanService = nutritionPlanService;
     }
 
     // ---- Coach side ----
@@ -131,7 +133,7 @@ public class CoachService {
     public List<CoachClient> listClients(String coachEmail) {
         UUID coachId = requireCoachId(coachEmail);
         return jdbcTemplate.query("""
-                SELECT cc.id, cc.created_at, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training,
+                SELECT cc.id, cc.created_at, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
                        u.name, u.email, u.picture
                 FROM coach_clients cc JOIN users u ON u.id = cc.client_user_id
                 WHERE cc.coach_user_id = ? AND cc.status = 'ACTIVE'
@@ -190,10 +192,11 @@ public class CoachService {
             linkId = jdbcTemplate.queryForObject("""
                     INSERT INTO coach_clients (coach_user_id, client_user_id, status,
                                                can_view_training, can_view_nutrition, can_view_body,
-                                               can_edit_training)
-                    VALUES (?, ?, 'ACTIVE', ?, ?, ?, ?) RETURNING id
+                                               can_edit_training, can_edit_nutrition)
+                    VALUES (?, ?, 'ACTIVE', ?, ?, ?, ?, ?) RETURNING id
                     """, UUID.class, invitation.coachUserId(), clientId,
-                    permissions.training(), permissions.nutrition(), permissions.body(), permissions.grantsEdit());
+                    permissions.training(), permissions.nutrition(), permissions.body(), permissions.grantsEdit(),
+                    permissions.grantsEditNutrition());
         } catch (DuplicateKeyException e) {
             throw new InvalidInputException("Ya estás vinculado con este entrenador.");
         }
@@ -207,7 +210,7 @@ public class CoachService {
 
     public List<MyCoach> listMyCoaches(String clientEmail) {
         return jdbcTemplate.query("""
-                SELECT cc.id, cc.created_at, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training,
+                SELECT cc.id, cc.created_at, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
                        co.name, co.email, co.picture
                 FROM coach_clients cc
                 JOIN users cu ON cu.id = cc.client_user_id
@@ -227,11 +230,12 @@ public class CoachService {
         }
         int updated = jdbcTemplate.update("""
                 UPDATE coach_clients
-                SET can_view_training = ?, can_view_nutrition = ?, can_view_body = ?, can_edit_training = ?
+                SET can_view_training = ?, can_view_nutrition = ?, can_view_body = ?, can_edit_training = ?,
+                    can_edit_nutrition = ?
                 WHERE id = ? AND status = 'ACTIVE'
                   AND client_user_id = (SELECT id FROM users WHERE email = ?)
                 """, permissions.training(), permissions.nutrition(), permissions.body(), permissions.grantsEdit(),
-                linkId, normalize(clientEmail));
+                permissions.grantsEditNutrition(), linkId, normalize(clientEmail));
         if (updated == 0) {
             throw new EntityNotFoundException("Entrenador no encontrado");
         }
@@ -319,20 +323,21 @@ public class CoachService {
                         rs.getString("workout_id"), rs.getString("body"), instant(rs, "created_at"),
                         instant(rs, "updated_at")),
                 userId, userId, userId, userId);
+        var nutritionPlans = nutritionPlanService.exportFor(userId);
         if (coachSince.isEmpty() && asClient.isEmpty() && asCoach.isEmpty() && invitations.isEmpty()
                 && accessesToMyData.isEmpty() && myAccessesAsCoach.isEmpty() && assignments.isEmpty()
-                && comments.isEmpty()) {
+                && comments.isEmpty() && nutritionPlans.isEmpty()) {
             return null;
         }
         return new CoachingExport(coachSince.isEmpty() ? null : coachSince.get(0), asClient, asCoach,
-                invitations, accessesToMyData, myAccessesAsCoach, assignments, comments);
+                invitations, accessesToMyData, myAccessesAsCoach, assignments, comments, nutritionPlans);
     }
 
     // Column names come from the two callers above, never from input.
     private List<LinkExport> exportLinks(String selfColumn, String otherColumn, UUID userId) {
         return jdbcTemplate.query("""
                 SELECT cc.id, cc.status, cc.created_at, cc.ended_at,
-                       cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training,
+                       cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
                        u.name, u.email, u.picture
                 FROM coach_clients cc JOIN users u ON u.id = cc.%s
                 WHERE cc.%s = ? ORDER BY cc.created_at
@@ -427,7 +432,8 @@ public class CoachService {
 
     private static Permissions permissions(ResultSet rs) throws SQLException {
         return new Permissions(rs.getBoolean("can_view_training"), rs.getBoolean("can_view_nutrition"),
-                rs.getBoolean("can_view_body"), rs.getBoolean("can_edit_training"));
+                rs.getBoolean("can_view_body"), rs.getBoolean("can_edit_training"),
+                rs.getBoolean("can_edit_nutrition"));
     }
 
     private static Instant instant(ResultSet rs, String column) throws SQLException {

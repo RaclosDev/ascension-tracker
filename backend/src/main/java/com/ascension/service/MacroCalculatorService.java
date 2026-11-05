@@ -2,6 +2,7 @@ package com.ascension.service;
 
 import com.ascension.dto.FoodLogDTO;
 import com.ascension.dto.MacrosDTO;
+import com.ascension.dto.NutritionPlanDtos;
 import com.ascension.dto.UserSettingsDTO;
 import com.ascension.model.WeightEntry;
 import com.ascension.repository.WeightEntryRepository;
@@ -23,6 +24,8 @@ public class MacroCalculatorService {
     private final WeightEntryRepository weightEntryRepository;
     private final NutritionLogService nutritionLogService;
     private final org.springframework.context.ApplicationContext applicationContext;
+    private final NutritionPlanService nutritionPlanService;
+    private final ClientProgramService clientProgramService;
 
     private NutritionService getNutritionService() {
         return applicationContext.getBean(NutritionService.class);
@@ -31,6 +34,28 @@ public class MacroCalculatorService {
     private static final double DEFAULT_WEIGHT_KG = 75.0;
 
     public MacrosDTO getMacros(String userEmail) {
+        return getMacros(userEmail, LocalDate.now());
+    }
+
+    /**
+     * The targets for {@code date}. A coach's plan in force wins over the user's own settings:
+     * training-day targets when an assigned program prescribes a session that day, rest-day ones otherwise.
+     */
+    public MacrosDTO getMacros(String userEmail, LocalDate date) {
+        var plan = nutritionPlanService.inForce(userEmail);
+        if (plan.isPresent()) {
+            boolean training = clientProgramService.isTrainingDay(userEmail, date);
+            var targets = training ? plan.get().training() : plan.get().rest();
+            var coach = plan.get().coach();
+            return MacrosDTO.builder()
+                    .kcal(targets.kcal())
+                    .protein((double) targets.protein())
+                    .carbs((double) targets.carbs())
+                    .fat((double) targets.fat())
+                    .coachName(coach.name() != null && !coach.name().isBlank() ? coach.name() : coach.email())
+                    .dayType(training ? NutritionPlanDtos.TRAINING : NutritionPlanDtos.REST)
+                    .build();
+        }
         UserSettingsDTO settings = settingsService.getSettings(userEmail);
         if (settings == null) {
             settings = UserSettingsDTO.builder()
@@ -81,7 +106,7 @@ public class MacroCalculatorService {
 
     @Transactional
     public Map<String, Object> getAssistantSummary(String userEmail, LocalDate targetDate) {
-        MacrosDTO targetMacros = getMacros(userEmail);
+        MacrosDTO targetMacros = getMacros(userEmail, targetDate);
         List<FoodLogDTO> logs = nutritionLogService.getFoodLogsByDate(userEmail, targetDate);
 
         double consumedKcal = 0, consumedProtein = 0, consumedCarbs = 0, consumedFat = 0;

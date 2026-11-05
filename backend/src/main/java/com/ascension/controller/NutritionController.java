@@ -8,10 +8,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ascension.util.SecurityUtils;
+
+import java.time.LocalDate;
 
 @Slf4j
 @RestController
@@ -22,9 +26,11 @@ public class NutritionController {
     private final MacroCalculatorService macroCalculatorService;
 
     @GetMapping("/macros")
-    public ResponseEntity<MacrosDTO> getMacros(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<MacrosDTO> getMacros(@RequestParam(required = false)
+                                               @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                                               @AuthenticationPrincipal Jwt jwt) {
         String userEmail = SecurityUtils.extractEmail(jwt);
         if (userEmail == null) return ResponseEntity.status(401).build();
-        return ResponseEntity.ok(macroCalculatorService.getMacros(userEmail));
+        return ResponseEntity.ok(macroCalculatorService.getMacros(userEmail, date == null ? LocalDate.now() : date));
     }
 }

@@ -48,6 +48,8 @@ class UserDataExportServiceTest {
     private CoachService coachService;
     @Mock
     private ProgramService programService;
+    @Mock
+    private CoachRecipeService coachRecipeService;
 
     @InjectMocks
     private UserDataExportService exportService;
