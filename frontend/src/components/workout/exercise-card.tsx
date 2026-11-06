@@ -427,7 +427,6 @@ export const ExerciseCard = React.memo(function ExerciseCard({
             <AlertDialogCancel className="btn btn-secondary">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="btn btn-danger btn-press"
-              style={{ color: 'var(--color-danger)' }}
               onClick={() => {
                 haptics.warning();
                 if (row) removeExercise(row.id);
