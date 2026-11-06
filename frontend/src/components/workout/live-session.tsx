@@ -42,7 +42,6 @@ export function LiveSession() {
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState(workoutName);
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const totalSetsCount = exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
   const completedSetsCount = exercises.reduce(
@@ -198,8 +197,8 @@ export function LiveSession() {
         </div>
       </header>
 
-      {/* Date & Time configuration card */}
-      {activeWorkout && (
+      {/* Fecha y hora: solo al editar un entreno ya guardado; en uno en curso es la de ahora. */}
+      {activeWorkout && isEditing && (
         <div
           className="workout-session-details-bar"
           style={{
@@ -238,61 +237,29 @@ export function LiveSession() {
                 >
                   Fecha y hora del entreno
                 </span>
-                {!isEditing && !showDatePicker && (
-                  <button
-                    type="button"
-                    onClick={() => setShowDatePicker(true)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--accent-primary-light, #38bdf8)',
-                      fontSize: '0.68rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      padding: 0,
-                      textDecoration: 'underline',
-                    }}
-                  >
-                    (Cambiar si fue ayer)
-                  </button>
-                )}
               </div>
-              {isEditing || showDatePicker ? (
-                <input
-                  type="datetime-local"
-                  value={toLocalDatetimeString(activeWorkout.startedAt)}
-                  onChange={(e) => {
-                    const ts = fromLocalDatetimeString(e.target.value);
-                    setWorkoutDate(ts);
-                  }}
-                  className="workout-date-input"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    borderRadius: '6px',
-                    color: 'var(--text-primary)',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    padding: '0.2rem 0.4rem',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    marginTop: '0.2rem',
-                    maxWidth: '240px',
-                  }}
-                />
-              ) : (
-                <span
-                  style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600 }}
-                >
-                  {new Date(activeWorkout.startedAt).toLocaleDateString(undefined, {
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
-              )}
+              <input
+                type="datetime-local"
+                value={toLocalDatetimeString(activeWorkout.startedAt)}
+                onChange={(e) => {
+                  const ts = fromLocalDatetimeString(e.target.value);
+                  setWorkoutDate(ts);
+                }}
+                className="workout-date-input"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '6px',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  padding: '0.2rem 0.4rem',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  marginTop: '0.2rem',
+                  maxWidth: '240px',
+                }}
+              />
             </div>
           </div>
 
