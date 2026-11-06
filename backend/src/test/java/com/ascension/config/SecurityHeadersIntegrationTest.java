@@ -26,7 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = {VersionController.class, AuthController.class})
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, com.ascension.security.AccessTokenIssuer.class,
+        com.ascension.security.RefreshCookies.class, com.ascension.security.TrustedOrigins.class})
 @TestPropertySource(properties = {
     "app.jwt.secret=this_is_a_very_long_secret_that_is_at_least_32_bytes_long_for_tests",
     "google.client-id=test-google-client-id"
