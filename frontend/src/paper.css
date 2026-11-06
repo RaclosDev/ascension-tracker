@@ -80,6 +80,15 @@ html {
 }
 
 /*
+ * Iconos funcionales (Lucide) con trazo de rotulador: el grosor por defecto es de línea fina
+ * de interfaz y desentona con la tinta de los títulos. Solo se toca el valor por defecto;
+ * los iconos con un grosor explícito lo conservan.
+ */
+svg.lucide[stroke-width='2'] {
+  stroke-width: 2.5;
+}
+
+/*
  * Papel: todo lo que vive dentro de una hoja, un diálogo o un menú se escribe con tinta.
  * Los tokens se redefinen aquí y Tailwind v4 los lee donde se usan, así que la pared no cambia.
  */
@@ -514,13 +523,15 @@ body,
 .mobile-top-bar {
   border-bottom: 2px solid var(--wall-line-soft);
 }
+/* El mismo logotipo que la barra lateral y la landing: una sola marca en toda la app. */
 .mobile-brand {
-  color: var(--wall-ink);
-  font-family: var(--font-marker);
-  font-size: 1.35rem;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  white-space: nowrap;
+  display: block;
+  height: 26px;
+  width: auto;
+}
+html[data-mode='light'] .mobile-brand,
+html[data-mode='light'] .sidebar-title-img {
+  filter: invert(1) brightness(0.12);
 }
 .mobile-top-actions {
   display: flex;
@@ -588,6 +599,9 @@ body,
   font-weight: 400;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  /* Sin transparencia: a 10px la etiqueta necesita el contraste completo en los dos modos. */
+  color: var(--text-secondary);
+  opacity: 1;
 }
 .mobile-bottom-item.active .mobile-bottom-icon,
 .mobile-bottom-item.active .mobile-bottom-label {
@@ -668,6 +682,22 @@ body,
 }
 .settings-nav-list::-webkit-scrollbar {
   display: none;
+}
+/* Borde difuminado solo por el lado donde quedan pestañas: avisa de que la tira se desplaza. */
+.settings-nav-list.fade-end {
+  mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
+}
+.settings-nav-list.fade-start {
+  mask-image: linear-gradient(to left, #000 calc(100% - 48px), transparent);
+}
+.settings-nav-list.fade-start.fade-end {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 48px,
+    #000 calc(100% - 48px),
+    transparent
+  );
 }
 .settings-nav-item {
   display: flex;

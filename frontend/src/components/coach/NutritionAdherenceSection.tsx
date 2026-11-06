@@ -6,7 +6,7 @@ import {
   type AdherenceWeek,
 } from '@/lib/coach/nutritionAdherence';
 
-const pct = (value: number | null) => (value == null ? '—' : `${value} %`);
+const pct = (value: number | null) => (value == null ? 'Sin datos' : `${value} %`);
 
 function dayState(day: AdherenceDay) {
   const label = format(parseISO(day.date), 'EEEE d', { locale: es });

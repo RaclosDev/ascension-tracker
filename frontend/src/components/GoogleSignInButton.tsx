@@ -22,8 +22,11 @@ const googleIdentity = () =>
 
 export default function GoogleSignInButton({
   onCredential,
+  className,
 }: {
   onCredential: (credential: string) => Promise<void>;
+  /** Estilo del botón visible; sin él, el botón de contorno a todo el ancho. */
+  className?: string;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -102,7 +105,7 @@ export default function GoogleSignInButton({
       <Button
         type="button"
         variant="outline"
-        className="w-full"
+        className={className ?? 'w-full'}
         style={{ paddingInline: '1rem' }}
         onClick={start}
       >

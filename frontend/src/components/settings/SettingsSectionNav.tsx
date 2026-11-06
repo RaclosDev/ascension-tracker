@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Activity,
@@ -40,6 +40,7 @@ interface SettingsSectionNavProps {
  */
 export function SettingsSectionNav({ active }: SettingsSectionNavProps) {
   const listRef = useRef<HTMLUListElement>(null);
+  const [edges, setEdges] = useState({ start: false, end: false });
 
   // En móvil la tira se desplaza en horizontal: mantiene visible la sección activa.
   useEffect(() => {
@@ -49,9 +50,28 @@ export function SettingsSectionNav({ active }: SettingsSectionNavProps) {
     list.scrollLeft = item.offsetLeft - (list.clientWidth - item.offsetWidth) / 2;
   }, [active]);
 
+  // Difumina el borde por el que quedan pestañas ocultas, para que se vea que la tira se desplaza.
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const update = () => {
+      const max = list.scrollWidth - list.clientWidth;
+      setEdges({ start: list.scrollLeft > 2, end: max > 2 && list.scrollLeft < max - 2 });
+    };
+    update();
+    list.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      list.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [active]);
+
+  const fade = `${edges.start ? ' fade-start' : ''}${edges.end ? ' fade-end' : ''}`;
+
   return (
     <nav className="settings-nav" aria-label="Secciones de ajustes">
-      <ul ref={listRef} className="settings-nav-list">
+      <ul ref={listRef} className={`settings-nav-list${fade}`}>
         {SETTINGS_SECTIONS.map(({ id, label, icon: Icon }) => {
           const isActive = id === active;
           return (

@@ -52,7 +52,7 @@ const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 
 const numFmt = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
 const num = (value: number | null | undefined, unit = '') =>
-  value == null || !Number.isFinite(value) ? '—' : `${numFmt.format(value)}${unit}`;
+  value == null || !Number.isFinite(value) ? 'Sin datos' : `${numFmt.format(value)}${unit}`;
 
 export default function CoachClientPage() {
   const { linkId = '' } = useParams();

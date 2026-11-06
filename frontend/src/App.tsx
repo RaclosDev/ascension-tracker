@@ -281,7 +281,7 @@ export default function App() {
 
   if (authError && !googleClientId) {
     return (
-      <div
+      <main
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -294,15 +294,15 @@ export default function App() {
           textAlign: 'center',
         }}
       >
-        <h2 style={{ marginBottom: '10px' }}>Error de conexión</h2>
-        <p style={{ color: '#94a3b8', marginBottom: '20px' }}>
+        <h1 style={{ marginBottom: '10px', fontSize: '1.5rem' }}>Error de conexión</h1>
+        <p style={{ color: '#3f4652', marginBottom: '20px' }}>
           No se pudo cargar la configuración segura. Comprueba tu conexión y que el servidor está
           online.
         </p>
         <button className="btn btn-primary" onClick={() => window.location.reload()}>
           Reintentar
         </button>
-      </div>
+      </main>
     );
   }
 

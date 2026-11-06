@@ -74,6 +74,29 @@
   outline: 2px solid var(--landing-blue);
   outline-offset: 3px;
 }
+/* Acción principal del hero: el mismo bloque de tinta que el botón de la cabecera, sin el goteo. */
+.landing-google-cta {
+  min-height: 48px;
+  padding: 0 1.25rem;
+  background: var(--ink);
+  color: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.landing-google-cta:hover {
+  background: var(--ink);
+  color: var(--paper);
+  transform: translateY(-1px);
+}
+.landing-google-cta:focus-visible {
+  outline: 2px solid var(--landing-blue);
+  outline-offset: 3px;
+}
 .landing-drip svg.drip {
   position: absolute;
   left: 0.6rem;

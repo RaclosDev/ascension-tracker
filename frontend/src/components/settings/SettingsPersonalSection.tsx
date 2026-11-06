@@ -26,7 +26,14 @@ export function SettingsPersonalSection({
       <SettingsSectionHeader title="Datos Personales" icon={User} />
       <div className="mt-5 pt-5 border-t border-white/10">
         <h3 className="subsection-title">Métricas Corporales y Biometría</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '1rem',
+            alignItems: 'end',
+          }}
+        >
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label htmlFor="settings-personal-section-sexo" className="form-label">
               Sexo
@@ -103,7 +110,7 @@ export function SettingsPersonalSection({
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label htmlFor="settings-personal-section-peso-deseado-kg" className="form-label">
-              Peso Deseado (kg)
+              Peso meta (kg)
             </label>
             <input
               id="settings-personal-section-peso-deseado-kg"
@@ -121,7 +128,14 @@ export function SettingsPersonalSection({
         <h3 className="subsection-title" style={{ marginTop: '1.5rem' }}>
           Progreso y Fechas
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '1rem',
+            alignItems: 'end',
+          }}
+        >
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label htmlFor="settings-personal-section-ritmo" className="form-label">
               {isGaining ? 'Ganancia (kg/sem)' : 'Pérdida (kg/sem)'}

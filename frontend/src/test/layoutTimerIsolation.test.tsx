@@ -75,5 +75,5 @@ it('shows the session avatar in the mobile header and opens settings from it', (
   );
   const avatar = screen.getByRole('button', { name: 'Cuenta y ajustes' });
   expect(avatar).toHaveTextContent('T');
-  expect(screen.getByText('Ascension')).toBeInTheDocument();
+  expect(screen.getAllByAltText('Ascension')).toHaveLength(2);
 });

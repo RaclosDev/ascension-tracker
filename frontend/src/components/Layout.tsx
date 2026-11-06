@@ -28,7 +28,7 @@ const navItems = [
   {
     path: '/dashboard',
     icon: <Home className="w-5 h-5" />,
-    label: 'Dashboard',
+    label: 'Inicio',
     shortLabel: 'Inicio',
   },
   {
@@ -181,7 +181,7 @@ export default function Layout() {
           <div className="sidebar-header">
             <div className="sidebar-brand-container">
               <img src="/ascension-title.png" alt="Ascension" className="sidebar-title-img" />
-              <div className="logo-subtitle">Weight Tracker</div>
+              <div className="logo-subtitle">Entreno · Nutrición · Peso</div>
             </div>
           </div>
           <nav className="sidebar-nav" aria-label="Navegación principal">
@@ -218,7 +218,13 @@ export default function Layout() {
         <main className="main-content">
           {/* Cabecera móvil: marca a la izquierda y sesión a la derecha; se desplaza con el contenido */}
           <header className="mobile-top-bar">
-            <span className="mobile-brand">Ascension</span>
+            <img
+              src="/ascension-title.png"
+              alt="Ascension"
+              className="mobile-brand"
+              width="75"
+              height="26"
+            />
             <div className="mobile-top-actions">
               {hideNav && <WorkoutElapsedTimer />}
               <button

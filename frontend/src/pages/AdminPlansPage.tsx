@@ -33,7 +33,7 @@ const FREE_PLAN = 'FREE';
 
 const planName = (id: string) => PLAN_NAMES[id] ?? id;
 const formatDate = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' }) : '—';
+  iso ? new Date(iso).toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' }) : 'Sin fecha';
 
 /** Today plus one month minus one day, in local time, as yyyy-mm-dd: a month paid from today. */
 function defaultPaidUntil(): string {

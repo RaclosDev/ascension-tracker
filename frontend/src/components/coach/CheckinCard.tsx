@@ -37,7 +37,7 @@ export function CheckinCard({ checkin, footer }: { checkin: Checkin; footer?: Re
               <dt className="text-sm" style={muted}>
                 {a.question}
               </dt>
-              <dd className="text-white whitespace-pre-line">{a.answer || '—'}</dd>
+              <dd className="text-white whitespace-pre-line">{a.answer || 'Sin respuesta'}</dd>
             </div>
           ))}
         </dl>

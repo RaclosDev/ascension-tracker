@@ -125,9 +125,9 @@ export function Dashboard() {
             justifyContent: 'center',
             alignItems: 'center',
             gap: '0.5rem',
-            borderRadius: '16px',
             marginBottom: '1.5rem',
-            boxShadow: '0 8px 16px rgba(0, 133, 255, 0.25)',
+            // Sombra plana desplazada, como las hojas: marca la acción principal sin brillo.
+            boxShadow: 'var(--shadow-md)',
           }}
         >
           <Play size={20} fill="currentColor" />
