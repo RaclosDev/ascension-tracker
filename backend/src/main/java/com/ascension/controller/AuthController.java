@@ -285,7 +285,7 @@ public class AuthController {
                 .body(Map.of("message", "Log out successful"));
     }
 
-    @DeleteMapping({"/account", "/users/account"})
+    @DeleteMapping("/account")
     public ResponseEntity<Map<String, String>> deleteAccount(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request) {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null || email.isBlank()) {

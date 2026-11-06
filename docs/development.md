@@ -85,6 +85,7 @@ Desde `frontend/`:
 ```bash
 npm ci
 npm run lint
+npm run knip
 npm run typecheck
 npm test
 npm run test:coverage
@@ -108,6 +109,14 @@ Referencia local del 31 de octubre de 2026, anterior a la limpieza documental:
 | Playwright | 87 casos Chromium y 2 casos del build en escritorio/móvil |
 
 La ejecución local de Maven usó JDK 21 con compilación objetivo 17, antes de que el proyecto pasara a Java 21. Estos resultados son una referencia fechada, no una promesa sobre futuros commits. El estado de una revisión publicada debe comprobarse en GitHub Actions. Las APIs externas están simuladas en los E2E; PostgreSQL sí es real en los tests de integración.
+
+## Convenciones del backend
+
+- **Acceso a datos.** Spring Data JPA para el CRUD de entidades propias de un usuario (entrenos, comidas, pesos…). `JdbcTemplate` con SQL explícito para consultas con joins, agregados o bloqueos (modo entrenador, cuotas, idempotencia). No mezcles los dos en la misma tabla dentro de una transacción sin vaciar la sesión de JPA.
+- **Emails.** Normaliza siempre con `Emails.normalize` (o `normalizeRequired` si su ausencia es un 404); `users.email` se guarda en minúsculas y las claves foráneas distinguen mayúsculas. Para el id interno usa `UserIdLookup`.
+- **Errores.** Lanza las excepciones de `com.ascension.exception`: `EntityNotFoundException` (404), `InvalidInputException` (400), `ExternalApiException` y `AiProcessingException` (502 si falla un servicio externo o la IA). No uses `jakarta.persistence.EntityNotFoundException`: el manejador global no la traduce y acaba en 500. Los mensajes al cliente nunca llevan datos personales.
+- **Texto sin distinción de mayúsculas.** `toLowerCase(Locale.ROOT)`, nunca el locale por defecto del servidor.
+- **Respuestas.** DTOs o records tipados; evita `Map<String, Object>` en controladores y servicios.
 
 ## Despliegue y diagnóstico
 
