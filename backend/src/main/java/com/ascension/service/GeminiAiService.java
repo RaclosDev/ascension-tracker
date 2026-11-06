@@ -1,6 +1,8 @@
 package com.ascension.service;
 
 import com.ascension.dto.AiChatRequestDTO;
+import com.ascension.dto.AiDtos.MealAssistantResponse;
+import com.ascension.dto.AiDtos.NutritionLabel;
 import com.ascension.dto.FoodLogDTO;
 import com.ascension.dto.MacrosDTO;
 import com.ascension.dto.MealDTO;
@@ -27,7 +29,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -193,7 +194,7 @@ public class GeminiAiService {
         }
     }
 
-    public Map<String, Object> processNutritionalLabel(String userEmail, MultipartFile file) {
+    public NutritionLabel processNutritionalLabel(String userEmail, MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new InvalidInputException("No se ha enviado ninguna imagen.");
         }
@@ -241,7 +242,7 @@ public class GeminiAiService {
         }
     }
 
-    public Map<String, Object> generateMealAssistantResponse(
+    public MealAssistantResponse generateMealAssistantResponse(
             String userEmail,
             String promptText,
             String base64Image,

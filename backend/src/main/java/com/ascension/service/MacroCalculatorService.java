@@ -1,5 +1,7 @@
 package com.ascension.service;
 
+import com.ascension.dto.AiDtos.AssistantSummary;
+import com.ascension.dto.AiDtos.MacroTotals;
 import com.ascension.dto.FoodLogDTO;
 import com.ascension.dto.MacrosDTO;
 import com.ascension.dto.NutritionPlanDtos;
@@ -12,8 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -105,7 +105,7 @@ public class MacroCalculatorService {
     }
 
     @Transactional
-    public Map<String, Object> getAssistantSummary(String userEmail, LocalDate targetDate) {
+    public AssistantSummary getAssistantSummary(String userEmail, LocalDate targetDate) {
         MacrosDTO targetMacros = getMacros(userEmail, targetDate);
         List<FoodLogDTO> logs = nutritionLogService.getFoodLogsByDate(userEmail, targetDate);
 
@@ -122,18 +122,13 @@ public class MacroCalculatorService {
         double targetCarbs = targetMacros.getCarbs() != null ? targetMacros.getCarbs() : 200.0;
         double targetFat = targetMacros.getFat() != null ? targetMacros.getFat() : 60.0;
 
-        Map<String, Object> summary = new HashMap<>();
-        summary.put("target", Map.of("kcal", targetKcal, "protein", targetProtein, "carbs", targetCarbs, "fat", targetFat));
-        summary.put("consumed", Map.of("kcal", Math.round(consumedKcal), "protein", round1(consumedProtein), "carbs", round1(consumedCarbs), "fat", round1(consumedFat)));
-        summary.put("remaining", Map.of(
-                "kcal", Math.round(targetKcal - consumedKcal),
-                "protein", round1(targetProtein - consumedProtein),
-                "carbs", round1(targetCarbs - consumedCarbs),
-                "fat", round1(targetFat - consumedFat)
-        ));
-        summary.put("date", targetDate.toString());
-        summary.put("meals", getNutritionService().getMeals(userEmail));
-        return summary;
+        return new AssistantSummary(
+                new MacroTotals(targetKcal, targetProtein, targetCarbs, targetFat),
+                new MacroTotals(Math.round(consumedKcal), round1(consumedProtein), round1(consumedCarbs), round1(consumedFat)),
+                new MacroTotals(Math.round(targetKcal - consumedKcal), round1(targetProtein - consumedProtein),
+                        round1(targetCarbs - consumedCarbs), round1(targetFat - consumedFat)),
+                targetDate.toString(),
+                getNutritionService().getMeals(userEmail));
     }
 
     private Double getCurrentWeight(String userEmail) {
