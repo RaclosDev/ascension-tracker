@@ -1,13 +1,14 @@
-# Build stage
-FROM maven:3.9-eclipse-temurin-17-alpine@sha256:b7c8d7298dbabbe750441736cd99a1d120a58083d5af8d2bd75a1624cfdd8f3a AS build
+# Build stage (Maven Wrapper: misma versión de Maven que en local y CI)
+FROM eclipse-temurin:21-jdk-alpine@sha256:b78a1d385da875588e21207f07dddf9a1418849971ae857fb24c8f3a7d441a72 AS build
 WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
+COPY mvnw pom.xml ./
+COPY .mvn ./.mvn
+RUN sh ./mvnw dependency:go-offline -B
 COPY src ./src
-RUN mvn package -DskipTests -B
+RUN sh ./mvnw package -DskipTests -B
 
 # Runtime stage
-FROM eclipse-temurin:17-jre-alpine@sha256:3c472129dc75a8d1d7a3f2df5b2093a8077e4493deff046754d4764d0371de63
+FROM eclipse-temurin:21-jre-alpine@sha256:82cf3d9ccbe1ed46252008d51b2f2329e6b9e8a2f4394c4bebefc3ea7f4b1372
 # Pull Alpine security fixes released after the pinned base image digest.
 RUN apk upgrade --no-cache
 RUN addgroup -S spring && adduser -S spring -G spring

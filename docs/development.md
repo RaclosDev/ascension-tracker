@@ -3,7 +3,7 @@
 ## Requisitos
 
 - Docker con Compose para el entorno completo y para los tests de integración con Testcontainers.
-- Java 17 y Node.js 22 si ejecutas backend/frontend fuera de sus contenedores. El repositorio incluye Maven Wrapper.
+- Java 21 y Node.js 22 si ejecutas backend/frontend fuera de sus contenedores. El repositorio incluye Maven Wrapper.
 - Un cliente OAuth de Google de tipo aplicación web. Autoriza el origen del frontend: `http://localhost:3000` con Compose o `http://localhost:5173` con Vite.
 
 ## Configuración con Compose
@@ -107,7 +107,7 @@ Referencia local del 31 de octubre de 2026, anterior a la limpieza documental:
 | Cobertura frontend | Statements 42%; branches 32,5%; functions 31,65%; lines 42,46% |
 | Playwright | 87 casos Chromium y 2 casos del build en escritorio/móvil |
 
-La ejecución local de Maven usó JDK 21 con compilación objetivo 17; CI está configurada con JDK 17. Estos resultados son una referencia fechada, no una promesa sobre futuros commits. El estado de una revisión publicada debe comprobarse en GitHub Actions. Las APIs externas están simuladas en los E2E; PostgreSQL sí es real en los tests de integración.
+La ejecución local de Maven usó JDK 21 con compilación objetivo 17, antes de que el proyecto pasara a Java 21. Estos resultados son una referencia fechada, no una promesa sobre futuros commits. El estado de una revisión publicada debe comprobarse en GitHub Actions. Las APIs externas están simuladas en los E2E; PostgreSQL sí es real en los tests de integración.
 
 ## Despliegue y diagnóstico
 

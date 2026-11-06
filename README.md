@@ -30,7 +30,7 @@ El acceso requiere una cuenta de Google. Las funciones de IA y push necesitan su
 | --- | --- |
 | Interfaz | React 19, TypeScript, Vite, Tailwind CSS |
 | Estado y consultas | TanStack Query, Zustand, IndexedDB |
-| API | Java 17, Spring Boot 4.1, Spring Security |
+| API | Java 21, Spring Boot 4.1, Spring Security |
 | Persistencia | PostgreSQL 16, Spring Data JPA, Flyway |
 | Pruebas | JUnit, Testcontainers, Vitest, Testing Library, Playwright |
 | Automatización | GitHub Actions, CodeQL, Trivy, Docker Compose |
