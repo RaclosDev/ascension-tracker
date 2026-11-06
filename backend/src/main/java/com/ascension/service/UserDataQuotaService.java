@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import com.ascension.config.UserDataQuotaProperties;
 import com.ascension.dto.UserDataExportDTO;
 import com.ascension.exception.UserDataQuotaExceededException;
@@ -27,7 +28,7 @@ public class UserDataQuotaService {
     public void acquireUserQuotaLock(String userEmail) {
         if (userEmail != null && !userEmail.isBlank() && jdbcTemplate != null) {
             jdbcTemplate.queryForObject("SELECT pg_advisory_xact_lock(hashtext('ascension_quota'), hashtext(?))",
-                    Object.class, userEmail.trim().toLowerCase(java.util.Locale.ROOT));
+                    Object.class, Emails.normalize(userEmail));
         }
     }
 

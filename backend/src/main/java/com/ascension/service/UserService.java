@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -10,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -80,7 +80,7 @@ public class UserService {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("User email cannot be null or blank");
         }
-        String cleanEmail = email.trim().toLowerCase(Locale.ROOT);
+        String cleanEmail = Emails.normalize(email);
         String sql = "INSERT INTO users (email, name, picture, google_sub, tokens_valid_after) " +
                      "VALUES (?, ?, ?, ?, NOW() - INTERVAL '1 second') " +
                      "ON CONFLICT (email) DO UPDATE SET " +
@@ -105,7 +105,7 @@ public class UserService {
         if (email == null || email.isBlank()) {
             return new UserSecurityState(false, null);
         }
-        String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+        String normalizedEmail = Emails.normalize(email);
         return loadSecurityState(normalizedEmail);
     }
 
@@ -124,7 +124,7 @@ public class UserService {
         if (email == null || email.isBlank()) {
             return;
         }
-        String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+        String normalizedEmail = Emails.normalize(email);
         Instant effectiveTime = timestamp != null ? timestamp : Instant.now();
         Timestamp ts = Timestamp.from(effectiveTime);
 
@@ -145,8 +145,8 @@ public class UserService {
         if (googleSub == null || googleSub.isBlank() || oldEmail == null || newEmail == null || newEmail.isBlank()) {
             throw new IllegalArgumentException("Google subject and both emails are required");
         }
-        String cleanOld = oldEmail.trim().toLowerCase(Locale.ROOT);
-        String cleanNew = newEmail.trim().toLowerCase(Locale.ROOT);
+        String cleanOld = Emails.normalize(oldEmail);
+        String cleanNew = Emails.normalize(newEmail);
         if (cleanOld.equals(cleanNew)) {
             return false;
         }

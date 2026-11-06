@@ -101,7 +101,8 @@ class PiiLogVerificationTest {
     void accountDeletionService_masksEmailInAllLogs() {
         AccountDeletionService service = new AccountDeletionService(jdbcTemplate,
                 new com.ascension.service.ProgressPhotoService(jdbcTemplate, com.ascension.service.PhotoStorage.disabled(),
-                        org.mockito.Mockito.mock(org.springframework.transaction.PlatformTransactionManager.class)));
+                        org.mockito.Mockito.mock(org.springframework.transaction.PlatformTransactionManager.class),
+                        new com.ascension.service.UserIdLookup(jdbcTemplate)));
         service.wipeAccountData(TARGET_EMAIL);
 
         assertNoRawEmailInLogs();

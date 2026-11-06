@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import com.ascension.dto.CheckinDtos.Answer;
 import com.ascension.dto.CheckinDtos.Checkin;
 import com.ascension.dto.CheckinDtos.CheckinExport;
@@ -25,7 +26,6 @@ import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -158,7 +158,7 @@ public class CheckinService {
                 SELECT %s FROM checkins c
                 WHERE c.link_id = ? AND c.client_user_id = (SELECT id FROM users WHERE email = ?)
                 ORDER BY c.week_start DESC LIMIT ?
-                """.formatted(COLUMNS), checkin(true), linkId, normalize(clientEmail), HISTORY_WEEKS);
+                """.formatted(COLUMNS), checkin(true), linkId, Emails.normalizeRequired(clientEmail), HISTORY_WEEKS);
     }
 
     // ---- GDPR export ----
@@ -199,7 +199,7 @@ public class CheckinService {
                         rs.getObject("client_user_id", UUID.class), rs.getString("client_email"),
                         rs.getBoolean("can_view_body"),
                         new Person(rs.getString("name"), rs.getString("email"), rs.getString("picture"))),
-                linkId, normalize(clientEmail));
+                linkId, Emails.normalizeRequired(clientEmail));
         if (found.isEmpty()) {
             throw new EntityNotFoundException("Entrenador no encontrado");
         }
@@ -216,7 +216,7 @@ public class CheckinService {
     private UUID requireCoachId(String coachEmail) {
         List<UUID> ids = jdbcTemplate.queryForList("""
                 SELECT cp.user_id FROM coach_profiles cp JOIN users u ON u.id = cp.user_id WHERE u.email = ?
-                """, UUID.class, normalize(coachEmail));
+                """, UUID.class, Emails.normalizeRequired(coachEmail));
         if (ids.isEmpty()) {
             throw new SecurityException("User is not a coach");
         }
@@ -251,10 +251,4 @@ public class CheckinService {
         return ts == null ? null : ts.toInstant();
     }
 
-    private static String normalize(String email) {
-        if (email == null || email.isBlank()) {
-            throw new EntityNotFoundException("Usuario no encontrado");
-        }
-        return email.trim().toLowerCase(Locale.ROOT);
-    }
 }

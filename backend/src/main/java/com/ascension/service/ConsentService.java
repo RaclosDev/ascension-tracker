@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import com.ascension.dto.ConsentDtos.Answer;
 import com.ascension.dto.ConsentDtos.Change;
 import com.ascension.dto.ConsentDtos.Kind;
@@ -12,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.EnumMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,7 +46,7 @@ public class ConsentService {
                 """, rs -> {
             answers.put(Kind.valueOf(rs.getString("kind")), new Answer(rs.getBoolean("granted"),
                     rs.getString("version"), rs.getTimestamp("created_at").toInstant()));
-        }, normalize(email));
+        }, Emails.normalize(email));
         return new Status(version, answers);
     }
 
@@ -77,7 +77,7 @@ public class ConsentService {
                 SELECT c.granted FROM user_consents c JOIN users u ON u.id = c.user_id
                 WHERE u.email = ? AND c.kind = ?
                 ORDER BY c.created_at DESC, c.id LIMIT 1
-                """, rs -> rs.next() ? rs.getBoolean(1) : null, normalize(email), kind.name());
+                """, rs -> rs.next() ? rs.getBoolean(1) : null, Emails.normalize(email), kind.name());
         return Boolean.TRUE.equals(granted);
     }
 
@@ -85,13 +85,10 @@ public class ConsentService {
         int rows = jdbcTemplate.update("""
                 INSERT INTO user_consents (user_id, kind, version, granted)
                 SELECT id, ?, ?, ? FROM users WHERE email = ?
-                """, kind.name(), version, granted, normalize(email));
+                """, kind.name(), version, granted, Emails.normalize(email));
         if (rows != 1) {
             throw new IllegalStateException("No user row for consent");
         }
     }
 
-    private static String normalize(String email) {
-        return email.trim().toLowerCase(Locale.ROOT);
-    }
 }
