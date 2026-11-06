@@ -124,14 +124,6 @@ public class RefreshTokenService {
         return refreshTokenRepository.findByToken(token);
     }
 
-    public RefreshToken verifyExpiration(RefreshToken token) {
-        if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
-            refreshTokenRepository.delete(token);
-            throw new com.ascension.exception.TokenRefreshException("Refresh token is expired");
-        }
-        return token;
-    }
-
     @Transactional
     public void deleteByEmail(String email) {
         refreshTokenRepository.deleteByEmail(email);

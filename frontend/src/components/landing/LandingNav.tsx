@@ -1,4 +1,3 @@
-import React from 'react';
 import DripButton from './DripButton';
 import { requestGoogleSignIn } from '../GoogleSignInButton';
 

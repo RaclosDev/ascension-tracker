@@ -168,10 +168,6 @@ public class WorkoutService {
         return workoutMapper.toDTO(we);
     }
 
-    private WorkoutSetDTO toSetDTO(WorkoutSet s) {
-        return workoutMapper.toDTO(s);
-    }
-
     @Transactional(readOnly = true)
     public List<CustomExerciseDTO> getCustomExercises(String userEmail) {
         return customExerciseService.getCustomExercises(userEmail);
