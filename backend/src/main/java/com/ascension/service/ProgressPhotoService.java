@@ -1,6 +1,7 @@
 package com.ascension.service;
 
 import com.ascension.util.Emails;
+import com.ascension.util.ImageFormats;
 import com.ascension.dto.ProgressPhotoDtos.ExportedPhoto;
 import com.ascension.dto.ProgressPhotoDtos.Photo;
 import com.ascension.dto.ProgressPhotoDtos.PhotoList;
@@ -23,11 +24,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -240,15 +239,8 @@ public class ProgressPhotoService {
 
     /** Checks the file's first bytes, never its name or declared type. */
     static String contentType(byte[] b) {
-        if (b.length >= 3 && (b[0] & 0xFF) == 0xFF && (b[1] & 0xFF) == 0xD8 && (b[2] & 0xFF) == 0xFF) {
-            return "image/jpeg";
-        }
-        if (b.length >= 12
-                && Arrays.equals(Arrays.copyOfRange(b, 0, 4), "RIFF".getBytes(StandardCharsets.US_ASCII))
-                && Arrays.equals(Arrays.copyOfRange(b, 8, 12), "WEBP".getBytes(StandardCharsets.US_ASCII))) {
-            return "image/webp";
-        }
-        return null;
+        String format = ImageFormats.detect(b);
+        return ImageFormats.JPEG.equals(format) || ImageFormats.WEBP.equals(format) ? format : null;
     }
 
     public static byte[] read(MultipartFile file) {

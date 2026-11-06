@@ -1,5 +1,6 @@
 package com.ascension.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -20,7 +21,7 @@ public class UserController {
     }
 
     @DeleteMapping("/account")
-    public ResponseEntity<Map<String, String>> deleteAccount(@AuthenticationPrincipal Jwt jwt) {
-        return authController.deleteAccount(jwt);
+    public ResponseEntity<Map<String, String>> deleteAccount(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request) {
+        return authController.deleteAccount(jwt, request);
     }
 }

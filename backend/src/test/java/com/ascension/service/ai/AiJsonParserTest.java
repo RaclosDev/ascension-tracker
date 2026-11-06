@@ -28,12 +28,12 @@ class AiJsonParserTest {
 
     @Test
     void capsLabelValuesToPhysicalLimits() throws Exception {
-        Map<String, Object> label = parser.parseNutritionalLabel("""
+        var label = parser.parseNutritionalLabel("""
                 {"kcalPer100g":12000,"proteinPer100g":10,"carbsPer100g":500,"fatPer100g":5}
                 """);
 
-        assertThat(label.get("kcalPer100g")).isEqualTo(900.0);
-        assertThat(label.get("carbsPer100g")).isEqualTo(100.0);
+        assertThat(label.kcalPer100g()).isEqualTo(900.0);
+        assertThat(label.carbsPer100g()).isEqualTo(100.0);
     }
 
     @Test

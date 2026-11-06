@@ -1,44 +1,44 @@
 package com.ascension.controller;
 
-import com.ascension.util.Emails;
-import jakarta.servlet.http.HttpServletRequest;
+import com.ascension.dto.LoginRequest;
+import com.ascension.exception.TokenRefreshException;
 import com.ascension.model.RefreshToken;
-import com.ascension.service.RefreshTokenService;
+import com.ascension.security.AccessTokenIssuer;
+import com.ascension.security.RefreshCookies;
+import com.ascension.security.TrustedOrigins;
 import com.ascension.service.AccountDeletionService;
+import com.ascension.service.RefreshTokenService;
 import com.ascension.service.UserService;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import com.ascension.service.UserService.User;
+import com.ascension.util.Emails;
+import com.ascension.util.PiiMasker;
+import com.ascension.util.SecurityUtils;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.CookieValue;
-import jakarta.annotation.PostConstruct;
-
-import com.ascension.exception.TokenRefreshException;
-import com.ascension.service.UserService.User;
-import com.ascension.util.PiiMasker;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -46,84 +46,41 @@ import java.util.Optional;
 @RequestMapping("/api/auth")
 public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
-    private static final String REFRESH_COOKIE_PATH = "/api/auth";
 
     private final GoogleIdTokenVerifier verifier;
-    private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
     private final RefreshTokenService refreshTokenService;
     private final AccountDeletionService accountDeletionService;
     private final UserService userService;
-    
+    private final AccessTokenIssuer accessTokens;
+    private final RefreshCookies refreshCookies;
+    private final TrustedOrigins trustedOrigins;
+
     @Value("${google.client-id:CHANGE_ME}")
     private String googleClientId;
 
-    @Value("${app.jwt.expiration-ms:900000}")
-    private long jwtExpirationMs;
-
-    @Value("${app.cookie.same-site:Lax}")
-    private String cookieSameSite;
-
-    @Value("${app.cookie.secure:#{null}}")
-    private Boolean cookieSecure;
-
-    @Value("${app.cors.allowed-origins:http://localhost:5173,https://ascension.raclos.es}")
-    private String corsAllowedOrigins;
-
     public AuthController(
             GoogleIdTokenVerifier verifier,
-            JwtEncoder jwtEncoder,
             JwtDecoder jwtDecoder,
             RefreshTokenService refreshTokenService,
             AccountDeletionService accountDeletionService,
-            UserService userService) {
+            UserService userService,
+            AccessTokenIssuer accessTokens,
+            RefreshCookies refreshCookies,
+            TrustedOrigins trustedOrigins) {
         this.verifier = verifier;
-        this.jwtEncoder = jwtEncoder;
         this.jwtDecoder = jwtDecoder;
         this.refreshTokenService = refreshTokenService;
         this.accountDeletionService = accountDeletionService;
         this.userService = userService;
-    }
-
-    private String generateJwt(String email, String name, String picture) {
-        return encodeJwt(email, name, picture, currentSecurityVersion(email));
-    }
-
-    private String generateJwt(String email, String name, String picture, String authorizedVersion) {
-        String expected = authorizedVersion != null ? authorizedVersion : "";
-        if (!expected.equals(currentSecurityVersion(email))) {
-            throw new TokenRefreshException("Session was revoked during refresh. Please log in again.");
-        }
-        return encodeJwt(email, name, picture, expected);
-    }
-
-    private String currentSecurityVersion(String email) {
-        var state = userService.getUserSecurityState(email);
-        if (!state.exists()) throw new TokenRefreshException("User account no longer exists");
-        return state.tokensValidAfter() != null ? state.tokensValidAfter().toString() : "";
-    }
-
-    private String encodeJwt(String email, String name, String picture, String securityVersion) {
-        Instant now = Instant.now();
-        JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer("ascension-backend")
-                .issuedAt(now)
-                .expiresAt(now.plus(jwtExpirationMs, ChronoUnit.MILLIS))
-                .subject(email)
-                .claim("email", email)
-                .claim("securityVersion", securityVersion)
-                .claim("name", name != null ? name : "")
-                .claim("picture", picture != null ? picture : "")
-                .build();
-
-        MacAlgorithm alg = MacAlgorithm.HS256;
-        JwsHeader jwsHeader = JwsHeader.with(alg).build();
-        return jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
+        this.accessTokens = accessTokens;
+        this.refreshCookies = refreshCookies;
+        this.trustedOrigins = trustedOrigins;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> payload, HttpServletRequest request) {
-        String googleToken = payload.get("token");
+    public ResponseEntity<?> login(@RequestBody LoginRequest payload, HttpServletRequest request) {
+        String googleToken = payload == null ? null : payload.token();
         if (googleToken == null || googleToken.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Missing token"));
         }
@@ -194,16 +151,15 @@ public class AuthController {
         // User tables are keyed by email; changeEmail above has already moved a renamed account.
         userService.ensureUserExists(email, name, picture, googleSub);
 
-        String customToken = generateJwt(email, name, picture);
+        String accessToken = accessTokens.issue(email, name, picture);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(email);
-        ResponseCookie springCookie = buildRefreshCookie(refreshToken.getPlainToken(), request);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, springCookie.toString(), buildLegacyDeleteCookie(request).toString())
-                .body(Map.of("token", customToken));
+                .header(HttpHeaders.SET_COOKIE, refreshCookies.issue(refreshToken.getPlainToken(), request))
+                .body(Map.of("token", accessToken));
     }
 
-    @PostMapping(value = "/login/redirect", consumes = org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @PostMapping(value = "/login/redirect", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<Void> loginRedirect(
             @RequestParam(name = "credential", required = false) String credential,
             @RequestParam(name = "g_csrf_token", required = false) String bodyCsrf,
@@ -211,13 +167,13 @@ public class AuthController {
             HttpServletRequest request) {
         if (credential == null || credential.isBlank() || bodyCsrf == null || bodyCsrf.isBlank()
                 || cookieCsrf == null || cookieCsrf.isBlank()
-                || !java.security.MessageDigest.isEqual(
+                || !MessageDigest.isEqual(
                         bodyCsrf.getBytes(StandardCharsets.UTF_8), cookieCsrf.getBytes(StandardCharsets.UTF_8))) {
             log.warn("Rejected Google redirect with missing credential or invalid CSRF token");
             return redirectLoginError();
         }
 
-        ResponseEntity<?> result = login(Map.of("token", credential), request);
+        ResponseEntity<?> result = login(new LoginRequest(credential), request);
         if (!result.getStatusCode().is2xxSuccessful()) {
             return redirectLoginError();
         }
@@ -235,76 +191,19 @@ public class AuthController {
                 .build();
     }
 
-    private String getEffectiveSameSite() {
-        if (cookieSameSite != null && "none".equalsIgnoreCase(cookieSameSite.trim())) {
-            return "None";
-        }
-        if (cookieSameSite != null && "strict".equalsIgnoreCase(cookieSameSite.trim())) {
-            return "Strict";
-        }
-        return "Lax";
-    }
-
-    private List<String> parseAllowedOrigins() {
-        if (corsAllowedOrigins == null || corsAllowedOrigins.isBlank()) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(corsAllowedOrigins.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toList();
-    }
-
-    private boolean isOriginAllowed(HttpServletRequest request) {
-        if (request == null) {
-            return true;
-        }
-        String origin = request.getHeader("Origin");
-        if (origin == null || origin.isBlank()) {
-            // Browsers always send Origin on a cross-site POST; fall back to Referer and
-            // reject requests that carry neither, since SameSite=Lax alone is the only other guard.
-            origin = originFromReferer(request.getHeader("Referer"));
-            if (origin == null) {
-                return false;
-            }
-        }
-        String trimmedOrigin = origin.trim();
-        List<String> allowed = parseAllowedOrigins();
-        if (allowed.contains("*")) {
-            return true;
-        }
-        return allowed.contains(trimmedOrigin);
-    }
-
-    private static String originFromReferer(String referer) {
-        if (referer == null || referer.isBlank()) {
-            return null;
-        }
-        try {
-            java.net.URI uri = java.net.URI.create(referer.trim());
-            if (uri.getScheme() == null || uri.getHost() == null) {
-                return null;
-            }
-            String port = uri.getPort() == -1 ? "" : ":" + uri.getPort();
-            return uri.getScheme() + "://" + uri.getHost() + port;
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshtoken(
             @CookieValue(name = "refreshToken", required = false) String requestCookieRefreshToken,
             HttpServletRequest request) {
 
-        if (!isOriginAllowed(request)) {
+        if (!trustedOrigins.allows(request)) {
             log.warn("Forbidden Origin header on /api/auth/refresh: {}", request != null ? request.getHeader("Origin") : null);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Forbidden origin"));
         }
 
         log.info("Refresh request received, token present in cookie: {}", requestCookieRefreshToken != null);
-        
+
         if (requestCookieRefreshToken == null || requestCookieRefreshToken.isBlank()) {
             log.warn("Refresh token missing from cookie");
             return ResponseEntity.status(401).body(Map.of("error", "Refresh token is missing"));
@@ -322,74 +221,18 @@ public class AuthController {
                 picture = userOpt.get().picture() != null ? userOpt.get().picture() : "";
             }
 
-            String token = generateJwt(email, name, picture, newRefreshToken.getAccessTokenSecurityVersion());
+            String token = accessTokens.issueForRefresh(email, name, picture, newRefreshToken.getAccessTokenSecurityVersion());
             log.info("Refresh token rotated successfully for user {}", PiiMasker.maskEmail(email));
 
             return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(newRefreshToken.getPlainToken(), request).toString(), buildLegacyDeleteCookie(request).toString())
+                    .header(HttpHeaders.SET_COOKIE, refreshCookies.issue(newRefreshToken.getPlainToken(), request))
                     .body(Map.of("token", token));
 
         } catch (TokenRefreshException e) {
             return ResponseEntity.status(401)
-                    .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString(), buildLegacyDeleteCookie(request).toString())
+                    .header(HttpHeaders.SET_COOKIE, refreshCookies.clear(request))
                     .body(Map.of("error", e.getMessage()));
         }
-    }
-
-    private boolean determineCookieSecure(HttpServletRequest request) {
-        String sameSite = getEffectiveSameSite();
-        if ("None".equalsIgnoreCase(sameSite)) {
-            return true;
-        }
-        if (cookieSecure != null) {
-            return cookieSecure;
-        }
-        if (request == null) {
-            return true;
-        }
-        String forwardedProto = request.getHeader("X-Forwarded-Proto");
-        if (forwardedProto != null) {
-            return "https".equalsIgnoreCase(forwardedProto.trim());
-        }
-        return request.isSecure();
-    }
-
-    private ResponseCookie buildRefreshCookie(String value, HttpServletRequest request) {
-        return ResponseCookie.from("refreshToken", value)
-                .httpOnly(true)
-                .secure(determineCookieSecure(request))
-                .path(REFRESH_COOKIE_PATH)
-                .maxAge(30L * 24 * 60 * 60)
-                .sameSite(getEffectiveSameSite())
-                .build();
-    }
-
-    private ResponseCookie buildDeleteCookie(HttpServletRequest request) {
-        return buildDeleteCookie(request, REFRESH_COOKIE_PATH);
-    }
-
-    // Cookies issued before the path was narrowed live at "/"; expire them so the browser
-    // does not keep sending a stale token next to the current one.
-    private ResponseCookie buildLegacyDeleteCookie(HttpServletRequest request) {
-        return buildDeleteCookie(request, "/");
-    }
-
-    private ResponseCookie buildDeleteCookie(HttpServletRequest request, String path) {
-        return ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(determineCookieSecure(request))
-                .path(path)
-                .maxAge(0)
-                .sameSite(getEffectiveSameSite())
-                .build();
-    }
-
-    public ResponseEntity<?> logout(
-            String requestCookieRefreshToken,
-            String authHeader,
-            Jwt principalJwt,
-            HttpServletRequest request) {
-        return logout(requestCookieRefreshToken, authHeader, false, principalJwt, request);
     }
 
     @PostMapping("/logout")
@@ -400,7 +243,7 @@ public class AuthController {
             @AuthenticationPrincipal Jwt principalJwt,
             HttpServletRequest request) {
 
-        if (!isOriginAllowed(request)) {
+        if (!trustedOrigins.allows(request)) {
             log.warn("Forbidden Origin header on /api/auth/logout: {}", request != null ? request.getHeader("Origin") : null);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Forbidden origin"));
@@ -409,11 +252,11 @@ public class AuthController {
         if (allDevices) {
             String targetEmail = null;
             if (principalJwt != null) {
-                targetEmail = com.ascension.util.SecurityUtils.extractEmail(principalJwt);
+                targetEmail = SecurityUtils.extractEmail(principalJwt);
             } else if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 try {
                     Jwt decoded = jwtDecoder.decode(authHeader.substring(7).trim());
-                    targetEmail = com.ascension.util.SecurityUtils.extractEmail(decoded);
+                    targetEmail = SecurityUtils.extractEmail(decoded);
                 } catch (Exception e) {
                     log.debug("Bearer token could not be decoded during logout: {}", e.getMessage());
                 }
@@ -428,37 +271,31 @@ public class AuthController {
                 userService.updateTokensValidAfter(targetEmail, Instant.now());
                 refreshTokenService.deleteByEmail(targetEmail);
             }
-        } else {
-            if (requestCookieRefreshToken != null && !requestCookieRefreshToken.isBlank()) {
-                refreshTokenService.findByToken(RefreshToken.hashToken(requestCookieRefreshToken)).ifPresent(token -> {
-                    refreshTokenService.delete(token);
-                    if (token.getFamilyId() != null && !token.getFamilyId().isBlank()) {
-                        refreshTokenService.deleteByFamilyId(token.getFamilyId());
-                    }
-                });
-            }
+        } else if (requestCookieRefreshToken != null && !requestCookieRefreshToken.isBlank()) {
+            refreshTokenService.findByToken(RefreshToken.hashToken(requestCookieRefreshToken)).ifPresent(token -> {
+                refreshTokenService.delete(token);
+                if (token.getFamilyId() != null && !token.getFamilyId().isBlank()) {
+                    refreshTokenService.deleteByFamilyId(token.getFamilyId());
+                }
+            });
         }
-        
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString(), buildLegacyDeleteCookie(request).toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookies.clear(request))
                 .body(Map.of("message", "Log out successful"));
     }
 
     @DeleteMapping({"/account", "/users/account"})
     public ResponseEntity<Map<String, String>> deleteAccount(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request) {
-        String email = com.ascension.util.SecurityUtils.extractEmail(jwt);
+        String email = SecurityUtils.extractEmail(jwt);
         if (email == null || email.isBlank()) {
             return ResponseEntity.status(401).build();
         }
         userService.updateTokensValidAfter(email, Instant.now());
         accountDeletionService.wipeAccountData(email);
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, buildDeleteCookie(request).toString(), buildLegacyDeleteCookie(request).toString())
-                .body(Collections.singletonMap("message", "Account deleted successfully"));
-    }
-
-    public ResponseEntity<Map<String, String>> deleteAccount(Jwt jwt) {
-        return deleteAccount(jwt, (HttpServletRequest) null);
+                .header(HttpHeaders.SET_COOKIE, refreshCookies.clear(request))
+                .body(Map.of("message", "Account deleted successfully"));
     }
 
     @GetMapping("/config")
