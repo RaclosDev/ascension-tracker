@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import { render, screen } from '@testing-library/react';
 import { lazyWithRetry, isChunkLoadError } from '../utils/lazyWithRetry';
 import ErrorBoundary from '../components/ErrorBoundary';

@@ -3,7 +3,7 @@ import api from '../../api/client';
 import type { DayTargets, DayType } from './nutritionPlan';
 
 /** Mirrors the backend NutritionPlanDtos adherence records. */
-export interface Intake {
+interface Intake {
   kcal: number;
   protein: number;
   carbs: number;

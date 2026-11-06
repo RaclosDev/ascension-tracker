@@ -38,10 +38,6 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         this.properties = properties != null ? properties : new RateLimitProperties();
     }
 
-    public RateLimiterService getRateLimiterService() {
-        return rateLimiterService;
-    }
-
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         if (Boolean.TRUE.equals(request.getAttribute(CHECKED_ATTRIBUTE))) return true;

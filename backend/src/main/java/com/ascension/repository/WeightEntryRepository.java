@@ -19,8 +19,6 @@ public interface WeightEntryRepository extends JpaRepository<WeightEntry, Long> 
 
     Optional<WeightEntry> findTopByUserEmailOrderByDateDesc(String userEmail);
 
-    boolean existsByUserEmailAndDate(String userEmail, LocalDate date);
-    
     void deleteAllByUserEmail(String userEmail);
 
     long countByUserEmail(String userEmail);

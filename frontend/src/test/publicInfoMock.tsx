@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import type { PublicInfo } from '../lib/publicInfo';
 
-export const PUBLIC_INFO: PublicInfo = {
+const PUBLIC_INFO: PublicInfo = {
   annualMonths: 10,
   contactEmail: 'hola@ascension.test',
   plans: [

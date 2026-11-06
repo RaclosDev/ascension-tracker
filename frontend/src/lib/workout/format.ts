@@ -63,10 +63,6 @@ export function completedSets(exercises: WorkoutExercise[]) {
   return exercises.reduce((n, ex) => n + ex.sets.filter((s) => s.completed).length, 0);
 }
 
-export function totalSets(exercises: WorkoutExercise[]) {
-  return exercises.reduce((n, ex) => n + ex.sets.length, 0);
-}
-
 export function matchVariant(
   v1?: { grip?: string | null; machine?: string | null },
   v2?: { grip?: string | null; machine?: string | null },

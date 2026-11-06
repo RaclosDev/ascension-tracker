@@ -23,5 +23,3 @@ export function DashboardChartsSkeleton() {
     </div>
   );
 }
-
-export default DashboardChartsSkeleton;

@@ -10,7 +10,7 @@ import { haptics } from '@/lib/haptics';
 import { LiveSession } from './live-session';
 import { FooterActions } from './workout-footer-actions';
 
-export function ActiveWorkout() {
+function ActiveWorkout() {
   const hasActive = useWorkoutStore((s) => s.active !== null);
   const startEmpty = useWorkoutStore((s) => s.startEmpty);
   const setPickerOpen = useWorkoutStore((s) => s.setPickerOpen);

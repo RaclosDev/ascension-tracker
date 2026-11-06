@@ -1,4 +1,3 @@
-import React from 'react';
 import GoogleSignInButton from '../GoogleSignInButton';
 import { Crown, ArrowDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
