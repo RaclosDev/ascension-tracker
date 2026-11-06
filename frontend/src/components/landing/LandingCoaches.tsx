@@ -1,4 +1,3 @@
-import React from 'react';
 import { ClipboardList, MessageSquare, Users } from 'lucide-react';
 import DripButton from './DripButton';
 import { requestGoogleSignIn } from '../GoogleSignInButton';

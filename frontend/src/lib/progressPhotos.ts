@@ -28,7 +28,7 @@ export const POSE_LABELS: Record<Pose, string> = {
 export const POSES = Object.keys(POSE_LABELS) as Pose[];
 
 /** Longest side after shrinking: sharp enough to compare, small enough to stay around 200–400 KB. */
-export const MAX_SIDE = 1600;
+const MAX_SIDE = 1600;
 const QUALITY = 0.8;
 // The signed URLs last 15 minutes; refresh a little before.
 const URL_REFRESH_MS = 12 * 60 * 1000;

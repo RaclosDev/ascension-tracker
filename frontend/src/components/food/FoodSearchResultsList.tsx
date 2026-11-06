@@ -1,4 +1,3 @@
-import React from 'react';
 import { normalizeString } from '../../lib/workout/format';
 import { GENERIC_FOODS } from '../../lib/nutrition/generic-foods';
 import { getSanitizedKcal } from '../../utils/portionHelper';
