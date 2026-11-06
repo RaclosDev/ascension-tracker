@@ -3,7 +3,7 @@ package com.ascension.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import jakarta.persistence.EntityNotFoundException;
+import com.ascension.exception.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 
 class EmailsTest {

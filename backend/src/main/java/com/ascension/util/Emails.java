@@ -1,6 +1,6 @@
 package com.ascension.util;
 
-import jakarta.persistence.EntityNotFoundException;
+import com.ascension.exception.EntityNotFoundException;
 import java.util.Locale;
 
 /** Single place that decides how an email is compared and stored: trimmed and lower-cased. */

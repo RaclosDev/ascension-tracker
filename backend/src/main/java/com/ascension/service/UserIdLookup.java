@@ -1,7 +1,7 @@
 package com.ascension.service;
 
 import com.ascension.util.Emails;
-import jakarta.persistence.EntityNotFoundException;
+import com.ascension.exception.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
