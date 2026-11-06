@@ -272,4 +272,3 @@ export const AiFoodAssistantView: React.FC<AiFoodAssistantViewProps> = ({
     </div>
   );
 };
-export default AiFoodAssistantView;

@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -168,10 +169,6 @@ public class WorkoutService {
         return workoutMapper.toDTO(we);
     }
 
-    private WorkoutSetDTO toSetDTO(WorkoutSet s) {
-        return workoutMapper.toDTO(s);
-    }
-
     @Transactional(readOnly = true)
     public List<CustomExerciseDTO> getCustomExercises(String userEmail) {
         return customExerciseService.getCustomExercises(userEmail);
@@ -203,7 +200,7 @@ public class WorkoutService {
         Map<String, String> customExMap = new HashMap<>();
         for (CustomExercise ex : customExerciseRepository.findByUserEmail(userEmail)) {
             if (ex.getName() != null) {
-                customExMap.put(ex.getName().trim().toLowerCase(), ex.getId());
+                customExMap.put(ex.getName().trim().toLowerCase(Locale.ROOT), ex.getId());
             }
         }
 
@@ -213,7 +210,7 @@ public class WorkoutService {
         if (request.getCustomExercises() != null) {
             for (CustomExerciseDTO exDTO : request.getCustomExercises()) {
                 if (exDTO.getName() == null || exDTO.getName().trim().isEmpty()) continue;
-                String normalizedName = exDTO.getName().trim().toLowerCase();
+                String normalizedName = exDTO.getName().trim().toLowerCase(Locale.ROOT);
                 String resolvedId;
                 if (!customExMap.containsKey(normalizedName)) {
                     // Prevent IDOR: always generate a fresh server-side UUID

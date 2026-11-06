@@ -1,5 +1,5 @@
 import { summarizeWorkoutExercises, formatWorkoutDuration } from '../../utils/workoutSummary';
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Trophy,
   Clock,

@@ -8,7 +8,7 @@ import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import jakarta.persistence.EntityNotFoundException;
+import com.ascension.exception.EntityNotFoundException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,7 +39,7 @@ public class WorkoutPreferencesService {
     @Transactional
     public WorkoutPreferencesDTO updatePreferences(String email, WorkoutPreferencesDTO dto) {
         UserSettings settings = userSettingsRepository.findByUserEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("User settings not found for: " + email));
+                .orElseThrow(() -> new EntityNotFoundException("Ajustes de usuario no encontrados"));
 
         try {
             String json = objectMapper.writeValueAsString(ensureDefaults(dto));

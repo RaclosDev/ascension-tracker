@@ -4,7 +4,7 @@
  */
 export type LegalDoc = 'privacidad' | 'terminos' | 'terminos-entrenadores';
 
-export interface LegalSection {
+interface LegalSection {
   title: string;
   paragraphs: string[];
 }
@@ -15,7 +15,7 @@ export interface LegalText {
   sections: LegalSection[];
 }
 
-export const LEGAL_VERSION = '2026-11-borrador';
+const LEGAL_VERSION = '2026-11-borrador';
 
 export const CONTACT = '[CONTACTO]';
 

@@ -25,8 +25,6 @@ public interface RestTimerRepository extends JpaRepository<RestTimer, Long> {
             @Param("limit") int limit
     );
 
-    List<RestTimer> findByUserEmailAndStatus(String userEmail, RestTimerStatus status);
-
     @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE RestTimer t SET t.status = :cancelledStatus WHERE (t.status = :pendingStatus OR t.status = com.ascension.model.RestTimerStatus.PROCESSING) AND t.fireAt < :cutoff")

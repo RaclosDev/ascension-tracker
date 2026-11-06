@@ -23,8 +23,7 @@ import {
 } from '@/lib/workout/api';
 import { MUSCLE_LABEL, type WorkoutExercise } from '@/lib/workout/types';
 
-import { SwipeableSetRow, type SwipeableSetRowProps } from './swipeable-set-row';
-export { SwipeableSetRow, type SwipeableSetRowProps };
+import { SwipeableSetRow } from './swipeable-set-row';
 
 export interface ExerciseCardProps {
   rowId?: string;
@@ -428,7 +427,6 @@ export const ExerciseCard = React.memo(function ExerciseCard({
             <AlertDialogCancel className="btn btn-secondary">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="btn btn-danger btn-press"
-              style={{ color: 'var(--color-danger)' }}
               onClick={() => {
                 haptics.warning();
                 if (row) removeExercise(row.id);

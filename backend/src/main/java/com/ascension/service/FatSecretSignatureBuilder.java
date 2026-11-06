@@ -53,14 +53,14 @@ public class FatSecretSignatureBuilder {
             String signature = Base64.getEncoder().encodeToString(mac.doFinal(baseString.getBytes(StandardCharsets.UTF_8)));
 
             return url + "?" + paramString.toString() + "&oauth_signature=" + oauthEncode(signature);
-        } catch (Exception e) {
+        } catch (java.security.GeneralSecurityException e) {
             log.error("Error signing FatSecret URL", e);
-            throw new RuntimeException("Error signing FatSecret URL", e);
+            throw new IllegalStateException("Error signing FatSecret URL", e);
         }
     }
 
-    private String oauthEncode(String value) throws Exception {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8.name())
+    private String oauthEncode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8)
                 .replace("+", "%20")
                 .replace("*", "%2A")
                 .replace("%7E", "~");

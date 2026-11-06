@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import com.ascension.dto.CoachDtos.Person;
 import com.ascension.dto.CoachDtos.WorkoutComment;
 import com.ascension.dto.ProgramDtos.Exercise;
@@ -17,7 +18,6 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -128,7 +128,7 @@ public class CoachSessionService {
                 (rs, n) -> new WorkoutComment(
                         new Person(rs.getString("name"), rs.getString("email"), rs.getString("picture")),
                         rs.getString("body"), toInstant(rs.getTimestamp("updated_at"))),
-                workoutId, normalize(email));
+                workoutId, Emails.normalize(email));
     }
 
     private void requireClientWorkout(ClientAccess access, String workoutId) {
@@ -144,7 +144,4 @@ public class CoachSessionService {
         return timestamp == null ? null : timestamp.toInstant();
     }
 
-    private static String normalize(String email) {
-        return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
-    }
 }

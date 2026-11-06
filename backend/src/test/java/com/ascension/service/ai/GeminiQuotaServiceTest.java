@@ -78,6 +78,23 @@ class GeminiQuotaServiceTest {
     }
 
     @Test
+    void scheduledPurgeDropsOnlyDaysOlderThanAWeek() {
+        var old = new GeminiQuotaStore(jdbc, manager, java.time.Clock.fixed(
+                java.time.Instant.parse("2026-10-01T12:00:00Z"), java.time.ZoneOffset.UTC));
+        var recent = new GeminiQuotaStore(jdbc, manager, java.time.Clock.fixed(
+                java.time.Instant.parse("2026-10-09T12:00:00Z"), java.time.ZoneOffset.UTC));
+        users.ensureUserExists("purge@example.com", "Purge", null);
+        old.reserve("purge@example.com", 5, 5);
+        recent.reserve("purge@example.com", 5, 5);
+
+        recent.purgeOldDays();
+
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM ai_quota_usage WHERE user_email = 'purge@example.com'", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM ai_quota_global WHERE quota_day = DATE '2026-10-01'", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM ai_quota_reservations WHERE quota_day = DATE '2026-10-01'", Integer.class)).isZero();
+    }
+
+    @Test
     void circuitStateSurvivesCreatingAnotherServiceInstance() {
         quotaService.setConsecutiveFailuresThreshold(1);
         quotaService.recordFailure(new org.springframework.web.client.ResourceAccessException("timeout"));

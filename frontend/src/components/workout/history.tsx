@@ -19,7 +19,7 @@ import { WorkoutHistoryDetail } from './history-detail';
 
 import { useWorkoutHistory, useDeleteWorkout, useCustomExercises } from '@/lib/workout/api';
 
-export function HistoryView() {
+function HistoryView() {
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useWorkoutHistory();
   const history = data?.pages.flatMap((page) => page.content) ?? [];
   const { data: customExercises = [] } = useCustomExercises();
@@ -184,7 +184,6 @@ export function HistoryView() {
             </AlertDialogCancel>
             <AlertDialogAction
               className="btn btn-danger btn-press"
-              style={{ color: 'var(--color-danger)' }}
               onClick={() => {
                 if (deletingId) {
                   deleteHistory(deletingId);

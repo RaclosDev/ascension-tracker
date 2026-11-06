@@ -60,10 +60,6 @@ public class PushNotificationService {
         this.pushService = pushService;
     }
 
-    public PushService getPushService() {
-        return this.pushService;
-    }
-
     public String getVapidPublicKey() {
         return vapidPublicKey;
     }
@@ -72,6 +68,14 @@ public class PushNotificationService {
     public void saveSubscription(String userEmail, Subscription subscription) {
         subscriptionRepo.findByEndpoint(subscription.endpoint).ifPresentOrElse(
                 sub -> {
+                    // Another account may take over an endpoint only from the same browser, which
+                    // proves it by sending the same keys; knowing the endpoint URL is not enough.
+                    boolean sameAccount = userEmail.equals(sub.getUserEmail());
+                    boolean sameKeys = java.util.Objects.equals(sub.getP256dh(), subscription.keys.p256dh)
+                            && java.util.Objects.equals(sub.getAuth(), subscription.keys.auth);
+                    if (!sameAccount && !sameKeys) {
+                        throw new SecurityException("Push endpoint belongs to another subscription");
+                    }
                     sub.setUserEmail(userEmail);
                     sub.setP256dh(subscription.keys.p256dh);
                     sub.setAuth(subscription.keys.auth);

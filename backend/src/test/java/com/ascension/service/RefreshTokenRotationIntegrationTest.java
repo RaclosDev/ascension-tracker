@@ -83,6 +83,27 @@ class RefreshTokenRotationIntegrationTest {
         assertThat(refreshTokenRepository.findByToken(RefreshToken.hashToken(plainToken2))).isEmpty();
     }
     @Test
+    void graceReuseLeavesOneLiveTokenAndReplayingTheSupersededSuccessorRevokesTheFamily() {
+        String email = "grace-branch@example.com";
+        userService.ensureUserExists(email);
+        RefreshToken original = refreshTokenService.createRefreshToken(email);
+        RefreshToken firstSuccessor = refreshTokenService.rotateRefreshToken(original.getPlainToken());
+
+        // The old token comes back within the grace window (for example a lost response).
+        RefreshToken graceSuccessor = refreshTokenService.rotateRefreshToken(original.getPlainToken());
+
+        List<RefreshToken> live = refreshTokenRepository.findAll().stream()
+                .filter(t -> original.getFamilyId().equals(t.getFamilyId()) && t.getReplacedAt() == null)
+                .toList();
+        assertThat(live).extracting(RefreshToken::getToken).containsExactly(graceSuccessor.getToken());
+
+        // Whoever still holds the first successor is now replaying a superseded token.
+        assertThrows(TokenRefreshException.class,
+                () -> refreshTokenService.rotateRefreshToken(firstSuccessor.getPlainToken()));
+        assertThat(refreshTokenRepository.findByToken(graceSuccessor.getToken())).isEmpty();
+    }
+
+    @Test
     void cleanupPreservesReplayDetectionUntilOriginalTokenExpires() {
         String email = "cleanup-replay@example.com";
         userService.ensureUserExists(email);

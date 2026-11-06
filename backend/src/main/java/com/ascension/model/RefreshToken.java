@@ -93,8 +93,8 @@ public class RefreshToken {
                 hexString.append(hex);
             }
             return hexString.toString();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 is not available", e);
         }
     }
 }

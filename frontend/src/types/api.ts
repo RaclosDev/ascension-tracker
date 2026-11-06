@@ -94,12 +94,6 @@ export interface FoodLog {
   portionsJson?: string;
 }
 
-export interface NutritionData {
-  macros: Macros | null;
-  meals: Meal[];
-  settings: UserSettings;
-  logs: FoodLog[];
-}
 
 export interface SavedFood {
   id?: number;

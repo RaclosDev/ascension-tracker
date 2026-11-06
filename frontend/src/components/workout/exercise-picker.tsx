@@ -6,7 +6,7 @@ import { EXERCISE_CATALOG, BASE_EXERCISES } from '@/lib/workout/exercises';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { normalizeString } from '@/lib/workout/format';
 import { MUSCLE_LABEL, type Equipment, type MuscleGroup } from '@/lib/workout/types';
-import { EQUIPMENT_OPTIONS, MUSCLE_OPTIONS } from './exercises-view';
+import { EQUIPMENT_OPTIONS, MUSCLE_OPTIONS } from '@/lib/workout/equipmentOptions';
 import { useExerciseCatalog } from '@/lib/workout/catalog-query';
 import {
   useRecentWorkouts,

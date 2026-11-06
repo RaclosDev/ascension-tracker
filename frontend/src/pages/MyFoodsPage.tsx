@@ -21,7 +21,6 @@ import RecipeCard from '../components/my-foods/RecipeCard';
 import AiFoodModal from '../components/my-foods/AiFoodModal';
 
 import { ChevronDown, ChevronRight, ScanLine, Pencil, Loader2, Check } from 'lucide-react';
-import { PageFoodItem } from '../types/myfoods';
 import { Recipe, FoodLog, SavedFood } from '../types/api';
 import { isFoodRegistered } from '../utils/nutritionHelpers';
 const BarcodeScanner = lazyWithRetry(() => import('../components/BarcodeScanner'));
@@ -144,16 +143,16 @@ export default function MyFoodsPage() {
                         : 'flex flex-col gap-2'
                     }
                   >
-                    {filters.filteredFoods.map((f: PageFoodItem) => (
+                    {filters.filteredFoods.map((f: SavedFood) => (
                       <FoodCard
                         key={f.id}
                         food={f as unknown as SavedFood}
                         isSelected={f.id !== undefined && meals.selectedFoods.has(Number(f.id))}
                         onToggleSelect={meals.toggleFoodSelection}
-                        onEdit={(food) => forms.handleEditFood(food as unknown as PageFoodItem)}
+                        onEdit={(food) => forms.handleEditFood(food)}
                         onDelete={deleteSavedFood}
                         viewMode={filters.viewMode as 'grid' | 'list'}
-                        onDragStart={(e, d) => scanner.handleDragStart(e, d as PageFoodItem)}
+                        onDragStart={(e, d) => scanner.handleDragStart(e, d)}
                       />
                     ))}
                   </div>
@@ -193,7 +192,7 @@ export default function MyFoodsPage() {
                             </span>
                           ) : (
                             <button
-                              onClick={() => scanner.saveRecentAsFood(f as unknown as PageFoodItem)}
+                              onClick={() => scanner.saveRecentAsFood(f)}
                               className="text-xs bg-[var(--accent-glow)] text-[var(--accent-primary-light)] border border-[var(--accent-primary)]/30 px-2 py-1 rounded-lg hover:bg-[var(--accent-primary)]/30 transition-colors"
                             >
                               Añadir

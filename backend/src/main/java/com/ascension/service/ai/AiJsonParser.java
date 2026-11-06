@@ -1,5 +1,9 @@
 package com.ascension.service.ai;
 
+import com.ascension.dto.AiDtos.MacroTotals;
+import com.ascension.dto.AiDtos.MealAssistantResponse;
+import com.ascension.dto.AiDtos.MealOption;
+import com.ascension.dto.AiDtos.NutritionLabel;
 import com.ascension.dto.FoodLogDTO;
 import com.ascension.dto.SavedFoodDTO;
 import tools.jackson.core.JacksonException;
@@ -10,7 +14,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,7 +21,21 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AiJsonParser {
 
+    // Physical limits: pure fat has ~9 kcal/g, and no macro can weigh more than the food itself.
+    static final double MAX_KCAL_PER_GRAM = 9.0;
+    static final double MAX_KCAL_PER_100G = 100 * MAX_KCAL_PER_GRAM;
+    static final double MAX_GRAMS_PER_100G = 100.0;
+
     private final ObjectMapper objectMapper;
+
+    /** Reads a portion's macros, capped to what its quantity can physically hold, so a hallucinated value cannot be logged. */
+    private void applyPortionMacros(FoodLogDTO dto, JsonNode node) {
+        double grams = dto.getQuantity();
+        dto.setKcal(sanitizeDouble(node.path("kcal").asDouble(0.0), 0.0, grams * MAX_KCAL_PER_GRAM, 0.0));
+        dto.setProtein(sanitizeDouble(node.path("protein").asDouble(0.0), 0.0, grams, 0.0));
+        dto.setCarbs(sanitizeDouble(node.path("carbs").asDouble(0.0), 0.0, grams, 0.0));
+        dto.setFat(sanitizeDouble(node.path("fat").asDouble(0.0), 0.0, grams, 0.0));
+    }
 
     public List<FoodLogDTO> parseFoodLogs(
             String responseText,
@@ -46,10 +63,7 @@ public class AiJsonParser {
                 dto.setDate(date);
                 dto.setProduct(node.path("product").asString("Alimento"));
                 dto.setQuantity(sanitizeDouble(node.path("quantity").asDouble(100.0), 0.1, 50000.0, 100.0));
-                dto.setKcal(sanitizeDouble(node.path("kcal").asDouble(0.0), 0.0, 50000.0, 0.0));
-                dto.setProtein(sanitizeDouble(node.path("protein").asDouble(0.0), 0.0, 5000.0, 0.0));
-                dto.setCarbs(sanitizeDouble(node.path("carbs").asDouble(0.0), 0.0, 5000.0, 0.0));
-                dto.setFat(sanitizeDouble(node.path("fat").asDouble(0.0), 0.0, 5000.0, 0.0));
+                applyPortionMacros(dto, node);
 
                 // Reconstruct portionsJson if it matches a SavedFood exactly
                 String pName = dto.getProduct();
@@ -107,10 +121,10 @@ public class AiJsonParser {
         SavedFoodDTO dto = new SavedFoodDTO();
         dto.setName(node.path("name").asString());
         dto.setBrand(node.path("brand").asString());
-        dto.setKcalPer100g(sanitizeDouble(node.path("kcalPer100g").asDouble(0.0), 0.0, 50000.0, 0.0));
-        dto.setProteinPer100g(sanitizeDouble(node.path("proteinPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
-        dto.setCarbsPer100g(sanitizeDouble(node.path("carbsPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
-        dto.setFatPer100g(sanitizeDouble(node.path("fatPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
+        dto.setKcalPer100g(sanitizeDouble(node.path("kcalPer100g").asDouble(0.0), 0.0, MAX_KCAL_PER_100G, 0.0));
+        dto.setProteinPer100g(sanitizeDouble(node.path("proteinPer100g").asDouble(0.0), 0.0, MAX_GRAMS_PER_100G, 0.0));
+        dto.setCarbsPer100g(sanitizeDouble(node.path("carbsPer100g").asDouble(0.0), 0.0, MAX_GRAMS_PER_100G, 0.0));
+        dto.setFatPer100g(sanitizeDouble(node.path("fatPer100g").asDouble(0.0), 0.0, MAX_GRAMS_PER_100G, 0.0));
         if (node.has("servingSize") && !node.path("servingSize").isNull()) {
             dto.setServingSize(sanitizeDouble(node.path("servingSize").asDouble(100.0), 0.1, 50000.0, 100.0));
         }
@@ -120,27 +134,27 @@ public class AiJsonParser {
         return dto;
     }
 
-    public Map<String, Object> parseNutritionalLabel(String responseText) throws JacksonException {
+    public NutritionLabel parseNutritionalLabel(String responseText) throws JacksonException {
         JsonNode node = objectMapper.readTree(responseText);
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("name", node.path("name").asString(""));
-        result.put("brand", node.path("brand").asString(""));
-        result.put("kcalPer100g", sanitizeDouble(node.path("kcalPer100g").asDouble(0.0), 0.0, 50000.0, 0.0));
-        result.put("proteinPer100g", sanitizeDouble(node.path("proteinPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
-        result.put("carbsPer100g", sanitizeDouble(node.path("carbsPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
-        result.put("fatPer100g", sanitizeDouble(node.path("fatPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
-        if (node.has("servingSize") && !node.path("servingSize").isNull()) {
-            result.put("servingSize", sanitizeDouble(node.path("servingSize").asDouble(100.0), 0.1, 50000.0, 100.0));
-        }
-        if (node.has("servingLabel") && !node.path("servingLabel").isNull()) {
-            result.put("servingLabel", node.path("servingLabel").asString());
-        }
-        return result;
+        Double servingSize = node.has("servingSize") && !node.path("servingSize").isNull()
+                ? sanitizeDouble(node.path("servingSize").asDouble(100.0), 0.1, 50000.0, 100.0)
+                : null;
+        String servingLabel = node.has("servingLabel") && !node.path("servingLabel").isNull()
+                ? node.path("servingLabel").asString()
+                : null;
+        return new NutritionLabel(
+                node.path("name").asString(""),
+                node.path("brand").asString(""),
+                sanitizeDouble(node.path("kcalPer100g").asDouble(0.0), 0.0, MAX_KCAL_PER_100G, 0.0),
+                sanitizeDouble(node.path("proteinPer100g").asDouble(0.0), 0.0, MAX_GRAMS_PER_100G, 0.0),
+                sanitizeDouble(node.path("carbsPer100g").asDouble(0.0), 0.0, MAX_GRAMS_PER_100G, 0.0),
+                sanitizeDouble(node.path("fatPer100g").asDouble(0.0), 0.0, MAX_GRAMS_PER_100G, 0.0),
+                servingSize,
+                servingLabel);
     }
 
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> parseMealAssistantResponse(
+    public MealAssistantResponse parseMealAssistantResponse(
             String responseText,
             LocalDate date,
             int resolvedMealIndex,
@@ -152,138 +166,73 @@ public class AiJsonParser {
         JsonNode rootNode = objectMapper.readTree(responseText);
 
         String reply = rootNode.path("reply").asString("Aquí tienes las mejores opciones adaptadas a tus macros.");
-        List<Map<String, Object>> parsedOptions = new ArrayList<>();
+        List<MealOption> options = new ArrayList<>();
 
         JsonNode optionsNode = rootNode.path("mealOptions");
         if (optionsNode.isArray() && optionsNode.size() > 0) {
             for (int i = 0; i < optionsNode.size(); i++) {
                 JsonNode oNode = optionsNode.get(i);
-                String optId = oNode.path("id").asString("opt-" + (i + 1));
-                String optTitle = oNode.path("title").asString("Opción " + (i + 1));
-                String optDesc = oNode.path("description").asString("");
                 int mIdx = oNode.path("mealIndex").asInt(resolvedMealIndex);
-                String mName = oNode.path("mealName").asString(resolvedMealName);
-
-                List<FoodLogDTO> optFoods = new ArrayList<>();
-                double optKcal = 0, optP = 0, optC = 0, optF = 0;
-
-                JsonNode fArray = oNode.path("suggestedFoods");
-                if (fArray.isArray()) {
-                    for (JsonNode fNode : fArray) {
-                        FoodLogDTO dto = new FoodLogDTO();
-                        dto.setDate(date);
-                        dto.setMealIndex(mIdx);
-                        dto.setProduct(fNode.path("product").asString());
-                        dto.setQuantity(sanitizeDouble(fNode.path("quantity").asDouble(100.0), 0.1, 50000.0, 100.0));
-                        dto.setKcal(sanitizeDouble(fNode.path("kcal").asDouble(0.0), 0.0, 50000.0, 0.0));
-                        dto.setProtein(sanitizeDouble(fNode.path("protein").asDouble(0.0), 0.0, 5000.0, 0.0));
-                        dto.setCarbs(sanitizeDouble(fNode.path("carbs").asDouble(0.0), 0.0, 5000.0, 0.0));
-                        dto.setFat(sanitizeDouble(fNode.path("fat").asDouble(0.0), 0.0, 5000.0, 0.0));
-
-                        optKcal += dto.getKcal();
-                        optP += dto.getProtein();
-                        optC += dto.getCarbs();
-                        optF += dto.getFat();
-
-                        optFoods.add(dto);
-                    }
-                }
-
-                Map<String, Object> optionMap = new HashMap<>();
-                optionMap.put("id", optId);
-                optionMap.put("title", optTitle);
-                optionMap.put("description", optDesc);
-                optionMap.put("mealIndex", mIdx);
-                optionMap.put("mealName", mName);
-                optionMap.put("suggestedFoods", optFoods);
-                optionMap.put("totalMacros", Map.of(
-                        "kcal", Math.round(optKcal),
-                        "protein", round1(optP),
-                        "carbs", round1(optC),
-                        "fat", round1(optF)
-                ));
-
-                parsedOptions.add(optionMap);
+                options.add(mealOption(
+                        oNode.path("id").asString("opt-" + (i + 1)),
+                        oNode.path("title").asString("Opción " + (i + 1)),
+                        oNode.path("description").asString(""),
+                        mIdx,
+                        oNode.path("mealName").asString(resolvedMealName),
+                        suggestedFoods(oNode.path("suggestedFoods"), date, mIdx)));
             }
         } else if (rootNode.has("suggestedFoods") && rootNode.path("suggestedFoods").isArray()) {
-            // Fallback for single option output
+            // Older prompt shape: a single list of foods instead of options.
             int mIdx = rootNode.path("mealIndex").asInt(resolvedMealIndex);
-            String mName = rootNode.path("mealName").asString(resolvedMealName);
-            List<FoodLogDTO> optFoods = new ArrayList<>();
-            double optKcal = 0, optP = 0, optC = 0, optF = 0;
-
-            for (JsonNode fNode : rootNode.path("suggestedFoods")) {
-                FoodLogDTO dto = new FoodLogDTO();
-                dto.setDate(date);
-                dto.setMealIndex(mIdx);
-                dto.setProduct(fNode.path("product").asString());
-                dto.setQuantity(sanitizeDouble(fNode.path("quantity").asDouble(100.0), 0.1, 50000.0, 100.0));
-                dto.setKcal(sanitizeDouble(fNode.path("kcal").asDouble(0.0), 0.0, 50000.0, 0.0));
-                dto.setProtein(sanitizeDouble(fNode.path("protein").asDouble(0.0), 0.0, 5000.0, 0.0));
-                dto.setCarbs(sanitizeDouble(fNode.path("carbs").asDouble(0.0), 0.0, 5000.0, 0.0));
-                dto.setFat(sanitizeDouble(fNode.path("fat").asDouble(0.0), 0.0, 5000.0, 0.0));
-
-                optKcal += dto.getKcal();
-                optP += dto.getProtein();
-                optC += dto.getCarbs();
-                optF += dto.getFat();
-
-                optFoods.add(dto);
-            }
-
-            if (!optFoods.isEmpty()) {
-                Map<String, Object> singleOpt = new HashMap<>();
-                singleOpt.put("id", "opt-1");
-                singleOpt.put("title", "Opción Recomendada");
-                singleOpt.put("description", "Adaptada a tus macros restantes.");
-                singleOpt.put("mealIndex", mIdx);
-                singleOpt.put("mealName", mName);
-                singleOpt.put("suggestedFoods", optFoods);
-                singleOpt.put("totalMacros", Map.of(
-                        "kcal", Math.round(optKcal),
-                        "protein", round1(optP),
-                        "carbs", round1(optC),
-                        "fat", round1(optF)
-                ));
-                parsedOptions.add(singleOpt);
+            List<FoodLogDTO> foods = suggestedFoods(rootNode.path("suggestedFoods"), date, mIdx);
+            if (!foods.isEmpty()) {
+                options.add(mealOption("opt-1", "Opción Recomendada", "Adaptada a tus macros restantes.",
+                        mIdx, rootNode.path("mealName").asString(resolvedMealName), foods));
             }
         }
 
-        // Provide first option's foods as default for backward compatibility
-        List<FoodLogDTO> defaultFoods = !parsedOptions.isEmpty() 
-                ? (List<FoodLogDTO>) parsedOptions.get(0).get("suggestedFoods") 
-                : List.of();
-        Map<String, Object> defaultTotals = !parsedOptions.isEmpty() 
-                ? (Map<String, Object>) parsedOptions.get(0).get("totalMacros") 
-                : Map.of("kcal", 0, "protein", 0.0, "carbs", 0.0, "fat", 0.0);
+        MealOption first = options.isEmpty() ? null : options.get(0);
+        return new MealAssistantResponse(
+                reply,
+                options,
+                first != null ? first.mealIndex() : resolvedMealIndex,
+                first != null ? first.mealName() : resolvedMealName,
+                first != null ? first.suggestedFoods() : List.of(),
+                first != null ? first.totalMacros() : MacroTotals.ZERO,
+                new MacroTotals(Math.round(remKcal), remProtein, remCarbs, remFat),
+                new MacroTotals(targetKcal, targetProtein, targetCarbs, targetFat),
+                new MacroTotals(Math.round(consumedKcal), round1(consumedProtein), round1(consumedCarbs),
+                        round1(consumedFat)));
+    }
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("reply", reply);
-        result.put("mealOptions", parsedOptions);
-        result.put("mealIndex", !parsedOptions.isEmpty() ? parsedOptions.get(0).get("mealIndex") : resolvedMealIndex);
-        result.put("mealName", !parsedOptions.isEmpty() ? parsedOptions.get(0).get("mealName") : resolvedMealName);
-        result.put("suggestedFoods", defaultFoods);
-        result.put("totalMacros", defaultTotals);
-        result.put("remainingBudget", Map.of(
-                "kcal", Math.round(remKcal),
-                "protein", remProtein,
-                "carbs", remCarbs,
-                "fat", remFat
-        ));
-        result.put("targetMacros", Map.of(
-                "kcal", targetKcal,
-                "protein", targetProtein,
-                "carbs", targetCarbs,
-                "fat", targetFat
-        ));
-        result.put("consumedToday", Map.of(
-                "kcal", Math.round(consumedKcal),
-                "protein", round1(consumedProtein),
-                "carbs", round1(consumedCarbs),
-                "fat", round1(consumedFat)
-        ));
-
+    private List<FoodLogDTO> suggestedFoods(JsonNode foods, LocalDate date, int mealIndex) {
+        List<FoodLogDTO> result = new ArrayList<>();
+        if (!foods.isArray()) {
+            return result;
+        }
+        for (JsonNode fNode : foods) {
+            FoodLogDTO dto = new FoodLogDTO();
+            dto.setDate(date);
+            dto.setMealIndex(mealIndex);
+            dto.setProduct(fNode.path("product").asString());
+            dto.setQuantity(sanitizeDouble(fNode.path("quantity").asDouble(100.0), 0.1, 50000.0, 100.0));
+            applyPortionMacros(dto, fNode);
+            result.add(dto);
+        }
         return result;
+    }
+
+    private MealOption mealOption(String id, String title, String description, int mealIndex, String mealName,
+                                  List<FoodLogDTO> foods) {
+        double kcal = 0, protein = 0, carbs = 0, fat = 0;
+        for (FoodLogDTO food : foods) {
+            kcal += food.getKcal();
+            protein += food.getProtein();
+            carbs += food.getCarbs();
+            fat += food.getFat();
+        }
+        return new MealOption(id, title, description, mealIndex, mealName, foods,
+                new MacroTotals(Math.round(kcal), round1(protein), round1(carbs), round1(fat)));
     }
 
     private double round1(double val) {

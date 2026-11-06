@@ -1,6 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { isSessionLogoutPending, markSessionLogoutPending } from '../auth/sessionBoundary';
+import { gzipJson } from './gzip';
 import { clearIdempotencyIntents, prepareIdempotency, settleIdempotency } from './idempotency';
 import { getWorkoutAccountRevision } from '../lib/workout/accountIdentity';
 
@@ -328,10 +329,13 @@ export const restoreUserData = async (
   if (confirmEmpty) {
     query.set('confirmEmpty', 'true');
   }
-  const response = await api.post<UserDataRestoreSummary>(
-    `/user/restore?${query.toString()}`,
-    backup,
-  );
+  const url = `/user/restore?${query.toString()}`;
+  const compressed = await gzipJson(JSON.stringify(backup));
+  const response = compressed
+    ? await api.post<UserDataRestoreSummary>(url, compressed, {
+        headers: { 'Content-Type': 'application/json', 'Content-Encoding': 'gzip' },
+      })
+    : await api.post<UserDataRestoreSummary>(url, backup);
   return response.data;
 };
 

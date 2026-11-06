@@ -1,4 +1,3 @@
-import React from 'react';
 import { Sunrise, Utensils, Moon, Apple, Coffee } from 'lucide-react';
 
 export function MealIcon({
