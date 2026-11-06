@@ -384,7 +384,6 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
             <AlertDialogAction
               disabled={pending}
               className="btn btn-danger btn-press"
-              style={{ color: 'var(--color-danger)' }}
               onClick={() => {
                 setConfirmDeleteOpen(false);
                 onDelete();

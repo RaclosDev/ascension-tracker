@@ -444,6 +444,12 @@ export default function SettingsPage() {
                 logout();
                 toast.success('Sesión cerrada');
               }}
+              onDeleteAccount={async () => {
+                await api.delete('/auth/account');
+                toast.success('Cuenta borrada');
+                // The server already revoked every session; this clears this device and leaves.
+                await logout();
+              }}
             />
           )}
         </section>

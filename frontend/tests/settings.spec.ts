@@ -209,4 +209,38 @@ test.describe('Settings Page & User Preferences Flows', () => {
     // Verify redirect to /login
     await expect(page).toHaveURL(/\/login/);
   });
+
+  test('deletes the account only after typed confirmation, then signs out', async ({ page }) => {
+    await setupAuthMocks(page);
+
+    const calls: string[] = [];
+    await page.route('**/api/auth/account', async (route) => {
+      calls.push(route.request().method());
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        json: { message: 'Account deleted successfully' },
+      });
+    });
+    await page.route('**/api/auth/logout', async (route) => {
+      calls.push('logout');
+      await route.fulfill({ status: 200, contentType: 'application/json', json: {} });
+    });
+
+    await page.goto('/settings?section=data');
+
+    const openButton = page.getByRole('button', { name: 'Borrar mi cuenta' });
+    await openButton.scrollIntoViewIfNeeded();
+    await openButton.click();
+
+    const dialog = page.getByRole('alertdialog');
+    const confirm = dialog.getByRole('button', { name: 'Borrar cuenta' });
+    await expect(confirm).toBeDisabled();
+    await dialog.getByLabel(/Escribe BORRAR/).fill('borrar');
+    await expect(confirm).toBeEnabled();
+    await confirm.click();
+
+    await expect(page).toHaveURL(/\/login/);
+    expect(calls).toEqual(['DELETE', 'logout']);
+  });
 });
