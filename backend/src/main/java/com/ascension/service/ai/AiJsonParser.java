@@ -18,7 +18,21 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AiJsonParser {
 
+    // Physical limits: pure fat has ~9 kcal/g, and no macro can weigh more than the food itself.
+    static final double MAX_KCAL_PER_GRAM = 9.0;
+    static final double MAX_KCAL_PER_100G = 100 * MAX_KCAL_PER_GRAM;
+    static final double MAX_GRAMS_PER_100G = 100.0;
+
     private final ObjectMapper objectMapper;
+
+    /** Reads a portion's macros, capped to what its quantity can physically hold, so a hallucinated value cannot be logged. */
+    private void applyPortionMacros(FoodLogDTO dto, JsonNode node) {
+        double grams = dto.getQuantity();
+        dto.setKcal(sanitizeDouble(node.path("kcal").asDouble(0.0), 0.0, grams * MAX_KCAL_PER_GRAM, 0.0));
+        dto.setProtein(sanitizeDouble(node.path("protein").asDouble(0.0), 0.0, grams, 0.0));
+        dto.setCarbs(sanitizeDouble(node.path("carbs").asDouble(0.0), 0.0, grams, 0.0));
+        dto.setFat(sanitizeDouble(node.path("fat").asDouble(0.0), 0.0, grams, 0.0));
+    }
 
     public List<FoodLogDTO> parseFoodLogs(
             String responseText,
@@ -46,10 +60,7 @@ public class AiJsonParser {
                 dto.setDate(date);
                 dto.setProduct(node.path("product").asString("Alimento"));
                 dto.setQuantity(sanitizeDouble(node.path("quantity").asDouble(100.0), 0.1, 50000.0, 100.0));
-                dto.setKcal(sanitizeDouble(node.path("kcal").asDouble(0.0), 0.0, 50000.0, 0.0));
-                dto.setProtein(sanitizeDouble(node.path("protein").asDouble(0.0), 0.0, 5000.0, 0.0));
-                dto.setCarbs(sanitizeDouble(node.path("carbs").asDouble(0.0), 0.0, 5000.0, 0.0));
-                dto.setFat(sanitizeDouble(node.path("fat").asDouble(0.0), 0.0, 5000.0, 0.0));
+                applyPortionMacros(dto, node);
 
                 // Reconstruct portionsJson if it matches a SavedFood exactly
                 String pName = dto.getProduct();
@@ -107,10 +118,10 @@ public class AiJsonParser {
         SavedFoodDTO dto = new SavedFoodDTO();
         dto.setName(node.path("name").asString());
         dto.setBrand(node.path("brand").asString());
-        dto.setKcalPer100g(sanitizeDouble(node.path("kcalPer100g").asDouble(0.0), 0.0, 50000.0, 0.0));
-        dto.setProteinPer100g(sanitizeDouble(node.path("proteinPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
-        dto.setCarbsPer100g(sanitizeDouble(node.path("carbsPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
-        dto.setFatPer100g(sanitizeDouble(node.path("fatPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
+        dto.setKcalPer100g(sanitizeDouble(node.path("kcalPer100g").asDouble(0.0), 0.0, MAX_KCAL_PER_100G, 0.0));
+        dto.setProteinPer100g(sanitizeDouble(node.path("proteinPer100g").asDouble(0.0), 0.0, MAX_GRAMS_PER_100G, 0.0));
+        dto.setCarbsPer100g(sanitizeDouble(node.path("carbsPer100g").asDouble(0.0), 0.0, MAX_GRAMS_PER_100G, 0.0));
+        dto.setFatPer100g(sanitizeDouble(node.path("fatPer100g").asDouble(0.0), 0.0, MAX_GRAMS_PER_100G, 0.0));
         if (node.has("servingSize") && !node.path("servingSize").isNull()) {
             dto.setServingSize(sanitizeDouble(node.path("servingSize").asDouble(100.0), 0.1, 50000.0, 100.0));
         }
@@ -126,10 +137,10 @@ public class AiJsonParser {
         Map<String, Object> result = new HashMap<>();
         result.put("name", node.path("name").asString(""));
         result.put("brand", node.path("brand").asString(""));
-        result.put("kcalPer100g", sanitizeDouble(node.path("kcalPer100g").asDouble(0.0), 0.0, 50000.0, 0.0));
-        result.put("proteinPer100g", sanitizeDouble(node.path("proteinPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
-        result.put("carbsPer100g", sanitizeDouble(node.path("carbsPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
-        result.put("fatPer100g", sanitizeDouble(node.path("fatPer100g").asDouble(0.0), 0.0, 5000.0, 0.0));
+        result.put("kcalPer100g", sanitizeDouble(node.path("kcalPer100g").asDouble(0.0), 0.0, MAX_KCAL_PER_100G, 0.0));
+        result.put("proteinPer100g", sanitizeDouble(node.path("proteinPer100g").asDouble(0.0), 0.0, MAX_GRAMS_PER_100G, 0.0));
+        result.put("carbsPer100g", sanitizeDouble(node.path("carbsPer100g").asDouble(0.0), 0.0, MAX_GRAMS_PER_100G, 0.0));
+        result.put("fatPer100g", sanitizeDouble(node.path("fatPer100g").asDouble(0.0), 0.0, MAX_GRAMS_PER_100G, 0.0));
         if (node.has("servingSize") && !node.path("servingSize").isNull()) {
             result.put("servingSize", sanitizeDouble(node.path("servingSize").asDouble(100.0), 0.1, 50000.0, 100.0));
         }
@@ -175,10 +186,7 @@ public class AiJsonParser {
                         dto.setMealIndex(mIdx);
                         dto.setProduct(fNode.path("product").asString());
                         dto.setQuantity(sanitizeDouble(fNode.path("quantity").asDouble(100.0), 0.1, 50000.0, 100.0));
-                        dto.setKcal(sanitizeDouble(fNode.path("kcal").asDouble(0.0), 0.0, 50000.0, 0.0));
-                        dto.setProtein(sanitizeDouble(fNode.path("protein").asDouble(0.0), 0.0, 5000.0, 0.0));
-                        dto.setCarbs(sanitizeDouble(fNode.path("carbs").asDouble(0.0), 0.0, 5000.0, 0.0));
-                        dto.setFat(sanitizeDouble(fNode.path("fat").asDouble(0.0), 0.0, 5000.0, 0.0));
+                        applyPortionMacros(dto, fNode);
 
                         optKcal += dto.getKcal();
                         optP += dto.getProtein();
@@ -218,10 +226,7 @@ public class AiJsonParser {
                 dto.setMealIndex(mIdx);
                 dto.setProduct(fNode.path("product").asString());
                 dto.setQuantity(sanitizeDouble(fNode.path("quantity").asDouble(100.0), 0.1, 50000.0, 100.0));
-                dto.setKcal(sanitizeDouble(fNode.path("kcal").asDouble(0.0), 0.0, 50000.0, 0.0));
-                dto.setProtein(sanitizeDouble(fNode.path("protein").asDouble(0.0), 0.0, 5000.0, 0.0));
-                dto.setCarbs(sanitizeDouble(fNode.path("carbs").asDouble(0.0), 0.0, 5000.0, 0.0));
-                dto.setFat(sanitizeDouble(fNode.path("fat").asDouble(0.0), 0.0, 5000.0, 0.0));
+                applyPortionMacros(dto, fNode);
 
                 optKcal += dto.getKcal();
                 optP += dto.getProtein();

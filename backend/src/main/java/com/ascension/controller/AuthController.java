@@ -148,11 +148,13 @@ public class AuthController {
             log.warn("Email not verified");
             return ResponseEntity.status(401).body(Map.of("error", "Email not verified"));
         }
-        String email = tokenPayload.getEmail();
-        if (email == null || email.isBlank()) {
+        String rawEmail = tokenPayload.getEmail();
+        if (rawEmail == null || rawEmail.isBlank()) {
             log.warn("Email is missing from Google token payload");
             return ResponseEntity.status(401).body(Map.of("error", "Email is required"));
         }
+        // users.email is stored lower-case and every foreign key to it is case-sensitive.
+        String email = rawEmail.trim().toLowerCase(java.util.Locale.ROOT);
         String googleSub = tokenPayload.getSubject();
         if (googleSub == null || googleSub.isBlank()) {
             log.warn("Google sub is missing from token payload");

@@ -301,6 +301,33 @@ class AuthControllerTest {
     }
 
     @Test
+    void login_WithMixedCaseGoogleEmail_UsesTheLowerCaseAccountEverywhere() throws Exception {
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
+        com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
+        payload.setEmailVerified(true);
+        payload.setEmail(" Athlete.Mixed@Example.COM ");
+        payload.setSubject("google-sub-mixed-123");
+        when(idToken.getPayload()).thenReturn(payload);
+        when(googleIdTokenVerifier.verify("mixed-case-token")).thenReturn(idToken);
+        when(userService.getUserSecurityState("athlete.mixed@example.com"))
+                .thenReturn(new UserSecurityState(true, null));
+
+        RefreshToken rt = new RefreshToken();
+        rt.setEmail("athlete.mixed@example.com");
+        rt.setPlainToken("plain-refresh-token");
+        when(refreshTokenService.createRefreshToken(anyString())).thenReturn(rt);
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"mixed-case-token\"}"))
+                .andExpect(status().isOk());
+
+        org.mockito.Mockito.verify(refreshTokenService).createRefreshToken("athlete.mixed@example.com");
+        org.mockito.Mockito.verify(userService).ensureUserExists("athlete.mixed@example.com", null, null, "google-sub-mixed-123");
+    }
+
+    @Test
     void refresh_WhenTokenReusedWithinGracePeriod_ReturnsOkWithNewCookieAndNoRefreshTokenInBody() throws Exception {
         RefreshToken graceToken = new RefreshToken();
         graceToken.setEmail("test@test.com");

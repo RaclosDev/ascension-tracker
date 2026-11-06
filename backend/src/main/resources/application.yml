@@ -57,6 +57,22 @@ server:
     mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
     min-response-size: 1024
 
+# Only the health check is published, and without details: it tells a load balancer or uptime
+# monitor whether the app and its database answer, and nothing about the system.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: false
+
 app:
   legal:
     # Version of the legal texts; keep in step with LEGAL_VERSION in frontend/src/lib/legal/texts.ts.
