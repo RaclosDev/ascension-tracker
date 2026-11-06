@@ -1,6 +1,6 @@
 /*
  * Papel y tinta, la misma familia visual que PorrApp y LoopDeck.
- * La pared es azul oscura; cada bloque de contenido es una hoja suelta pegada con cinta,
+ * La pared es azul oscura; cada bloque de contenido es una hoja suelta,
  * con su propio giro, rayado fino y la hoja de debajo asomando.
  * Permanent Marker para títulos, Anton para pestañas y sellos, Inter para datos.
  */
@@ -20,7 +20,6 @@
   --wall-active-ink: #111827;
   --wall-shadow: rgba(0, 0, 0, 0.35);
   color-scheme: dark;
-  --tape: rgba(255, 230, 140, 0.8);
   /* Grano de papel: ruido SVG en línea, sin imagen que precachear. */
   --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .07 0 0 0 0 .09 0 0 0 0 .15 0 0 0 .12 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
   --paper-lines: repeating-linear-gradient(
@@ -287,7 +286,7 @@ body,
   outline: 3px solid var(--accent-primary);
   outline-offset: 2px;
 }
-/* En la pared, el foco va en amarillo cinta: se ve con cualquier acento. */
+/* En la pared, el foco va en amarillo: se ve con cualquier acento. */
 .sidebar *:focus-visible,
 .mobile-bottom-nav *:focus-visible,
 .segmented *:focus-visible {
@@ -299,13 +298,10 @@ body,
 /*
  * Cada tarjeta de primer nivel es una hoja. El papel se dibuja en ::before y es lo único que
  * se inclina: el texto, los gráficos y los controles siguen rectos y se leen igual.
- * El giro de la hoja y el ancho y ángulo de la cinta, siempre centrada, salen de ciclos de 2, 3, 4 y 5 hojas,
- * así que el patrón tarda en repetirse y parece colocado a mano.
+ * El giro de cada hoja sale de un ciclo de 5, así que parecen colocadas a mano.
  */
 :is(.card, .chart-card, .progress-card) {
   --paper-angle: -0.5deg;
-  --tape-angle: -5deg;
-  --tape-width: 64px;
 }
 :is(.card, .chart-card, .progress-card):not([role='dialog'], [role='alertdialog']):not(
     :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
@@ -337,22 +333,6 @@ body,
     0 10px 24px rgba(0, 0, 0, 0.35);
   pointer-events: none;
 }
-:is(.card, .chart-card, .progress-card):not([role='dialog'], [role='alertdialog']):not(
-    :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
-      *
-  )::after {
-  content: '';
-  position: absolute;
-  top: -9px;
-  left: 50%;
-  z-index: 2;
-  width: var(--tape-width);
-  height: 19px;
-  background: var(--tape);
-  border-inline: 1px dashed rgba(17, 24, 39, 0.15);
-  transform: translateX(-50%) rotate(var(--tape-angle));
-  pointer-events: none;
-}
 :is(.card, .chart-card, .progress-card):nth-child(5n + 2) {
   --paper-angle: 0.6deg;
 }
@@ -365,19 +345,7 @@ body,
 :is(.card, .chart-card, .progress-card):nth-child(5n) {
   --paper-angle: -0.75deg;
 }
-:is(.card, .chart-card, .progress-card):nth-child(3n + 2) {
-  --tape-width: 88px;
-}
-:is(.card, .chart-card, .progress-card):nth-child(3n) {
-  --tape-width: 96px;
-}
-:is(.card, .chart-card, .progress-card):nth-child(2n) {
-  --tape-angle: 4deg;
-}
-:is(.card, .chart-card, .progress-card):nth-child(4n + 3) {
-  --tape-angle: -2deg;
-}
-/* Las hojas que recortaban su contenido lo siguen haciendo, pero dejan asomar papel y cinta. */
+/* Las hojas que recortaban su contenido lo siguen haciendo, pero dejan asomar el papel girado. */
 .overflow-hidden:is(.card, .chart-card, .progress-card):not(
     [role='dialog'],
     [role='alertdialog']
@@ -427,7 +395,7 @@ body,
   font-size: 1rem;
 }
 
-/* Dentro de una hoja, las tarjetas son recuadros blancos con canto de tinta, sin giro ni cinta. */
+/* Dentro de una hoja, las tarjetas son recuadros blancos con canto de tinta, sin giro. */
 :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
   .card {
   background: #fffdf7;
@@ -489,19 +457,6 @@ body,
     3px 4px 0 #d8cfb9,
     0 12px 24px rgba(0, 0, 0, 0.4) !important;
 }
-.paper-toast::after {
-  content: '';
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  width: 54px;
-  height: 18px;
-  background: var(--tape);
-  border-inline: 1px dashed rgba(17, 24, 39, 0.15);
-  transform: translateX(-50%) rotate(-4deg);
-  pointer-events: none;
-}
-
 /* ───────────── Pared: navegación, pestañas y botones ───────────── */
 
 /* Cabecera móvil como en PorrApp: marca a rotulador y avatar de la sesión. */
@@ -818,24 +773,6 @@ html[data-mode='light'] .sidebar-title-img {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   transform: rotate(-4deg);
-}
-
-/* Cinta adhesiva amarilla para cualquier bloque destacado. */
-.paper-tape {
-  position: relative;
-}
-.paper-tape::after {
-  content: '';
-  position: absolute;
-  top: -13px;
-  left: 50%;
-  width: 104px;
-  height: 28px;
-  background: var(--tape);
-  border-inline: 1px dashed rgba(17, 24, 39, 0.19);
-  transform: translateX(-50%) rotate(-3deg);
-  pointer-events: none;
-  z-index: 2;
 }
 
 @media (prefers-reduced-motion: reduce) {
