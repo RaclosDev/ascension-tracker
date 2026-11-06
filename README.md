@@ -6,7 +6,7 @@
 
 **Entrenamiento, nutrición y progreso en una sola PWA, con modo entrenador para pautar y seguir a alumnos.**
 
-[![Abrir la app](https://img.shields.io/badge/Abrir_la_app-ascension.raclos.es-1d5d86?style=for-the-badge&logo=googlechrome&logoColor=white)](https://ascension.raclos.es)
+[![Abrir la app](https://img.shields.io/badge/Abrir_la_app-ascension.raclos.es-f2c94c?style=for-the-badge&logo=googlechrome&logoColor=black)](https://ascension.raclos.es)
 [![CI](https://img.shields.io/github/actions/workflow/status/RaclosDev/ascension-tracker/ci.yml?branch=main&style=for-the-badge&label=CI&logo=githubactions&logoColor=white)](https://github.com/RaclosDev/ascension-tracker/actions/workflows/ci.yml)
 
 ![Java](https://img.shields.io/badge/Java_21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)

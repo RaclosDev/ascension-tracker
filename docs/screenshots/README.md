@@ -10,7 +10,7 @@ Las capturas del README muestran la interfaz React real con datos ficticios: och
 - `workout.png`: entreno en curso con series completadas.
 - `hero.jpg`: composición de la cabecera del README a partir de `dashboard`, `workout` y `nutrition`.
 
-Todas usan una ventana móvil de 390 × 844 píxeles CSS, densidad 2× y una hora fija de media tarde. El script comprueba que no hay desbordamiento horizontal y falla si alguna llamada a la API no está simulada.
+Todas usan el modo oscuro, una ventana móvil de 390 × 844 píxeles CSS, densidad 2× y una hora fija de media tarde. La portada pública tiene su propio diseño claro. El script comprueba que no hay desbordamiento horizontal y falla si alguna llamada a la API no está simulada.
 
 ## Reproducirlas
 

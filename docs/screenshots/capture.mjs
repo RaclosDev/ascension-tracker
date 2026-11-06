@@ -166,6 +166,7 @@ const contextOptions = {
   isMobile: true,
   hasTouch: true,
   locale: 'es-ES',
+  colorScheme: 'dark', // la app sigue el tema del sistema por defecto
   reducedMotion: 'reduce',
   serviceWorkers: 'block',
 };
