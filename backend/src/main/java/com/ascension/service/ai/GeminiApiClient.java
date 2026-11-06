@@ -19,6 +19,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Locale;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -74,7 +75,7 @@ public class GeminiApiClient {
 
     private boolean isTextGenerationModel(String name) {
         if (name == null || name.isBlank()) return false;
-        String lower = name.toLowerCase();
+        String lower = name.toLowerCase(Locale.ROOT);
         return !(lower.contains("tts") || lower.contains("audio") || lower.contains("embed")
                 || lower.contains("realtime") || lower.contains("live") || lower.contains("image")
                 || lower.contains("banana") || lower.contains("transcribe") || lower.contains("robotics")
@@ -206,7 +207,7 @@ public class GeminiApiClient {
                 return false;
             }
             if (code == 400) {
-                String body = rcre.getResponseBodyAsString().toLowerCase();
+                String body = rcre.getResponseBodyAsString().toLowerCase(Locale.ROOT);
                 if (body.contains("model") || body.contains("not supported") || body.contains("not found")
                         || body.contains("unsupported") || body.contains("modalit")) {
                     return false;

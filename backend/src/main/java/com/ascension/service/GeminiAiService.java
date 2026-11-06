@@ -26,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Locale;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -286,7 +287,7 @@ public class GeminiAiService {
             MealDTO m = availableMeals.get(i);
             String safeName = promptBuilder.sanitizeUserInput(m.getName());
             mealsContext.append("- index ").append(i).append(": \"").append(safeName).append("\"\n");
-            if (m.getName().toLowerCase().contains("cena") && resolvedMealIndex == -1) {
+            if (m.getName().toLowerCase(Locale.ROOT).contains("cena") && resolvedMealIndex == -1) {
                 resolvedMealIndex = i;
                 resolvedMealName = safeName;
             }
