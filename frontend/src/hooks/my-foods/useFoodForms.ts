@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { PageFoodItem } from '../../types/myfoods';
-import { Recipe } from '../../types/api';
+import { Recipe, SavedFood } from '../../types/api';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 
@@ -123,7 +122,7 @@ export function useFoodForms(fetchData: () => void) {
     }
   };
 
-  const handleEditFood = (food: PageFoodItem) => {
+  const handleEditFood = (food: SavedFood) => {
     setFoodForm({
       name: food.name || '',
       brand: food.brand || '',

@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 import { getSanitizedKcal, extractPortions } from '../../utils/portionHelper';
-import { PageFoodItem } from '../../types/myfoods';
+import type { FoodLog } from '../../types/api';
+import type { DragFoodData } from '../../components/my-foods/FoodCard';
 
 type ScannedProductType = {
   name: string;
@@ -240,7 +241,7 @@ export function useScannerAndOCR(
     setLookupError(null);
   };
 
-  const handleDragStart = (e: React.DragEvent, foodData: PageFoodItem) => {
+  const handleDragStart = (e: React.DragEvent, foodData: DragFoodData) => {
     e.dataTransfer.setData('application/json', JSON.stringify(foodData));
     e.dataTransfer.effectAllowed = 'copy';
   };
@@ -293,7 +294,7 @@ export function useScannerAndOCR(
     }
   };
 
-  const saveRecentAsFood = async (f: PageFoodItem) => {
+  const saveRecentAsFood = async (f: FoodLog) => {
     const q = f.quantity || 100;
     const match = f.product?.match(/^(.+?)\s*\((.+?)\)$/);
     const name = match ? match[1].trim() : f.product;

@@ -138,6 +138,7 @@ jobs:
         run: |
           npm run check:csp
           npm run lint
+          npm run knip
           npm run typecheck
           npm run test:coverage
           npm run build

@@ -1,12 +1,7 @@
 import { useState, useMemo } from 'react';
-import { PageFoodItem } from '../../types/myfoods';
-import { Recipe, FoodLog } from '../../types/api';
+import { Recipe, FoodLog, SavedFood } from '../../types/api';
 
-export function useFoodFilters(
-  recentFoods: FoodLog[],
-  savedFoods: PageFoodItem[],
-  recipes: Recipe[],
-) {
+export function useFoodFilters(recentFoods: FoodLog[], savedFoods: SavedFood[], recipes: Recipe[]) {
   const [searchQuery, setSearchQuery] = useState('');
   const [macroFilter, setMacroFilter] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
@@ -14,7 +9,7 @@ export function useFoodFilters(
 
   const q = searchQuery.toLowerCase().trim();
 
-  const getPredominantMacro = (f: PageFoodItem) => {
+  const getPredominantMacro = (f: SavedFood) => {
     const p = f.proteinPer100g || 0;
     const c = f.carbsPer100g || 0;
     const fat = f.fatPer100g || 0;
@@ -32,7 +27,7 @@ export function useFoodFilters(
 
   const filteredFoods = useMemo(() => {
     return savedFoods
-      .filter((f: PageFoodItem) => {
+      .filter((f: SavedFood) => {
         if (q) {
           const nameMatch = (f.name || '').toLowerCase().includes(q);
           const brandMatch = (f.brand || '').toLowerCase().includes(q);
@@ -41,7 +36,7 @@ export function useFoodFilters(
         if (macroFilter !== 'all' && getPredominantMacro(f) !== macroFilter) return false;
         return true;
       })
-      .sort((a: PageFoodItem, b: PageFoodItem) => {
+      .sort((a: SavedFood, b: SavedFood) => {
         if (sortBy === 'name_asc') return (a.name || '').localeCompare(b.name || '');
         if (sortBy === 'recent') {
           if (a.id && b.id) {
