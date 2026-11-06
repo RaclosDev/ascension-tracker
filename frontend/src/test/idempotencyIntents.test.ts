@@ -66,3 +66,25 @@ it('replays an uncertain exercise merge under the original intent', async () => 
   expect(retry.headers.get('Idempotency-Key')).toBe(first.headers.get('Idempotency-Key'));
   expect(retry.headers.get('Idempotency-Key')).toBeTypeOf('string');
 });
+
+it('gives gzipped uploads with different contents different keys and retries the same one', async () => {
+  const client = await import('../api/idempotency');
+  const { Blob: NodeBlob } = await import('node:buffer');
+  const upload = (text: string): InternalAxiosRequestConfig => ({
+    method: 'post',
+    url: '/user/restore?mode=MERGE',
+    data: new NodeBlob([text]) as unknown as Blob,
+    headers: new AxiosHeaders(),
+  });
+  vi.stubGlobal('Blob', NodeBlob);
+  const first = upload('backup-a');
+  await client.prepareIdempotency(first, 'alice');
+  client.settleIdempotency(first);
+  const other = upload('backup-b');
+  await client.prepareIdempotency(other, 'alice');
+  expect(other.headers.get('Idempotency-Key')).not.toBe(first.headers.get('Idempotency-Key'));
+  client.settleIdempotency(other, 200);
+  const retry = upload('backup-a');
+  await client.prepareIdempotency(retry, 'alice');
+  expect(retry.headers.get('Idempotency-Key')).toBe(first.headers.get('Idempotency-Key'));
+});
