@@ -27,4 +27,6 @@ public class RateLimitProperties {
     private int photoLimit = 60;
     private int publicLimit = 30;
     private int maxRequestsPerMinute = 20;
+    /** How many clients' worth of requests one untrusted proxy address may carry per group. */
+    private int proxyHopMultiplier = 20;
 }

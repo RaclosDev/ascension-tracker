@@ -98,6 +98,7 @@ app:
     photo-limit: ${RATE_LIMIT_PHOTOS:60}
     public-limit: ${RATE_LIMIT_PUBLIC:30}
     max-requests-per-minute: ${RATE_LIMIT_GENERAL:20}
+    proxy-hop-multiplier: ${RATE_LIMIT_PROXY_HOP_MULTIPLIER:20}
   admin:
     emails: ${APP_ADMIN_EMAILS:}
   coach:
