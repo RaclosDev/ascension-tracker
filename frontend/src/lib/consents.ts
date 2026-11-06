@@ -4,7 +4,7 @@ import api from '../api/client';
 /** Mirrors the backend ConsentDtos records. */
 export type ConsentKind = 'TERMS' | 'PRIVACY' | 'HEALTH_DATA' | 'AI_HEALTH' | 'COACH_TERMS';
 
-export interface ConsentAnswer {
+interface ConsentAnswer {
   granted: boolean;
   version: string;
   at: string;

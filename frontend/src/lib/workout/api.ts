@@ -195,7 +195,7 @@ export interface WorkoutPreferences {
   restPreset?: number;
 }
 
-export const useWorkoutPreferences = () => {
+const useWorkoutPreferences = () => {
   return useQuery<WorkoutPreferences, Error>({
     queryKey: ['workoutPreferences'],
     queryFn: async ({ signal }): Promise<WorkoutPreferences> => {

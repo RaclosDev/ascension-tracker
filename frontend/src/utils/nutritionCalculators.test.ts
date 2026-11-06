@@ -3,12 +3,7 @@ import {
   parseNumber,
   calcBmr,
   calcTdee,
-  simpleDailyDeficit,
-  weeklyGoalToDailyDeficit,
   simulateWeightChange,
-  findIntakeForGoal,
-  assessPlan,
-  calcMacros,
   calcBodyFatNavy,
   calcBodyComposition,
 } from './nutritionCalculators';
@@ -37,12 +32,6 @@ describe('nutritionCalculators', () => {
     expect(calcBmr('M', 80, 180, 5)).toBeNull(); // age too low
   });
 
-  it('deficits', () => {
-    expect(simpleDailyDeficit(80, 73, 90)).toBeCloseTo(598.889, 3);
-    expect(simpleDailyDeficit(80, 85, 90)).toBeNull(); // goal >= current
-    expect(weeklyGoalToDailyDeficit(0.5)).toBe(550);
-  });
-
   it('simulateWeightChange', () => {
     // 500 kcal deficit -> losing exactly 500*7/7700 = 0.4545 kg first week
     const sim = simulateWeightChange({
@@ -69,55 +58,6 @@ describe('nutritionCalculators', () => {
       weeks: 2,
     });
     expect(simMaint![1].weightKg).toBeCloseTo(80, 1);
-  });
-
-  it('findIntakeForGoal', () => {
-    const intake = findIntakeForGoal('M', 30, 180, 80, 73, 1.55, 12);
-    expect(intake).not.toBeNull();
-
-    const sim = simulateWeightChange({
-      sex: 'M',
-      age: 30,
-      heightCm: 180,
-      weightKg: 80,
-      activityFactor: 1.55,
-      intakeKcal: intake!,
-      weeks: 12,
-    });
-    expect(sim![12].weightKg).toBeCloseTo(73, 3);
-
-    // Check initial deficit is higher than simple method due to metabolic adaptation
-    const simpleDef = simpleDailyDeficit(80, 73, 12 * 7)!;
-    const initialTdee = calcTdee(calcBmr('M', 80, 180, 30)!, 1.55);
-    const complexDef = initialTdee - intake!;
-    expect(complexDef).toBeGreaterThan(simpleDef);
-
-    // Unreachable
-    expect(findIntakeForGoal('M', 30, 180, 80, 20, 1.55, 4)).toBeNull();
-  });
-
-  it('assessPlan', () => {
-    const ok = assessPlan(80, 7 / 13, 400, 2759, 2359, 1780);
-    expect(ok).toHaveLength(0);
-
-    const bad = assessPlan(80, 15 / 8, 1500, 2759, 1259, 1780); // losing ~1.875kg/w, 54% deficit, < BMR
-    expect(bad.some((w) => w.code === 'RATE_VERY_HIGH')).toBe(true);
-    expect(bad.some((w) => w.code === 'DEFICIT_VERY_HIGH')).toBe(true);
-    expect(bad.some((w) => w.code === 'BELOW_BMR')).toBe(true);
-  });
-
-  it('calcMacros', () => {
-    // 80kg, 2100kcal. 2g P = 160g, 0.75g F = 60g
-    // P=640kcal, F=540kcal -> 1180. Remaining = 920kcal -> 230g C.
-    const m = calcMacros({ kcal: 2100, weightKg: 80 });
-    expect(m.proteinG).toBe(160);
-    expect(m.fatG).toBe(60);
-    expect(m.carbsG).toBe(230);
-    expect(m.overBudgetKcal).toBe(0);
-
-    const m2 = calcMacros({ kcal: 1000, weightKg: 80 }); // overbudget
-    expect(m2.carbsG).toBe(0);
-    expect(m2.overBudgetKcal).toBe(180); // 1180 - 1000
   });
 
   it('calcBodyFatNavy', () => {

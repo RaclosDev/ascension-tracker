@@ -23,8 +23,7 @@ import {
 } from '@/lib/workout/api';
 import { MUSCLE_LABEL, type WorkoutExercise } from '@/lib/workout/types';
 
-import { SwipeableSetRow, type SwipeableSetRowProps } from './swipeable-set-row';
-export { SwipeableSetRow, type SwipeableSetRowProps };
+import { SwipeableSetRow } from './swipeable-set-row';
 
 export interface ExerciseCardProps {
   rowId?: string;

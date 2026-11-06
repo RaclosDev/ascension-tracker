@@ -9,7 +9,7 @@ export interface CheckinTemplate {
   custom: boolean;
 }
 
-export interface CheckinAnswer {
+interface CheckinAnswer {
   question: string;
   answer: string;
 }

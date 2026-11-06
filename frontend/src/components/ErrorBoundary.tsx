@@ -1,5 +1,5 @@
 import toast from 'react-hot-toast';
-import React, { Component, ReactNode, ErrorInfo } from 'react';
+import { Component, ReactNode, ErrorInfo } from 'react';
 import { isChunkLoadError, claimChunkReload, clearChunkReloadLocks } from '../utils/lazyWithRetry';
 
 interface Props {
@@ -11,7 +11,7 @@ interface State {
   error?: Error;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };

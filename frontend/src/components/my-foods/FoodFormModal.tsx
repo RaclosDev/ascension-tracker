@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, Trash2 } from 'lucide-react';
 
-export interface FoodForm {
+interface FoodForm {
   name: string;
   brand: string;
   protein: string;
