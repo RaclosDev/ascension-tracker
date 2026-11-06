@@ -73,6 +73,9 @@ export interface Macros {
   protein: number;
   carbs: number;
   fat: number;
+  /** Set when a coach's nutrition plan gives these targets. */
+  coachName?: string | null;
+  dayType?: 'TRAINING' | 'REST' | null;
 }
 
 export interface FoodLog {

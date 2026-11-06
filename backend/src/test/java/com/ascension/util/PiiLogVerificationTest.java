@@ -99,7 +99,9 @@ class PiiLogVerificationTest {
 
     @Test
     void accountDeletionService_masksEmailInAllLogs() {
-        AccountDeletionService service = new AccountDeletionService(jdbcTemplate);
+        AccountDeletionService service = new AccountDeletionService(jdbcTemplate,
+                new com.ascension.service.ProgressPhotoService(jdbcTemplate, com.ascension.service.PhotoStorage.disabled(),
+                        org.mockito.Mockito.mock(org.springframework.transaction.PlatformTransactionManager.class)));
         service.wipeAccountData(TARGET_EMAIL);
 
         assertNoRawEmailInLogs();
@@ -120,7 +122,12 @@ class PiiLogVerificationTest {
                 stepsEntryRepository,
                 weightEntryRepository,
                 userSettingsRepository,
-                mapper
+                mapper,
+                org.mockito.Mockito.mock(com.ascension.service.CoachService.class),
+                org.mockito.Mockito.mock(com.ascension.service.ProgramService.class),
+                org.mockito.Mockito.mock(com.ascension.service.CoachRecipeService.class),
+                org.mockito.Mockito.mock(com.ascension.service.ProgressPhotoService.class),
+                org.mockito.Mockito.mock(com.ascension.service.ContactRequestService.class)
         );
 
         when(workoutRepository.findAllByUserEmailOrderByStartedAtDesc(TARGET_EMAIL)).thenReturn(Collections.emptyList());

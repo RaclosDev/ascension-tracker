@@ -16,6 +16,7 @@ import { useAnyInView } from '../hooks/use-any-in-view';
 const MyFoodsPage = lazyWithRetry(() => import('./MyFoodsPage'));
 const FoodSearchModal = lazyWithRetry(() => import('../components/FoodSearchModal'));
 const NutritionPieChart = lazyWithRetry(() => import('../components/nutrition/NutritionPieChart'));
+const PlannedMealsCard = lazyWithRetry(() => import('../components/coach/PlannedMealsCard'));
 
 export default function NutritionPage() {
   const queryClient = useQueryClient();
@@ -152,7 +153,7 @@ export default function NutritionPage() {
 
           <button
             type="button"
-            className={`fixed z-40 rounded-full w-14 h-14 flex items-center justify-center bg-[var(--accent-primary)] text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 motion-reduce:transition-none ${
+            className={`fixed z-40 rounded-full w-14 h-14 flex items-center justify-center bg-[var(--accent-primary)] text-[var(--accent-text)] shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 motion-reduce:transition-none ${
               mealActionsInView ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100'
             }`}
             style={{
@@ -176,6 +177,11 @@ export default function NutritionPage() {
           </button>
 
           <MacroSummaryHeader consumed={consumed} macros={macros} />
+          {macros.coachName && (
+            <Suspense fallback={null}>
+              <PlannedMealsCard date={selectedDate} dayType={macros.dayType} meals={meals} />
+            </Suspense>
+          )}
 
           <div
             className="pb-16 min-[1025px]:pb-32"

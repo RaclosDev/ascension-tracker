@@ -40,6 +40,7 @@ describe('CSP Policy Synchronization (Single Source of Truth)', () => {
     expect(imgSrc).toContain('https://lh3.googleusercontent.com');
     expect(imgSrc).toContain('https://images.openfoodfacts.org');
     expect(imgSrc).toContain('https://raw.githubusercontent.com');
+    expect(imgSrc).toContain('https://*.r2.cloudflarestorage.com');
   });
 
   it('frontend/security-headers.conf must match the canonical CSP policy', () => {

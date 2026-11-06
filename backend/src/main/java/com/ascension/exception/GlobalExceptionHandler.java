@@ -89,8 +89,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
         String traceId = UUID.randomUUID().toString();
         log.warn("Illegal argument: {} [trace_id: {}]", ex.getMessage(), traceId);
-        String msg = (ex.getMessage() != null && !ex.getMessage().isBlank()) ? ex.getMessage() : "Entrada invalida";
-        return buildErrorResponse(msg, HttpStatus.BAD_REQUEST, traceId);
+        // Its message may come from a library and name internal details; user-facing ones use InvalidInputException.
+        return buildErrorResponse("Entrada no válida.", HttpStatus.BAD_REQUEST, traceId);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

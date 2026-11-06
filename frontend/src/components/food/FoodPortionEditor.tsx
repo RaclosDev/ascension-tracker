@@ -115,9 +115,9 @@ export function FoodPortionEditor({
             alignItems: 'center',
           }}
         >
-          <label className="form-label" style={{ margin: 0 }}>
+          <span className="form-label" style={{ margin: 0 }}>
             Cantidad {inputMode === 'grams' ? '(gramos)' : `(${portionLabel})`}
-          </label>
+          </span>
           {hasPortions && (
             <div style={{ width: '160px' }}>
               <SegmentedControl

@@ -38,7 +38,7 @@ export function useNutritionDiary() {
     queryKey: ['nutritionData', selectedDate],
     queryFn: async ({ signal }) => {
       const [macrosRes, mealsRes, settingsRes, logsRes] = await Promise.all([
-        api.get<Macros>('/nutrition/macros', { signal }),
+        api.get<Macros>(`/nutrition/macros?date=${selectedDate}`, { signal }),
         api.get<Meal[]>('/nutrition/meals', { signal }),
         api.get<UserSettings>('/settings', { signal }),
         api.get<FoodLog[]>(`/nutrition/logs?date=${selectedDate}`, { signal }),

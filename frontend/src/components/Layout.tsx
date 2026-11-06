@@ -22,6 +22,7 @@ import { Skeleton } from './ui/skeleton';
 import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings, Plus } from 'lucide-react';
 import { ActiveWorkoutBanner } from './workout/ActiveWorkoutBanner';
 import { haptics } from '@/lib/haptics';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   {
@@ -69,8 +70,12 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const firstPathRef = useRef(true);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const userInitial = (user?.name || user?.email || '?').trim().charAt(0).toUpperCase();
   const hasActiveWorkout = useWorkoutStore((s) => s.active !== null);
   const hideNav = hasActiveWorkout && location.pathname === '/workout';
 
@@ -95,6 +100,12 @@ export default function Layout() {
     setSidebarOpen(false);
     setMoreMenuOpen(false);
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    // Move focus to the new page so screen readers announce it; not on the first load.
+    if (firstPathRef.current) {
+      firstPathRef.current = false;
+      return;
+    }
+    contentRef.current?.focus({ preventScroll: true });
   }, [location.pathname]);
 
   // Close more menu when clicking outside
@@ -154,15 +165,9 @@ export default function Layout() {
 
   return (
     <div className="app-root">
-      {/* Barra superior de app para móvil */}
-      <header className="mobile-top-bar">
-        {hideNav ? <WorkoutElapsedTimer /> : <div style={{ width: '48px' }} />}
-        <div className="mobile-top-logo">
-          <img src="/ascension-title.png" alt="Ascension" className="mobile-header-title-img" />
-        </div>
-        <div style={{ width: '48px' }} />
-      </header>
-
+      <a href="#contenido" className="skip-link">
+        Saltar al contenido
+      </a>
       {/* Capa de fondo oscurecida para cerrar el menú */}
       <div
         className={`mobile-overlay ${sidebarOpen ? 'active' : ''}`}
@@ -179,7 +184,7 @@ export default function Layout() {
               <div className="logo-subtitle">Weight Tracker</div>
             </div>
           </div>
-          <nav className="sidebar-nav">
+          <nav className="sidebar-nav" aria-label="Navegación principal">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -187,6 +192,7 @@ export default function Layout() {
                   key={item.path}
                   type="button"
                   className={`nav-item ${isActive ? 'active' : ''}`}
+                  aria-current={isActive ? 'page' : undefined}
                   onMouseEnter={() => preloadRoute(item.path)}
                   onTouchStart={() => preloadRoute(item.path)}
                   onClick={(e) => {
@@ -210,7 +216,27 @@ export default function Layout() {
         </aside>
 
         <main className="main-content">
-          <div className="main-content-inner">
+          {/* Cabecera móvil: marca a la izquierda y sesión a la derecha; se desplaza con el contenido */}
+          <header className="mobile-top-bar">
+            <span className="mobile-brand">Ascension</span>
+            <div className="mobile-top-actions">
+              {hideNav && <WorkoutElapsedTimer />}
+              <button
+                type="button"
+                className="mobile-avatar-btn"
+                aria-label="Cuenta y ajustes"
+                title="Cuenta y ajustes"
+                onClick={() => navigateTo('/settings')}
+              >
+                {user?.picture ? (
+                  <img src={user.picture} alt="" referrerPolicy="no-referrer" />
+                ) : (
+                  <span aria-hidden="true">{userInitial}</span>
+                )}
+              </button>
+            </div>
+          </header>
+          <div id="contenido" ref={contentRef} tabIndex={-1} className="main-content-inner">
             {configError && <QueryErrorNotice retry={retryConfig} pending={fetchingConfig} />}
             <Suspense
               fallback={
@@ -346,6 +372,7 @@ export default function Layout() {
                   key={item.path}
                   type="button"
                   className={`bottom-sheet-item ${isActive ? 'active' : ''}`}
+                  aria-current={isActive ? 'page' : undefined}
                   onMouseEnter={() => preloadRoute(item.path)}
                   onTouchStart={() => preloadRoute(item.path)}
                   onClick={(e) => {

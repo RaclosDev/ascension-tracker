@@ -90,6 +90,9 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             case "food-external" -> properties.getFoodExternalLimit();
             case "push" -> properties.getPushLimit();
             case "user" -> properties.getUserLimit();
+            case "coach" -> properties.getCoachLimit();
+            case "photos" -> properties.getPhotoLimit();
+            case "public" -> properties.getPublicLimit();
             default -> properties.getMaxRequestsPerMinute();
         };
     }
@@ -134,12 +137,22 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         if (path.startsWith("/api/user")) {
             return "user";
         }
+        // Covers both /api/coach (the coach's side) and /api/coaching (the client's side).
+        if (path.startsWith("/api/coach")) {
+            return "coach";
+        }
+        if (path.startsWith("/api/progress-photos")) {
+            return "photos";
+        }
+        if (path.startsWith("/api/public")) {
+            return "public";
+        }
         return null;
     }
 
     private static String clientId(String group, HttpServletRequest request) {
         // IP-keyed groups: login, refresh, auth
-        if ("auth".equals(group) || "login".equals(group) || "refresh".equals(group)) {
+        if ("auth".equals(group) || "login".equals(group) || "refresh".equals(group) || "public".equals(group)) {
             return "ip:" + request.getRemoteAddr();
         }
 

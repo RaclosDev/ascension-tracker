@@ -207,7 +207,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
                             justifyContent: 'center',
                             background: 'transparent',
                             border: 'none',
-                            color: '#ef4444',
+                            color: 'var(--color-danger)',
                           }}
                           onClick={() => {
                             if (meal.id) handleDeleteMeal(meal.id);

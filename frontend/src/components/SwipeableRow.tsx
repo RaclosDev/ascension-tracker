@@ -150,7 +150,7 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
           alignItems: 'center',
           justifyContent: 'flex-end',
           paddingRight: '20px',
-          background: '#ef4444',
+          background: 'var(--color-danger)',
           borderRadius: '0 12px 12px 0',
           opacity: offsetX < -15 ? 1 : 0,
           cursor: 'pointer',

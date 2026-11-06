@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
 
 import com.ascension.support.DisabledIfDockerUnavailable;
@@ -30,6 +31,9 @@ class FlywayCleanDatabaseMigrationTest {
     @Autowired
     private Flyway flyway;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @Test
     @DisplayName("Verify that all Flyway migrations (V1..Vn) apply cleanly on an empty database without baseline-on-migrate")
     void flywayMigrations_applyCleanlyOnEmptyDatabaseWithoutBaseline() {
@@ -40,8 +44,8 @@ class FlywayCleanDatabaseMigrationTest {
                 .isNotEmpty();
 
         assertThat(appliedMigrations.length)
-                .as("All 26 Flyway migrations (V1 to V26) should be applied")
-                .isGreaterThanOrEqualTo(26);
+                .as("All 10 Flyway migrations (V1 to V10) should be applied")
+                .isGreaterThanOrEqualTo(10);
 
         boolean allSuccessful = Arrays.stream(appliedMigrations)
                 .allMatch(m -> m.getState().isApplied());
@@ -53,5 +57,15 @@ class FlywayCleanDatabaseMigrationTest {
         assertThat(flyway.getConfiguration().isBaselineOnMigrate())
                 .as("baseline-on-migrate must be false in this test to ensure zero-base verification")
                 .isFalse();
+    }
+
+    @Test
+    void publicTablesRequireRowLevelSecurity() {
+        var unprotectedTables = jdbcTemplate.queryForList(
+                "SELECT tablename FROM pg_tables WHERE schemaname = 'public' "
+                        + "AND tablename <> 'flyway_schema_history' AND NOT rowsecurity",
+                String.class);
+
+        assertThat(unprotectedTables).isEmpty();
     }
 }

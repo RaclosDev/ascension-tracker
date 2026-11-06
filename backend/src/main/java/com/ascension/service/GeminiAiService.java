@@ -7,6 +7,7 @@ import com.ascension.dto.MealDTO;
 import com.ascension.dto.RecipeDTO;
 import com.ascension.dto.SavedFoodDTO;
 import com.ascension.exception.AiProcessingException;
+import com.ascension.exception.InvalidInputException;
 import com.ascension.exception.ExternalApiException;
 import com.ascension.exception.UserDataQuotaExceededException;
 import com.ascension.service.ai.AiJsonParser;
@@ -199,13 +200,13 @@ public class GeminiAiService {
 
     public Map<String, Object> processNutritionalLabel(String userEmail, MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("No image file provided");
+            throw new InvalidInputException("No se ha enviado ninguna imagen.");
         }
         byte[] fileBytes;
         try {
             fileBytes = file.getBytes();
         } catch (IOException e) {
-            throw new IllegalArgumentException("Could not read uploaded image file", e);
+            throw new InvalidInputException("No se pudo leer la imagen.", e);
         }
         String mimeType = validateAndGetMimeType(fileBytes);
         String base64Image = Base64.getEncoder().encodeToString(fileBytes);
@@ -398,7 +399,7 @@ public class GeminiAiService {
 
     public String validateAndGetMimeType(byte[] data) {
         if (data == null || data.length < 12) {
-            throw new IllegalArgumentException("Corrupt image data: No image data present to read");
+            throw new InvalidInputException("La imagen está dañada o no se puede leer.");
         }
         String mimeType = null;
         if (data[0] == (byte) 0xFF && data[1] == (byte) 0xD8) {
@@ -411,14 +412,14 @@ public class GeminiAiService {
         }
 
         if (mimeType == null) {
-            throw new IllegalArgumentException("Unsupported image format. Only JPEG, PNG, and WEBP are allowed.");
+            throw new InvalidInputException("Formato de imagen no admitido. Usa JPEG, PNG o WebP.");
         }
 
         try (ByteArrayInputStream bais = new ByteArrayInputStream(data);
              ImageInputStream iis = ImageIO.createImageInputStream(bais)) {
 
             if (iis == null) {
-                throw new IllegalArgumentException("Corrupt image data: Unable to read stream");
+                throw new InvalidInputException("La imagen está dañada o no se puede leer.");
             }
 
             Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
@@ -427,7 +428,7 @@ public class GeminiAiService {
                     validateWebpDimensions(data);
                     return "image/webp";
                 }
-                throw new IllegalArgumentException("Corrupt image data: No image reader found");
+                throw new InvalidInputException("La imagen está dañada o no se puede leer.");
             }
 
             ImageReader reader = readers.next();
@@ -437,12 +438,12 @@ public class GeminiAiService {
                 int height = reader.getHeight(0);
 
                 if (width <= 0 || height <= 0) {
-                    throw new IllegalArgumentException("Corrupt image data: Invalid dimensions (" + width + "x" + height + ")");
+                    throw new InvalidInputException("La imagen está dañada o no se puede leer.");
                 }
 
                 long pixelCount = (long) width * (long) height;
                 if (pixelCount > MAX_PIXEL_COUNT) {
-                    throw new IllegalArgumentException("Image resolution exceeds maximum allowed limit of 25 megapixels: " + width + "x" + height);
+                    throw new InvalidInputException("La imagen supera el máximo de 25 megapíxeles (" + width + "x" + height + ").");
                 }
             } finally {
                 reader.dispose();
@@ -450,7 +451,7 @@ public class GeminiAiService {
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
-            throw new IllegalArgumentException("Corrupt image data: Failed to read image metadata", e);
+            throw new InvalidInputException("La imagen está dañada o no se puede leer.", e);
         }
 
         return mimeType;
@@ -484,7 +485,7 @@ public class GeminiAiService {
             if (width > 0 && height > 0) {
                 long pixelCount = (long) width * (long) height;
                 if (pixelCount > MAX_PIXEL_COUNT) {
-                    throw new IllegalArgumentException("Image resolution exceeds maximum allowed limit of 25 megapixels: " + width + "x" + height);
+                    throw new InvalidInputException("La imagen supera el máximo de 25 megapíxeles (" + width + "x" + height + ").");
                 }
             }
         } catch (IllegalArgumentException e) {

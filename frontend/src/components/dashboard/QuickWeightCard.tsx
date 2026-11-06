@@ -183,7 +183,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
               style={{
                 background: 'rgba(245, 158, 11, 0.15)',
                 borderColor: 'rgba(245, 158, 11, 0.3)',
-                color: '#fbbf24',
+                color: 'var(--color-warning)',
               }}
             >
               Pendiente
@@ -208,8 +208,8 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
               aria-label="Peso corporal de hoy en kilogramos"
               className="quick-add-input min-h-11 text-3xl sm:text-4xl font-black tabular-nums text-center rounded-xl w-full py-1.5 pr-8 pl-3 outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-1 text-white border transition-all"
               style={{
-                background: 'rgba(0, 0, 0, 0.45)',
-                borderColor: isDirty ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.12)',
+                background: 'var(--bg-input)',
+                borderColor: isDirty ? 'var(--accent-primary)' : 'var(--border-medium)',
               }}
               value={quickWeight}
               onChange={(e) => setQuickWeight(e.target.value)}

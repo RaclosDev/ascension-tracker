@@ -264,8 +264,6 @@ describe('Workout Session & Stepper Anti-Regression Suite', () => {
 
     render(
       <SettingsWorkoutSection
-        isOpen={true}
-        onToggle={vi.fn()}
         restPreset={savedVal}
         onRestPresetChange={handleChange}
         onWorkoutSettingsChange={vi.fn()}
