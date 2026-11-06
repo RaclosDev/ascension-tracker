@@ -4,6 +4,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
+import com.ascension.exception.ExternalApiException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,33 +23,28 @@ public class FatSecretResponseMapper {
     }
 
     public String mapFatSecretToOpenFoodFacts(JsonNode root, boolean singleProduct) {
-        try {
-            if (root.has("error")) {
-                String errorMsg = root.path("error").path("message").asString("Unknown");
-                log.error("FatSecret API Error: {}", errorMsg);
-                throw new RuntimeException("FatSecret API Error: " + errorMsg);
-            }
-            ObjectNode openFoodFactsRoot = objectMapper.createObjectNode();
-            
-            if (singleProduct) {
-                JsonNode food = root.path("food");
-                if (food.isMissingNode()) return "{\"product\": null}";
-                openFoodFactsRoot.set("product", mapSingleFood(food));
-            } else {
-                ArrayNode mappedProducts = objectMapper.createArrayNode();
-                JsonNode foods = root.path("foods").path("food");
-                if (foods.isArray()) {
-                    for (JsonNode food : foods) mappedProducts.add(mapSingleFood(food));
-                } else if (foods.isObject()) {
-                    mappedProducts.add(mapSingleFood(foods));
-                }
-                openFoodFactsRoot.set("products", mappedProducts);
-            }
-            return objectMapper.writeValueAsString(openFoodFactsRoot);
-        } catch (Exception e) {
-            if (e instanceof RuntimeException) throw (RuntimeException) e;
-            throw new RuntimeException("Error mapping FatSecret response: " + e.getMessage(), e);
+        if (root.has("error")) {
+            String errorMsg = root.path("error").path("message").asString("Unknown");
+            log.error("FatSecret API Error: {}", errorMsg);
+            throw new ExternalApiException("FatSecret", HttpStatus.BAD_GATEWAY, "FatSecret devolvió un error: " + errorMsg);
         }
+        ObjectNode openFoodFactsRoot = objectMapper.createObjectNode();
+        
+        if (singleProduct) {
+            JsonNode food = root.path("food");
+            if (food.isMissingNode()) return "{\"product\": null}";
+            openFoodFactsRoot.set("product", mapSingleFood(food));
+        } else {
+            ArrayNode mappedProducts = objectMapper.createArrayNode();
+            JsonNode foods = root.path("foods").path("food");
+            if (foods.isArray()) {
+                for (JsonNode food : foods) mappedProducts.add(mapSingleFood(food));
+            } else if (foods.isObject()) {
+                mappedProducts.add(mapSingleFood(foods));
+            }
+            openFoodFactsRoot.set("products", mappedProducts);
+        }
+        return objectMapper.writeValueAsString(openFoodFactsRoot);
     }
 
     private ObjectNode mapSingleFood(JsonNode food) {

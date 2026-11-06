@@ -64,9 +64,10 @@ public class FoodExternalService {
             throw new com.ascension.exception.ExternalApiException("ExternalFoodApis", org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE, "Food search interrupted", ex);
         } catch (com.ascension.exception.ExternalApiException eae) {
             throw eae;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Error combining external APIs", e);
-            throw new RuntimeException("External API Error: " + e.getMessage(), e);
+            throw new com.ascension.exception.ExternalApiException("ExternalFoodApis",
+                    org.springframework.http.HttpStatus.BAD_GATEWAY, "Error combinando las APIs externas de alimentos", e);
         }
     }
 
