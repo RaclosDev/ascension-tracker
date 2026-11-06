@@ -54,7 +54,7 @@ export function playRestSound() {
   }
 }
 
-export const REST_NOTIFICATION_TAG = 'ascension-rest-timer';
+const REST_NOTIFICATION_TAG = 'ascension-rest-timer';
 
 export async function dismissRestNotifications() {
   if (typeof window === 'undefined') return;

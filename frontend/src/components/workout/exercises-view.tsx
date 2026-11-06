@@ -12,10 +12,6 @@ import {
   useUpdateWorkoutPreferences,
 } from '@/lib/workout/api';
 
-// Re-exportadas para que los imports existentes sigan funcionando
-export { EQUIPMENT_OPTIONS, MUSCLE_OPTIONS } from '@/lib/workout/equipmentOptions';
-export type { EquipmentOption, MuscleOption } from '@/lib/workout/equipmentOptions';
-
 import { useExerciseFilters } from '@/hooks/workout/useExerciseFilters';
 import { ExerciseCardItem } from './exercises/ExerciseCardItem';
 import { ExerciseFilterBar } from './exercises/ExerciseFilterBar';
@@ -242,5 +238,3 @@ export default function ExercisesView() {
     </div>
   );
 }
-
-export { ExercisesView };

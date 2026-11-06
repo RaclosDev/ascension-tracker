@@ -49,7 +49,7 @@ export interface AdminContactRequest {
   handledAt: string | null;
 }
 
-export const PLAN_NAMES: Record<string, string> = {
+const PLAN_NAMES: Record<string, string> = {
   FREE: 'Gratis',
   STARTER: 'Básico',
   PRO: 'Pro',
