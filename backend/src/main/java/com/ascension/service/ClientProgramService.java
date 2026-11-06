@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import com.ascension.dto.ProgramDtos.Exercise;
 import com.ascension.dto.ProgramDtos.TodayDay;
 import com.ascension.dto.ProgramDtos.TodayPlan;
@@ -13,7 +14,6 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -49,7 +49,7 @@ public class ClientProgramService {
                 (rs, n) -> new Active(rs.getObject("id", UUID.class), rs.getObject("program_id", UUID.class),
                         rs.getString("name"), rs.getString("coach_name"),
                         rs.getObject("start_date", LocalDate.class), rs.getInt("weeks")),
-                normalize(email));
+                Emails.normalize(email));
         return active.stream().map(a -> plan(email, a, date)).toList();
     }
 
@@ -68,7 +68,7 @@ public class ClientProgramService {
                     JOIN programs p ON p.id = d.program_id
                     JOIN users u ON u.id = p.owner_user_id
                     WHERE d.id = ? AND u.email = ? AND NOT p.is_library)
-                """, Boolean.class, programDayId, normalize(email));
+                """, Boolean.class, programDayId, Emails.normalize(email));
         return Boolean.TRUE.equals(owns);
     }
 
@@ -79,7 +79,7 @@ public class ClientProgramService {
                 UPDATE program_assignments SET status = 'ENDED', ended_at = NOW()
                 WHERE id = ? AND status = 'ACTIVE'
                   AND client_user_id = (SELECT id FROM users WHERE email = ?)
-                """, assignmentId, normalize(email));
+                """, assignmentId, Emails.normalize(email));
         if (updated == 0) {
             throw new EntityNotFoundException("Programa no encontrado");
         }
@@ -125,7 +125,4 @@ public class ClientProgramService {
                 (rs, n) -> ProgramService.exercise(rs), programDayId);
     }
 
-    private static String normalize(String email) {
-        return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
-    }
 }

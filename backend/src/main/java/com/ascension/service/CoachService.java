@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import com.ascension.dto.CoachDtos.AccessExport;
 import com.ascension.dto.CoachDtos.AccessLogEntry;
 import com.ascension.dto.CoachDtos.AssignmentExport;
@@ -31,7 +32,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -54,14 +54,17 @@ public class CoachService {
     private final NutritionPlanService nutritionPlanService;
     private final CheckinService checkinService;
     private final CoachSubscriptionService subscriptionService;
+    private final UserIdLookup userIdLookup;
     private final SecureRandom random = new SecureRandom();
 
     public CoachService(JdbcTemplate jdbcTemplate, NutritionPlanService nutritionPlanService,
-                        CheckinService checkinService, CoachSubscriptionService subscriptionService) {
+                        CheckinService checkinService, CoachSubscriptionService subscriptionService,
+                        UserIdLookup userIdLookup) {
         this.jdbcTemplate = jdbcTemplate;
         this.nutritionPlanService = nutritionPlanService;
         this.checkinService = checkinService;
         this.subscriptionService = subscriptionService;
+        this.userIdLookup = userIdLookup;
     }
 
     // ---- Coach side ----
@@ -72,7 +75,7 @@ public class CoachService {
                 INSERT INTO coach_profiles (user_id)
                 SELECT id FROM users WHERE email = ?
                 ON CONFLICT (user_id) DO NOTHING
-                """, normalize(coachEmail));
+                """, Emails.normalizeRequired(coachEmail));
         subscriptionService.startTrial(requireCoachId(coachEmail));
     }
 
@@ -89,7 +92,7 @@ public class CoachService {
         Integer count = jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM coach_profiles cp JOIN users u ON u.id = cp.user_id
                 WHERE u.email = ?
-                """, Integer.class, normalize(email));
+                """, Integer.class, Emails.normalizeRequired(email));
         return count != null && count > 0;
     }
 
@@ -167,7 +170,7 @@ public class CoachService {
                 UPDATE coach_clients SET status = 'ENDED', ended_at = NOW()
                 WHERE id = ? AND status = 'ACTIVE'
                   AND coach_user_id = (SELECT id FROM users WHERE email = ?)
-                """, linkId, normalize(coachEmail));
+                """, linkId, Emails.normalizeRequired(coachEmail));
         if (updated == 0) {
             throw new EntityNotFoundException("Alumno no encontrado");
         }
@@ -237,7 +240,7 @@ public class CoachService {
                 """,
                 (rs, n) -> new MyCoach(rs.getObject("id", UUID.class), person(rs),
                         permissions(rs), instant(rs, "created_at")),
-                normalize(clientEmail));
+                Emails.normalizeRequired(clientEmail));
     }
 
     @Transactional
@@ -252,7 +255,7 @@ public class CoachService {
                 WHERE id = ? AND status = 'ACTIVE'
                   AND client_user_id = (SELECT id FROM users WHERE email = ?)
                 """, permissions.training(), permissions.nutrition(), permissions.body(), permissions.grantsEdit(),
-                permissions.grantsEditNutrition(), linkId, normalize(clientEmail));
+                permissions.grantsEditNutrition(), linkId, Emails.normalizeRequired(clientEmail));
         if (updated == 0) {
             throw new EntityNotFoundException("Entrenador no encontrado");
         }
@@ -264,7 +267,7 @@ public class CoachService {
                 UPDATE coach_clients SET status = 'ENDED', ended_at = NOW()
                 WHERE id = ? AND status = 'ACTIVE'
                   AND client_user_id = (SELECT id FROM users WHERE email = ?)
-                """, linkId, normalize(clientEmail));
+                """, linkId, Emails.normalizeRequired(clientEmail));
         if (updated == 0) {
             throw new EntityNotFoundException("Entrenador no encontrado");
         }
@@ -282,7 +285,7 @@ public class CoachService {
                 """,
                 (rs, n) -> new AccessLogEntry(person(rs), rs.getString("action"),
                         rs.getObject("access_date", LocalDate.class), instant(rs, "last_at"), rs.getInt("hits")),
-                normalize(clientEmail), ACCESS_LOG_DAYS, ACCESS_LOG_LIMIT);
+                Emails.normalizeRequired(clientEmail), ACCESS_LOG_DAYS, ACCESS_LOG_LIMIT);
     }
 
     // ---- GDPR export ----
@@ -290,12 +293,10 @@ public class CoachService {
     /** Everything coach mode keeps about this user, as coach and as client. Null when there is nothing. */
     @Transactional(readOnly = true)
     public CoachingExport exportFor(String email) {
-        List<UUID> ids = jdbcTemplate.queryForList("SELECT id FROM users WHERE email = ?", UUID.class,
-                normalize(email));
-        if (ids.isEmpty()) {
+        UUID userId = userIdLookup.find(email).orElse(null);
+        if (userId == null) {
             return null;
         }
-        UUID userId = ids.get(0);
         List<Instant> coachSince = jdbcTemplate.query(
                 "SELECT created_at FROM coach_profiles WHERE user_id = ?",
                 (rs, n) -> instant(rs, "created_at"), userId);
@@ -407,7 +408,7 @@ public class CoachService {
         List<UUID> ids = jdbcTemplate.queryForList("""
                 SELECT cp.user_id FROM coach_profiles cp JOIN users u ON u.id = cp.user_id
                 WHERE u.email = ?
-                """, UUID.class, normalize(coachEmail));
+                """, UUID.class, Emails.normalizeRequired(coachEmail));
         if (ids.isEmpty()) {
             throw new SecurityException("User is not a coach");
         }
@@ -415,12 +416,7 @@ public class CoachService {
     }
 
     private UUID requireUserId(String email) {
-        List<UUID> ids = jdbcTemplate.queryForList("SELECT id FROM users WHERE email = ?",
-                UUID.class, normalize(email));
-        if (ids.isEmpty()) {
-            throw new EntityNotFoundException("Usuario no encontrado");
-        }
-        return ids.get(0);
+        return userIdLookup.require(email);
     }
 
     private boolean activeLinkExists(UUID coachId, UUID clientId) {
@@ -438,12 +434,6 @@ public class CoachService {
         return count == null ? 0 : count;
     }
 
-    private static String normalize(String email) {
-        if (email == null || email.isBlank()) {
-            throw new EntityNotFoundException("Usuario no encontrado");
-        }
-        return email.trim().toLowerCase(Locale.ROOT);
-    }
 
     private static Person person(ResultSet rs) throws SQLException {
         return new Person(rs.getString("name"), rs.getString("email"), rs.getString("picture"));

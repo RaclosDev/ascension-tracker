@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import com.ascension.config.AdminProperties;
 import com.ascension.dto.ContactDtos.AdminContactRequest;
 import com.ascension.dto.ContactDtos.ContactRequestExport;
@@ -16,7 +17,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 /** Users asking about plans; the admins get a push and read them in the back office. */
@@ -30,20 +30,18 @@ public class ContactRequestService {
     private final JdbcTemplate jdbcTemplate;
     private final AdminProperties adminProperties;
     private final PushNotificationService pushNotificationService;
+    private final UserIdLookup userIdLookup;
 
     public ContactRequestService(JdbcTemplate jdbcTemplate, AdminProperties adminProperties,
-                                 PushNotificationService pushNotificationService) {
+                                 PushNotificationService pushNotificationService, UserIdLookup userIdLookup) {
         this.jdbcTemplate = jdbcTemplate;
         this.adminProperties = adminProperties;
         this.pushNotificationService = pushNotificationService;
+        this.userIdLookup = userIdLookup;
     }
 
     public void create(String userEmail, NewContactRequest request) {
-        UUID userId = jdbcTemplate.query("SELECT id FROM users WHERE email = ?",
-                rs -> rs.next() ? rs.getObject(1, UUID.class) : null, normalize(userEmail));
-        if (userId == null) {
-            throw new EntityNotFoundException("Usuario no encontrado");
-        }
+        UUID userId = userIdLookup.require(userEmail);
         Integer recent = jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM contact_requests
                 WHERE user_id = ? AND created_at > NOW() - INTERVAL '1 day'
@@ -57,7 +55,7 @@ public class ContactRequestService {
         log.info("Contact request ({}) from {}", request.topic(), PiiMasker.maskEmail(userEmail));
         for (String admin : adminProperties.getEmails()) {
             if (admin != null && !admin.isBlank()) {
-                pushNotificationService.sendAsync(normalize(admin), "Nueva solicitud de contacto",
+                pushNotificationService.sendAsync(Emails.normalize(admin), "Nueva solicitud de contacto",
                         "Alguien pregunta por los planes de entrenador.", "contact-request", "/admin/planes");
             }
         }
@@ -91,7 +89,7 @@ public class ContactRequestService {
                 WHERE u.email = ? ORDER BY r.created_at
                 """, (rs, n) -> new ContactRequestExport(rs.getString("topic"), rs.getString("message"),
                 (Integer) rs.getObject("desired_clients"), instant(rs, "created_at"), instant(rs, "handled_at")),
-                normalize(userEmail));
+                Emails.normalize(userEmail));
     }
 
     private static Instant instant(ResultSet rs, String column) throws SQLException {
@@ -99,7 +97,4 @@ public class ContactRequestService {
         return ts == null ? null : ts.toInstant();
     }
 
-    private static String normalize(String email) {
-        return email.trim().toLowerCase(Locale.ROOT);
-    }
 }

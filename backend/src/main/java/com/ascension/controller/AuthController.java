@@ -1,5 +1,6 @@
 package com.ascension.controller;
 
+import com.ascension.util.Emails;
 import jakarta.servlet.http.HttpServletRequest;
 import com.ascension.model.RefreshToken;
 import com.ascension.service.RefreshTokenService;
@@ -154,7 +155,7 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("error", "Email is required"));
         }
         // users.email is stored lower-case and every foreign key to it is case-sensitive.
-        String email = rawEmail.trim().toLowerCase(java.util.Locale.ROOT);
+        String email = Emails.normalize(rawEmail);
         String googleSub = tokenPayload.getSubject();
         if (googleSub == null || googleSub.isBlank()) {
             log.warn("Google sub is missing from token payload");

@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import com.ascension.config.CoachPlanProperties;
 import com.ascension.dto.AdminDtos.AdminCoach;
 import com.ascension.dto.AdminDtos.CoachPlans;
@@ -26,7 +27,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -106,7 +106,7 @@ public class CoachSubscriptionService implements AiDailyLimitResolver {
                     UNION
                     SELECT cc.coach_user_id FROM coach_clients cc JOIN users u ON u.id = cc.client_user_id
                     WHERE u.email = ? AND cc.status = 'ACTIVE')
-                """, CoachSubscriptionService::row, normalize(userEmail), normalize(userEmail));
+                """, CoachSubscriptionService::row, Emails.normalize(userEmail), Emails.normalize(userEmail));
         int limit = 0;
         for (Row row : rows) {
             limit = Math.max(limit, properties.plan(effectivePlan(row)).getAiDailyLimit());
@@ -255,7 +255,4 @@ public class CoachSubscriptionService implements AiDailyLimitResolver {
         return ts == null ? null : ts.toInstant();
     }
 
-    private static String normalize(String email) {
-        return email.trim().toLowerCase(Locale.ROOT);
-    }
 }

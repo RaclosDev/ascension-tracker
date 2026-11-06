@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import com.ascension.dto.ProgressPhotoDtos.ExportedPhoto;
 import com.ascension.dto.ProgressPhotoDtos.Photo;
 import com.ascension.dto.ProgressPhotoDtos.PhotoList;
@@ -28,7 +29,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -50,11 +50,13 @@ public class ProgressPhotoService {
     private final PhotoStorage storage;
     private final TransactionTemplate tx;
     private final TransactionTemplate newTx;
+    private final UserIdLookup userIdLookup;
 
     public ProgressPhotoService(JdbcTemplate jdbcTemplate, PhotoStorage storage,
-                                PlatformTransactionManager transactionManager) {
+                                PlatformTransactionManager transactionManager, UserIdLookup userIdLookup) {
         this.jdbcTemplate = jdbcTemplate;
         this.storage = storage;
+        this.userIdLookup = userIdLookup;
         this.tx = new TransactionTemplate(transactionManager);
         this.newTx = new TransactionTemplate(transactionManager);
         this.newTx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
@@ -75,7 +77,7 @@ public class ProgressPhotoService {
                 rs.getObject("taken_on", LocalDate.class),
                 storage.signedUrl(rs.getString("object_key"), URL_TTL),
                 rs.getInt("size_bytes"),
-                rs.getTimestamp("created_at").toInstant()), normalize(email)));
+                rs.getTimestamp("created_at").toInstant()), Emails.normalize(email)));
     }
 
     /** Every stored photo's details for the data export, oldest first; works with storage off too. */
@@ -91,7 +93,7 @@ public class ProgressPhotoService {
                 rs.getObject("taken_on", LocalDate.class),
                 rs.getString("content_type"),
                 rs.getInt("size_bytes"),
-                rs.getTimestamp("created_at").toInstant()), normalize(email));
+                rs.getTimestamp("created_at").toInstant()), Emails.normalize(email));
     }
 
     /**
@@ -119,8 +121,7 @@ public class ProgressPhotoService {
             throw new InvalidInputException("Formato de foto no admitido. Usa JPEG o WebP.");
         }
         byte[] bytes = PhotoMetadataStripper.strip(original, contentType);
-        UUID userId = jdbcTemplate.queryForObject("SELECT id FROM users WHERE email = ?",
-                UUID.class, normalize(email));
+        UUID userId = userIdLookup.require(email);
         // Checked first without a lock, so a full gallery never uploads anything.
         checkPhotoCap(userId);
         UUID id = UUID.randomUUID();
@@ -159,7 +160,7 @@ public class ProgressPhotoService {
                 DELETE FROM progress_photos
                 WHERE id = ? AND user_id = (SELECT id FROM users WHERE email = ?)
                 RETURNING object_key
-                """, String.class, photoId, normalize(email));
+                """, String.class, photoId, Emails.normalize(email));
         if (keys.isEmpty()) {
             throw new EntityNotFoundException("Foto no encontrada");
         }
@@ -170,7 +171,7 @@ public class ProgressPhotoService {
     public void deleteAllObjectsFor(String email) {
         List<String> keys = jdbcTemplate.queryForList("""
                 SELECT p.object_key FROM progress_photos p JOIN users u ON u.id = p.user_id WHERE u.email = ?
-                """, String.class, normalize(email));
+                """, String.class, Emails.normalize(email));
         if (!keys.isEmpty()) {
             deleteAfterCommit(keys);
         }
@@ -264,7 +265,4 @@ public class ProgressPhotoService {
         }
     }
 
-    private static String normalize(String email) {
-        return email.trim().toLowerCase(Locale.ROOT);
-    }
 }
