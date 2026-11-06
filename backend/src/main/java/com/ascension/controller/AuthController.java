@@ -257,7 +257,7 @@ public class AuthController {
                 try {
                     Jwt decoded = jwtDecoder.decode(authHeader.substring(7).trim());
                     targetEmail = SecurityUtils.extractEmail(decoded);
-                } catch (Exception e) {
+                } catch (org.springframework.security.oauth2.jwt.JwtException | IllegalArgumentException e) {
                     log.debug("Bearer token could not be decoded during logout: {}", e.getMessage());
                 }
             } else if (requestCookieRefreshToken != null && !requestCookieRefreshToken.isBlank()) {
@@ -285,7 +285,7 @@ public class AuthController {
                 .body(Map.of("message", "Log out successful"));
     }
 
-    @DeleteMapping({"/account", "/users/account"})
+    @DeleteMapping("/account")
     public ResponseEntity<Map<String, String>> deleteAccount(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request) {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null || email.isBlank()) {

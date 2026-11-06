@@ -182,7 +182,7 @@ class ProgressPhotoIntegrationTest {
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("id").asString();
         assertThat(MemoryStorage.OBJECTS.keySet()).anyMatch(k -> k.contains(id));
 
-        mvc.perform(as(delete("/api/users/account"), client)).andExpect(status().isOk());
+        mvc.perform(as(delete("/api/auth/account"), client)).andExpect(status().isOk());
 
         assertThat(MemoryStorage.OBJECTS.keySet()).noneMatch(k -> k.contains(id));
     }

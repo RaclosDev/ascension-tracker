@@ -143,7 +143,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleAiProcessingException(AiProcessingException ex) {
         String traceId = UUID.randomUUID().toString();
         log.error("AI processing error: {} [trace_id: {}]", ex.getMessage(), traceId, ex);
-        return buildErrorResponse("No se pudo procesar la solicitud con el servicio de IA.", HttpStatus.BAD_REQUEST, traceId);
+        return buildErrorResponse("No se pudo procesar la solicitud con el servicio de IA.", HttpStatus.BAD_GATEWAY, traceId);
     }
 
     @ExceptionHandler(ExternalApiException.class)

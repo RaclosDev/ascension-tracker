@@ -103,6 +103,25 @@ public class NutritionAiControllerTest {
     }
 
     @Test
+    public void addSavedFoodWithAi_WhenAiAnswerCannotBeProcessed_ReturnsBadGateway() throws Exception {
+        AiFoodRequestDTO request = new AiFoodRequestDTO();
+        request.setText("1 manzana");
+
+        when(geminiAiService.processNaturalLanguageFood(eq("test@example.com"), eq("1 manzana")))
+                .thenThrow(new com.ascension.exception.AiProcessingException("Failed to parse AI response: garbage",
+                        new IllegalStateException("garbage")));
+
+        mockMvc.perform(post("/api/nutrition/ai/food")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(jwt().jwt(builder -> builder.claim("email", "test@example.com")))
+                .with(csrf()))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error").value("No se pudo procesar la solicitud con el servicio de IA."))
+                .andExpect(jsonPath("$.trace_id").exists());
+    }
+
+    @Test
     public void addSavedFoodWithAi_WhenServiceUnavailable503_MasksUpstreamError() throws Exception {
         AiFoodRequestDTO request = new AiFoodRequestDTO();
         request.setText("1 manzana");
