@@ -94,7 +94,7 @@ export function MuscleRecovery({
   return (
     <>
       <div className="card flex flex-col justify-between h-full min-h-[190px] p-3 sm:p-4">
-        <div>
+        <div className="flex flex-1 flex-col">
           <div className="flex items-center justify-between mb-2.5">
             <button
               type="button"
@@ -122,14 +122,18 @@ export function MuscleRecovery({
           </div>
 
           {musclesToRecover.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-5 text-center">
-              <div className="w-9 h-9 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mb-1.5 text-emerald-400">
-                <BatteryFull size={18} aria-hidden />
+            // Centrado en todo el alto de la tarjeta: con la del mapa al lado, no queda un hueco abajo.
+            <div className="flex flex-1 flex-col items-center justify-center py-5 text-center">
+              <div className="w-9 h-9 sm:w-14 sm:h-14 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mb-1.5 sm:mb-3 text-emerald-400">
+                <BatteryFull className="size-[18px] sm:size-7" aria-hidden />
               </div>
-              <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+              <p
+                className="text-xs sm:text-lg font-semibold"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 100% Listo
               </p>
-              <p className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-[10px] sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                 Músculos recuperados
               </p>
             </div>
@@ -208,7 +212,7 @@ export function MuscleRecovery({
               let statusBadge = {
                 text: 'Listo',
                 bg: 'rgba(34, 197, 94, 0.15)',
-                color: '#4ade80',
+                color: 'var(--color-success)',
               };
 
               if (recoveryPct < 30) {
@@ -216,14 +220,14 @@ export function MuscleRecovery({
                 statusBadge = {
                   text: 'Fatiga alta',
                   bg: 'rgba(239, 68, 68, 0.15)',
-                  color: '#f87171',
+                  color: 'var(--color-danger)',
                 };
               } else if (recoveryPct < 60) {
                 barColor = 'var(--color-carbs)';
                 statusBadge = {
                   text: 'En recuperación',
                   bg: 'rgba(245, 158, 11, 0.15)',
-                  color: '#fbbf24',
+                  color: 'var(--color-warning)',
                 };
               } else if (recoveryPct < 100) {
                 barColor = 'var(--accent-primary)';

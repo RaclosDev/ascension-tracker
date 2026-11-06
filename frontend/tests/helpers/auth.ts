@@ -53,6 +53,19 @@ export async function setupAuthMocks(page: Page): Promise<void> {
     });
   });
 
+  // Consents already given (prevents the blocking consent screen)
+  await page.route('**/api/consents', async (route) => {
+    const answer = { granted: true, version: 'e2e', at: '2026-01-01T00:00:00Z' };
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      json: {
+        version: 'e2e',
+        consents: { TERMS: answer, PRIVACY: answer, HEALTH_DATA: answer, AI_HEALTH: answer },
+      },
+    });
+  });
+
   // 3. User settings (Prevents OnboardingScreen)
   await page.route('**/api/settings**', async (route) => {
     await route.fulfill({

@@ -61,7 +61,10 @@ export default function AiFoodModal({
             marginBottom: '1.5rem',
           }}
         >
-          <h3 id="ai-food-modal-title" style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)' }}>
+          <h3
+            id="ai-food-modal-title"
+            style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)' }}
+          >
             Crear con IA
           </h3>
           <button
@@ -129,7 +132,7 @@ export default function AiFoodModal({
                 style={{
                   background: isListening ? 'rgba(239, 68, 68, 0.2)' : 'var(--bg-secondary)',
                   border: isListening
-                    ? '1px solid #ef4444'
+                    ? '1px solid var(--color-danger)'
                     : '1px solid var(--border-color, var(--border-medium))',
                   borderRadius: '50%',
                   width: '34px',
@@ -138,7 +141,7 @@ export default function AiFoodModal({
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  color: isListening ? '#ef4444' : 'var(--text-primary)',
+                  color: isListening ? 'var(--color-danger)' : 'var(--text-primary)',
                   transition: 'all 0.2s ease',
                 }}
                 title={isListening ? 'Detener dictado' : 'Dictar por voz'}
@@ -155,7 +158,7 @@ export default function AiFoodModal({
                 alignItems: 'center',
                 gap: '0.4rem',
                 fontSize: '0.8rem',
-                color: '#ef4444',
+                color: 'var(--color-danger)',
               }}
             >
               <span className="recording-dot" />

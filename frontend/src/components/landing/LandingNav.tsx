@@ -1,10 +1,11 @@
 import React from 'react';
 import DripButton from './DripButton';
+import { requestGoogleSignIn } from '../GoogleSignInButton';
 
 const links = [
   { href: '#funciones', label: 'Funciones' },
   { href: '#datos', label: 'Tus datos' },
-  { href: '#entrar', label: 'Entrar' },
+  { href: '#entrenadores', label: 'Entrenadores' },
 ];
 
 export default function LandingNav() {
@@ -30,7 +31,9 @@ export default function LandingNav() {
           </a>
         ))}
       </nav>
-      <DripButton href="#entrar">Entrar</DripButton>
+      <DripButton href="#entrar" onClick={requestGoogleSignIn}>
+        Entrar
+      </DripButton>
     </header>
   );
 }

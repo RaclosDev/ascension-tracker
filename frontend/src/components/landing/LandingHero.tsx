@@ -63,6 +63,7 @@ export default function LandingHero() {
         <div id="entrar" className="mt-7 flex flex-wrap items-center gap-5">
           <div className="flex min-h-11 items-center">
             <GoogleSignInButton
+              className="landing-google-cta"
               onCredential={async (credential) => {
                 const res = await api.post<{ token?: string }>('/auth/login', {
                   token: credential,

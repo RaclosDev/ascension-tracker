@@ -15,6 +15,9 @@ class AccountDeletionServiceTest {
     @Mock
     private JdbcTemplate jdbcTemplate;
 
+    @Mock
+    private ProgressPhotoService progressPhotoService;
+
     @InjectMocks
     private AccountDeletionService accountDeletionService;
 

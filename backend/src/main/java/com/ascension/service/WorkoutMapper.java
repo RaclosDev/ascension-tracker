@@ -19,6 +19,8 @@ public interface WorkoutMapper {
 
     @Mapping(target = "userEmail", ignore = true)
     @Mapping(target = "isNew", ignore = true)
+    @Mapping(target = "programDayId", ignore = true)
+    @Mapping(target = "programOrigin", ignore = true)
     Workout toEntity(WorkoutDTO dto);
 
     @Mapping(target = "workout", ignore = true)

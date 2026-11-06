@@ -147,7 +147,7 @@ export function SettingsDataSection({
             style={{
               width: '100%',
               borderColor: 'rgba(239, 68, 68, 0.5)',
-              color: '#ef4444',
+              color: 'var(--color-danger)',
               background: 'rgba(239, 68, 68, 0.1)',
             }}
             onClick={onLogout}
@@ -157,6 +157,21 @@ export function SettingsDataSection({
           </button>
         </div>
       </div>
+      <nav
+        aria-label="Textos legales"
+        className="flex flex-wrap gap-x-4 gap-y-2 text-sm"
+        style={{ color: 'var(--text-secondary)' }}
+      >
+        <a href="/privacidad" className="flex min-h-11 items-center underline">
+          Privacidad
+        </a>
+        <a href="/terminos" className="flex min-h-11 items-center underline">
+          Términos de uso
+        </a>
+        <a href="/terminos-entrenadores" className="flex min-h-11 items-center underline">
+          Condiciones para entrenadores
+        </a>
+      </nav>
     </>
   );
 }

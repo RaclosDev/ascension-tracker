@@ -18,6 +18,9 @@ vi.mock('../lib/workout/store', () => ({
   useWorkoutStore: (select: (state: { active: { startedAt: number } }) => unknown) =>
     select({ active: { startedAt: 0 } }),
 }));
+vi.mock('../context/AuthContext', () => ({
+  useAuth: () => ({ user: { name: 'test user', email: 'test@example.com' } }),
+}));
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
@@ -61,4 +64,16 @@ it('shows settings failure with retry instead of onboarding when stale data is n
   expect(screen.getByRole('alert')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
   expect(refetch).toHaveBeenCalledOnce();
+});
+
+it('shows the session avatar in the mobile header and opens settings from it', () => {
+  vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+  render(
+    <MemoryRouter initialEntries={['/']}>
+      <Layout />
+    </MemoryRouter>,
+  );
+  const avatar = screen.getByRole('button', { name: 'Cuenta y ajustes' });
+  expect(avatar).toHaveTextContent('T');
+  expect(screen.getAllByAltText('Ascension')).toHaveLength(2);
 });

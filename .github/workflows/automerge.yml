@@ -1,0 +1,65 @@
+name: Auto-merge de PRs propios
+
+# Los PR que abre el dueño del repo se fusionan solos (squash) cuando la CI obligatoria pasa.
+# Los de cualquier otra persona o bot (Dependabot incluido) siguen esperando una fusión manual.
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+
+# Un solo vigilante por PR: cada push nuevo sustituye al anterior.
+concurrency:
+  group: automerge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  enable:
+    if: >-
+      github.event.pull_request.user.login == github.repository_owner
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Activar auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge "$PR_URL" --auto --squash
+
+  # Lo que fusiona el bot no lanza ningún workflow (ni el push a main ni el cierre del PR),
+  # así que se espera aquí a la fusión y se lanza la CI de main a mano, que sí está permitido.
+  # Tampoco se aplica el borrado automático de la rama, así que se borra aquí.
+  main-ci:
+    needs: enable
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Esperar la fusión y lanzar la CI de main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          for _ in $(seq 1 110); do
+            state=$(gh pr view "$PR_URL" --json state -q .state || echo UNKNOWN)
+            case "$state" in
+              MERGED)
+                gh workflow run ci.yml --ref main
+                gh api -X DELETE "repos/$GH_REPO/git/refs/heads/$HEAD_REF" || echo "La rama ya no existe"
+                exit 0 ;;
+              CLOSED) echo "PR cerrado sin fusionar"; exit 0 ;;
+            esac
+            sleep 30
+          done
+          echo "El PR sigue abierto; el próximo push volverá a esperar la fusión."

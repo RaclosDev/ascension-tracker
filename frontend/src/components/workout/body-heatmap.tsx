@@ -83,7 +83,7 @@ export function BodyHeatmap({
     return data;
   }, [history, catalog]);
 
-  const colors = ['#86efac', '#4ade80', '#22c55e', '#16a34a', '#dc2626'];
+  const colors = ['#86efac', 'var(--color-success)', 'var(--color-success)', '#16a34a', '#dc2626'];
   const modelProps = {
     data: bodyData,
     highlightedColors: colors,
@@ -117,13 +117,13 @@ export function BodyHeatmap({
     <div className="card flex flex-col justify-between items-center h-full min-h-[190px] p-3 sm:p-4">
       <div className="w-full flex items-center justify-between px-1 mb-1">
         <h3
-          className="text-xs sm:text-sm font-bold tracking-tight"
+          className="text-xs sm:text-sm font-bold tracking-tight whitespace-nowrap"
           style={{ color: 'var(--text-primary)' }}
         >
-          Zonas Activas
+          Músculos
         </h3>
         <span
-          className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+          className="shrink-0 whitespace-nowrap text-[10px] font-semibold px-1.5 py-0.5 rounded"
           style={{ color: 'var(--text-secondary)', background: 'rgba(255, 255, 255, 0.05)' }}
         >
           7 días

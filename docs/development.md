@@ -3,7 +3,7 @@
 ## Requisitos
 
 - Docker con Compose para el entorno completo y para los tests de integración con Testcontainers.
-- Java 17 y Node.js 22 si ejecutas backend/frontend fuera de sus contenedores. El repositorio incluye Maven Wrapper.
+- Java 21 y Node.js 22 si ejecutas backend/frontend fuera de sus contenedores. El repositorio incluye Maven Wrapper.
 - Un cliente OAuth de Google de tipo aplicación web. Autoriza el origen del frontend: `http://localhost:3000` con Compose o `http://localhost:5173` con Vite.
 
 ## Configuración con Compose
@@ -21,6 +21,7 @@ Copia `.env.example` a `.env` y completa los valores obligatorios. Los archivos 
 | `GEMINI_API_KEY` | Opcional; habilita las funciones de IA |
 | `FATSECRET_CLIENT_ID`, `FATSECRET_CLIENT_SECRET` | Opcionales; configura ambas para utilizar FatSecret |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Opcionales; configura el par de claves y un contacto propio para Web Push |
+| `R2_ENDPOINT`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | Opcionales; bucket privado de Cloudflare R2 para las fotos de progreso. Sin ellas, las fotos quedan desactivadas |
 
 Puedes generar secretos con `openssl rand -base64 48`. Para VAPID: `npx web-push generate-vapid-keys`. No reutilices el mismo secreto para JWT y enmascarado de logs.
 
@@ -106,7 +107,7 @@ Referencia local del 31 de octubre de 2026, anterior a la limpieza documental:
 | Cobertura frontend | Statements 42%; branches 32,5%; functions 31,65%; lines 42,46% |
 | Playwright | 87 casos Chromium y 2 casos del build en escritorio/móvil |
 
-La ejecución local de Maven usó JDK 21 con compilación objetivo 17; CI está configurada con JDK 17. Estos resultados son una referencia fechada, no una promesa sobre futuros commits. El estado de una revisión publicada debe comprobarse en GitHub Actions. Las APIs externas están simuladas en los E2E; PostgreSQL sí es real en los tests de integración.
+La ejecución local de Maven usó JDK 21 con compilación objetivo 17, antes de que el proyecto pasara a Java 21. Estos resultados son una referencia fechada, no una promesa sobre futuros commits. El estado de una revisión publicada debe comprobarse en GitHub Actions. Las APIs externas están simuladas en los E2E; PostgreSQL sí es real en los tests de integración.
 
 ## Despliegue y diagnóstico
 
