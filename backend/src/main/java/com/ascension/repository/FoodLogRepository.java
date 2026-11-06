@@ -10,7 +10,6 @@ import java.util.List;
 @Repository
 public interface FoodLogRepository extends JpaRepository<FoodLog, Long> {
     List<FoodLog> findByUserEmailAndDateOrderByIdAsc(String userEmail, LocalDate date);
-    List<FoodLog> findTop20ByUserEmailOrderByDateDescIdDesc(String userEmail);
     List<FoodLog> findTop50ByUserEmailOrderByDateDesc(String userEmail);
     List<FoodLog> findAllByUserEmailOrderByDateAscIdAsc(String userEmail);
     void deleteAllByUserEmail(String userEmail);

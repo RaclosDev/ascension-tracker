@@ -52,7 +52,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, com.ascension.security.AccessTokenIssuer.class,
+        com.ascension.security.RefreshCookies.class, com.ascension.security.TrustedOrigins.class})
 @TestPropertySource(properties = {
     "app.jwt.secret=this_is_a_very_long_secret_that_is_at_least_32_bytes_long_for_tests",
     "google.client-id=test-google-client-id"
@@ -196,13 +197,13 @@ class AuthControllerTest {
         String email = "precise@example.com";
         var cutoff = java.time.Instant.now();
         when(userService.getUserSecurityState(email)).thenReturn(new UserSecurityState(true, cutoff));
-        String token = ReflectionTestUtils.invokeMethod(authController, "generateJwt", email, "Name", "");
+        String token = accessTokenIssuer.issue(email, "Name", "");
         assertEquals(cutoff.toString(), jwtDecoder.decode(token).getClaimAsString("securityVersion"));
         var revokedAt = cutoff.plusMillis(1);
         when(userService.getUserSecurityState(email)).thenReturn(new UserSecurityState(true, revokedAt));
         org.junit.jupiter.api.Assertions.assertThrows(org.springframework.security.oauth2.jwt.JwtException.class,
                 () -> jwtDecoder.decode(token));
-        String replacement = ReflectionTestUtils.invokeMethod(authController, "generateJwt", email, "Name", "");
+        String replacement = accessTokenIssuer.issue(email, "Name", "");
         assertEquals(revokedAt.toString(), jwtDecoder.decode(replacement).getClaimAsString("securityVersion"));
     }
 
@@ -227,6 +228,12 @@ class AuthControllerTest {
 
     @Autowired
     private AuthController authController;
+
+    @Autowired
+    private com.ascension.security.AccessTokenIssuer accessTokenIssuer;
+
+    @Autowired
+    private com.ascension.security.RefreshCookies refreshCookies;
 
     @MockitoBean
     private RefreshTokenService refreshTokenService;
@@ -748,7 +755,7 @@ class AuthControllerTest {
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Origin", "https://malicious.evil.com");
-        ResponseEntity<?> response = authController.logout("sample_token", null, null, request);
+        ResponseEntity<?> response = authController.logout("sample_token", null, false, null, request);
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         assertEquals(java.util.Map.of("error", "Forbidden origin"), response.getBody());
     }
@@ -787,7 +794,7 @@ class AuthControllerTest {
 
     @Test
     void cookieSameSite_usesNoneOnlyWhenConfiguredExplicitly() throws Exception {
-        ReflectionTestUtils.setField(authController, "cookieSameSite", "None");
+        ReflectionTestUtils.setField(refreshCookies, "cookieSameSite", "None");
         try {
             mockMvc.perform(post("/api/auth/logout")
                     .header("Origin", "http://localhost:5173")
@@ -795,7 +802,7 @@ class AuthControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(header().string("Set-Cookie", containsString("SameSite=None")));
         } finally {
-            ReflectionTestUtils.setField(authController, "cookieSameSite", "Lax");
+            ReflectionTestUtils.setField(refreshCookies, "cookieSameSite", "Lax");
         }
     }
 

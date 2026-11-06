@@ -15,5 +15,3 @@ export function WorkoutPageSkeleton() {
     </div>
   );
 }
-
-export default WorkoutPageSkeleton;

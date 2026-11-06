@@ -1,4 +1,3 @@
-import React from 'react';
 import { Dumbbell, Camera, Scale, Download } from 'lucide-react';
 import DripButton from './DripButton';
 import { requestGoogleSignIn } from '../GoogleSignInButton';

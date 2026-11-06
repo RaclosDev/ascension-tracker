@@ -1,5 +1,6 @@
 package com.ascension.service.ai;
 
+import com.ascension.util.Emails;
 import com.ascension.exception.AiQuotaExceededException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -10,7 +11,6 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.util.Locale;
 import java.util.UUID;
 
 @Repository
@@ -34,7 +34,7 @@ public class GeminiQuotaStore {
 
     public Reservation reserve(String email, int userLimit, int globalLimit) {
         if (email == null || email.isBlank()) throw new IllegalArgumentException("Usuario de cuota obligatorio");
-        String owner = email.trim().toLowerCase(Locale.ROOT);
+        String owner = Emails.normalize(email);
         return transaction.execute(status -> {
             lock();
             if (isCircuitOpen()) throw new AiQuotaExceededException("El servicio de IA se encuentra temporalmente degradado tras multiples fallos consecutivos.");

@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function LandingFooter() {
   return (
     <footer className="mx-auto mt-24 flex max-w-6xl flex-wrap items-center justify-between gap-4 border-t border-[var(--landing-steel)] px-5 py-8 text-[0.85rem] text-[var(--landing-muted)] sm:px-8">

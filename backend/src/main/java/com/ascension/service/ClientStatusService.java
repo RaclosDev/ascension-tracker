@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import com.ascension.dto.ClientStatusDtos.ClientStatus;
 import com.ascension.dto.ClientStatusDtos.Level;
 import com.ascension.dto.ClientStatusDtos.Reason;
@@ -14,7 +15,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -160,7 +160,7 @@ public class ClientStatusService {
     private UUID requireCoachId(String coachEmail) {
         List<UUID> ids = jdbcTemplate.queryForList("""
                 SELECT cp.user_id FROM coach_profiles cp JOIN users u ON u.id = cp.user_id WHERE u.email = ?
-                """, UUID.class, coachEmail == null ? "" : coachEmail.trim().toLowerCase(Locale.ROOT));
+                """, UUID.class, Emails.normalize(coachEmail));
         if (ids.isEmpty()) {
             throw new SecurityException("User is not a coach");
         }

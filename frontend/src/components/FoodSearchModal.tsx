@@ -15,14 +15,14 @@ import { AiFoodAssistantView } from './food/AiFoodAssistantView';
 import { useFoodSelection } from '../hooks/food/useFoodSelection';
 const BarcodeScanner = lazyWithRetry(() => import('./BarcodeScanner'));
 import ManualFoodForm from './food/ManualFoodForm';
-import { FoodPortionEditor, SearchProduct } from './food/FoodPortionEditor';
+import { FoodPortionEditor } from './food/FoodPortionEditor';
 import { FoodSearchResultsList, SavedFoodExtended } from './food/FoodSearchResultsList';
 
 import { Mic, ImageIcon, ScanLine } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { FoodLog, Meal } from '../types/api';
 
-export type { SavedFoodExtended, SearchProduct };
+export type { SavedFoodExtended };
 
 export default function FoodSearchModal({
   isOpen,

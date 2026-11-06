@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import com.ascension.dto.CoachRecipeDtos;
 import com.ascension.dto.CoachRecipeDtos.Recipe;
 import com.ascension.dto.CoachRecipeDtos.RecipeRequest;
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -101,7 +101,7 @@ public class CoachRecipeService {
     public List<Recipe> exportFor(String email) {
         return jdbcTemplate.query("SELECT " + COLUMNS + " FROM coach_recipes r JOIN users u ON u.id = r.coach_user_id"
                 + " WHERE u.email = ? ORDER BY r.created_at", MAPPER,
-                email == null ? null : email.trim().toLowerCase(Locale.ROOT));
+                Emails.normalize(email));
     }
 
     private Optional<Recipe> find(UUID coachId, UUID recipeId) {

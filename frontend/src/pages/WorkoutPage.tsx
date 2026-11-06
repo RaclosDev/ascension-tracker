@@ -1,5 +1,5 @@
 import { useWorkoutPersistenceError, useUnclaimedWorkoutBackup } from '../lib/workout/storage';
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useWorkoutStore, useWorkoutHydrated } from '../lib/workout/store';
 import { SegmentedControl } from '../components/ui/segmented-control';

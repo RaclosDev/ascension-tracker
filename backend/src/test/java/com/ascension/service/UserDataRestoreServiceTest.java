@@ -101,6 +101,61 @@ class UserDataRestoreServiceTest {
                 .getFoodLogsRestored()).isZero();
     }
 
+    @Test
+    void mergeSkipsRecipesFoodsStepsAndWeightsTheUserAlreadyHas() {
+        when(recipeRepository.findAllByUserEmailOrderByNameAsc(AUTH_USER))
+                .thenReturn(List.of(Recipe.builder().name(" Avena ").build()));
+        when(savedFoodRepository.findAllByUserEmailOrderByNameAsc(AUTH_USER))
+                .thenReturn(List.of(SavedFood.builder().name("Yogur").brand("Marca").build()));
+        StepsEntry existingSteps = new StepsEntry();
+        existingSteps.setDate(LocalDate.of(2026, 10, 1));
+        when(stepsEntryRepository.findAllByUserEmailOrderByDateAsc(AUTH_USER)).thenReturn(List.of(existingSteps));
+        when(weightEntryRepository.findAllByUserEmailOrderByDateAsc(AUTH_USER))
+                .thenReturn(List.of(WeightEntry.builder().date(LocalDate.of(2026, 10, 1)).build()));
+        var backup = UserDataExportDTO.builder().version("1.0")
+                .recipes(List.of(RecipeDTO.builder().name("AVENA").build(), RecipeDTO.builder().name("Pan").build(),
+                        RecipeDTO.builder().name("  ").build()))
+                .savedFoods(List.of(SavedFoodDTO.builder().name("yogur").brand("MARCA").build(),
+                        SavedFoodDTO.builder().name("Yogur").brand("Otra").build()))
+                .stepsEntries(List.of(StepsEntryDTO.builder().date(LocalDate.of(2026, 10, 1)).steps(5000).build(),
+                        StepsEntryDTO.builder().date(LocalDate.of(2026, 10, 2)).steps(6000).build()))
+                .weightEntries(List.of(WeightEntryDTO.builder().date(LocalDate.of(2026, 10, 1)).weight(80.0).build(),
+                        WeightEntryDTO.builder().date(LocalDate.of(2026, 10, 2)).weight(79.5).build()))
+                .build();
+
+        var summary = service.restoreUserData(AUTH_USER, RestoreMode.MERGE, false, backup);
+
+        assertThat(summary.getRecipesRestored()).isEqualTo(1);
+        assertThat(summary.getSavedFoodsRestored()).isEqualTo(1);
+        assertThat(summary.getStepsEntriesRestored()).isEqualTo(1);
+        assertThat(summary.getWeightEntriesRestored()).isEqualTo(1);
+        var recipe = ArgumentCaptor.forClass(Recipe.class);
+        verify(recipeRepository).save(recipe.capture());
+        assertThat(recipe.getValue().getName()).isEqualTo("Pan");
+        var food = ArgumentCaptor.forClass(SavedFood.class);
+        verify(savedFoodRepository).save(food.capture());
+        assertThat(food.getValue().getBrand()).isEqualTo("Otra");
+    }
+
+    @Test
+    void mergeMatchesNamesTheSameWayUnderATurkishDefaultLocale() {
+        Locale previous = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr"));
+            when(recipeRepository.findAllByUserEmailOrderByNameAsc(AUTH_USER))
+                    .thenReturn(List.of(Recipe.builder().name("TORTILLA").build()));
+            var backup = UserDataExportDTO.builder().version("1.0")
+                    .recipes(List.of(RecipeDTO.builder().name("tortilla").build())).build();
+
+            var summary = service.restoreUserData(AUTH_USER, RestoreMode.MERGE, false, backup);
+
+            assertThat(summary.getRecipesRestored()).isZero();
+            verify(recipeRepository, never()).save(any(Recipe.class));
+        } finally {
+            Locale.setDefault(previous);
+        }
+    }
+
     private UserDataExportDTO createSampleBackup() {
         CustomExerciseDTO customEx = CustomExerciseDTO.builder()
                 .id("client-ex-1")

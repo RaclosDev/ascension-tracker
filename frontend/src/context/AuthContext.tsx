@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useContext,
   useState,
@@ -112,7 +112,7 @@ export const getCachedUser = (): User | null => {
   }
 };
 
-export const setCachedUser = (user: User | null) => {
+const setCachedUser = (user: User | null) => {
   if (typeof window === 'undefined') return;
   try {
     if (user) {

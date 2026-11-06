@@ -1,12 +1,12 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import com.ascension.exception.EntityNotFoundException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -92,7 +92,7 @@ public class CoachAccessPolicy {
                         rs.getBoolean("can_view_body"),
                         rs.getBoolean("can_edit_training"),
                         rs.getBoolean("can_edit_nutrition")),
-                linkId, coachEmail.trim().toLowerCase(Locale.ROOT));
+                linkId, Emails.normalize(coachEmail));
         if (found.isEmpty()) {
             throw new EntityNotFoundException("Alumno no encontrado");
         }

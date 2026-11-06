@@ -2,7 +2,7 @@ import { SetType, Exercise, CompletedWorkout, WorkoutSet, WorkoutExercise } from
 import { uid } from '@/lib/utils';
 import { EXERCISE_CATALOG } from './exercises';
 
-export const MONTH_MAP: Record<string, number> = {
+const MONTH_MAP: Record<string, number> = {
   ene: 0,
   jan: 0,
   enero: 0,
@@ -45,7 +45,7 @@ export const MONTH_MAP: Record<string, number> = {
   december: 11,
 };
 
-export function sanitizeCsvFormula(str: string): string {
+function sanitizeCsvFormula(str: string): string {
   if (!str) return '';
   const trimmed = str.trim();
   if (/^[=+\-@\t\r%|]/m.test(trimmed)) {
@@ -298,7 +298,7 @@ export interface ParsedHevyImport {
   lastDate: number | null;
 }
 
-export function roundToTwoDecimals(val: string): string {
+function roundToTwoDecimals(val: string): string {
   if (!val || !val.trim()) return '';
   const num = parseFloat(val.replace(',', '.'));
   if (Number.isNaN(num) || !Number.isFinite(num)) return '';

@@ -17,7 +17,7 @@ const TodayProgramCard = lazy(() =>
     .catch(() => ({ default: () => null })),
 );
 
-export function Dashboard() {
+function Dashboard() {
   const { data: history = [], isLoading: isLoadingHistory } = useRecentWorkouts(60);
   const { data: templates = [] } = useWorkoutTemplates();
   const { data: customExercises = [] } = useCustomExercises();

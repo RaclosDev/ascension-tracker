@@ -3,7 +3,7 @@ import api from '../../api/client';
 
 /** Mirrors the backend ClientStatusDtos records. */
 export type StatusLevel = 'GREEN' | 'AMBER' | 'RED';
-export type StatusReason = 'INACTIVE' | 'CHECKIN_MISSING' | 'FEW_FOOD_LOGS' | 'WEIGHT_STALLED';
+type StatusReason = 'INACTIVE' | 'CHECKIN_MISSING' | 'FEW_FOOD_LOGS' | 'WEIGHT_STALLED';
 
 export interface StatusSignal {
   reason: StatusReason;

@@ -225,26 +225,6 @@ public class NutritionLogService {
         return saved.stream().map(log -> toFoodLogDTO(log, meals)).collect(Collectors.toList());
     }
 
-    private double parseDoubleSafe(Object val, double defaultVal) {
-        if (val == null) return defaultVal;
-        if (val instanceof Number n) return n.doubleValue();
-        try {
-            return Double.parseDouble(val.toString().trim());
-        } catch (Exception e) {
-            return defaultVal;
-        }
-    }
-
-    private int parseIntSafe(Object val, int defaultVal) {
-        if (val == null) return defaultVal;
-        if (val instanceof Number n) return n.intValue();
-        try {
-            return Integer.parseInt(val.toString().trim());
-        } catch (Exception e) {
-            return defaultVal;
-        }
-    }
-
     private FoodLogDTO toFoodLogDTO(FoodLog log, List<com.ascension.model.Meal> meals) {
         return FoodLogDTO.builder()
                 .id(log.getId())

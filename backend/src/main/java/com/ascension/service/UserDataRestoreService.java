@@ -12,7 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 @Slf4j
 @Service
@@ -218,7 +221,7 @@ public class UserDataRestoreService {
         if (!isOverwrite) {
             for (CustomExercise ex : customExerciseRepository.findByUserEmail(userEmail)) {
                 if (ex.getName() != null) {
-                    existingMap.put(ex.getName().trim().toLowerCase(), ex.getId());
+                    existingMap.put(nameKey(ex.getName()), ex.getId());
                 }
             }
         }
@@ -226,7 +229,7 @@ public class UserDataRestoreService {
         int count = 0;
         for (CustomExerciseDTO dto : dtos) {
             if (dto.getName() == null || dto.getName().trim().isEmpty()) continue;
-            String normalizedName = dto.getName().trim().toLowerCase();
+            String normalizedName = nameKey(dto.getName());
 
             if (!isOverwrite && existingMap.containsKey(normalizedName)) {
                 String existingId = existingMap.get(normalizedName);
@@ -339,7 +342,7 @@ public class UserDataRestoreService {
         if (!isOverwrite) {
             for (WorkoutTemplate t : workoutTemplateRepository.findByUserEmail(userEmail)) {
                 if (t.getName() != null) {
-                    existingNames.add(t.getName().trim().toLowerCase());
+                    existingNames.add(nameKey(t.getName()));
                 }
             }
         }
@@ -347,7 +350,7 @@ public class UserDataRestoreService {
         int count = 0;
         for (WorkoutTemplateDTO dto : dtos) {
             if (dto.getName() == null || dto.getName().trim().isEmpty()) continue;
-            String normalizedName = dto.getName().trim().toLowerCase();
+            String normalizedName = nameKey(dto.getName());
 
             if (!isOverwrite && existingNames.contains(normalizedName)) {
                 continue;
@@ -440,7 +443,7 @@ public class UserDataRestoreService {
             if (dto.getName() == null || dto.getName().trim().isEmpty()) {
                 continue;
             }
-            String normalizedName = dto.getName().trim().toLowerCase();
+            String normalizedName = nameKey(dto.getName());
             if (processedNames.contains(normalizedName)) {
                 continue;
             }
@@ -470,152 +473,125 @@ public class UserDataRestoreService {
     }
 
     private int restoreRecipes(String userEmail, List<RecipeDTO> dtos, boolean isOverwrite) {
-        if (dtos == null || dtos.isEmpty()) return 0;
-
         Set<String> existingNames = new HashSet<>();
-        if (!isOverwrite) {
+        if (!isOverwrite && dtos != null && !dtos.isEmpty()) {
             for (Recipe r : recipeRepository.findAllByUserEmailOrderByNameAsc(userEmail)) {
                 if (r.getName() != null) {
-                    existingNames.add(r.getName().trim().toLowerCase());
+                    existingNames.add(nameKey(r.getName()));
                 }
             }
         }
-
-        int count = 0;
-        for (RecipeDTO dto : dtos) {
-            if (dto.getName() == null || dto.getName().trim().isEmpty()) continue;
-            String normalizedName = dto.getName().trim().toLowerCase();
-
-            if (!isOverwrite && existingNames.contains(normalizedName)) {
-                continue;
-            }
-
-            Recipe recipe = Recipe.builder()
-                    .userEmail(userEmail)
-                    .name(dto.getName().trim())
-                    .description(dto.getDescription())
-                    .totalKcal(dto.getTotalKcal())
-                    .totalProtein(dto.getTotalProtein())
-                    .totalCarbs(dto.getTotalCarbs())
-                    .totalFat(dto.getTotalFat())
-                    .build();
-
-            recipeRepository.save(recipe);
-            existingNames.add(normalizedName);
-            count++;
-        }
-        return count;
+        return restoreNewRows(dtos, isOverwrite, existingNames, dto -> nameKey(dto.getName()),
+                dto -> recipeRepository.save(Recipe.builder()
+                        .userEmail(userEmail)
+                        .name(dto.getName().trim())
+                        .description(dto.getDescription())
+                        .totalKcal(dto.getTotalKcal())
+                        .totalProtein(dto.getTotalProtein())
+                        .totalCarbs(dto.getTotalCarbs())
+                        .totalFat(dto.getTotalFat())
+                        .build()),
+                false);
     }
 
     private int restoreSavedFoods(String userEmail, List<SavedFoodDTO> dtos, boolean isOverwrite) {
-        if (dtos == null || dtos.isEmpty()) return 0;
-
         Set<String> existingKeys = new HashSet<>();
-        if (!isOverwrite) {
+        if (!isOverwrite && dtos != null && !dtos.isEmpty()) {
             for (SavedFood sf : savedFoodRepository.findAllByUserEmailOrderByNameAsc(userEmail)) {
-                String brand = sf.getBrand() != null ? sf.getBrand().trim().toLowerCase() : "";
-                String name = sf.getName() != null ? sf.getName().trim().toLowerCase() : "";
-                existingKeys.add(name + ":" + brand);
+                existingKeys.add(savedFoodKey(sf.getName(), sf.getBrand()));
             }
         }
-
-        int count = 0;
-        for (SavedFoodDTO dto : dtos) {
-            if (dto.getName() == null || dto.getName().trim().isEmpty()) continue;
-            String brand = dto.getBrand() != null ? dto.getBrand().trim().toLowerCase() : "";
-            String name = dto.getName().trim().toLowerCase();
-            String key = name + ":" + brand;
-
-            if (!isOverwrite && existingKeys.contains(key)) {
-                continue;
-            }
-
-            SavedFood savedFood = SavedFood.builder()
-                    .userEmail(userEmail)
-                    .name(dto.getName().trim())
-                    .brand(dto.getBrand())
-                    .kcalPer100g(dto.getKcalPer100g())
-                    .proteinPer100g(dto.getProteinPer100g())
-                    .carbsPer100g(dto.getCarbsPer100g())
-                    .fatPer100g(dto.getFatPer100g())
-                    .servingSize(dto.getServingSize())
-                    .servingLabel(dto.getServingLabel())
-                    .build();
-
-            savedFoodRepository.save(savedFood);
-            existingKeys.add(key);
-            count++;
-            flushAndClearBatch(count);
-        }
-        finalFlushAndClear();
-        return count;
+        return restoreNewRows(dtos, isOverwrite, existingKeys,
+                dto -> nameKey(dto.getName()) == null ? null : savedFoodKey(dto.getName(), dto.getBrand()),
+                dto -> savedFoodRepository.save(SavedFood.builder()
+                        .userEmail(userEmail)
+                        .name(dto.getName().trim())
+                        .brand(dto.getBrand())
+                        .kcalPer100g(dto.getKcalPer100g())
+                        .proteinPer100g(dto.getProteinPer100g())
+                        .carbsPer100g(dto.getCarbsPer100g())
+                        .fatPer100g(dto.getFatPer100g())
+                        .servingSize(dto.getServingSize())
+                        .servingLabel(dto.getServingLabel())
+                        .build()),
+                true);
     }
 
     private int restoreStepsEntries(String userEmail, List<StepsEntryDTO> dtos, boolean isOverwrite) {
-        if (dtos == null || dtos.isEmpty()) return 0;
-
-        Set<java.time.LocalDate> existingDates = new HashSet<>();
-        if (!isOverwrite) {
+        Set<LocalDate> existingDates = new HashSet<>();
+        if (!isOverwrite && dtos != null && !dtos.isEmpty()) {
             for (StepsEntry se : stepsEntryRepository.findAllByUserEmailOrderByDateAsc(userEmail)) {
                 if (se.getDate() != null) {
                     existingDates.add(se.getDate());
                 }
             }
         }
-
-        int count = 0;
-        for (StepsEntryDTO dto : dtos) {
-            if (dto.getDate() == null) continue;
-            if (!isOverwrite && existingDates.contains(dto.getDate())) {
-                continue;
-            }
-
+        return restoreNewRows(dtos, isOverwrite, existingDates, StepsEntryDTO::getDate, dto -> {
             StepsEntry entry = new StepsEntry();
             entry.setUserEmail(userEmail);
             entry.setDate(dto.getDate());
             entry.setSteps(dto.getSteps());
-
             stepsEntryRepository.save(entry);
-            existingDates.add(dto.getDate());
-            count++;
-            flushAndClearBatch(count);
-        }
-        finalFlushAndClear();
-        return count;
+        }, true);
     }
 
     private int restoreWeightEntries(String userEmail, List<WeightEntryDTO> dtos, boolean isOverwrite) {
-        if (dtos == null || dtos.isEmpty()) return 0;
-
-        Set<java.time.LocalDate> existingDates = new HashSet<>();
-        if (!isOverwrite) {
+        Set<LocalDate> existingDates = new HashSet<>();
+        if (!isOverwrite && dtos != null && !dtos.isEmpty()) {
             for (WeightEntry we : weightEntryRepository.findAllByUserEmailOrderByDateAsc(userEmail)) {
                 if (we.getDate() != null) {
                     existingDates.add(we.getDate());
                 }
             }
         }
+        return restoreNewRows(dtos, isOverwrite, existingDates, WeightEntryDTO::getDate,
+                dto -> weightEntryRepository.save(WeightEntry.builder()
+                        .userEmail(userEmail)
+                        .date(dto.getDate())
+                        .weight(dto.getWeight())
+                        .build()),
+                true);
+    }
 
+    /**
+     * Saves each backup row whose key is new. Rows without a key (no name or date) are skipped. In
+     * merge mode a row whose key the user already has is left alone; in overwrite mode the user's
+     * data was wiped first, so every row with a key is saved.
+     */
+    private <D, K> int restoreNewRows(List<D> dtos, boolean isOverwrite, Set<K> existingKeys,
+                                      Function<D, K> keyOf, Consumer<D> save, boolean batched) {
+        if (dtos == null || dtos.isEmpty()) return 0;
         int count = 0;
-        for (WeightEntryDTO dto : dtos) {
-            if (dto.getDate() == null) continue;
-            if (!isOverwrite && existingDates.contains(dto.getDate())) {
+        for (D dto : dtos) {
+            K key = keyOf.apply(dto);
+            if (key == null || (!isOverwrite && existingKeys.contains(key))) {
                 continue;
             }
-
-            WeightEntry entry = WeightEntry.builder()
-                    .userEmail(userEmail)
-                    .date(dto.getDate())
-                    .weight(dto.getWeight())
-                    .build();
-
-            weightEntryRepository.save(entry);
-            existingDates.add(dto.getDate());
+            save.accept(dto);
+            existingKeys.add(key);
             count++;
-            flushAndClearBatch(count);
+            if (batched) {
+                flushAndClearBatch(count);
+            }
         }
-        finalFlushAndClear();
+        if (batched) {
+            finalFlushAndClear();
+        }
         return count;
+    }
+
+    /** Case-insensitive identity of a named row; null when the name is missing. */
+    private static String nameKey(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return null;
+        }
+        return name.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static String savedFoodKey(String name, String brand) {
+        String n = name != null ? name.trim().toLowerCase(Locale.ROOT) : "";
+        String b = brand != null ? brand.trim().toLowerCase(Locale.ROOT) : "";
+        return n + ":" + b;
     }
 
     private boolean restoreUserSettings(String userEmail, UserSettingsDTO dto, boolean isOverwrite) {
@@ -651,24 +627,6 @@ public class UserDataRestoreService {
 
         userSettingsRepository.save(s);
         return true;
-    }
-
-    private Double parseDoubleSafe(String val) {
-        if (val == null || val.trim().isEmpty()) return null;
-        try {
-            return Double.parseDouble(val.trim().replace(',', '.'));
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
-
-    private Integer parseIntSafe(String val) {
-        if (val == null || val.trim().isEmpty()) return null;
-        try {
-            return Integer.parseInt(val.trim());
-        } catch (NumberFormatException e) {
-            return null;
-        }
     }
 
     private java.math.BigDecimal parseBigDecimal(String val) {

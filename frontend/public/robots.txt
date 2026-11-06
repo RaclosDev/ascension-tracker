@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /api/
+Disallow: /invitacion/
+
+Sitemap: https://ascension.raclos.es/sitemap.xml

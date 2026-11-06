@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 
@@ -19,7 +18,7 @@ vi.mock('../lib/workout/notifications', () => ({
   notifyRestFinished: vi.fn(),
 }));
 
-import { ActiveWorkout } from '../components/workout/active-workout';
+import ActiveWorkout from '../components/workout/active-workout';
 import { useWorkoutStore } from '../lib/workout/store';
 
 describe('ActiveWorkout Component - Anti-Regression Suite (React #185 Protection)', () => {

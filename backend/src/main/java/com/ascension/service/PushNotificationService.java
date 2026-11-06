@@ -60,10 +60,6 @@ public class PushNotificationService {
         this.pushService = pushService;
     }
 
-    public PushService getPushService() {
-        return this.pushService;
-    }
-
     public String getVapidPublicKey() {
         return vapidPublicKey;
     }

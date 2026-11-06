@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import com.ascension.dto.ProgramDtos.Day;
 import com.ascension.dto.ProgramDtos.Exercise;
 import com.ascension.dto.ProgramDtos.Program;
@@ -116,7 +117,7 @@ public class ProgramService {
         return jdbcTemplate.queryForList("""
                 SELECT p.id FROM programs p JOIN users u ON u.id = p.owner_user_id
                 WHERE u.email = ? ORDER BY p.created_at
-                """, UUID.class, email == null ? null : email.trim().toLowerCase(java.util.Locale.ROOT))
+                """, UUID.class, Emails.normalize(email))
                 .stream().map(this::readProgram).toList();
     }
 

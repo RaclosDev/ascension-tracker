@@ -1,5 +1,4 @@
 import { ChefComposer } from './ChefComposer';
-import React from 'react';
 import { ChefHat, User, Utensils, Check, Plus } from 'lucide-react';
 import {
   useAiNutritionChef,

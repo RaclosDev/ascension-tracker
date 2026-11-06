@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { useNow } from '@/hooks/use-now';

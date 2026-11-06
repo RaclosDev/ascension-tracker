@@ -272,5 +272,3 @@ export function MuscleRecovery({
     </>
   );
 }
-
-export default MuscleRecovery;

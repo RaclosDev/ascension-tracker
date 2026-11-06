@@ -18,7 +18,7 @@ export function readColorMode(): ColorMode {
   }
 }
 
-export function resolveColorMode(mode: ColorMode): 'light' | 'dark' {
+function resolveColorMode(mode: ColorMode): 'light' | 'dark' {
   if (mode !== 'system') return mode;
   return window.matchMedia?.(DARK_QUERY).matches ? 'dark' : 'light';
 }

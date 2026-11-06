@@ -178,5 +178,3 @@ export default function TemplatesView() {
     </div>
   );
 }
-
-export { TemplatesView };

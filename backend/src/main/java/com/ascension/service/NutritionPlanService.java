@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.Emails;
 import com.ascension.dto.CoachDtos.Person;
 import com.ascension.dto.NutritionPlanDtos.DayRequest;
 import com.ascension.dto.CoachRecipeDtos;
@@ -25,7 +26,6 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -117,7 +117,7 @@ public class NutritionPlanService {
                 JOIN users co ON co.id = cc.coach_user_id
                 WHERE cu.email = ? AND p.status = 'ACTIVE'
                   AND cc.status = 'ACTIVE' AND cc.can_view_nutrition AND cc.can_edit_nutrition
-                """.formatted(COLUMNS), PLAN, normalize(email)).stream().findFirst().map(this::withMeals);
+                """.formatted(COLUMNS), PLAN, Emails.normalize(email)).stream().findFirst().map(this::withMeals);
     }
 
     @Transactional(readOnly = true)
@@ -197,7 +197,4 @@ public class NutritionPlanService {
         return ts == null ? null : ts.toInstant();
     }
 
-    private static String normalize(String email) {
-        return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
-    }
 }
