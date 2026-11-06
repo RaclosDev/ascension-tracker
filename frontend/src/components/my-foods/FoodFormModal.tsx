@@ -100,8 +100,11 @@ export default function FoodFormModal({
           style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}
         >
           <div>
-            <label className="form-label">Nombre *</label>
+            <label htmlFor="food-form-modal-nombre" className="form-label">
+              Nombre *
+            </label>
             <input
+              id="food-form-modal-nombre"
               className="form-input"
               required
               value={foodForm.name}
@@ -109,8 +112,11 @@ export default function FoodFormModal({
             />
           </div>
           <div>
-            <label className="form-label">Marca</label>
+            <label htmlFor="food-form-modal-marca" className="form-label">
+              Marca
+            </label>
             <input
+              id="food-form-modal-marca"
               className="form-input"
               value={foodForm.brand}
               onChange={(e) => updateFoodForm('brand', e.target.value)}
@@ -119,8 +125,11 @@ export default function FoodFormModal({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
             <div>
-              <label className="form-label">Prot / 100g</label>
+              <label htmlFor="food-form-modal-prot-100g" className="form-label">
+                Prot / 100g
+              </label>
               <input
+                id="food-form-modal-prot-100g"
                 type="number"
                 inputMode="decimal"
                 step="0.1"
@@ -130,8 +139,11 @@ export default function FoodFormModal({
               />
             </div>
             <div>
-              <label className="form-label">Carb / 100g</label>
+              <label htmlFor="food-form-modal-carb-100g" className="form-label">
+                Carb / 100g
+              </label>
               <input
+                id="food-form-modal-carb-100g"
                 type="number"
                 inputMode="decimal"
                 step="0.1"
@@ -141,8 +153,11 @@ export default function FoodFormModal({
               />
             </div>
             <div>
-              <label className="form-label">Grasa / 100g</label>
+              <label htmlFor="food-form-modal-grasa-100g" className="form-label">
+                Grasa / 100g
+              </label>
               <input
+                id="food-form-modal-grasa-100g"
                 type="number"
                 inputMode="decimal"
                 step="0.1"
@@ -152,8 +167,11 @@ export default function FoodFormModal({
               />
             </div>
             <div>
-              <label className="form-label">Kcal / 100g</label>
+              <label htmlFor="food-form-modal-kcal-100g" className="form-label">
+                Kcal / 100g
+              </label>
               <input
+                id="food-form-modal-kcal-100g"
                 type="number"
                 inputMode="decimal"
                 step="0.1"
@@ -166,8 +184,11 @@ export default function FoodFormModal({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
             <div>
-              <label className="form-label">Ración (g)</label>
+              <label htmlFor="food-form-modal-racion-g" className="form-label">
+                Ración (g)
+              </label>
               <input
+                id="food-form-modal-racion-g"
                 type="number"
                 inputMode="decimal"
                 step="0.1"
@@ -178,8 +199,11 @@ export default function FoodFormModal({
               />
             </div>
             <div>
-              <label className="form-label">Etiqueta ración</label>
+              <label htmlFor="food-form-modal-etiqueta-racion" className="form-label">
+                Etiqueta ración
+              </label>
               <input
+                id="food-form-modal-etiqueta-racion"
                 className="form-input"
                 placeholder="Ej: 1 cazo"
                 value={foodForm.servingLabel}

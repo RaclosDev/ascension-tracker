@@ -25,13 +25,13 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleIllegalArgumentException_returnsCustomMessage() {
-        IllegalArgumentException ex = new IllegalArgumentException("El formato del archivo es invalido");
+    void handleIllegalArgumentException_hidesTheInternalMessage() {
+        IllegalArgumentException ex = new IllegalArgumentException("No enum constant com.ascension.Internal.X");
         ResponseEntity<ApiErrorResponse> response = handler.handleIllegalArgumentException(ex);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getError()).isEqualTo("El formato del archivo es invalido");
+        assertThat(response.getBody().getError()).isEqualTo("Entrada no válida.");
     }
 
     @Test

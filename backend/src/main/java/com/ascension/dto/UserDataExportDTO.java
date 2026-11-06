@@ -58,4 +58,27 @@ public class UserDataExportDTO {
 
     @jakarta.validation.Valid
     private UserSettingsDTO userSettings;
+
+    /** Coach-mode links, invitations and access log. Export only: a restore never reads it back. */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    private com.ascension.dto.CoachDtos.CoachingExport coaching;
+
+    /** Training programs the user owns. Export only, like {@link #coaching}. */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    private List<com.ascension.dto.ProgramDtos.Program> programs;
+
+    /** The recipe library the user keeps as a coach. Export only, like {@link #coaching}. */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    private List<com.ascension.dto.CoachRecipeDtos.Recipe> coachRecipes;
+
+    /** Progress photo details (the images stay in private storage). Export only, like {@link #coaching}. */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    private List<com.ascension.dto.ProgressPhotoDtos.ExportedPhoto> progressPhotos;
+    /** Messages the user sent us from the contact form. Export only, like {@link #coaching}. */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+    private List<com.ascension.dto.ContactDtos.ContactRequestExport> contactRequests;
 }

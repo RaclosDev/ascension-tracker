@@ -213,7 +213,7 @@ export function RestoreBackupModal({ isOpen, onClose }: RestoreBackupModalProps)
       <div
         ref={modalRef}
         className="card w-full max-w-xl max-h-[90vh] flex flex-col p-6 overflow-hidden rounded-2xl border border-white/10 shadow-2xl bg-neutral-900"
-        style={{ background: 'var(--color-bg-surface, #171717)' }}
+        style={{ background: 'var(--bg-card)' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
@@ -378,7 +378,7 @@ export function RestoreBackupModal({ isOpen, onClose }: RestoreBackupModalProps)
               <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
                 <p className="text-sm font-semibold text-white">Método de Restauración:</p>
                 <div className="space-y-2">
-                  <label className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors border-white/10 hover:border-white/30 bg-black/20">
+                  <label className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors border-white/10 hover:border-white/30 bg-[var(--bg-secondary)]">
                     <input
                       type="radio"
                       name="restoreMode"
@@ -398,7 +398,7 @@ export function RestoreBackupModal({ isOpen, onClose }: RestoreBackupModalProps)
                     </div>
                   </label>
 
-                  <label className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors border-white/10 hover:border-white/30 bg-black/20">
+                  <label className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors border-white/10 hover:border-white/30 bg-[var(--bg-secondary)]">
                     <input
                       type="radio"
                       name="restoreMode"

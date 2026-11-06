@@ -42,7 +42,7 @@ export function ChefComposer({
           <button
             type="button"
             onClick={stopListening}
-            className="bg-red-500 text-white rounded-md min-h-11 px-4 text-xs font-semibold cursor-pointer"
+            className="bg-red-500 text-[var(--paper)] rounded-md min-h-11 px-4 text-xs font-semibold cursor-pointer"
           >
             Listo
           </button>
@@ -59,7 +59,7 @@ export function ChefComposer({
           <button
             type="button"
             onClick={() => setSelectedImage(null)}
-            className="absolute -top-1.5 -right-1.5 bg-black text-white border border-white/20 rounded-full w-5 h-5 flex items-center justify-center text-xs before:absolute before:-inset-3"
+            className="absolute -top-1.5 -right-1.5 bg-black text-[var(--paper)] border border-white/20 rounded-full w-5 h-5 flex items-center justify-center text-xs before:absolute before:-inset-3"
             title="Quitar foto"
           >
             ✕
@@ -90,7 +90,7 @@ export function ChefComposer({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           aria-label="Adjuntar foto de comida"
-          className="w-11 h-11 rounded-full bg-[#1C1C1E] border border-white/10 text-white flex items-center justify-center flex-shrink-0 hover:bg-white/10 transition-colors"
+          className="w-11 h-11 rounded-full bg-[var(--bg-input)] border border-white/10 text-white flex items-center justify-center flex-shrink-0 hover:bg-white/10 transition-colors"
           title="Adjuntar foto de comida"
         >
           <Camera size={18} />
@@ -102,8 +102,8 @@ export function ChefComposer({
           aria-label={isListening ? 'Detener dictado por voz' : 'Dictar por voz'}
           className={`w-11 h-11 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
             isListening
-              ? 'bg-red-500 text-white border-red-500'
-              : 'bg-[#1C1C1E] border-white/10 text-white hover:bg-white/10'
+              ? 'bg-red-500 text-[var(--paper)] border-red-500'
+              : 'bg-[var(--bg-input)] border-white/10 text-white hover:bg-white/10'
           }`}
           title={isListening ? 'Detener dictado' : 'Dictar por voz'}
         >
@@ -117,7 +117,7 @@ export function ChefComposer({
           id="ai-chef-user-input"
           type="text"
           aria-label="Mensaje o petición para el chef nutricional IA"
-          className="flex-1 min-w-0 min-h-11 px-3.5 rounded-xl bg-[#1C1C1E] border border-white/10 text-white text-base placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#0085FF)]"
+          className="flex-1 min-w-0 min-h-11 px-3.5 rounded-xl bg-[var(--bg-input)] border border-white/10 text-white text-base placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#0085FF)]"
           placeholder="Pide una receta o sugerencia..."
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
@@ -137,7 +137,7 @@ export function ChefComposer({
           className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
             (!userInput.trim() && !selectedImage) || sending
               ? 'bg-white/5 text-gray-500 cursor-not-allowed'
-              : 'bg-[var(--accent-primary,#0085FF)] text-white hover:opacity-90 cursor-pointer shadow-md'
+              : 'bg-[var(--accent-primary,#0085FF)] text-[var(--accent-text)] hover:opacity-90 cursor-pointer shadow-md'
           }`}
           title="Enviar mensaje"
         >

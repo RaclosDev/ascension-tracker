@@ -175,11 +175,11 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
             exercise.equipment === 'multipower') && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <label
+                <span
                   style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}
                 >
                   Agarre (Filtro)
-                </label>
+                </span>
                 <VariantSelector
                   type="grip"
                   value={filterGrip === 'ALL' ? undefined : filterGrip}
@@ -195,11 +195,11 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
                 exercise.equipment === 'polea' ||
                 exercise.equipment === 'multipower') && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  <label
+                  <span
                     style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}
                   >
                     Máquina (Filtro)
-                  </label>
+                  </span>
                   <VariantSelector
                     type="machine"
                     value={filterMachine === 'ALL' ? undefined : filterMachine}
@@ -228,7 +228,7 @@ export function ExerciseDetailsModal({ exercise, onClose }: Props) {
                 border: '1px solid rgba(255,215,0,0.2)',
               }}
             >
-              <Trophy size={20} style={{ color: '#FBBF24' }} />
+              <Trophy size={20} style={{ color: 'var(--color-warning)' }} />
               <p
                 style={{
                   fontSize: '0.75rem',

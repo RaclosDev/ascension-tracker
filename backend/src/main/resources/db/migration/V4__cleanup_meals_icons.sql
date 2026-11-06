@@ -1,1 +1,0 @@
-UPDATE meals SET icon = '';

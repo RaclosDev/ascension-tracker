@@ -30,6 +30,14 @@ public class WeightService {
                 .collect(Collectors.toList());
     }
 
+    /** Entries from {@code from} onwards, oldest first; bounds what a coach loads for a long history. */
+    public List<WeightEntryDTO> getEntriesSince(String userEmail, LocalDate from) {
+        return weightEntryRepository
+                .findByUserEmailAndDateBetweenOrderByDateAsc(userEmail, from, LocalDate.of(9999, 12, 31)).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public WeightEntryDTO saveEntry(String userEmail, WeightEntryDTO dto) {
         userDataQuotaService.acquireUserQuotaLock(userEmail);

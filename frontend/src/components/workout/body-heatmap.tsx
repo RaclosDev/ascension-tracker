@@ -83,7 +83,7 @@ export function BodyHeatmap({
     return data;
   }, [history, catalog]);
 
-  const colors = ['#86efac', '#4ade80', '#22c55e', '#16a34a', '#dc2626'];
+  const colors = ['#86efac', 'var(--color-success)', 'var(--color-success)', '#16a34a', '#dc2626'];
   const modelProps = {
     data: bodyData,
     highlightedColors: colors,

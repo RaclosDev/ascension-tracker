@@ -9,6 +9,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -41,7 +45,7 @@ public class NutritionControllerTest {
         dto.setCarbs(250.0);
         dto.setFat(70.0);
 
-        when(macroCalculatorService.getMacros("test@example.com")).thenReturn(dto);
+        when(macroCalculatorService.getMacros(eq("test@example.com"), any(LocalDate.class))).thenReturn(dto);
 
         mockMvc.perform(get("/api/nutrition/macros")
                 .contentType(MediaType.APPLICATION_JSON)

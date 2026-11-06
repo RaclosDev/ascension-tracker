@@ -18,6 +18,28 @@ export default defineConfig({
         globIgnores: [
           '**/BarcodeScanner*',
           '**/CategoricalChart*',
+          // Coach pages need the network anyway and most users never open them.
+          '**/Coach*Page*',
+          '**/Admin*Page*',
+          '**/LegalPage*',
+          '**/checkins-*',
+          '**/CheckinCard-*',
+          '**/PushToggle-*',
+          '**/coachPrograms-*',
+          '**/coachRecipes-*',
+          '**/TodayProgramCard-*',
+          '**/today-*',
+          '**/CoachNutritionGate-*',
+          // Drag-and-drop only appears in online editors (meals, programs).
+          '**/MealConfigurator-*',
+          '**/dnd.esm-*',
+          // Progress photos only work online.
+          '**/ProgressPhotosSection-*',
+          '**/PhotoGallery-*',
+          '**/progressPhotos-*',
+          '**/nutritionPlan-*',
+          '**/PlannedMealsCard-*',
+          '**/InvitationPage-*',
           '**/exercises*.json',
           '**/ascension-title.png',
           '**/pwa-logo.png',

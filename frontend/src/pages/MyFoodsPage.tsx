@@ -291,7 +291,7 @@ export default function MyFoodsPage() {
       <button
         ref={addButtonRef}
         aria-label="Crear alimento"
-        className="fixed z-50 bottom-[calc(75px+env(safe-area-inset-bottom))] right-5 w-14 h-14 rounded-full flex items-center justify-center bg-[var(--accent-primary)] hover:brightness-110 active:scale-95 text-white text-2xl font-bold shadow-lg border-none transition-all cursor-pointer"
+        className="fixed z-50 bottom-[calc(75px+env(safe-area-inset-bottom))] right-5 w-14 h-14 rounded-full flex items-center justify-center bg-[var(--accent-primary)] hover:brightness-110 active:scale-95 text-[var(--accent-text)] text-2xl font-bold shadow-lg border-none transition-all cursor-pointer"
         onClick={() => setIsActionMenuOpen(true)}
       >
         +

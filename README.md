@@ -8,7 +8,7 @@ Proyecto personal full-stack con interfaz en español. Reúne el registro de ses
 
 [![CI](https://github.com/RaclosDev/ascension-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/RaclosDev/ascension-tracker/actions/workflows/ci.yml)
 
-## La aplicación
+## Qué puedes hacer
 
 <p align="center">
   <img src="docs/screenshots/dashboard.png" alt="Inicio: peso actual y progreso hacia el objetivo" width="32%">
@@ -22,7 +22,7 @@ Proyecto personal full-stack con interfaz en español. Reúne el registro de ses
 - **Datos propios:** exportación y restauración de copias de seguridad, con modos de fusión y sustitución.
 - **Integraciones opcionales:** asistencia nutricional con Gemini y avisos de descanso mediante Web Push.
 
-El acceso requiere una cuenta de Google. Las funciones de IA y push necesitan sus servicios configurados. Puedes consultar [más capturas](docs/screenshots) sin iniciar sesión.
+El acceso requiere una cuenta de Google. Las funciones de IA y push necesitan sus servicios configurados. Las capturas muestran la interfaz real en móvil con datos ficticios. [Cómo reproducirlas](docs/screenshots/README.md).
 
 ## Stack
 
@@ -35,15 +35,16 @@ El acceso requiere una cuenta de Google. Las funciones de IA y push necesitan su
 | Pruebas | JUnit, Testcontainers, Vitest, Testing Library, Playwright |
 | Automatización | GitHub Actions, CodeQL, Trivy, Docker Compose |
 
-## Decisiones de ingeniería
+## Un recorrido por Ascension
 
-- **Conservar el entrenamiento al recargar.** El estado activo se guarda en IndexedDB por cuenta. La hidratación y los cambios de usuario están protegidos frente a respuestas tardías. Esto no convierte toda la aplicación en offline.
-- **Reintentar sin duplicar escrituras.** Las operaciones compatibles usan `Idempotency-Key`: PostgreSQL confirma la escritura y su respuesta en una misma transacción, y reproduce el resultado en los reintentos.
-- **Mantener el significado del historial.** Los registros de comida conservan una identidad estable y una copia de su nombre; reordenar o eliminar comidas no los reasigna a otra posición.
-- **Compartir límites entre instancias.** Las cuotas HTTP e IA se almacenan en PostgreSQL. Los temporizadores push usan reclamaciones con caducidad y reintentos acotados.
-- **Comprobar fallos, además del caso correcto.** Hay regresiones para rollback, respuestas perdidas, cambios de cuenta, revocación de sesiones, almacenamiento bloqueado y envíos concurrentes.
+1. Accede con Google y configura tus objetivos de peso y nutrición.
+2. Crea una plantilla o empieza un entrenamiento vacío: añade ejercicios y registra peso y repeticiones por serie.
+3. Anota tus comidas en el diario, reutiliza alimentos o recetas y consulta calorías y macronutrientes.
+4. Registra peso y pasos y consulta la evolución semanal para seguir tu progreso.
 
-La [guía de arquitectura](docs/architecture.md) conecta estas decisiones con su implementación y explica sus límites.
+## Arquitectura y código
+
+La aplicación combina una SPA React con una API Spring Boot y PostgreSQL. La [guía de arquitectura](docs/architecture.md) explica el modelo, la persistencia del entrenamiento, la autenticación y las integraciones, y enlaza a implementaciones y pruebas representativas.
 
 ## Arranque local
 
