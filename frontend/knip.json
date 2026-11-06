@@ -1,7 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["playwright.production.config.ts", "scripts/*.mjs"],
-  "project": ["src/**/*.{ts,tsx,css}", "tests/**/*.ts", "scripts/**/*.mjs"],
+  "entry": ["src/main.tsx!", "src/sw.ts!", "playwright.production.config.ts", "scripts/*.mjs"],
+  "project": ["src/**/*.{ts,tsx,css}!", "tests/**/*.ts", "scripts/**/*.mjs"],
   "ignore": ["src/components/ui/**"],
   "ignoreDependencies": ["prettier"]
 }
