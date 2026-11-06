@@ -1,12 +1,16 @@
 # Capturas móviles
 
-Estas tres capturas muestran la interfaz React real con datos ficticios de las fixtures de navegador del repositorio. No se accede a cuentas ni bases de datos reales.
+Las capturas del README muestran la interfaz React real con datos ficticios: ocho semanas de peso, seis de entrenos con una rutina torso/pierna y un día de comidas. La API se simula en el navegador; no se accede a cuentas ni bases de datos reales.
 
-- `dashboard.png`: registro de peso y progreso hacia el objetivo.
-- `workout.png`: entrenamiento activo con ejercicios y series.
-- `nutrition.png`: diario y resumen de macronutrientes.
+- `landing.png`: portada pública, sin sesión.
+- `dashboard.png`: peso del día y progreso hacia el objetivo.
+- `tracking.png`: peso, pasos y calorías por semana.
+- `nutrition.png`: diario con calorías y macronutrientes.
+- `training.png`: resumen de entreno con recuperación muscular y actividad.
+- `workout.png`: entreno en curso con series completadas.
+- `hero.jpg`: composición de la cabecera del README a partir de `dashboard`, `workout` y `nutrition`.
 
-Todas usan una ventana móvil de 430 × 932 píxeles CSS y densidad 2×. Se comprueba la carga de Inter y Oswald desde Google Fonts y la ausencia de desbordamiento horizontal. Se captura una pantalla, sin modificar los estilos de la aplicación.
+Todas usan el modo oscuro, una ventana móvil de 390 × 844 píxeles CSS, densidad 2× y una hora fija de media tarde. La portada pública tiene su propio diseño claro. El script comprueba que no hay desbordamiento horizontal y falla si alguna llamada a la API no está simulada.
 
 ## Reproducirlas
 
@@ -25,4 +29,4 @@ En otra terminal desde la raíz:
 node docs/screenshots/capture.mjs
 ```
 
-El script sobrescribe las tres imágenes. Necesita conexión a Google Fonts; el resto de conexiones externas se bloquea y las llamadas a la API se simulan con las fixtures mantenidas en `frontend/tests/helpers`. Si falta una fuente o una respuesta de API, la captura falla. No requiere Google OAuth, Gemini ni backend.
+El script sobrescribe las seis capturas. Solo permite conexiones a Google Fonts y a las miniaturas públicas de ejercicios; el resto de conexiones externas se bloquea. La sesión y los ajustes salen de las fixtures de `frontend/tests/helpers`; los datos de demo están en el propio script.
