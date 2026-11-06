@@ -1,4 +1,5 @@
 import { Download, UploadCloud, LogOut } from 'lucide-react';
+import { DeleteAccountCard } from './DeleteAccountCard';
 
 interface SettingsDataSectionProps {
   isExportingJson: boolean;
@@ -6,6 +7,7 @@ interface SettingsDataSectionProps {
   onOpenRestoreModal: () => void;
   onExportCsv: () => void;
   onLogout: () => void;
+  onDeleteAccount: () => Promise<void>;
 }
 
 export function SettingsDataSection({
@@ -14,6 +16,7 @@ export function SettingsDataSection({
   onOpenRestoreModal,
   onExportCsv,
   onLogout,
+  onDeleteAccount,
 }: SettingsDataSectionProps) {
   return (
     <>
@@ -157,6 +160,7 @@ export function SettingsDataSection({
           </button>
         </div>
       </div>
+      <DeleteAccountCard onConfirm={onDeleteAccount} />
       <nav
         aria-label="Textos legales"
         className="flex flex-wrap gap-x-4 gap-y-2 text-sm"

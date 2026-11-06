@@ -184,7 +184,6 @@ function HistoryView() {
             </AlertDialogCancel>
             <AlertDialogAction
               className="btn btn-danger btn-press"
-              style={{ color: 'var(--color-danger)' }}
               onClick={() => {
                 if (deletingId) {
                   deleteHistory(deletingId);

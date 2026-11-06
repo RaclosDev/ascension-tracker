@@ -166,7 +166,9 @@ test.describe('Backup, Restore & Hevy Import Flows', () => {
     });
 
     // Preview counters visible
-    await expect(page.getByText('Entrenos')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('dialog').getByText('Entrenos', { exact: true })).toBeVisible({
+      timeout: 5000,
+    });
     await expect(page.getByRole('dialog').getByText('Comidas', { exact: true })).toBeVisible();
 
     // Default mode is OVERWRITE. Confirm button must be disabled until safety checkbox is checked
