@@ -1,6 +1,5 @@
 package com.ascension.filter;
 
-import com.ascension.model.RefreshToken;
 import com.ascension.service.IdempotencyService;
 import com.ascension.util.SecurityUtils;
 import jakarta.servlet.FilterChain;
@@ -58,10 +57,10 @@ public class IdempotencyFilter extends OncePerRequestFilter {
                 request.setAttribute(com.ascension.interceptor.RateLimitInterceptor.CHECKED_ATTRIBUTE, true);
             } catch (Exception e) { throw new ServletException(e); }
         }
-        byte[] body = request.getInputStream().readNBytes(5 * 1024 * 1024 + 1);
-        if (body.length > 5 * 1024 * 1024) { response.sendError(413); return; }
-        String hash = RefreshToken.hashToken(request.getRequestURI() + "?" + request.getQueryString()
-                + "\n" + new String(body, StandardCharsets.UTF_8));
+        int maxBody = (int) JsonSizeLimitFilter.maxJsonBytes(request.getRequestURI());
+        byte[] body = request.getInputStream().readNBytes(maxBody + 1);
+        if (body.length > maxBody) { response.sendError(413); return; }
+        String hash = requestHash(request.getRequestURI() + "?" + request.getQueryString() + "\n", body);
         var buffered = new ContentCachingResponseWrapper(response);
         try {
             var result = service.getObject().execute(SecurityUtils.extractEmail(jwt), key, hash, () -> {
@@ -80,6 +79,18 @@ public class IdempotencyFilter extends OncePerRequestFilter {
             response.getOutputStream().write(result.body());
         } catch (UncheckedIOException e) {
             throw e.getCause();
+        }
+    }
+
+    /** Same SHA-256 hex as hashing the text "prefix + body", without copying a large body into a String. */
+    static String requestHash(String prefix, byte[] body) {
+        try {
+            var digest = java.security.MessageDigest.getInstance("SHA-256");
+            digest.update(prefix.getBytes(StandardCharsets.UTF_8));
+            digest.update(body);
+            return java.util.HexFormat.of().formatHex(digest.digest());
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
         }
     }
 

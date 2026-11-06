@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import api, { restoreUserData, UserDataRestoreSummary } from '../api/client';
+import { gzipJson } from '../api/gzip';
+
+vi.mock('../api/gzip', () => ({ gzipJson: vi.fn(async () => null) }));
 
 describe('restoreUserData', () => {
   afterEach(() => {
@@ -61,5 +64,19 @@ describe('restoreUserData', () => {
     expect(postSpy).toHaveBeenCalledWith('/user/restore?mode=OVERWRITE&confirmEmpty=true', payload);
     expect(result).toEqual(mockSummary);
     expect(result.mode).toBe('OVERWRITE');
+  });
+
+  it('sends the backup gzipped when the browser can compress it', async () => {
+    const compressed = new Blob(['gz']);
+    vi.mocked(gzipJson).mockResolvedValueOnce(compressed);
+    const postSpy = vi.spyOn(api, 'post').mockResolvedValueOnce({ data: { mode: 'MERGE' } });
+
+    const payload = { version: '1.0', workouts: [] };
+    await restoreUserData(payload);
+
+    expect(gzipJson).toHaveBeenCalledWith(JSON.stringify(payload));
+    expect(postSpy).toHaveBeenCalledWith('/user/restore?mode=MERGE', compressed, {
+      headers: { 'Content-Type': 'application/json', 'Content-Encoding': 'gzip' },
+    });
   });
 });

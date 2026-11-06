@@ -22,6 +22,9 @@ public class NutritionPromptBuilder {
         // Escape & first so pre-escaped entities cannot break out of the delimiter tags.
         sanitized = sanitized.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
         sanitized = sanitized.replaceAll("(?i)(IGNORE|OVERRIDE|FORGET|DISREGARD)(\\s+(ALL|PREVIOUS|ABOVE|PRIOR))+\\s+(INSTRUCTIONS?|RULES?|PROMPTS?)", "[filtered]");
+        // Same phrases in Spanish, the language users write in ("ignora todas las instrucciones anteriores").
+        sanitized = sanitized.replaceAll("(?iu)(IGNORA|OLVIDA|DESCARTA|OMITE)(\\s+(TODAS?|TODO|LAS|LOS|TUS|ESTAS))*\\s+"
+                + "(INSTRUCCIONES|REGLAS|ÓRDENES|ORDENES|INDICACIONES|NORMAS)(\\s+(ANTERIORES|PREVIAS|DE\\s+ARRIBA))?", "[filtered]");
         return sanitized;
     }
 

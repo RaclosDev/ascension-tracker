@@ -57,6 +57,22 @@ server:
     mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
     min-response-size: 1024
 
+# Only the health check is published, and without details: it tells a load balancer or uptime
+# monitor whether the app and its database answer, and nothing about the system.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: false
+
 app:
   legal:
     # Version of the legal texts; keep in step with LEGAL_VERSION in frontend/src/lib/legal/texts.ts.
@@ -82,6 +98,7 @@ app:
     photo-limit: ${RATE_LIMIT_PHOTOS:60}
     public-limit: ${RATE_LIMIT_PUBLIC:30}
     max-requests-per-minute: ${RATE_LIMIT_GENERAL:20}
+    proxy-hop-multiplier: ${RATE_LIMIT_PROXY_HOP_MULTIPLIER:20}
   admin:
     emails: ${APP_ADMIN_EMAILS:}
   coach:

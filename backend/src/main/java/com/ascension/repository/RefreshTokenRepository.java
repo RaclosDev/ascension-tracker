@@ -29,6 +29,11 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     @Query("DELETE FROM RefreshToken r WHERE r.familyId = :familyId")
     void deleteByFamilyId(@Param("familyId") String familyId);
 
+    /** Marks every unreplaced token of the family as replaced at {@code replacedAt}. */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("UPDATE RefreshToken r SET r.replacedAt = :replacedAt WHERE r.familyId = :familyId AND r.replacedAt IS NULL")
+    int supersedeLiveTokens(@Param("familyId") String familyId, @Param("replacedAt") Instant replacedAt);
+
     @Modifying
     @Query("DELETE FROM RefreshToken r WHERE r.expiryDate < :instant")
     void deleteByExpiryDateBefore(@Param("instant") Instant instant);

@@ -27,7 +27,7 @@ public class AiChatRequestDTO {
     @Size(max = 20, message = "El historial no puede superar los 20 mensajes")
     private List<ChatMessageDTO> chatHistory;
 
-    @Size(max = 10_000_000, message = "La imagen codificada en base64 no puede superar los 10MB")
+    @Size(max = 4_800_000, message = "La imagen es demasiado grande (máximo 3,5 MB)")
     private String base64Image;
 
     @Data

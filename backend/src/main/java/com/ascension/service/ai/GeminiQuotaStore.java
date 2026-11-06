@@ -3,6 +3,7 @@ package com.ascension.service.ai;
 import com.ascension.exception.AiQuotaExceededException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -38,9 +39,6 @@ public class GeminiQuotaStore {
             lock();
             if (isCircuitOpen()) throw new AiQuotaExceededException("El servicio de IA se encuentra temporalmente degradado tras multiples fallos consecutivos.");
             LocalDate day = LocalDate.now(clock);
-            jdbc.update("DELETE FROM ai_quota_reservations WHERE quota_day < ?", day.minusDays(7));
-            jdbc.update("DELETE FROM ai_quota_usage WHERE quota_day < ?", day.minusDays(7));
-            jdbc.update("DELETE FROM ai_quota_global WHERE quota_day < ?", day.minusDays(7));
             jdbc.update("INSERT INTO ai_quota_global(quota_day, used) VALUES (?, 0) ON CONFLICT DO NOTHING", day);
             ensureUsage(day, owner);
             if (jdbc.queryForObject("SELECT used FROM ai_quota_global WHERE quota_day = ?", Integer.class, day) >= globalLimit) throw new AiQuotaExceededException("Se ha alcanzado el limite diario global del servicio de IA.");
@@ -51,6 +49,18 @@ public class GeminiQuotaStore {
             jdbc.update("INSERT INTO ai_quota_reservations(id, quota_day, user_email) VALUES (?, ?, ?)", reservation.id(), day, owner);
             return reservation;
         });
+    }
+
+    /**
+     * Drops quota rows older than a week. Runs on its own schedule instead of inside every reservation,
+     * which holds the global quota lock; it takes no lock because it only touches days nobody reserves any more.
+     */
+    @Scheduled(cron = "0 15 4 * * *")
+    public void purgeOldDays() {
+        LocalDate cutoff = LocalDate.now(clock).minusDays(7);
+        jdbc.update("DELETE FROM ai_quota_reservations WHERE quota_day < ?", cutoff);
+        jdbc.update("DELETE FROM ai_quota_usage WHERE quota_day < ?", cutoff);
+        jdbc.update("DELETE FROM ai_quota_global WHERE quota_day < ?", cutoff);
     }
 
     public void release(Reservation reservation) {

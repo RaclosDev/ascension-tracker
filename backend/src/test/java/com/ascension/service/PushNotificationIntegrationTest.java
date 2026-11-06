@@ -348,4 +348,21 @@ class PushNotificationIntegrationTest {
         assertThat(all).hasSize(1);
         assertThat(all.get(0).getUserEmail()).isEqualTo(USER_EMAIL_2);
     }
+
+    @Test
+    void saveSubscription_anotherAccountCannotTakeOverAnEndpointWithoutItsKeys() throws Exception {
+        pushNotificationService.saveSubscription(USER_EMAIL,
+                new Subscription(ENDPOINT_PHONE, new Subscription.Keys(validP256dh, validAuth)));
+
+        Subscription stolen = new Subscription(ENDPOINT_PHONE, new Subscription.Keys(validP256dh, "other-auth"));
+        org.junit.jupiter.api.Assertions.assertThrows(SecurityException.class,
+                () -> pushNotificationService.saveSubscription(USER_EMAIL_2, stolen));
+
+        assertThat(pushSubscriptionRepository.findAll())
+                .singleElement()
+                .satisfies(sub -> {
+                    assertThat(sub.getUserEmail()).isEqualTo(USER_EMAIL);
+                    assertThat(sub.getAuth()).isEqualTo(validAuth);
+                });
+    }
 }

@@ -78,6 +78,48 @@ class RateLimitInterceptorTest {
         assertThat(hit(AI_PATH, "10.0.0.3")).isEqualTo(200);
     }
 
+    private int hitThroughProxy(RateLimitInterceptor target, String path, String proxy, String forwardedFor) throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", path);
+        request.setRemoteAddr(proxy);
+        request.addHeader("X-Forwarded-For", forwardedFor);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        return target.preHandle(request, response, new Object()) ? 200 : response.getStatus();
+    }
+
+    @Test
+    void visitorsBehindTheSameProxyKeepSeparateBuckets() throws Exception {
+        for (int i = 0; i < 30; i++) {
+            assertThat(hitThroughProxy(interceptor, "/api/auth/refresh", "13.36.234.213", "86.127.230.196")).isEqualTo(200);
+        }
+        assertThat(hitThroughProxy(interceptor, "/api/auth/refresh", "13.36.234.213", "86.127.230.196")).isEqualTo(429);
+        // Another visitor through the same Vercel edge is not affected.
+        assertThat(hitThroughProxy(interceptor, "/api/auth/refresh", "13.36.234.213", "90.1.2.3")).isEqualTo(200);
+    }
+
+    @Test
+    void forgedForwardedAddressesAreBoundedByTheProxyBucket() throws Exception {
+        var properties = new com.ascension.config.RateLimitProperties();
+        properties.setLoginLimit(2);
+        properties.setProxyHopMultiplier(3);
+        var target = new RateLimitInterceptor(new com.ascension.service.ratelimit.InMemoryRateLimiterService(), properties);
+        // A direct caller rotating the forwarded address gets 2 x 3 requests from its real address, no more.
+        for (int i = 0; i < 6; i++) {
+            assertThat(hitThroughProxy(target, "/api/auth/login", "203.0.113.9", "198.51.100." + i)).isEqualTo(200);
+        }
+        assertThat(hitThroughProxy(target, "/api/auth/login", "203.0.113.9", "198.51.100.99")).isEqualTo(429);
+    }
+
+    @Test
+    void malformedForwardedValuesFallBackToTheRemoteAddress() {
+        var request = new MockHttpServletRequest("POST", "/api/auth/login");
+        request.setRemoteAddr("13.36.234.213");
+        request.addHeader("X-Forwarded-For", "x:evil-key\n");
+        assertThat(RateLimitInterceptor.clientIp(request)).isEqualTo("13.36.234.213");
+        var chained = new MockHttpServletRequest("POST", "/api/auth/login");
+        chained.addHeader("X-Forwarded-For", "1.1.1.1, 86.127.230.196");
+        assertThat(RateLimitInterceptor.clientIp(chained)).isEqualTo("86.127.230.196");
+    }
+
     @Test
     void authEndpointsAreLimitedPerIp() throws Exception {
         for (int i = 0; i < RateLimitInterceptor.MAX_REQUESTS_PER_MINUTE; i++) {

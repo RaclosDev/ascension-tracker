@@ -1,3 +1,4 @@
+import { gunzipSync } from 'node:zlib';
 import { test, expect } from '@playwright/test';
 import { setupAuthMocks } from './helpers/auth';
 
@@ -102,7 +103,12 @@ test.describe('Backup, Restore & Hevy Import Flows', () => {
     let restoreModeQueryParam: string | null = null;
 
     await page.route('**/api/user/restore**', async (route) => {
-      restorePayload = route.request().postDataJSON() as Record<string, unknown>;
+      // The app gzips backups before upload; the server decompresses them.
+      const request = route.request();
+      const body = request.postDataBuffer() ?? Buffer.alloc(0);
+      const encoding = await request.headerValue('content-encoding');
+      expect(encoding).toBe('gzip');
+      restorePayload = JSON.parse(gunzipSync(body).toString('utf8')) as Record<string, unknown>;
       const url = new URL(route.request().url());
       restoreModeQueryParam = url.searchParams.get('mode');
       await route.fulfill({

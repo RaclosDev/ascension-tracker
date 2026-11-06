@@ -52,7 +52,20 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         String group = groupOf(path);
         if (group != null) {
             int capacity = capacityForGroup(group);
-            String key = group + ":" + clientId(group, request);
+            String clientId = clientId(group, request);
+            String key = group + ":" + clientId;
+
+            // A client seen through an untrusted proxy (Vercel's edge in production) is keyed by the
+            // address that proxy reports, which a caller reaching the backend directly could forge.
+            // The proxy's own address then gets a wider bucket, so forged addresses stay bounded.
+            String proxy = request.getRemoteAddr();
+            if (clientId.startsWith("ip:") && !clientId.equals("ip:" + proxy)) {
+                String proxyKey = group + ":proxy:" + proxy;
+                int proxyCapacity = capacity * Math.max(1, properties.getProxyHopMultiplier());
+                if (!rateLimiterService.tryConsume(proxyKey, proxyCapacity, Duration.ofMinutes(1))) {
+                    return rejectTooManyRequests(response);
+                }
+            }
 
             if (!rateLimiterService.tryConsume(key, capacity, Duration.ofMinutes(1))) {
                 return rejectTooManyRequests(response);
@@ -153,7 +166,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     private static String clientId(String group, HttpServletRequest request) {
         // IP-keyed groups: login, refresh, auth
         if ("auth".equals(group) || "login".equals(group) || "refresh".equals(group) || "public".equals(group)) {
-            return "ip:" + request.getRemoteAddr();
+            return "ip:" + clientIp(request);
         }
 
         // Authenticated user keyed (or fallback to IP if anonymous)
@@ -161,7 +174,26 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
             return "user:" + auth.getName();
         }
-        return "ip:" + request.getRemoteAddr();
+        return "ip:" + clientIp(request);
+    }
+
+    private static final java.util.regex.Pattern IP_LITERAL = java.util.regex.Pattern.compile("[0-9A-Fa-f:.]{2,45}");
+
+    /**
+     * The visitor's address. Tomcat's RemoteIpValve has already promoted the first untrusted hop
+     * (Vercel's edge, behind Heroku's router) to the remote address and left the hops before it in
+     * X-Forwarded-For; the last of those is the address the edge received the request from.
+     */
+    static String clientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null) {
+            int comma = forwarded.lastIndexOf(',');
+            String candidate = forwarded.substring(comma + 1).trim();
+            if (IP_LITERAL.matcher(candidate).matches()) {
+                return candidate;
+            }
+        }
+        return request.getRemoteAddr();
     }
 
     private static boolean rejectTooManyRequests(HttpServletResponse response) throws Exception {

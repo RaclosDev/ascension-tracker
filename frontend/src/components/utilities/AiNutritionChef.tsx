@@ -1,6 +1,5 @@
 import { ChefComposer } from './ChefComposer';
 import React from 'react';
-import DOMPurify from 'dompurify';
 import { ChefHat, User, Utensils, Check, Plus } from 'lucide-react';
 import {
   useAiNutritionChef,
@@ -8,6 +7,7 @@ import {
   MealOption,
   SuggestedFood,
 } from '../../hooks/utilities/useAiNutritionChef';
+import { renderInlineMarkdown } from '../../utils/inlineMarkdown';
 
 export default function AiNutritionChef() {
   const {
@@ -42,11 +42,8 @@ export default function AiNutritionChef() {
       const trimmed = line.trim();
       if (!trimmed) return <div key={idx} style={{ height: '0.4rem' }} />;
 
-      let formatted = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
       if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-        const bulletText = formatted.replace(/^[-*]\s+/, '');
+        const bulletText = renderInlineMarkdown(trimmed.replace(/^[-*]\s+/, ''));
         return (
           <div
             key={idx}
@@ -59,17 +56,15 @@ export default function AiNutritionChef() {
             }}
           >
             <span style={{ color: 'var(--accent-primary, #0085FF)', fontWeight: 700 }}>•</span>
-            <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bulletText) }} />
+            <span>{bulletText}</span>
           </div>
         );
       }
 
       return (
-        <p
-          key={idx}
-          style={{ margin: '0 0 0.45rem 0', lineHeight: 1.5 }}
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatted) }}
-        />
+        <p key={idx} style={{ margin: '0 0 0.45rem 0', lineHeight: 1.5 }}>
+          {renderInlineMarkdown(line)}
+        </p>
       );
     });
   };

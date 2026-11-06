@@ -88,9 +88,14 @@ public class RefreshTokenService {
         if (refreshToken.getReplacedAt() != null) {
             Instant graceThreshold = refreshToken.getReplacedAt().plusSeconds(gracePeriodSeconds);
             if (Instant.now().isBefore(graceThreshold)) {
-                // Grace period: allow concurrent cluster/tab refresh without deleting the family
+                // Grace period: a client that lost the rotation response may retry with the old token.
+                // The token issued now becomes the family's only live one: earlier successors are marked
+                // as replaced outside the grace window, so presenting any of them later revokes the family
+                // instead of leaving a parallel branch alive for 30 days.
                 refreshToken.setGraceUsed(true);
                 refreshTokenRepository.save(refreshToken);
+                refreshTokenRepository.supersedeLiveTokens(refreshToken.getFamilyId(),
+                        Instant.now().minusSeconds(gracePeriodSeconds + 1));
                 return createRotatedToken(refreshToken.getEmail(), refreshToken.getFamilyId(), securityVersion);
             }
             // Outside the grace period: token reuse detected, revoke the whole family.

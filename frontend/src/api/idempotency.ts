@@ -53,6 +53,12 @@ export function clearIdempotencyIntents() {
   }
 }
 
+// A Blob serialises to "{}", so two different uploads would share one key; hash its bytes instead.
+async function blobFingerprint(blob: Blob) {
+  const digest = await crypto.subtle.digest('SHA-256', await blob.arrayBuffer());
+  return `blob:${Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')}`;
+}
+
 export async function prepareIdempotency(
   config: InternalAxiosRequestConfig,
   account: string | null,
@@ -65,7 +71,12 @@ export async function prepareIdempotency(
     active.add(existing);
     return;
   }
-  const payload = typeof config.data === 'string' ? config.data : JSON.stringify(config.data ?? {});
+  const payload =
+    typeof config.data === 'string'
+      ? config.data
+      : config.data instanceof Blob
+        ? await blobFingerprint(config.data)
+        : JSON.stringify(config.data ?? {});
   const bytes = new TextEncoder().encode(JSON.stringify([account, config.url, payload]));
   const digest = await crypto.subtle.digest('SHA-256', bytes);
   const signature = Array.from(new Uint8Array(digest), (byte) =>
