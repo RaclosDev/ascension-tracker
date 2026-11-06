@@ -10,6 +10,7 @@ import com.ascension.exception.AiProcessingException;
 import com.ascension.exception.InvalidInputException;
 import com.ascension.exception.ExternalApiException;
 import com.ascension.exception.UserDataQuotaExceededException;
+import com.ascension.service.ai.AiImageValidator;
 import com.ascension.service.ai.AiJsonParser;
 import com.ascension.service.ai.GeminiApiClient;
 import com.ascension.service.ai.GeminiQuotaService;
@@ -21,15 +22,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +34,6 @@ import java.util.Map;
 public class GeminiAiService {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiAiService.class);
-    public static final long MAX_PIXEL_COUNT = 25_000_000L;
 
     private final GeminiApiClient apiClient;
     private final GeminiQuotaService quotaService;
@@ -69,7 +64,7 @@ public class GeminiAiService {
         if (base64Image != null && !base64Image.isEmpty()) {
             cleanBase64 = base64Image.contains(",") ? base64Image.substring(base64Image.indexOf(",") + 1) : base64Image;
             byte[] decoded = Base64.getDecoder().decode(cleanBase64);
-            mimeType = validateAndGetMimeType(decoded);
+            mimeType = AiImageValidator.validate(decoded);
         }
 
         // Check data quota before calling external AI API to avoid unbilled calls
@@ -208,7 +203,7 @@ public class GeminiAiService {
         } catch (IOException e) {
             throw new InvalidInputException("No se pudo leer la imagen.", e);
         }
-        String mimeType = validateAndGetMimeType(fileBytes);
+        String mimeType = AiImageValidator.validate(fileBytes);
         String base64Image = Base64.getEncoder().encodeToString(fileBytes);
 
         userDataQuotaService.checkSavedFoodQuota(userEmail, 1);
@@ -259,7 +254,7 @@ public class GeminiAiService {
         if (base64Image != null && !base64Image.isEmpty()) {
             cleanBase64 = base64Image.contains(",") ? base64Image.substring(base64Image.indexOf(",") + 1) : base64Image;
             byte[] decoded = Base64.getDecoder().decode(cleanBase64);
-            mimeType = validateAndGetMimeType(decoded);
+            mimeType = AiImageValidator.validate(decoded);
         }
 
         MacrosDTO targetMacros = macroCalculatorService.getMacros(userEmail);
@@ -400,101 +395,4 @@ public class GeminiAiService {
         }
     }
 
-    public String validateAndGetMimeType(byte[] data) {
-        if (data == null || data.length < 12) {
-            throw new InvalidInputException("La imagen está dañada o no se puede leer.");
-        }
-        String mimeType = null;
-        if (data[0] == (byte) 0xFF && data[1] == (byte) 0xD8) {
-            mimeType = "image/jpeg";
-        } else if (data[0] == (byte) 0x89 && data[1] == (byte) 0x50 && data[2] == (byte) 0x4E && data[3] == (byte) 0x47) {
-            mimeType = "image/png";
-        } else if (data[0] == (byte) 'R' && data[1] == (byte) 'I' && data[2] == (byte) 'F' && data[3] == (byte) 'F' &&
-                data[8] == (byte) 'W' && data[9] == (byte) 'E' && data[10] == (byte) 'B' && data[11] == (byte) 'P') {
-            mimeType = "image/webp";
-        }
-
-        if (mimeType == null) {
-            throw new InvalidInputException("Formato de imagen no admitido. Usa JPEG, PNG o WebP.");
-        }
-
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(data);
-             ImageInputStream iis = ImageIO.createImageInputStream(bais)) {
-
-            if (iis == null) {
-                throw new InvalidInputException("La imagen está dañada o no se puede leer.");
-            }
-
-            Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
-            if (!readers.hasNext()) {
-                if ("image/webp".equals(mimeType)) {
-                    validateWebpDimensions(data);
-                    return "image/webp";
-                }
-                throw new InvalidInputException("La imagen está dañada o no se puede leer.");
-            }
-
-            ImageReader reader = readers.next();
-            try {
-                reader.setInput(iis, true, true);
-                int width = reader.getWidth(0);
-                int height = reader.getHeight(0);
-
-                if (width <= 0 || height <= 0) {
-                    throw new InvalidInputException("La imagen está dañada o no se puede leer.");
-                }
-
-                long pixelCount = (long) width * (long) height;
-                if (pixelCount > MAX_PIXEL_COUNT) {
-                    throw new InvalidInputException("La imagen supera el máximo de 25 megapíxeles (" + width + "x" + height + ").");
-                }
-            } finally {
-                reader.dispose();
-            }
-        } catch (IllegalArgumentException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new InvalidInputException("La imagen está dañada o no se puede leer.", e);
-        }
-
-        return mimeType;
-    }
-
-    private void validateWebpDimensions(byte[] data) {
-        if (data == null || data.length < 30) {
-            return;
-        }
-        try {
-            int width = -1;
-            int height = -1;
-            if (data[12] == 'V' && data[13] == 'P' && data[14] == '8' && data[15] == 'X') {
-                width = 1 + ((data[24] & 0xFF) | ((data[25] & 0xFF) << 8) | ((data[26] & 0xFF) << 16));
-                height = 1 + ((data[27] & 0xFF) | ((data[28] & 0xFF) << 8) | ((data[29] & 0xFF) << 16));
-            } else if (data[12] == 'V' && data[13] == 'P' && data[14] == '8' && data[15] == ' ') {
-                if (data.length >= 30 && (data[23] & 0xFF) == 0x9D && (data[24] & 0xFF) == 0x01 && (data[25] & 0xFF) == 0x2A) {
-                    width = ((data[26] & 0xFF) | ((data[27] & 0xFF) << 8)) & 0x3FFF;
-                    height = ((data[28] & 0xFF) | ((data[29] & 0xFF) << 8)) & 0x3FFF;
-                }
-            } else if (data[12] == 'V' && data[13] == 'P' && data[14] == '8' && data[15] == 'L') {
-                if (data.length >= 25 && data[20] == 0x2F) {
-                    int b1 = data[21] & 0xFF;
-                    int b2 = data[22] & 0xFF;
-                    int b3 = data[23] & 0xFF;
-                    int b4 = data[24] & 0xFF;
-                    width = 1 + (((b2 & 0x3F) << 8) | b1);
-                    height = 1 + (((b4 & 0x0F) << 10) | (b3 << 2) | ((b2 & 0xC0) >> 6));
-                }
-            }
-            if (width > 0 && height > 0) {
-                long pixelCount = (long) width * (long) height;
-                if (pixelCount > MAX_PIXEL_COUNT) {
-                    throw new InvalidInputException("La imagen supera el máximo de 25 megapíxeles (" + width + "x" + height + ").");
-                }
-            }
-        } catch (IllegalArgumentException e) {
-            throw e;
-        } catch (Exception ignored) {
-            // Non-fatal if extended chunks prevent direct parsing
-        }
-    }
 }

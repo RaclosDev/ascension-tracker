@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.service.ai.AiImageValidator;
 import com.ascension.dto.FoodLogDTO;
 import com.ascension.exception.ExternalApiException;
 import com.ascension.exception.UserDataQuotaExceededException;
@@ -105,7 +106,7 @@ class GeminiAiServiceTest {
 
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> geminiAiService.validateAndGetMimeType(hugeImageBytes)
+                () -> AiImageValidator.validate(hugeImageBytes)
         );
 
         assertThat(ex.getMessage()).contains("25 megapíxeles");
@@ -118,7 +119,7 @@ class GeminiAiServiceTest {
         ImageIO.write(normalImage, "png", baos);
         byte[] normalImageBytes = baos.toByteArray();
 
-        String mimeType = geminiAiService.validateAndGetMimeType(normalImageBytes);
+        String mimeType = AiImageValidator.validate(normalImageBytes);
         assertThat(mimeType).isEqualTo("image/png");
     }
 
@@ -264,7 +265,7 @@ class GeminiAiServiceTest {
         validWebp[24] = 99; validWebp[25] = 0; validWebp[26] = 0;
         validWebp[27] = 99; validWebp[28] = 0; validWebp[29] = 0;
 
-        String mime = geminiAiService.validateAndGetMimeType(validWebp);
+        String mime = AiImageValidator.validate(validWebp);
         org.junit.jupiter.api.Assertions.assertEquals("image/webp", mime);
     }
 
@@ -280,7 +281,7 @@ class GeminiAiServiceTest {
 
         IllegalArgumentException ex = org.junit.jupiter.api.Assertions.assertThrows(
                 IllegalArgumentException.class,
-                () -> geminiAiService.validateAndGetMimeType(oversizedWebp)
+                () -> AiImageValidator.validate(oversizedWebp)
         );
         org.junit.jupiter.api.Assertions.assertTrue(ex.getMessage().contains("supera el máximo de 25 megapíxeles"));
     }
