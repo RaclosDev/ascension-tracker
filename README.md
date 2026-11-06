@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/screenshots/hero.jpg" alt="Ascension Tracker: capturas móviles del inicio, un entreno en curso y el diario de nutrición" width="100%">
+<img src="docs/screenshots/hero.jpg" alt="Ascension, tu progreso bajo control: capturas móviles del inicio, un entreno en curso y el diario de nutrición" width="100%">
 
 # Ascension Tracker
 
