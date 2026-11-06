@@ -26,44 +26,6 @@ export const calcTdee = (bmr: number, factor: number): number => {
   return bmr * factor;
 };
 
-interface SimParams {
-  sex: 'M' | 'F';
-  age: number;
-  heightCm: number;
-  weightKg: number;
-  activityFactor: number;
-  intakeKcal: number;
-  weeks: number;
-}
-
-interface SimResult {
-  week: number;
-  weightKg: number;
-  tdee: number;
-}
-
-export const simulateWeightChange = (params: SimParams): SimResult[] | null => {
-  let { weightKg } = params;
-  const { sex, age, heightCm, activityFactor, intakeKcal, weeks } = params;
-  if (!Number.isInteger(weeks) || weeks < 1 || weeks > 104) return null;
-
-  const results: SimResult[] = [];
-  for (let w = 0; w <= weeks; w++) {
-    const bmr = calcBmr(sex, weightKg, heightCm, age);
-    if (bmr === null) return null; // out of valid ranges
-    const tdee = calcTdee(bmr, activityFactor);
-
-    results.push({ week: w, weightKg, tdee });
-
-    if (w < weeks) {
-      const dailyDeficit = tdee - intakeKcal; // positive means losing weight
-      const kgLost = (dailyDeficit * 7) / KCAL_PER_KG_FAT;
-      weightKg -= kgLost;
-    }
-  }
-  return results;
-};
-
 interface NavyParams {
   sex: 'M' | 'F';
   heightCm: number;

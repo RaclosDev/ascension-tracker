@@ -16,13 +16,13 @@ export default defineConfig({
       include: ['src/**'],
       // Entry points only wire the app together and are exercised by the Playwright suite.
       exclude: ['src/test/**', 'src/**/*.d.ts', 'src/main.tsx', 'src/sw.ts'],
-      // Ratchet: set just under the measured coverage (Nov 2026: 50.9 / 41.5 / 45.6 / 51.8).
+      // Ratchet: set just under the measured coverage (Nov 2026: 51.0 / 42.0 / 45.7 / 51.7).
       // Raise these as tests are added; never lower them to get a build green.
       thresholds: {
-        statements: 49,
-        branches: 40,
-        functions: 44,
-        lines: 50,
+        statements: 50,
+        branches: 41,
+        functions: 45,
+        lines: 51,
       },
     },
   },

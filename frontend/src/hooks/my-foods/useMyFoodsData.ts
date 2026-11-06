@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
-import { PageFoodItem } from '../../types/myfoods';
-import { Recipe, FoodLog } from '../../types/api';
+import { Recipe, FoodLog, SavedFood } from '../../types/api';
 import toast from 'react-hot-toast';
 
 export function useMyFoodsData() {
@@ -16,7 +15,7 @@ export function useMyFoodsData() {
   } = useQuery<
     {
       recentFoods: FoodLog[];
-      savedFoods: PageFoodItem[];
+      savedFoods: SavedFood[];
       recipes: Recipe[];
     },
     Error
@@ -25,7 +24,7 @@ export function useMyFoodsData() {
     queryFn: async ({ signal }) => {
       const [recentRes, savedRes, recipesRes] = await Promise.all([
         api.get<FoodLog[]>('/nutrition/logs/recent', { signal }),
-        api.get<PageFoodItem[]>('/nutrition/my-foods', { signal }),
+        api.get<SavedFood[]>('/nutrition/my-foods', { signal }),
         api.get<Recipe[]>('/nutrition/recipes', { signal }),
       ]);
       return { recentFoods: recentRes.data, savedFoods: savedRes.data, recipes: recipesRes.data };
