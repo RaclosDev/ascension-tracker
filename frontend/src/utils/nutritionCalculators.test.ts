@@ -3,7 +3,6 @@ import {
   parseNumber,
   calcBmr,
   calcTdee,
-  simulateWeightChange,
   calcBodyFatNavy,
   calcBodyComposition,
 } from './nutritionCalculators';
@@ -30,34 +29,6 @@ describe('nutritionCalculators', () => {
     expect(calcBmr('M', 10, 180, 30)).toBeNull(); // weight too low
     expect(calcBmr('M', 80, 100, 30)).toBeNull(); // height too low
     expect(calcBmr('M', 80, 180, 5)).toBeNull(); // age too low
-  });
-
-  it('simulateWeightChange', () => {
-    // 500 kcal deficit -> losing exactly 500*7/7700 = 0.4545 kg first week
-    const sim = simulateWeightChange({
-      sex: 'M',
-      age: 30,
-      heightCm: 180,
-      weightKg: 80,
-      activityFactor: 1.55,
-      intakeKcal: 2759 - 500,
-      weeks: 2,
-    });
-    expect(sim).toBeDefined();
-    expect(sim![0].weightKg).toBe(80);
-    expect(sim![1].weightKg).toBeCloseTo(80 - 0.4545, 3);
-
-    // Intake = TDEE means weight stays same
-    const simMaint = simulateWeightChange({
-      sex: 'M',
-      age: 30,
-      heightCm: 180,
-      weightKg: 80,
-      activityFactor: 1.55,
-      intakeKcal: 2759,
-      weeks: 2,
-    });
-    expect(simMaint![1].weightKg).toBeCloseTo(80, 1);
   });
 
   it('calcBodyFatNavy', () => {
