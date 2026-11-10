@@ -104,6 +104,27 @@ describe('InvitationPage', () => {
     expect(await screen.findByText('ajustes')).toBeDefined();
   });
 
+  it('warns when a shared scope belongs to a module the client switched off', async () => {
+    mockedApi.get.mockResolvedValue({
+      data: { coach, expiresAt: '2026-11-12T00:00:00Z', alreadyLinked: false },
+    });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    queryClient.setQueryData(['settings'], { appModules: 'TRAINING' });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[`/invitacion/${TOKEN}`]}>
+          <Routes>{routes}</Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText('Laura Coach');
+    fireEvent.click(screen.getByRole('checkbox', { name: /Entrenamiento/ }));
+    expect(screen.queryByRole('status')).toBeNull();
+    fireEvent.click(screen.getByRole('checkbox', { name: /^Nutrición/ }));
+    expect(screen.getByRole('status').textContent).toContain('Tienes desactivado Nutrición');
+  });
+
   it('only lets the coach prescribe when training is shared', async () => {
     mockedApi.get.mockResolvedValue({
       data: { coach, expiresAt: '2026-11-12T00:00:00Z', alreadyLinked: false },

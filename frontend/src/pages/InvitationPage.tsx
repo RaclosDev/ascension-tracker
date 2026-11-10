@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { hasBodyTracking, hasNutrition } from '../lib/appModules';
+import type { UserSettings } from '../types/api';
 import {
   PERMISSION_LABELS,
   scopeDisabled,
@@ -32,6 +35,12 @@ export default function InvitationPage() {
   // The invitation is now on screen, so it must not reopen on the next sign-in.
   useEffect(clearPendingInvitation, []);
   const anySelected = SCOPES.some((scope) => permissions[scope]);
+  // Si comparte algo de un módulo que tiene apagado, no verá lo que le paute el entrenador.
+  const modules = useQueryClient().getQueryData<UserSettings | null>(['settings'])?.appModules;
+  const hiddenModules = [
+    (permissions.nutrition || permissions.editNutrition) && !hasNutrition(modules) && 'Nutrición',
+    permissions.body && !hasBodyTracking(modules) && 'Peso y medidas',
+  ].filter(Boolean);
 
   const submit = () => {
     if (!anySelected) return;
@@ -105,6 +114,13 @@ export default function InvitationPage() {
             entrenamiento» podrá asignarte programas. Puedes cambiarlo o terminar la relación cuando
             quieras desde Ajustes → Entrenador.
           </p>
+          {hiddenModules.length > 0 && (
+            <p className="text-sm mb-4" role="status" style={{ color: 'var(--text-secondary)' }}>
+              Tienes desactivado {hiddenModules.join(' y ')}. Actívalo en{' '}
+              <Link to="/settings?section=modules">Ajustes → Módulos</Link> para registrarlo y ver
+              lo que te paute tu entrenador.
+            </p>
+          )}
           {!anySelected && (
             <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
               Marca al menos una opción para aceptar.

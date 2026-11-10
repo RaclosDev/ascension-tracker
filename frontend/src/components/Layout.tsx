@@ -19,11 +19,22 @@ import OnboardingScreen from './OnboardingScreen';
 import { preloadRoute } from '../utils/routePreload';
 
 import { Skeleton } from './ui/skeleton';
-import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings, Plus, LogOut } from 'lucide-react';
+import {
+  Home,
+  LineChart,
+  Utensils,
+  Dumbbell,
+  Wrench,
+  Settings,
+  Plus,
+  LogOut,
+  GraduationCap,
+} from 'lucide-react';
 import { ActiveWorkoutBanner } from './workout/ActiveWorkoutBanner';
 import { haptics } from '@/lib/haptics';
 import { useAuth } from '../context/AuthContext';
 import { isPathEnabled } from '../lib/appModules';
+import { useCoachProfile } from '../lib/coach/api';
 
 const navItems = [
   {
@@ -51,6 +62,12 @@ const navItems = [
     shortLabel: 'Entreno',
   },
   {
+    path: '/entrenador',
+    icon: <GraduationCap className="w-5 h-5" />,
+    label: 'Entrenador',
+    shortLabel: 'Entrenador',
+  },
+  {
     path: '/utilities',
     icon: <Wrench className="w-5 h-5" />,
     label: 'Utilidades',
@@ -65,7 +82,7 @@ const navItems = [
 ];
 
 const bottomNavPaths = ['/dashboard', '/tracking', '/nutrition', '/workout'];
-const moreMenuPaths = ['/utilities', '/settings'];
+const moreMenuPaths = ['/entrenador', '/utilities', '/settings'];
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -95,6 +112,7 @@ export default function Layout() {
       }),
   });
   const needsOnboarding = !loadingConfig && !configError && settings === null;
+  const isCoach = useCoachProfile().data?.coach === true;
 
   // Cerrar el menú automáticamente al cambiar de página y resetear scroll
   useEffect(() => {
@@ -156,7 +174,10 @@ export default function Layout() {
   const closeSidebar = () => setSidebarOpen(false);
   const isMoreActive = moreMenuPaths.includes(location.pathname);
   // Hide the sections of the modules the user switched off (Ajustes › Módulos).
-  const visibleNav = navItems.filter((i) => isPathEnabled(i.path, settings?.appModules));
+  // «Entrenador» solo aparece a quien tiene activado el modo entrenador.
+  const visibleNav = navItems.filter((i) =>
+    i.path === '/entrenador' ? isCoach : isPathEnabled(i.path, settings?.appModules),
+  );
   const bottomItems = visibleNav.filter((i) => bottomNavPaths.includes(i.path));
   // Index of the highlighted tab; the "Más" button is the last slot. -1 hides the pill.
   const activeBottomIndex = isMoreActive
