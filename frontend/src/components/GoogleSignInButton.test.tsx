@@ -38,6 +38,12 @@ describe('Google sign-in parity with PorrApp', () => {
     expect(id.prompt).not.toHaveBeenCalled();
   });
 
+  it('shows the Google mark next to the label without changing its accessible name', () => {
+    render(<GoogleSignInButton onCredential={vi.fn()} />);
+    const button = screen.getByRole('button', { name: 'Continuar con Google' });
+    expect(button.querySelector('svg[aria-hidden="true"]')).toBeInTheDocument();
+  });
+
   it('opens the dialog on every click, even without the Google script', () => {
     render(<GoogleSignInButton onCredential={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
