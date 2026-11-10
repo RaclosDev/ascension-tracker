@@ -4,7 +4,6 @@ import { EMAIL_ACCESS_EVENT, type AccessMode } from './emailAccessEvents';
 import { useAuth } from '../../context/AuthContext';
 import { apiErrorMessage } from '../../lib/coach/api';
 import {
-  confirmSignUp,
   requestPasswordReset,
   signInWithPassword,
   signInWithPasskey,
@@ -14,7 +13,7 @@ import { isPasskeyCancel, passkeysSupported } from '../../utils/webauthn';
 import { markPasskeyPromptAnswered } from '../../utils/passkeyPrompt';
 
 type Mode = AccessMode;
-type Step = 'form' | 'code' | 'forgot' | 'forgot-sent';
+type Step = 'form' | 'forgot' | 'forgot-sent';
 
 const field =
   'landing-field w-full min-h-11 rounded-[4px] border-2 border-[var(--landing-ink)] bg-[var(--paper)] px-3 text-base text-[var(--landing-ink)]';
@@ -24,8 +23,7 @@ const linkButton =
   'min-h-11 self-start bg-transparent p-0 text-[0.85rem] font-bold text-[var(--landing-ink)] underline underline-offset-4';
 
 /**
- * Sign-in and sign-up with email, the code that confirms a new account, the forgotten-password
- * link and the passkey button. Errors never tell whether an email has an account.
+ * Sign-in and sign-up with email, the forgotten-password link and the passkey button.
  * `alternatives` (the Google button) sits under the email form as the second way in.
  */
 export default function EmailAccess({ alternatives }: { alternatives?: ReactNode }) {
@@ -37,7 +35,6 @@ export default function EmailAccess({ alternatives }: { alternatives?: ReactNode
   const [step, setStep] = useState<Step>('form');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const registering = mode === 'register';
@@ -75,9 +72,7 @@ export default function EmailAccess({ alternatives }: { alternatives?: ReactNode
     event.preventDefault();
     if (registering) {
       void run(async () => {
-        await startSignUp(email.trim(), password);
-        setCode('');
-        setStep('code');
+        await login(await startSignUp(email.trim(), password));
       }, 'No se ha podido crear la cuenta. Inténtalo de nuevo.');
     } else {
       void run(
@@ -85,14 +80,6 @@ export default function EmailAccess({ alternatives }: { alternatives?: ReactNode
         'No se ha podido iniciar sesión. Inténtalo de nuevo.',
       );
     }
-  };
-
-  const confirm = (event: FormEvent) => {
-    event.preventDefault();
-    void run(
-      async () => login(await confirmSignUp(email.trim(), code.trim(), password)),
-      'No se ha podido confirmar el código.',
-    );
   };
 
   const forgot = (event: FormEvent) => {
@@ -126,38 +113,6 @@ export default function EmailAccess({ alternatives }: { alternatives?: ReactNode
       {error}
     </p>
   );
-
-  if (step === 'code') {
-    return (
-      <form onSubmit={confirm} className="flex w-full flex-col gap-3" noValidate>
-        <p className="text-[0.95rem]">
-          Te hemos enviado un código de 6 cifras a <strong>{email.trim()}</strong>. Escríbelo para
-          crear la cuenta. Revisa también la carpeta de spam.
-        </p>
-        <label htmlFor={`${ids}-code`} className="text-sm font-bold">
-          Código
-        </label>
-        <input
-          id={`${ids}-code`}
-          className={`${field} tracking-[0.4em]`}
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          pattern="\d{6}"
-          maxLength={6}
-          required
-          value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-        />
-        {alert}
-        <button type="submit" className={primary} disabled={busy || code.length !== 6}>
-          {busy ? 'Comprobando…' : 'Crear cuenta'}
-        </button>
-        <button type="button" className={linkButton} onClick={() => switchTo('form')}>
-          Cambiar el email o pedir otro código
-        </button>
-      </form>
-    );
-  }
 
   if (step === 'forgot' || step === 'forgot-sent') {
     return (
@@ -244,7 +199,7 @@ export default function EmailAccess({ alternatives }: { alternatives?: ReactNode
         />
         {registering && (
           <p id={`${ids}-hint`} className="text-[0.8rem] text-[var(--landing-muted)]">
-            Mínimo 8 caracteres. Te mandaremos un código al email para confirmar la cuenta.
+            Mínimo 8 caracteres. Entrarás directamente al crear la cuenta.
           </p>
         )}
         {alert}
@@ -253,7 +208,7 @@ export default function EmailAccess({ alternatives }: { alternatives?: ReactNode
           className={`${primary} mt-1`}
           disabled={busy || !email.trim() || !password}
         >
-          {busy ? 'Un momento…' : registering ? 'Recibir código' : 'Entrar'}
+          {busy ? 'Un momento…' : registering ? 'Crear cuenta' : 'Entrar'}
         </button>
       </form>
       {!registering && (
@@ -265,7 +220,8 @@ export default function EmailAccess({ alternatives }: { alternatives?: ReactNode
         className="flex items-center gap-3 text-[0.8rem] text-[var(--landing-muted)]"
         aria-hidden="true"
       >
-        <span className="flex-1 border-t border-current opacity-40" />o<span className="flex-1 border-t border-current opacity-40" />
+        <span className="flex-1 border-t border-current opacity-40" />o
+        <span className="flex-1 border-t border-current opacity-40" />
       </div>
       {!registering && passkeysSupported() && (
         <button

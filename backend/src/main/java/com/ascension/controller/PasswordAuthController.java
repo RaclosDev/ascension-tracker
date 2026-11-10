@@ -8,6 +8,7 @@ import com.ascension.service.auth.PasswordResetService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,13 +28,6 @@ public class PasswordAuthController {
         @Override
         public String toString() {
             return "RegisterRequest[]";
-        }
-    }
-
-    public record ConfirmRequest(String email, String code, String password) {
-        @Override
-        public String toString() {
-            return "ConfirmRequest[]";
         }
     }
 
@@ -72,18 +66,14 @@ public class PasswordAuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody RegisterRequest body) {
-        passwords.register(body.email(), body.password());
-        return ResponseEntity.accepted().body(Map.of("verificationRequired", true, "message", CHECK_EMAIL));
-    }
-
-    @PostMapping("/register/confirm")
-    public ResponseEntity<Map<String, String>> confirm(@RequestBody ConfirmRequest body, HttpServletRequest request) {
+    @Transactional
+    public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest body, HttpServletRequest request) {
         requireTrustedOrigin(request);
-        return open(passwords.confirmRegistration(body.email(), body.code(), body.password()), request);
+        return open(passwords.register(body.email(), body.password()), request);
     }
 
     @PostMapping("/login")
+    @Transactional
     public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest body, HttpServletRequest request) {
         requireTrustedOrigin(request);
         return open(passwords.login(body.email(), body.password()), request);

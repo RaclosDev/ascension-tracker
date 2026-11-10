@@ -7,7 +7,6 @@ import { requestEmailAccess } from './emailAccessEvents';
 const mocks = vi.hoisted(() => ({
   login: vi.fn(),
   startSignUp: vi.fn(),
-  confirmSignUp: vi.fn(),
   signInWithPassword: vi.fn(),
   requestPasswordReset: vi.fn(),
   signInWithPasskey: vi.fn(),
@@ -18,7 +17,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock('../../context/AuthContext', () => ({ useAuth: () => ({ login: mocks.login }) }));
 vi.mock('../../auth/accountAccess', () => ({
   startSignUp: mocks.startSignUp,
-  confirmSignUp: mocks.confirmSignUp,
   signInWithPassword: mocks.signInWithPassword,
   requestPasswordReset: mocks.requestPasswordReset,
   signInWithPasskey: mocks.signInWithPasskey,
@@ -65,29 +63,16 @@ describe('EmailAccess', () => {
     expect(mocks.login).not.toHaveBeenCalled();
   });
 
-  it('creates an account with the emailed code', async () => {
-    mocks.startSignUp.mockResolvedValue(undefined);
-    mocks.confirmSignUp.mockResolvedValue('new-session');
+  it('creates an account and signs in directly', async () => {
+    mocks.startSignUp.mockResolvedValue('new-session');
     render(<EmailAccess />);
     fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
     type('Email', 'ana@example.com');
     type('Contraseña', 'una-frase-larga');
-    fireEvent.click(screen.getByRole('button', { name: 'Recibir código' }));
-
-    const code = await screen.findByLabelText('Código');
-    fireEvent.change(code, { target: { value: '12a3456' } });
-    expect(code).toHaveValue('123456');
-    fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Crear cuenta' })[1]);
 
     await waitFor(() => expect(mocks.login).toHaveBeenCalledWith('new-session'));
-    expect(mocks.confirmSignUp).toHaveBeenCalledWith(
-      'ana@example.com',
-      '123456',
-      'una-frase-larga',
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Cambiar el email o pedir otro código' }));
-    expect(screen.getByLabelText('Contraseña')).toBeInTheDocument();
+    expect(mocks.startSignUp).toHaveBeenCalledWith('ana@example.com', 'una-frase-larga');
   });
 
   it('sends the reset link and goes back to sign-in', async () => {
@@ -132,11 +117,11 @@ describe('EmailAccess', () => {
 
     act(() => requestEmailAccess('register')());
 
-    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toHaveAttribute(
+    expect(screen.getAllByRole('button', { name: 'Crear cuenta' })[0]).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    expect(screen.getByRole('button', { name: 'Recibir código' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Crear cuenta' })).toHaveLength(2);
     expect(screen.getByLabelText('Email')).toHaveFocus();
     expect(
       screen.queryByRole('button', { name: 'Entrar con huella o llave de acceso' }),
