@@ -107,35 +107,78 @@
   color: var(--landing-blue);
 }
 
-/* Thin ink rules in the side gutter, never across the text, behind the content. */
-.landing-hero {
-  isolation: isolate;
+/* Second way in (passkey, Google): same block, paper instead of ink, so email stays the one
+   solid action in the sheet. */
+.landing-alt-cta {
+  min-height: 48px;
+  padding: 0 1.25rem;
+  background: transparent;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 700;
 }
-.landing-hero::before,
-.landing-hero::after {
+.landing-alt-cta:hover {
+  background: rgba(17, 24, 39, 0.06);
+  color: var(--ink);
+}
+.landing-alt-cta:focus-visible,
+.landing-switch:focus-visible {
+  outline: 2px solid var(--landing-blue);
+  outline-offset: 3px;
+}
+.landing-google-cta:disabled,
+.landing-alt-cta:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Access sheet: a print pinned to the poster, with the same tape and hard shadow as the shots. */
+.landing-sheet {
+  position: relative;
+  background: #fffdf7;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  box-shadow: 6px 8px 0 rgba(0, 0, 0, 0.2);
+}
+.landing-sheet::before {
   content: '';
   position: absolute;
-  top: 0;
-  bottom: 0;
-  z-index: -1;
-  width: 2px;
-  background: var(--landing-ink);
-  opacity: 0.15;
+  top: -14px;
+  left: 50%;
+  width: 96px;
+  height: 26px;
+  background: rgba(255, 230, 140, 0.8);
+  border-inline: 1px dashed rgba(17, 24, 39, 0.19);
+  transform: translateX(-50%) rotate(-3deg);
   pointer-events: none;
 }
-.landing-hero::before {
-  left: 8px;
+
+/* Sign in / Create account: two halves of one ink frame, the active one filled. */
+.landing-switches {
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  overflow: hidden;
 }
-.landing-hero::after {
-  right: 8px;
+.landing-switch {
+  background: transparent;
+  color: var(--ink);
 }
-@media (min-width: 1240px) {
-  .landing-hero::before {
-    left: -32px;
-  }
-  .landing-hero::after {
-    right: -32px;
-  }
+.landing-switch + .landing-switch {
+  border-left: 2px solid var(--ink);
+}
+.landing-switch[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--paper);
+}
+.landing-switch:focus-visible {
+  outline-offset: -5px;
+  outline-color: var(--paper);
+}
+.landing-switch[aria-pressed='false']:focus-visible {
+  outline-color: var(--landing-blue);
 }
 
 /* Phone shot inside a steel frame. */

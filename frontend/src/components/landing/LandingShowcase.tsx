@@ -5,13 +5,13 @@ const shots = [
     tilt: '-rotate-6 lg:-translate-y-2',
   },
   {
-    src: '/landing/nutrition.webp',
-    alt: 'Diario de nutrición con calorías, macros y las comidas del día',
+    src: '/landing/dashboard.webp',
+    alt: 'Panel principal de Ascension con el peso de hoy, el total perdido y la fecha estimada para llegar al objetivo',
     tilt: 'rotate-0 z-10 lg:-translate-y-10',
   },
   {
-    src: '/landing/tracking.webp',
-    alt: 'Seguimiento semanal de peso, pasos y calorías',
+    src: '/landing/nutrition.webp',
+    alt: 'Diario de nutrición con calorías, macros y las comidas del día',
     tilt: 'rotate-6 lg:-translate-y-2',
   },
 ];
