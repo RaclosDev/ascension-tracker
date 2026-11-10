@@ -1,5 +1,5 @@
 import { ClipboardList, MessageSquare, Users } from 'lucide-react';
-import DripButton from './DripButton';
+import InkButton from './InkButton';
 import { requestEmailAccess } from './emailAccessEvents';
 import { planName } from '../../lib/coach/plan';
 import { usePublicInfo } from '../../lib/publicInfo';
@@ -120,9 +120,9 @@ export default function LandingCoaches() {
             Te respondemos por email.
           </p>
         </div>
-        <DripButton href="#entrar" onClick={requestEmailAccess('register')} className="shrink-0">
+        <InkButton href="#entrar" onClick={requestEmailAccess('register')} className="shrink-0">
           Probar 14 días gratis
-        </DripButton>
+        </InkButton>
       </div>
     </section>
   );
