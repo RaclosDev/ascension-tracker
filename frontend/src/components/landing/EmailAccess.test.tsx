@@ -1,7 +1,8 @@
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import EmailAccess from './EmailAccess';
+import { requestEmailAccess } from './emailAccessEvents';
 
 const mocks = vi.hoisted(() => ({
   login: vi.fn(),
@@ -44,7 +45,7 @@ describe('EmailAccess', () => {
     render(<EmailAccess />);
     type('Email', ' ana@example.com ');
     type('Contraseña', 'una-frase-larga');
-    fireEvent.click(screen.getByRole('button', { name: 'Entrar con email' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
 
     await waitFor(() => expect(mocks.login).toHaveBeenCalledWith('session'));
     expect(mocks.signInWithPassword).toHaveBeenCalledWith('ana@example.com', 'una-frase-larga');
@@ -58,7 +59,7 @@ describe('EmailAccess', () => {
     render(<EmailAccess />);
     type('Email', 'ana@example.com');
     type('Contraseña', 'mala');
-    fireEvent.click(screen.getByRole('button', { name: 'Entrar con email' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/incorrectos|No se ha podido/);
     expect(mocks.login).not.toHaveBeenCalled();
@@ -68,10 +69,10 @@ describe('EmailAccess', () => {
     mocks.startSignUp.mockResolvedValue(undefined);
     mocks.confirmSignUp.mockResolvedValue('new-session');
     render(<EmailAccess />);
-    fireEvent.click(screen.getByRole('button', { name: 'Créala con tu email' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
     type('Email', 'ana@example.com');
     type('Contraseña', 'una-frase-larga');
-    fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Recibir código' }));
 
     const code = await screen.findByLabelText('Código');
     fireEvent.change(code, { target: { value: '12a3456' } });
@@ -99,7 +100,7 @@ describe('EmailAccess', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('Si hay una cuenta');
     expect(mocks.requestPasswordReset).toHaveBeenCalledWith('ana@example.com');
     fireEvent.click(screen.getByRole('button', { name: 'Volver a iniciar sesión' }));
-    expect(screen.getByRole('button', { name: 'Entrar con email' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Entrar' })).toBeInTheDocument();
   });
 
   it('signs in with a passkey and stops offering one on this device', async () => {
@@ -119,6 +120,27 @@ describe('EmailAccess', () => {
 
     await waitFor(() => expect(mocks.signInWithPasskey).toHaveBeenCalled());
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('opens in the mode a call to action asks for, with the cursor in the email field', () => {
+    render(<EmailAccess alternatives={<button type="button">Continuar con Google</button>} />);
+    expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Continuar con Google' })).toBeInTheDocument();
+
+    act(() => requestEmailAccess('register')());
+
+    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Recibir código' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toHaveFocus();
+    expect(
+      screen.queryByRole('button', { name: 'Entrar con huella o llave de acceso' }),
+    ).not.toBeInTheDocument();
   });
 
   it('hides the passkey button where passkeys are not supported', () => {

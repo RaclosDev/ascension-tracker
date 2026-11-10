@@ -1,5 +1,5 @@
 import DripButton from './DripButton';
-import { requestGoogleSignIn } from '../GoogleSignInButton';
+import { requestEmailAccess } from './emailAccessEvents';
 
 const links = [
   { href: '#funciones', label: 'Funciones' },
@@ -30,7 +30,7 @@ export default function LandingNav() {
           </a>
         ))}
       </nav>
-      <DripButton href="#entrar" onClick={requestGoogleSignIn}>
+      <DripButton href="#entrar" onClick={requestEmailAccess('login')}>
         Entrar
       </DripButton>
     </header>

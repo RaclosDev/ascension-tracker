@@ -17,15 +17,17 @@ const Stroke = () => (
   </svg>
 );
 
+// The page is /login: the poster on the left says what the app is, and the access sheet on the
+// right is pinned where the eye lands, with email first and Google as the other way in.
 export default function LandingHero() {
   const { login } = useAuth();
 
   return (
     <section
       id="inicio"
-      className="landing-hero relative mx-auto grid max-w-6xl gap-10 px-5 pb-16 pt-10 sm:px-8 sm:pt-16 lg:grid-cols-12 lg:gap-6 lg:pb-24"
+      className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 pb-16 pt-8 sm:px-8 sm:pt-14 lg:grid-cols-12 lg:gap-12 lg:pb-24"
     >
-      <div className="landing-rise lg:col-span-7 lg:self-end">
+      <div className="landing-rise lg:col-span-7">
         <p className="landing-display flex items-center gap-2 text-[0.85rem] tracking-[0.12em] text-[var(--landing-blue)]">
           <Crown size={16} aria-hidden="true" />
           Entreno · Nutrición · Peso
@@ -39,31 +41,35 @@ export default function LandingHero() {
             <Stroke />
           </span>
         </h1>
-      </div>
-
-      <div className="landing-rise landing-rise-2 relative lg:col-span-5 lg:row-span-2">
-        <div className="landing-vault mx-auto w-[min(100%,300px)] p-3 lg:w-[320px] lg:rotate-2">
-          <img
-            src="/landing/dashboard.webp"
-            alt="Panel principal de Ascension con el peso de hoy, el total perdido y la fecha estimada para llegar al objetivo"
-            width="470"
-            height="1024"
-            className="block w-full"
-            fetchPriority="high"
-          />
-        </div>
-      </div>
-
-      <div className="landing-rise landing-rise-3 lg:col-span-7 lg:max-w-xl">
         <p className="max-w-[46ch] text-[1.02rem] leading-relaxed text-[var(--landing-muted)]">
           Récords por ejercicio y por variante, comidas registradas con una foto, peso y pasos cada
           día. Una PWA gratuita en español que funciona sin conexión y se instala en el móvil.
         </p>
+        <a
+          href="#funciones"
+          className="landing-display mt-6 hidden min-h-11 items-center gap-2 text-[0.85rem] tracking-[0.1em] text-[var(--landing-muted)] hover:text-white focus-visible:text-white lg:inline-flex"
+        >
+          Ver qué incluye
+          <ArrowDown size={16} aria-hidden="true" />
+        </a>
+      </div>
 
-        <div id="entrar" className="mt-7 flex flex-wrap items-center gap-5">
-          <div className="flex min-h-11 items-center">
+      <div
+        id="entrar"
+        className="landing-rise landing-rise-2 landing-sheet w-full max-w-md justify-self-center p-5 sm:p-7 lg:col-span-5 lg:justify-self-end"
+        aria-labelledby="entrar-title"
+        role="region"
+      >
+        <h2 id="entrar-title" className="landing-display text-[1.9rem] font-bold text-white">
+          Entra en Ascension
+        </h2>
+        <p className="mt-1 mb-5 text-[0.9rem] text-[var(--landing-muted)]">
+          Gratis para uso personal, sin anuncios y sin tarjeta.
+        </p>
+        <EmailAccess
+          alternatives={
             <GoogleSignInButton
-              className="landing-google-cta"
+              className="landing-alt-cta w-full"
               onCredential={async (credential) => {
                 const res = await api.post<{ token?: string }>('/auth/login', {
                   token: credential,
@@ -72,28 +78,8 @@ export default function LandingHero() {
                 login(res.data.token);
               }}
             />
-          </div>
-          <a
-            href="#funciones"
-            className="landing-display flex min-h-11 items-center gap-2 text-[0.85rem] tracking-[0.1em] text-[var(--landing-muted)] hover:text-white focus-visible:text-white"
-          >
-            Ver qué incluye
-            <ArrowDown size={16} aria-hidden="true" />
-          </a>
-        </div>
-        <div
-          className="mt-6 flex max-w-sm items-center gap-3 text-[0.8rem] text-[var(--landing-muted)]"
-          aria-hidden="true"
-        >
-          <span className="flex-1 border-t border-current opacity-40" />o con tu email
-          <span className="flex-1 border-t border-current opacity-40" />
-        </div>
-        <div className="mt-4">
-          <EmailAccess />
-        </div>
-        <p className="mt-3 text-[0.8rem] text-[var(--landing-muted)]">
-          Con Google, con tu email o con la huella del móvil. Gratis y sin tarjeta.
-        </p>
+          }
+        />
       </div>
     </section>
   );

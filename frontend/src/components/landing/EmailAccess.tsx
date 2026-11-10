@@ -1,5 +1,6 @@
-import { useId, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { KeyRound } from 'lucide-react';
+import { EMAIL_ACCESS_EVENT, type AccessMode } from './emailAccessEvents';
 import { useAuth } from '../../context/AuthContext';
 import { apiErrorMessage } from '../../lib/coach/api';
 import {
@@ -12,22 +13,26 @@ import {
 import { isPasskeyCancel, passkeysSupported } from '../../utils/webauthn';
 import { markPasskeyPromptAnswered } from '../../utils/passkeyPrompt';
 
-type Mode = 'login' | 'register';
+type Mode = AccessMode;
 type Step = 'form' | 'code' | 'forgot' | 'forgot-sent';
 
 const field =
   'landing-field w-full min-h-11 rounded-[4px] border-2 border-[var(--landing-ink)] bg-[var(--paper)] px-3 text-base text-[var(--landing-ink)]';
 const primary = 'landing-google-cta w-full';
+const secondary = 'landing-alt-cta w-full';
 const linkButton =
-  'min-h-11 bg-transparent p-0 text-[0.85rem] font-bold text-[var(--landing-ink)] underline';
+  'min-h-11 self-start bg-transparent p-0 text-[0.85rem] font-bold text-[var(--landing-ink)] underline underline-offset-4';
 
 /**
  * Sign-in and sign-up with email, the code that confirms a new account, the forgotten-password
  * link and the passkey button. Errors never tell whether an email has an account.
+ * `alternatives` (the Google button) sits under the email form as the second way in.
  */
-export default function EmailAccess() {
+export default function EmailAccess({ alternatives }: { alternatives?: ReactNode }) {
   const { login } = useAuth();
   const ids = useId();
+  const emailInput = useRef<HTMLInputElement>(null);
+  const [focusRequest, setFocusRequest] = useState(0);
   const [mode, setMode] = useState<Mode>('login');
   const [step, setStep] = useState<Step>('form');
   const [email, setEmail] = useState('');
@@ -36,6 +41,23 @@ export default function EmailAccess() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const registering = mode === 'register';
+
+  // Calls to action elsewhere on the page open the panel in their mode, ready to type.
+  useEffect(() => {
+    const open = (event: Event) => {
+      const next = (event as CustomEvent<Mode>).detail;
+      setError('');
+      setMode(next === 'register' ? 'register' : 'login');
+      setStep('form');
+      setFocusRequest((n) => n + 1);
+    };
+    window.addEventListener(EMAIL_ACCESS_EVENT, open);
+    return () => window.removeEventListener(EMAIL_ACCESS_EVENT, open);
+  }, []);
+
+  useEffect(() => {
+    if (focusRequest) emailInput.current?.focus({ preventScroll: true });
+  }, [focusRequest]);
 
   const run = async (action: () => Promise<void>, fallback: string) => {
     setError('');
@@ -107,7 +129,7 @@ export default function EmailAccess() {
 
   if (step === 'code') {
     return (
-      <form onSubmit={confirm} className="flex w-full max-w-sm flex-col gap-3" noValidate>
+      <form onSubmit={confirm} className="flex w-full flex-col gap-3" noValidate>
         <p className="text-[0.95rem]">
           Te hemos enviado un código de 6 cifras a <strong>{email.trim()}</strong>. Escríbelo para
           crear la cuenta. Revisa también la carpeta de spam.
@@ -139,7 +161,7 @@ export default function EmailAccess() {
 
   if (step === 'forgot' || step === 'forgot-sent') {
     return (
-      <form onSubmit={forgot} className="flex w-full max-w-sm flex-col gap-3" noValidate>
+      <form onSubmit={forgot} className="flex w-full flex-col gap-3" noValidate>
         {step === 'forgot-sent' ? (
           <p role="status" className="text-[0.95rem]">
             Si hay una cuenta con ese email, te hemos enviado un enlace para elegir otra contraseña.
@@ -175,13 +197,29 @@ export default function EmailAccess() {
     );
   }
 
+  const tab = (target: Mode, label: string) => (
+    <button
+      type="button"
+      aria-pressed={mode === target}
+      className="landing-switch min-h-11 flex-1 px-3 text-[0.9rem] font-bold"
+      onClick={() => switchTo(target)}
+    >
+      {label}
+    </button>
+  );
+
   return (
-    <div className="flex w-full max-w-sm flex-col gap-3">
+    <div className="flex w-full flex-col gap-3">
+      <div role="group" aria-label="Tipo de acceso" className="landing-switches flex">
+        {tab('login', 'Iniciar sesión')}
+        {tab('register', 'Crear cuenta')}
+      </div>
       <form onSubmit={submit} className="flex flex-col gap-3" noValidate>
         <label htmlFor={`${ids}-email`} className="text-sm font-bold">
           Email
         </label>
         <input
+          ref={emailInput}
           id={`${ids}-email`}
           className={field}
           type="email"
@@ -206,12 +244,16 @@ export default function EmailAccess() {
         />
         {registering && (
           <p id={`${ids}-hint`} className="text-[0.8rem] text-[var(--landing-muted)]">
-            Mínimo 8 caracteres. Mejor una frase que solo tú recuerdes.
+            Mínimo 8 caracteres. Te mandaremos un código al email para confirmar la cuenta.
           </p>
         )}
         {alert}
-        <button type="submit" className={primary} disabled={busy || !email.trim() || !password}>
-          {busy ? 'Un momento…' : registering ? 'Crear cuenta' : 'Entrar con email'}
+        <button
+          type="submit"
+          className={`${primary} mt-1`}
+          disabled={busy || !email.trim() || !password}
+        >
+          {busy ? 'Un momento…' : registering ? 'Recibir código' : 'Entrar'}
         </button>
       </form>
       {!registering && (
@@ -219,10 +261,16 @@ export default function EmailAccess() {
           ¿Has olvidado la contraseña?
         </button>
       )}
+      <div
+        className="flex items-center gap-3 text-[0.8rem] text-[var(--landing-muted)]"
+        aria-hidden="true"
+      >
+        <span className="flex-1 border-t border-current opacity-40" />o<span className="flex-1 border-t border-current opacity-40" />
+      </div>
       {!registering && passkeysSupported() && (
         <button
           type="button"
-          className="flex min-h-11 items-center justify-center gap-2 rounded-[4px] border-2 border-[var(--landing-ink)] px-4 text-[0.9rem] font-bold"
+          className={`${secondary} flex items-center justify-center gap-2`}
           disabled={busy}
           onClick={passkey}
         >
@@ -230,16 +278,7 @@ export default function EmailAccess() {
           Entrar con huella o llave de acceso
         </button>
       )}
-      <p className="text-[0.85rem]">
-        {registering ? '¿Ya tienes cuenta? ' : '¿No tienes cuenta? '}
-        <button
-          type="button"
-          className={linkButton}
-          onClick={() => switchTo(registering ? 'login' : 'register')}
-        >
-          {registering ? 'Inicia sesión' : 'Créala con tu email'}
-        </button>
-      </p>
+      {alternatives}
     </div>
   );
 }

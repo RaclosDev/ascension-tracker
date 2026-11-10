@@ -1,6 +1,6 @@
 import { Dumbbell, Camera, Scale, Download } from 'lucide-react';
 import DripButton from './DripButton';
-import { requestGoogleSignIn } from '../GoogleSignInButton';
+import { requestEmailAccess } from './emailAccessEvents';
 
 const groups = [
   {
@@ -47,11 +47,11 @@ export default function LandingFeatures() {
           Todo lo que registras, en un sitio
         </h2>
         <p className="mt-4 max-w-[38ch] text-[var(--landing-muted)]">
-          Gratis para uso personal: sin anuncios y sin cuenta nueva. Código abierto, en español.
+          Gratis para uso personal y sin anuncios. Código abierto, en español.
         </p>
         <div className="mt-6" id="datos">
-          <DripButton href="#entrar" onClick={requestGoogleSignIn}>
-            Empezar ahora
+          <DripButton href="#entrar" onClick={requestEmailAccess('register')}>
+            Crear mi cuenta
           </DripButton>
         </div>
       </div>

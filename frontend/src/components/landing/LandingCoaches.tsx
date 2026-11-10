@@ -1,6 +1,6 @@
 import { ClipboardList, MessageSquare, Users } from 'lucide-react';
 import DripButton from './DripButton';
-import { requestGoogleSignIn } from '../GoogleSignInButton';
+import { requestEmailAccess } from './emailAccessEvents';
 import { planName } from '../../lib/coach/plan';
 import { usePublicInfo } from '../../lib/publicInfo';
 
@@ -114,14 +114,13 @@ export default function LandingCoaches() {
               </>
             ) : (
               <>
-                entra con tu cuenta de Google y escríbenos desde Modo entrenador › Plan y
-                facturación.
+                entra con tu cuenta y escríbenos desde Modo entrenador › Plan y facturación.
               </>
             )}{' '}
             Te respondemos por email.
           </p>
         </div>
-        <DripButton href="#entrar" onClick={requestGoogleSignIn} className="shrink-0">
+        <DripButton href="#entrar" onClick={requestEmailAccess('register')} className="shrink-0">
           Probar 14 días gratis
         </DripButton>
       </div>
