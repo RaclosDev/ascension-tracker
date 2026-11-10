@@ -70,7 +70,8 @@ public class SettingsService {
             settings.setKcal((int) Math.round(p * 4 + f * 9 + c * 4));
         }
 
-        if (isNew && dto.getStartWeight() != null) {
+        // Solo sembramos el primer pesaje si el usuario lleva peso y medidas (null = todo activo).
+        if (isNew && dto.getStartWeight() != null && tracksBody(settings.getAppModules())) {
             WeightEntry entry = new WeightEntry();
             entry.setUserEmail(userEmail);
             entry.setDate(LocalDate.now());
@@ -82,6 +83,10 @@ public class SettingsService {
     }
 
 
+
+    private static boolean tracksBody(String appModules) {
+        return appModules == null || "FULL".equals(appModules) || "TRAINING_BODY".equals(appModules);
+    }
 
     private UserSettingsDTO toDTO(UserSettings s) {
         return UserSettingsDTO.builder()
