@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PasskeysCard } from './PasskeysCard';
@@ -107,6 +107,16 @@ describe('PasskeyPrompt', () => {
     localStorage.clear();
     mocks.passkeysSupported.mockReturnValue(true);
     mocks.platformPasskeyAvailable.mockResolvedValue(true);
+    mocks.listPasskeys.mockResolvedValue([]);
+  });
+
+  it('does not offer activation when the account already has a passkey', async () => {
+    mocks.listPasskeys.mockResolvedValue([{ id: 7, name: 'iPhone' }]);
+    withQueries(<PasskeyPrompt email="ana@example.com" />);
+    await act(async () => {
+      await mocks.listPasskeys.mock.results[0].value;
+    });
+    expect(screen.queryByRole('button', { name: 'Activar huella' })).not.toBeInTheDocument();
   });
 
   it('asks once per account and remembers "Ahora no"', async () => {

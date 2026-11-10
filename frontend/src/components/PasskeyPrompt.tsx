@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Fingerprint } from 'lucide-react';
-import { addPasskeyOnThisDevice } from '../auth/accountAccess';
+import { addPasskeyOnThisDevice, listPasskeys } from '../auth/accountAccess';
 import { apiErrorMessage } from '../lib/coach/api';
 import { markPasskeyPromptAnswered, passkeyPromptAnswered } from '../utils/passkeyPrompt';
 import {
@@ -20,9 +20,13 @@ export function PasskeyPrompt({ email }: { email: string }) {
   useEffect(() => {
     let active = true;
     if (!passkeysSupported() || passkeyPromptAnswered(email)) return;
-    void platformPasskeyAvailable().then((available) => {
-      if (active && available) setVisible(true);
-    });
+    void Promise.all([platformPasskeyAvailable(), listPasskeys()])
+      .then(([available, passkeys]) => {
+        if (active && available && passkeys.length === 0) setVisible(true);
+      })
+      .catch(() => {
+        // If the account cannot be checked, avoid offering a duplicate registration.
+      });
     return () => {
       active = false;
     };
