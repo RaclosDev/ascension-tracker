@@ -154,21 +154,33 @@ body {
   touch-action: pan-y;
 }
 
-/* Franja sólida sobre la barra de estado de la PWA en iOS. Con black-translucent la
-   app ocupa toda la pantalla y los iconos de iOS son blancos; sin un fondo oscuro
-   detrás, iOS añade un difuminado para legibilidad sobre el papel claro. Esta franja
-   del alto exacto del safe-area lo evita y deja la barra limpia como en la web.
-   Mide 0 px fuera de la PWA (safe-area-inset-top = 0), así no afecta a web ni escritorio. */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: env(safe-area-inset-top, 0px);
-  background: #0f172a;
-  z-index: 2147483000;
-  pointer-events: none;
+/* Franja para la barra de estado de la app instalada en iOS 26+. Sin una caja fija de
+   color sólido en el borde superior, iOS difumina unos 40 pt de la página bajo la barra
+   de estado (scroll edge effect) y ningún meta ni propiedad CSS lo apaga. WebKit busca
+   esa caja 4 px por debajo del centro del borde superior: tiene que ser un elemento real
+   (no un pseudo-elemento), fijo, de al menos el 90 % del ancho y más de 10 px de alto.
+   El color se lee del estilo y background-clip: text hace que no pinte nada, así que la
+   página se ve igual. Solo existe en la app instalada de iOS. */
+.ios-status-bar-band {
+  display: none;
+}
+@media (display-mode: standalone) {
+  @supports (-webkit-touch-callout: none) {
+    .ios-status-bar-band {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 12px;
+      background-color: var(--wall, #0f172a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      /* Lo más alto, para que ningún menú ni modal tape el punto que muestrea iOS. */
+      z-index: 2147483647;
+      pointer-events: none;
+    }
+  }
 }
 
 .app-container {
@@ -3151,36 +3163,9 @@ button, a, input, select, textarea, [role=button], [onclick] {
 
 @media all and (display-mode: standalone) {
   html, body, .app-root, .app-container {
-    /* Sin cap de height:100vh: fijarla convertía .main-content en un scroll-view interno
-       que iOS 26/27 escarcha bajo la barra de estado (scroll edge effect) solo en la PWA.
-       Con min-height el standalone scrollea el documento como la web, igual que PorrApp. */
+    /* El difuminado superior de iOS 26+ no depende de quién scrollea: se evita con
+       .ios-status-bar-band. Aquí el layout es el mismo que en la web. */
     min-height: 100dvh !important;
-  }
-  /* min-height solo no basta: mientras .app-root mida 100dvh y .main-content tenga
-     overflow propio, sigue habiendo scroll interno y iOS lo difumina. Aquí se suelta
-     la altura y los overflow para que scrollee el documento. */
-  .app-root {
-    height: auto;
-  }
-  body {
-    overflow-x: clip;
-    overflow-y: visible;
-  }
-  .app-container {
-    overflow: visible;
-  }
-  .main-content {
-    overflow-y: visible;
-  }
-  /* Con scroll de documento, el fondo no debe moverse detrás de un modal abierto. */
-  body:has(
-      .modal-backdrop,
-      .workout-sheet-overlay,
-      .bottom-sheet-overlay,
-      [role='dialog'],
-      [role='alertdialog']
-    ) {
-    overflow: hidden;
   }
 }
 
