@@ -22,6 +22,11 @@
   /* Sombra dura de las hojas: más densa sobre la pared oscura para que se despeguen igual. */
   --sheet-shadow: rgba(0, 0, 0, 0.5);
   --sheet: #fffdf7;
+  --sheet-edge: var(--ink);
+  --sheet-ink: var(--ink);
+  --inset-card-bg: var(--paper);
+  --inset-card-edge: rgba(17, 24, 39, 0.55);
+  --inset-card-edge-hover: rgba(17, 24, 39, 0.6);
   color-scheme: dark;
   /* Grano de papel: ruido SVG en línea, sin imagen que precachear. */
   --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .07 0 0 0 0 .09 0 0 0 0 .15 0 0 0 .12 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
@@ -404,7 +409,7 @@ body,
   position: absolute;
   inset: 0;
   z-index: -1;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--sheet-edge);
   border-radius: 4px;
   background-color: var(--sheet);
   box-shadow: 5px 6px 0 var(--sheet-shadow);
@@ -445,15 +450,15 @@ body,
 /* Dentro de una hoja, las tarjetas son recuadros blancos con canto de tinta, sin giro. */
 :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
   .card {
-  background: var(--paper);
-  border: 1.5px solid rgba(17, 24, 39, 0.55);
+  background: var(--inset-card-bg);
+  border: 1.5px solid var(--inset-card-edge);
   border-radius: 4px;
   box-shadow: none;
 }
 @media (hover: hover) {
   :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
     .card:hover {
-    border-color: rgba(17, 24, 39, 0.6);
+    border-color: var(--inset-card-edge-hover);
   }
 }
 .card-title,
@@ -513,23 +518,23 @@ body,
 [role='dialog'].bg-card,
 [role='alertdialog'] {
   background-color: var(--sheet);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--sheet-edge);
   border-radius: 4px;
   box-shadow: var(--shadow-elevated);
 }
 [role='menu'],
 [role='listbox'] {
-  background: #fffdf7;
-  border: 1px solid var(--ink);
+  background: var(--sheet);
+  border: 1px solid var(--sheet-edge);
   border-radius: 4px;
-  box-shadow: 3px 4px 0 rgba(17, 24, 39, 0.3);
+  box-shadow: 3px 4px 0 var(--menu-shadow, rgba(17, 24, 39, 0.3));
 }
 .paper-toast {
   position: relative;
   overflow: visible !important;
   background: var(--sheet) !important;
-  color: var(--ink) !important;
-  border: 2px solid var(--ink) !important;
+  color: var(--sheet-ink) !important;
+  border: 2px solid var(--sheet-edge) !important;
   border-radius: 4px !important;
   box-shadow: 4px 5px 0 var(--sheet-shadow) !important;
 }
@@ -539,13 +544,13 @@ body,
 /* Tracking: cada semana es una hoja de papel sobre la pared. */
 .calendar-week {
   background: var(--sheet);
-  color: var(--ink);
-  border: 2px solid var(--ink);
+  color: var(--sheet-ink);
+  border: 2px solid var(--sheet-edge);
   border-radius: 4px;
   box-shadow: 5px 6px 0 var(--sheet-shadow);
 }
 .calendar-week:hover {
-  border-color: var(--ink);
+  border-color: var(--sheet-edge);
 }
 .calendar-day {
   background: var(--bg-card);
@@ -1066,10 +1071,8 @@ html[data-mode='light'] .btn-primary:hover {
 }
 
 /*
- * Modo oscuro: las hojas son de tinta, no de papel. Heredan los tokens de la pared (texto crema,
- * acento aclarado, paleta de Tailwind original) y se separan del fondo con un canto crema fino.
- * Solo la hoja clave de cada pantalla (.sheet-key) conserva el canto grueso y la sombra dura.
- * La landing se queda en papel.
+ * Las hojas oscuras usan texto crema y la paleta de la pared. Comparten canto,
+ * radios y desplazamiento de sombra con las claras. La landing mantiene su paleta.
  */
 html:not([data-mode='light'])
   :is(
@@ -1191,55 +1194,13 @@ html:not([data-mode='light'])
   --border-accent: inherit;
   --color-success-accent: inherit;
   --gradient-primary: inherit;
-  --dark-sheet: #17233a;
-  --dark-edge: rgba(243, 236, 220, 0.28);
-}
-html:not([data-mode='light'])
-  :is(.card, .chart-card, .progress-card):not([role='dialog'], [role='alertdialog']):not(
-    :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
-      *,
-    .landing *
-  )::before {
-  border: 1.5px solid var(--dark-edge);
-  background-color: var(--dark-sheet);
-  box-shadow: none;
-}
-/* La hoja clave de la pantalla: canto crema grueso y sombra dura, como la hoja de la landing. */
-html:not([data-mode='light']) .sheet-key.sheet-key:is(.card, .chart-card, .progress-card)::before {
-  border: 2px solid var(--wall-ink);
-  box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.55);
-}
-html:not([data-mode='light'])
-  :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet):not(
-    .landing *
-  )
-  :is(.card, .kpi-card),
-html:not([data-mode='light']) .kpi-card {
-  background: rgba(243, 236, 220, 0.04);
-  border: 1px solid var(--wall-line-soft);
-}
-html:not([data-mode='light'])
-  :is(
-    .modal-content,
-    .bottom-sheet-content,
-    .workout-sheet,
-    [role='dialog'].bg-card,
-    [role='alertdialog'],
-    .calendar-week
-  ):not(.landing *) {
-  background-color: var(--dark-sheet);
-  color: var(--text-primary);
-  border: 1.5px solid rgba(243, 236, 220, 0.45);
-}
-html:not([data-mode='light']) :is([role='menu'], [role='listbox']):not(.landing *) {
-  background: var(--dark-sheet);
-  border-color: rgba(243, 236, 220, 0.45);
-  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.45);
-}
-html:not([data-mode='light']) .paper-toast {
-  background: var(--dark-sheet) !important;
-  color: var(--text-primary) !important;
-  border: 1.5px solid rgba(243, 236, 220, 0.45) !important;
+  --sheet: #17233a;
+  --sheet-edge: rgba(243, 236, 220, 0.45);
+  --sheet-ink: var(--text-primary);
+  --inset-card-bg: rgba(243, 236, 220, 0.04);
+  --inset-card-edge: var(--wall-line-soft);
+  --inset-card-edge-hover: var(--border-medium);
+  --menu-shadow: rgba(0, 0, 0, 0.45);
 }
 html:not([data-mode='light'])
   :is(.card, .modal-content, [role='dialog'], [role='alertdialog']):not(.landing *)
@@ -1258,7 +1219,7 @@ html:not([data-mode='light'])
 html:not([data-mode='light'])
   :is(.card, .modal-content, [role='dialog'], [role='alertdialog']):not(.landing *)
   .btn-secondary {
-  border-color: var(--border-medium);
+  border-color: var(--sheet-edge);
   color: var(--text-primary);
 }
 html:not([data-mode='light']) .marker-ink {
@@ -1297,8 +1258,7 @@ html:not([data-mode='light']) .marker-ink {
 .kpi-strip {
   padding: 0;
 }
-.kpi-strip .kpi-cell,
-html:not([data-mode='light']) .kpi-strip .kpi-cell {
+.kpi-strip .kpi-cell {
   background: none;
   border: 0;
   border-radius: 0;
