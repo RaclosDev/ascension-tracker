@@ -30,13 +30,6 @@ public class PasswordAuthController {
         }
     }
 
-    public record ConfirmRequest(String email, String code, String password) {
-        @Override
-        public String toString() {
-            return "ConfirmRequest[]";
-        }
-    }
-
     public record LoginRequest(String email, String password) {
         @Override
         public String toString() {
@@ -72,15 +65,9 @@ public class PasswordAuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody RegisterRequest body) {
-        passwords.register(body.email(), body.password());
-        return ResponseEntity.accepted().body(Map.of("verificationRequired", true, "message", CHECK_EMAIL));
-    }
-
-    @PostMapping("/register/confirm")
-    public ResponseEntity<Map<String, String>> confirm(@RequestBody ConfirmRequest body, HttpServletRequest request) {
+    public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest body, HttpServletRequest request) {
         requireTrustedOrigin(request);
-        return open(passwords.confirmRegistration(body.email(), body.code(), body.password()), request);
+        return open(passwords.register(body.email(), body.password()), request);
     }
 
     @PostMapping("/login")

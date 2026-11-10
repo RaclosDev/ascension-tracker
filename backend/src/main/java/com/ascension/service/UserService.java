@@ -4,10 +4,12 @@ import com.ascension.util.Emails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -75,6 +77,13 @@ public class UserService {
         }
     }
 
+    public boolean hasUnverifiedEmail(String email) {
+        Boolean unverified = jdbcTemplate.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM users WHERE email = ? AND email_verified = FALSE)",
+                Boolean.class, Emails.normalize(email));
+        return Boolean.TRUE.equals(unverified);
+    }
+
     @Transactional
     public void ensureUserExists(String email, String name, String picture, String googleSub) {
         if (email == null || email.isBlank()) {
@@ -86,8 +95,13 @@ public class UserService {
                      "ON CONFLICT (email) DO UPDATE SET " +
                      "name = COALESCE(EXCLUDED.name, users.name), " +
                      "picture = COALESCE(EXCLUDED.picture, users.picture), " +
-                     "google_sub = COALESCE(users.google_sub, EXCLUDED.google_sub)";
-        jdbcTemplate.update(sql, cleanEmail, name, picture, googleSub);
+                     "google_sub = COALESCE(users.google_sub, EXCLUDED.google_sub) " +
+                     "WHERE users.email_verified = TRUE OR EXCLUDED.google_sub IS NULL";
+        int updated = jdbcTemplate.update(sql, cleanEmail, name, picture, googleSub);
+        if (updated == 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Este email ya tiene una cuenta. Entra con email y contraseña.");
+        }
 
     }
 

@@ -1,6 +1,6 @@
 package com.ascension.service.auth;
 
-/** Transactional account emails: sign-up code, password reset link and account notices. */
+/** Transactional account emails for password reset and account notices. */
 public interface EmailSender {
 
     /** Whether a provider is configured; without one no email can be sent. */

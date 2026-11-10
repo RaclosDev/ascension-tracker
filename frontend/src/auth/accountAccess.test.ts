@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   addPasskeyOnThisDevice,
-  confirmSignUp,
   deletePasskey,
   listPasskeys,
   requestPasswordReset,
@@ -33,15 +32,13 @@ describe('accountAccess', () => {
   it('calls the password endpoints and returns the session token', async () => {
     mocks.post.mockResolvedValue({ data: { token: 't' } });
 
-    await startSignUp('a@b.es', 'clave');
-    expect(await confirmSignUp('a@b.es', '123456', 'clave')).toBe('t');
+    expect(await startSignUp('a@b.es', 'clave')).toBe('t');
     expect(await signInWithPassword('a@b.es', 'clave')).toBe('t');
     await requestPasswordReset('a@b.es');
     expect(await resetPassword('tok', 'clave')).toBe('t');
 
     expect(mocks.post.mock.calls.map(([url]) => url)).toEqual([
       '/auth/password/register',
-      '/auth/password/register/confirm',
       '/auth/password/login',
       '/auth/password/reset-request',
       '/auth/password/reset',

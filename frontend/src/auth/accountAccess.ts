@@ -1,7 +1,6 @@
 /**
- * Sign-in without Google: email and password (with a code by email to sign up and a link to reset
- * it) and passkeys. Every call that opens a session answers `{ token }`; the refresh cookie comes
- * with it.
+ * Sign-in without Google: email and password, a link to reset the password, and passkeys.
+ * Every call that opens a session answers `{ token }`; the refresh cookie comes with it.
  */
 import api from '../api/client';
 import { createPasskey, deviceName, getPasskey, type BrowserOptions } from '../utils/webauthn';
@@ -27,17 +26,9 @@ const sessionToken = (data: SessionResponse) => {
   return data.token;
 };
 
-/** Sends the sign-up code. The answer is the same whether or not the email has an account. */
-export async function startSignUp(email: string, password: string): Promise<void> {
-  await api.post('/auth/password/register', { email, password });
-}
-
-export async function confirmSignUp(email: string, code: string, password: string) {
-  const { data } = await api.post<SessionResponse>('/auth/password/register/confirm', {
-    email,
-    code,
-    password,
-  });
+/** Creates an account and opens its session. */
+export async function startSignUp(email: string, password: string) {
+  const { data } = await api.post<SessionResponse>('/auth/password/register', { email, password });
   return sessionToken(data);
 }
 

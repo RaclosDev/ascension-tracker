@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Sign-up with a code by email, sign-in with password and reset by link, without revealing accounts. */
+/** Direct sign-up, password sign-in and reset by link. */
 @SpringBootTest
 @org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 @DisabledIfDockerUnavailable
@@ -47,10 +47,11 @@ class PasswordAuthIntegrationTest {
     /** Keeps the emails instead of sending them. */
     static class CapturingEmailSender implements EmailSender {
         final List<Email> sent = new CopyOnWriteArrayList<>();
+        boolean available = true;
 
         @Override
         public boolean enabled() {
-            return true;
+            return available;
         }
 
         @Override
@@ -77,36 +78,32 @@ class PasswordAuthIntegrationTest {
 
     @BeforeEach
     void freshClient() {
+        mail.available = true;
+        mail.sent.clear();
         // Each test comes from its own address, so the per-IP login bucket never runs out.
         ThreadLocalRandom random = ThreadLocalRandom.current();
         ip = "10." + random.nextInt(256) + "." + random.nextInt(256) + "." + random.nextInt(1, 255);
     }
 
     @Test
-    void signUpNeedsTheEmailedCodeAndThenSignsInWithThePassword() throws Exception {
+    void signUpOpensASessionWithoutEmailAndThenSignsInWithThePassword() throws Exception {
         String email = email();
-        call("/api/auth/password/register", body(email, PASSWORD))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.verificationRequired").value(true));
-        String code = lastCodeFor(email);
-        assertThat(users.findByEmail(email)).isEmpty();
+        mail.available = false;
+        try {
+            call("/api/auth/password/register", body(email, PASSWORD))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.token").isString())
+                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refreshToken=")));
+            assertThat(users.findByEmail(email)).isPresent();
+            assertThat(users.hasUnverifiedEmail(email)).isTrue();
+            assertThat(mail.sent).isEmpty();
 
-        call("/api/auth/password/register/confirm", confirm(email, wrong(code), PASSWORD))
-                .andExpect(status().isBadRequest());
-        call("/api/auth/password/register/confirm", confirm(email, code, "otra-contrasena-larga"))
-                .andExpect(status().isBadRequest());
-        call("/api/auth/password/register/confirm", confirm(email, code, PASSWORD))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").isString())
-                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refreshToken=")));
-        assertThat(users.findByEmail(email)).isPresent();
-        // The code works once.
-        call("/api/auth/password/register/confirm", confirm(email, code, PASSWORD))
-                .andExpect(status().isBadRequest());
-
-        call("/api/auth/password/login", body(email.toUpperCase(), PASSWORD))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").isString());
+            call("/api/auth/password/login", body(email.toUpperCase(), PASSWORD))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.token").isString());
+        } finally {
+            mail.available = true;
+        }
     }
 
     @Test
@@ -133,16 +130,12 @@ class PasswordAuthIntegrationTest {
     }
 
     @Test
-    void signingUpWithATakenEmailAnswersTheSameAndWarnsTheOwner() throws Exception {
+    void signingUpWithATakenEmailReturnsConflict() throws Exception {
         String email = registeredWithoutEmail();
         mail.sent.clear();
         call("/api/auth/password/register", body(email, PASSWORD))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.verificationRequired").value(true));
-        assertThat(mail.sent).singleElement().satisfies(sent -> {
-            assertThat(sent.to()).isEqualTo(email);
-            assertThat(sent.subject()).contains("Ya tienes una cuenta");
-        });
+                .andExpect(status().isConflict());
+        assertThat(mail.sent).isEmpty();
     }
 
     @Test
@@ -158,6 +151,11 @@ class PasswordAuthIntegrationTest {
     @Test
     void sessionEndpointsNeedATrustedOrigin() throws Exception {
         String email = registered();
+        mvc.perform(post("/api/auth/password/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Origin", "https://evil.example")
+                        .content(body(email(), PASSWORD)))
+                .andExpect(status().isForbidden());
         mvc.perform(post("/api/auth/password/login")
                         .with(request -> {
                             request.setRemoteAddr(ip);
@@ -210,8 +208,7 @@ class PasswordAuthIntegrationTest {
         call("/api/auth/password/reset", reset("no-existe", "nueva-clave-segura-7")).andExpect(status().isBadRequest());
     }
 
-    /** Creates an account with {@link #PASSWORD} through the real sign-up. */
-    /** An account created without going through the code email, so the per-address email throttle is untouched. */
+    /** An account created without going through the sign-up endpoint. */
     String registeredWithoutEmail() {
         String email = email();
         jdbc.update("INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)",
@@ -221,9 +218,7 @@ class PasswordAuthIntegrationTest {
 
     String registered() throws Exception {
         String email = email();
-        call("/api/auth/password/register", body(email, PASSWORD)).andExpect(status().isAccepted());
-        call("/api/auth/password/register/confirm", confirm(email, lastCodeFor(email), PASSWORD))
-                .andExpect(status().isOk());
+        call("/api/auth/password/register", body(email, PASSWORD)).andExpect(status().isOk());
         return email;
     }
 
@@ -237,10 +232,6 @@ class PasswordAuthIntegrationTest {
             r.setRemoteAddr(address);
             return r;
         });
-    }
-
-    String lastCodeFor(String email) {
-        return lastMatch(email, Pattern.compile("es (\\d{6})\\."));
     }
 
     String lastResetTokenFor(String email) {
@@ -262,16 +253,8 @@ class PasswordAuthIntegrationTest {
         return "pw-" + UUID.randomUUID() + "@login.test";
     }
 
-    static String wrong(String code) {
-        return code.equals("000000") ? "111111" : "000000";
-    }
-
     static String body(String email, String password) {
         return "{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}";
-    }
-
-    static String confirm(String email, String code, String password) {
-        return "{\"email\":\"" + email + "\",\"code\":\"" + code + "\",\"password\":\"" + password + "\"}";
     }
 
     static String reset(String token, String password) {
