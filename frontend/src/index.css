@@ -3156,6 +3156,32 @@ button, a, input, select, textarea, [role=button], [onclick] {
        Con min-height el standalone scrollea el documento como la web, igual que PorrApp. */
     min-height: 100dvh !important;
   }
+  /* min-height solo no basta: mientras .app-root mida 100dvh y .main-content tenga
+     overflow propio, sigue habiendo scroll interno y iOS lo difumina. Aquí se suelta
+     la altura y los overflow para que scrollee el documento. */
+  .app-root {
+    height: auto;
+  }
+  body {
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+  .app-container {
+    overflow: visible;
+  }
+  .main-content {
+    overflow-y: visible;
+  }
+  /* Con scroll de documento, el fondo no debe moverse detrás de un modal abierto. */
+  body:has(
+      .modal-backdrop,
+      .workout-sheet-overlay,
+      .bottom-sheet-overlay,
+      [role='dialog'],
+      [role='alertdialog']
+    ) {
+    overflow: hidden;
+  }
 }
 
 /* Range slider (deficit split) */
