@@ -225,6 +225,7 @@ public class UserDataExportService {
                 .heightCm(s.getHeightCm())
                 .sex(s.getSex())
                 .activityFactor(s.getActivityFactor())
+                .appModules(s.getAppModules())
                 .workoutData(s.getWorkoutData())
                 .build();
     }

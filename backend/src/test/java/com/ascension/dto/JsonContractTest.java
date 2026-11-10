@@ -72,7 +72,7 @@ class JsonContractTest {
         assertMatchesGolden("user-settings", UserSettingsDTO.builder()
                 .startWeight(90.0).goalWeight(75.0).weeklyGoal(-0.5).startDate(DATE).kcal(2200)
                 .macroStrategy("balanced").customProteinPct(30.0).age(35).heightCm(180).sex("M")
-                .activityFactor(1.55).workoutData("{\"a\":1}").build());
+                .activityFactor(1.55).appModules("TRAINING").workoutData("{\"a\":1}").build());
     }
 
     @Test

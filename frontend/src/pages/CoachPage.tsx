@@ -11,6 +11,7 @@ import {
   Copy,
   CreditCard,
   Link2,
+  Share2,
   Trash2,
   UserMinus,
   Users,
@@ -99,14 +100,28 @@ function Invitations() {
     }
   };
 
+  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const share = async (value: string) => {
+    try {
+      await navigator.share({
+        title: 'Invitación a Ascension',
+        text: 'Te invito a Ascension para llevar tu seguimiento conmigo:',
+        url: value,
+      });
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') return;
+      await copy(value);
+    }
+  };
+
   return (
     <section className="card">
       <h2 className="card-title flex items-center gap-2">
         <Link2 size={18} aria-hidden /> Invitaciones
       </h2>
       <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
-        Cada enlace sirve para un alumno y caduca a los 7 días. Solo se muestra una vez: cópialo y
-        envíalo.
+        Cada enlace sirve para un alumno y caduca a los 7 días. Solo se muestra una vez: cópialo o
+        compártelo. Ábrelo con la cuenta de tu alumno, no con la tuya.
       </p>
       <button
         type="button"
@@ -135,6 +150,11 @@ function Invitations() {
           <button type="button" className="btn btn-secondary" onClick={() => copy(link)}>
             <Copy size={16} aria-hidden /> Copiar
           </button>
+          {canShare && (
+            <button type="button" className="btn btn-primary" onClick={() => share(link)}>
+              <Share2 size={16} aria-hidden /> Compartir
+            </button>
+          )}
         </div>
       )}
 

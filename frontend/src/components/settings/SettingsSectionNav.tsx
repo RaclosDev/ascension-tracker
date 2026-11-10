@@ -5,6 +5,7 @@ import {
   Database,
   Dumbbell,
   GraduationCap,
+  LayoutGrid,
   LucideIcon,
   Palette,
   Scale,
@@ -14,7 +15,8 @@ import {
 
 export const SETTINGS_SECTIONS = [
   { id: 'personal', label: 'Datos personales', icon: User },
-  { id: 'plan', label: 'Plan de adelgazamiento', icon: Activity },
+  { id: 'modules', label: 'Módulos', icon: LayoutGrid },
+  { id: 'plan', label: 'Plan de peso', icon: Activity },
   { id: 'macros', label: 'Macros', icon: Scale },
   { id: 'meals', label: 'Comidas', icon: Utensils },
   { id: 'theme', label: 'Apariencia', icon: Palette },

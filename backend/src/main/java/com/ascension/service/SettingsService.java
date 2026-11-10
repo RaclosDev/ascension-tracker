@@ -60,6 +60,7 @@ public class SettingsService {
         if (dto.getHeightCm() != null) settings.setHeightCm(dto.getHeightCm());
         if (dto.getSex() != null) settings.setSex(dto.getSex());
         if (dto.getActivityFactor() != null) settings.setActivityFactor(dto.getActivityFactor());
+        if (dto.getAppModules() != null) settings.setAppModules(dto.getAppModules().isEmpty() ? null : dto.getAppModules());
         if (dto.getWorkoutData() != null) settings.setWorkoutData(dto.getWorkoutData());
 
         if ("CUSTOM_GRAMS".equals(settings.getMacroStrategy())) {
@@ -100,6 +101,7 @@ public class SettingsService {
                 .heightCm(s.getHeightCm())
                 .sex(s.getSex())
                 .activityFactor(s.getActivityFactor())
+                .appModules(s.getAppModules())
                 .workoutData(s.getWorkoutData())
                 .build();
     }
