@@ -1047,3 +1047,243 @@ html[data-mode='light'] .btn-primary:hover {
     max-width: 1180px;
   }
 }
+
+/*
+ * Panel de entrenador: contadores y filtros sobre la pared; la lista de alumnos es una sola hoja.
+ * Desde 1024px, tabla; por debajo, filas apiladas con el borde izquierdo del color del estado.
+ */
+.coach-page {
+  display: flex;
+  flex-direction: column;
+}
+.coach-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+.coach-tabs {
+  width: auto;
+  flex: 1 1 320px;
+  max-width: 460px;
+}
+.coach-toolbar .btn {
+  min-height: 44px;
+}
+.coach-counters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin: 0;
+}
+.coach-counters > div {
+  padding: 0.75rem 0.9rem;
+  border: 2px solid var(--wall-line);
+  border-radius: 4px;
+}
+.coach-counters dt {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.coach-counters dd {
+  margin: 0.25rem 0 0;
+  color: var(--wall-ink);
+  font-family: var(--font-display);
+  font-size: 2rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.coach-counter-total {
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+.coach-chips {
+  display: flex;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.coach-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  padding: 0 0.85rem;
+  border: 2px solid var(--wall-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--wall-ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.coach-chip[aria-pressed='true'] {
+  border-color: var(--wall-active-bg);
+  background: var(--wall-active-bg);
+  color: var(--wall-active-ink);
+}
+.coach-chip:focus-visible {
+  outline: 2px solid var(--wall-ink);
+  outline-offset: 2px;
+}
+.coach-chip-count {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+.coach-muted {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+.coach-status {
+  display: flex;
+  flex-direction: column;
+}
+.coach-status-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.coach-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 999px;
+}
+.coach-pending {
+  display: inline-block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+.coach-table-wrap {
+  display: none;
+  padding: 0;
+  overflow: hidden;
+}
+.coach-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.coach-table th {
+  padding: 0.7rem 1rem;
+  border-bottom: 2px solid var(--border-medium);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+.coach-table td {
+  padding: 0.8rem 1rem;
+  border-top: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+.coach-table tbody tr:hover {
+  background: var(--bg-card-hover);
+}
+.coach-row-link {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+.coach-row-link:hover {
+  text-decoration: underline;
+}
+.coach-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.coach-cards {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+.coach-cards li {
+  border-left: 5px solid var(--border-subtle);
+}
+.coach-cards li + li {
+  border-top: 1px solid var(--border-subtle);
+}
+.coach-card-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 0.9rem;
+  color: var(--text-primary);
+}
+.coach-card-name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (min-width: 1024px) {
+  .coach-table-wrap {
+    display: block;
+  }
+  .coach-cards {
+    display: none;
+  }
+}
+@media (max-width: 480px) {
+  .coach-counters > div {
+    padding: 0.6rem;
+  }
+  .coach-counters dd {
+    font-size: 1.6rem;
+  }
+  .coach-tabs {
+    flex-basis: 100%;
+    max-width: none;
+  }
+  .coach-toolbar .btn {
+    width: 100%;
+  }
+}
+
+/* Ficha del alumno: nombre, qué comparte y la salida de la relación a mano, sin buscarla. */
+.coach-client-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+.coach-client-name {
+  margin: 0;
+  color: var(--wall-ink);
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1.05;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.coach-scopes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.coach-scopes li {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--wall-line);
+  border-radius: 999px;
+  color: var(--wall-ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.coach-end {
+  min-height: 44px;
+}
