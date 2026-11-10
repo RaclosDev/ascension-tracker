@@ -96,11 +96,12 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
   return (
     <div
       style={{
-        minHeight: '100dvh',
+        // body tiene overflow:hidden: esta pantalla tiene que desplazarse por sí misma.
+        height: '100dvh',
+        overflowY: 'auto',
+        overscrollBehaviorY: 'contain',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
         background: 'var(--bg-default, #0f172a)',
         color: 'var(--text-primary, #fff)',
         padding: '1.5rem',
@@ -115,6 +116,8 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.85)',
           width: '100%',
           maxWidth: '420px',
+          // margin:auto centra la tarjeta sin recortar su parte superior cuando no cabe.
+          margin: 'auto',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
