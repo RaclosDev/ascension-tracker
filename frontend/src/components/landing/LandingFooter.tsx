@@ -1,13 +1,9 @@
+import Wordmark from './Wordmark';
+
 export default function LandingFooter() {
   return (
     <footer className="mx-auto mt-24 flex max-w-6xl flex-wrap items-center justify-between gap-4 border-t border-[var(--landing-steel)] px-5 py-8 text-[0.85rem] text-[var(--landing-muted)] sm:px-8">
-      <img
-        src="/ascension-title.png"
-        alt="Ascension"
-        className="h-6 w-auto"
-        width="120"
-        height="24"
-      />
+      <Wordmark className="text-[1.4rem]" />
       <p className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <span>Código abierto, licencia MIT.</span>
         <a

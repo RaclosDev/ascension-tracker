@@ -1,6 +1,6 @@
 import { Dumbbell, Camera, Scale, Download } from 'lucide-react';
-import DripButton from './DripButton';
-import { requestGoogleSignIn } from '../GoogleSignInButton';
+import InkButton from './InkButton';
+import { requestEmailAccess } from './emailAccessEvents';
 
 const groups = [
   {
@@ -47,18 +47,22 @@ export default function LandingFeatures() {
           Todo lo que registras, en un sitio
         </h2>
         <p className="mt-4 max-w-[38ch] text-[var(--landing-muted)]">
-          Gratis para uso personal: sin anuncios y sin cuenta nueva. Código abierto, en español.
+          Gratis para uso personal y sin anuncios. Código abierto, en español.
         </p>
-        <div className="mt-6" id="datos">
-          <DripButton href="#entrar" onClick={requestGoogleSignIn}>
-            Empezar ahora
-          </DripButton>
+        <div className="mt-6">
+          <InkButton href="#entrar" onClick={requestEmailAccess('register')}>
+            Crear mi cuenta
+          </InkButton>
         </div>
       </div>
 
       <ul className="grid gap-px border border-[var(--landing-steel)] bg-[var(--landing-steel)] sm:grid-cols-2 lg:col-span-8">
         {groups.map((g) => (
-          <li key={g.title} className="bg-[var(--landing-bg)] p-6">
+          <li
+            key={g.title}
+            id={g.title === 'Tus datos' ? 'datos' : undefined}
+            className="bg-[var(--landing-bg)] p-6"
+          >
             <g.icon size={22} className="text-[var(--landing-blue)]" aria-hidden="true" />
             <h3 className="landing-display mt-4 text-[1.5rem] font-semibold text-white">
               {g.title}

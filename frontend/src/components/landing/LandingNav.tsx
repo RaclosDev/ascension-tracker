@@ -1,5 +1,6 @@
-import DripButton from './DripButton';
-import { requestGoogleSignIn } from '../GoogleSignInButton';
+import InkButton from './InkButton';
+import Wordmark from './Wordmark';
+import { requestEmailAccess } from './emailAccessEvents';
 
 const links = [
   { href: '#funciones', label: 'Funciones' },
@@ -11,28 +12,22 @@ export default function LandingNav() {
   return (
     <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
       <a href="#inicio" className="flex min-h-11 items-center" aria-label="Ascension, inicio">
-        <img
-          src="/ascension-title.png"
-          alt=""
-          className="h-7 w-auto sm:h-8"
-          width="160"
-          height="32"
-        />
+        <Wordmark className="text-[1.6rem] sm:text-[1.85rem]" />
       </a>
-      <nav aria-label="Secciones" className="hidden items-center gap-1 sm:flex">
+      <nav aria-label="Secciones" className="hidden items-center gap-2 md:flex">
         {links.map((l) => (
           <a
             key={l.href}
             href={l.href}
-            className="landing-display flex min-h-11 items-center px-3 text-[0.8rem] tracking-[0.08em] text-[var(--landing-muted)] transition-colors hover:text-white focus-visible:text-white"
+            className="landing-display flex min-h-11 items-center px-3 text-[1.05rem] tracking-[0.06em] text-[var(--landing-muted)] transition-colors hover:text-[var(--landing-blue)] focus-visible:text-[var(--landing-blue)]"
           >
             {l.label}
           </a>
         ))}
       </nav>
-      <DripButton href="#entrar" onClick={requestGoogleSignIn}>
+      <InkButton href="#entrar" onClick={requestEmailAccess('login')}>
         Entrar
-      </DripButton>
+      </InkButton>
     </header>
   );
 }
