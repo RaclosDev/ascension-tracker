@@ -111,7 +111,9 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             return null;
         }
         // Exact endpoints first: the prefix groups below would also match them.
-        if (path.equals("/api/auth/login") || path.startsWith("/api/auth/login/")) {
+        // Every way of signing in (Google, password, passkey) shares the per-IP login bucket.
+        if (path.equals("/api/auth/login") || path.startsWith("/api/auth/login/")
+                || path.startsWith("/api/auth/password/") || path.startsWith("/api/auth/passkeys/")) {
             return "login";
         }
         if (path.equals("/api/auth/refresh") || path.startsWith("/api/auth/refresh/")) {

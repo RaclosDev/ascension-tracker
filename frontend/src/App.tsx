@@ -13,6 +13,7 @@ const DashboardPage = lazyWithRetry(() => import('./pages/DashboardPage'));
 const TrackingPage = lazyWithRetry(() => import('./pages/TrackingPage'));
 const NutritionPage = lazyWithRetry(() => import('./pages/NutritionPage'));
 const SettingsPage = lazyWithRetry(() => import('./pages/SettingsPage'));
+const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage'));
 const WorkoutPage = lazyWithRetry(() => import('./pages/WorkoutPage'));
 const UtilitiesPage = lazyWithRetry(() => import('./pages/UtilitiesPage'));
 const CoachPage = lazyWithRetry(() => import('./pages/CoachPage'));
@@ -115,6 +116,14 @@ function AppContent() {
         <Routes>
           <Route path="/login" element={<LandingPage />} />
           <Route path="/invitacion/:token" element={<RememberInvitation />} />
+          <Route
+            path="/restablecer-contrasena"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <ResetPasswordPage />
+              </Suspense>
+            }
+          />
           {legalRoutes}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
@@ -148,6 +157,7 @@ function AppContent() {
               <Route path="checkin/:linkId" element={<CoachCheckinPage />} />
               <Route path="invitacion/:token" element={<InvitationPage />} />
             </Route>
+            <Route path="/restablecer-contrasena" element={<ResetPasswordPage />} />
             <Route path="/login" element={<HomeRedirect />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
