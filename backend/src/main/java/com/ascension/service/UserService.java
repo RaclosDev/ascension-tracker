@@ -4,10 +4,12 @@ import com.ascension.util.Emails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -81,15 +83,45 @@ public class UserService {
             throw new IllegalArgumentException("User email cannot be null or blank");
         }
         String cleanEmail = Emails.normalize(email);
-        String sql = "INSERT INTO users (email, name, picture, google_sub, tokens_valid_after) " +
-                     "VALUES (?, ?, ?, ?, NOW() - INTERVAL '1 second') " +
-                     "ON CONFLICT (email) DO UPDATE SET " +
-                     "name = COALESCE(EXCLUDED.name, users.name), " +
-                     "picture = COALESCE(EXCLUDED.picture, users.picture), " +
-                     "google_sub = COALESCE(users.google_sub, EXCLUDED.google_sub)";
-        jdbcTemplate.update(sql, cleanEmail, name, picture, googleSub);
-
+        if (googleSub == null) {
+            String sql = "INSERT INTO users (email, name, picture, tokens_valid_after) " +
+                         "VALUES (?, ?, ?, NOW() - INTERVAL '1 second') " +
+                         "ON CONFLICT (email) DO UPDATE SET " +
+                         "name = COALESCE(EXCLUDED.name, users.name), " +
+                         "picture = COALESCE(EXCLUDED.picture, users.picture)";
+            jdbcTemplate.update(sql, cleanEmail, name, picture);
+            return;
+        }
+        jdbcTemplate.update("""
+                INSERT INTO users (email, name, picture, google_sub, tokens_valid_after)
+                VALUES (?, ?, ?, ?, NOW() - INTERVAL '1 second')
+                ON CONFLICT (email) DO NOTHING
+                """, cleanEmail, name, picture, googleSub);
+        GoogleLinkState current = jdbcTemplate.query("""
+                SELECT google_sub, password_hash FROM users WHERE email = ? FOR UPDATE
+                """, (rs, row) -> new GoogleLinkState(
+                        rs.getString("google_sub"), rs.getString("password_hash")), cleanEmail).getFirst();
+        if (current.googleSub() != null && !current.googleSub().equals(googleSub)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Security identity mismatch");
+        }
+        boolean converting = current.googleSub() == null || current.passwordHash() != null;
+        if (converting) {
+            jdbcTemplate.update("""
+                    UPDATE users SET google_sub = ?, password_hash = NULL, email_verified = TRUE,
+                        name = COALESCE(?, name), picture = COALESCE(?, picture),
+                        tokens_valid_after = NOW()
+                    WHERE email = ?
+                    """, googleSub, name, picture, cleanEmail);
+            jdbcTemplate.update("DELETE FROM refresh_tokens WHERE email = ?", cleanEmail);
+            jdbcTemplate.update("DELETE FROM passkeys WHERE user_id = (SELECT id FROM users WHERE email = ?)", cleanEmail);
+            jdbcTemplate.update("DELETE FROM passkey_challenges WHERE user_id = (SELECT id FROM users WHERE email = ?)", cleanEmail);
+        } else {
+            jdbcTemplate.update("UPDATE users SET name = COALESCE(?, name), picture = COALESCE(?, picture) WHERE email = ?",
+                    name, picture, cleanEmail);
+        }
     }
+
+    private record GoogleLinkState(String googleSub, String passwordHash) {}
 
     @Transactional
     public void ensureUserExists(String email, String name, String picture) {

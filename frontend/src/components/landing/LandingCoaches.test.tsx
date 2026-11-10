@@ -31,7 +31,7 @@ describe('Landing para entrenadores', () => {
   it('leaves the prices out and points to the app when the backend does not answer', async () => {
     render(<LandingCoaches />, { wrapper: mockPublicInfo(null) });
     expect(
-      await screen.findByText(/entra con tu cuenta de Google y escríbenos/),
+      await screen.findByText(/entra con tu cuenta y escríbenos/),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('list', { name: 'Planes para entrenadores' }),

@@ -16,8 +16,8 @@
   --color-card: var(--bg-card);
   --color-muted: var(--bg-card-hover);
   --color-muted-foreground: var(--text-muted);
-  --color-primary: var(--accent-red);
-  --color-primary-foreground: #fff;
+  --color-primary: var(--wall-active-bg);
+  --color-primary-foreground: var(--wall-active-ink);
   --color-secondary: var(--bg-card-hover);
   --color-secondary-foreground: var(--text-main);
   --color-border: var(--border-color);
@@ -38,17 +38,17 @@
   /* Borders */
   --border-subtle: rgba(17, 24, 39, 0.08);
   --border-medium: rgba(17, 24, 39, 0.15);
-  --border-accent: rgba(0, 133, 255, 0.3);
+  --border-accent: rgba(11, 95, 116, 0.3);
   /* Text */
   --text-primary: #FFFFFF;
   --text-secondary: #d1d5db;
   --text-muted: #9CA3AF;
-  --text-accent: #0085FF;
+  --text-accent: #0b5f74;
   /* Accent Colors */
-  --accent-primary: #0085FF;
+  --accent-primary: #0b5f74;
   --accent-primary-light: #339CFF;
   --accent-primary-dark: #0066CC;
-  --accent-glow: rgba(0, 133, 255, 0.15);
+  --accent-glow: rgba(11, 95, 116, 0.15);
   /* Semantic */
   --color-success: var(--accent-primary);
   --color-success-bg: var(--accent-glow);
@@ -59,10 +59,10 @@
   --color-info: var(--accent-primary);
   --color-info-bg: var(--accent-glow);
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #0085FF, #0066CC);
+  --gradient-primary: linear-gradient(135deg, #0b5f74, #084a5b);
   --gradient-success: linear-gradient(135deg, #10B981, #059669);
   --gradient-danger: linear-gradient(135deg, #EF4444, #DC2626);
-  --gradient-card: linear-gradient(135deg, rgba(0, 133, 255, 0.05), rgba(0, 133, 255, 0.01));
+  --gradient-card: linear-gradient(135deg, rgba(11, 95, 116, 0.05), rgba(11, 95, 116, 0.01));
   /* Macros */
   --color-protein: var(--accent-primary-light);
   --color-carbs: var(--accent-primary);
@@ -154,21 +154,33 @@ body {
   touch-action: pan-y;
 }
 
-/* Franja sólida sobre la barra de estado de la PWA en iOS. Con black-translucent la
-   app ocupa toda la pantalla y los iconos de iOS son blancos; sin un fondo oscuro
-   detrás, iOS añade un difuminado para legibilidad sobre el papel claro. Esta franja
-   del alto exacto del safe-area lo evita y deja la barra limpia como en la web.
-   Mide 0 px fuera de la PWA (safe-area-inset-top = 0), así no afecta a web ni escritorio. */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: env(safe-area-inset-top, 0px);
-  background: #0f172a;
-  z-index: 2147483000;
-  pointer-events: none;
+/* Franja para la barra de estado de la app instalada en iOS 26+. Sin una caja fija de
+   color sólido en el borde superior, iOS difumina unos 40 pt de la página bajo la barra
+   de estado (scroll edge effect) y ningún meta ni propiedad CSS lo apaga. WebKit busca
+   esa caja 4 px por debajo del centro del borde superior: tiene que ser un elemento real
+   (no un pseudo-elemento), fijo, de al menos el 90 % del ancho y más de 10 px de alto.
+   El color se lee del estilo y background-clip: text hace que no pinte nada, así que la
+   página se ve igual. Solo existe en la app instalada de iOS. */
+.ios-status-bar-band {
+  display: none;
+}
+@media (display-mode: standalone) {
+  @supports (-webkit-touch-callout: none) {
+    .ios-status-bar-band {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 12px;
+      background-color: var(--wall, #0f172a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      /* Lo más alto, para que ningún menú ni modal tape el punto que muestrea iOS. */
+      z-index: 2147483647;
+      pointer-events: none;
+    }
+  }
 }
 
 .app-container {
@@ -311,9 +323,9 @@ body::before {
   }
 }
 
-.kpi-card.accent { background: linear-gradient(180deg, rgba(0, 133, 255, 0.08) 0%, rgba(0, 133, 255, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(0, 133, 255, 0.2); }
+.kpi-card.accent { background: linear-gradient(180deg, color-mix(in srgb, var(--accent-primary) 8%, transparent) 0%, color-mix(in srgb, var(--accent-primary) 0%, transparent) 100%), var(--bg-card); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--accent-primary) 20%, transparent); }
 .kpi-card.success { background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(16, 185, 129, 0.2); }
-.kpi-card.info { background: linear-gradient(180deg, rgba(0, 133, 255, 0.08) 0%, rgba(0, 133, 255, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(0, 133, 255, 0.2); }
+.kpi-card.info { background: linear-gradient(180deg, color-mix(in srgb, var(--accent-primary) 8%, transparent) 0%, color-mix(in srgb, var(--accent-primary) 0%, transparent) 100%), var(--bg-card); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--accent-primary) 20%, transparent); }
 .kpi-card.warning { background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(245, 158, 11, 0.2); }
 .kpi-card.danger { background: linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0) 100%), var(--bg-card); box-shadow: inset 0 1px 0 rgba(239, 68, 68, 0.2); }
 
@@ -1045,7 +1057,7 @@ input[type=number]::-webkit-outer-spin-button {
   width: 48px;
   height: 28px;
   border-radius: 14px;
-  background: rgba(0, 133, 255, 0.18);
+  background: color-mix(in srgb, var(--accent-primary) 18%, transparent);
   margin-bottom: 2px;
   transform: translateY(-1px) scale(1.05);
 }
@@ -1751,12 +1763,12 @@ button, a, input, select, textarea, [role=button], [onclick] {
   background: rgba(17, 24, 39, 0.03);
 }
 .workout-exercise-card .set-row.set-completed {
-  background: rgba(0, 133, 255, 0.05);
-  border-color: rgba(0, 133, 255, 0.18);
+  background: color-mix(in srgb, var(--accent-primary) 5%, transparent);
+  border-color: color-mix(in srgb, var(--accent-primary) 18%, transparent);
 }
 .workout-exercise-card .set-row.set-completed .set-input {
-  background: rgba(0, 133, 255, 0.08);
-  border-color: rgba(0, 133, 255, 0.22);
+  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent-primary) 22%, transparent);
   color: var(--accent-primary-light, #38bdf8);
 }
 .workout-exercise-card .set-number.warmup {
@@ -2594,7 +2606,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 .exercise-card-rest-pill:focus-within {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px var(--accent-glow, rgba(0, 133, 255, 0.25));
+  box-shadow: 0 0 0 2px var(--accent-glow, color-mix(in srgb, var(--accent-primary) 25%, transparent));
 }
 /* The select is borderless inside the pill, so the pill carries its keyboard focus ring. */
 .exercise-card-rest-pill:has(.exercise-card-rest-select:focus-visible) {
@@ -2737,7 +2749,7 @@ button, a, input, select, textarea, [role=button], [onclick] {
   transition: background 0.12s ease;
 }
 .set-row.completed {
-  background: rgba(0, 133, 255, 0.04);
+  background: color-mix(in srgb, var(--accent-primary) 4%, transparent);
 }
 
 .set-type-btn {
@@ -2794,9 +2806,9 @@ button, a, input, select, textarea, [role=button], [onclick] {
   color: transparent;
 }
 .set-input.completed {
-  background: rgba(var(--accent-primary-rgb, 0, 133, 255), 0.08);
+  background: rgba(var(--accent-primary-rgb, 11, 95, 116), 0.08);
   color: var(--accent-primary-light, var(--accent-primary));
-  border-color: rgba(var(--accent-primary-rgb, 0, 133, 255), 0.25);
+  border-color: rgba(var(--accent-primary-rgb, 11, 95, 116), 0.25);
 }
 
 .set-check-btn {
@@ -3038,8 +3050,8 @@ button, a, input, select, textarea, [role=button], [onclick] {
   transform: scale(0.98);
 }
 .bottom-sheet-item.active {
-  background: rgba(0, 133, 255, 0.15);
-  border: 1px solid rgba(0, 133, 255, 0.3);
+  background: color-mix(in srgb, var(--accent-primary) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 30%, transparent);
   color: var(--accent-primary-light);
   font-weight: 600;
 }
@@ -3151,9 +3163,8 @@ button, a, input, select, textarea, [role=button], [onclick] {
 
 @media all and (display-mode: standalone) {
   html, body, .app-root, .app-container {
-    /* Sin cap de height:100vh: fijarla convertía .main-content en un scroll-view interno
-       que iOS 26/27 escarcha bajo la barra de estado (scroll edge effect) solo en la PWA.
-       Con min-height el standalone scrollea el documento como la web, igual que PorrApp. */
+    /* El difuminado superior de iOS 26+ no depende de quién scrollea: se evita con
+       .ios-status-bar-band. Aquí el layout es el mismo que en la web. */
     min-height: 100dvh !important;
   }
 }

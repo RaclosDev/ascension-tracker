@@ -21,6 +21,28 @@ test('landing scrolls on a phone', async ({ page }) => {
 });
 
 test('the features link scrolls to the features section', async ({ page }) => {
+  // On a phone the hero goes straight to the sign-in panel; the link only shows on wide screens.
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.getByRole('link', { name: /Ver qué incluye/i }).click();
   await expect(page.getByRole('heading', { name: /Todo lo que registras/i })).toBeInViewport();
+});
+
+test('section links leave space above their targets', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const landing = page.locator('.landing');
+
+  for (const [label, id] of [
+    ['Funciones', 'funciones'],
+    ['Tus datos', 'datos'],
+    ['Entrenadores', 'entrenadores'],
+  ]) {
+    await page.getByRole('navigation', { name: 'Secciones' }).getByRole('link', { name: label }).click();
+    await expect.poll(async () => {
+      const target = await page.locator(`#${id}`).boundingBox();
+      const container = await landing.boundingBox();
+      return Math.abs(target!.y - container!.y - 48);
+    }).toBeLessThan(5);
+  }
+
+  await expect(page.locator('#datos').getByRole('heading', { name: 'Tus datos' })).toBeVisible();
 });

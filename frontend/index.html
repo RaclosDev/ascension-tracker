@@ -6,6 +6,9 @@
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#0f172a">
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <!-- "default", no "black-translucent": con barra translúcida la página se dibuja bajo el reloj
+       y iOS 26+ la difumina. iOS lee este valor al añadir el icono a la pantalla de inicio. -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Ascension">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="application-name" content="Ascension">
@@ -25,6 +28,7 @@
       try {
         var hex = localStorage.getItem('ascension_custom_color');
         if (!hex || !/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+        if (hex.toLowerCase() === '#0085ff' && !localStorage.getItem('ascension_accent_v2')) return;
         var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
         function adj(h, p) {
           var _r = parseInt(h.slice(1,3),16), _g = parseInt(h.slice(3,5),16), _b = parseInt(h.slice(5,7),16);
@@ -48,6 +52,8 @@
   <script src="/pwa-recovery.js" defer></script>
 </head>
 <body>
+  <!-- Fuente de color para la barra de estado de la app instalada en iOS; ver .ios-status-bar-band. -->
+  <div class="ios-status-bar-band" aria-hidden="true"></div>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

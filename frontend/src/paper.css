@@ -19,6 +19,14 @@
   --wall-active-bg: #f3ecdc;
   --wall-active-ink: #111827;
   --wall-shadow: rgba(0, 0, 0, 0.35);
+  /* Sombra dura de las hojas: más densa sobre la pared oscura para que se despeguen igual. */
+  --sheet-shadow: rgba(0, 0, 0, 0.5);
+  --sheet: #fffdf7;
+  --sheet-edge: var(--ink);
+  --sheet-ink: var(--ink);
+  --inset-card-bg: var(--paper);
+  --inset-card-edge: rgba(17, 24, 39, 0.55);
+  --inset-card-edge-hover: rgba(17, 24, 39, 0.6);
   color-scheme: dark;
   /* Grano de papel: ruido SVG en línea, sin imagen que precachear. */
   --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .07 0 0 0 0 .09 0 0 0 0 .15 0 0 0 .12 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
@@ -65,11 +73,13 @@
   --radius-md: 4px;
   --radius-lg: 6px;
   --radius-xl: 8px;
+  --radius-2xl: 8px;
+  --radius-3xl: 10px;
 
   --shadow-sm: 2px 3px 0 rgba(0, 0, 0, 0.25);
   --shadow-md: 3px 4px 0 rgba(0, 0, 0, 0.3);
   --shadow-lg: 6px 8px 0 rgba(0, 0, 0, 0.35);
-  --shadow-elevated: 4px 5px 0 #d8cfb9, 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  --shadow-elevated: 6px 8px 0 rgba(0, 0, 0, 0.45);
 }
 
 html {
@@ -115,9 +125,19 @@ svg.lucide[stroke-width='2'] {
   --bg-card-hover: #e9e0cd;
   --bg-glass: rgba(17, 24, 39, 0.035);
   --bg-glass-strong: rgba(17, 24, 39, 0.07);
-  --bg-input: #fffdf7;
+  --bg-input: #f3ecdc;
   --bg-surface: #fffdf7;
   --bg-surface-hover: #e9e0cd;
+
+  /* Pestañas y botones principales dentro de una hoja: tinta sobre papel, como en la landing. */
+  --wall-ink: #111827;
+  --wall-line: #111827;
+  --wall-line-soft: rgba(17, 24, 39, 0.18);
+  --wall-highlight: #7a4708;
+  --wall-highlight-bg: rgba(135, 80, 11, 0.12);
+  --wall-active-bg: #111827;
+  --wall-active-ink: #f3ecdc;
+  --wall-shadow: rgba(17, 24, 39, 0.22);
 
   --border-subtle: rgba(17, 24, 39, 0.2);
   --border-medium: #788076;
@@ -262,16 +282,21 @@ body,
 @layer base {
   h1,
   h2,
-  h3,
-  h4 {
-    font-family: var(--font-marker);
+  h3 {
+    font-family: var(--font-display);
     font-weight: 400;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+  h4 {
+    font-family: var(--font-main);
+    font-weight: 700;
     letter-spacing: 0;
   }
   input:not([type='checkbox'], [type='radio'], [type='color'], [type='range']),
   textarea,
   select {
-    border-color: var(--border-medium);
     color: var(--text-primary);
     accent-color: var(--accent-primary);
   }
@@ -279,6 +304,72 @@ body,
   textarea::placeholder {
     color: var(--text-muted);
     opacity: 1;
+  }
+}
+
+/*
+ * Campos: relleno crema y canto de tinta de 2px, los mismos que la hoja de acceso de la landing.
+ * Va fuera de capa para ganar a las utilidades sueltas (border-white/10, rounded-xl) y con
+ * :where() para que las clases propias de cada campo sigan pudiendo ajustarlo.
+ */
+:where(
+  input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='color'],
+      [type='range'],
+      [type='file'],
+      .bg-transparent
+    ),
+  textarea:not(.bg-transparent),
+  select:not(.bg-transparent)
+) {
+  border: 2px solid var(--text-primary);
+  border-radius: 4px;
+  background-color: var(--bg-input);
+}
+.form-input,
+.quick-add-input,
+.weight-input,
+.picker-search-input {
+  border: 2px solid var(--text-primary);
+  border-radius: 4px;
+  background-color: var(--bg-input);
+}
+.form-input:focus,
+.quick-add-input:focus,
+.weight-input:focus,
+.picker-search-input:focus {
+  border-color: var(--text-primary);
+  box-shadow: none;
+  outline: 3px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+.form-label {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+/* Título de página: en escritorio encabeza la columna; en móvil ya lo dice la barra inferior. */
+.main-content h1:not(.sr-only) {
+  font-size: clamp(1.9rem, 3.2vw, 2.6rem);
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+}
+.page-title-desktop {
+  margin: 0 0 var(--space-lg);
+  color: var(--wall-ink);
+}
+@media (max-width: 1023px) {
+  .page-title-desktop {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 
@@ -296,13 +387,8 @@ body,
 /* ───────────── Hojas sueltas ───────────── */
 
 /*
- * Cada tarjeta de primer nivel es una hoja. El papel se dibuja en ::before y es lo único que
- * se inclina: el texto, los gráficos y los controles siguen rectos y se leen igual.
- * El giro de cada hoja sale de un ciclo de 5, así que parecen colocadas a mano.
+ * Cada tarjeta de primer nivel es una hoja recta. El papel se dibuja en ::before.
  */
-:is(.card, .chart-card, .progress-card) {
-  --paper-angle: -0.5deg;
-}
 :is(.card, .chart-card, .progress-card):not([role='dialog'], [role='alertdialog']):not(
     :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
       *
@@ -323,29 +409,13 @@ body,
   position: absolute;
   inset: 0;
   z-index: -1;
-  border-radius: 3px;
-  background-color: var(--paper);
-  background-image: var(--paper-lines);
-  transform: skewY(var(--paper-angle));
-  box-shadow:
-    4px 5px 0 #d8cfb9,
-    5px 6px 0 rgba(17, 24, 39, 0.25),
-    0 10px 24px rgba(0, 0, 0, 0.35);
+  border: 2px solid var(--sheet-edge);
+  border-radius: 4px;
+  background-color: var(--sheet);
+  box-shadow: 5px 6px 0 var(--sheet-shadow);
   pointer-events: none;
 }
-:is(.card, .chart-card, .progress-card):nth-child(5n + 2) {
-  --paper-angle: 0.6deg;
-}
-:is(.card, .chart-card, .progress-card):nth-child(5n + 3) {
-  --paper-angle: -0.25deg;
-}
-:is(.card, .chart-card, .progress-card):nth-child(5n + 4) {
-  --paper-angle: 0.8deg;
-}
-:is(.card, .chart-card, .progress-card):nth-child(5n) {
-  --paper-angle: -0.75deg;
-}
-/* Las hojas que recortaban su contenido lo siguen haciendo, pero dejan asomar el papel girado. */
+/* Las hojas que recortaban su contenido lo siguen haciendo, pero dejan asomar la sombra del papel. */
 .overflow-hidden:is(.card, .chart-card, .progress-card):not(
     [role='dialog'],
     [role='alertdialog']
@@ -356,23 +426,8 @@ body,
   overflow: clip;
   overflow-clip-margin: 24px;
 }
-/* En móvil el giro es menor: la hoja es estrecha y el borde no debe comerse el margen. */
+/* En móvil la sombra es menor: la hoja es estrecha y no debe comerse el margen. */
 @media (max-width: 768px) {
-  :is(.card, .chart-card, .progress-card) {
-    --paper-angle: -0.3deg;
-  }
-  :is(.card, .chart-card, .progress-card):nth-child(5n + 2) {
-    --paper-angle: 0.4deg;
-  }
-  :is(.card, .chart-card, .progress-card):nth-child(5n + 3) {
-    --paper-angle: -0.15deg;
-  }
-  :is(.card, .chart-card, .progress-card):nth-child(5n + 4) {
-    --paper-angle: 0.5deg;
-  }
-  :is(.card, .chart-card, .progress-card):nth-child(5n) {
-    --paper-angle: -0.45deg;
-  }
   :is(.card, .chart-card, .progress-card):not([role='dialog'], [role='alertdialog']):not(
       :is(
           .card,
@@ -384,10 +439,7 @@ body,
         )
         *
     )::before {
-    box-shadow:
-      3px 4px 0 #d8cfb9,
-      4px 5px 0 rgba(17, 24, 39, 0.25),
-      0 8px 18px rgba(0, 0, 0, 0.35);
+    box-shadow: 3px 4px 0 var(--sheet-shadow);
   }
 }
 
@@ -398,15 +450,15 @@ body,
 /* Dentro de una hoja, las tarjetas son recuadros blancos con canto de tinta, sin giro. */
 :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
   .card {
-  background: #fffdf7;
-  border: 1px solid rgba(17, 24, 39, 0.35);
-  border-radius: 8px;
+  background: var(--inset-card-bg);
+  border: 1.5px solid var(--inset-card-edge);
+  border-radius: 4px;
   box-shadow: none;
 }
 @media (hover: hover) {
   :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
     .card:hover {
-    border-color: rgba(17, 24, 39, 0.6);
+    border-color: var(--inset-card-edge-hover);
   }
 }
 .card-title,
@@ -417,9 +469,66 @@ body,
 .calendar-week-title,
 .workout-sheet-title,
 .bottom-sheet-title {
-  font-family: var(--font-marker);
+  font-family: var(--font-display);
   font-weight: 400;
-  letter-spacing: 0;
+  letter-spacing: 0.03em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+.card-title,
+.chart-title {
+  font-size: 1.15rem;
+}
+.section-title {
+  font-size: clamp(1.5rem, 2.4vw, 1.9rem);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  color: var(--text-primary);
+}
+/* KPIs: la cifra es el titular de su recuadro. */
+.kpi-card,
+.kpi-card:is(.accent, .success, .info, .warning, .danger) {
+  background: var(--paper);
+  border: 1.5px solid rgba(17, 24, 39, 0.55);
+  border-radius: 4px;
+  box-shadow: none;
+}
+.kpi-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.kpi-value {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.onboarding-option {
+  position: relative;
+  display: block;
+  padding: 0.75rem;
+  background: var(--bg-card);
+  border: 2px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .onboarding-option:hover {
+    background: var(--bg-card-hover);
+  }
+}
+
+.onboarding-option:has(:checked) {
+  border-color: var(--accent-primary);
+}
+
+.onboarding-option:has(:focus-visible) {
+  outline: 3px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 
 /* ───────────── Diálogos, menús y avisos ───────────── */
@@ -433,43 +542,40 @@ body,
 .workout-sheet,
 [role='dialog'].bg-card,
 [role='alertdialog'] {
-  background-color: var(--paper);
-  background-image: var(--paper-lines);
-  border: 0;
+  background-color: var(--sheet);
+  border: 2px solid var(--sheet-edge);
   border-radius: 4px;
   box-shadow: var(--shadow-elevated);
 }
 [role='menu'],
 [role='listbox'] {
-  background: #fffdf7;
-  border: 1px solid var(--ink);
+  background: var(--sheet);
+  border: 1px solid var(--sheet-edge);
   border-radius: 4px;
-  box-shadow: 3px 4px 0 rgba(17, 24, 39, 0.3);
+  box-shadow: 3px 4px 0 var(--menu-shadow, rgba(17, 24, 39, 0.3));
 }
 .paper-toast {
   position: relative;
   overflow: visible !important;
-  background: var(--paper) !important;
-  color: var(--ink) !important;
-  border: 0 !important;
-  border-radius: 3px !important;
-  box-shadow:
-    3px 4px 0 #d8cfb9,
-    0 12px 24px rgba(0, 0, 0, 0.4) !important;
+  background: var(--sheet) !important;
+  color: var(--sheet-ink) !important;
+  border: 2px solid var(--sheet-edge) !important;
+  border-radius: 4px !important;
+  box-shadow: 4px 5px 0 var(--sheet-shadow) !important;
 }
 /* ───────────── Pared: navegación, pestañas y botones ───────────── */
 
 /* Cabecera móvil como en PorrApp: marca a rotulador y avatar de la sesión. */
 /* Tracking: cada semana es una hoja de papel sobre la pared. */
 .calendar-week {
-  background: var(--paper);
-  color: var(--ink);
-  border: 0;
-  border-radius: 3px;
-  box-shadow: var(--shadow-md);
+  background: var(--sheet);
+  color: var(--sheet-ink);
+  border: 2px solid var(--sheet-edge);
+  border-radius: 4px;
+  box-shadow: 5px 6px 0 var(--sheet-shadow);
 }
 .calendar-week:hover {
-  border-color: transparent;
+  border-color: var(--sheet-edge);
 }
 .calendar-day {
   background: var(--bg-card);
@@ -478,15 +584,33 @@ body,
 .mobile-top-bar {
   border-bottom: 2px solid var(--wall-line-soft);
 }
-/* El mismo logotipo que la barra lateral y la landing: una sola marca en toda la app. */
-.mobile-brand {
-  display: block;
-  height: 26px;
-  width: auto;
+/* El nombre compuesto como en la landing: Anton en mayúsculas y el punto en tinta de acento. */
+.app-wordmark {
+  display: inline-block;
+  color: var(--wall-ink);
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-transform: uppercase;
 }
-html[data-mode='light'] .mobile-brand,
-html[data-mode='light'] .sidebar-title-img {
-  filter: invert(1) brightness(0.12);
+.app-wordmark-dot {
+  color: var(--accent-primary);
+}
+.sidebar .app-wordmark {
+  font-size: 2rem;
+}
+.mobile-top-bar .app-wordmark {
+  font-size: 1.6rem;
+}
+.sidebar-brand-container {
+  align-items: flex-start;
+  text-align: left;
+  gap: 6px;
+}
+.logo-subtitle {
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 .mobile-top-actions {
   display: flex;
@@ -501,11 +625,11 @@ html[data-mode='light'] .sidebar-title-img {
   height: 44px;
   padding: 0;
   overflow: hidden;
-  border: 1px solid var(--wall-line);
-  border-radius: 50%;
+  border: 2px solid var(--wall-ink);
+  border-radius: 4px;
   background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-marker);
+  font-family: var(--font-display);
   font-size: 1.1rem;
   cursor: pointer;
 }
@@ -540,14 +664,13 @@ html[data-mode='light'] .sidebar-title-img {
   color: var(--wall-active-ink);
   border: 0;
   box-shadow: 3px 4px 0 var(--wall-shadow);
-  transform: rotate(-1deg);
 }
 .mobile-bottom-nav {
-  border: 1px solid var(--wall-line);
-  border-radius: 10px;
+  border: 2px solid var(--wall-ink);
+  border-radius: 6px;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  box-shadow: 0 10px 24px var(--wall-shadow);
+  box-shadow: 4px 5px 0 var(--wall-shadow);
 }
 .mobile-bottom-label {
   font-family: var(--font-display);
@@ -575,18 +698,29 @@ html[data-mode='light'] .sidebar-title-img {
   display: flex;
   position: relative;
   width: 100%;
-  gap: 4px;
-  padding: 4px;
-  background: var(--wall);
-  border: 1px solid var(--wall-line);
-  border-radius: 6px;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  border: 2px solid var(--wall-ink);
+  border-radius: 4px;
+}
+.segmented-option + .segmented-option {
+  border-left: 2px solid var(--wall-ink);
+}
+.segmented-option:focus-visible {
+  outline-offset: -5px;
+}
+/* Dos mitades activas seguidas (Peso, Pasos y Kcal a la vez): la raya se ve en el color del texto. */
+.segmented-option[aria-pressed='true'] + .segmented-option[aria-pressed='true'] {
+  border-left-color: var(--wall-active-ink);
 }
 .segmented-option {
   flex: 1;
   min-height: 44px;
   padding: 0.55rem 0.5rem;
   border: 0;
-  border-radius: 3px;
+  border-radius: 0;
   background: transparent;
   color: var(--text-secondary);
   font-family: var(--font-display);
@@ -609,12 +743,29 @@ html[data-mode='light'] .sidebar-title-img {
 .segmented-option[aria-pressed='true'] {
   background: var(--wall-active-bg);
   color: var(--wall-active-ink);
-  box-shadow: 2px 3px 0 var(--wall-shadow);
 }
 /*
- * Ajustes por secciones: en móvil una tira de pestañas que se desplaza en horizontal;
- * desde 1024px, una columna fija a la izquierda. La activa es el mismo recorte de papel.
+ * Ajustes por secciones. Móvil: /settings es un índice a pantalla completa y cada sección
+ * se abre sola, con «‹ Ajustes» para volver. Desde 1024px: columna fija a la izquierda.
  */
+.settings-title {
+  margin: 0 0 var(--space-md);
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+.settings-back {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  margin: -6px 0 var(--space-sm) -6px;
+  padding: 0 6px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-decoration: none;
+}
 .settings-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -625,52 +776,34 @@ html[data-mode='light'] .sidebar-title-img {
 }
 .settings-nav-list {
   display: flex;
+  flex-direction: column;
   gap: 4px;
   margin: 0;
   padding: 4px;
   list-style: none;
-  overflow-x: auto;
-  scrollbar-width: none;
-  background: var(--wall);
-  border: 1px solid var(--wall-line);
-  border-radius: 6px;
-}
-.settings-nav-list::-webkit-scrollbar {
-  display: none;
-}
-/* Borde difuminado solo por el lado donde quedan pestañas: avisa de que la tira se desplaza. */
-.settings-nav-list.fade-end {
-  mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
-}
-.settings-nav-list.fade-start {
-  mask-image: linear-gradient(to left, #000 calc(100% - 48px), transparent);
-}
-.settings-nav-list.fade-start.fade-end {
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 48px,
-    #000 calc(100% - 48px),
-    transparent
-  );
+  background: transparent;
+  border: 2px solid var(--wall-ink);
+  border-radius: 4px;
 }
 .settings-nav-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  min-height: 44px;
+  gap: 0.6rem;
+  min-height: 48px;
   padding: 0.55rem 0.85rem;
   border-radius: 3px;
   color: var(--text-secondary);
   font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   text-decoration: none;
-  white-space: nowrap;
   transition:
     background-color 0.2s ease,
     color 0.2s ease;
+}
+.settings-nav-item > span {
+  flex: 1;
 }
 .settings-nav-item:focus-visible {
   outline-color: var(--wall-highlight);
@@ -681,6 +814,37 @@ html[data-mode='light'] .sidebar-title-img {
     color: var(--wall-ink);
     background: var(--bg-glass-strong);
   }
+}
+@media (max-width: 1023px) {
+  .settings-page.is-index .settings-section-panel,
+  .settings-page.has-section .settings-nav,
+  .settings-page.has-section .settings-title {
+    display: none;
+  }
+  .settings-page.has-section .settings-back {
+    display: inline-flex;
+  }
+  /* En el índice nada está abierto todavía: ninguna entrada se marca como activa. */
+  .settings-page.is-index .settings-nav-item.is-active {
+    background: transparent;
+    color: var(--text-secondary);
+    box-shadow: none;
+  }
+  .settings-nav-list li + li {
+    border-top: 1px solid var(--border-subtle);
+  }
+  /* Guardar queda a mano encima de la barra inferior aunque el formulario sea largo; el
+     relleno inferior de .main-content ya deja el hueco de la barra. */
+  .settings-save {
+    position: sticky;
+    bottom: 8px;
+    z-index: 5;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+}
+.settings-nav-chevron {
+  margin-left: auto;
+  opacity: 0.6;
 }
 .settings-nav-item.is-active {
   background: var(--wall-active-bg);
@@ -697,12 +861,11 @@ html[data-mode='light'] .sidebar-title-img {
     position: sticky;
     top: var(--space-lg);
   }
-  .settings-nav-list {
-    flex-direction: column;
-    overflow: visible;
+  .settings-nav-list li + li {
+    border-top: 0;
   }
-  .settings-nav-item {
-    white-space: normal;
+  .settings-nav-chevron {
+    display: none;
   }
 }
 
@@ -719,13 +882,22 @@ html[data-mode='light'] .sidebar-title-img {
 }
 
 .btn {
+  min-height: 44px;
   border-radius: 4px;
+}
+.btn-sm {
+  min-height: 36px;
 }
 .btn-primary {
   background: var(--wall-active-bg);
   color: var(--wall-active-ink);
   border: 2px solid var(--wall-active-bg);
-  font-weight: 700;
+  /* Acción principal: bloque de tinta en Anton, igual que «Entrar» en la landing. */
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 @media (hover: hover) {
   .btn-primary:hover {
@@ -743,6 +915,12 @@ html[data-mode='light'] .sidebar-title-img {
   color: var(--paper);
   border-color: var(--ink);
 }
+/* El color «primary» de Tailwind (bg-primary, Button por defecto) sigue al botón principal:
+   papel sobre la pared (definido en @theme) y tinta sobre las hojas. */
+:is(.card, .modal-content, [role='dialog'], [role='alertdialog'], .landing) {
+  --color-primary: var(--ink);
+  --color-primary-foreground: var(--paper);
+}
 @media (hover: hover) {
   :is(.card, .modal-content, [role='dialog'], [role='alertdialog'], .landing) .btn-primary:hover {
     background: #303a49;
@@ -756,8 +934,10 @@ html[data-mode='light'] .sidebar-title-img {
 /* ───────────── Detalles de cuaderno ───────────── */
 
 .marker-ink {
-  font-family: var(--font-marker);
+  font-family: var(--font-display);
   font-weight: 400;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
   color: var(--marker-ink);
 }
 
@@ -797,6 +977,7 @@ html[data-mode='light'] {
   --wall-active-bg: #111827;
   --wall-active-ink: #f3ecdc;
   --wall-shadow: rgba(17, 24, 39, 0.22);
+  --sheet-shadow: rgba(17, 24, 39, 0.22);
   color-scheme: light;
 
   --bg-main: #e6e0d3;
@@ -899,4 +1080,492 @@ html[data-mode='light'] {
 }
 html[data-mode='light'] .btn-primary:hover {
   background: #303a49;
+}
+
+/*
+ * Modo oscuro: sobre la pared azul el acento se aclara lo justo para leerse, sin cambiar de tono.
+ * Las hojas redefinen su propio acento más arriba, así que solo afecta a lo que va sobre la pared.
+ */
+@supports (color: oklch(from red l c h)) {
+  html:not([data-mode='light']) body {
+    --accent-primary: oklch(from var(--accent-raw) max(l, 0.74) c h);
+    --accent-primary-light: oklch(from var(--accent-raw) max(l, 0.8) c h);
+    --accent-primary-dark: oklch(from var(--accent-raw) max(l, 0.66) c h);
+    --gradient-primary: linear-gradient(var(--accent-primary), var(--accent-primary));
+  }
+}
+
+/*
+ * Las hojas oscuras usan texto crema y la paleta de la pared. Comparten canto,
+ * radios y desplazamiento de sombra con las claras. La landing mantiene su paleta.
+ */
+html:not([data-mode='light'])
+  :is(
+    .card,
+    .chart-card,
+    .progress-card,
+    .modal-content,
+    .bottom-sheet-content,
+    .workout-sheet,
+    .exercise-card-menu-dropdown,
+    .food-search-fullscreen,
+    .calendar-week,
+    .paper-toast,
+    [role='dialog'],
+    [role='alertdialog'],
+    [role='menu'],
+    [role='listbox'],
+    [data-radix-popper-content-wrapper]
+  ):not(.landing, .landing *) {
+  --bg-main: inherit;
+  --bg-primary: inherit;
+  --bg-secondary: inherit;
+  --bg-card: inherit;
+  --bg-card-hover: inherit;
+  --bg-glass: inherit;
+  --bg-glass-strong: inherit;
+  --bg-input: #101a2e;
+  --bg-surface: inherit;
+  --bg-surface-hover: inherit;
+  --wall-ink: inherit;
+  --wall-line: inherit;
+  --wall-line-soft: inherit;
+  --wall-highlight: inherit;
+  --wall-highlight-bg: inherit;
+  --wall-active-bg: inherit;
+  --wall-active-ink: inherit;
+  --wall-shadow: inherit;
+  --border-subtle: inherit;
+  --border-medium: inherit;
+  --border-color: inherit;
+  --text-primary: inherit;
+  --text-main: inherit;
+  --text-secondary: inherit;
+  --text-muted: inherit;
+  --color-success: inherit;
+  --color-success-bg: inherit;
+  --color-danger: inherit;
+  --color-danger-bg: inherit;
+  --color-warning: inherit;
+  --color-warning-bg: inherit;
+  --color-protein: inherit;
+  --color-carbs: inherit;
+  --color-fat: inherit;
+  --gradient-success: inherit;
+  --gradient-danger: inherit;
+  --gradient-card: inherit;
+  --shadow-sm: inherit;
+  --shadow-md: inherit;
+  --shadow-lg: inherit;
+  --color-primary: inherit;
+  --color-primary-foreground: inherit;
+  --color-white: inherit;
+  --color-gray-100: inherit;
+  --color-gray-200: inherit;
+  --color-gray-300: inherit;
+  --color-gray-400: inherit;
+  --color-gray-500: inherit;
+  --color-gray-600: inherit;
+  --color-gray-700: inherit;
+  --color-gray-800: inherit;
+  --color-gray-900: inherit;
+  --color-zinc-200: inherit;
+  --color-zinc-300: inherit;
+  --color-zinc-400: inherit;
+  --color-zinc-500: inherit;
+  --color-zinc-600: inherit;
+  --color-zinc-700: inherit;
+  --color-zinc-800: inherit;
+  --color-zinc-900: inherit;
+  --color-neutral-300: inherit;
+  --color-neutral-400: inherit;
+  --color-neutral-500: inherit;
+  --color-slate-300: inherit;
+  --color-slate-400: inherit;
+  --color-slate-500: inherit;
+  --color-red-200: inherit;
+  --color-red-300: inherit;
+  --color-red-400: inherit;
+  --color-red-500: inherit;
+  --color-rose-400: inherit;
+  --color-rose-500: inherit;
+  --color-emerald-300: inherit;
+  --color-emerald-400: inherit;
+  --color-emerald-500: inherit;
+  --color-green-400: inherit;
+  --color-green-500: inherit;
+  --color-amber-200: inherit;
+  --color-amber-300: inherit;
+  --color-amber-400: inherit;
+  --color-amber-500: inherit;
+  --color-yellow-400: inherit;
+  --color-orange-400: inherit;
+  --color-orange-500: inherit;
+  --color-sky-300: inherit;
+  --color-sky-400: inherit;
+  --color-blue-300: inherit;
+  --color-blue-400: inherit;
+  --color-blue-500: inherit;
+  --color-cyan-400: inherit;
+  --color-indigo-400: inherit;
+  --color-violet-400: inherit;
+  --color-purple-400: inherit;
+  --accent-primary: inherit;
+  --accent-primary-light: inherit;
+  --accent-primary-dark: inherit;
+  --accent-glow: inherit;
+  --accent-shadow: inherit;
+  --accent-text: inherit;
+  --border-accent: inherit;
+  --color-success-accent: inherit;
+  --gradient-primary: inherit;
+  --sheet: #17233a;
+  --sheet-edge: rgba(243, 236, 220, 0.45);
+  --sheet-ink: var(--text-primary);
+  --inset-card-bg: rgba(243, 236, 220, 0.04);
+  --inset-card-edge: var(--wall-line-soft);
+  --inset-card-edge-hover: var(--border-medium);
+  --menu-shadow: rgba(0, 0, 0, 0.45);
+}
+html:not([data-mode='light'])
+  :is(.card, .modal-content, [role='dialog'], [role='alertdialog']):not(.landing *)
+  .btn-primary {
+  background: var(--wall-active-bg);
+  color: var(--wall-active-ink);
+  border-color: var(--wall-active-bg);
+}
+@media (hover: hover) {
+  html:not([data-mode='light'])
+    :is(.card, .modal-content, [role='dialog'], [role='alertdialog']):not(.landing *)
+    .btn-primary:hover {
+    background: #fffdf7;
+  }
+}
+html:not([data-mode='light'])
+  :is(.card, .modal-content, [role='dialog'], [role='alertdialog']):not(.landing *)
+  .btn-secondary {
+  border-color: var(--sheet-edge);
+  color: var(--text-primary);
+}
+html:not([data-mode='light']) .marker-ink {
+  color: var(--accent-primary);
+}
+
+/* Aviso secundario: una franja sobre la pared, no una hoja que empuje el contenido. */
+.passkey-strip {
+  padding: 8px 12px;
+  border: 1px dashed var(--wall-line);
+  border-radius: 4px;
+  color: var(--wall-ink);
+}
+
+/* Inicio: en el móvil, peso → hoy → tendencia; en PC, la tendencia a la izquierda y "Hoy" al lado. */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'weight' 'today' 'stats';
+}
+@media (min-width: 1100px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-areas: 'weight today' 'stats today';
+    grid-template-rows: auto 1fr;
+    column-gap: 20px;
+  }
+  .dashboard-today {
+    align-self: start;
+    position: sticky;
+    top: var(--space-xl);
+  }
+}
+
+/* Los cuatro indicadores comparten una hoja: celdas separadas por filetes, sin recuadros. */
+.kpi-strip {
+  padding: 0;
+}
+.kpi-strip .kpi-cell {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 14px 16px;
+  gap: 4px;
+}
+.kpi-strip .kpi-cell + .kpi-cell {
+  border-left: 1px solid var(--border-subtle);
+}
+@media (max-width: 1023px) {
+  .kpi-strip .kpi-cell:nth-child(3) {
+    border-left: 0;
+  }
+  .kpi-strip .kpi-cell:nth-child(n + 3) {
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+.kpi-number {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  line-height: 1;
+  color: var(--text-primary);
+}
+.kpi-number-date {
+  font-size: 1.15rem;
+  line-height: 1.5;
+}
+
+/* Lista de "Hoy": una fila por cosa pendiente. */
+.today-row + .today-row {
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Escritorio: barra lateral más estrecha y columna de contenido contenida. */
+@media (min-width: 769px) {
+  :root {
+    --sidebar-width: 232px;
+  }
+  .main-content {
+    padding: var(--space-xl) var(--space-xl) var(--space-2xl);
+  }
+  .main-content-inner {
+    max-width: 1180px;
+  }
+}
+
+/*
+ * Panel de entrenador: contadores y filtros sobre la pared; la lista de alumnos es una sola hoja.
+ * Desde 1024px, tabla; por debajo, filas apiladas con el borde izquierdo del color del estado.
+ */
+.coach-page {
+  display: flex;
+  flex-direction: column;
+}
+.coach-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+.coach-tabs {
+  width: auto;
+  flex: 1 1 320px;
+  max-width: 460px;
+}
+.coach-toolbar .btn {
+  min-height: 44px;
+}
+.coach-counters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin: 0;
+}
+.coach-counters > div {
+  padding: 0.75rem 0.9rem;
+  border: 2px solid var(--wall-line);
+  border-radius: 4px;
+}
+.coach-counters dt {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.coach-counters dd {
+  margin: 0.25rem 0 0;
+  color: var(--wall-ink);
+  font-family: var(--font-display);
+  font-size: 2rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.coach-counter-total {
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+.coach-chips {
+  display: flex;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.coach-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  padding: 0 0.85rem;
+  border: 2px solid var(--wall-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--wall-ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.coach-chip[aria-pressed='true'] {
+  border-color: var(--wall-active-bg);
+  background: var(--wall-active-bg);
+  color: var(--wall-active-ink);
+}
+.coach-chip:focus-visible {
+  outline: 2px solid var(--wall-ink);
+  outline-offset: 2px;
+}
+.coach-chip-count {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+.coach-muted {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+.coach-status {
+  display: flex;
+  flex-direction: column;
+}
+.coach-status-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.coach-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 999px;
+}
+.coach-pending {
+  display: inline-block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+.coach-table-wrap {
+  display: none;
+  padding: 0;
+  overflow: hidden;
+}
+.coach-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.coach-table th {
+  padding: 0.7rem 1rem;
+  border-bottom: 2px solid var(--border-medium);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+.coach-table td {
+  padding: 0.8rem 1rem;
+  border-top: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+.coach-table tbody tr:hover {
+  background: var(--bg-card-hover);
+}
+.coach-row-link {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+.coach-row-link:hover {
+  text-decoration: underline;
+}
+.coach-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.coach-cards {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+.coach-cards li {
+  border-left: 5px solid var(--border-subtle);
+}
+.coach-cards li + li {
+  border-top: 1px solid var(--border-subtle);
+}
+.coach-card-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 0.9rem;
+  color: var(--text-primary);
+}
+.coach-card-name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (min-width: 1024px) {
+  .coach-table-wrap {
+    display: block;
+  }
+  .coach-cards {
+    display: none;
+  }
+}
+@media (max-width: 480px) {
+  .coach-counters > div {
+    padding: 0.6rem;
+  }
+  .coach-counters dd {
+    font-size: 1.6rem;
+  }
+  .coach-tabs {
+    flex-basis: 100%;
+    max-width: none;
+  }
+  .coach-toolbar .btn {
+    width: 100%;
+  }
+}
+
+/* Ficha del alumno: nombre, qué comparte y la salida de la relación a mano, sin buscarla. */
+.coach-client-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+.coach-client-name {
+  margin: 0;
+  color: var(--wall-ink);
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1.05;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.coach-scopes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.coach-scopes li {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--wall-line);
+  border-radius: 999px;
+  color: var(--wall-ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.coach-end {
+  min-height: 44px;
 }

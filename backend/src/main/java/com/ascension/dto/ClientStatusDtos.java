@@ -21,8 +21,12 @@ public final class ClientStatusDtos {
     public record Signal(Reason reason, Level level, int value) {
     }
 
-    /** {@code lastActivity} only counts what the client shares with this coach. */
+    /**
+     * {@code lastActivity} only counts what the client shares with this coach. {@code weightChange} is the
+     * average weight of the last week minus the one three weeks earlier, in kg to one decimal; null when the
+     * client does not share body data or has no weights in either week.
+     */
     public record ClientStatus(UUID linkId, Level level, LocalDate lastActivity, int pendingReplies,
-                               List<Signal> signals) {
+                               List<Signal> signals, Double weightChange) {
     }
 }

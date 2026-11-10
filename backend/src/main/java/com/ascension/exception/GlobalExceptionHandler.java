@@ -17,6 +17,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
@@ -183,6 +184,19 @@ public class GlobalExceptionHandler {
         String traceId = UUID.randomUUID().toString();
         log.warn("Data integrity violation [trace_id: {}]: {}", traceId, ex.getMessage());
         return buildErrorResponse("Error de integridad de datos: el registro ya existe o viola una restriccion del sistema.", HttpStatus.BAD_REQUEST, traceId);
+    }
+
+    /** Errors raised on purpose with a status and a message for the user (sign-in, passkeys). */
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiErrorResponse> handleResponseStatusException(ResponseStatusException ex) {
+        String traceId = UUID.randomUUID().toString();
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+        log.warn("Request rejected with {} [trace_id: {}]", status.value(), traceId);
+        String message = ex.getReason() != null ? ex.getReason() : status.getReasonPhrase();
+        return buildErrorResponse(message, status, traceId);
     }
 
     @ExceptionHandler(Exception.class)

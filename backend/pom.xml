@@ -184,6 +184,12 @@
             <artifactId>bucket4j-core</artifactId>
             <version>8.10.1</version>
         </dependency>
+        <!-- Passkeys (WebAuthn): sign in with the fingerprint, face or device PIN. -->
+        <dependency>
+            <groupId>com.yubico</groupId>
+            <artifactId>webauthn-server-core</artifactId>
+            <version>2.10.1</version>
+        </dependency>
         <!-- Progress photos live in Cloudflare R2, which speaks the S3 API. JDK HTTP client only. -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
