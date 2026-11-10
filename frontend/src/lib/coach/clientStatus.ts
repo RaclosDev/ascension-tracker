@@ -64,5 +64,7 @@ export const useClientStatus = (enabled: boolean) =>
   useQuery({
     queryKey: ['coach', 'clients', 'status'] as const,
     enabled,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
     queryFn: async () => (await api.get<ClientStatus[]>('/coach/clients/status')).data,
   });
