@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
 import toast from 'react-hot-toast';
-import { User, Scale, Activity } from 'lucide-react';
+import { User, Scale, Activity, Users } from 'lucide-react';
+import { APP_MODULE_OPTIONS, hasNutrition, type AppModules } from '../lib/appModules';
+import { peekPendingInvitation } from '../lib/coach/api';
+import { calcBmr, calcTdee, parseNumber } from '../utils/nutritionCalculators';
 import { getLocalDateString } from '../utils/dateHelper';
-import WeightLossPlan from './calculators/WeightLossPlan';
+import WeightLossPlan, { weightGoal } from './calculators/WeightLossPlan';
 import MacroConfigurator from './calculators/MacroConfigurator';
 
 import { MacroForm } from './calculators/MacroConfigurator';
@@ -16,9 +19,19 @@ interface OnboardingForm extends MacroForm {
   activityFactor: string;
 }
 
-export default function OnboardingScreen({ onComplete }: { onComplete: () => void }) {
+export default function OnboardingScreen({
+  onComplete,
+}: {
+  /** Called once saved; with a path when the app should open there instead of reloading. */
+  onComplete: (path?: string) => void;
+}) {
   const { logout } = useAuth();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
+  // Quien llega con un enlace de invitación es alumno: no le preguntamos si es entrenador.
+  const [invited] = useState(() => peekPendingInvitation() !== null);
+  const [role, setRole] = useState<'user' | 'coach'>('user');
+  const [modules, setModules] = useState<AppModules>('FULL');
+  const withNutrition = hasNutrition(modules);
   const [form, setForm] = useState<OnboardingForm>({
     sex: 'M',
     age: '',
@@ -55,6 +68,16 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
     setStep(4);
   };
 
+  // Sin nutrición no pasamos por el plan: guardamos el mantenimiento estimado como referencia.
+  const maintenanceKcal = () => {
+    const weight = parseNumber(form.startWeight);
+    const height = parseNumber(form.heightCm);
+    const age = parseNumber(form.age);
+    const bmr = weight && height && age ? calcBmr(form.sex, weight, height, age) : null;
+    if (!bmr) return 2000;
+    return Math.round(calcTdee(bmr, parseNumber(form.activityFactor) || 1.2));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -67,10 +90,11 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
         startWeight: parseFloat(String(form.startWeight)) || null,
         goalWeight: parseFloat(String(form.goalWeight)) || null,
         activityFactor: parseFloat(form.activityFactor),
-        kcal: Number(form.kcal),
+        kcal: withNutrition ? Number(form.kcal) : maintenanceKcal(),
         macroStrategy: form.macroStrategy,
         weeklyGoal: 0.5,
         startDate: getLocalDateString(),
+        appModules: modules,
       });
 
       if (mealOption === 'default') {
@@ -81,7 +105,20 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
         }
       }
 
-      toast.success('¡Configuración completada!');
+      if (role === 'coach') {
+        try {
+          await api.post('/coach/profile');
+          toast.success('¡Listo! Ya puedes invitar a tus alumnos.');
+          onComplete('/entrenador');
+          return;
+        } catch {
+          toast.error(
+            'Tu cuenta está lista, pero no se pudo activar el modo entrenador. Actívalo desde Entrenador.',
+          );
+        }
+      } else {
+        toast.success('¡Configuración completada!');
+      }
       onComplete();
     } catch (err) {
       toast.error('Error al guardar configuración inicial');
@@ -136,19 +173,136 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
             ← Volver al login
           </button>
         </div>
-        {step === 1 ? (
-          <>
-            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+        {step === 0 ? (
+          <form
+            onSubmit={handleNextStep}
+            style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+          >
+            <div style={{ textAlign: 'center' }}>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem 0' }}>
                 Bienvenido a Ascension
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-                Para empezar, necesitamos conocer algunos datos básicos sobre ti.
+                Cuéntanos cómo la vas a usar. Puedes cambiarlo luego en Ajustes.
+              </p>
+            </div>
+
+            {!invited && (
+              <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+                <legend className="form-label" style={{ marginBottom: '0.5rem' }}>
+                  ¿Quién eres?
+                </legend>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  {(
+                    [
+                      { value: 'user', label: 'Entreno yo', icon: <User size={18} aria-hidden /> },
+                      {
+                        value: 'coach',
+                        label: 'Soy entrenador',
+                        icon: <Users size={18} aria-hidden />,
+                      },
+                    ] as const
+                  ).map((o) => (
+                    <label
+                      key={o.value}
+                      className="kpi-card"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.75rem',
+                        cursor: 'pointer',
+                        border:
+                          role === o.value
+                            ? '2px solid var(--accent-primary)'
+                            : '2px solid transparent',
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="onboarding-role"
+                        value={o.value}
+                        checked={role === o.value}
+                        onChange={() => setRole(o.value)}
+                        className="sr-only"
+                      />
+                      {o.icon}
+                      <span style={{ fontWeight: 600 }}>{o.label}</span>
+                    </label>
+                  ))}
+                </div>
+                {role === 'coach' && (
+                  <p
+                    style={{
+                      color: 'var(--text-secondary)',
+                      fontSize: '0.85rem',
+                      marginTop: '0.5rem',
+                    }}
+                  >
+                    Activaremos el modo entrenador para que invites a tus alumnos. También podrás
+                    llevar tu propio entreno.
+                  </p>
+                )}
+              </fieldset>
+            )}
+
+            <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+              <legend className="form-label" style={{ marginBottom: '0.5rem' }}>
+                ¿Qué quieres llevar en la app?
+              </legend>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {APP_MODULE_OPTIONS.map((o) => (
+                  <label
+                    key={o.value}
+                    className="kpi-card"
+                    style={{
+                      display: 'block',
+                      padding: '0.75rem',
+                      cursor: 'pointer',
+                      border:
+                        modules === o.value
+                          ? '2px solid var(--accent-primary)'
+                          : '2px solid transparent',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="onboarding-modules"
+                      value={o.value}
+                      checked={modules === o.value}
+                      onChange={() => setModules(o.value)}
+                      className="sr-only"
+                    />
+                    <span style={{ fontWeight: 600, display: 'block' }}>{o.label}</span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                      {o.description}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: '100%', padding: '0.875rem' }}
+            >
+              Continuar
+            </button>
+          </form>
+        ) : step === 1 ? (
+          <>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem 0' }}>
+                Sobre ti
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+                Unos datos básicos para calcular tu gasto y tus marcas relativas.
               </p>
             </div>
 
             <form
-              onSubmit={handleNextStep}
+              onSubmit={withNutrition ? handleNextStep : handleSubmit}
               style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
             >
               <div style={{ display: 'flex', gap: '1rem' }}>
@@ -260,13 +414,24 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
                 </select>
               </div>
 
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{ width: '100%', marginTop: '1rem', padding: '0.875rem' }}
-              >
-                Continuar
-              </button>
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={handlePreviousStep}
+                  style={{ flex: 1, padding: '0.875rem' }}
+                >
+                  Atrás
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={loading}
+                  style={{ flex: 2, padding: '0.875rem' }}
+                >
+                  {withNutrition ? 'Continuar' : loading ? 'Guardando…' : 'Empezar'}
+                </button>
+              </div>
             </form>
           </>
         ) : step === 2 ? (
@@ -368,7 +533,16 @@ export default function OnboardingScreen({ onComplete }: { onComplete: () => voi
           <>
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem 0' }}>
-                Plan de Adelgazamiento
+                {
+                  {
+                    lose: 'Plan para perder peso',
+                    maintain: 'Plan para mantener tu peso',
+                    gain: 'Plan para ganar peso',
+                  }[
+                    weightGoal(parseNumber(form.startWeight), parseNumber(form.goalWeight)) ??
+                      'lose'
+                  ]
+                }
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
                 Ajusta tu plazo y actividad diaria para calcular tus calorías.

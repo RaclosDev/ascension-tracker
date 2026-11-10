@@ -10,6 +10,17 @@ import {
   calcStepsKcal,
 } from '../../utils/nutritionCalculators';
 
+/** Within this margin of the current weight the goal is to keep it, not to lose or gain. */
+const MAINTAIN_MARGIN_KG = 0.5;
+
+export type WeightGoal = 'lose' | 'maintain' | 'gain';
+
+export function weightGoal(current: number | null, goal: number | null): WeightGoal | null {
+  if (!current || !goal) return null;
+  if (Math.abs(goal - current) < MAINTAIN_MARGIN_KG) return 'maintain';
+  return goal < current ? 'lose' : 'gain';
+}
+
 interface WeightLossPlanProps {
   initialWeightKg: string;
   initialGoalWeight: string;
@@ -51,7 +62,7 @@ export default function WeightLossPlan({
 
   const plan = useMemo(() => {
     if (!tdee || !bmr || !pWeight || !pGoal || !pWeeks || pWeeks < 1) return null;
-    if (pGoal >= pWeight) return null;
+    if (pGoal > pWeight - MAINTAIN_MARGIN_KG) return null;
 
     const totalKgToLose = pWeight - pGoal;
     const totalKcalToLose = totalKgToLose * KCAL_PER_KG_FAT;
@@ -112,6 +123,28 @@ export default function WeightLossPlan({
       warnings,
     };
   }, [tdee, bmr, pWeight, pGoal, pWeeks, stepsPct]);
+
+  const goal = weightGoal(pWeight, pGoal);
+
+  // Mantener o ganar: comer a mantenimiento o con un superávit moderado (el músculo no se gana
+  // más rápido comiendo más; el exceso se va a grasa).
+  const altPlan = useMemo(() => {
+    if (!tdee || !pWeight || !pGoal || !pWeeks || pWeeks < 1) return null;
+    if (goal === 'maintain') return { dailyIntake: tdee, surplus: 0, weeklyRate: 0, warnings: [] };
+    if (goal !== 'gain') return null;
+    const totalKg = pGoal - pWeight;
+    const weeklyRate = totalKg / pWeeks;
+    const surplus = Math.min((totalKg * KCAL_PER_KG_FAT) / (pWeeks * 7), 500);
+    const warnings: { level: 'warning' | 'danger'; msg: string }[] = [];
+    const ratePct = (weeklyRate / pWeight) * 100;
+    if (ratePct > 0.5) {
+      warnings.push({
+        level: 'warning',
+        msg: `Subir un ${ratePct.toFixed(1)}% semanal es rápido: parte será grasa. Para ganar músculo limpio, alarga el plazo.`,
+      });
+    }
+    return { dailyIntake: tdee + surplus, surplus, weeklyRate, warnings };
+  }, [tdee, pWeight, pGoal, pWeeks, goal]);
 
   const handleManualSteps = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value);
@@ -178,10 +211,57 @@ export default function WeightLossPlan({
         </div>
       </div>
 
-      {pGoal && pWeight && pGoal >= pWeight && (
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-          El peso objetivo debe ser menor al actual.
-        </p>
+      {altPlan && (
+        <div>
+          <div
+            className="kpi-card"
+            style={{
+              textAlign: 'center',
+              padding: '24px',
+              marginBottom: '1rem',
+              borderTop: '3px solid var(--accent-primary)',
+            }}
+          >
+            <div
+              className="kpi-value"
+              style={{ color: 'var(--accent-primary)', fontSize: '2.5rem' }}
+            >
+              {Math.round(altPlan.dailyIntake)} kcal
+            </div>
+            <div className="kpi-detail">
+              {goal === 'maintain' ? 'Calorías de mantenimiento' : 'Calorías diarias para ganar'}
+            </div>
+            <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              {goal === 'maintain'
+                ? `Tu gasto estimado (TDEE): ${Math.round(tdee)} kcal`
+                : `TDEE ${Math.round(tdee)} + superávit ${Math.round(altPlan.surplus)} kcal · ${altPlan.weeklyRate.toFixed(2)} kg/semana`}
+            </div>
+          </div>
+          {altPlan.warnings.map((w, i) => (
+            <div
+              key={i}
+              role="alert"
+              className={`kpi-card ${w.level}`}
+              style={{
+                marginBottom: '8px',
+                borderLeft: '4px solid var(--color-carbs)',
+                padding: '12px 16px',
+              }}
+            >
+              <span style={{ fontSize: '0.85rem' }}>{w.msg}</span>
+            </div>
+          ))}
+          {onSave && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              style={{ width: '100%', marginTop: '1rem' }}
+              onClick={() => onSave(Math.round(altPlan.dailyIntake))}
+            >
+              {saveButtonText}
+            </button>
+          )}
+        </div>
       )}
 
       {plan && (
