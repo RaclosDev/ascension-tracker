@@ -71,6 +71,10 @@ public class UserSettingsDTO {
     @DecimalMax(value = "3.0", message = "El factor de actividad no puede superar 3.0")
     private Double activityFactor;
 
+    @Pattern(regexp = "^(TRAINING|TRAINING_NUTRITION|TRAINING_BODY|FULL)?$",
+            message = "Módulos no válidos")
+    private String appModules;
+
     @Size(max = 200000, message = "La configuración de entrenamientos no puede superar 200KB")
     private String workoutData;
 }

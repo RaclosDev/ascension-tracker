@@ -13,6 +13,10 @@ import { QuickWeightCard } from '../components/dashboard/QuickWeightCard';
 import { ElevatedKpiGrid } from '../components/dashboard/ElevatedKpiGrid';
 import { GoalProgressBar } from '../components/dashboard/GoalProgressBar';
 import { useRatePreference, calcEstimatedDate } from '../hooks/useRatePreference';
+import { hasBodyTracking } from '../lib/appModules';
+import { PowerliftingCard } from '../components/workout/PowerliftingCard';
+import { Link } from 'react-router-dom';
+import { Dumbbell } from 'lucide-react';
 
 const DashboardCharts = lazyWithRetry(() => import('../components/DashboardCharts'));
 
@@ -138,6 +142,25 @@ export default function DashboardPage() {
 
         {/* Skeleton for Charts */}
         <DashboardChartsSkeleton />
+      </div>
+    );
+  }
+
+  // Sin el módulo de peso y medidas, el inicio se centra en el entreno en vez de pedir el peso.
+  if (settings && !hasBodyTracking(settings.appModules)) {
+    return (
+      <div className="fade-in">
+        <h1 className="text-2xl font-black text-white tracking-tight mb-1">Inicio</h1>
+        <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+          {todayLabel}
+        </p>
+        <Link
+          to="/workout"
+          className="btn btn-primary w-full mb-6 flex items-center justify-center gap-2"
+        >
+          <Dumbbell size={18} aria-hidden /> Ir a entrenar
+        </Link>
+        <PowerliftingCard />
       </div>
     );
   }

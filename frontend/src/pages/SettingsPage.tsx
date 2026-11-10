@@ -17,6 +17,7 @@ import { SettingsWorkoutSection } from '../components/settings/SettingsWorkoutSe
 import { SettingsDataSection } from '../components/settings/SettingsDataSection';
 import { SettingsConsentCard } from '../components/settings/SettingsConsentCard';
 import { SettingsCoachSection } from '../components/settings/SettingsCoachSection';
+import { SettingsModulesSection } from '../components/settings/SettingsModulesSection';
 import { useAuth } from '../context/AuthContext';
 
 /** A coach's plan in force locks the macro editor; if its chunk fails, the editor shows as usual. */
@@ -355,9 +356,11 @@ export default function SettingsPage() {
             />
           )}
 
+          {activeSection === 'modules' && <SettingsModulesSection />}
+
           {activeSection === 'plan' && (
             <div className="card p-4 sm:p-6">
-              <SettingsSectionHeader title="Plan de Adelgazamiento" icon={Activity} />
+              <SettingsSectionHeader title="Plan de peso" icon={Activity} />
               <div className="mt-5 pt-5 border-t border-white/10">
                 <WeightLossPlan
                   initialWeightKg={String(

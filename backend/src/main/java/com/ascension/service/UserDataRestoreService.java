@@ -623,6 +623,7 @@ public class UserDataRestoreService {
         s.setHeightCm(dto.getHeightCm());
         s.setSex(dto.getSex());
         s.setActivityFactor(dto.getActivityFactor());
+        s.setAppModules(dto.getAppModules() == null || dto.getAppModules().isEmpty() ? null : dto.getAppModules());
         s.setWorkoutData(dto.getWorkoutData());
 
         userSettingsRepository.save(s);

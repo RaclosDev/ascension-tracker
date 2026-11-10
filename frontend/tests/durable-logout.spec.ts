@@ -15,10 +15,12 @@ test('failed server logout survives reload and cannot be undone by a peer token 
     });
     await tab.route('**/api/auth/logout', (route) => route.abort('internetdisconnected'));
     await tab.goto('/settings?section=data');
-    await expect(tab.getByRole('button', { name: 'Cerrar sesión', exact: true })).toBeVisible();
+    await expect(
+      tab.getByRole('main').getByRole('button', { name: 'Cerrar sesión', exact: true }),
+    ).toBeVisible();
   }
   await page.evaluate(() => localStorage.setItem('other_app_preference', 'preserved'));
-  await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
+  await page.getByRole('main').getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await expect(peer).toHaveURL(/\/login$/);
   const callsAfterLogout = refreshCalls;
