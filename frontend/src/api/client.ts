@@ -241,6 +241,9 @@ api.interceptors.response.use(
       originalRequest._retry ||
       originalRequest.url === '/auth/refresh' ||
       originalRequest.url === '/auth/logout' ||
+      // A wrong password or passkey is an answer, not an expired session.
+      originalRequest.url?.startsWith('/auth/password/') ||
+      originalRequest.url?.startsWith('/auth/passkeys/') ||
       window.location.pathname === '/login'
     ) {
       settleIdempotency(originalRequest, error.response?.status);

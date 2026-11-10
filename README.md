@@ -54,7 +54,7 @@
 | --- | --- |
 | **Escrituras idempotentes** | `IdempotencyFilter` guarda la clave, la firma de la petición y la respuesta en la misma transacción. Si la conexión falla, el reintento no duplica entrenos ni comidas. |
 | **Concurrencia en PostgreSQL** | Límites de uso con *token bucket* atómico compartido entre instancias, y temporizadores push reclamados con `FOR UPDATE SKIP LOCKED`. |
-| **Sesión segura** | Google acredita la identidad; la API emite un JWT de acceso que vive en memoria y un refresh token rotatorio en cookie `HttpOnly`. CSP generada y verificada en CI. |
+| **Sesión segura** | Acceso con Google, email y contraseña o llave de acceso. La API emite un JWT de acceso que vive en memoria y un refresh token rotatorio en cookie `HttpOnly`. CSP generada y verificada en CI. |
 | **Local-first en el gimnasio** | El entreno en curso se guarda en IndexedDB, aislado por cuenta, y sobrevive a recargas y a una mala cobertura. |
 | **Privacidad por diseño** | El alumno elige qué comparte con su entrenador, cada consulta del entrenador queda registrada y el borrado de cuenta no deja datos huérfanos. |
 | **Rendimiento medido** | Tests que cuentan las consultas SQL para detectar N+1, y presupuestos de tamaño de JS, CSS y precache comprobados en CI. |

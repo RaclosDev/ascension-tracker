@@ -30,7 +30,7 @@ export const LEGAL_TEXTS: Record<LegalDoc, LegalText> = {
       {
         title: 'Qué datos tratamos',
         paragraphs: [
-          'Los de tu cuenta de Google con la que entras: nombre, email y foto de perfil.',
+          'Los de tu acceso: tu email y, según cómo entres, tu contraseña (guardada solo como hash, nunca en claro), la clave pública de tus llaves de acceso o el nombre y la foto de perfil de tu cuenta de Google.',
           'Lo que registras en la app: entrenamientos, comidas, peso, pasos, medidas, fotos de progreso, check-ins y ajustes. Varios de estos datos (peso, medidas, fotos, alimentación) son datos relativos a la salud.',
           'Si nos escribes desde el formulario de contacto, tu mensaje y el número de alumnos que nos indiques.',
           'Datos técnicos necesarios para que el servicio funcione y sea seguro: registros de acceso, dirección IP y suscripciones a avisos del navegador.',
@@ -55,7 +55,7 @@ export const LEGAL_TEXTS: Record<LegalDoc, LegalText> = {
       {
         title: 'Con quién los compartimos',
         paragraphs: [
-          'Con proveedores que nos ayudan a prestar el servicio y actúan como encargados del tratamiento: Heroku (alojamiento de la aplicación), [PROVEEDOR DE BASE DE DATOS] (base de datos), Cloudflare R2 (fotos de progreso, en almacenamiento privado), Google (inicio de sesión y Gemini) y los servicios de avisos del navegador que uses.',
+          'Con proveedores que nos ayudan a prestar el servicio y actúan como encargados del tratamiento: Heroku (alojamiento de la aplicación), [PROVEEDOR DE BASE DE DATOS] (base de datos), Cloudflare R2 (fotos de progreso, en almacenamiento privado), Resend (envío de los correos de tu cuenta, como la verificación del email o el cambio de contraseña), Google (inicio de sesión con Google y Gemini) y los servicios de avisos del navegador que uses.',
           'Algunos están fuera del Espacio Económico Europeo; en esos casos las transferencias se amparan en las cláusulas contractuales tipo de la Comisión Europea o en el Marco de Privacidad de Datos UE-EE. UU.',
           'Con tu entrenador, solo si te vinculas y solo lo que tú compartes. No vendemos tus datos ni los usamos para publicidad.',
         ],
@@ -90,7 +90,7 @@ export const LEGAL_TEXTS: Record<LegalDoc, LegalText> = {
       {
         title: 'Tu cuenta',
         paragraphs: [
-          'Entras con tu cuenta de Google y eres responsable de lo que hagas con ella. Debes tener al menos [EDAD MÍNIMA] años.',
+          'Entras con tu email y contraseña, con una llave de acceso o con tu cuenta de Google. Guarda tus credenciales en secreto: eres responsable de lo que se haga con tu cuenta. Debes tener al menos [EDAD MÍNIMA] años.',
           'No uses la app para fines ilícitos, para acceder a datos de otros sin permiso ni para sobrecargar el servicio. Podemos suspender cuentas que lo hagan.',
         ],
       },

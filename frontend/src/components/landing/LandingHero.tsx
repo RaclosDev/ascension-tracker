@@ -2,6 +2,7 @@ import GoogleSignInButton from '../GoogleSignInButton';
 import { Crown, ArrowDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
+import EmailAccess from './EmailAccess';
 
 // Marker stroke under the blue tag word, drawn by hand so it never repeats exactly.
 const Stroke = () => (
@@ -80,8 +81,18 @@ export default function LandingHero() {
             <ArrowDown size={16} aria-hidden="true" />
           </a>
         </div>
+        <div
+          className="mt-6 flex max-w-sm items-center gap-3 text-[0.8rem] text-[var(--landing-muted)]"
+          aria-hidden="true"
+        >
+          <span className="flex-1 border-t border-current opacity-40" />o con tu email
+          <span className="flex-1 border-t border-current opacity-40" />
+        </div>
+        <div className="mt-4">
+          <EmailAccess />
+        </div>
         <p className="mt-3 text-[0.8rem] text-[var(--landing-muted)]">
-          Solo cuenta de Google. Sin registro, sin contraseña, sin tarjeta.
+          Con Google, con tu email o con la huella del móvil. Gratis y sin tarjeta.
         </p>
       </div>
     </section>

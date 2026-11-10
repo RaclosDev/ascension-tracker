@@ -308,6 +308,33 @@ class AuthControllerTest {
     }
 
     @Test
+    void login_LinksGoogleToAnUnverifiedPasswordAccount() throws Exception {
+        var idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
+        var payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
+        payload.setEmailVerified(true);
+        payload.setEmail("unverified@example.com");
+        payload.setSubject("google-sub-unverified");
+        when(idToken.getPayload()).thenReturn(payload);
+        when(googleIdTokenVerifier.verify("unverified-token")).thenReturn(idToken);
+        when(userService.findByEmail("unverified@example.com")).thenReturn(Optional.of(
+                new User("unverified@example.com", "Unverified", null, null, null)));
+
+        RefreshToken rt = new RefreshToken();
+        rt.setEmail("unverified@example.com");
+        rt.setPlainToken("plain-refresh-token");
+        when(refreshTokenService.createRefreshToken("unverified@example.com")).thenReturn(rt);
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"unverified-token\"}"))
+                .andExpect(status().isOk())
+                .andExpect(cookie().exists("refreshToken"));
+        org.mockito.Mockito.verify(userService)
+                .ensureUserExists("unverified@example.com", null, null, "google-sub-unverified");
+    }
+
+    @Test
     void login_WithMixedCaseGoogleEmail_UsesTheLowerCaseAccountEverywhere() throws Exception {
         com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
         com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();

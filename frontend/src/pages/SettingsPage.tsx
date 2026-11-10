@@ -16,6 +16,7 @@ import { SettingsThemeSection } from '../components/settings/SettingsThemeSectio
 import { SettingsWorkoutSection } from '../components/settings/SettingsWorkoutSection';
 import { SettingsDataSection } from '../components/settings/SettingsDataSection';
 import { SettingsConsentCard } from '../components/settings/SettingsConsentCard';
+import { PasskeysCard } from '../components/settings/PasskeysCard';
 import { useCoachProfile } from '../lib/coach/api';
 import { SettingsCoachSection } from '../components/settings/SettingsCoachSection';
 import { SettingsModulesSection } from '../components/settings/SettingsModulesSection';
@@ -446,6 +447,7 @@ export default function SettingsPage() {
 
           {activeSection === 'coach' && <SettingsCoachSection />}
 
+          {activeSection === 'data' && <PasskeysCard />}
           {activeSection === 'data' && <SettingsConsentCard />}
           {activeSection === 'data' && (
             <SettingsDataSection
