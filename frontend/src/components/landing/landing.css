@@ -18,6 +18,12 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.landing #funciones,
+.landing #datos,
+.landing #entrenadores {
+  scroll-margin-top: 3rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing {
     scroll-behavior: auto;
