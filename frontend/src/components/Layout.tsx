@@ -16,6 +16,7 @@ import { useWorkoutStore } from '@/lib/workout/store';
 import { useQuery } from '@tanstack/react-query';
 import { WorkoutElapsedTimer } from './workout/WorkoutElapsedTimer';
 import OnboardingScreen from './OnboardingScreen';
+import { PasskeyPrompt } from './PasskeyPrompt';
 import { preloadRoute } from '../utils/routePreload';
 
 import { Skeleton } from './ui/skeleton';
@@ -356,6 +357,7 @@ export default function Layout() {
               }
             >
               <div key={location.pathname} className="route-fade">
+                {user?.email && <PasskeyPrompt email={user.email} />}
                 <Outlet />
               </div>
             </Suspense>

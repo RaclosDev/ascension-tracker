@@ -100,7 +100,8 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain authFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/api/auth/login", "/api/auth/login/redirect", "/api/auth/refresh", "/api/auth/logout", "/api/auth/config")
+            .securityMatcher("/api/auth/login", "/api/auth/login/redirect", "/api/auth/refresh", "/api/auth/logout", "/api/auth/config",
+                "/api/auth/password/**", "/api/auth/passkeys/**")
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
