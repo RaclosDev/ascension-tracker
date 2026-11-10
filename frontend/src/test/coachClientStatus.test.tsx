@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -30,6 +30,7 @@ const status = (linkId: string, over: Partial<ClientStatus>): ClientStatus => ({
   level: 'GREEN',
   lastActivity: '2026-11-04',
   pendingReplies: 0,
+  weightChange: null,
   signals: [],
   ...over,
 });
@@ -46,7 +47,7 @@ describe('Semáforo de alumnos', () => {
       '/coach/checkin-template': { questions: ['¿Qué tal la semana?'], custom: false },
       '/coach/clients': [client('a', 'Ana'), client('b', 'Bruno'), client('c', 'Carla')],
       '/coach/clients/status': [
-        status('a', {}),
+        status('a', { weightChange: -0.7 }),
         status('b', {
           level: 'RED',
           signals: [{ reason: 'INACTIVE', level: 'RED', value: 9 }],
@@ -69,17 +70,27 @@ describe('Semáforo de alumnos', () => {
       </QueryClientProvider>,
     );
 
-    await screen.findByText('Necesita atención');
-    const items = within(screen.getByText('Bruno').closest('ul')!).getAllByRole('listitem');
-    expect(items.map((li) => li.querySelector('.font-bold')?.textContent)).toEqual([
+    await screen.findAllByText('Necesita atención');
+    const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
+    expect(rows.map((tr) => within(tr).getByRole('link').textContent)).toEqual([
       'Bruno',
       'Carla',
       'Ana',
     ]);
-    expect(items[0]).toHaveTextContent('9 días sin registrar nada');
-    expect(items[0]).toHaveTextContent('2 check-ins por responder');
-    expect(items[1]).toHaveTextContent('Vigilar');
-    expect(items[2]).toHaveTextContent('Al día');
+    expect(rows[0]).toHaveTextContent('9 días sin registrar nada');
+    expect(rows[0]).toHaveTextContent('2 por responder');
+    expect(rows[1]).toHaveTextContent('Vigilar');
+    expect(rows[2]).toHaveTextContent('Al día');
+    expect(rows[2]).toHaveTextContent('-0,7 kg');
+
+    const counters = screen.getByText('Necesitan atención').closest('dl')!;
+    expect(counters).toHaveTextContent('Necesitan atención2');
+    expect(counters).toHaveTextContent('Check-ins por responder2');
+    expect(counters).toHaveTextContent('Al día1 de 3');
+
+    fireEvent.click(screen.getByRole('button', { name: /Check-in pendiente/ }));
+    const filtered = within(screen.getByRole('table')).getAllByRole('row').slice(1);
+    expect(filtered.map((tr) => within(tr).getByRole('link').textContent)).toEqual(['Bruno']);
   });
 
   it('describes every reason in plain words', () => {

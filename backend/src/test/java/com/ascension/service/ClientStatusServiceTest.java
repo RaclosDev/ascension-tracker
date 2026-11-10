@@ -77,6 +77,13 @@ class ClientStatusServiceTest {
     }
 
     @Test
+    void reportsTheWeightChangeOnlyWithWeightsFromBothWeeks() {
+        assertThat(ClientStatusService.evaluate(weights(84.26, 85.0, 75.0), TODAY).weightChange()).isEqualTo(-0.7);
+        assertThat(ClientStatusService.evaluate(weights(65.6, 65.0, null), TODAY).weightChange()).isEqualTo(0.6);
+        assertThat(ClientStatusService.evaluate(weights(84.8, null, 75.0), TODAY).weightChange()).isNull();
+    }
+
+    @Test
     void weightStallsWhenItBarelyMovesTowardsAGoalStillFarAway() {
         Signal stalled = new Signal(Reason.WEIGHT_STALLED, Level.AMBER, 3);
         // Cutting from 85 to 75: 0.2 kg in three weeks is a stall, 0.5 kg is progress, gaining is a stall.

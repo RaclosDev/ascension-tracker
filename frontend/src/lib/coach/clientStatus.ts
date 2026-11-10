@@ -22,6 +22,8 @@ export interface ClientStatus {
   level: StatusLevel;
   lastActivity: string | null;
   pendingReplies: number;
+  /** Kilos gained (+) or lost (-) between the last week and three weeks earlier; null if unknown. */
+  weightChange: number | null;
   signals: StatusSignal[];
 }
 
@@ -31,6 +33,12 @@ export const LEVEL_LABELS: Record<StatusLevel, string> = {
   RED: 'Necesita atención',
   AMBER: 'Vigilar',
   GREEN: 'Al día',
+};
+
+export const LEVEL_COLORS: Record<StatusLevel, string> = {
+  RED: 'var(--color-danger)',
+  AMBER: 'var(--color-warning)',
+  GREEN: 'var(--color-success)',
 };
 
 export function signalText({ reason, value }: StatusSignal): string {

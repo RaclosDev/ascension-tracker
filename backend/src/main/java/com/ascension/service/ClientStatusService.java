@@ -146,7 +146,16 @@ public class ClientStatusService {
         }
 
         Level level = signals.stream().map(Signal::level).max(Comparator.naturalOrder()).orElse(Level.GREEN);
-        return new ClientStatus(facts.linkId(), level, lastActivity, facts.pendingReplies(), signals);
+        return new ClientStatus(facts.linkId(), level, lastActivity, facts.pendingReplies(), signals,
+                weightChange(facts));
+    }
+
+    /** Last week's average weight against the one three weeks before, rounded to 0.1 kg. */
+    private static Double weightChange(Facts facts) {
+        if (facts.recentWeight() == null || facts.earlierWeight() == null) {
+            return null;
+        }
+        return Math.round((facts.recentWeight() - facts.earlierWeight()) * 10) / 10.0;
     }
 
     /** Still over 1 kg from the goal and less than 0.3 kg closer to it than three weeks ago. */

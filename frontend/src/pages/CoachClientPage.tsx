@@ -1,5 +1,5 @@
 import { Suspense, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
   ArrowLeft,
@@ -9,18 +9,21 @@ import {
   Footprints,
   MessageSquareText,
   Scale,
+  UserMinus,
   Utensils,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { ReactNode } from 'react';
 import {
+  PERMISSION_LABELS,
   formatCoachDate,
   personName,
   apiErrorMessage,
-  sharedScopes,
   useClientCustomExercises,
   useClientData,
   useCoachClients,
+  useEndClient,
+  type CoachPermissions,
   type CoachTargets,
 } from '../lib/coach/api';
 import {
@@ -60,7 +63,7 @@ export default function CoachClientPage() {
   const link = clients.data?.find((c) => c.linkId === linkId);
 
   return (
-    <div className="fade-in max-w-5xl mx-auto px-4 pt-2 sm:pt-4">
+    <div className="fade-in coach-page">
       <Link
         to="/entrenador"
         className="inline-flex items-center gap-1 mb-3"
@@ -72,13 +75,23 @@ export default function CoachClientPage() {
       {clients.data && !link && <p role="alert">Este alumno ya no está vinculado contigo.</p>}
       {link && (
         <>
-          <header className="mb-6 pb-2 border-b border-white/5">
-            <h1 className="text-2xl font-black text-white tracking-tight">
-              {personName(link.client)}
-            </h1>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              Comparte: {sharedScopes(link.permissions)} · desde {formatCoachDate(link.since)}
-            </p>
+          <header className="coach-client-header">
+            <div className="min-w-0">
+              <h1 className="coach-client-name">{personName(link.client)}</h1>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Alumno desde {formatCoachDate(link.since)}
+              </p>
+              <ul className="coach-scopes" aria-label="Qué te comparte">
+                {(Object.keys(PERMISSION_LABELS) as (keyof CoachPermissions)[])
+                  .filter((scope) => link.permissions[scope])
+                  .map((scope) => (
+                    <li key={scope} title={PERMISSION_LABELS[scope].detail}>
+                      {PERMISSION_LABELS[scope].title}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+            <EndRelationButton linkId={linkId} name={personName(link.client)} />
           </header>
           <div className="flex flex-col gap-6">
             <Section title="Check-ins" icon={<MessageSquareText size={18} aria-hidden />}>
@@ -96,6 +109,27 @@ export default function CoachClientPage() {
         </>
       )}
     </div>
+  );
+}
+
+function EndRelationButton({ linkId, name }: { linkId: string; name: string }) {
+  const end = useEndClient();
+  const navigate = useNavigate();
+  return (
+    <button
+      type="button"
+      className="btn btn-secondary coach-end"
+      disabled={end.isPending}
+      onClick={() => {
+        if (!window.confirm(`¿Terminar la relación con ${name}? Dejarás de ver sus datos.`)) return;
+        end.mutate(linkId, {
+          onSuccess: () => navigate('/entrenador'),
+          onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo terminar la relación')),
+        });
+      }}
+    >
+      <UserMinus size={16} aria-hidden /> Terminar relación
+    </button>
   );
 }
 
@@ -124,7 +158,7 @@ function Stat({ label, value }: { label: string; value: string }) {
       <div className="text-xs uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
         {label}
       </div>
-      <div className="text-lg font-bold text-white">{value}</div>
+      <div className="text-lg font-bold text-foreground">{value}</div>
     </div>
   );
 }
@@ -145,7 +179,7 @@ function WeeklyList({ weeks, unit }: { weeks: WeekSummary[]; unit: string }) {
           <span style={{ color: 'var(--text-secondary)' }}>
             Semana del {formatCoachDate(week.weekStart)}
           </span>
-          <span className="text-white">{num(week.average, unit)}</span>
+          <span className="text-foreground">{num(week.average, unit)}</span>
         </li>
       ))}
     </ul>
@@ -266,7 +300,7 @@ function ProgramsSection({ linkId, canAssign }: { linkId: string; canAssign: boo
             <li key={a.id} className="flex flex-col gap-1">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="font-bold text-white truncate">{a.programName}</div>
+                  <div className="font-bold text-foreground truncate">{a.programName}</div>
                   <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                     {a.weeks} {a.weeks === 1 ? 'semana' : 'semanas'} · empieza el{' '}
                     {formatCoachDate(a.startDate)}
@@ -386,7 +420,7 @@ function TrainingSection({ linkId }: { linkId: string }) {
           <BodyHeatmap history={recent.data} customExercises={custom.data ?? []} />
         </div>
       )}
-      <h3 className="text-sm font-bold text-white mb-2">Últimos entrenamientos</h3>
+      <h3 className="text-sm font-bold text-foreground mb-2">Últimos entrenamientos</h3>
       <QueryState isLoading={history.isLoading} isError={history.isError} />
       {history.data?.content.length === 0 && (
         <p style={{ color: 'var(--text-secondary)' }}>Aún no ha registrado entrenamientos.</p>
@@ -399,7 +433,7 @@ function TrainingSection({ linkId }: { linkId: string }) {
             style={{ borderColor: 'var(--border-subtle)' }}
           >
             <div className="flex justify-between gap-2">
-              <span className="font-bold text-white">{workout.name || 'Entrenamiento'}</span>
+              <span className="font-bold text-foreground">{workout.name || 'Entrenamiento'}</span>
               <span style={{ color: 'var(--text-secondary)' }}>{formatDay(workout.startedAt)}</span>
             </div>
             <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
@@ -407,7 +441,7 @@ function TrainingSection({ linkId }: { linkId: string }) {
                 .map((ex) => exerciseMap.get(ex.exerciseId)?.name ?? 'Ejercicio')
                 .join(' · ')}
             </div>
-            <div className="text-sm text-white">
+            <div className="text-sm text-foreground">
               Volumen {formatKg(sessionVolume(workout.exercises ?? []))}
             </div>
           </li>
@@ -435,11 +469,11 @@ function NutritionSection({ linkId, canEditPlan }: { linkId: string; canEditPlan
 
   return (
     <Section title="Nutrición" icon={<Utensils size={18} aria-hidden />}>
-      <h3 className="font-semibold text-white mb-2">Pauta de nutrición</h3>
+      <h3 className="font-semibold text-foreground mb-2">Pauta de nutrición</h3>
       <NutritionPlanSection linkId={linkId} canEdit={canEditPlan} />
-      <h3 className="font-semibold text-white mt-6 mb-2">Adherencia a la pauta</h3>
+      <h3 className="font-semibold text-foreground mt-6 mb-2">Adherencia a la pauta</h3>
       <NutritionAdherenceSection linkId={linkId} />
-      <h3 className="font-semibold text-white mt-6 mb-2">Sus objetivos y registro</h3>
+      <h3 className="font-semibold text-foreground mt-6 mb-2">Sus objetivos y registro</h3>
       {t && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
           <Stat label="Objetivo" value={num(t.kcal, ' kcal')} />
@@ -475,7 +509,7 @@ function NutritionSection({ linkId, canEditPlan }: { linkId: string; canEditPlan
                     · {num(log.quantity, ' g')}
                   </span>
                 </span>
-                <span className="text-white">{num(log.kcal, ' kcal')}</span>
+                <span className="text-foreground">{num(log.kcal, ' kcal')}</span>
               </li>
             ))}
           </ul>
@@ -484,7 +518,7 @@ function NutritionSection({ linkId, canEditPlan }: { linkId: string; canEditPlan
               <NutritionPieChart pieData={macroPieData(totals, t?.kcal)} />
             </Suspense>
           </div>
-          <p className="text-sm text-white">
+          <p className="text-sm text-foreground">
             Total {num(totals.kcal, ' kcal')} · P {num(totals.protein, ' g')} · C{' '}
             {num(totals.carbs, ' g')} · G {num(totals.fat, ' g')}
           </p>
