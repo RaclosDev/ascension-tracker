@@ -1,24 +1,16 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { GoogleLogin, useGoogleOAuth, type CredentialResponse } from '@react-oauth/google';
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { Button } from './ui/button';
 import './GoogleSignInButton.css';
 
 const SIGN_IN_EVENT = 'ascension:google-sign-in';
 
-// Lets any call to action on the page (nav "Entrar", "Empezar ahora") open Google's account
-// chooser directly instead of following its #entrar link down to the hero button.
+// Lets any call to action on the page (nav "Entrar", "Empezar ahora") open the Google sign-in
+// dialog directly instead of following its #entrar link down to the hero button.
 export function requestGoogleSignIn(event?: { preventDefault: () => void }) {
   event?.preventDefault();
   window.dispatchEvent(new Event(SIGN_IN_EVENT));
 }
-
-type GoogleIdentity = {
-  initialize: (config: Record<string, unknown>) => void;
-  prompt: (listener?: (moment: { isSkippedMoment?: () => boolean }) => void) => void;
-};
-
-const googleIdentity = () =>
-  (window as unknown as { google?: { accounts?: { id?: GoogleIdentity } } }).google?.accounts?.id;
 
 export default function GoogleSignInButton({
   onCredential,
@@ -30,7 +22,6 @@ export default function GoogleSignInButton({
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
-  const { clientId, scriptLoadedSuccessfully } = useGoogleOAuth();
   const [standalone] = useState(
     () =>
       window.matchMedia?.('(display-mode: standalone)').matches ||
@@ -66,34 +57,12 @@ export default function GoogleSignInButton({
     [onCredential],
   );
 
-  // Shows Google's own account chooser in the page; falls back to the dialog with the
-  // Google button when the browser can't show it (cooldown, blocked FedCM, script missing).
+  // Opens the dialog with Google's own rendered button. One Tap (`prompt()`) is not used on
+  // click: it goes silent for hours after a dismissal, needs FedCM or third-party cookies,
+  // and with FedCM it does not report when it is not shown, so the click did nothing.
   const start = useCallback(() => {
-    const identity = googleIdentity();
-    const fallback = () => {
-      if (!dialog.current?.open) dialog.current?.showModal();
-    };
-    if (typeof identity?.prompt !== 'function' || !clientId || !scriptLoadedSuccessfully) {
-      fallback();
-      return;
-    }
-    try {
-      identity.initialize({
-        client_id: clientId,
-        callback: handleSuccess,
-        ux_mode: uxMode,
-        login_uri: loginUri,
-        context: 'signin',
-        itp_support: true,
-        use_fedcm_for_prompt: true,
-      });
-      identity.prompt((moment) => {
-        if (moment.isSkippedMoment?.()) fallback();
-      });
-    } catch {
-      fallback();
-    }
-  }, [clientId, scriptLoadedSuccessfully, handleSuccess, uxMode, loginUri]);
+    if (!dialog.current?.open) dialog.current?.showModal();
+  }, []);
 
   useEffect(() => {
     window.addEventListener(SIGN_IN_EVENT, start);
