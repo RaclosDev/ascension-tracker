@@ -16,8 +16,8 @@
   --color-card: var(--bg-card);
   --color-muted: var(--bg-card-hover);
   --color-muted-foreground: var(--text-muted);
-  --color-primary: var(--accent-red);
-  --color-primary-foreground: #fff;
+  --color-primary: var(--wall-active-bg);
+  --color-primary-foreground: var(--wall-active-ink);
   --color-secondary: var(--bg-card-hover);
   --color-secondary-foreground: var(--text-main);
   --color-border: var(--border-color);

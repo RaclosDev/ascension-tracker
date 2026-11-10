@@ -296,13 +296,8 @@ body,
 /* ───────────── Hojas sueltas ───────────── */
 
 /*
- * Cada tarjeta de primer nivel es una hoja. El papel se dibuja en ::before y es lo único que
- * se inclina: el texto, los gráficos y los controles siguen rectos y se leen igual.
- * El giro de cada hoja sale de un ciclo de 5, así que parecen colocadas a mano.
+ * Cada tarjeta de primer nivel es una hoja recta. El papel se dibuja en ::before.
  */
-:is(.card, .chart-card, .progress-card) {
-  --paper-angle: -0.5deg;
-}
 :is(.card, .chart-card, .progress-card):not([role='dialog'], [role='alertdialog']):not(
     :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
       *
@@ -326,26 +321,13 @@ body,
   border-radius: 3px;
   background-color: var(--paper);
   background-image: var(--paper-lines);
-  transform: skewY(var(--paper-angle));
   box-shadow:
     4px 5px 0 #d8cfb9,
     5px 6px 0 rgba(17, 24, 39, 0.25),
     0 10px 24px rgba(0, 0, 0, 0.35);
   pointer-events: none;
 }
-:is(.card, .chart-card, .progress-card):nth-child(5n + 2) {
-  --paper-angle: 0.6deg;
-}
-:is(.card, .chart-card, .progress-card):nth-child(5n + 3) {
-  --paper-angle: -0.25deg;
-}
-:is(.card, .chart-card, .progress-card):nth-child(5n + 4) {
-  --paper-angle: 0.8deg;
-}
-:is(.card, .chart-card, .progress-card):nth-child(5n) {
-  --paper-angle: -0.75deg;
-}
-/* Las hojas que recortaban su contenido lo siguen haciendo, pero dejan asomar el papel girado. */
+/* Las hojas que recortaban su contenido lo siguen haciendo, pero dejan asomar la sombra del papel. */
 .overflow-hidden:is(.card, .chart-card, .progress-card):not(
     [role='dialog'],
     [role='alertdialog']
@@ -356,23 +338,8 @@ body,
   overflow: clip;
   overflow-clip-margin: 24px;
 }
-/* En móvil el giro es menor: la hoja es estrecha y el borde no debe comerse el margen. */
+/* En móvil la sombra es menor: la hoja es estrecha y no debe comerse el margen. */
 @media (max-width: 768px) {
-  :is(.card, .chart-card, .progress-card) {
-    --paper-angle: -0.3deg;
-  }
-  :is(.card, .chart-card, .progress-card):nth-child(5n + 2) {
-    --paper-angle: 0.4deg;
-  }
-  :is(.card, .chart-card, .progress-card):nth-child(5n + 3) {
-    --paper-angle: -0.15deg;
-  }
-  :is(.card, .chart-card, .progress-card):nth-child(5n + 4) {
-    --paper-angle: 0.5deg;
-  }
-  :is(.card, .chart-card, .progress-card):nth-child(5n) {
-    --paper-angle: -0.45deg;
-  }
   :is(.card, .chart-card, .progress-card):not([role='dialog'], [role='alertdialog']):not(
       :is(
           .card,
@@ -540,7 +507,6 @@ html[data-mode='light'] .sidebar-title-img {
   color: var(--wall-active-ink);
   border: 0;
   box-shadow: 3px 4px 0 var(--wall-shadow);
-  transform: rotate(-1deg);
 }
 .mobile-bottom-nav {
   border: 1px solid var(--wall-line);
@@ -742,6 +708,12 @@ html[data-mode='light'] .sidebar-title-img {
   background: var(--ink);
   color: var(--paper);
   border-color: var(--ink);
+}
+/* El color «primary» de Tailwind (bg-primary, Button por defecto) sigue al botón principal:
+   papel sobre la pared (definido en @theme) y tinta sobre las hojas. */
+:is(.card, .modal-content, [role='dialog'], [role='alertdialog'], .landing) {
+  --color-primary: var(--ink);
+  --color-primary-foreground: var(--paper);
 }
 @media (hover: hover) {
   :is(.card, .modal-content, [role='dialog'], [role='alertdialog'], .landing) .btn-primary:hover {
