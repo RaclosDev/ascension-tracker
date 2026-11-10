@@ -29,6 +29,10 @@ import {
   Plus,
   LogOut,
   GraduationCap,
+  Users,
+  ClipboardList,
+  ChefHat,
+  CreditCard,
 } from 'lucide-react';
 import { ActiveWorkoutBanner } from './workout/ActiveWorkoutBanner';
 import { haptics } from '@/lib/haptics';
@@ -82,7 +86,49 @@ const navItems = [
 ];
 
 const bottomNavPaths = ['/dashboard', '/tracking', '/nutrition', '/workout'];
-const moreMenuPaths = ['/entrenador', '/utilities', '/settings'];
+
+/**
+ * Una cuenta de entrenador es solo para entrenar a otros: ve sus alumnos, programas, recetas y plan.
+ * Si quiere llevar su propio seguimiento, usa otra cuenta.
+ */
+const coachNavItems = [
+  {
+    path: '/entrenador',
+    icon: <Users className="w-5 h-5" />,
+    label: 'Alumnos',
+    shortLabel: 'Alumnos',
+  },
+  {
+    path: '/entrenador/programas',
+    icon: <ClipboardList className="w-5 h-5" />,
+    label: 'Programas',
+    shortLabel: 'Programas',
+  },
+  {
+    path: '/entrenador/recetas',
+    icon: <ChefHat className="w-5 h-5" />,
+    label: 'Recetas',
+    shortLabel: 'Recetas',
+  },
+  {
+    path: '/entrenador/plan',
+    icon: <CreditCard className="w-5 h-5" />,
+    label: 'Plan y facturación',
+    shortLabel: 'Plan',
+  },
+  ...navItems.filter((i) => i.path === '/utilities' || i.path === '/settings'),
+];
+const coachBottomPaths = coachNavItems.slice(0, 4).map((i) => i.path);
+/** Personal sections a coach account does not use; they open the coach panel instead. */
+const personalPaths = ['/dashboard', '/tracking', '/nutrition', '/workout'];
+
+/** The client pages belong to «Alumnos»; the other sections also cover their subpages. */
+function isItemActive(itemPath: string, pathname: string) {
+  if (itemPath === '/entrenador') {
+    return pathname === '/entrenador' || pathname.startsWith('/entrenador/alumnos/');
+  }
+  return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+}
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -113,6 +159,12 @@ export default function Layout() {
   });
   const needsOnboarding = !loadingConfig && !configError && settings === null;
   const isCoach = useCoachProfile().data?.coach === true;
+
+  useEffect(() => {
+    if (isCoach && personalPaths.includes(location.pathname)) {
+      navigate('/entrenador', { replace: true });
+    }
+  }, [isCoach, location.pathname, navigate]);
 
   // Cerrar el menú automáticamente al cambiar de página y resetear scroll
   useEffect(() => {
@@ -172,17 +224,21 @@ export default function Layout() {
   }, [navigateTo]);
 
   const closeSidebar = () => setSidebarOpen(false);
-  const isMoreActive = moreMenuPaths.includes(location.pathname);
   // Hide the sections of the modules the user switched off (Ajustes › Módulos).
-  // «Entrenador» solo aparece a quien tiene activado el modo entrenador.
-  const visibleNav = navItems.filter((i) =>
-    i.path === '/entrenador' ? isCoach : isPathEnabled(i.path, settings?.appModules),
-  );
-  const bottomItems = visibleNav.filter((i) => bottomNavPaths.includes(i.path));
+  // «Entrenador» solo aparece a quien tiene activado el modo entrenador (y entonces es lo único).
+  const visibleNav = isCoach
+    ? coachNavItems
+    : navItems.filter((i) =>
+        i.path === '/entrenador' ? false : isPathEnabled(i.path, settings?.appModules),
+      );
+  const bottomPaths = isCoach ? coachBottomPaths : bottomNavPaths;
+  const bottomItems = visibleNav.filter((i) => bottomPaths.includes(i.path));
+  const moreItems = visibleNav.filter((i) => !bottomPaths.includes(i.path));
+  const isMoreActive = moreItems.some((i) => isItemActive(i.path, location.pathname));
   // Index of the highlighted tab; the "Más" button is the last slot. -1 hides the pill.
   const activeBottomIndex = isMoreActive
     ? bottomItems.length
-    : bottomItems.findIndex((i) => i.path === location.pathname);
+    : bottomItems.findIndex((i) => isItemActive(i.path, location.pathname));
   if (needsOnboarding && !loadingConfig) {
     return (
       <OnboardingScreen
@@ -209,12 +265,14 @@ export default function Layout() {
           <div className="sidebar-header">
             <div className="sidebar-brand-container">
               <img src="/ascension-title.png" alt="Ascension" className="sidebar-title-img" />
-              <div className="logo-subtitle">Entreno · Nutrición · Peso</div>
+              <div className="logo-subtitle">
+                {isCoach ? 'Panel de entrenador' : 'Entreno · Nutrición · Peso'}
+              </div>
             </div>
           </div>
           <nav className="sidebar-nav" aria-label="Navegación principal">
             {visibleNav.map((item) => {
-              const isActive = location.pathname === item.path;
+              const isActive = isItemActive(item.path, location.pathname);
               return (
                 <button
                   key={item.path}
@@ -328,7 +386,7 @@ export default function Layout() {
           <span className="mobile-bottom-pill-ghost">&nbsp;</span>
         </span>
         {bottomItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = isItemActive(item.path, location.pathname);
           return (
             <button
               key={item.path}
@@ -413,35 +471,33 @@ export default function Layout() {
         title="Más opciones"
       >
         <div className="bottom-sheet-grid">
-          {visibleNav
-            .filter((i) => moreMenuPaths.includes(i.path))
-            .map((item) => {
-              const isActive = location.pathname === item.path;
-              return (
-                <button
-                  key={item.path}
-                  type="button"
-                  className={`bottom-sheet-item ${isActive ? 'active' : ''}`}
-                  aria-current={isActive ? 'page' : undefined}
-                  onMouseEnter={() => preloadRoute(item.path)}
-                  onTouchStart={() => preloadRoute(item.path)}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setMoreMenuOpen(false);
-                    navigateTo(item.path);
-                  }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center' }}
-                >
-                  <div className="bottom-sheet-item-icon" style={{ pointerEvents: 'none' }}>
-                    {item.icon}
-                  </div>
-                  <span style={{ pointerEvents: 'none', flex: 1, textAlign: 'left' }}>
-                    {item.label}
-                  </span>
-                </button>
-              );
-            })}
+          {moreItems.map((item) => {
+            const isActive = isItemActive(item.path, location.pathname);
+            return (
+              <button
+                key={item.path}
+                type="button"
+                className={`bottom-sheet-item ${isActive ? 'active' : ''}`}
+                aria-current={isActive ? 'page' : undefined}
+                onMouseEnter={() => preloadRoute(item.path)}
+                onTouchStart={() => preloadRoute(item.path)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMoreMenuOpen(false);
+                  navigateTo(item.path);
+                }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center' }}
+              >
+                <div className="bottom-sheet-item-icon" style={{ pointerEvents: 'none' }}>
+                  {item.icon}
+                </div>
+                <span style={{ pointerEvents: 'none', flex: 1, textAlign: 'left' }}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
           <button
             type="button"
             className="bottom-sheet-item"

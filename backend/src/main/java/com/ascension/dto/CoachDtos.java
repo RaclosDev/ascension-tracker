@@ -1,6 +1,12 @@
 package com.ascension.dto;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
@@ -41,7 +47,31 @@ public final class CoachDtos {
     public record CreatedInvitation(UUID id, String token, Instant expiresAt) {
     }
 
-    public record PendingInvitation(UUID id, Instant createdAt, Instant expiresAt) {
+    /**
+     * Details the coach already knows about the person they invite, so that person only has to sign up and
+     * accept. Every field is optional; they are kept on the invitation until it is accepted, revoked or expires.
+     */
+    public record InvitationProfile(
+            @Pattern(regexp = "^[MF]$", message = "El sexo debe ser 'M' o 'F'") String sex,
+            @Min(10) @Max(120) Integer age,
+            @Min(50) @Max(300) Integer heightCm,
+            @DecimalMin("1.0") @DecimalMax("1000.0") Double startWeight,
+            @DecimalMin("1.0") @DecimalMax("1000.0") Double goalWeight,
+            @DecimalMin("1.0") @DecimalMax("3.0") Double activityFactor,
+            @Pattern(regexp = "^(TRAINING|TRAINING_NUTRITION|TRAINING_BODY|FULL)$") String appModules) {
+        public boolean isEmpty() {
+            return sex == null && age == null && heightCm == null && startWeight == null && goalWeight == null
+                    && activityFactor == null && appModules == null;
+        }
+    }
+
+    /** Optional body of a new invitation: who it is for, what the coach asks to see, and known details. */
+    public record InvitationRequest(@Size(max = 80) String clientName, Permissions permissions,
+                                    @Valid InvitationProfile profile) {
+    }
+
+    public record PendingInvitation(UUID id, String clientName, Permissions permissions, boolean prefilled,
+                                    Instant createdAt, Instant expiresAt) {
     }
 
     public record Person(String name, String email, String picture) {
@@ -50,7 +80,9 @@ public final class CoachDtos {
     public record CoachClient(UUID linkId, Person client, Permissions permissions, Instant since) {
     }
 
-    public record InvitationPreview(Person coach, Instant expiresAt, boolean alreadyLinked) {
+    /** {@code requested} is what the coach asked for (pre-ticked); {@code profile} is null when nothing was filled in. */
+    public record InvitationPreview(Person coach, Instant expiresAt, boolean alreadyLinked, String clientName,
+                                    Permissions requested, InvitationProfile profile) {
     }
 
     public record MyCoach(UUID linkId, Person coach, Permissions permissions, Instant since) {

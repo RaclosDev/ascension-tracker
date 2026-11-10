@@ -3,8 +3,18 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import { User, Scale, Activity, Users } from 'lucide-react';
-import { APP_MODULE_OPTIONS, hasNutrition, type AppModules } from '../lib/appModules';
-import { peekPendingInvitation } from '../lib/coach/api';
+import {
+  APP_MODULE_OPTIONS,
+  hasNutrition,
+  normalizeModules,
+  type AppModules,
+} from '../lib/appModules';
+import {
+  peekPendingInvitation,
+  personName,
+  useInvitationPreview,
+  type InvitationProfile,
+} from '../lib/coach/api';
 import { calcBmr, calcTdee, parseNumber } from '../utils/nutritionCalculators';
 import { getLocalDateString } from '../utils/dateHelper';
 import WeightLossPlan, { weightGoal } from './calculators/WeightLossPlan';
@@ -32,6 +42,16 @@ export default function OnboardingScreen({
   const [invited] = useState(
     () => peekPendingInvitation() !== null || window.location.pathname.startsWith('/invitacion/'),
   );
+  const [invitationToken] = useState(
+    () =>
+      peekPendingInvitation() ??
+      decodeURIComponent(window.location.pathname.match(/^\/invitacion\/([^/]+)/)?.[1] ?? ''),
+  );
+  // Si el entrenador ya rellenó sus datos al invitarle, el alumno solo tiene que confirmar.
+  const invitation = useInvitationPreview(invitationToken, invited);
+  const prefill = invitation.data?.profile ?? null;
+  const [appliedPrefill, setAppliedPrefill] = useState<InvitationProfile | null>(null);
+  const [reviewing, setReviewing] = useState(false);
   const [role, setRole] = useState<'user' | 'coach'>('user');
   const [modules, setModules] = useState<AppModules>('FULL');
   // El entrenador no rellena «Sobre ti» ni el plan: entra directo a gestionar alumnos.
@@ -53,6 +73,22 @@ export default function OnboardingScreen({
     customFatPct: '',
     customCarbsPct: '',
   });
+
+  if (prefill && prefill !== appliedPrefill) {
+    setAppliedPrefill(prefill);
+    setForm((f) => ({
+      ...f,
+      sex: prefill.sex ?? f.sex,
+      age: prefill.age != null ? String(prefill.age) : f.age,
+      heightCm: prefill.heightCm != null ? String(prefill.heightCm) : f.heightCm,
+      startWeight: prefill.startWeight != null ? String(prefill.startWeight) : f.startWeight,
+      goalWeight: prefill.goalWeight != null ? String(prefill.goalWeight) : f.goalWeight,
+      activityFactor:
+        prefill.activityFactor != null ? String(prefill.activityFactor) : f.activityFactor,
+    }));
+    if (prefill.appModules) setModules(normalizeModules(prefill.appModules));
+  }
+  const quickStart = invited && prefill !== null && !reviewing && step === 0;
 
   const [mealOption, setMealOption] = useState<'default' | 'custom'>('default');
   const [customMealsCount, setCustomMealsCount] = useState<number>(3);
@@ -85,6 +121,17 @@ export default function OnboardingScreen({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    await save(false);
+  };
+
+  // Atajo del alumno invitado con datos ya rellenados: calorías de mantenimiento y comidas por
+  // defecto; su entrenador le fija los objetivos después.
+  const handleQuickStart = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await save(true);
+  };
+
+  const save = async (quick: boolean) => {
     setLoading(true);
 
     try {
@@ -106,7 +153,7 @@ export default function OnboardingScreen({
             startWeight: parseFloat(String(form.startWeight)) || null,
             goalWeight: parseFloat(String(form.goalWeight)) || null,
             activityFactor: parseFloat(form.activityFactor),
-            kcal: withNutrition ? Number(form.kcal) : maintenanceKcal(),
+            kcal: withNutrition && !quick ? Number(form.kcal) : maintenanceKcal(),
             macroStrategy: form.macroStrategy,
             weeklyGoal: 0.5,
             startDate: getLocalDateString(),
@@ -114,7 +161,7 @@ export default function OnboardingScreen({
           };
       await api.put('/settings', payload);
 
-      if (mealOption === 'default') {
+      if (quick || mealOption === 'default') {
         await api.post('/nutrition/meals/reset');
       } else {
         for (let i = 1; i <= customMealsCount; i++) {
@@ -136,7 +183,7 @@ export default function OnboardingScreen({
       } else {
         toast.success('¡Configuración completada!');
       }
-      onComplete();
+      onComplete(invited && invitationToken ? `/invitacion/${invitationToken}` : undefined);
     } catch (err) {
       toast.error('Error al guardar configuración inicial');
       console.error(
@@ -190,7 +237,16 @@ export default function OnboardingScreen({
             ← Volver al login
           </button>
         </div>
-        {step === 0 ? (
+        {quickStart && invitation.data ? (
+          <PrefilledStart
+            coachName={personName(invitation.data.coach)}
+            profile={prefill}
+            modules={modules}
+            loading={loading}
+            onConfirm={handleQuickStart}
+            onReview={() => setReviewing(true)}
+          />
+        ) : step === 0 ? (
           <form
             onSubmit={isCoach ? handleSubmit : handleNextStep}
             style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
@@ -634,5 +690,91 @@ export default function OnboardingScreen({
         )}
       </div>
     </div>
+  );
+}
+
+const ACTIVITY_LABELS: Record<string, string> = {
+  '1.2': 'Sedentario',
+  '1.375': 'Ligero',
+  '1.55': 'Moderado',
+  '1.725': 'Alto',
+  '1.9': 'Muy alto',
+};
+
+function PrefilledStart({
+  coachName,
+  profile,
+  modules,
+  loading,
+  onConfirm,
+  onReview,
+}: {
+  coachName: string;
+  profile: InvitationProfile;
+  modules: AppModules;
+  loading: boolean;
+  onConfirm: (e: React.FormEvent) => void;
+  onReview: () => void;
+}) {
+  const rows = [
+    profile.sex && ['Sexo', profile.sex === 'M' ? 'Hombre' : 'Mujer'],
+    profile.age != null && ['Edad', `${profile.age} años`],
+    profile.heightCm != null && ['Altura', `${profile.heightCm} cm`],
+    profile.startWeight != null && ['Peso', `${profile.startWeight} kg`],
+    profile.goalWeight != null && ['Objetivo', `${profile.goalWeight} kg`],
+    profile.activityFactor != null && [
+      'Actividad',
+      ACTIVITY_LABELS[String(profile.activityFactor)] ?? String(profile.activityFactor),
+    ],
+    ['Usarás', APP_MODULE_OPTIONS.find((o) => o.value === modules)?.label ?? 'Todo'],
+  ].filter((row): row is [string, string] => Array.isArray(row));
+
+  return (
+    <form onSubmit={onConfirm} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div style={{ textAlign: 'center' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem 0' }}>
+          Bienvenido a Ascension
+        </h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+          {coachName} ya ha rellenado tus datos. Revísalos y empieza.
+        </p>
+      </div>
+      <dl
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr',
+          gap: '0.5rem 1rem',
+          margin: 0,
+        }}
+      >
+        {rows.map(([label, value]) => (
+          <div key={label} style={{ display: 'contents' }}>
+            <dt style={{ color: 'var(--text-secondary)' }}>{label}</dt>
+            <dd style={{ margin: 0, fontWeight: 600 }}>{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 }}>
+        Tu entrenador te pautará el plan. Puedes cambiar estos datos cuando quieras en Ajustes.
+      </p>
+      <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={onReview}
+          style={{ flex: 1, padding: '0.875rem' }}
+        >
+          Cambiar datos
+        </button>
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={loading}
+          style={{ flex: 2, padding: '0.875rem' }}
+        >
+          {loading ? 'Guardando...' : 'Empezar'}
+        </button>
+      </div>
+    </form>
   );
 }
