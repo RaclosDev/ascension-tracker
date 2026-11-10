@@ -20,5 +20,7 @@ test('App shows authenticated dashboard when auth succeeds', async ({ page }) =>
   await page.goto('/');
 
   await expect(page).toHaveURL(/.*dashboard.*/, { timeout: 15000 });
-  await expect(page.getByText(/Peso hoy/i)).toBeVisible({ timeout: 15000 });
+  await expect(page.getByLabel('Peso corporal de hoy en kilogramos')).toBeVisible({
+    timeout: 15000,
+  });
 });

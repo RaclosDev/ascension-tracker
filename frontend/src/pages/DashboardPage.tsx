@@ -13,10 +13,9 @@ import { QuickWeightCard } from '../components/dashboard/QuickWeightCard';
 import { ElevatedKpiGrid } from '../components/dashboard/ElevatedKpiGrid';
 import { GoalProgressBar } from '../components/dashboard/GoalProgressBar';
 import { useRatePreference, calcEstimatedDate } from '../hooks/useRatePreference';
-import { hasBodyTracking } from '../lib/appModules';
+import { hasBodyTracking, hasNutrition } from '../lib/appModules';
 import { PowerliftingCard } from '../components/workout/PowerliftingCard';
-import { Link } from 'react-router-dom';
-import { Dumbbell } from 'lucide-react';
+import { TodayCard } from '../components/dashboard/TodayCard';
 
 const DashboardCharts = lazyWithRetry(() => import('../components/DashboardCharts'));
 
@@ -103,64 +102,55 @@ export default function DashboardPage() {
     return (
       <div className="fade-in">
         <h1 className="page-title-desktop">Inicio</h1>
-        {/* Skeleton for Quick Add */}
-        <div className="card glass-panel-elevated p-4 sm:p-5 rounded-2xl mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <Skeleton className="h-5 w-24" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-          <div className="flex flex-col items-center gap-3">
-            <Skeleton className="h-12 w-32" />
-            <Skeleton className="h-9 w-64" />
-            <Skeleton className="h-10 w-full max-w-xs rounded-xl" />
-          </div>
-        </div>
-
-        {/* Skeleton for KPI Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="card glass-panel-elevated p-3.5 sm:p-4 rounded-2xl">
-              <Skeleton className="h-4 w-20 mb-2" />
-              <Skeleton className="h-7 w-24 mb-2" />
-              <Skeleton className="h-3 w-32" />
+        <div className="dashboard-grid">
+          <div className="card p-4 mb-5" style={{ gridArea: 'weight' }}>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <Skeleton className="h-4 w-28 mb-2" />
+                <Skeleton className="h-3 w-44" />
+              </div>
+              <Skeleton className="h-11 w-48" />
             </div>
-          ))}
-        </div>
-
-        {/* Skeleton for Progress Bar */}
-        <div className="card glass-panel-elevated p-4 sm:p-5 rounded-2xl mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-6 w-14 rounded-full" />
           </div>
-          <Skeleton className="h-4 w-full rounded-full mb-3" />
-          <div className="flex justify-between">
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-3 w-16" />
+          <div className="card p-4 mb-5" style={{ gridArea: 'today' }}>
+            <Skeleton className="h-3 w-12 mb-4" />
+            <Skeleton className="h-10 w-full mb-3" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div style={{ gridArea: 'stats' }}>
+            <div className="card grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 mb-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i}>
+                  <Skeleton className="h-3 w-20 mb-2" />
+                  <Skeleton className="h-7 w-24" />
+                </div>
+              ))}
+            </div>
+            <DashboardChartsSkeleton />
           </div>
         </div>
-
-        {/* Skeleton for Charts */}
-        <DashboardChartsSkeleton />
       </div>
     );
   }
+
+  const showNutrition = settings ? hasNutrition(settings.appModules) : false;
 
   // Sin el módulo de peso y medidas, el inicio se centra en el entreno en vez de pedir el peso.
   if (settings && !hasBodyTracking(settings.appModules)) {
     return (
       <div className="fade-in">
-        <h1 className="text-2xl font-black text-white tracking-tight mb-1">Inicio</h1>
-        <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+        <h1 className="page-title-desktop">Inicio</h1>
+        <p className="mb-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
           {todayLabel}
         </p>
-        <Link
-          to="/workout"
-          className="btn btn-primary w-full mb-6 flex items-center justify-center gap-2"
-        >
-          <Dumbbell size={18} aria-hidden /> Ir a entrenar
-        </Link>
-        <PowerliftingCard />
+        <div className="dashboard-grid">
+          <div className="dashboard-today" style={{ gridArea: 'today' }}>
+            <TodayCard showNutrition={showNutrition} />
+          </div>
+          <div style={{ gridArea: 'stats' }}>
+            <PowerliftingCard />
+          </div>
+        </div>
       </div>
     );
   }
@@ -185,41 +175,50 @@ export default function DashboardPage() {
     <div className="fade-in">
       {hasError && <QueryErrorNotice retry={retry} pending={isFetching} />}
       <h1 className="page-title-desktop">Inicio</h1>
-      <QuickWeightCard
-        todayLabel={todayLabel}
-        todayDateStr={todayDateStr}
-        todayWeight={todayEntry?.weight}
-        recentWeight={recentWeight}
-        yesterdayWeight={yesterdayWeight}
-        hasTodayWeight={hasTodayWeight}
-      />
+      <div className="dashboard-grid">
+        <div style={{ gridArea: 'weight' }}>
+          <QuickWeightCard
+            todayLabel={todayLabel}
+            todayDateStr={todayDateStr}
+            todayWeight={todayEntry?.weight}
+            recentWeight={recentWeight}
+            yesterdayWeight={yesterdayWeight}
+            hasTodayWeight={hasTodayWeight}
+          />
+        </div>
 
-      <ElevatedKpiGrid
-        currentWeight={dashboard.currentWeight}
-        weeklyAverage={dashboard.currentWeeklyAverage}
-        totalLost={dashboard.totalLost}
-        remaining={dashboard.remaining}
-        estimatedDate={effectiveEstimatedDate}
-        avgWeeklyRate={effectiveRate}
-        ratePref={pref}
-        onRateChange={updateRatePref}
-        weeklyGoal={settings.weeklyGoal}
-      />
+        <aside className="dashboard-today" style={{ gridArea: 'today' }} aria-label="Plan de hoy">
+          <TodayCard showNutrition={showNutrition} />
+        </aside>
 
-      <GoalProgressBar
-        progress={dashboard.progress}
-        startWeight={settings.startWeight}
-        goalWeight={settings.goalWeight}
-        currentWeight={dashboard.currentWeight}
-      />
+        <div style={{ gridArea: 'stats' }} className="min-w-0">
+          <ElevatedKpiGrid
+            weeklyAverage={dashboard.currentWeeklyAverage}
+            totalLost={dashboard.totalLost}
+            remaining={dashboard.remaining}
+            estimatedDate={effectiveEstimatedDate}
+            avgWeeklyRate={effectiveRate}
+            ratePref={pref}
+            onRateChange={updateRatePref}
+            weeklyGoal={settings.weeklyGoal}
+          />
 
-      <Suspense fallback={<DashboardChartsSkeleton />}>
-        <DashboardCharts
-          weightChartData={weightChartData}
-          deltaData={deltaData}
-          goalWeight={settings.goalWeight}
-        />
-      </Suspense>
+          <GoalProgressBar
+            progress={dashboard.progress}
+            startWeight={settings.startWeight}
+            goalWeight={settings.goalWeight}
+            currentWeight={dashboard.currentWeight}
+          />
+
+          <Suspense fallback={<DashboardChartsSkeleton />}>
+            <DashboardCharts
+              weightChartData={weightChartData}
+              deltaData={deltaData}
+              goalWeight={settings.goalWeight}
+            />
+          </Suspense>
+        </div>
+      </div>
     </div>
   );
 }

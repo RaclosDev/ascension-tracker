@@ -55,24 +55,20 @@ export function PasskeyPrompt({ email }: { email: string }) {
   return (
     <section
       aria-labelledby="passkey-prompt-title"
-      className="card mb-4 flex flex-col gap-3"
-      style={{ padding: 'var(--space-lg)', border: '1px solid var(--border-subtle)' }}
+      className="passkey-strip mb-4 flex flex-wrap items-center gap-x-3 gap-y-2"
     >
-      <div className="flex items-center gap-2">
-        <Fingerprint size={20} style={{ color: 'var(--color-primary)' }} aria-hidden="true" />
-        <h2 id="passkey-prompt-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>
-          ¿Entrar con la huella la próxima vez?
-        </h2>
-      </div>
-      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-        Guarda una llave de acceso en este dispositivo y entra sin contraseña. Puedes quitarla
-        cuando quieras desde Ajustes.
+      <Fingerprint size={20} className="shrink-0" aria-hidden="true" />
+      <p id="passkey-prompt-title" className="m-0 min-w-0 flex-1 basis-56 text-sm font-semibold">
+        ¿Entrar con la huella la próxima vez?{' '}
+        <span className="font-normal" style={{ color: 'var(--text-secondary)' }}>
+          Sin contraseña en este dispositivo.
+        </span>
       </p>
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" disabled={busy} onClick={() => void activate()}>
-          {busy ? 'Esperando al dispositivo…' : 'Activar huella'}
+      <div className="flex gap-2">
+        <Button type="button" size="sm" disabled={busy} onClick={() => void activate()}>
+          {busy ? 'Esperando…' : 'Activar huella'}
         </Button>
-        <Button type="button" variant="ghost" disabled={busy} onClick={close}>
+        <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={close}>
           Ahora no
         </Button>
       </div>
