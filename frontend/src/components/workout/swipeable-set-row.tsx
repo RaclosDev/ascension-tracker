@@ -134,7 +134,7 @@ export const SwipeableSetRow = React.memo(
               transform: `translateX(${offsetX}px)`,
               transition: isDragging.current ? 'none' : 'transform 0.2s ease',
               background: s.completed
-                ? 'rgba(var(--accent-primary-rgb, 0, 133, 255), 0.05)'
+                ? 'rgba(var(--accent-primary-rgb, 11, 95, 116), 0.05)'
                 : 'var(--bg-card)',
               position: 'relative',
               zIndex: 1,

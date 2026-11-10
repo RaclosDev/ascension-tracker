@@ -117,7 +117,7 @@ export function ChefComposer({
           id="ai-chef-user-input"
           type="text"
           aria-label="Mensaje o petición para el chef nutricional IA"
-          className="flex-1 min-w-0 min-h-11 px-3.5 rounded-xl bg-[var(--bg-input)] border border-white/10 text-white text-base placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#0085FF)]"
+          className="flex-1 min-w-0 min-h-11 px-3.5 rounded-xl bg-[var(--bg-input)] border border-white/10 text-white text-base placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary,#0b5f74)]"
           placeholder="Pide una receta o sugerencia..."
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
@@ -137,7 +137,7 @@ export function ChefComposer({
           className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
             (!userInput.trim() && !selectedImage) || sending
               ? 'bg-white/5 text-gray-500 cursor-not-allowed'
-              : 'bg-[var(--accent-primary,#0085FF)] text-[var(--accent-text)] hover:opacity-90 cursor-pointer shadow-md'
+              : 'bg-[var(--accent-primary,#0b5f74)] text-[var(--accent-text)] hover:opacity-90 cursor-pointer shadow-md'
           }`}
           title="Enviar mensaje"
         >

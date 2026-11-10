@@ -46,14 +46,24 @@ function getContrastColor(hex: string) {
 function normalizeThemeColor(value: string): string {
   if (/^#[0-9a-f]{3}$/i.test(value))
     return '#' + [...value.slice(1)].map((digit) => digit + digit).join('');
-  return /^#[0-9a-f]{6}$/i.test(value) ? value : '#0085FF';
+  return /^#[0-9a-f]{6}$/i.test(value) ? value : '#0b5f74';
 }
+
+// El azul era el color de serie hasta que el interior adoptó la tinta de la landing. Quien
+// lo tenga guardado sin haberlo elegido pasa una sola vez al nuevo color de serie.
+const LEGACY_DEFAULT_COLOR = '#0085ff';
+const ACCENT_MIGRATION_KEY = 'ascension_accent_v2';
 
 export function readThemeColor(): string {
   try {
-    return normalizeThemeColor(localStorage.getItem('ascension_custom_color') || '#0085FF');
+    if (!localStorage.getItem(ACCENT_MIGRATION_KEY)) {
+      localStorage.setItem(ACCENT_MIGRATION_KEY, '1');
+      if (localStorage.getItem('ascension_custom_color')?.toLowerCase() === LEGACY_DEFAULT_COLOR)
+        localStorage.removeItem('ascension_custom_color');
+    }
+    return normalizeThemeColor(localStorage.getItem('ascension_custom_color') || '#0b5f74');
   } catch {
-    return '#0085FF';
+    return '#0b5f74';
   }
 }
 

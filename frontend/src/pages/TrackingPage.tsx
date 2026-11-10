@@ -205,7 +205,7 @@ export default function TrackingPage() {
   if (isLoading && weeks.length === 0) {
     return (
       <div className="fade-in">
-        <h1 className="sr-only">Tracking semanal</h1>
+        <h1 className="page-title-desktop">Tracking semanal</h1>
         <div
           style={{
             display: 'flex',
@@ -245,7 +245,7 @@ export default function TrackingPage() {
   return (
     <div className="fade-in">
       {isError && <QueryErrorNotice retry={fetchData} pending={isFetching} />}
-      <h1 className="sr-only">Tracking semanal</h1>
+      <h1 className="page-title-desktop">Tracking semanal</h1>
       <TrackingMetricToggle
         showWeight={showWeight}
         showSteps={showSteps}
