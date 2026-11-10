@@ -2,28 +2,28 @@ const shots = [
   {
     src: '/landing/workout.webp',
     alt: 'Entrenamiento en curso: series de press de banca con kilos y repeticiones, dos completadas, y el temporizador de descanso',
-    tilt: '-rotate-6 lg:-translate-y-2',
+    tilt: '-rotate-6 translate-y-6',
   },
   {
     src: '/landing/dashboard.webp',
     alt: 'Panel principal de Ascension con el peso de hoy, el total perdido y la fecha estimada para llegar al objetivo',
-    tilt: 'rotate-0 z-10 lg:-translate-y-10',
+    tilt: 'z-10 scale-[1.06]',
   },
   {
     src: '/landing/nutrition.webp',
     alt: 'Diario de nutrición con calorías, macros y las comidas del día',
-    tilt: 'rotate-6 lg:-translate-y-2',
+    tilt: 'rotate-6 translate-y-6',
   },
 ];
 
-// Real screens, fanned like the cards in the template. The statement under them is the one
-// thing that sets the app apart, so it gets the display face at full width.
+// Real screens, each in a phone body and fanned with the middle one forward. The statement under
+// them is the one thing that sets the app apart, so it gets the display face at full width.
 export default function LandingShowcase() {
   return (
     <section className="relative mx-auto max-w-6xl px-5 sm:px-8" aria-labelledby="showcase-title">
-      <ul className="-mx-6 flex items-end justify-center gap-0 overflow-x-clip py-8 sm:-mx-0 sm:gap-4 lg:gap-8">
+      <ul className="-mx-6 flex items-start justify-center gap-0 overflow-x-clip pt-6 pb-12 sm:-mx-0 sm:gap-2 lg:gap-4">
         {shots.map((s) => (
-          <li key={s.src} className={`landing-card w-[38%] max-w-[260px] shrink-0 p-2 ${s.tilt}`}>
+          <li key={s.src} className={`landing-phone w-[36%] max-w-[250px] shrink-0 ${s.tilt}`}>
             <img
               src={s.src}
               alt={s.alt}

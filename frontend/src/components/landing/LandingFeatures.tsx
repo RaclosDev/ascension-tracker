@@ -1,5 +1,5 @@
 import { Dumbbell, Camera, Scale, Download } from 'lucide-react';
-import DripButton from './DripButton';
+import InkButton from './InkButton';
 import { requestEmailAccess } from './emailAccessEvents';
 
 const groups = [
@@ -50,9 +50,9 @@ export default function LandingFeatures() {
           Gratis para uso personal y sin anuncios. Código abierto, en español.
         </p>
         <div className="mt-6" id="datos">
-          <DripButton href="#entrar" onClick={requestEmailAccess('register')}>
+          <InkButton href="#entrar" onClick={requestEmailAccess('register')}>
             Crear mi cuenta
-          </DripButton>
+          </InkButton>
         </div>
       </div>
 

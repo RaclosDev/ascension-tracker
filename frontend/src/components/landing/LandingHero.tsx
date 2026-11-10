@@ -25,11 +25,11 @@ export default function LandingHero() {
   return (
     <section
       id="inicio"
-      className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 pb-16 pt-8 sm:px-8 sm:pt-14 lg:grid-cols-12 lg:gap-12 lg:pb-24"
+      className="relative mx-auto grid max-w-6xl items-start gap-10 px-5 pb-16 pt-8 sm:px-8 sm:pt-14 lg:grid-cols-12 lg:gap-12 lg:pb-24"
     >
-      <div className="landing-rise lg:col-span-7">
-        <p className="landing-display flex items-center gap-2 text-[0.85rem] tracking-[0.12em] text-[var(--landing-blue)]">
-          <Crown size={16} aria-hidden="true" />
+      <div className="landing-rise lg:col-span-7 lg:pt-7">
+        <p className="landing-display flex items-center gap-2 text-[1.15rem] tracking-[0.08em] text-[var(--landing-blue)]">
+          <Crown size={20} aria-hidden="true" />
           Entreno · Nutrición · Peso
         </p>
         <h1 className="landing-display mt-4 mb-8 text-[clamp(3.2rem,9vw,6rem)] font-bold text-white">
