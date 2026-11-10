@@ -73,7 +73,7 @@ export default function NutritionPage() {
   if (loading) {
     return (
       <div className="fade-in">
-        <h1 className="sr-only">Nutrición</h1>
+        <h1 className="page-title-desktop">Nutrición</h1>
         <Skeleton className="h-10 w-full max-w-sm mx-auto mb-6" />
         <div
           style={{
@@ -130,7 +130,7 @@ export default function NutritionPage() {
   return (
     <div className="fade-in">
       {isError && <QueryErrorNotice retry={fetchData} pending={isFetching} />}
-      <h1 className="sr-only">Nutrición</h1>
+      <h1 className="page-title-desktop">Nutrición</h1>
       <SegmentedControl
         options={[
           { label: 'Diario', value: 'diary' },

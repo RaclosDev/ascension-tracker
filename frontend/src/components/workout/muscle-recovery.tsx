@@ -233,7 +233,7 @@ export function MuscleRecovery({
                 barColor = 'var(--accent-primary)';
                 statusBadge = {
                   text: 'Casi listo',
-                  bg: 'rgba(0, 133, 255, 0.15)',
+                  bg: 'color-mix(in srgb, var(--accent-primary) 15%, transparent)',
                   color: 'var(--accent-primary-light)',
                 };
               }

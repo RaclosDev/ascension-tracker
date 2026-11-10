@@ -91,8 +91,8 @@ export default function NutritionCalculators() {
                 textAlign: 'center',
                 padding: '1.15rem',
                 borderRadius: '14px',
-                background: 'rgba(0, 133, 255, 0.05)',
-                border: '1px solid rgba(0, 133, 255, 0.2)',
+                background: 'color-mix(in srgb, var(--accent-primary) 5%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--accent-primary) 20%, transparent)',
               }}
             >
               <div
@@ -177,8 +177,8 @@ export default function NutritionCalculators() {
                 textAlign: 'center',
                 padding: '1.15rem',
                 borderRadius: '14px',
-                background: 'rgba(0, 133, 255, 0.05)',
-                border: '1px solid rgba(0, 133, 255, 0.2)',
+                background: 'color-mix(in srgb, var(--accent-primary) 5%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--accent-primary) 20%, transparent)',
               }}
             >
               <div

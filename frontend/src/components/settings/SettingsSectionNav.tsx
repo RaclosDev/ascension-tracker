@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Activity,
+  ChevronRight,
   Database,
   Dumbbell,
   GraduationCap,
@@ -41,44 +41,14 @@ interface SettingsSectionNavProps {
 }
 
 /**
- * Menú de secciones de ajustes: columna fija a la izquierda en escritorio y tira de
- * pestañas desplazable en móvil. Cada entrada es un enlace a `?section=`, así que se puede
- * compartir y el botón atrás vuelve a la sección anterior.
+ * Menú de secciones de ajustes: columna fija a la izquierda en escritorio e índice a
+ * pantalla completa en móvil, donde cada sección se abre en su propia pantalla. Cada
+ * entrada es un enlace a `?section=`, así que se puede compartir y el botón atrás funciona.
  */
 export function SettingsSectionNav({ active, only }: SettingsSectionNavProps) {
-  const listRef = useRef<HTMLUListElement>(null);
-  const [edges, setEdges] = useState({ start: false, end: false });
-
-  // En móvil la tira se desplaza en horizontal: mantiene visible la sección activa.
-  useEffect(() => {
-    const list = listRef.current;
-    const item = list?.querySelector<HTMLElement>('[aria-current="page"]');
-    if (!list || !item || list.scrollWidth <= list.clientWidth) return;
-    list.scrollLeft = item.offsetLeft - (list.clientWidth - item.offsetWidth) / 2;
-  }, [active]);
-
-  // Difumina el borde por el que quedan pestañas ocultas, para que se vea que la tira se desplaza.
-  useEffect(() => {
-    const list = listRef.current;
-    if (!list) return;
-    const update = () => {
-      const max = list.scrollWidth - list.clientWidth;
-      setEdges({ start: list.scrollLeft > 2, end: max > 2 && list.scrollLeft < max - 2 });
-    };
-    update();
-    list.addEventListener('scroll', update, { passive: true });
-    window.addEventListener('resize', update);
-    return () => {
-      list.removeEventListener('scroll', update);
-      window.removeEventListener('resize', update);
-    };
-  }, [active]);
-
-  const fade = `${edges.start ? ' fade-start' : ''}${edges.end ? ' fade-end' : ''}`;
-
   return (
     <nav className="settings-nav" aria-label="Secciones de ajustes">
-      <ul ref={listRef} className={`settings-nav-list${fade}`}>
+      <ul className="settings-nav-list">
         {SETTINGS_SECTIONS.filter((s) => !only || only.includes(s.id)).map(
           ({ id, label, icon: Icon }) => {
             const isActive = id === active;
@@ -91,6 +61,7 @@ export function SettingsSectionNav({ active, only }: SettingsSectionNavProps) {
                 >
                   <Icon size={16} aria-hidden="true" />
                   <span>{label}</span>
+                  <ChevronRight size={18} className="settings-nav-chevron" aria-hidden="true" />
                 </Link>
               </li>
             );

@@ -12,7 +12,6 @@ import {
 import { RatePreference, RateMode } from '../../hooks/useRatePreference';
 
 interface ElevatedKpiGridProps {
-  currentWeight?: number | null;
   weeklyAverage?: number | null;
   totalLost?: number | null;
   remaining?: number | null;
@@ -45,7 +44,6 @@ const MODE_OPTIONS: { mode: RateMode; label: string; icon: React.ReactNode; desc
 ];
 
 export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
-  currentWeight,
   weeklyAverage,
   totalLost,
   remaining,
@@ -56,7 +54,6 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
   weeklyGoal,
 }: ElevatedKpiGridProps) {
   const isLoss = (totalLost ?? 0) <= 0;
-  const numCurrent = currentWeight ?? 0;
   const numWeeklyAvg = weeklyAverage ?? 0;
   const numTotalLost = Math.abs(totalLost ?? 0);
   const numRemaining = remaining ?? 0;
@@ -127,83 +124,60 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
   const currentMode = ratePref?.mode ?? 'history';
   const trendColor = isLoss ? 'var(--color-success, #34d399)' : '#f43f5e';
 
-  // The .kpi-value/.kpi-detail classes stay as test hooks; the global .kpi-value font-size
-  // would override Tailwind on that element, so the number sizes live on the inner spans.
-  const secondaryLabel = 'text-xs font-medium mb-1.5';
-  const secondaryNumber = 'text-lg sm:text-xl font-bold leading-tight text-white tabular-nums';
+  // The .kpi-value/.kpi-detail classes stay as test hooks. The four figures share one sheet:
+  // the current weight already lives in the weight card above, so it is not repeated here.
+  const cell = 'kpi-card kpi-cell flex flex-col justify-between min-w-0';
+  const label = 'kpi-label mb-1';
+  const number = 'kpi-number tabular-nums';
   const unit = 'text-xs font-semibold text-[var(--text-secondary)]';
 
   return (
-    <div className="kpi-grid grid grid-cols-2 xl:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
-      {/* Current weight is checked daily, so it is the focal card; the other three defer to it. */}
-      <div className="card kpi-card glass-panel-elevated relative overflow-hidden rounded-2xl p-3.5 sm:p-4 border border-white/[0.08] flex flex-col justify-between">
-        <span className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
-          Peso actual
-        </span>
-        <div className="kpi-value flex items-baseline gap-1 my-1">
-          <span className="text-[2rem] sm:text-[2.5rem] font-extrabold leading-none tracking-tight text-white tabular-nums">
-            {numCurrent.toFixed(2)}
-          </span>{' '}
-          <span className="text-sm font-semibold text-[var(--text-secondary)]">kg</span>
+    <section
+      aria-label="Resumen de tu progreso"
+      className="card kpi-strip grid grid-cols-2 lg:grid-cols-4 mb-6"
+    >
+      <div className={cell}>
+        <span className={label}>Media semanal</span>
+        <div className="kpi-value flex items-baseline gap-1">
+          <span className={number}>{numWeeklyAvg.toFixed(2)}</span> <span className={unit}>kg</span>
         </div>
-        <div
-          className="kpi-detail text-[0.68rem] font-medium pt-1 border-t border-white/[0.04]"
-          style={{ color: 'var(--text-secondary)' }}
-        >
-          Media semanal:{' '}
-          <span className="text-gray-200 font-semibold tabular-nums whitespace-nowrap">
-            {numWeeklyAvg.toFixed(2)} kg
-          </span>
+        <div className="kpi-detail text-[0.72rem]" style={{ color: 'var(--text-secondary)' }}>
+          Últimos 7 días
         </div>
       </div>
 
-      <div className="card kpi-card glass-panel-elevated relative overflow-hidden rounded-2xl p-3.5 sm:p-4 border border-white/[0.08] flex flex-col justify-between">
-        <span className={secondaryLabel} style={{ color: 'var(--text-secondary)' }}>
-          {isLoss ? 'Total perdido' : 'Total ganado'}
-        </span>
-        <div className="kpi-value flex items-baseline gap-1 my-1">
-          <span className={secondaryNumber}>{numTotalLost.toFixed(2)}</span>{' '}
-          <span className={unit}>kg</span>
-        </div>
-        <div className="kpi-detail pt-1 border-t border-white/[0.04]">
-          <span
-            className="inline-flex items-center gap-0.5 text-[0.68rem] font-semibold tabular-nums"
-            style={{ color: trendColor }}
-          >
+      <div className={cell}>
+        <span className={label}>{isLoss ? 'Total perdido' : 'Total ganado'}</span>
+        <div className="kpi-value flex items-baseline gap-1">
+          <span className={number}>{numTotalLost.toFixed(2)}</span> <span className={unit}>kg</span>
+          <span className="self-center" style={{ color: trendColor }}>
             {isLoss ? (
-              <ArrowDownRight size={12} aria-hidden />
+              <ArrowDownRight size={14} aria-label="bajando" />
             ) : (
-              <ArrowUpRight size={12} aria-hidden />
+              <ArrowUpRight size={14} aria-label="subiendo" />
             )}
-            {numTotalLost.toFixed(1)} kg {isLoss ? 'perdidos' : 'ganados'}
           </span>
+        </div>
+        <div className="kpi-detail text-[0.72rem]" style={{ color: 'var(--text-secondary)' }}>
+          Desde el inicio
         </div>
       </div>
 
-      <div className="card kpi-card glass-panel-elevated relative overflow-hidden rounded-2xl p-3.5 sm:p-4 border border-white/[0.08] flex flex-col justify-between">
-        <span className={secondaryLabel} style={{ color: 'var(--text-secondary)' }}>
-          Te falta
-        </span>
-        <div className="kpi-value flex items-baseline gap-1 my-1">
-          <span className={secondaryNumber}>
-            {numRemaining > 0 ? numRemaining.toFixed(1) : '0.0'}
-          </span>{' '}
+      <div className={cell}>
+        <span className={label}>Te falta</span>
+        <div className="kpi-value flex items-baseline gap-1">
+          <span className={number}>{numRemaining > 0 ? numRemaining.toFixed(1) : '0.0'}</span>{' '}
           <span className={unit}>kg</span>
         </div>
-        <div
-          className="kpi-detail text-[0.68rem] font-medium leading-snug pt-1 border-t border-white/[0.04]"
-          style={{ color: 'var(--text-secondary)' }}
-        >
+        <div className="kpi-detail text-[0.72rem]" style={{ color: 'var(--text-secondary)' }}>
           {numRemaining <= 0 ? '¡Meta alcanzada!' : 'por perder'}
         </div>
       </div>
 
-      <div className="card kpi-card glass-panel-elevated relative rounded-2xl p-3.5 sm:p-4 border border-white/[0.08] flex flex-col justify-between">
-        <span className={secondaryLabel} style={{ color: 'var(--text-secondary)' }}>
-          Fecha estimada
-        </span>
-        <div className="kpi-value my-1 min-w-0">
-          <span className="block truncate text-lg sm:text-xl font-bold leading-tight text-white">
+      <div className={cell}>
+        <span className={label}>Fecha estimada</span>
+        <div className="kpi-value min-w-0">
+          <span className="kpi-number kpi-number-date block truncate">
             {estimatedDate || 'En cálculo'}
           </span>
         </div>
@@ -218,13 +192,13 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
               }
               setPopoverOpen((o) => !o);
             }}
-            className="flex items-center gap-1 min-h-11 text-[0.68rem] font-medium hover:opacity-100 opacity-70 transition-opacity w-full text-left group"
+            className="flex items-center gap-1 min-h-11 text-[0.72rem] font-medium w-full text-left group"
             style={{ color: 'var(--text-secondary)' }}
             aria-expanded={popoverOpen}
           >
             <span>
               A ritmo de{' '}
-              <span className="font-semibold text-gray-200 tabular-nums whitespace-nowrap">
+              <span className="font-semibold tabular-nums whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
                 {numWeeklyRate.toFixed(2)} kg/sem
               </span>
               <span className="sr-only">, cambiar ritmo de proyección</span>
@@ -395,6 +369,6 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
             })()}
         </div>
       </div>
-    </div>
+    </section>
   );
 });

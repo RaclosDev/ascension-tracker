@@ -16,17 +16,17 @@ test.describe('Dashboard Page & KPI Metrics Suite', () => {
     const kpiCards = page.locator('.kpi-card');
     await expect(kpiCards).toHaveCount(4);
 
-    // Card 1: Peso Actual & Media semanal
-    const weightCard = kpiCards.filter({ hasText: /peso actual/i });
+    // Card 1: Media semanal (the current weight lives in the weight card, not repeated here)
+    const weightCard = kpiCards.filter({ hasText: /media semanal/i });
     await expect(weightCard).toBeVisible();
     await expect(weightCard.locator('.kpi-value')).toContainText('81.20 kg');
-    await expect(weightCard.locator('.kpi-detail')).toContainText(/media semanal: 81\.20 kg/i);
+    await expect(weightCard.locator('.kpi-detail')).toContainText(/últimos 7 días/i);
 
     // Card 2: Total Perdido
     const lostCard = kpiCards.filter({ hasText: /total perdido/i });
     await expect(lostCard).toBeVisible();
     await expect(lostCard.locator('.kpi-value')).toContainText('3.80 kg');
-    await expect(lostCard.locator('.kpi-detail')).toContainText(/3\.8 kg perdidos/i);
+    await expect(lostCard.locator('.kpi-detail')).toContainText(/desde el inicio/i);
 
     // Card 3: Te Falta
     const remainingCard = kpiCards.filter({ hasText: /te falta/i });

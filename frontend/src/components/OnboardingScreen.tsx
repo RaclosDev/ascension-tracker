@@ -203,8 +203,8 @@ export default function OnboardingScreen({
         overscrollBehaviorY: 'contain',
         display: 'flex',
         flexDirection: 'column',
-        background: 'var(--bg-default, #0f172a)',
-        color: 'var(--text-primary, #fff)',
+        background: 'var(--bg-main)',
+        color: 'var(--text-primary)',
         padding: '1.5rem',
       }}
     >
@@ -278,17 +278,11 @@ export default function OnboardingScreen({
                   ).map((o) => (
                     <label
                       key={o.value}
-                      className="kpi-card"
+                      className="onboarding-option"
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.5rem',
-                        padding: '0.75rem',
-                        cursor: 'pointer',
-                        border:
-                          role === o.value
-                            ? '2px solid var(--accent-primary)'
-                            : '2px solid transparent',
                       }}
                     >
                       <input
@@ -326,19 +320,7 @@ export default function OnboardingScreen({
                 </legend>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {APP_MODULE_OPTIONS.map((o) => (
-                    <label
-                      key={o.value}
-                      className="kpi-card"
-                      style={{
-                        display: 'block',
-                        padding: '0.75rem',
-                        cursor: 'pointer',
-                        border:
-                          modules === o.value
-                            ? '2px solid var(--accent-primary)'
-                            : '2px solid transparent',
-                      }}
-                    >
+                    <label key={o.value} className="onboarding-option">
                       <input
                         type="radio"
                         name="onboarding-modules"

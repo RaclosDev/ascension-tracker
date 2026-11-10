@@ -12,7 +12,7 @@ it('keeps theme readable and usable when storage is denied', () => {
   vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
     throw new Error('denied');
   });
-  expect(readThemeColor()).toBe('#0085FF');
+  expect(readThemeColor()).toBe('#0b5f74');
   expect(() => applyThemeColor('#abc')).not.toThrow();
   expect(document.documentElement.style.getPropertyValue('--accent-primary')).toBe('#aabbcc');
   expect(document.documentElement.style.getPropertyValue('--accent-primary-light')).not.toContain(

@@ -198,7 +198,7 @@ test.describe('Settings Page & User Preferences Flows', () => {
     await page.goto('/settings?section=data');
 
     // Locate and click "Cerrar Sesión"
-    const logoutBtn = page.getByRole('button', { name: /Cerrar Sesión/i });
+    const logoutBtn = page.locator('#contenido').getByRole('button', { name: /Cerrar Sesión/i });
     await logoutBtn.scrollIntoViewIfNeeded();
     await expect(logoutBtn).toBeVisible();
     await logoutBtn.click();

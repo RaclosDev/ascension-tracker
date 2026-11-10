@@ -10,7 +10,7 @@ interface SettingsThemeSectionProps {
   presets?: string[];
 }
 
-const DEFAULT_PRESETS = ['#0085FF', '#E11D48', '#FFFFFF', '#FF5E00', '#8B5CF6'];
+const DEFAULT_PRESETS = ['#0b5f74', '#0085FF', '#E11D48', '#FF5E00', '#8B5CF6'];
 
 const MODE_OPTIONS: { label: string; value: ColorMode }[] = [
   { label: 'Claro', value: 'light' },

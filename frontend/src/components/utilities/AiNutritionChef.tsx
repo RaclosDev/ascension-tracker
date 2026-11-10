@@ -54,7 +54,7 @@ export default function AiNutritionChef() {
               alignItems: 'flex-start',
             }}
           >
-            <span style={{ color: 'var(--accent-primary, #0085FF)', fontWeight: 700 }}>•</span>
+            <span style={{ color: 'var(--accent-primary, #0b5f74)', fontWeight: 700 }}>•</span>
             <span>{bulletText}</span>
           </div>
         );
@@ -124,7 +124,7 @@ export default function AiNutritionChef() {
             padding: '1.25rem 1rem',
           }}
         >
-          <div className="w-10 h-10 rounded-full bg-[var(--accent-glow,#0085FF1A)] border border-[var(--accent-primary,#0085FF)]/30 flex items-center justify-center mx-auto mb-2 text-[var(--accent-primary,#0085FF)]">
+          <div className="w-10 h-10 rounded-full bg-[var(--accent-glow,#0b5f741A)] border border-[var(--accent-primary,#0b5f74)]/30 flex items-center justify-center mx-auto mb-2 text-[var(--accent-primary,#0b5f74)]">
             <ChefHat size={20} />
           </div>
           <div className="text-sm font-semibold text-white mb-1">Chef Nutricional</div>
@@ -174,7 +174,7 @@ export default function AiNutritionChef() {
                   {isUser ? (
                     <User size={18} />
                   ) : (
-                    <ChefHat size={18} color="var(--accent-primary, #0085FF)" />
+                    <ChefHat size={18} color="var(--accent-primary, #0b5f74)" />
                   )}
                 </div>
                 <div className={`chat-bubble ${isUser ? 'user-bubble' : 'ai-bubble'}`}>
@@ -410,7 +410,7 @@ export default function AiNutritionChef() {
           {sending && (
             <div className="chat-msg-row">
               <div className="chat-avatar">
-                <ChefHat size={18} color="var(--accent-primary, #0085FF)" />
+                <ChefHat size={18} color="var(--accent-primary, #0b5f74)" />
               </div>
               <div className="chat-bubble ai-bubble flex items-center gap-2 text-gray-400 text-xs">
                 <span className="spinner w-4 h-4 border-2" />

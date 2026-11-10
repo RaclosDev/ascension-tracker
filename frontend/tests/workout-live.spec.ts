@@ -172,7 +172,7 @@ test.describe('Sesión de Entrenamiento en Vivo (Workout Live)', () => {
     const countBeforeDelete = await page.locator('.set-row').count();
     const lastDeleteBtn = page.getByRole('button', { name: /eliminar serie/i }).last();
     await lastDeleteBtn.focus();
-    await lastDeleteBtn.click({ force: true });
+    await lastDeleteBtn.press('Enter');
     await expect(page.locator('.set-row')).toHaveCount(countBeforeDelete - 1);
   });
 
