@@ -19,7 +19,7 @@ import OnboardingScreen from './OnboardingScreen';
 import { preloadRoute } from '../utils/routePreload';
 
 import { Skeleton } from './ui/skeleton';
-import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings, Plus } from 'lucide-react';
+import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings, Plus, LogOut } from 'lucide-react';
 import { ActiveWorkoutBanner } from './workout/ActiveWorkoutBanner';
 import { haptics } from '@/lib/haptics';
 import { useAuth } from '../context/AuthContext';
@@ -74,7 +74,7 @@ export default function Layout() {
   const firstPathRef = useRef(true);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const userInitial = (user?.name || user?.email || '?').trim().charAt(0).toUpperCase();
   const hasActiveWorkout = useWorkoutStore((s) => s.active !== null);
   const hideNav = hasActiveWorkout && location.pathname === '/workout';
@@ -212,6 +212,22 @@ export default function Layout() {
                 </button>
               );
             })}
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                closeSidebar();
+                void logout();
+              }}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', marginTop: 'auto' }}
+            >
+              <span className="nav-icon" style={{ pointerEvents: 'none' }}>
+                <LogOut className="w-5 h-5" aria-hidden />
+              </span>
+              <span style={{ flex: 1, textAlign: 'left', pointerEvents: 'none' }}>
+                Cerrar sesión
+              </span>
+            </button>
           </nav>
         </aside>
 
@@ -398,6 +414,20 @@ export default function Layout() {
                 </button>
               );
             })}
+          <button
+            type="button"
+            className="bottom-sheet-item"
+            onClick={() => {
+              setMoreMenuOpen(false);
+              void logout();
+            }}
+            style={{ width: '100%', display: 'flex', alignItems: 'center' }}
+          >
+            <div className="bottom-sheet-item-icon" style={{ pointerEvents: 'none' }}>
+              <LogOut className="w-5 h-5" aria-hidden />
+            </div>
+            <span style={{ pointerEvents: 'none', flex: 1, textAlign: 'left' }}>Cerrar sesión</span>
+          </button>
         </div>
       </BottomSheet>
     </div>
