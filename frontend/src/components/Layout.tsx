@@ -23,6 +23,7 @@ import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings, Plus, LogOut } f
 import { ActiveWorkoutBanner } from './workout/ActiveWorkoutBanner';
 import { haptics } from '@/lib/haptics';
 import { useAuth } from '../context/AuthContext';
+import { isPathEnabled } from '../lib/appModules';
 
 const navItems = [
   {
@@ -154,13 +155,19 @@ export default function Layout() {
 
   const closeSidebar = () => setSidebarOpen(false);
   const isMoreActive = moreMenuPaths.includes(location.pathname);
-  const bottomItems = navItems.filter((i) => bottomNavPaths.includes(i.path));
+  // Hide the sections of the modules the user switched off (Ajustes › Módulos).
+  const visibleNav = navItems.filter((i) => isPathEnabled(i.path, settings?.appModules));
+  const bottomItems = visibleNav.filter((i) => bottomNavPaths.includes(i.path));
   // Index of the highlighted tab; the "Más" button is the last slot. -1 hides the pill.
   const activeBottomIndex = isMoreActive
     ? bottomItems.length
     : bottomItems.findIndex((i) => i.path === location.pathname);
   if (needsOnboarding && !loadingConfig) {
-    return <OnboardingScreen onComplete={() => window.location.reload()} />;
+    return (
+      <OnboardingScreen
+        onComplete={(path) => (path ? window.location.assign(path) : window.location.reload())}
+      />
+    );
   }
 
   return (
@@ -185,7 +192,7 @@ export default function Layout() {
             </div>
           </div>
           <nav className="sidebar-nav" aria-label="Navegación principal">
-            {navItems.map((item) => {
+            {visibleNav.map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <button
@@ -385,7 +392,7 @@ export default function Layout() {
         title="Más opciones"
       >
         <div className="bottom-sheet-grid">
-          {navItems
+          {visibleNav
             .filter((i) => moreMenuPaths.includes(i.path))
             .map((item) => {
               const isActive = location.pathname === item.path;

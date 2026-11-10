@@ -48,6 +48,8 @@ export interface UserSettings {
   heightCm?: number;
   sex?: string;
   activityFactor?: number;
+  /** TRAINING | TRAINING_NUTRITION | TRAINING_BODY | FULL; ausente = FULL. */
+  appModules?: string | null;
   workoutData?: string;
 }
 

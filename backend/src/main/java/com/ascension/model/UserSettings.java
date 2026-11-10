@@ -72,6 +72,10 @@ public class UserSettings {
     @Column(name = "activity_factor")
     private Double activityFactor;
 
+    /** TRAINING, TRAINING_NUTRITION, TRAINING_BODY or FULL; null means FULL. */
+    @Column(name = "app_modules", length = 20)
+    private String appModules;
+
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "workout_data", columnDefinition = "jsonb")
     private String workoutData;
