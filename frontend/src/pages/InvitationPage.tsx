@@ -30,8 +30,13 @@ export default function InvitationPage() {
   const navigate = useNavigate();
   const preview = useInvitationPreview(token);
   const accept = useAcceptInvitation(token);
-  // Nothing is shared until the client ticks it.
+  // Starts from what the coach asked for; nothing is shared until the client accepts.
   const [permissions, setPermissions] = useState<CoachPermissions>(NONE);
+  const [requested, setRequested] = useState<CoachPermissions | null>(null);
+  if (preview.data?.requested && preview.data.requested !== requested) {
+    setRequested(preview.data.requested);
+    setPermissions(preview.data.requested);
+  }
   // The invitation is now on screen, so it must not reopen on the next sign-in.
   useEffect(clearPendingInvitation, []);
   const anySelected = SCOPES.some((scope) => permissions[scope]);
@@ -91,6 +96,11 @@ export default function InvitationPage() {
           </p>
           <fieldset className="flex flex-col gap-3 mb-4">
             <legend className="mb-2 font-bold text-white">¿Qué quieres compartir?</legend>
+            {SCOPES.some((scope) => preview.data.requested?.[scope]) && (
+              <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>
+                Viene marcado lo que te pide tu entrenador. Desmarca lo que no quieras compartir.
+              </p>
+            )}
             {SCOPES.map((scope) => (
               <label key={scope} className="flex items-start gap-3 cursor-pointer">
                 <input

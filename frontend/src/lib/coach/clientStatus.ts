@@ -3,7 +3,13 @@ import api from '../../api/client';
 
 /** Mirrors the backend ClientStatusDtos records. */
 export type StatusLevel = 'GREEN' | 'AMBER' | 'RED';
-type StatusReason = 'INACTIVE' | 'CHECKIN_MISSING' | 'FEW_FOOD_LOGS' | 'WEIGHT_STALLED';
+type StatusReason =
+  | 'INACTIVE'
+  | 'CHECKIN_MISSING'
+  | 'FEW_FOOD_LOGS'
+  | 'WEIGHT_STALLED'
+  | 'NO_PROGRAM'
+  | 'NO_NUTRITION_PLAN';
 
 export interface StatusSignal {
   reason: StatusReason;
@@ -39,6 +45,10 @@ export function signalText({ reason, value }: StatusSignal): string {
       return `Comida registrada ${value} de 7 días`;
     case 'WEIGHT_STALLED':
       return `Peso estancado en las últimas ${value} semanas`;
+    case 'NO_PROGRAM':
+      return 'Sin programa asignado';
+    case 'NO_NUTRITION_PLAN':
+      return 'Sin plan de nutrición';
   }
 }
 

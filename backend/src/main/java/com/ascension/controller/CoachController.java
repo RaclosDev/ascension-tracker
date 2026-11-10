@@ -4,10 +4,12 @@ import com.ascension.dto.ClientStatusDtos.ClientStatus;
 import com.ascension.dto.CoachDtos.CoachClient;
 import com.ascension.dto.CoachDtos.CoachStatus;
 import com.ascension.dto.CoachDtos.CreatedInvitation;
+import com.ascension.dto.CoachDtos.InvitationRequest;
 import com.ascension.dto.CoachDtos.PendingInvitation;
 import com.ascension.service.ClientStatusService;
 import com.ascension.service.CoachService;
 import com.ascension.util.SecurityUtils;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -69,10 +71,11 @@ public class CoachController {
     }
 
     @PostMapping("/invitations")
-    public ResponseEntity<CreatedInvitation> invite(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<CreatedInvitation> invite(@Valid @RequestBody(required = false) InvitationRequest request,
+                                                    @AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.status(HttpStatus.CREATED).body(coachService.createInvitation(email));
+        return ResponseEntity.status(HttpStatus.CREATED).body(coachService.createInvitation(email, request));
     }
 
     @DeleteMapping("/invitations/{id}")
