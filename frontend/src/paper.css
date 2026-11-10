@@ -715,9 +715,27 @@ body,
   color: var(--wall-active-ink);
 }
 /*
- * Ajustes por secciones: en móvil una tira de pestañas que se desplaza en horizontal;
- * desde 1024px, una columna fija a la izquierda. La activa es el mismo recorte de papel.
+ * Ajustes por secciones. Móvil: /settings es un índice a pantalla completa y cada sección
+ * se abre sola, con «‹ Ajustes» para volver. Desde 1024px: columna fija a la izquierda.
  */
+.settings-title {
+  margin: 0 0 var(--space-md);
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+.settings-back {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  margin: -6px 0 var(--space-sm) -6px;
+  padding: 0 6px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-decoration: none;
+}
 .settings-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -728,52 +746,34 @@ body,
 }
 .settings-nav-list {
   display: flex;
+  flex-direction: column;
   gap: 4px;
   margin: 0;
   padding: 4px;
   list-style: none;
-  overflow-x: auto;
-  scrollbar-width: none;
   background: transparent;
   border: 2px solid var(--wall-ink);
   border-radius: 4px;
 }
-.settings-nav-list::-webkit-scrollbar {
-  display: none;
-}
-/* Borde difuminado solo por el lado donde quedan pestañas: avisa de que la tira se desplaza. */
-.settings-nav-list.fade-end {
-  mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
-}
-.settings-nav-list.fade-start {
-  mask-image: linear-gradient(to left, #000 calc(100% - 48px), transparent);
-}
-.settings-nav-list.fade-start.fade-end {
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 48px,
-    #000 calc(100% - 48px),
-    transparent
-  );
-}
 .settings-nav-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  min-height: 44px;
+  gap: 0.6rem;
+  min-height: 48px;
   padding: 0.55rem 0.85rem;
   border-radius: 3px;
   color: var(--text-secondary);
   font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   text-decoration: none;
-  white-space: nowrap;
   transition:
     background-color 0.2s ease,
     color 0.2s ease;
+}
+.settings-nav-item > span {
+  flex: 1;
 }
 .settings-nav-item:focus-visible {
   outline-color: var(--wall-highlight);
@@ -784,6 +784,37 @@ body,
     color: var(--wall-ink);
     background: var(--bg-glass-strong);
   }
+}
+@media (max-width: 1023px) {
+  .settings-page.is-index .settings-section-panel,
+  .settings-page.has-section .settings-nav,
+  .settings-page.has-section .settings-title {
+    display: none;
+  }
+  .settings-page.has-section .settings-back {
+    display: inline-flex;
+  }
+  /* En el índice nada está abierto todavía: ninguna entrada se marca como activa. */
+  .settings-page.is-index .settings-nav-item.is-active {
+    background: transparent;
+    color: var(--text-secondary);
+    box-shadow: none;
+  }
+  .settings-nav-list li + li {
+    border-top: 1px solid var(--border-subtle);
+  }
+  /* Guardar queda a mano encima de la barra inferior aunque el formulario sea largo; el
+     relleno inferior de .main-content ya deja el hueco de la barra. */
+  .settings-save {
+    position: sticky;
+    bottom: 8px;
+    z-index: 5;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+}
+.settings-nav-chevron {
+  margin-left: auto;
+  opacity: 0.6;
 }
 .settings-nav-item.is-active {
   background: var(--wall-active-bg);
@@ -800,12 +831,11 @@ body,
     position: sticky;
     top: var(--space-lg);
   }
-  .settings-nav-list {
-    flex-direction: column;
-    overflow: visible;
+  .settings-nav-list li + li {
+    border-top: 0;
   }
-  .settings-nav-item {
-    white-space: normal;
+  .settings-nav-chevron {
+    display: none;
   }
 }
 
@@ -1033,6 +1063,273 @@ html[data-mode='light'] .btn-primary:hover {
     --accent-primary-dark: oklch(from var(--accent-raw) max(l, 0.66) c h);
     --gradient-primary: linear-gradient(var(--accent-primary), var(--accent-primary));
   }
+}
+
+/*
+ * Modo oscuro: las hojas son de tinta, no de papel. Heredan los tokens de la pared (texto crema,
+ * acento aclarado, paleta de Tailwind original) y se separan del fondo con un canto crema fino.
+ * Solo la hoja clave de cada pantalla (.sheet-key) conserva el canto grueso y la sombra dura.
+ * La landing se queda en papel.
+ */
+html:not([data-mode='light'])
+  :is(
+    .card,
+    .chart-card,
+    .progress-card,
+    .modal-content,
+    .bottom-sheet-content,
+    .workout-sheet,
+    .exercise-card-menu-dropdown,
+    .food-search-fullscreen,
+    .calendar-week,
+    .paper-toast,
+    [role='dialog'],
+    [role='alertdialog'],
+    [role='menu'],
+    [role='listbox'],
+    [data-radix-popper-content-wrapper]
+  ):not(.landing, .landing *) {
+  --bg-main: inherit;
+  --bg-primary: inherit;
+  --bg-secondary: inherit;
+  --bg-card: inherit;
+  --bg-card-hover: inherit;
+  --bg-glass: inherit;
+  --bg-glass-strong: inherit;
+  --bg-input: #101a2e;
+  --bg-surface: inherit;
+  --bg-surface-hover: inherit;
+  --wall-ink: inherit;
+  --wall-line: inherit;
+  --wall-line-soft: inherit;
+  --wall-highlight: inherit;
+  --wall-highlight-bg: inherit;
+  --wall-active-bg: inherit;
+  --wall-active-ink: inherit;
+  --wall-shadow: inherit;
+  --border-subtle: inherit;
+  --border-medium: inherit;
+  --border-color: inherit;
+  --text-primary: inherit;
+  --text-main: inherit;
+  --text-secondary: inherit;
+  --text-muted: inherit;
+  --color-success: inherit;
+  --color-success-bg: inherit;
+  --color-danger: inherit;
+  --color-danger-bg: inherit;
+  --color-warning: inherit;
+  --color-warning-bg: inherit;
+  --color-protein: inherit;
+  --color-carbs: inherit;
+  --color-fat: inherit;
+  --gradient-success: inherit;
+  --gradient-danger: inherit;
+  --gradient-card: inherit;
+  --shadow-sm: inherit;
+  --shadow-md: inherit;
+  --shadow-lg: inherit;
+  --color-primary: inherit;
+  --color-primary-foreground: inherit;
+  --color-white: inherit;
+  --color-gray-100: inherit;
+  --color-gray-200: inherit;
+  --color-gray-300: inherit;
+  --color-gray-400: inherit;
+  --color-gray-500: inherit;
+  --color-gray-600: inherit;
+  --color-gray-700: inherit;
+  --color-gray-800: inherit;
+  --color-gray-900: inherit;
+  --color-zinc-200: inherit;
+  --color-zinc-300: inherit;
+  --color-zinc-400: inherit;
+  --color-zinc-500: inherit;
+  --color-zinc-600: inherit;
+  --color-zinc-700: inherit;
+  --color-zinc-800: inherit;
+  --color-zinc-900: inherit;
+  --color-neutral-300: inherit;
+  --color-neutral-400: inherit;
+  --color-neutral-500: inherit;
+  --color-slate-300: inherit;
+  --color-slate-400: inherit;
+  --color-slate-500: inherit;
+  --color-red-200: inherit;
+  --color-red-300: inherit;
+  --color-red-400: inherit;
+  --color-red-500: inherit;
+  --color-rose-400: inherit;
+  --color-rose-500: inherit;
+  --color-emerald-300: inherit;
+  --color-emerald-400: inherit;
+  --color-emerald-500: inherit;
+  --color-green-400: inherit;
+  --color-green-500: inherit;
+  --color-amber-200: inherit;
+  --color-amber-300: inherit;
+  --color-amber-400: inherit;
+  --color-amber-500: inherit;
+  --color-yellow-400: inherit;
+  --color-orange-400: inherit;
+  --color-orange-500: inherit;
+  --color-sky-300: inherit;
+  --color-sky-400: inherit;
+  --color-blue-300: inherit;
+  --color-blue-400: inherit;
+  --color-blue-500: inherit;
+  --color-cyan-400: inherit;
+  --color-indigo-400: inherit;
+  --color-violet-400: inherit;
+  --color-purple-400: inherit;
+  --accent-primary: inherit;
+  --accent-primary-light: inherit;
+  --accent-primary-dark: inherit;
+  --accent-glow: inherit;
+  --accent-shadow: inherit;
+  --accent-text: inherit;
+  --border-accent: inherit;
+  --color-success-accent: inherit;
+  --gradient-primary: inherit;
+  --dark-sheet: #17233a;
+  --dark-edge: rgba(243, 236, 220, 0.28);
+}
+html:not([data-mode='light'])
+  :is(.card, .chart-card, .progress-card):not([role='dialog'], [role='alertdialog']):not(
+    :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet)
+      *,
+    .landing *
+  )::before {
+  border: 1.5px solid var(--dark-edge);
+  background-color: var(--dark-sheet);
+  box-shadow: none;
+}
+/* La hoja clave de la pantalla: canto crema grueso y sombra dura, como la hoja de la landing. */
+html:not([data-mode='light']) .sheet-key.sheet-key:is(.card, .chart-card, .progress-card)::before {
+  border: 2px solid var(--wall-ink);
+  box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.55);
+}
+html:not([data-mode='light'])
+  :is(.card, .chart-card, .modal-content, [role='dialog'], .bottom-sheet-content, .workout-sheet):not(
+    .landing *
+  )
+  :is(.card, .kpi-card),
+html:not([data-mode='light']) .kpi-card {
+  background: rgba(243, 236, 220, 0.04);
+  border: 1px solid var(--wall-line-soft);
+}
+html:not([data-mode='light'])
+  :is(
+    .modal-content,
+    .bottom-sheet-content,
+    .workout-sheet,
+    [role='dialog'].bg-card,
+    [role='alertdialog'],
+    .calendar-week
+  ):not(.landing *) {
+  background-color: var(--dark-sheet);
+  color: var(--text-primary);
+  border: 1.5px solid rgba(243, 236, 220, 0.45);
+}
+html:not([data-mode='light']) :is([role='menu'], [role='listbox']):not(.landing *) {
+  background: var(--dark-sheet);
+  border-color: rgba(243, 236, 220, 0.45);
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.45);
+}
+html:not([data-mode='light']) .paper-toast {
+  background: var(--dark-sheet) !important;
+  color: var(--text-primary) !important;
+  border: 1.5px solid rgba(243, 236, 220, 0.45) !important;
+}
+html:not([data-mode='light'])
+  :is(.card, .modal-content, [role='dialog'], [role='alertdialog']):not(.landing *)
+  .btn-primary {
+  background: var(--wall-active-bg);
+  color: var(--wall-active-ink);
+  border-color: var(--wall-active-bg);
+}
+@media (hover: hover) {
+  html:not([data-mode='light'])
+    :is(.card, .modal-content, [role='dialog'], [role='alertdialog']):not(.landing *)
+    .btn-primary:hover {
+    background: #fffdf7;
+  }
+}
+html:not([data-mode='light'])
+  :is(.card, .modal-content, [role='dialog'], [role='alertdialog']):not(.landing *)
+  .btn-secondary {
+  border-color: var(--border-medium);
+  color: var(--text-primary);
+}
+html:not([data-mode='light']) .marker-ink {
+  color: var(--accent-primary);
+}
+
+/* Aviso secundario: una franja sobre la pared, no una hoja que empuje el contenido. */
+.passkey-strip {
+  padding: 8px 12px;
+  border: 1px dashed var(--wall-line);
+  border-radius: 4px;
+  color: var(--wall-ink);
+}
+
+/* Inicio: en el móvil, peso → hoy → tendencia; en PC, la tendencia a la izquierda y "Hoy" al lado. */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'weight' 'today' 'stats';
+}
+@media (min-width: 1100px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-areas: 'weight today' 'stats today';
+    grid-template-rows: auto 1fr;
+    column-gap: 20px;
+  }
+  .dashboard-today {
+    align-self: start;
+    position: sticky;
+    top: var(--space-xl);
+  }
+}
+
+/* Los cuatro indicadores comparten una hoja: celdas separadas por filetes, sin recuadros. */
+.kpi-strip {
+  padding: 0;
+}
+.kpi-strip .kpi-cell,
+html:not([data-mode='light']) .kpi-strip .kpi-cell {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 14px 16px;
+  gap: 4px;
+}
+.kpi-strip .kpi-cell + .kpi-cell {
+  border-left: 1px solid var(--border-subtle);
+}
+@media (max-width: 1023px) {
+  .kpi-strip .kpi-cell:nth-child(3) {
+    border-left: 0;
+  }
+  .kpi-strip .kpi-cell:nth-child(n + 3) {
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+.kpi-number {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  line-height: 1;
+  color: var(--text-primary);
+}
+.kpi-number-date {
+  font-size: 1.15rem;
+  line-height: 1.5;
+}
+
+/* Lista de "Hoy": una fila por cosa pendiente. */
+.today-row + .today-row {
+  border-top: 1px solid var(--border-subtle);
 }
 
 /* Escritorio: barra lateral más estrecha y columna de contenido contenida. */

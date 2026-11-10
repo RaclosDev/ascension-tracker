@@ -133,72 +133,51 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
     parsedCurrent !== null &&
     (todayWeight === undefined || Math.abs(parsedCurrent - todayWeight) > 0.001);
 
+  const registered = hasTodayWeight || justSaved;
+
+  // Compact row: the weight is the one daily action, so it is the key sheet of the page.
   return (
-    <div className="card quick-add-card glass-panel-elevated p-4 sm:p-5 rounded-2xl mb-6 relative overflow-hidden border border-white/[0.08]">
-      {/* Header Row */}
-      <div className="quick-add-header flex items-center justify-between mb-3 relative z-10">
-        <div className="flex items-center gap-2.5">
+    <div className="card sheet-key quick-add-card p-3 sm:p-4 mb-5">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <div className="min-w-0 flex-1 basis-40">
+          <div className="flex items-center gap-2">
+            <Scale size={16} aria-hidden="true" style={{ color: 'var(--text-secondary)' }} />
+            <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+              Peso de hoy
+            </span>
+            <span
+              className="text-[0.68rem] font-bold uppercase tracking-wide"
+              style={{ color: registered ? 'var(--color-success, #34d399)' : 'var(--color-warning)' }}
+            >
+              {registered ? 'Registrado' : 'Pendiente'}
+            </span>
+          </div>
           <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center border"
-            style={{
-              background: 'var(--accent-glow)',
-              borderColor: 'rgba(255, 255, 255, 0.1)',
-              color: 'var(--accent-primary-light, #38bdf8)',
-            }}
+            className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[0.72rem]"
+            style={{ color: 'var(--text-secondary)' }}
           >
-            <Scale size={16} />
-          </div>
-          <div>
-            <span
-              className="quick-add-title text-xs font-semibold block"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              Peso Hoy
+            <span className="flex items-center gap-1">
+              <Calendar size={11} aria-hidden="true" /> {capitalizeFirst(todayLabel)}
             </span>
-            <span
-              className="quick-add-date text-[0.72rem] flex items-center gap-1"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              <Calendar size={11} className="opacity-70" /> {capitalizeFirst(todayLabel)}
-            </span>
+            {yesterdayWeight !== undefined && <span>Ayer: {yesterdayWeight.toFixed(2)} kg</span>}
+            {DeltaIcon !== null && deltaVsYesterday !== null && (
+              <span
+                className="flex items-center gap-0.5 font-semibold tabular-nums"
+                style={{ color: deltaColor }}
+              >
+                <DeltaIcon size={12} aria-hidden="true" />
+                {deltaVsYesterday > 0 ? '+' : ''}
+                {deltaVsYesterday.toFixed(2)} kg
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Status Badge: Top Right */}
         <div className="flex items-center gap-2">
-          {hasTodayWeight || justSaved ? (
-            <span
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border"
-              style={{
-                background: 'rgba(52, 211, 153, 0.15)',
-                borderColor: 'rgba(52, 211, 153, 0.3)',
-                color: 'var(--color-success, #34d399)',
-              }}
-            >
-              <Check size={13} className="stroke-[2.5]" /> Registrado
-            </span>
-          ) : (
-            <span
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border"
-              style={{
-                background: 'rgba(245, 158, 11, 0.15)',
-                borderColor: 'rgba(245, 158, 11, 0.3)',
-                color: 'var(--color-warning)',
-              }}
-            >
-              Pendiente
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Input Body: Clean, integrated action without steppers or giant button */}
-      <div className="quick-add-body flex flex-col items-center justify-center py-2 relative z-10">
-        <div className="flex items-center justify-center gap-2.5 w-full max-w-xs mb-2">
           <label htmlFor="quick-weight-input" className="sr-only">
             Peso corporal de hoy
           </label>
-          <div className="relative flex-1 max-w-[170px] flex items-center">
+          <div className="relative flex w-[132px] items-center">
             <input
               ref={inputRef}
               id="quick-weight-input"
@@ -206,9 +185,10 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
               inputMode="decimal"
               pattern="[0-9]*[.,]?[0-9]*"
               aria-label="Peso corporal de hoy en kilogramos"
-              className="quick-add-input min-h-11 text-3xl sm:text-4xl font-black tabular-nums text-center rounded-xl w-full py-1.5 pr-8 pl-3 outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-1 text-white border transition-all"
+              className="quick-add-input min-h-11 w-full rounded-md border py-1 pl-3 pr-8 text-center text-2xl font-black tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
               style={{
                 background: 'var(--bg-input)',
+                color: 'var(--text-primary)',
                 borderColor: isDirty ? 'var(--accent-primary)' : 'var(--border-medium)',
               }}
               value={quickWeight}
@@ -218,7 +198,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
               disabled={isPending}
             />
             <span
-              className="absolute right-2.5 text-xs font-bold pointer-events-none"
+              className="pointer-events-none absolute right-2.5 text-xs font-bold"
               style={{ color: 'var(--text-secondary)' }}
             >
               kg
@@ -229,50 +209,20 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
             type="button"
             onClick={() => saveWeight()}
             disabled={isPending}
-            className={`btn-press h-11 px-3.5 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
-              isPending
-                ? 'opacity-60 cursor-not-allowed bg-white/5 border border-white/10 text-zinc-400'
-                : isDirty || !hasTodayWeight
-                  ? 'btn btn-primary text-white'
-                  : 'bg-white/10 border border-white/15 text-zinc-200 hover:text-white'
-            }`}
+            className={`btn ${isDirty || !hasTodayWeight ? 'btn-primary' : 'btn-secondary'} btn-press h-11 px-3.5 text-xs font-semibold flex items-center gap-1.5`}
             aria-label={
               hasTodayWeight ? 'Actualizar peso corporal de hoy' : 'Registrar peso corporal de hoy'
             }
           >
             {isPending ? (
               <Loader2 size={16} className="animate-spin" />
-            ) : justSaved ? (
-              <>
-                <Check size={16} className="text-emerald-400 stroke-[2.5]" />
-                <span className="hidden sm:inline">Guardado</span>
-              </>
             ) : (
               <>
-                <Check size={16} className="stroke-[2.5]" />
-                <span>{hasTodayWeight ? 'Actualizar' : 'Registrar'}</span>
+                <Check size={16} className="stroke-[2.5]" aria-hidden="true" />
+                <span>{justSaved ? 'Guardado' : hasTodayWeight ? 'Actualizar' : 'Registrar'}</span>
               </>
             )}
           </button>
-        </div>
-
-        {/* Delta vs yesterday + yesterday context */}
-        <div className="flex items-center gap-3 h-5 text-xs">
-          {yesterdayWeight !== undefined && (
-            <span className="text-[0.72rem]" style={{ color: 'var(--text-secondary)' }}>
-              Ayer: {yesterdayWeight.toFixed(2)} kg
-            </span>
-          )}
-          {DeltaIcon !== null && deltaVsYesterday !== null && (
-            <span
-              className="flex items-center gap-0.5 text-[0.72rem] font-semibold tabular-nums"
-              style={{ color: deltaColor }}
-            >
-              <DeltaIcon size={12} />
-              {deltaVsYesterday > 0 ? '+' : ''}
-              {deltaVsYesterday.toFixed(2)} kg
-            </span>
-          )}
         </div>
       </div>
     </div>

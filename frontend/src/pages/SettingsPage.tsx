@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useEffect, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import api, { exportUserData } from '../api/client';
 import toast from 'react-hot-toast';
 
@@ -30,7 +30,7 @@ const CoachNutritionGate = lazy(() =>
 );
 import { applyThemeColor, readThemeColor } from '../utils/colorHelper';
 import { Skeleton } from '../components/ui/skeleton';
-import { Scale, Activity } from 'lucide-react';
+import { Scale, Activity, ChevronLeft } from 'lucide-react';
 import { SettingsSectionHeader } from '../components/settings/SettingsSectionHeader';
 import {
   SETTINGS_SECTIONS,
@@ -111,6 +111,8 @@ export default function SettingsPage() {
     isCoach && !COACH_SETTINGS_SECTIONS.includes(requestedSection)
       ? COACH_SETTINGS_SECTIONS[0]
       : requestedSection;
+  // En móvil, /settings sin sección es el índice; con sección, solo esa pantalla.
+  const hasExplicitSection = isSettingsSection(sectionParam) || location.hash === '#meals';
   const activeSectionLabel = SETTINGS_SECTIONS.find((s) => s.id === activeSection)?.label;
   const goToSection = (section: SettingsSectionId) => navigate({ search: `?section=${section}` });
 
@@ -315,7 +317,7 @@ export default function SettingsPage() {
 
   if (loading && !effectiveSettings) {
     return (
-      <div className="fade-in max-w-5xl mx-auto px-4 pt-2 sm:pt-4">
+      <div className="fade-in max-w-5xl mx-auto">
         <div className="settings-layout">
           <div className="flex lg:flex-col gap-2 overflow-hidden">
             {[1, 2, 3, 4].map((i) => (
@@ -337,15 +339,13 @@ export default function SettingsPage() {
 
   return (
     <div
-      className="fade-in max-w-5xl mx-auto px-4 pt-2 sm:pt-4"
+      className={`settings-page ${hasExplicitSection ? 'has-section' : 'is-index'} fade-in max-w-5xl mx-auto`}
       style={{ paddingBottom: 'calc(110px + env(safe-area-inset-bottom, 24px))' }}
     >
-      <header className="mb-6 pb-2 border-b border-white/5">
-        <h1 className="text-2xl font-black text-white tracking-tight">Ajustes y Preferencias</h1>
-        <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
-          Configuración personal, macros, entrenamiento y privacidad.
-        </p>
-      </header>
+      <h1 className="settings-title">Ajustes</h1>
+      <Link to={{ search: '' }} className="settings-back">
+        <ChevronLeft size={18} aria-hidden="true" /> Ajustes
+      </Link>
 
       <div className="settings-layout">
         <SettingsSectionNav
@@ -410,7 +410,7 @@ export default function SettingsPage() {
                     initialStartWeight={dashboard?.currentWeight || effectiveSettings?.startWeight}
                   />
                   <button
-                    className="btn btn-primary min-h-11"
+                    className="btn btn-primary settings-save min-h-11"
                     style={{ width: '100%', marginTop: '0.5rem' }}
                     onClick={handleSaveMacros}
                   >
