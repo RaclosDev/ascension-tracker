@@ -265,7 +265,9 @@ export default function Layout() {
         <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <div className="sidebar-header">
             <div className="sidebar-brand-container">
-              <img src="/ascension-title.png" alt="Ascension" className="sidebar-title-img" />
+              <span className="app-wordmark">
+                Ascension<span className="app-wordmark-dot">.</span>
+              </span>
               <div className="logo-subtitle">
                 {isCoach ? 'Panel de entrenador' : 'Entreno · Nutrición · Peso'}
               </div>
@@ -321,13 +323,9 @@ export default function Layout() {
         <main className="main-content">
           {/* Cabecera móvil: marca a la izquierda y sesión a la derecha; se desplaza con el contenido */}
           <header className="mobile-top-bar">
-            <img
-              src="/ascension-title.png"
-              alt="Ascension"
-              className="mobile-brand"
-              width="75"
-              height="26"
-            />
+            <span className="app-wordmark">
+              Ascension<span className="app-wordmark-dot">.</span>
+            </span>
             <div className="mobile-top-actions">
               {hideNav && <WorkoutElapsedTimer />}
               <button
