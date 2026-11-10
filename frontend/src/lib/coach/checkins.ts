@@ -85,6 +85,8 @@ export function useSaveCheckinTemplate() {
 export const useClientCheckins = (linkId: string) =>
   useQuery({
     queryKey: keys.client(linkId),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
     retry: false,
     queryFn: async () => (await api.get<Checkin[]>(`/coach/clients/${enc(linkId)}/checkins`)).data,
   });
@@ -111,6 +113,8 @@ export function useReplyCheckin(linkId: string) {
 export const useMyCheckin = (linkId: string) =>
   useQuery({
     queryKey: keys.mine(linkId),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
     retry: false,
     queryFn: async () =>
       (await api.get<ClientCheckin>(`/coaching/coaches/${enc(linkId)}/checkin`)).data,
@@ -119,6 +123,8 @@ export const useMyCheckin = (linkId: string) =>
 export const useMyCheckinHistory = (linkId: string) =>
   useQuery({
     queryKey: keys.history(linkId),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
     queryFn: async () =>
       (await api.get<Checkin[]>(`/coaching/coaches/${enc(linkId)}/checkins`)).data,
   });

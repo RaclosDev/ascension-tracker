@@ -35,8 +35,13 @@ const checkin = (over: Partial<Checkin> = {}): Checkin => ({
   ...over,
 });
 
-function wrap(ui: ReactNode, path = '/') {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+function wrap(
+  ui: ReactNode,
+  path = '/',
+  queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, staleTime: 5 * 60 * 1000 } },
+  }),
+) {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[path]}>
@@ -115,6 +120,18 @@ describe('Check-ins del alumno', () => {
 });
 
 describe('Check-ins en la ficha del entrenador', () => {
+  it('shows a newly submitted check-in when reopening a client with a cached empty list', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { staleTime: 5 * 60 * 1000 } },
+    });
+    queryClient.setQueryData(['coach', 'client', 'l1', 'checkins'], []);
+    mockedApi.get.mockResolvedValue({ data: [checkin()] });
+
+    wrap(<CheckinsSection linkId="l1" />, '/', queryClient);
+
+    expect(await screen.findByText('Rodilla')).toBeInTheDocument();
+  });
+
   it('shows scores, weight and answers and lets the coach reply', async () => {
     mockedApi.get.mockResolvedValue({ data: [checkin()] });
     mockedApi.put.mockResolvedValue({ data: checkin({ coachReply: 'Ánimo' }) });
