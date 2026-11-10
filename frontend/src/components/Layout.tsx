@@ -19,10 +19,26 @@ import OnboardingScreen from './OnboardingScreen';
 import { preloadRoute } from '../utils/routePreload';
 
 import { Skeleton } from './ui/skeleton';
-import { Home, LineChart, Utensils, Dumbbell, Wrench, Settings, Plus } from 'lucide-react';
+import {
+  Home,
+  LineChart,
+  Utensils,
+  Dumbbell,
+  Wrench,
+  Settings,
+  Plus,
+  LogOut,
+  GraduationCap,
+  Users,
+  ClipboardList,
+  ChefHat,
+  CreditCard,
+} from 'lucide-react';
 import { ActiveWorkoutBanner } from './workout/ActiveWorkoutBanner';
 import { haptics } from '@/lib/haptics';
 import { useAuth } from '../context/AuthContext';
+import { isPathEnabled } from '../lib/appModules';
+import { useCoachProfile } from '../lib/coach/api';
 
 const navItems = [
   {
@@ -50,6 +66,12 @@ const navItems = [
     shortLabel: 'Entreno',
   },
   {
+    path: '/entrenador',
+    icon: <GraduationCap className="w-5 h-5" />,
+    label: 'Entrenador',
+    shortLabel: 'Entrenador',
+  },
+  {
     path: '/utilities',
     icon: <Wrench className="w-5 h-5" />,
     label: 'Utilidades',
@@ -64,7 +86,49 @@ const navItems = [
 ];
 
 const bottomNavPaths = ['/dashboard', '/tracking', '/nutrition', '/workout'];
-const moreMenuPaths = ['/utilities', '/settings'];
+
+/**
+ * Una cuenta de entrenador es solo para entrenar a otros: ve sus alumnos, programas, recetas y plan.
+ * Si quiere llevar su propio seguimiento, usa otra cuenta.
+ */
+const coachNavItems = [
+  {
+    path: '/entrenador',
+    icon: <Users className="w-5 h-5" />,
+    label: 'Alumnos',
+    shortLabel: 'Alumnos',
+  },
+  {
+    path: '/entrenador/programas',
+    icon: <ClipboardList className="w-5 h-5" />,
+    label: 'Programas',
+    shortLabel: 'Programas',
+  },
+  {
+    path: '/entrenador/recetas',
+    icon: <ChefHat className="w-5 h-5" />,
+    label: 'Recetas',
+    shortLabel: 'Recetas',
+  },
+  {
+    path: '/entrenador/plan',
+    icon: <CreditCard className="w-5 h-5" />,
+    label: 'Plan y facturación',
+    shortLabel: 'Plan',
+  },
+  ...navItems.filter((i) => i.path === '/utilities' || i.path === '/settings'),
+];
+const coachBottomPaths = coachNavItems.slice(0, 4).map((i) => i.path);
+/** Personal sections a coach account does not use; they open the coach panel instead. */
+const personalPaths = ['/dashboard', '/tracking', '/nutrition', '/workout'];
+
+/** The client pages belong to «Alumnos»; the other sections also cover their subpages. */
+function isItemActive(itemPath: string, pathname: string) {
+  if (itemPath === '/entrenador') {
+    return pathname === '/entrenador' || pathname.startsWith('/entrenador/alumnos/');
+  }
+  return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+}
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -74,7 +138,7 @@ export default function Layout() {
   const firstPathRef = useRef(true);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const userInitial = (user?.name || user?.email || '?').trim().charAt(0).toUpperCase();
   const hasActiveWorkout = useWorkoutStore((s) => s.active !== null);
   const hideNav = hasActiveWorkout && location.pathname === '/workout';
@@ -94,6 +158,13 @@ export default function Layout() {
       }),
   });
   const needsOnboarding = !loadingConfig && !configError && settings === null;
+  const isCoach = useCoachProfile().data?.coach === true;
+
+  useEffect(() => {
+    if (isCoach && personalPaths.includes(location.pathname)) {
+      navigate('/entrenador', { replace: true });
+    }
+  }, [isCoach, location.pathname, navigate]);
 
   // Cerrar el menú automáticamente al cambiar de página y resetear scroll
   useEffect(() => {
@@ -153,14 +224,27 @@ export default function Layout() {
   }, [navigateTo]);
 
   const closeSidebar = () => setSidebarOpen(false);
-  const isMoreActive = moreMenuPaths.includes(location.pathname);
-  const bottomItems = navItems.filter((i) => bottomNavPaths.includes(i.path));
+  // Hide the sections of the modules the user switched off (Ajustes › Módulos).
+  // «Entrenador» solo aparece a quien tiene activado el modo entrenador (y entonces es lo único).
+  const visibleNav = isCoach
+    ? coachNavItems
+    : navItems.filter((i) =>
+        i.path === '/entrenador' ? false : isPathEnabled(i.path, settings?.appModules),
+      );
+  const bottomPaths = isCoach ? coachBottomPaths : bottomNavPaths;
+  const bottomItems = visibleNav.filter((i) => bottomPaths.includes(i.path));
+  const moreItems = visibleNav.filter((i) => !bottomPaths.includes(i.path));
+  const isMoreActive = moreItems.some((i) => isItemActive(i.path, location.pathname));
   // Index of the highlighted tab; the "Más" button is the last slot. -1 hides the pill.
   const activeBottomIndex = isMoreActive
     ? bottomItems.length
-    : bottomItems.findIndex((i) => i.path === location.pathname);
+    : bottomItems.findIndex((i) => isItemActive(i.path, location.pathname));
   if (needsOnboarding && !loadingConfig) {
-    return <OnboardingScreen onComplete={() => window.location.reload()} />;
+    return (
+      <OnboardingScreen
+        onComplete={(path) => (path ? window.location.assign(path) : window.location.reload())}
+      />
+    );
   }
 
   return (
@@ -181,12 +265,14 @@ export default function Layout() {
           <div className="sidebar-header">
             <div className="sidebar-brand-container">
               <img src="/ascension-title.png" alt="Ascension" className="sidebar-title-img" />
-              <div className="logo-subtitle">Entreno · Nutrición · Peso</div>
+              <div className="logo-subtitle">
+                {isCoach ? 'Panel de entrenador' : 'Entreno · Nutrición · Peso'}
+              </div>
             </div>
           </div>
           <nav className="sidebar-nav" aria-label="Navegación principal">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
+            {visibleNav.map((item) => {
+              const isActive = isItemActive(item.path, location.pathname);
               return (
                 <button
                   key={item.path}
@@ -212,6 +298,22 @@ export default function Layout() {
                 </button>
               );
             })}
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                closeSidebar();
+                void logout();
+              }}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', marginTop: 'auto' }}
+            >
+              <span className="nav-icon" style={{ pointerEvents: 'none' }}>
+                <LogOut className="w-5 h-5" aria-hidden />
+              </span>
+              <span style={{ flex: 1, textAlign: 'left', pointerEvents: 'none' }}>
+                Cerrar sesión
+              </span>
+            </button>
           </nav>
         </aside>
 
@@ -284,7 +386,7 @@ export default function Layout() {
           <span className="mobile-bottom-pill-ghost">&nbsp;</span>
         </span>
         {bottomItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = isItemActive(item.path, location.pathname);
           return (
             <button
               key={item.path}
@@ -369,35 +471,47 @@ export default function Layout() {
         title="Más opciones"
       >
         <div className="bottom-sheet-grid">
-          {navItems
-            .filter((i) => moreMenuPaths.includes(i.path))
-            .map((item) => {
-              const isActive = location.pathname === item.path;
-              return (
-                <button
-                  key={item.path}
-                  type="button"
-                  className={`bottom-sheet-item ${isActive ? 'active' : ''}`}
-                  aria-current={isActive ? 'page' : undefined}
-                  onMouseEnter={() => preloadRoute(item.path)}
-                  onTouchStart={() => preloadRoute(item.path)}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setMoreMenuOpen(false);
-                    navigateTo(item.path);
-                  }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center' }}
-                >
-                  <div className="bottom-sheet-item-icon" style={{ pointerEvents: 'none' }}>
-                    {item.icon}
-                  </div>
-                  <span style={{ pointerEvents: 'none', flex: 1, textAlign: 'left' }}>
-                    {item.label}
-                  </span>
-                </button>
-              );
-            })}
+          {moreItems.map((item) => {
+            const isActive = isItemActive(item.path, location.pathname);
+            return (
+              <button
+                key={item.path}
+                type="button"
+                className={`bottom-sheet-item ${isActive ? 'active' : ''}`}
+                aria-current={isActive ? 'page' : undefined}
+                onMouseEnter={() => preloadRoute(item.path)}
+                onTouchStart={() => preloadRoute(item.path)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMoreMenuOpen(false);
+                  navigateTo(item.path);
+                }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center' }}
+              >
+                <div className="bottom-sheet-item-icon" style={{ pointerEvents: 'none' }}>
+                  {item.icon}
+                </div>
+                <span style={{ pointerEvents: 'none', flex: 1, textAlign: 'left' }}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            className="bottom-sheet-item"
+            onClick={() => {
+              setMoreMenuOpen(false);
+              void logout();
+            }}
+            style={{ width: '100%', display: 'flex', alignItems: 'center' }}
+          >
+            <div className="bottom-sheet-item-icon" style={{ pointerEvents: 'none' }}>
+              <LogOut className="w-5 h-5" aria-hidden />
+            </div>
+            <span style={{ pointerEvents: 'none', flex: 1, textAlign: 'left' }}>Cerrar sesión</span>
+          </button>
         </div>
       </BottomSheet>
     </div>

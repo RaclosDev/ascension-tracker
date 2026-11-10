@@ -24,11 +24,13 @@ test.describe('Onboarding Flow', () => {
 
     await page.goto('/');
 
-    // Verify Onboarding Welcome header is visible
+    // Paso 0: rol y módulos
     await expect(page.getByText('Bienvenido a Ascension')).toBeVisible({ timeout: 15000 });
-    await expect(
-      page.getByText('Para empezar, necesitamos conocer algunos datos básicos sobre ti.'),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('¿Quién eres?')).toBeVisible();
+    await expect(page.getByText('¿Qué quieres llevar en la app?')).toBeVisible();
+    await page.getByRole('button', { name: 'Continuar' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Sobre ti' })).toBeVisible({ timeout: 10000 });
 
     // Verify Step 1 fields exist
     await expect(page.getByText('Sexo')).toBeVisible();
@@ -88,6 +90,8 @@ test.describe('Onboarding Flow', () => {
 
     // --- PASO 1: Datos Personales ---
     await expect(page.getByText('Bienvenido a Ascension')).toBeVisible({ timeout: 15000 });
+    await page.getByRole('button', { name: 'Continuar' }).click();
+    await expect(page.getByRole('heading', { name: 'Sobre ti' })).toBeVisible({ timeout: 10000 });
 
     // Fill Step 1 inputs
     const ageInput = page.locator('input[type="number"]').nth(0);
@@ -112,7 +116,7 @@ test.describe('Onboarding Flow', () => {
     await continueBtn.click();
 
     // --- PASO 3: Plan de Pérdida de Peso (WeightLossPlan) ---
-    await expect(page.getByText(/Plan de Pérdida de Peso|Calorías diarias a comer/i)).toBeVisible({
+    await expect(page.getByRole('heading', { name: 'Plan para perder peso' })).toBeVisible({
       timeout: 10000,
     });
 
@@ -139,6 +143,7 @@ test.describe('Onboarding Flow', () => {
     expect(submittedSettingsPayload?.startWeight).toBe(82.5);
     expect(submittedSettingsPayload?.goalWeight).toBe(75.0);
     expect(submittedSettingsPayload?.macroStrategy).toBe('BALANCED');
+    expect(submittedSettingsPayload?.appModules).toBe('FULL');
 
     // Verify meals reset was called
     await expect.poll(() => mealsResetCalled, { timeout: 10000 }).toBe(true);
@@ -160,6 +165,8 @@ test.describe('Onboarding Flow', () => {
     await page.goto('/');
 
     await expect(page.getByText('Bienvenido a Ascension')).toBeVisible({ timeout: 15000 });
+    await page.getByRole('button', { name: 'Continuar' }).click();
+    await expect(page.getByRole('heading', { name: 'Sobre ti' })).toBeVisible({ timeout: 10000 });
 
     const ageInput = page.locator('input[type="number"]').nth(0);
     const heightInput = page.locator('input[type="number"]').nth(1);
@@ -180,10 +187,40 @@ test.describe('Onboarding Flow', () => {
     await backBtn.click();
 
     // Verify fields are preserved
-    await expect(page.getByText('Bienvenido a Ascension')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Sobre ti' })).toBeVisible({ timeout: 10000 });
     await expect(ageInput).toHaveValue('32');
     await expect(heightInput).toHaveValue('180');
     await expect(startWeightInput).toHaveValue('85.0');
     await expect(goalWeightInput).toHaveValue('80.0');
+  });
+
+  test('a coach skips the personal steps and lands on the coach page', async ({ page }) => {
+    await setupAuthMocks(page);
+    let payload: Record<string, unknown> | null = null;
+    let coachProfileCreated = false;
+    await page.route('**/api/settings**', async (route) => {
+      if (route.request().method() === 'PUT') {
+        payload = route.request().postDataJSON() as Record<string, unknown>;
+        await route.fulfill({ json: payload });
+      } else {
+        await route.fulfill({ status: 204, body: '' });
+      }
+    });
+    await page.route('**/api/nutrition/meals/reset**', (route) => route.fulfill({ json: {} }));
+    await page.route('**/api/coach/profile', async (route) => {
+      coachProfileCreated = route.request().method() === 'POST';
+      await route.fulfill({ json: {} });
+    });
+
+    await page.goto('/');
+    await expect(page.getByText('Bienvenido a Ascension')).toBeVisible({ timeout: 15000 });
+    await page.getByText('Soy entrenador').click();
+    await expect(page.getByText('¿Qué quieres llevar en la app?')).toBeHidden();
+    await page.getByRole('button', { name: 'Empezar' }).click();
+
+    await expect.poll(() => coachProfileCreated, { timeout: 10000 }).toBe(true);
+    await expect(page).toHaveURL(/\/entrenador$/);
+    expect(payload?.appModules).toBe('TRAINING');
+    expect(payload?.sex).toBeUndefined();
   });
 });

@@ -5,6 +5,7 @@ import {
   Database,
   Dumbbell,
   GraduationCap,
+  LayoutGrid,
   LucideIcon,
   Palette,
   Scale,
@@ -14,7 +15,8 @@ import {
 
 export const SETTINGS_SECTIONS = [
   { id: 'personal', label: 'Datos personales', icon: User },
-  { id: 'plan', label: 'Plan de adelgazamiento', icon: Activity },
+  { id: 'modules', label: 'Módulos', icon: LayoutGrid },
+  { id: 'plan', label: 'Plan de peso', icon: Activity },
   { id: 'macros', label: 'Macros', icon: Scale },
   { id: 'meals', label: 'Comidas', icon: Utensils },
   { id: 'theme', label: 'Apariencia', icon: Palette },
@@ -25,12 +27,17 @@ export const SETTINGS_SECTIONS = [
 
 export type SettingsSectionId = (typeof SETTINGS_SECTIONS)[number]['id'];
 
+/** A coach account only coaches: no personal data, plan, macros, meals or workouts of its own. */
+export const COACH_SETTINGS_SECTIONS: readonly SettingsSectionId[] = ['theme', 'data'];
+
 export function isSettingsSection(value: string | null): value is SettingsSectionId {
   return SETTINGS_SECTIONS.some((section) => section.id === value);
 }
 
 interface SettingsSectionNavProps {
   active: SettingsSectionId;
+  /** Only these sections; all of them when omitted. */
+  only?: readonly SettingsSectionId[];
 }
 
 /**
@@ -38,7 +45,7 @@ interface SettingsSectionNavProps {
  * pestañas desplazable en móvil. Cada entrada es un enlace a `?section=`, así que se puede
  * compartir y el botón atrás vuelve a la sección anterior.
  */
-export function SettingsSectionNav({ active }: SettingsSectionNavProps) {
+export function SettingsSectionNav({ active, only }: SettingsSectionNavProps) {
   const listRef = useRef<HTMLUListElement>(null);
   const [edges, setEdges] = useState({ start: false, end: false });
 
@@ -72,21 +79,23 @@ export function SettingsSectionNav({ active }: SettingsSectionNavProps) {
   return (
     <nav className="settings-nav" aria-label="Secciones de ajustes">
       <ul ref={listRef} className={`settings-nav-list${fade}`}>
-        {SETTINGS_SECTIONS.map(({ id, label, icon: Icon }) => {
-          const isActive = id === active;
-          return (
-            <li key={id}>
-              <Link
-                to={{ search: `?section=${id}` }}
-                className={`settings-nav-item ${isActive ? 'is-active' : ''}`}
-                aria-current={isActive ? 'page' : undefined}
-              >
-                <Icon size={16} aria-hidden="true" />
-                <span>{label}</span>
-              </Link>
-            </li>
-          );
-        })}
+        {SETTINGS_SECTIONS.filter((s) => !only || only.includes(s.id)).map(
+          ({ id, label, icon: Icon }) => {
+            const isActive = id === active;
+            return (
+              <li key={id}>
+                <Link
+                  to={{ search: `?section=${id}` }}
+                  className={`settings-nav-item ${isActive ? 'is-active' : ''}`}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  <Icon size={16} aria-hidden="true" />
+                  <span>{label}</span>
+                </Link>
+              </li>
+            );
+          },
+        )}
       </ul>
     </nav>
   );

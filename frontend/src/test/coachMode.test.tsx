@@ -7,7 +7,7 @@ import api from '../api/client';
 import InvitationPage from '../pages/InvitationPage';
 import { HomeRedirect, RememberInvitation } from '../components/coach/InvitationRedirects';
 import { SettingsCoachSection } from '../components/settings/SettingsCoachSection';
-import { peekPendingInvitation } from '../lib/coach/api';
+import { peekPendingInvitation, rememberPendingInvitation } from '../lib/coach/api';
 import CoachClientPage from '../pages/CoachClientPage';
 import type { CompletedWorkout, Exercise } from '../lib/workout/types';
 
@@ -62,6 +62,7 @@ function renderAt(path: string, routes: ReactNode) {
 beforeEach(() => {
   vi.clearAllMocks();
   sessionStorage.clear();
+  localStorage.clear();
 });
 afterEach(cleanup);
 
@@ -101,6 +102,27 @@ describe('InvitationPage', () => {
       }),
     );
     expect(await screen.findByText('ajustes')).toBeDefined();
+  });
+
+  it('warns when a shared scope belongs to a module the client switched off', async () => {
+    mockedApi.get.mockResolvedValue({
+      data: { coach, expiresAt: '2026-11-12T00:00:00Z', alreadyLinked: false },
+    });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    queryClient.setQueryData(['settings'], { appModules: 'TRAINING' });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[`/invitacion/${TOKEN}`]}>
+          <Routes>{routes}</Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText('Laura Coach');
+    fireEvent.click(screen.getByRole('checkbox', { name: /Entrenamiento/ }));
+    expect(screen.queryByRole('status')).toBeNull();
+    fireEvent.click(screen.getByRole('checkbox', { name: /^Nutrición/ }));
+    expect(screen.getByRole('status').textContent).toContain('Tienes desactivado Nutrición');
   });
 
   it('only lets the coach prescribe when training is shared', async () => {
@@ -191,8 +213,18 @@ describe('pending invitation across sign-in', () => {
     expect(peekPendingInvitation()).toBeNull();
   });
 
+  it('keeps the invitation across tabs but forgets it once it expires', () => {
+    rememberPendingInvitation(TOKEN);
+    expect(localStorage.getItem('ascension:pending-invitation')).toContain(TOKEN);
+    localStorage.setItem(
+      'ascension:pending-invitation',
+      JSON.stringify({ token: TOKEN, expiresAt: Date.now() - 1 }),
+    );
+    expect(peekPendingInvitation()).toBeNull();
+  });
+
   it('clears the pending invitation once it is on screen', async () => {
-    sessionStorage.setItem('ascension:pending-invitation', TOKEN);
+    rememberPendingInvitation(TOKEN);
     mockedApi.get.mockResolvedValue({
       data: { coach, expiresAt: '2026-11-12T00:00:00Z', alreadyLinked: false },
     });

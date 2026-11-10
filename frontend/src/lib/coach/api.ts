@@ -32,8 +32,28 @@ export interface MyCoach {
   since: string;
 }
 
+/** What the coach already knows about the client, so the client skips those onboarding steps. */
+export interface InvitationProfile {
+  sex: 'M' | 'F' | null;
+  age: number | null;
+  heightCm: number | null;
+  startWeight: number | null;
+  goalWeight: number | null;
+  activityFactor: number | null;
+  appModules: string | null;
+}
+
+export interface InvitationRequest {
+  clientName?: string;
+  permissions?: CoachPermissions;
+  profile?: InvitationProfile;
+}
+
 export interface PendingInvitation {
   id: string;
+  clientName: string | null;
+  permissions: CoachPermissions;
+  prefilled: boolean;
   createdAt: string;
   expiresAt: string;
 }
@@ -46,6 +66,10 @@ export interface InvitationPreview {
   coach: CoachPerson;
   expiresAt: string;
   alreadyLinked: boolean;
+  clientName: string | null;
+  /** What the coach asked to see; the client starts from it and can change it. */
+  requested: CoachPermissions;
+  profile: InvitationProfile | null;
 }
 
 export interface AccessLogEntry {
@@ -173,7 +197,8 @@ export const useCoachInvitations = (enabled: boolean) =>
 export function useCreateInvitation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async () => (await api.post<CreatedInvitation>('/coach/invitations')).data,
+    mutationFn: async (request?: InvitationRequest) =>
+      (await api.post<CreatedInvitation>('/coach/invitations', request ?? {})).data,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.invitations }),
   });
 }
@@ -231,9 +256,10 @@ export const useClientCustomExercises = (linkId: string) =>
 
 // ---- Client side ----
 
-export const useInvitationPreview = (token: string) =>
+export const useInvitationPreview = (token: string, enabled = true) =>
   useQuery({
     queryKey: ['coaching', 'invitation', token],
+    enabled: enabled && token !== '',
     retry: false,
     queryFn: async () =>
       (await api.get<InvitationPreview>(`/coaching/invitations/${encodeURIComponent(token)}`)).data,
@@ -296,16 +322,42 @@ export const useCoachAccessLog = () =>
 const PENDING_INVITATION_KEY = 'ascension:pending-invitation';
 const TOKEN_FORMAT = /^[A-Za-z0-9_-]{43}$/;
 
+// localStorage (no sessionStorage): el enlace suele abrirse en otra pestaña o navegador del que
+// acaba iniciando sesión (WhatsApp, PWA, redirección de Google), y sessionStorage no sobrevive.
+// Caduca a la semana, como la propia invitación.
+const PENDING_INVITATION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
 export function rememberPendingInvitation(token: string) {
-  if (TOKEN_FORMAT.test(token)) sessionStorage.setItem(PENDING_INVITATION_KEY, token);
+  if (!TOKEN_FORMAT.test(token)) return;
+  try {
+    localStorage.setItem(
+      PENDING_INVITATION_KEY,
+      JSON.stringify({ token, expiresAt: Date.now() + PENDING_INVITATION_TTL_MS }),
+    );
+  } catch {
+    // Almacenamiento bloqueado: el usuario tendrá que volver a abrir el enlace.
+  }
 }
 
 /** The invitation opened before signing in, if any. Pure, so it is safe to call while rendering. */
 export function peekPendingInvitation(): string | null {
-  const token = sessionStorage.getItem(PENDING_INVITATION_KEY);
-  return token && TOKEN_FORMAT.test(token) ? token : null;
+  try {
+    const raw = localStorage.getItem(PENDING_INVITATION_KEY);
+    if (!raw) return null;
+    const { token, expiresAt } = JSON.parse(raw) as { token?: unknown; expiresAt?: unknown };
+    if (typeof token !== 'string' || !TOKEN_FORMAT.test(token)) return null;
+    if (typeof expiresAt !== 'number' || expiresAt < Date.now()) return null;
+    return token;
+  } catch {
+    return null;
+  }
 }
 
 export function clearPendingInvitation() {
-  sessionStorage.removeItem(PENDING_INVITATION_KEY);
+  try {
+    localStorage.removeItem(PENDING_INVITATION_KEY);
+    sessionStorage.removeItem(PENDING_INVITATION_KEY);
+  } catch {
+    // ignore
+  }
 }

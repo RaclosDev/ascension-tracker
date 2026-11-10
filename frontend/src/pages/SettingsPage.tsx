@@ -16,7 +16,9 @@ import { SettingsThemeSection } from '../components/settings/SettingsThemeSectio
 import { SettingsWorkoutSection } from '../components/settings/SettingsWorkoutSection';
 import { SettingsDataSection } from '../components/settings/SettingsDataSection';
 import { SettingsConsentCard } from '../components/settings/SettingsConsentCard';
+import { useCoachProfile } from '../lib/coach/api';
 import { SettingsCoachSection } from '../components/settings/SettingsCoachSection';
+import { SettingsModulesSection } from '../components/settings/SettingsModulesSection';
 import { useAuth } from '../context/AuthContext';
 
 /** A coach's plan in force locks the macro editor; if its chunk fails, the editor shows as usual. */
@@ -31,6 +33,7 @@ import { Scale, Activity } from 'lucide-react';
 import { SettingsSectionHeader } from '../components/settings/SettingsSectionHeader';
 import {
   SETTINGS_SECTIONS,
+  COACH_SETTINGS_SECTIONS,
   SettingsSectionNav,
   isSettingsSection,
   type SettingsSectionId,
@@ -97,11 +100,16 @@ export default function SettingsPage() {
     settings || (querySettings as SettingsForm) || (cachedSettings as SettingsForm) || null;
   // La sección visible sale de la URL (?section=). El antiguo ancla #meals sigue funcionando.
   const sectionParam = searchParams.get('section');
-  const activeSection: SettingsSectionId = isSettingsSection(sectionParam)
+  const isCoach = useCoachProfile().data?.coach === true;
+  const requestedSection: SettingsSectionId = isSettingsSection(sectionParam)
     ? sectionParam
     : location.hash === '#meals'
       ? 'meals'
       : 'personal';
+  const activeSection: SettingsSectionId =
+    isCoach && !COACH_SETTINGS_SECTIONS.includes(requestedSection)
+      ? COACH_SETTINGS_SECTIONS[0]
+      : requestedSection;
   const activeSectionLabel = SETTINGS_SECTIONS.find((s) => s.id === activeSection)?.label;
   const goToSection = (section: SettingsSectionId) => navigate({ search: `?section=${section}` });
 
@@ -339,7 +347,10 @@ export default function SettingsPage() {
       </header>
 
       <div className="settings-layout">
-        <SettingsSectionNav active={activeSection} />
+        <SettingsSectionNav
+          active={activeSection}
+          only={isCoach ? COACH_SETTINGS_SECTIONS : undefined}
+        />
 
         <section
           key={activeSection}
@@ -355,9 +366,11 @@ export default function SettingsPage() {
             />
           )}
 
+          {activeSection === 'modules' && <SettingsModulesSection />}
+
           {activeSection === 'plan' && (
             <div className="card p-4 sm:p-6">
-              <SettingsSectionHeader title="Plan de Adelgazamiento" icon={Activity} />
+              <SettingsSectionHeader title="Plan de peso" icon={Activity} />
               <div className="mt-5 pt-5 border-t border-white/10">
                 <WeightLossPlan
                   initialWeightKg={String(
