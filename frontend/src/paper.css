@@ -506,6 +506,31 @@ body,
   line-height: 1;
 }
 
+.onboarding-option {
+  position: relative;
+  display: block;
+  padding: 0.75rem;
+  background: var(--bg-card);
+  border: 2px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .onboarding-option:hover {
+    background: var(--bg-card-hover);
+  }
+}
+
+.onboarding-option:has(:checked) {
+  border-color: var(--accent-primary);
+}
+
+.onboarding-option:has(:focus-visible) {
+  outline: 3px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
 /* ───────────── Diálogos, menús y avisos ───────────── */
 
 .modal-backdrop,
