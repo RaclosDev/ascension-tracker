@@ -137,7 +137,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
 
   // Compact row: the weight is the one daily action, so it is the key sheet of the page.
   return (
-    <div className="card sheet-key quick-add-card p-3 sm:p-4 mb-5">
+    <div className="card quick-add-card p-3 sm:p-4 mb-5">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
         <div className="min-w-0 flex-1 basis-40">
           <div className="flex items-center gap-2">
@@ -147,7 +147,9 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
             </span>
             <span
               className="text-[0.68rem] font-bold uppercase tracking-wide"
-              style={{ color: registered ? 'var(--color-success, #34d399)' : 'var(--color-warning)' }}
+              style={{
+                color: registered ? 'var(--color-success, #34d399)' : 'var(--color-warning)',
+              }}
             >
               {registered ? 'Registrado' : 'Pendiente'}
             </span>
