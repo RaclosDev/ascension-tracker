@@ -16,7 +16,7 @@ public final class ClientStatusDtos {
      * Why a client is not green. {@code value} is the number behind it: days without logging,
      * weeks without a check-in, days with food logged in the last week or weeks the weight has stalled.
      */
-    public enum Reason { INACTIVE, CHECKIN_MISSING, FEW_FOOD_LOGS, WEIGHT_STALLED }
+    public enum Reason { INACTIVE, CHECKIN_MISSING, FEW_FOOD_LOGS, WEIGHT_STALLED, NO_PROGRAM, NO_NUTRITION_PLAN }
 
     public record Signal(Reason reason, Level level, int value) {
     }

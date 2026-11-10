@@ -21,12 +21,12 @@ class ClientStatusServiceTest {
     private static Facts facts(LocalDate since, LocalDate lastWorkout, LocalDate lastCheckinWeek, boolean nutrition,
                                int foodDays) {
         return new Facts(UUID.randomUUID(), since, nutrition, lastWorkout, null, null, null, lastCheckinWeek, 0,
-                foodDays, null, null, null);
+                foodDays, null, null, null, false, false);
     }
 
     private static Facts weights(Double recent, Double earlier, Double goal) {
         return new Facts(UUID.randomUUID(), LONG_AGO, false, TODAY, null, null, null, LocalDate.of(2026, 10, 26), 0,
-                0, recent, earlier, goal);
+                0, recent, earlier, goal, false, false);
     }
 
     @Test
@@ -90,5 +90,16 @@ class ClientStatusServiceTest {
         assertThat(ClientStatusService.evaluate(weights(75.5, 75.5, 75.0), TODAY).level()).isEqualTo(Level.GREEN);
         assertThat(ClientStatusService.evaluate(weights(84.8, 85.0, null), TODAY).level()).isEqualTo(Level.GREEN);
         assertThat(ClientStatusService.evaluate(weights(84.8, null, 75.0), TODAY).level()).isEqualTo(Level.GREEN);
+    }
+
+    @Test
+    void aClientTheCoachCanPlanButHasNothingAssignedIsToPlan() {
+        Facts base = facts(LONG_AGO, TODAY.minusDays(1), LocalDate.of(2026, 10, 26), true, 6);
+        Facts noPlans = new Facts(base.linkId(), base.since(), true, base.lastWorkout(), null, null, null,
+                base.lastCheckinWeek(), 0, 6, null, null, null, true, true);
+        ClientStatus status = ClientStatusService.evaluate(noPlans, TODAY);
+        assertThat(status.level()).isEqualTo(Level.AMBER);
+        assertThat(status.signals()).containsExactly(new Signal(Reason.NO_PROGRAM, Level.AMBER, 0),
+                new Signal(Reason.NO_NUTRITION_PLAN, Level.AMBER, 0));
     }
 }

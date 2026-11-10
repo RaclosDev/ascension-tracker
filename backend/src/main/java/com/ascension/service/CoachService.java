@@ -10,6 +10,8 @@ import com.ascension.dto.CoachDtos.CoachingExport;
 import com.ascension.dto.CoachDtos.CreatedInvitation;
 import com.ascension.dto.CoachDtos.InvitationExport;
 import com.ascension.dto.CoachDtos.InvitationPreview;
+import com.ascension.dto.CoachDtos.InvitationProfile;
+import com.ascension.dto.CoachDtos.InvitationRequest;
 import com.ascension.dto.CoachDtos.LinkExport;
 import com.ascension.dto.CoachDtos.MyCoach;
 import com.ascension.dto.CoachDtos.PendingInvitation;
@@ -20,6 +22,7 @@ import com.ascension.exception.InvalidInputException;
 import com.ascension.model.RefreshToken;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -96,8 +99,9 @@ public class CoachService {
         return count != null && count > 0;
     }
 
+    /** {@code request} may be null: a bare link that asks for nothing and knows nothing about the client. */
     @Transactional
-    public CreatedInvitation createInvitation(String coachEmail) {
+    public CreatedInvitation createInvitation(String coachEmail, InvitationRequest request) {
         UUID coachId = requireCoachId(coachEmail);
         // Serialises invitation creation per coach so the limits below hold under concurrency.
         jdbcTemplate.queryForObject("SELECT user_id FROM coach_profiles WHERE user_id = ? FOR UPDATE",
@@ -119,22 +123,42 @@ public class CoachService {
         random.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
         Instant expiresAt = Instant.now().plus(INVITATION_TTL);
+        String clientName = request == null || request.clientName() == null || request.clientName().isBlank()
+                ? null : request.clientName().strip();
+        Permissions asks = request == null || request.permissions() == null
+                ? new Permissions(false, false, false, false, false) : request.permissions();
+        InvitationProfile profile = request == null || request.profile() == null || request.profile().isEmpty()
+                ? null : request.profile();
         UUID id = jdbcTemplate.queryForObject("""
-                INSERT INTO coach_invitations (coach_user_id, token_hash, expires_at)
-                VALUES (?, ?, ?) RETURNING id
-                """, UUID.class, coachId, RefreshToken.hashToken(token), Timestamp.from(expiresAt));
+                INSERT INTO coach_invitations (coach_user_id, token_hash, expires_at, client_name,
+                                               asks_training, asks_nutrition, asks_body,
+                                               asks_edit_training, asks_edit_nutrition,
+                                               prefill_sex, prefill_age, prefill_height_cm, prefill_start_weight,
+                                               prefill_goal_weight, prefill_activity_factor, prefill_app_modules)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+                """, UUID.class, coachId, RefreshToken.hashToken(token), Timestamp.from(expiresAt), clientName,
+                asks.training(), asks.nutrition(), asks.body(), asks.grantsEdit(), asks.grantsEditNutrition(),
+                profile == null ? null : profile.sex(), profile == null ? null : profile.age(),
+                profile == null ? null : profile.heightCm(), profile == null ? null : profile.startWeight(),
+                profile == null ? null : profile.goalWeight(), profile == null ? null : profile.activityFactor(),
+                profile == null ? null : profile.appModules());
         return new CreatedInvitation(id, token, expiresAt);
     }
 
     public List<PendingInvitation> listInvitations(String coachEmail) {
         UUID coachId = requireCoachId(coachEmail);
         return jdbcTemplate.query("""
-                SELECT id, created_at, expires_at FROM coach_invitations
+                SELECT id, created_at, expires_at, client_name, asks_training, asks_nutrition, asks_body,
+                       asks_edit_training, asks_edit_nutrition,
+                       (prefill_sex IS NOT NULL OR prefill_age IS NOT NULL OR prefill_height_cm IS NOT NULL
+                        OR prefill_start_weight IS NOT NULL OR prefill_goal_weight IS NOT NULL
+                        OR prefill_activity_factor IS NOT NULL OR prefill_app_modules IS NOT NULL) AS prefilled
+                FROM coach_invitations
                 WHERE coach_user_id = ? AND accepted_at IS NULL AND revoked_at IS NULL AND expires_at > NOW()
                 ORDER BY created_at DESC
                 """,
-                (rs, n) -> new PendingInvitation(rs.getObject("id", UUID.class),
-                        instant(rs, "created_at"), instant(rs, "expires_at")),
+                (rs, n) -> new PendingInvitation(rs.getObject("id", UUID.class), rs.getString("client_name"),
+                        asks(rs), rs.getBoolean("prefilled"), instant(rs, "created_at"), instant(rs, "expires_at")),
                 coachId);
     }
 
@@ -142,8 +166,8 @@ public class CoachService {
     public void revokeInvitation(String coachEmail, UUID invitationId) {
         UUID coachId = requireCoachId(coachEmail);
         int updated = jdbcTemplate.update("""
-                UPDATE coach_invitations SET revoked_at = NOW()
-                WHERE id = ? AND coach_user_id = ? AND accepted_at IS NULL AND revoked_at IS NULL
+                UPDATE coach_invitations SET revoked_at = NOW(), """ + CLEAR_PREFILL + """
+                 WHERE id = ? AND coach_user_id = ? AND accepted_at IS NULL AND revoked_at IS NULL
                 """, invitationId, coachId);
         if (updated == 0) {
             throw new EntityNotFoundException("Invitación no encontrada");
@@ -187,8 +211,21 @@ public class CoachService {
         Person coach = jdbcTemplate.queryForObject(
                 "SELECT name, email, picture FROM users WHERE id = ?",
                 (rs, n) -> person(rs), invitation.coachUserId());
-        return new InvitationPreview(coach, invitation.expiresAt(),
-                activeLinkExists(invitation.coachUserId(), clientId));
+        boolean alreadyLinked = activeLinkExists(invitation.coachUserId(), clientId);
+        return jdbcTemplate.queryForObject("""
+                SELECT client_name, asks_training, asks_nutrition, asks_body, asks_edit_training,
+                       asks_edit_nutrition, prefill_sex, prefill_age, prefill_height_cm, prefill_start_weight,
+                       prefill_goal_weight, prefill_activity_factor, prefill_app_modules
+                FROM coach_invitations WHERE id = ?
+                """, (rs, n) -> {
+                    InvitationProfile profile = new InvitationProfile(rs.getString("prefill_sex"),
+                            rs.getObject("prefill_age", Integer.class), rs.getObject("prefill_height_cm", Integer.class),
+                            decimal(rs, "prefill_start_weight"),
+                            decimal(rs, "prefill_goal_weight"),
+                            decimal(rs, "prefill_activity_factor"), rs.getString("prefill_app_modules"));
+                    return new InvitationPreview(coach, invitation.expiresAt(), alreadyLinked,
+                            rs.getString("client_name"), asks(rs), profile.isEmpty() ? null : profile);
+                }, invitation.id());
     }
 
     @Transactional
@@ -220,8 +257,8 @@ public class CoachService {
         } catch (DuplicateKeyException e) {
             throw new InvalidInputException("Ya estás vinculado con este entrenador.");
         }
-        jdbcTemplate.update("UPDATE coach_invitations SET accepted_at = NOW(), accepted_by = ? WHERE id = ?",
-                clientId, invitation.id());
+        jdbcTemplate.update("UPDATE coach_invitations SET accepted_at = NOW(), accepted_by = ?, " + CLEAR_PREFILL
+                + " WHERE id = ?", clientId, invitation.id());
         return listMyCoaches(clientEmail).stream()
                 .filter(c -> c.linkId().equals(linkId))
                 .findFirst()
@@ -379,7 +416,35 @@ public class CoachService {
                 userId);
     }
 
+    /** Daily: the details a coach typed in for someone who never accepted do not outlive the invitation. */
+    @Scheduled(cron = "0 40 3 * * *")
+    @Transactional
+    public void clearExpiredPrefill() {
+        jdbcTemplate.update("UPDATE coach_invitations SET " + CLEAR_PREFILL + """
+                 WHERE expires_at <= NOW() AND (client_name IS NOT NULL OR prefill_sex IS NOT NULL
+                   OR prefill_age IS NOT NULL OR prefill_height_cm IS NOT NULL OR prefill_start_weight IS NOT NULL
+                   OR prefill_goal_weight IS NOT NULL OR prefill_activity_factor IS NOT NULL
+                   OR prefill_app_modules IS NOT NULL)
+                """);
+    }
+
     // ---- Helpers ----
+
+    /** The client's details on an invitation, name included: once used or dead they are not kept. */
+    private static final String CLEAR_PREFILL = "client_name = NULL, prefill_sex = NULL, prefill_age = NULL, "
+            + "prefill_height_cm = NULL, prefill_start_weight = NULL, prefill_goal_weight = NULL, "
+            + "prefill_activity_factor = NULL, prefill_app_modules = NULL";
+
+    private static Double decimal(ResultSet rs, String column) throws SQLException {
+        java.math.BigDecimal value = rs.getBigDecimal(column);
+        return value == null ? null : value.doubleValue();
+    }
+
+    private static Permissions asks(ResultSet rs) throws SQLException {
+        return new Permissions(rs.getBoolean("asks_training"), rs.getBoolean("asks_nutrition"),
+                rs.getBoolean("asks_body"), rs.getBoolean("asks_edit_training"),
+                rs.getBoolean("asks_edit_nutrition"));
+    }
 
     private record OpenInvitation(UUID id, UUID coachUserId, Instant expiresAt) {
     }

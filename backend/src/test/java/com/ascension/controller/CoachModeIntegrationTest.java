@@ -279,6 +279,51 @@ class CoachModeIntegrationTest {
         assertThat(rules).allSatisfy(rule -> assertThat(rule).matches(".* (CASCADE|SET NULL)"));
     }
 
+    @Test
+    void anInvitationCarriesWhatTheCoachAsksAndKnowsUntilItIsAccepted() throws Exception {
+        String coach = coach();
+        String client = user();
+        String body = """
+                {"clientName":"  Ana López ","permissions":{"training":true,"nutrition":true,"body":false,
+                 "editTraining":true,"editNutrition":true},
+                 "profile":{"sex":"F","age":31,"heightCm":165,"startWeight":64.5,"goalWeight":60,
+                            "activityFactor":1.55,"appModules":"TRAINING_NUTRITION"}}
+                """;
+        String token = json.readTree(mvc.perform(as(post("/api/coach/invitations")
+                        .contentType("application/json").content(body), coach))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString())
+                .get("token").asString();
+
+        mvc.perform(as(get("/api/coach/invitations"), coach))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].clientName").value("Ana López"))
+                .andExpect(jsonPath("$[0].prefilled").value(true))
+                .andExpect(jsonPath("$[0].permissions.editNutrition").value(true));
+        mvc.perform(as(get("/api/coaching/invitations/{token}", token), client))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.requested.training").value(true))
+                .andExpect(jsonPath("$.requested.body").value(false))
+                .andExpect(jsonPath("$.profile.sex").value("F"))
+                .andExpect(jsonPath("$.profile.startWeight").value(64.5))
+                .andExpect(jsonPath("$.profile.appModules").value("TRAINING_NUTRITION"));
+
+        accept(client, token, TRAINING_ONLY);
+        Integer leftovers = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM coach_invitations i JOIN users u ON u.id = i.coach_user_id
+                WHERE u.email = ? AND (i.client_name IS NOT NULL OR i.prefill_start_weight IS NOT NULL
+                                       OR i.prefill_sex IS NOT NULL)
+                """, Integer.class, coach);
+        assertThat(leftovers).isZero();
+    }
+
+    @Test
+    void anInvitationRejectsImpossibleDetails() throws Exception {
+        String coach = coach();
+        mvc.perform(as(post("/api/coach/invitations").contentType("application/json")
+                        .content("{\"profile\":{\"age\":3,\"sex\":\"X\"}}"), coach))
+                .andExpect(status().isBadRequest());
+    }
+
     private MockHttpServletRequestBuilder as(MockHttpServletRequestBuilder request, String email) {
         return request.with(jwt().jwt(j -> j.subject(email).claim("email", email)));
     }

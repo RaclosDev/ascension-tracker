@@ -28,6 +28,8 @@ import java.util.stream.Stream;
  *   <li>With nutrition shared, days with food logged in the last seven: amber under 4.</li>
  *   <li>With body data shared and a weight goal that is still over 1 kg away, the average weight of the last
  *       week has moved less than 0.3 kg towards it compared with three weeks earlier: amber.</li>
+ *   <li>The coach may edit the training (or nutrition) but has no active program (or nutrition plan) for the
+ *       client yet: amber, so new clients show up as «to plan» instead of «up to date».</li>
  * </ul>
  * Nothing here is written to the access log: it is a summary, not a look at the client's data.
  */
@@ -50,7 +52,8 @@ public class ClientStatusService {
     /** What the query returns per link; dates are null when not shared or never logged. */
     record Facts(UUID linkId, LocalDate since, boolean nutrition, LocalDate lastWorkout, LocalDate lastFood,
                  LocalDate lastWeight, LocalDate lastCheckin, LocalDate lastCheckinWeek, int pendingReplies,
-                 int foodDays, Double recentWeight, Double earlierWeight, Double goalWeight) {
+                 int foodDays, Double recentWeight, Double earlierWeight, Double goalWeight,
+                 boolean needsProgram, boolean needsNutritionPlan) {
     }
 
     @Transactional(readOnly = true)
@@ -86,7 +89,13 @@ public class ClientStatusService {
                            WHERE we.user_email = u.email AND we.date BETWEEN ? AND ?) END AS earlier_weight,
                        CASE WHEN cc.can_view_body THEN (
                            SELECT s.goal_weight FROM user_settings s
-                           WHERE s.user_email = u.email AND s.weekly_goal <> 0 AND s.goal_weight > 0) END AS goal_weight
+                           WHERE s.user_email = u.email AND s.weekly_goal <> 0 AND s.goal_weight > 0) END AS goal_weight,
+                       cc.can_edit_training AND NOT EXISTS (
+                           SELECT 1 FROM program_assignments pa
+                           WHERE pa.coach_link_id = cc.id AND pa.status = 'ACTIVE') AS needs_program,
+                       cc.can_edit_nutrition AND NOT EXISTS (
+                           SELECT 1 FROM nutrition_plans np
+                           WHERE np.coach_link_id = cc.id AND np.status = 'ACTIVE') AS needs_nutrition_plan
                 FROM coach_clients cc JOIN users u ON u.id = cc.client_user_id
                 WHERE cc.coach_user_id = ? AND cc.status = 'ACTIVE'
                 """,
@@ -96,7 +105,8 @@ public class ClientStatusService {
                         date(rs.getDate("last_checkin")), date(rs.getDate("last_checkin_week")),
                         rs.getInt("pending_replies"), rs.getInt("food_days"),
                         rs.getObject("recent_weight", Double.class), rs.getObject("earlier_weight", Double.class),
-                        rs.getObject("goal_weight", Double.class)), today),
+                        rs.getObject("goal_weight", Double.class), rs.getBoolean("needs_program"),
+                        rs.getBoolean("needs_nutrition_plan")), today),
                 weekAgo, yesterday, recentFrom, Date.valueOf(today), earlierFrom, earlierTo, coachId);
     }
 
@@ -126,6 +136,13 @@ public class ClientStatusService {
 
         if (weightStalled(facts)) {
             signals.add(new Signal(Reason.WEIGHT_STALLED, Level.AMBER, STALL_WEEKS));
+        }
+
+        if (facts.needsProgram()) {
+            signals.add(new Signal(Reason.NO_PROGRAM, Level.AMBER, 0));
+        }
+        if (facts.needsNutritionPlan()) {
+            signals.add(new Signal(Reason.NO_NUTRITION_PLAN, Level.AMBER, 0));
         }
 
         Level level = signals.stream().map(Signal::level).max(Comparator.naturalOrder()).orElse(Level.GREEN);

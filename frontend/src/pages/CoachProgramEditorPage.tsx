@@ -36,6 +36,7 @@ import {
   type ProgramExercise,
 } from '../lib/coach/coachPrograms';
 import { useExerciseCatalog } from '../lib/workout/catalog-query';
+import { BASE_EXERCISES } from '../lib/workout/exercises';
 import { useCustomExercises } from '../lib/workout/api';
 import { normalizeString } from '../lib/workout/format';
 import type { Exercise } from '../lib/workout/types';
@@ -648,7 +649,7 @@ function ExerciseRow({
 
 const MAX_RESULTS = 8;
 
-/** Searches the shared catalog and the coach's own exercises. */
+/** Searches the coach's own exercises, the Spanish base list and the shared catalog. */
 function ExerciseSearch({ onPick }: { onPick: (exercise: Exercise) => void }) {
   const { data: catalog = [] } = useExerciseCatalog();
   const { data: custom = [] } = useCustomExercises();
@@ -657,8 +658,14 @@ function ExerciseSearch({ onPick }: { onPick: (exercise: Exercise) => void }) {
   const results = useMemo(() => {
     const q = normalizeString(query.trim());
     if (!q) return [];
-    return [...custom, ...catalog]
-      .filter((ex) => normalizeString(ex.name).includes(q))
+    // BASE_EXERCISES se rellena al cargar el catálogo; sin él no salen los nombres en español.
+    const seen = new Set<string>();
+    return [...custom, ...BASE_EXERCISES, ...catalog]
+      .filter((ex) => {
+        if (seen.has(ex.id) || !normalizeString(ex.name).includes(q)) return false;
+        seen.add(ex.id);
+        return true;
+      })
       .slice(0, MAX_RESULTS);
   }, [query, catalog, custom]);
 

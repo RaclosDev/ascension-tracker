@@ -32,8 +32,28 @@ export interface MyCoach {
   since: string;
 }
 
+/** What the coach already knows about the client, so the client skips those onboarding steps. */
+export interface InvitationProfile {
+  sex: 'M' | 'F' | null;
+  age: number | null;
+  heightCm: number | null;
+  startWeight: number | null;
+  goalWeight: number | null;
+  activityFactor: number | null;
+  appModules: string | null;
+}
+
+export interface InvitationRequest {
+  clientName?: string;
+  permissions?: CoachPermissions;
+  profile?: InvitationProfile;
+}
+
 export interface PendingInvitation {
   id: string;
+  clientName: string | null;
+  permissions: CoachPermissions;
+  prefilled: boolean;
   createdAt: string;
   expiresAt: string;
 }
@@ -46,6 +66,10 @@ export interface InvitationPreview {
   coach: CoachPerson;
   expiresAt: string;
   alreadyLinked: boolean;
+  clientName: string | null;
+  /** What the coach asked to see; the client starts from it and can change it. */
+  requested: CoachPermissions;
+  profile: InvitationProfile | null;
 }
 
 export interface AccessLogEntry {
@@ -173,7 +197,8 @@ export const useCoachInvitations = (enabled: boolean) =>
 export function useCreateInvitation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async () => (await api.post<CreatedInvitation>('/coach/invitations')).data,
+    mutationFn: async (request?: InvitationRequest) =>
+      (await api.post<CreatedInvitation>('/coach/invitations', request ?? {})).data,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.invitations }),
   });
 }
@@ -231,9 +256,10 @@ export const useClientCustomExercises = (linkId: string) =>
 
 // ---- Client side ----
 
-export const useInvitationPreview = (token: string) =>
+export const useInvitationPreview = (token: string, enabled = true) =>
   useQuery({
     queryKey: ['coaching', 'invitation', token],
+    enabled: enabled && token !== '',
     retry: false,
     queryFn: async () =>
       (await api.get<InvitationPreview>(`/coaching/invitations/${encodeURIComponent(token)}`)).data,
