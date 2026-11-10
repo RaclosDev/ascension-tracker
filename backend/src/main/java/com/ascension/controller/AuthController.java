@@ -122,9 +122,6 @@ public class AuthController {
         // An email bound to a different google_sub is a recycled address: reject the login.
         Optional<User> userByEmail = userService.findByEmail(email);
         if (userByEmail.isPresent()) {
-            if (userService.hasUnverifiedEmail(email)) {
-                return ResponseEntity.status(409).body(Map.of("error", "Este email ya tiene una cuenta. Entra con email y contraseña."));
-            }
             String existingSub = userByEmail.get().googleSub();
             if (existingSub != null && !existingSub.equals(googleSub)) {
                 log.error("SECURITY ALERT: Identity mismatch for account '{}'. Stored google_sub='{}', incoming google_sub='{}'. Possible account takeover attempt.",

@@ -8,6 +8,7 @@ import com.ascension.service.auth.PasswordResetService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -65,12 +66,14 @@ public class PasswordAuthController {
     }
 
     @PostMapping("/register")
+    @Transactional
     public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest body, HttpServletRequest request) {
         requireTrustedOrigin(request);
         return open(passwords.register(body.email(), body.password()), request);
     }
 
     @PostMapping("/login")
+    @Transactional
     public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest body, HttpServletRequest request) {
         requireTrustedOrigin(request);
         return open(passwords.login(body.email(), body.password()), request);

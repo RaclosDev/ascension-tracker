@@ -95,7 +95,8 @@ class PasswordAuthIntegrationTest {
                     .andExpect(jsonPath("$.token").isString())
                     .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refreshToken=")));
             assertThat(users.findByEmail(email)).isPresent();
-            assertThat(users.hasUnverifiedEmail(email)).isTrue();
+            assertThat(jdbc.queryForObject("SELECT email_verified FROM users WHERE email = ?",
+                    Boolean.class, email)).isFalse();
             assertThat(mail.sent).isEmpty();
 
             call("/api/auth/password/login", body(email.toUpperCase(), PASSWORD))
@@ -104,6 +105,31 @@ class PasswordAuthIntegrationTest {
         } finally {
             mail.available = true;
         }
+    }
+
+    @Test
+    void googleClaimsTheSameAccountAndDisablesItsPasswordAndOldSessions() throws Exception {
+        String email = email();
+        call("/api/auth/password/register", body(email, PASSWORD)).andExpect(status().isOk());
+        UUID before = jdbc.queryForObject("SELECT id FROM users WHERE email = ?", UUID.class, email);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM refresh_tokens WHERE email = ?",
+                Integer.class, email)).isPositive();
+        call("/api/auth/password/reset-request", "{\"email\":\"" + email + "\"}")
+                .andExpect(status().isAccepted());
+        String resetToken = lastResetTokenFor(email);
+
+        users.ensureUserExists(email, "Google Name", null, "google-sub-" + UUID.randomUUID());
+
+        assertThat(jdbc.queryForObject("SELECT id FROM users WHERE email = ?", UUID.class, email)).isEqualTo(before);
+        assertThat(jdbc.queryForObject("SELECT password_hash FROM users WHERE email = ?",
+                String.class, email)).isNull();
+        assertThat(jdbc.queryForObject("SELECT email_verified FROM users WHERE email = ?",
+                Boolean.class, email)).isTrue();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM refresh_tokens WHERE email = ?",
+                Integer.class, email)).isZero();
+        call("/api/auth/password/login", body(email, PASSWORD)).andExpect(status().isUnauthorized());
+        call("/api/auth/password/reset", reset(resetToken, "nueva-clave-segura-7"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

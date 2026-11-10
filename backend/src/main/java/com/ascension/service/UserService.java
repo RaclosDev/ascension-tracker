@@ -77,33 +77,51 @@ public class UserService {
         }
     }
 
-    public boolean hasUnverifiedEmail(String email) {
-        Boolean unverified = jdbcTemplate.queryForObject(
-                "SELECT EXISTS (SELECT 1 FROM users WHERE email = ? AND email_verified = FALSE)",
-                Boolean.class, Emails.normalize(email));
-        return Boolean.TRUE.equals(unverified);
-    }
-
     @Transactional
     public void ensureUserExists(String email, String name, String picture, String googleSub) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("User email cannot be null or blank");
         }
         String cleanEmail = Emails.normalize(email);
-        String sql = "INSERT INTO users (email, name, picture, google_sub, tokens_valid_after) " +
-                     "VALUES (?, ?, ?, ?, NOW() - INTERVAL '1 second') " +
-                     "ON CONFLICT (email) DO UPDATE SET " +
-                     "name = COALESCE(EXCLUDED.name, users.name), " +
-                     "picture = COALESCE(EXCLUDED.picture, users.picture), " +
-                     "google_sub = COALESCE(users.google_sub, EXCLUDED.google_sub) " +
-                     "WHERE users.email_verified = TRUE OR EXCLUDED.google_sub IS NULL";
-        int updated = jdbcTemplate.update(sql, cleanEmail, name, picture, googleSub);
-        if (updated == 0) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Este email ya tiene una cuenta. Entra con email y contraseña.");
+        if (googleSub == null) {
+            String sql = "INSERT INTO users (email, name, picture, tokens_valid_after) " +
+                         "VALUES (?, ?, ?, NOW() - INTERVAL '1 second') " +
+                         "ON CONFLICT (email) DO UPDATE SET " +
+                         "name = COALESCE(EXCLUDED.name, users.name), " +
+                         "picture = COALESCE(EXCLUDED.picture, users.picture)";
+            jdbcTemplate.update(sql, cleanEmail, name, picture);
+            return;
         }
-
+        jdbcTemplate.update("""
+                INSERT INTO users (email, name, picture, google_sub, tokens_valid_after)
+                VALUES (?, ?, ?, ?, NOW() - INTERVAL '1 second')
+                ON CONFLICT (email) DO NOTHING
+                """, cleanEmail, name, picture, googleSub);
+        GoogleLinkState current = jdbcTemplate.query("""
+                SELECT google_sub, password_hash FROM users WHERE email = ? FOR UPDATE
+                """, (rs, row) -> new GoogleLinkState(
+                        rs.getString("google_sub"), rs.getString("password_hash")), cleanEmail).getFirst();
+        if (current.googleSub() != null && !current.googleSub().equals(googleSub)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Security identity mismatch");
+        }
+        boolean converting = current.googleSub() == null || current.passwordHash() != null;
+        if (converting) {
+            jdbcTemplate.update("""
+                    UPDATE users SET google_sub = ?, password_hash = NULL, email_verified = TRUE,
+                        name = COALESCE(?, name), picture = COALESCE(?, picture),
+                        tokens_valid_after = NOW()
+                    WHERE email = ?
+                    """, googleSub, name, picture, cleanEmail);
+            jdbcTemplate.update("DELETE FROM refresh_tokens WHERE email = ?", cleanEmail);
+            jdbcTemplate.update("DELETE FROM passkeys WHERE user_id = (SELECT id FROM users WHERE email = ?)", cleanEmail);
+            jdbcTemplate.update("DELETE FROM passkey_challenges WHERE user_id = (SELECT id FROM users WHERE email = ?)", cleanEmail);
+        } else {
+            jdbcTemplate.update("UPDATE users SET name = COALESCE(?, name), picture = COALESCE(?, picture) WHERE email = ?",
+                    name, picture, cleanEmail);
+        }
     }
+
+    private record GoogleLinkState(String googleSub, String passwordHash) {}
 
     @Transactional
     public void ensureUserExists(String email, String name, String picture) {

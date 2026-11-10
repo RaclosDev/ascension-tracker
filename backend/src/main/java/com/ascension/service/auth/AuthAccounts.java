@@ -42,6 +42,14 @@ public class AuthAccounts {
         return jdbc.query(COLUMNS + "WHERE LOWER(email) = ?", MAPPER, Emails.normalize(email)).stream().findFirst();
     }
 
+    public Optional<Account> findByEmailForUpdate(String email) {
+        if (email == null || email.isBlank()) {
+            return Optional.empty();
+        }
+        return jdbc.query(COLUMNS + "WHERE LOWER(email) = ? FOR UPDATE", MAPPER,
+                Emails.normalize(email)).stream().findFirst();
+    }
+
     public Optional<Account> findById(UUID id) {
         return jdbc.query(COLUMNS + "WHERE id = ?", MAPPER, id).stream().findFirst();
     }

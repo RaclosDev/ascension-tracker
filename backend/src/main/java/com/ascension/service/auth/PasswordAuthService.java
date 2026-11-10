@@ -85,7 +85,7 @@ public class PasswordAuthService {
             throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
                     "Demasiados intentos. Espera unos minutos o restablece la contraseña.");
         }
-        Account account = accounts.findByEmail(email).orElse(null);
+        Account account = accounts.findByEmailForUpdate(email).orElse(null);
         String hash = account != null && account.passwordHash() != null ? account.passwordHash() : dummyHash;
         boolean matches = !PasswordPolicy.tooLong(password) && encoder.matches(password, hash);
         if (account == null || account.passwordHash() == null || !matches) {

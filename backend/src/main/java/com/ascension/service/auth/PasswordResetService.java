@@ -98,7 +98,11 @@ public class PasswordResetService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, INVALID_LINK));
         PasswordPolicy.validate(newPassword, account.email());
 
-        jdbc.update("UPDATE users SET password_hash = ? WHERE id = ?", passwords.encoder().encode(newPassword), account.id());
+        int updated = jdbc.update("UPDATE users SET password_hash = ? WHERE id = ? AND google_sub IS NULL",
+                passwords.encoder().encode(newPassword), account.id());
+        if (updated == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, INVALID_LINK);
+        }
         jdbc.update("DELETE FROM password_reset_tokens WHERE user_id = ?", account.id());
         jdbc.update("DELETE FROM passkeys WHERE user_id = ?", account.id());
         jdbc.update("DELETE FROM passkey_challenges WHERE user_id = ?", account.id());

@@ -5,14 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -58,17 +56,6 @@ class UserServiceTest {
         Optional<UserService.User> user = userService.findByGoogleSub("sub-456");
         assertThat(user).isPresent();
         assertThat(user.get().email()).isEqualTo("user@test.com");
-    }
-
-    @Test
-    void googleCannotClaimAnUnverifiedPasswordAccountDuringConcurrentSignup() {
-        when(jdbcTemplate.update(anyString(), eq("user@test.com"), eq("Google"),
-                isNull(), eq("google-sub"))).thenReturn(0);
-
-        assertThatThrownBy(() -> userService.ensureUserExists(
-                "user@test.com", "Google", null, "google-sub"))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("409 CONFLICT");
     }
 
     @Test

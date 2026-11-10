@@ -308,7 +308,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_DoesNotLinkGoogleToAnUnverifiedPasswordAccount() throws Exception {
+    void login_LinksGoogleToAnUnverifiedPasswordAccount() throws Exception {
         var idToken = org.mockito.Mockito.mock(com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.class);
         var payload = new com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload();
         payload.setEmailVerified(true);
@@ -318,18 +318,20 @@ class AuthControllerTest {
         when(googleIdTokenVerifier.verify("unverified-token")).thenReturn(idToken);
         when(userService.findByEmail("unverified@example.com")).thenReturn(Optional.of(
                 new User("unverified@example.com", "Unverified", null, null, null)));
-        when(userService.hasUnverifiedEmail("unverified@example.com")).thenReturn(true);
+
+        RefreshToken rt = new RefreshToken();
+        rt.setEmail("unverified@example.com");
+        rt.setPlainToken("plain-refresh-token");
+        when(refreshTokenService.createRefreshToken("unverified@example.com")).thenReturn(rt);
 
         mockMvc.perform(post("/api/auth/login")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"token\":\"unverified-token\"}"))
-                .andExpect(status().isConflict())
-                .andExpect(cookie().doesNotExist("refreshToken"));
-        org.mockito.Mockito.verify(userService, org.mockito.Mockito.never())
-                .ensureUserExists(org.mockito.ArgumentMatchers.anyString(),
-                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
-                        org.mockito.ArgumentMatchers.any());
+                .andExpect(status().isOk())
+                .andExpect(cookie().exists("refreshToken"));
+        org.mockito.Mockito.verify(userService)
+                .ensureUserExists("unverified@example.com", null, null, "google-sub-unverified");
     }
 
     @Test
