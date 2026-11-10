@@ -193,4 +193,34 @@ test.describe('Onboarding Flow', () => {
     await expect(startWeightInput).toHaveValue('85.0');
     await expect(goalWeightInput).toHaveValue('80.0');
   });
+
+  test('a coach skips the personal steps and lands on the coach page', async ({ page }) => {
+    await setupAuthMocks(page);
+    let payload: Record<string, unknown> | null = null;
+    let coachProfileCreated = false;
+    await page.route('**/api/settings**', async (route) => {
+      if (route.request().method() === 'PUT') {
+        payload = route.request().postDataJSON() as Record<string, unknown>;
+        await route.fulfill({ json: payload });
+      } else {
+        await route.fulfill({ status: 204, body: '' });
+      }
+    });
+    await page.route('**/api/nutrition/meals/reset**', (route) => route.fulfill({ json: {} }));
+    await page.route('**/api/coach/profile', async (route) => {
+      coachProfileCreated = route.request().method() === 'POST';
+      await route.fulfill({ json: {} });
+    });
+
+    await page.goto('/');
+    await expect(page.getByText('Bienvenido a Ascension')).toBeVisible({ timeout: 15000 });
+    await page.getByText('Soy entrenador').click();
+    await expect(page.getByText('¿Qué quieres llevar en la app?')).toBeHidden();
+    await page.getByRole('button', { name: 'Empezar' }).click();
+
+    await expect.poll(() => coachProfileCreated, { timeout: 10000 }).toBe(true);
+    await expect(page).toHaveURL(/\/entrenador$/);
+    expect(payload?.appModules).toBe('TRAINING');
+    expect(payload?.sex).toBeUndefined();
+  });
 });

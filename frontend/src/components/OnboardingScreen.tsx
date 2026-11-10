@@ -31,7 +31,9 @@ export default function OnboardingScreen({
   const [invited] = useState(() => peekPendingInvitation() !== null);
   const [role, setRole] = useState<'user' | 'coach'>('user');
   const [modules, setModules] = useState<AppModules>('FULL');
-  const withNutrition = hasNutrition(modules);
+  // El entrenador no rellena «Sobre ti» ni el plan: entra directo a gestionar alumnos.
+  const isCoach = !invited && role === 'coach';
+  const withNutrition = !isCoach && hasNutrition(modules);
   const [form, setForm] = useState<OnboardingForm>({
     sex: 'M',
     age: '',
@@ -83,19 +85,31 @@ export default function OnboardingScreen({
     setLoading(true);
 
     try {
-      await api.put('/settings', {
-        sex: form.sex,
-        age: parseInt(form.age) || null,
-        heightCm: parseInt(form.heightCm) || null,
-        startWeight: parseFloat(String(form.startWeight)) || null,
-        goalWeight: parseFloat(String(form.goalWeight)) || null,
-        activityFactor: parseFloat(form.activityFactor),
-        kcal: withNutrition ? Number(form.kcal) : maintenanceKcal(),
-        macroStrategy: form.macroStrategy,
-        weeklyGoal: 0.5,
-        startDate: getLocalDateString(),
-        appModules: modules,
-      });
+      // El backend exige un plan básico; para el entrenador guardamos uno neutro y solo entreno
+      // (sin seguimiento corporal, así no se registra ningún peso). Lo puede completar en Ajustes.
+      const payload = isCoach
+        ? {
+            startWeight: 70,
+            goalWeight: 70,
+            weeklyGoal: 0,
+            kcal: 2000,
+            startDate: getLocalDateString(),
+            appModules: 'TRAINING' satisfies AppModules,
+          }
+        : {
+            sex: form.sex,
+            age: parseInt(form.age) || null,
+            heightCm: parseInt(form.heightCm) || null,
+            startWeight: parseFloat(String(form.startWeight)) || null,
+            goalWeight: parseFloat(String(form.goalWeight)) || null,
+            activityFactor: parseFloat(form.activityFactor),
+            kcal: withNutrition ? Number(form.kcal) : maintenanceKcal(),
+            macroStrategy: form.macroStrategy,
+            weeklyGoal: 0.5,
+            startDate: getLocalDateString(),
+            appModules: modules,
+          };
+      await api.put('/settings', payload);
 
       if (mealOption === 'default') {
         await api.post('/nutrition/meals/reset');
@@ -105,7 +119,7 @@ export default function OnboardingScreen({
         }
       }
 
-      if (role === 'coach') {
+      if (isCoach) {
         try {
           await api.post('/coach/profile');
           toast.success('¡Listo! Ya puedes invitar a tus alumnos.');
@@ -175,7 +189,7 @@ export default function OnboardingScreen({
         </div>
         {step === 0 ? (
           <form
-            onSubmit={handleNextStep}
+            onSubmit={isCoach ? handleSubmit : handleNextStep}
             style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
           >
             <div style={{ textAlign: 'center' }}>
@@ -239,55 +253,58 @@ export default function OnboardingScreen({
                       marginTop: '0.5rem',
                     }}
                   >
-                    Activaremos el modo entrenador para que invites a tus alumnos. También podrás
-                    llevar tu propio entreno.
+                    Activaremos el modo entrenador para que invites a tus alumnos. Si también
+                    quieres llevar tu propio entreno o tu nutrición, actívalo luego en Ajustes.
                   </p>
                 )}
               </fieldset>
             )}
 
-            <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-              <legend className="form-label" style={{ marginBottom: '0.5rem' }}>
-                ¿Qué quieres llevar en la app?
-              </legend>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {APP_MODULE_OPTIONS.map((o) => (
-                  <label
-                    key={o.value}
-                    className="kpi-card"
-                    style={{
-                      display: 'block',
-                      padding: '0.75rem',
-                      cursor: 'pointer',
-                      border:
-                        modules === o.value
-                          ? '2px solid var(--accent-primary)'
-                          : '2px solid transparent',
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="onboarding-modules"
-                      value={o.value}
-                      checked={modules === o.value}
-                      onChange={() => setModules(o.value)}
-                      className="sr-only"
-                    />
-                    <span style={{ fontWeight: 600, display: 'block' }}>{o.label}</span>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                      {o.description}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
+            {!isCoach && (
+              <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+                <legend className="form-label" style={{ marginBottom: '0.5rem' }}>
+                  ¿Qué quieres llevar en la app?
+                </legend>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {APP_MODULE_OPTIONS.map((o) => (
+                    <label
+                      key={o.value}
+                      className="kpi-card"
+                      style={{
+                        display: 'block',
+                        padding: '0.75rem',
+                        cursor: 'pointer',
+                        border:
+                          modules === o.value
+                            ? '2px solid var(--accent-primary)'
+                            : '2px solid transparent',
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="onboarding-modules"
+                        value={o.value}
+                        checked={modules === o.value}
+                        onChange={() => setModules(o.value)}
+                        className="sr-only"
+                      />
+                      <span style={{ fontWeight: 600, display: 'block' }}>{o.label}</span>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                        {o.description}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
 
             <button
               type="submit"
               className="btn btn-primary"
+              disabled={loading}
               style={{ width: '100%', padding: '0.875rem' }}
             >
-              Continuar
+              {isCoach ? (loading ? 'Guardando…' : 'Empezar') : 'Continuar'}
             </button>
           </form>
         ) : step === 1 ? (
