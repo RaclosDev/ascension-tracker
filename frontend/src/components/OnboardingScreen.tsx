@@ -28,7 +28,10 @@ export default function OnboardingScreen({
   const { logout } = useAuth();
   const [step, setStep] = useState(0);
   // Quien llega con un enlace de invitación es alumno: no le preguntamos si es entrenador.
-  const [invited] = useState(() => peekPendingInvitation() !== null);
+  // También si ya tenía sesión y abrió el enlace directamente (no se guarda el token pendiente).
+  const [invited] = useState(
+    () => peekPendingInvitation() !== null || window.location.pathname.startsWith('/invitacion/'),
+  );
   const [role, setRole] = useState<'user' | 'coach'>('user');
   const [modules, setModules] = useState<AppModules>('FULL');
   // El entrenador no rellena «Sobre ti» ni el plan: entra directo a gestionar alumnos.
