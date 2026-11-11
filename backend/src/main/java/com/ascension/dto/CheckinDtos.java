@@ -30,23 +30,23 @@ public final class CheckinDtos {
 
     /** {@code answers} follow the order of the coach's questions; missing ones are left blank. */
     public record CheckinRequest(@Min(1) @Max(5) int energy, @Min(1) @Max(5) int sleep,
-                                 @Min(1) @Max(5) int trainingAdherence, @Min(1) @Max(5) int dietAdherence,
+                                 @Min(1) @Max(5) Integer trainingAdherence, @Min(1) @Max(5) Integer dietAdherence,
                                  @Size(max = 10) List<@Size(max = 1000) String> answers,
                                  @Size(max = 2000) String notes) {
     }
 
-    public record ReplyRequest(@NotBlank @Size(max = 2000) String reply) {
+    public record ReplyRequest(@NotBlank @Size(max = 2000) String reply, Instant expectedUpdatedAt) {
     }
 
     /** {@code weightAvg} is the week's average weight, only while the client shares body data. */
     public record Checkin(UUID id, UUID linkId, LocalDate weekStart, Double weightAvg, int energy, int sleep,
-                          int trainingAdherence, int dietAdherence, List<Answer> answers, String notes,
+                          Integer trainingAdherence, Integer dietAdherence, List<Answer> answers, String notes,
                           String coachReply, Instant repliedAt, Instant createdAt, Instant updatedAt) {
     }
 
     /** This week's check-in for one coach: the questions to answer and what was sent, if anything. */
     public record ClientCheckin(UUID linkId, Person coach, LocalDate weekStart, List<String> questions,
-                                Checkin current, CoachScheduleDtos.Followup followup) {
+                                Checkin current, CoachScheduleDtos.Followup followup, List<String> scoreKeys) {
     }
 
     /** {@code role} is CLIENT for check-ins the exporting user sent, COACH for ones they received. */

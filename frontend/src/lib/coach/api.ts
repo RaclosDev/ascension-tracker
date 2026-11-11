@@ -133,7 +133,8 @@ const dateFmt = new Intl.DateTimeFormat('es-ES', {
   month: 'short',
   year: 'numeric',
 });
-export const formatCoachDate = (iso: string) => dateFmt.format(new Date(iso));
+export const formatCoachDate = (iso: string) =>
+  dateFmt.format(new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T12:00:00` : iso));
 
 export const sharedScopes = (permissions: CoachPermissions) =>
   (Object.keys(PERMISSION_LABELS) as (keyof CoachPermissions)[])

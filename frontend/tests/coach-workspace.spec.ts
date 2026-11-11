@@ -138,6 +138,16 @@ for (const width of [1440, 390]) {
     await page.getByRole('link', { name: /Ana García.*por responder/ }).click();
     await expect(page.getByRole('heading', { name: 'Revisiones semanales' })).toBeVisible();
     await page.getByLabel('Tu respuesta').fill('Buen trabajo. Mantenemos el programa esta semana.');
+    await page.getByRole('link', { name: 'Volver a revisiones' }).click();
+    await page.getByRole('link', { name: /Ana García.*por responder/ }).click();
+    await expect(page.getByLabel('Tu respuesta')).toHaveValue(
+      'Buen trabajo. Mantenemos el programa esta semana.',
+    );
+    page.on('dialog', (dialog) => dialog.accept());
+    await page.reload();
+    await expect(page.getByLabel('Tu respuesta')).toHaveValue(
+      'Buen trabajo. Mantenemos el programa esta semana.',
+    );
     await page.getByRole('button', { name: 'Responder', exact: true }).click();
     await expect(page.getByText('Respuesta del entrenador', { exact: true })).toBeVisible();
     await noHorizontalOverflow(page);
