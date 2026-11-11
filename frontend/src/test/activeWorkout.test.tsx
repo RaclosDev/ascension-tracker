@@ -94,6 +94,8 @@ describe('ActiveWorkout Component - Anti-Regression Suite (React #185 Protection
     expect(screen.getByText('Torso Fuerza Hipertrofia')).toBeDefined();
     expect(screen.getByText('En curso')).toBeDefined();
     expect(screen.getByRole('button', { name: /Minimizar/i })).toBeDefined();
+    expect(screen.queryByText('¿No vas a completar esta serie?')).not.toBeInTheDocument();
+    expect(screen.queryByText('Quedan series sin completar')).not.toBeInTheDocument();
   });
 
   it('toggles set completion without crashing or triggering depth loop', () => {
