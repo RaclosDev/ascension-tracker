@@ -30,10 +30,7 @@ function Reviews() {
   const count = pending.reduce((n, row) => n + (row.status?.pendingReplies ?? 0), 0);
   return (
     <>
-      <CoachPageHeader
-        title="Revisiones"
-        description="Responde a los check-ins y consulta quién tiene semanas pendientes."
-      >
+      <CoachPageHeader title="Revisiones">
         <Link className="btn btn-secondary" to="/entrenador/ajustes">
           Configurar check-in
         </Link>

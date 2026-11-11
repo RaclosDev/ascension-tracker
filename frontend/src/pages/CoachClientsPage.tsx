@@ -109,10 +109,7 @@ function Clients() {
 
   return (
     <>
-      <CoachPageHeader
-        title="Atletas"
-        description="Encuentra a cada atleta y retoma su seguimiento."
-      >
+      <CoachPageHeader title="Atletas">
         <InviteClientButton />
       </CoachPageHeader>
       {clients.isPending ? (
