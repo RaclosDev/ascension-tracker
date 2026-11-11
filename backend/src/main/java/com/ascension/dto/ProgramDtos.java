@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -21,7 +22,8 @@ public final class ProgramDtos {
     private ProgramDtos() {
     }
 
-    public record ProgramSummary(UUID id, String name, int weeks, int dayCount, Instant updatedAt) {
+    public record ProgramSummary(UUID id, String name, int weeks, int dayCount, Instant updatedAt,
+                                 String status) {
     }
 
     /** Request and response body: the builder always saves the whole program at once. */
@@ -31,7 +33,8 @@ public final class ProgramDtos {
             @Size(max = 2000) String notes,
             @NotNull @Min(1) @Max(52) Integer weeks,
             @NotNull @Size(max = 140, message = "Demasiados días en el programa") List<@Valid @NotNull Day> days,
-            Instant updatedAt) {
+            Instant updatedAt,
+            @Pattern(regexp = "DRAFT|READY") String status) {
     }
 
     public record Day(
@@ -61,6 +64,12 @@ public final class ProgramDtos {
     /** A coach assigns one of their library programs to a client, starting on {@code startDate}. */
     public record AssignRequest(
             @NotNull(message = "Elige un programa") UUID programId,
+            @NotNull(message = "Elige la fecha de inicio") LocalDate startDate,
+            Instant programUpdatedAt) {
+    }
+
+    public record AdaptRequest(
+            @Valid @NotNull Program program,
             @NotNull(message = "Elige la fecha de inicio") LocalDate startDate) {
     }
 

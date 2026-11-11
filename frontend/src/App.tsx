@@ -24,6 +24,7 @@ const CoachSettingsPage = lazyWithRetry(() => import('./pages/CoachSettingsPage'
 const CoachClientPage = lazyWithRetry(() => import('./pages/CoachClientPage'));
 const CoachProgramsPage = lazyWithRetry(() => import('./pages/CoachProgramsPage'));
 const CoachProgramEditorPage = lazyWithRetry(() => import('./pages/CoachProgramEditorPage'));
+const CoachProgramAdaptPage = lazyWithRetry(() => import('./pages/CoachProgramAdaptPage'));
 const CoachRecipesPage = lazyWithRetry(() => import('./pages/CoachRecipesPage'));
 const CoachPlanPage = lazyWithRetry(() => import('./pages/CoachPlanPage'));
 const LegalPage = lazyWithRetry(() => import('./pages/LegalPage'));
@@ -154,6 +155,10 @@ function AppContent() {
               <Route path="entrenador/planificacion" element={<CoachPlanningPage />} />
               <Route path="entrenador/ajustes" element={<CoachSettingsPage />} />
               <Route path="entrenador/alumnos/:linkId" element={<CoachClientPage />} />
+              <Route
+                path="entrenador/alumnos/:linkId/programas/:assignmentId/adaptar"
+                element={<CoachProgramAdaptPage />}
+              />
               <Route path="entrenador/programas" element={<CoachProgramsPage />} />
               <Route path="entrenador/programas/:programId" element={<CoachProgramEditorPage />} />
               <Route path="entrenador/recetas" element={<CoachRecipesPage />} />

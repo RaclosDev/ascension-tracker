@@ -49,6 +49,44 @@ class CoachProgramIntegrationTest {
     @Autowired ObjectMapper json;
 
     @Test
+    void draftCanBeIncompleteButReadyProgramsNeedPopulatedSessions() throws Exception {
+        String coach = coach();
+        String draft = "{\"name\":\"En preparación\",\"weeks\":4,\"days\":[]}";
+        String id = create(coach, draft);
+        mvc.perform(as(get("/api/coach/programs/{id}", id), coach))
+                .andExpect(jsonPath("$.status").value("DRAFT"));
+        mvc.perform(as(put("/api/coach/programs/{id}", id), coach).contentType("application/json")
+                .content(draft.replace("\"days\":[]", "\"status\":\"READY\",\"days\":[]")))
+                .andExpect(status().isBadRequest());
+        mvc.perform(as(put("/api/coach/programs/{id}", id), coach).contentType("application/json")
+                .content("""
+                        {"name":"Vacío","status":"READY","weeks":1,"days":[
+                          {"week":1,"dayIndex":1,"name":"Sesión","exercises":[]}]}
+                        """))
+                .andExpect(status().isBadRequest());
+        mvc.perform(as(put("/api/coach/programs/{id}", id), coach).contentType("application/json")
+                .content(PROGRAM.replace("\"weeks\":4", "\"status\":\"READY\",\"weeks\":4")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("READY"));
+        mvc.perform(as(post("/api/coach/programs/{id}/duplicate", id), coach))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("DRAFT"));
+    }
+
+    @Test
+    void staleEditsCannotOverwriteANewerLibraryVersion() throws Exception {
+        String coach = coach();
+        String id = create(coach, PROGRAM);
+        var first = json.readTree(mvc.perform(as(get("/api/coach/programs/{id}", id), coach))
+                .andReturn().getResponse().getContentAsString());
+        mvc.perform(as(put("/api/coach/programs/{id}", id), coach).contentType("application/json")
+                .content(first.toString().replace("Progresión lineal", "Cambios guardados")))
+                .andExpect(status().isOk());
+        mvc.perform(as(put("/api/coach/programs/{id}", id), coach).contentType("application/json")
+                .content(first.toString())).andExpect(status().isConflict());
+        mvc.perform(as(get("/api/coach/programs/{id}", id), coach))
+                .andExpect(jsonPath("$.notes").value("Cambios guardados"));
+    }
+
+    @Test
     void coachBuildsUpdatesDuplicatesAndDeletesLibraryPrograms() throws Exception {
         String coach = coach();
         String id = create(coach, PROGRAM);

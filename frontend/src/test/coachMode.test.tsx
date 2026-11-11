@@ -383,6 +383,18 @@ describe('CoachClientPage', () => {
         return Promise.resolve({
           data: [{ id: 'p-2', name: 'Hipertrofia', weeks: 6, dayCount: 4, updatedAt: '' }],
         });
+      if (url === '/coach/programs/p-2')
+        return Promise.resolve({
+          data: {
+            id: 'p-2',
+            name: 'Hipertrofia',
+            notes: null,
+            weeks: 6,
+            days: [],
+            status: 'READY',
+            updatedAt: '2026-11-11T10:00:00Z',
+          },
+        });
       const path = url.startsWith(base) ? url.slice(base.length) : url;
       if (path.startsWith('workouts/recent?since=')) return Promise.resolve({ data: [workout] });
       if (path.startsWith('nutrition/logs?date=')) {
@@ -465,12 +477,14 @@ describe('CoachClientPage', () => {
     await screen.findByRole('option', { name: 'Hipertrofia' });
     fireEvent.change(select, { target: { value: 'p-2' } });
     fireEvent.change(screen.getByLabelText('Empieza el'), { target: { value: '2026-11-09' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Asignar' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Asignar' }));
 
     await waitFor(() =>
       expect(mockedApi.post).toHaveBeenCalledWith('/coach/clients/link-9/programs', {
         programId: 'p-2',
         startDate: '2026-11-09',
+        programUpdatedAt: '2026-11-11T10:00:00Z',
       }),
     );
     expect(window.confirm).toHaveBeenCalled();

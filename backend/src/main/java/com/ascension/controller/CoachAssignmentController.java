@@ -1,7 +1,9 @@
 package com.ascension.controller;
 
 import com.ascension.dto.ProgramDtos.AssignRequest;
+import com.ascension.dto.ProgramDtos.AdaptRequest;
 import com.ascension.dto.ProgramDtos.Assignment;
+import com.ascension.dto.ProgramDtos.Program;
 import com.ascension.dto.ProgramDtos.Session;
 import com.ascension.service.CoachAccessPolicy;
 import com.ascension.service.CoachAccessPolicy.Action;
@@ -62,5 +64,24 @@ public class CoachAssignmentController {
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         assignmentService.end(accessPolicy.require(email, linkId, Action.ASSIGN_PROGRAM), assignmentId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{assignmentId}/plan")
+    public ResponseEntity<Program> plan(@PathVariable UUID linkId, @PathVariable UUID assignmentId,
+                                       @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(assignmentService.plan(
+                accessPolicy.require(email, linkId, Action.VIEW_PROGRAMS), assignmentId));
+    }
+
+    @PostMapping("/{assignmentId}/adapt")
+    public ResponseEntity<Assignment> adapt(@PathVariable UUID linkId, @PathVariable UUID assignmentId,
+                                           @Valid @RequestBody AdaptRequest request,
+                                           @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(assignmentService.adapt(
+                accessPolicy.require(email, linkId, Action.ASSIGN_PROGRAM), assignmentId, request));
     }
 }

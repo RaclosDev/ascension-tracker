@@ -287,7 +287,7 @@ class CoachNutritionIntegrationTest {
 
     private String createProgram(String coach) throws Exception {
         String program = """
-                {"name":"Fuerza","weeks":1,"days":[
+                {"name":"Fuerza","status":"READY","weeks":1,"days":[
                   {"week":1,"dayIndex":1,"name":"Torso","exercises":[
                     {"exerciseId":"bench-press","exerciseName":"Press banca","sets":4}]}]}
                 """;
