@@ -8,7 +8,9 @@ import { useWorkoutStore } from '@/lib/workout/store';
 import type { CompletedWorkout } from '@/lib/workout/types';
 import { PrescriptionSummary } from '../coach/PrescriptionSummary';
 
-/** "Hoy": what each program a coach assigned prescribes for today, ready to start. */
+const PHASE_ORDER = { ACTIVE: 0, UPCOMING: 1, FINISHED: 2 };
+const PHASE_LABEL = { ACTIVE: 'Hoy', UPCOMING: 'Próximamente', FINISHED: 'Completado' };
+
 export function TodayProgramCard({
   history,
   exerciseName,
@@ -20,14 +22,16 @@ export function TodayProgramCard({
   if (!plans.data?.length) return null;
   return (
     <section aria-label="Hoy" className="flex flex-col gap-3" style={{ marginBottom: '1.5rem' }}>
-      {plans.data.map((plan) => (
-        <PlanCard
-          key={plan.assignmentId}
-          plan={plan}
-          history={history}
-          exerciseName={exerciseName}
-        />
-      ))}
+      {[...plans.data]
+        .sort((a, b) => PHASE_ORDER[a.phase] - PHASE_ORDER[b.phase])
+        .map((plan) => (
+          <PlanCard
+            key={plan.assignmentId}
+            plan={plan}
+            history={history}
+            exerciseName={exerciseName}
+          />
+        ))}
     </section>
   );
 }
@@ -77,7 +81,7 @@ function PlanCard({
             className="text-xs font-semibold uppercase"
             style={{ color: 'var(--text-secondary)' }}
           >
-            Hoy · {plan.programName}
+            {PHASE_LABEL[plan.phase]} · {plan.programName}
             {byCoach}
           </div>
           {plan.phase === 'ACTIVE' && plan.day && (
