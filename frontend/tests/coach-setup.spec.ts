@@ -13,23 +13,31 @@ for (const width of [1440, 390]) {
     await page.route('**/api/coach/**', async (route) => {
       const path = new URL(route.request().url()).pathname.replace('/api/coach/', '');
       if (path === 'profile') return route.fulfill({ json: { coach: true } });
-      if (path === 'clients')
+      const client = {
+        linkId: 'l1',
+        client: { name: 'Ana García', email: 'ana@example.com', picture: null },
+        since: '2026-11-01T10:00:00Z',
+        setup,
+        permissions: {
+          training: false,
+          nutrition: false,
+          body: true,
+          editTraining: false,
+          editNutrition: false,
+        },
+      };
+      if (path === 'clients') return route.fulfill({ json: [client] });
+      if (path === 'clients/l1') return route.fulfill({ json: client });
+      if (path === 'clients/l1/status')
         return route.fulfill({
-          json: [
-            {
-              linkId: 'l1',
-              client: { name: 'Ana García', email: 'ana@example.com', picture: null },
-              since: '2026-11-01T10:00:00Z',
-              setup,
-              permissions: {
-                training: false,
-                nutrition: false,
-                body: true,
-                editTraining: false,
-                editNutrition: false,
-              },
-            },
-          ],
+          json: {
+            linkId: 'l1',
+            level: 'GREEN',
+            lastActivity: null,
+            pendingReplies: 0,
+            signals: [],
+            weightChange: null,
+          },
         });
       if (path === 'clients/status')
         return route.fulfill({

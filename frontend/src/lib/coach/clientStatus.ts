@@ -54,11 +54,17 @@ export function signalText({ reason, value }: StatusSignal): string {
   }
 }
 
-export const useClientStatus = (enabled: boolean) =>
+export const useClientStatus = (enabled: boolean, linkId?: string) =>
   useQuery({
-    queryKey: ['coach', 'clients', 'status'] as const,
+    queryKey: linkId ? ['coach', 'clients', 'status', linkId] : ['coach', 'clients', 'status'],
     enabled,
     staleTime: 0,
     refetchOnWindowFocus: true,
-    queryFn: async () => (await api.get<ClientStatus[]>('/coach/clients/status')).data,
+    queryFn: async () =>
+      linkId
+        ? [
+            (await api.get<ClientStatus>(`/coach/clients/${encodeURIComponent(linkId)}/status`))
+              .data,
+          ]
+        : (await api.get<ClientStatus[]>('/coach/clients/status')).data,
   });

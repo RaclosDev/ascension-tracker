@@ -7,6 +7,7 @@ import CoachPage from '../pages/CoachPage';
 import CoachClientsPage from '../pages/CoachClientsPage';
 import CoachClientPage from '../pages/CoachClientPage';
 import CoachReviewsPage from '../pages/CoachReviewsPage';
+import { emptySetup } from '../lib/coach/setup';
 import type { ClientStatus } from '../lib/coach/clientStatus';
 
 vi.mock('../api/client', () => ({
@@ -26,6 +27,7 @@ const clients = ['Ángela', 'Bruno'].map((name, i) => ({
   client: { name, email: `${i}@test`, picture: null },
   permissions,
   since: '2026-11-01T10:00:00Z',
+  setup: i === 0 ? null : { ...emptySetup(), reviewed: true },
 }));
 const statuses: ClientStatus[] = [
   {
@@ -34,10 +36,7 @@ const statuses: ClientStatus[] = [
     lastActivity: null,
     pendingReplies: 0,
     weightChange: null,
-    signals: [
-      { reason: 'NO_PROGRAM', level: 'AMBER', value: 0 },
-      { reason: 'NO_NUTRITION_PLAN', level: 'AMBER', value: 0 },
-    ],
+    signals: [],
   },
   {
     linkId: 'l1',
@@ -53,6 +52,9 @@ function mockData(statusData: ClientStatus[] | Error = statuses) {
   mockedApi.get.mockImplementation(async (url) => {
     if (url === '/coach/profile') return { data: { coach: true } };
     if (url === '/coach/clients') return { data: clients };
+    if (url === '/coach/clients/l0') return { data: clients[0] };
+    if (url === '/coach/clients/l1') return { data: clients[1] };
+    if (url === '/coach/clients/l0/status') return { data: statuses[0] };
     if (url === '/coach/clients/status') {
       if (statusData instanceof Error) throw statusData;
       return { data: statusData };
@@ -93,7 +95,10 @@ describe('Espacio del entrenador', () => {
     );
     expect(screen.getByRole('link', { name: /Alumnos por revisar/ })).toHaveTextContent('1');
     expect(screen.getByRole('link', { name: /Alumnos activos/ })).toHaveTextContent('2');
-    expect(screen.queryByText('Ángela')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Ángela.*Configurar servicio/ })).toHaveAttribute(
+      'href',
+      '/entrenador/alumnos/l0?seccion=gestion',
+    );
     fireEvent.click(screen.getByRole('link', { name: /Check-ins por responder/ }));
     expect(await screen.findByText('2 check-ins por responder de 1 alumno.')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Pendiente del alumno/ }));

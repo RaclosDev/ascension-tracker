@@ -2,6 +2,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowUpRight, Search } from 'lucide-react';
 import { personName, sharedScopes } from '../lib/coach/api';
 import { LEVEL_COLORS, signalText } from '../lib/coach/clientStatus';
+import { clientTasks } from '../lib/coach/tasks';
+import { SERVICE_LABELS, serviceNames } from '../lib/coach/setup';
 import {
   activityText,
   clientHref,
@@ -19,9 +21,20 @@ import {
 import { PendingInvitations } from '../components/coach/CoachInvitations';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
 
-type Filter = 'all' | 'attention' | 'checkin' | 'noProgram';
+type Filter = 'all' | 'attention' | 'checkin' | 'noProgram' | 'setup' | 'tasks' | 'waiting';
 const FILTERS: { value: Filter; label: string; matches: (row: CoachRow) => boolean }[] = [
   { value: 'all', label: 'Todos', matches: () => true },
+  { value: 'setup', label: 'Incorporación', matches: (r) => !r.link.setup?.reviewed },
+  {
+    value: 'tasks',
+    label: 'Tareas del entrenador',
+    matches: (r) => clientTasks(r).some((t) => t.owner === 'coach'),
+  },
+  {
+    value: 'waiting',
+    label: 'Pendiente del alumno',
+    matches: (r) => clientTasks(r).some((t) => t.owner === 'client'),
+  },
   {
     value: 'attention',
     label: 'Por revisar',
@@ -54,6 +67,7 @@ function Clients() {
   const search = params.get('q') ?? '';
   const sort = params.get('orden') ?? 'priority';
   const showWeight = params.get('peso') === 'si';
+  const service = params.get('servicio') ?? '';
   const update = (key: string, value: string) =>
     setParams(
       (previous) => {
@@ -67,6 +81,10 @@ function Clients() {
   const visible = rows.filter(
     (r) =>
       filter.matches(r) &&
+      (!service ||
+        Object.entries(r.link.setup?.services ?? {}).some(
+          ([key, active]) => key === service && active,
+        )) &&
       searchName(personName(r.link.client)).includes(searchName(search.trim())),
   );
   if (sort === 'name')
@@ -123,6 +141,17 @@ function Clients() {
               />{' '}
               Mostrar peso
             </label>
+            <label className="coach-sort">
+              <span>Servicio</span>
+              <select value={service} onChange={(e) => update('servicio', e.target.value)}>
+                <option value="">Todos los servicios</option>
+                {Object.entries(SERVICE_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <div className="coach-chips" role="group" aria-label="Filtrar alumnos">
             {FILTERS.map((f) => (
@@ -153,8 +182,8 @@ function Clients() {
           )}
           {filter.value === 'noProgram' && (
             <p className="coach-description">
-              Alumnos que permiten pautar entrenamiento y no tienen un programa activo. Comprueba
-              qué habéis acordado antes de asignarlo.
+              Alumnos con servicio de entrenamiento acordado, permiso para pautarlo y sin programa
+              activo.
             </p>
           )}
           {!ready && filter.value !== 'all' ? (
@@ -201,9 +230,13 @@ function Clients() {
                             {personName(row.link.client)}
                           </Link>
                           <span className="coach-muted">{sharedScopes(row.link.permissions)}</span>
+                          {row.link.setup && (
+                            <span className="coach-muted">{serviceNames(row.link.setup)}</span>
+                          )}
                         </td>
                         <td>
                           <ClientState row={row} />
+                          <TaskLinks row={row} href={href} />
                         </td>
                         <td>{activityText(row.status?.lastActivity)}</td>
                         {showWeight && (
@@ -241,6 +274,9 @@ function Clients() {
                       <span className="min-w-0 flex-1 flex flex-col gap-1">
                         <strong className="coach-card-name">{personName(row.link.client)}</strong>
                         <ClientState row={row} />
+                        {row.link.setup && (
+                          <span className="coach-muted">{serviceNames(row.link.setup)}</span>
+                        )}
                         <span className="coach-muted">
                           Última actividad: {activityText(row.status?.lastActivity)}
                         </span>
@@ -259,6 +295,7 @@ function Clients() {
                       </span>
                       <ArrowUpRight size={18} aria-hidden />
                     </Link>
+                    <TaskLinks row={row} href={href} />
                   </li>
                 ))}
               </ul>
@@ -268,6 +305,31 @@ function Clients() {
       )}
       <PendingInvitations />
     </>
+  );
+}
+
+function TaskLinks({
+  row,
+  href,
+}: {
+  row: CoachRow;
+  href: (linkId: string, section: string) => string;
+}) {
+  const tasks = clientTasks(row);
+  if (tasks.length === 0) return null;
+  return (
+    <ul className="mt-2 space-y-2">
+      {tasks.map((task) => (
+        <li key={task.id}>
+          <Link
+            className="text-sm underline inline-flex items-center min-h-11 py-2"
+            to={href(row.link.linkId, task.section)}
+          >
+            {task.title}
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 

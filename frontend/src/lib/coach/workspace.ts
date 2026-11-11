@@ -7,10 +7,7 @@ export interface CoachRow {
   status: ClientStatus | undefined;
 }
 
-// Permission to prescribe does not establish that a programme or nutrition plan is due.
-export const followupSignals = (status: ClientStatus | undefined) =>
-  status?.signals.filter((s) => s.reason !== 'NO_PROGRAM' && s.reason !== 'NO_NUTRITION_PLAN') ??
-  [];
+export const followupSignals = (status: ClientStatus | undefined) => status?.signals ?? [];
 
 export const followupLevel = (status: ClientStatus | undefined) =>
   followupSignals(status).reduce<'GREEN' | 'AMBER' | 'RED'>(

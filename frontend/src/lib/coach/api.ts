@@ -224,6 +224,14 @@ export const useCoachClients = (enabled: boolean) =>
     queryFn: async () => (await api.get<CoachClient[]>('/coach/clients')).data,
   });
 
+export const useCoachClient = (linkId: string) =>
+  useQuery({
+    queryKey: ['coach', 'clients', linkId] as const,
+    enabled: !!linkId,
+    queryFn: async () =>
+      (await api.get<CoachClient>(`/coach/clients/${encodeURIComponent(linkId)}`)).data,
+  });
+
 export function useEndClient() {
   const queryClient = useQueryClient();
   return useMutation({

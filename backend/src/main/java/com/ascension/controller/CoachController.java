@@ -94,6 +94,13 @@ public class CoachController {
         return ResponseEntity.ok(coachService.listClients(email));
     }
 
+    @GetMapping("/clients/{linkId}")
+    public ResponseEntity<CoachClient> client(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(coachService.client(email, linkId));
+    }
+
     /** The traffic light for every active client: who needs attention today and why. */
     @GetMapping("/clients/status")
     public ResponseEntity<List<ClientStatus>> clientStatus(@AuthenticationPrincipal Jwt jwt) {
@@ -109,6 +116,13 @@ public class CoachController {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.ok(setupService.save(email, linkId, setup));
+    }
+
+    @GetMapping("/clients/{linkId}/status")
+    public ResponseEntity<ClientStatus> status(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(clientStatusService.forClient(email, linkId, LocalDate.now()));
     }
 
     @PostMapping("/clients/{linkId}/end")

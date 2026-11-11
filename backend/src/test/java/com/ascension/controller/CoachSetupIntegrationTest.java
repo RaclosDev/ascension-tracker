@@ -91,6 +91,23 @@ class CoachSetupIntegrationTest {
     }
 
     @Test
+    void directClientLookupIsScopedAndUnavailableAfterRelationshipEnds() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach, "{\"setup\":" + SETUP + "}"));
+        mvc.perform(as(get("/api/coach/clients/{id}", link), coach))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.linkId").value(link))
+                .andExpect(jsonPath("$.setup.trainingDays").value(4));
+        mvc.perform(as(get("/api/coach/clients/{id}", link), coach())).andExpect(status().isNotFound());
+        mvc.perform(as(get("/api/coach/clients/{id}/status", link), coach))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.linkId").value(link));
+        mvc.perform(as(get("/api/coach/clients/{id}/status", link), coach())).andExpect(status().isNotFound());
+        mvc.perform(as(post("/api/coach/clients/{id}/end", link), coach)).andExpect(status().isNoContent());
+        mvc.perform(as(get("/api/coach/clients/{id}", link), coach)).andExpect(status().isNotFound());
+        mvc.perform(as(get("/api/coach/clients/{id}/status", link), coach)).andExpect(status().isNotFound());
+    }
+
+    @Test
     void rejectsEmptyServicesAndInvalidAvailabilityAndClearsRevokedSetup() throws Exception {
         String coach = coach();
         for (String setup : new String[]{SETUP.replace("\"training\":true", "\"training\":false"), SETUP.replace("\"trainingDays\":4", "\"trainingDays\":8")}) {

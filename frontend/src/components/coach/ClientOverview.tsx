@@ -7,6 +7,7 @@ import { useClientAssignments } from '../../lib/coach/coachPrograms';
 import { activityText, followupSignals } from '../../lib/coach/workspace';
 import { QueryErrorNotice } from '../QueryErrorNotice';
 import { ClientSetupSummary } from './ClientSetup';
+import { signalSection } from '../../lib/coach/tasks';
 
 export function ClientOverview({
   link,
@@ -15,7 +16,7 @@ export function ClientOverview({
   link: CoachClient;
   sectionHref: (section: string) => string;
 }) {
-  const query = useClientStatus(true);
+  const query = useClientStatus(true, link.linkId);
   const status = query.isError ? undefined : query.data?.find((s) => s.linkId === link.linkId);
   const signals = followupSignals(status);
   return (
@@ -52,7 +53,9 @@ export function ClientOverview({
               {signals.length > 0 ? (
                 <ul className="coach-signal-list">
                   {signals.map((s) => (
-                    <li key={s.reason}>{signalText(s)}</li>
+                    <li key={s.reason}>
+                      <Link to={sectionHref(signalSection(s))}>{signalText(s)}</Link>
+                    </li>
                   ))}
                 </ul>
               ) : (
