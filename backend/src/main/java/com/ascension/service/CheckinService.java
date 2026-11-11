@@ -102,20 +102,20 @@ public class CheckinService {
 
     /** This week's questions from this coach and the check-in already sent, if any. */
     @Transactional(readOnly = true)
-    public ClientCheckin current(String clientEmail, UUID linkId, LocalDate today) {
+    public ClientCheckin current(String clientEmail, UUID linkId, Instant now) {
         Link link = activeLink(clientEmail, linkId);
-        LocalDate week = weekOf(today);
+        LocalDate week = weekOf(now.atZone(java.time.ZoneId.of(link.followup().schedule().timeZone())).toLocalDate());
         Checkin sent = find(link, week);
         List<String> questions = sent == null
                 ? templateOf(link.coachUserId()).questions()
                 : sent.answers().stream().map(Answer::question).toList();
-        return new ClientCheckin(linkId, link.coach(), week, questions, sent);
+        return new ClientCheckin(linkId, link.coach(), week, questions, sent, link.followup());
     }
 
     @Transactional
-    public Checkin submit(String clientEmail, UUID linkId, CheckinRequest request, LocalDate today) {
+    public Checkin submit(String clientEmail, UUID linkId, CheckinRequest request, Instant now) {
         Link link = activeLink(clientEmail, linkId);
-        LocalDate week = weekOf(today);
+        LocalDate week = weekOf(now.atZone(java.time.ZoneId.of(link.followup().schedule().timeZone())).toLocalDate());
         Checkin sent = find(link, week);
         if (sent != null && sent.coachReply() != null) {
             throw new InvalidInputException("Tu entrenador ya ha respondido a este check-in.");
@@ -183,22 +183,24 @@ public class CheckinService {
 
     // ---- Helpers ----
 
-    private record Link(UUID linkId, UUID coachUserId, UUID clientUserId, String clientEmail, boolean body, Person coach) {
+    private record Link(UUID linkId, UUID coachUserId, UUID clientUserId, String clientEmail, boolean body, Person coach,
+                        com.ascension.dto.CoachScheduleDtos.Followup followup) {
     }
 
     private Link activeLink(String clientEmail, UUID linkId) {
         List<Link> found = jdbcTemplate.query("""
-                SELECT cc.id, cc.coach_user_id, cc.client_user_id, cu.email AS client_email, cc.can_view_body,
+                SELECT %s, cc.id, cc.coach_user_id, cc.client_user_id, cu.email AS client_email, cc.can_view_body,
                        co.name, co.email, co.picture
                 FROM coach_clients cc
                 JOIN users cu ON cu.id = cc.client_user_id
                 JOIN users co ON co.id = cc.coach_user_id
                 WHERE cc.id = ? AND cc.status = 'ACTIVE' AND cu.email = ?
-                """,
+                """.formatted(CoachScheduleService.COLUMNS),
                 (rs, n) -> new Link(rs.getObject("id", UUID.class), rs.getObject("coach_user_id", UUID.class),
                         rs.getObject("client_user_id", UUID.class), rs.getString("client_email"),
                         rs.getBoolean("can_view_body"),
-                        new Person(rs.getString("name"), rs.getString("email"), rs.getString("picture"))),
+                        new Person(rs.getString("name"), rs.getString("email"), rs.getString("picture")),
+                        CoachScheduleService.read(rs, Instant.now())),
                 linkId, Emails.normalizeRequired(clientEmail));
         if (found.isEmpty()) {
             throw new EntityNotFoundException("Entrenador no encontrado");

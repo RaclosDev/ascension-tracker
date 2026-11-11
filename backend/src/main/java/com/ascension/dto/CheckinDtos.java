@@ -46,7 +46,7 @@ public final class CheckinDtos {
 
     /** This week's check-in for one coach: the questions to answer and what was sent, if anything. */
     public record ClientCheckin(UUID linkId, Person coach, LocalDate weekStart, List<String> questions,
-                                Checkin current) {
+                                Checkin current, CoachScheduleDtos.Followup followup) {
     }
 
     /** {@code role} is CLIENT for check-ins the exporting user sent, COACH for ones they received. */

@@ -43,6 +43,7 @@ class CheckinNotificationIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired UserService users;
     @Autowired ObjectMapper json;
+    @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     @Test
     void theCoachHearsAboutANewCheckinAndTheClientAboutTheReply() throws Exception {
@@ -70,23 +71,39 @@ class CheckinNotificationIntegrationTest {
     }
 
     @Test
-    void theSundayReminderGoesOnceToClientsWithoutThisWeeksCheckin() throws Exception {
+    void remindersRespectTheDeadlinePauseAndOneReminderPerWeek() throws Exception {
         String coach = user("Marta Coach");
         mvc.perform(as(post("/api/coach/profile"), coach)).andExpect(status().isOk());
         String pending = user("Ana Pendiente");
         String done = user("Luis Hecho");
         String pendingLink = accept(pending, invite(coach));
         String doneLink = accept(done, invite(coach));
+        String paused = user("Pausa");
+        String pausedLink = accept(paused, invite(coach));
+        String legacy = user("Sin servicio");
+        accept(legacy, invite(coach));
+        jdbc.update("""
+                UPDATE coach_clients SET created_at = NOW() - INTERVAL '21 days',
+                    coaching_setup = '{"services":{"training":true,"nutrition":false,"progress":false},"reviewed":true}'::jsonb,
+                    followup_paused = (id = ?)
+                WHERE id IN (?, ?, ?)
+                """, UUID.fromString(pausedLink), UUID.fromString(pendingLink), UUID.fromString(doneLink), UUID.fromString(pausedLink));
         mvc.perform(as(put(CLIENT_PATH, doneLink), done).contentType("application/json").content(CHECKIN))
                 .andExpect(status().isOk());
         clearInvocations(push);
 
-        notifier.remind(LocalDate.now());
-        notifier.remind(LocalDate.now());
+        var due = CheckinService.weekOf(LocalDate.now(java.time.ZoneId.of("Europe/Madrid"))).plusDays(6)
+                .atTime(18, 0).atZone(java.time.ZoneId.of("Europe/Madrid")).toInstant();
+        notifier.remind(due.minusSeconds(1));
+        verify(push, never()).sendAsync(eq(pending), anyString(), anyString(), anyString(), anyString());
+        notifier.remind(due);
+        notifier.remind(due.plusSeconds(300));
 
         verify(push, times(1)).sendAsync(pending, "Check-in semanal", "Cuéntale a Marta cómo te ha ido la semana.",
                 "ascension-checkin-" + pendingLink, "/checkin/" + pendingLink);
         verify(push, never()).sendAsync(eq(done), anyString(), anyString(), anyString(), anyString());
+        verify(push, never()).sendAsync(eq(paused), anyString(), anyString(), anyString(), anyString());
+        verify(push, never()).sendAsync(eq(legacy), anyString(), anyString(), anyString(), anyString());
     }
 
     private MockHttpServletRequestBuilder as(MockHttpServletRequestBuilder request, String email) {

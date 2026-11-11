@@ -188,15 +188,16 @@ public class CoachService {
     private List<CoachClient> findClients(String coachEmail, UUID linkId) {
         UUID coachId = requireCoachId(coachEmail);
         return jdbcTemplate.query("""
-                SELECT cc.id, cc.created_at, cc.coaching_setup, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
+                SELECT %s, cc.id, cc.created_at, cc.coaching_setup, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
                        u.name, u.email, u.picture
                 FROM coach_clients cc JOIN users u ON u.id = cc.client_user_id
                 WHERE cc.coach_user_id = ? AND cc.status = 'ACTIVE'
                   AND (?::uuid IS NULL OR cc.id = ?)
                 ORDER BY LOWER(COALESCE(u.name, u.email))
-                """,
+                """.formatted(CoachScheduleService.COLUMNS),
                 (rs, n) -> new CoachClient(rs.getObject("id", UUID.class), person(rs),
-                        permissions(rs), instant(rs, "created_at"), setupService.decode(rs.getString("coaching_setup"))),
+                        permissions(rs), instant(rs, "created_at"), setupService.decode(rs.getString("coaching_setup")),
+                        CoachScheduleService.read(rs, Instant.now())),
                 coachId, linkId, linkId);
     }
 
@@ -285,16 +286,16 @@ public class CoachService {
 
     public List<MyCoach> listMyCoaches(String clientEmail) {
         return jdbcTemplate.query("""
-                SELECT cc.id, cc.created_at, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
+                SELECT %s, cc.id, cc.created_at, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
                        co.name, co.email, co.picture
                 FROM coach_clients cc
                 JOIN users cu ON cu.id = cc.client_user_id
                 JOIN users co ON co.id = cc.coach_user_id
                 WHERE cu.email = ? AND cc.status = 'ACTIVE'
                 ORDER BY cc.created_at
-                """,
+                """.formatted(CoachScheduleService.COLUMNS),
                 (rs, n) -> new MyCoach(rs.getObject("id", UUID.class), person(rs),
-                        permissions(rs), instant(rs, "created_at")),
+                        permissions(rs), instant(rs, "created_at"), CoachScheduleService.read(rs, Instant.now())),
                 Emails.normalizeRequired(clientEmail));
     }
 
@@ -411,15 +412,15 @@ public class CoachService {
     // Column names come from the two callers above, never from input.
     private List<LinkExport> exportLinks(String selfColumn, String otherColumn, UUID userId) {
         return jdbcTemplate.query("""
-                SELECT cc.id, cc.status, cc.created_at, cc.ended_at, cc.coaching_setup,
+                SELECT %s, cc.id, cc.status, cc.created_at, cc.ended_at, cc.coaching_setup,
                        cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
                        u.name, u.email, u.picture
                 FROM coach_clients cc JOIN users u ON u.id = cc.%s
                 WHERE cc.%s = ? ORDER BY cc.created_at
-                """.formatted(otherColumn, selfColumn),
+                """.formatted(CoachScheduleService.COLUMNS, otherColumn, selfColumn),
                 (rs, n) -> new LinkExport(rs.getObject("id", UUID.class), person(rs), rs.getString("status"),
                         permissions(rs), instant(rs, "created_at"), instant(rs, "ended_at"),
-                        setupService.decode(rs.getString("coaching_setup"))),
+                        setupService.decode(rs.getString("coaching_setup")), CoachScheduleService.read(rs, Instant.now())),
                 userId);
     }
 
