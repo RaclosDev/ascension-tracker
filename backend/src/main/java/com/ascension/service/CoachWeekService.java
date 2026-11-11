@@ -32,7 +32,8 @@ public class CoachWeekService {
     private final ProgramSchedule schedule;
     private final ProgramAssignmentService assignments;
 
-    @Transactional(readOnly = true)
+    // Reading client data also records the coach's access for the client.
+    @Transactional
     public Saved get(String email, UUID link, LocalDate week) {
         access.require(email, link, CoachAccessPolicy.Action.VIEW_PROGRAMS);
         validateWeek(week);
