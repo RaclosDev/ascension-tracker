@@ -8,6 +8,7 @@ import { activityText, followupSignals } from '../../lib/coach/workspace';
 import { QueryErrorNotice } from '../QueryErrorNotice';
 import { ClientSetupSummary } from './ClientSetup';
 import { signalSection } from '../../lib/coach/tasks';
+import { nextReviewLabel, scheduleLabel } from '../../lib/coach/coachSchedule';
 
 export function ClientOverview({
   link,
@@ -28,6 +29,16 @@ export function ClientOverview({
       <div className="coach-client-summary">
         <section className="card">
           <h2>Seguimiento</h2>
+          {link.followup && (
+            <p className="coach-description">
+              {link.followup.schedule.paused
+                ? 'Seguimiento en pausa'
+                : scheduleLabel(link.followup.schedule)}
+              {!link.followup.schedule.paused && <> · Próxima: {nextReviewLabel(link.followup)}</>}
+              {' · '}
+              <Link to={sectionHref('gestion')}>Cambiar agenda</Link>
+            </p>
+          )}
           {query.isPending ? (
             <p role="status">Cargando seguimiento…</p>
           ) : !status ? (
@@ -60,9 +71,11 @@ export function ClientOverview({
                 </ul>
               ) : (
                 <p className="coach-description">
-                  {link.setup
-                    ? 'Sin señales de seguimiento pendientes.'
-                    : 'Configura el servicio para activar las señales de seguimiento.'}
+                  {link.followup?.schedule.paused
+                    ? 'Las alertas de seguimiento están pausadas.'
+                    : link.setup
+                      ? 'Sin señales de seguimiento pendientes.'
+                      : 'Configura el servicio para activar las señales de seguimiento.'}
                 </p>
               )}
             </>

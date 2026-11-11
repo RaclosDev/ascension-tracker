@@ -4,6 +4,7 @@ import { SCORE_KEYS, SCORE_LABELS, type Checkin } from '../../lib/coach/checkins
 
 const muted = { color: 'var(--text-secondary)' };
 const kg = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
+const dateTime = new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
 
 /** One weekly check-in as both sides read it: scores, weight, answers, notes and the coach's reply. */
 export function CheckinCard({ checkin, footer }: { checkin: Checkin; footer?: ReactNode }) {
@@ -20,8 +21,13 @@ export function CheckinCard({ checkin, footer }: { checkin: Checkin; footer?: Re
           </span>
         )}
       </div>
+      <p className="text-xs" style={muted}>
+        Enviado: {dateTime.format(new Date(checkin.createdAt))}
+        {checkin.updatedAt !== checkin.createdAt &&
+          ` · Editado: ${dateTime.format(new Date(checkin.updatedAt))}`}
+      </p>
       <dl className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {SCORE_KEYS.map((key) => (
+        {SCORE_KEYS.filter((key) => checkin[key] != null).map((key) => (
           <div key={key}>
             <dt className="text-xs" style={muted}>
               {SCORE_LABELS[key]}
@@ -51,7 +57,16 @@ export function CheckinCard({ checkin, footer }: { checkin: Checkin; footer?: Re
       {checkin.coachReply && (
         <div className="rounded-lg p-3 bg-black/20">
           <div className="text-xs mb-1" style={muted}>
-            Respuesta del entrenador
+            <span>Respuesta del entrenador</span>
+            {checkin.repliedAt && (
+              <>
+                {' '}
+                ·{' '}
+                <time dateTime={checkin.repliedAt}>
+                  {dateTime.format(new Date(checkin.repliedAt))}
+                </time>
+              </>
+            )}
           </div>
           <p className="text-white whitespace-pre-line">{checkin.coachReply}</p>
         </div>

@@ -16,8 +16,9 @@ export function CheckinTemplateEditor() {
         <MessageSquareText size={18} aria-hidden /> Check-in semanal
       </h2>
       <p className="mb-3" style={{ color: 'var(--text-secondary)' }}>
-        Las preguntas que tus alumnos responden cada semana, además de energía, sueño y
-        cumplimiento.
+        Sin personalizar, se añaden preguntas según el servicio de cada alumno. Si guardas estas
+        preguntas, serán comunes a todos. Las valoraciones de cumplimiento se piden solo para los
+        servicios acordados; los check-ins anteriores conservan sus preguntas.
       </p>
       {template.isLoading && <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>}
       {template.isError && (

@@ -41,7 +41,7 @@ export function signalText({ reason, value }: StatusSignal): string {
       return `${value} días sin registrar nada`;
     case 'CHECKIN_MISSING':
       return value === 1
-        ? 'Falta el check-in de la semana pasada'
+        ? 'Falta un check-in tras la fecha acordada'
         : `${value} semanas sin check-in`;
     case 'FEW_FOOD_LOGS':
       return `Comida registrada ${value} de 7 días`;

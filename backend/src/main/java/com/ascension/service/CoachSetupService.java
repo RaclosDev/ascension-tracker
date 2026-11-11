@@ -32,10 +32,12 @@ public class CoachSetupService {
     public Setup save(String coachEmail, UUID linkId, Setup setup) {
         int updated = jdbc.update("""
                 UPDATE coach_clients SET coaching_setup = ?::jsonb, setup_updated_at = NOW(),
-                    setup_started_at = COALESCE(setup_started_at, NOW())
+                    setup_started_at = COALESCE(setup_started_at, NOW()),
+                    followup_started_at = CASE WHEN ? AND COALESCE(coaching_setup ->> 'reviewed', 'false') <> 'true'
+                        THEN NOW() ELSE followup_started_at END
                 WHERE id = ? AND status = 'ACTIVE'
                   AND coach_user_id = (SELECT id FROM users WHERE email = ?)
-                """, encode(setup), linkId, Emails.normalizeRequired(coachEmail));
+                """, encode(setup), setup.reviewed(), linkId, Emails.normalizeRequired(coachEmail));
         if (updated == 0) throw new EntityNotFoundException("Alumno no encontrado");
         return setup;
     }

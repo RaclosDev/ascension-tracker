@@ -14,6 +14,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.UUID;
+import java.time.Instant;
+import java.time.ZoneId;
+import com.ascension.service.CheckinService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -38,6 +41,71 @@ class CoachSetupIntegrationTest {
     @Autowired JdbcTemplate jdbc;
     @Autowired UserService users;
     @Autowired CoachService coaches;
+    @Autowired CheckinService checkins;
+
+    private static final String SCHEDULE = """
+            {"day":1,"time":"08:30","timeZone":"Pacific/Kiritimati","paused":false}
+            """;
+
+    @Test
+    void scheduleIsOwnedValidatedAndIncludedInClientViewsAndExport() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach, "{}"));
+        for (String stranger : new String[]{coach(), client}) {
+            mvc.perform(as(put("/api/coach/clients/{id}/schedule", link), stranger)
+                    .contentType("application/json").content(SCHEDULE)).andExpect(status().isNotFound());
+        }
+        for (String invalid : new String[]{SCHEDULE.replace("\"day\":1", "\"day\":8"),
+                SCHEDULE.replace("Pacific/Kiritimati", "Europe/Invalid"), SCHEDULE.replace("08:30", "08:30:01")}) {
+            mvc.perform(as(put("/api/coach/clients/{id}/schedule", link), coach)
+                    .contentType("application/json").content(invalid)).andExpect(status().isBadRequest());
+        }
+        mvc.perform(as(put("/api/coach/clients/{id}/schedule", link), coach)
+                .contentType("application/json").content(SCHEDULE)).andExpect(status().isOk());
+        mvc.perform(as(get("/api/coach/clients/{id}", link), coach))
+                .andExpect(jsonPath("$.followup.schedule.timeZone").value("Pacific/Kiritimati"))
+                .andExpect(jsonPath("$.permissions.editTraining").value(false));
+        assertThat(coaches.exportFor(client).asClient().getFirst().followup().schedule().day()).isEqualTo(1);
+        Instant boundary = Instant.parse("2026-11-08T12:00:00Z");
+        assertThat(checkins.current(client, UUID.fromString(link), boundary).weekStart()).isEqualTo("2026-11-09");
+        mvc.perform(as(post("/api/coach/clients/{id}/end", link), coach)).andExpect(status().isNoContent());
+        mvc.perform(as(put("/api/coach/clients/{id}/schedule", link), coach)
+                .contentType("application/json").content(SCHEDULE)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void pauseRetainsRelationshipAndResumeStartsFreshGracePeriod() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach, "{\"setup\":" + SETUP.replace("\"reviewed\":false", "\"reviewed\":true") + "}"));
+        UUID id = UUID.fromString(link);
+        jdbc.update("UPDATE coach_clients SET created_at = NOW() - INTERVAL '40 days', setup_started_at = NOW() - INTERVAL '40 days' WHERE id = ?", id);
+        mvc.perform(as(get("/api/coach/clients/{id}/status", link), coach)).andExpect(jsonPath("$.signals").isNotEmpty());
+        mvc.perform(as(put("/api/coach/clients/{id}/schedule", link), coach).contentType("application/json")
+                .content(SCHEDULE.replace("false", "true")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.nextDueAt").doesNotExist());
+        mvc.perform(as(get("/api/coach/clients/{id}/status", link), coach)).andExpect(jsonPath("$.signals").isEmpty());
+        assertThat(jdbc.queryForObject("SELECT status FROM coach_clients WHERE id = ?", String.class, id)).isEqualTo("ACTIVE");
+        mvc.perform(as(put("/api/coach/clients/{id}/schedule", link), coach).contentType("application/json").content(SCHEDULE))
+                .andExpect(status().isOk());
+        var followup = coaches.exportFor(coach).asCoach().getFirst().followup();
+        assertThat(followup.nextDueAt()).isAfterOrEqualTo(followup.startedAt().atZone(ZoneId.of("Pacific/Kiritimati")).plusDays(7).toInstant());
+        mvc.perform(as(get("/api/coach/clients/{id}/status", link), coach)).andExpect(jsonPath("$.signals").isEmpty());
+        mvc.perform(as(put("/api/coach/clients/{id}/schedule", link), coach).contentType("application/json").content(SCHEDULE))
+                .andExpect(status().isOk());
+        assertThat(coaches.exportFor(coach).asCoach().getFirst().followup().startedAt()).isEqualTo(followup.startedAt());
+    }
+
+    @Test
+    void confirmingAnOldIncorporationStartsGraceNow() throws Exception {
+        String coach = coach();
+        String link = accept(user(), invite(coach, "{\"setup\":" + SETUP + "}"));
+        jdbc.update("UPDATE coach_clients SET created_at = NOW() - INTERVAL '40 days', setup_started_at = NOW() - INTERVAL '40 days' WHERE id = ?", UUID.fromString(link));
+        mvc.perform(as(put("/api/coach/clients/{id}/setup", link), coach).contentType("application/json")
+                .content(SETUP.replace("\"reviewed\":false", "\"reviewed\":true"))).andExpect(status().isOk());
+        mvc.perform(as(get("/api/coach/clients/{id}/status", link), coach)).andExpect(jsonPath("$.signals").isEmpty());
+    }
 
     @Test
     void invitationTransfersSetupWithoutGrantingExtraPermissionsAndExportsIt() throws Exception {

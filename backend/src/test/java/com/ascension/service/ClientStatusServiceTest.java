@@ -20,12 +20,17 @@ class ClientStatusServiceTest {
 
     private static Facts facts(LocalDate since, LocalDate lastWorkout, LocalDate lastCheckinWeek, boolean nutrition,
                                int foodDays) {
-        return new Facts(UUID.randomUUID(), since, nutrition, lastWorkout, null, null, null, lastCheckinWeek, 0,
+        var schedule = new com.ascension.dto.CoachScheduleDtos.Schedule(7, java.time.LocalTime.of(18, 0), "Europe/Madrid", false);
+        var followup = new com.ascension.dto.CoachScheduleDtos.Followup(schedule,
+                since.atStartOfDay(java.time.ZoneId.of("Europe/Madrid")).toInstant(), null);
+        int missing = CoachScheduleService.missing(followup, lastCheckinWeek,
+                TODAY.atTime(12, 0).atZone(java.time.ZoneId.of("Europe/Madrid")).toInstant());
+        return new Facts(UUID.randomUUID(), since, nutrition, lastWorkout, null, null, null, missing, 0,
                 foodDays, null, null, null, false, false);
     }
 
     private static Facts weights(Double recent, Double earlier, Double goal) {
-        return new Facts(UUID.randomUUID(), LONG_AGO, false, TODAY, null, null, null, LocalDate.of(2026, 10, 26), 0,
+        return new Facts(UUID.randomUUID(), LONG_AGO, false, TODAY, null, null, null, 0, 0,
                 0, recent, earlier, goal, false, false);
     }
 
@@ -50,15 +55,15 @@ class ClientStatusServiceTest {
     }
 
     @Test
-    void missingCheckinsCountOnlyFinishedWeeksSinceTheLinkStarted() {
+    void missingCheckinsRespectTheFirstScheduledDeadline() {
         // Linked this week: nothing is due yet, and the link date counts as activity.
         ClientStatus fresh = ClientStatusService.evaluate(facts(TODAY.minusDays(1), null, null, true, 0), TODAY);
         assertThat(fresh.level()).isEqualTo(Level.GREEN);
         assertThat(fresh.lastActivity()).isNull();
 
-        // Linked last week without a check-in: one week missing.
+        // The first scheduled deadline must leave at least seven days after joining.
         assertThat(ClientStatusService.evaluate(facts(LocalDate.of(2026, 10, 28), TODAY, null, false, 0), TODAY)
-                .signals()).containsExactly(new Signal(Reason.CHECKIN_MISSING, Level.AMBER, 1));
+                .signals()).isEmpty();
 
         // Long linked, last check-in three weeks ago: capped at two, red.
         assertThat(ClientStatusService.evaluate(facts(LONG_AGO, TODAY, LocalDate.of(2026, 10, 12), false, 0), TODAY)
@@ -103,7 +108,7 @@ class ClientStatusServiceTest {
     void aClientTheCoachCanPlanButHasNothingAssignedIsToPlan() {
         Facts base = facts(LONG_AGO, TODAY.minusDays(1), LocalDate.of(2026, 10, 26), true, 6);
         Facts noPlans = new Facts(base.linkId(), base.since(), true, base.lastWorkout(), null, null, null,
-                base.lastCheckinWeek(), 0, 6, null, null, null, true, true);
+                base.missingCheckins(), 0, 6, null, null, null, true, true);
         ClientStatus status = ClientStatusService.evaluate(noPlans, TODAY);
         assertThat(status.level()).isEqualTo(Level.AMBER);
         assertThat(status.signals()).containsExactly(new Signal(Reason.NO_PROGRAM, Level.AMBER, 0),

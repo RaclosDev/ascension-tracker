@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserMinus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ClientSetupForm } from './ClientSetup';
+import { ClientSchedule } from './ClientSchedule';
 import {
   PERMISSION_LABELS,
   formatCoachDate,
@@ -18,6 +19,10 @@ export function ClientManagement({ link }: { link: CoachClient }) {
   return (
     <>
       <ClientSetupForm key={link.linkId} link={link} />
+      <ClientSchedule
+        key={`${link.linkId}-${JSON.stringify(link.followup?.schedule)}`}
+        link={link}
+      />
       <section className="card">
         <h2>Datos de la relación</h2>
         <dl className="coach-facts">

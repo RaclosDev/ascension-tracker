@@ -49,6 +49,15 @@ describe('Tareas del entrenador', () => {
     data.link.setup = null;
     expect(clientTasks(data).map((t) => t.id)).toEqual(['reply', 'setup']);
   });
+  it('keeps unanswered check-ins but suppresses other work during a pause', () => {
+    const data = row();
+    data.link.followup = {
+      schedule: { day: 7, time: '18:00', timeZone: 'Europe/Madrid', paused: true },
+      startedAt: '2026-11-01T12:00:00Z',
+      nextDueAt: null,
+    };
+    expect(clientTasks(data).map((t) => t.id)).toEqual(['reply']);
+  });
   it('shows missing permission as an action for the client and never grants it', () => {
     const data = row();
     data.link.permissions.training = false;

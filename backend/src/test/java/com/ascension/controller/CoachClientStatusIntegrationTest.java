@@ -46,7 +46,7 @@ class CoachClientStatusIntegrationTest {
         // Both linked a month ago.
         jdbc.update("""
                 UPDATE coach_clients SET created_at = NOW() - INTERVAL '30 days',
-                    coaching_setup = '{"services":{"training":false,"nutrition":false,"progress":true}}'::jsonb
+                    coaching_setup = '{"services":{"training":false,"nutrition":false,"progress":true},"reviewed":true}'::jsonb
                 WHERE id IN (?, ?)
                 """,
                 UUID.fromString(activeLink), UUID.fromString(idleLink));

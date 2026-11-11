@@ -58,7 +58,7 @@ public class CoachCheckinController {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Checkin replied = checkinService.reply(accessPolicy.require(email, linkId, Action.REPLY_CHECKIN),
-                checkinId, request.reply());
+                checkinId, request.reply(), request.expectedUpdatedAt());
         notifier.replied(linkId);
         return ResponseEntity.ok(replied);
     }

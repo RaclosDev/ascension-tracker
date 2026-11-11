@@ -78,7 +78,7 @@ public final class CoachDtos {
     }
 
     public record CoachClient(UUID linkId, Person client, Permissions permissions, Instant since,
-                              CoachSetupDtos.Setup setup) {
+                              CoachSetupDtos.Setup setup, CoachScheduleDtos.Followup followup) {
     }
 
     /** {@code requested} is what the coach asked for (pre-ticked); {@code profile} is null when nothing was filled in. */
@@ -86,7 +86,8 @@ public final class CoachDtos {
                                     Permissions requested, InvitationProfile profile, CoachSetupDtos.Setup setup) {
     }
 
-    public record MyCoach(UUID linkId, Person coach, Permissions permissions, Instant since) {
+    public record MyCoach(UUID linkId, Person coach, Permissions permissions, Instant since,
+                          CoachScheduleDtos.Followup followup) {
     }
 
     /** Nutrition targets only; biometrics and workout preferences stay private to the client. */
@@ -133,7 +134,8 @@ public final class CoachDtos {
 
     /** {@code other} is the coach when exported as client, and the client when exported as coach. */
     public record LinkExport(UUID linkId, Person other, String status, Permissions permissions,
-                             Instant createdAt, Instant endedAt, CoachSetupDtos.Setup setup) {
+                             Instant createdAt, Instant endedAt, CoachSetupDtos.Setup setup,
+                             CoachScheduleDtos.Followup followup) {
     }
 
     public record InvitationExport(UUID id, Instant createdAt, Instant expiresAt, Instant acceptedAt,

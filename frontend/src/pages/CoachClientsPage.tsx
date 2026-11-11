@@ -21,9 +21,11 @@ import {
 import { PendingInvitations } from '../components/coach/CoachInvitations';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
 
-type Filter = 'all' | 'attention' | 'checkin' | 'noProgram' | 'setup' | 'tasks' | 'waiting';
+type Filter =
+  'all' | 'attention' | 'checkin' | 'noProgram' | 'setup' | 'tasks' | 'waiting' | 'paused';
 const FILTERS: { value: Filter; label: string; matches: (row: CoachRow) => boolean }[] = [
   { value: 'all', label: 'Todos', matches: () => true },
+  { value: 'paused', label: 'En pausa', matches: (r) => !!r.link.followup?.schedule.paused },
   { value: 'setup', label: 'Incorporación', matches: (r) => !r.link.setup?.reviewed },
   {
     value: 'tasks',
@@ -229,7 +231,9 @@ function Clients() {
                           <Link className="coach-row-link" to={href(row.link.linkId)}>
                             {personName(row.link.client)}
                           </Link>
-                          <span className="coach-muted">{sharedScopes(row.link.permissions)}</span>
+                          <span className="coach-muted">
+                            Acceso: {sharedScopes(row.link.permissions)}
+                          </span>
                           {row.link.setup && (
                             <span className="coach-muted">{serviceNames(row.link.setup)}</span>
                           )}
@@ -334,6 +338,8 @@ function TaskLinks({
 }
 
 function ClientState({ row }: { row: CoachRow }) {
+  if (row.link.followup?.schedule.paused)
+    return <span className="coach-muted">Seguimiento en pausa</span>;
   if (!row.status) return <span className="coach-muted">Seguimiento no disponible</span>;
   if (!row.link.setup) return <span className="coach-muted">Servicio por configurar</span>;
   if (!row.link.setup.reviewed) return <span className="coach-muted">Incorporación pendiente</span>;
