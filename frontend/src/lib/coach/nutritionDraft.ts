@@ -1,5 +1,6 @@
 import type { DayGrams, DayType, NutritionPlan, NutritionPlanRequest } from './nutritionPlan';
 import { dayKcal } from './nutritionPlan';
+import type { CoachRecipe } from './coachRecipes';
 
 export function mealNutrition(recipe: DayGrams, servings: number) {
   const roundedServings = Math.round(servings * 100) / 100;
@@ -37,7 +38,9 @@ export interface NutritionDraft {
   meals: MealDraft[];
 }
 
-export const nutritionDraft = (plan: NutritionPlan | null): NutritionDraft => {
+export const nutritionDraft = (
+  plan: Pick<NutritionPlan, 'training' | 'rest' | 'notes' | 'meals'> | null,
+): NutritionDraft => {
   const grams = (day: 'training' | 'rest') => ({
     protein: plan ? String(plan[day].protein) : '',
     carbs: plan ? String(plan[day].carbs) : '',
@@ -116,4 +119,25 @@ export function nutritionRequest(draft: NutritionDraft): NutritionPlanRequest | 
     });
   }
   return { training, rest, notes: draft.notes.trim() || null, meals };
+}
+
+export function previewNutrition(request: NutritionPlanRequest, recipes: CoachRecipe[]) {
+  return {
+    training: { ...request.training, kcal: dayKcal(request.training) },
+    rest: { ...request.rest, kcal: dayKcal(request.rest) },
+    notes: request.notes,
+    meals: (request.meals ?? []).flatMap((meal) => {
+      const recipe = recipes.find((item) => item.id === meal.recipeId);
+      return recipe
+        ? [
+            {
+              ...meal,
+              name: recipe.name,
+              description: recipe.description,
+              ...mealNutrition(recipe, meal.servings),
+            },
+          ]
+        : [];
+    }),
+  };
 }

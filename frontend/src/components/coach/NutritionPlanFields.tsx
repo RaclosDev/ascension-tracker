@@ -165,10 +165,13 @@ function DayMeals({
                   {r.name}
                 </option>
               ))}
+              {meal.recipeId && !recipe && (
+                <option value={meal.recipeId}>Receta no disponible</option>
+              )}
             </select>
             <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-              {meal.deletedName
-                ? 'Receta borrada: elige otra o quita la comida.'
+              {meal.deletedName || (meal.recipeId && !recipe)
+                ? 'Receta no disponible: elige otra o quita la comida.'
                 : recipe && servings != null
                   ? `${mealNutrition(recipe, servings).kcal} kcal`
                   : 'Raciones entre 0,25 y 10'}

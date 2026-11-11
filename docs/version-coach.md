@@ -72,6 +72,12 @@ Antes de asignar se muestra la versión completa. Si cambia mientras se revisa, 
 
 ---
 
+## Biblioteca de pautas de nutrición
+
+En Planificación, «Pautas de nutrición» guarda hasta 100 pautas privadas con objetivos para entreno y descanso, notas y comidas opcionales. El editor conserva los cambios pendientes en la pestaña y permite revisar la vista previa antes de guardarlos. Si otra sesión cambia la pauta, puedes recuperar la versión guardada o conservar tu trabajo como una nueva.
+
+Desde Nutrición en la ficha de un alumno, «Usar pauta de biblioteca» copia el contenido a su borrador. Puedes adaptarlo y publicarlo cuando esté listo. Editar o borrar la pauta de biblioteca no cambia las copias ya publicadas. Las comidas guardadas conservan su contenido; al preparar una nueva copia se usan las recetas actuales y hay que sustituir o quitar las que ya no estén disponibles. La descarga de datos incluye la biblioteca del entrenador.
+
 ## Fase 5 — Planes *(en curso)*
 
 **Prueba de 14 días.** Quien activa el modo entrenador empieza una prueba gratuita de 14 días con el plan Pro, sin tarjeta. Los entrenadores que ya existían reciben la misma prueba desde hoy. Volver a activar el modo entrenador no reinicia la prueba.

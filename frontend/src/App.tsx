@@ -26,6 +26,12 @@ const CoachProgramsPage = lazyWithRetry(() => import('./pages/CoachProgramsPage'
 const CoachProgramEditorPage = lazyWithRetry(() => import('./pages/CoachProgramEditorPage'));
 const CoachProgramAdaptPage = lazyWithRetry(() => import('./pages/CoachProgramAdaptPage'));
 const CoachRecipesPage = lazyWithRetry(() => import('./pages/CoachRecipesPage'));
+const CoachNutritionTemplatesPage = lazyWithRetry(
+  () => import('./pages/CoachNutritionTemplatesPage'),
+);
+const CoachNutritionTemplateEditorPage = lazyWithRetry(
+  () => import('./pages/CoachNutritionTemplateEditorPage'),
+);
 const CoachPlanPage = lazyWithRetry(() => import('./pages/CoachPlanPage'));
 const LegalPage = lazyWithRetry(() => import('./pages/LegalPage'));
 const AdminPlansPage = lazyWithRetry(() => import('./pages/AdminPlansPage'));
@@ -162,6 +168,11 @@ function AppContent() {
               <Route path="entrenador/programas" element={<CoachProgramsPage />} />
               <Route path="entrenador/programas/:programId" element={<CoachProgramEditorPage />} />
               <Route path="entrenador/recetas" element={<CoachRecipesPage />} />
+              <Route path="entrenador/pautas" element={<CoachNutritionTemplatesPage />} />
+              <Route
+                path="entrenador/pautas/:templateId"
+                element={<CoachNutritionTemplateEditorPage />}
+              />
               <Route path="entrenador/plan" element={<CoachPlanPage />} />
               {LEGAL_DOCS.map((doc) => (
                 <Route key={doc} path={doc} element={<LegalPage doc={doc} />} />

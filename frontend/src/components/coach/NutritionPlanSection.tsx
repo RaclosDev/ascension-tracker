@@ -5,22 +5,21 @@ import { apiErrorMessage, formatCoachDate } from '@/lib/coach/api';
 import { useCoachRecipes } from '@/lib/coach/coachRecipes';
 import {
   isNutritionDraft,
-  mealNutrition,
+  previewNutrition,
   nutritionDraft,
   nutritionRequest,
   type NutritionDraft,
 } from '@/lib/coach/nutritionDraft';
 import {
-  dayKcal,
   useCoachNutritionPlan,
   useEndNutritionPlan,
   useSetNutritionPlan,
   type NutritionPlan,
-  type PlannedMeal,
 } from '@/lib/coach/nutritionPlan';
 import { NutritionPlanFields } from './NutritionPlanFields';
 import { NutritionPlanHistory } from './NutritionPlanHistory';
 import { NutritionPlanSummary } from './NutritionPlanSummary';
+import { NutritionTemplatePicker } from './NutritionTemplatePicker';
 
 interface ClientDraft {
   baseId: string | null;
@@ -94,18 +93,6 @@ function PlanForm({
     (meal) => !knownRecipes.some((r) => r.id === meal.recipeId),
   );
   const ready = request !== null && !missingRecipe;
-  const previewMeals: PlannedMeal[] = (request?.meals ?? []).flatMap((meal) => {
-    const recipe = knownRecipes.find((item) => item.id === meal.recipeId);
-    if (!recipe) return [];
-    return [
-      {
-        ...meal,
-        name: recipe.name,
-        description: recipe.description,
-        ...mealNutrition(recipe, meal.servings),
-      },
-    ];
-  });
 
   const submit = () => {
     if (!request || !ready || stale || busy) return;
@@ -165,6 +152,15 @@ function PlanForm({
           <NutritionPlanSummary plan={plan} />
         </details>
       )}
+      <NutritionTemplatePicker
+        dirty={draft.dirty}
+        disabled={busy || stale}
+        onCopy={(fields) => {
+          draft.setValue({ ...draft.value, fields });
+          setPreview(false);
+          setError(null);
+        }}
+      />
       {draft.notice && (
         <p role="status" className="text-sm">
           {draft.notice}
@@ -231,14 +227,7 @@ function PlanForm({
       </div>
       {preview && request && ready ? (
         <section aria-label="Vista previa de la pauta">
-          <NutritionPlanSummary
-            plan={{
-              training: { ...request.training, kcal: dayKcal(request.training) },
-              rest: { ...request.rest, kcal: dayKcal(request.rest) },
-              notes: request.notes,
-              meals: previewMeals,
-            }}
-          />
+          <NutritionPlanSummary plan={previewNutrition(request, knownRecipes)} />
         </section>
       ) : (
         <NutritionPlanFields
