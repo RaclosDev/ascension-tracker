@@ -127,7 +127,15 @@ describe('Comidas pautadas', () => {
           training: { protein: 180, carbs: 300, fat: 70 },
           rest: { protein: 180, carbs: 150, fat: 80 },
           notes: null,
-          meals: [{ dayType: 'TRAINING', slotName: 'Comida', recipeId: 'r1', servings: 1.5 }],
+          meals: [
+            {
+              dayType: 'TRAINING',
+              slotName: 'Comida',
+              recipeId: 'r1',
+              servings: 1.5,
+              expectedRecipeUpdatedAt: bowl.updatedAt,
+            },
+          ],
         },
       }),
     );

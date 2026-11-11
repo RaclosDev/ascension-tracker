@@ -164,7 +164,7 @@ for (const width of [390, 1440]) {
       plan: {
         training: { protein: 200 },
         notes: 'Versión preparada para Ana',
-        meals: [{ recipeId: 'r1', servings: 1.5 }],
+        meals: [{ recipeId: 'r1', servings: 1.5, expectedRecipeUpdatedAt: '2026-11-11T10:00:00Z' }],
       },
     });
     await page.reload();

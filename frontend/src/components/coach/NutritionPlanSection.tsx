@@ -104,7 +104,17 @@ function PlanForm({
       return;
     setError(null);
     save.mutate(
-      { plan: request, expectedPlanId: draft.value.baseId },
+      {
+        plan: {
+          ...request,
+          meals: request.meals.map((meal) => ({
+            ...meal,
+            expectedRecipeUpdatedAt: knownRecipes.find((recipe) => recipe.id === meal.recipeId)
+              ?.updatedAt,
+          })),
+        },
+        expectedPlanId: draft.value.baseId,
+      },
       {
         onSuccess: () => {
           draft.clear();
@@ -175,8 +185,17 @@ function PlanForm({
       {error && (
         <div role="alert">
           <p>{error}</p>
-          <button type="button" className="btn btn-secondary" disabled={busy} onClick={reload}>
-            Actualizar pauta publicada
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={busy}
+            onClick={() => {
+              reload();
+              void recipes.refetch();
+              setPreview(false);
+            }}
+          >
+            Actualizar pauta y recetas
           </button>
         </div>
       )}

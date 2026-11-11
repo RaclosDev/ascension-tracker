@@ -42,6 +42,7 @@ interface MealRequest {
   slotName: string;
   recipeId: string;
   servings: number;
+  expectedRecipeUpdatedAt?: string;
 }
 
 export type DayGrams = Pick<DayTargets, 'protein' | 'carbs' | 'fat'>;
