@@ -64,7 +64,7 @@ export function VariantSelector({
               borderRadius: '6px',
               fontSize: '0.75rem',
               background: value === opt ? 'var(--accent-primary)' : 'var(--bg-primary)',
-              color: value === opt ? '#fff' : 'var(--text-primary)',
+              color: value === opt ? 'var(--accent-text)' : 'var(--text-primary)',
               border: value === opt ? 'none' : '1px solid var(--border-medium)',
               cursor: 'pointer',
               transition: 'all 0.15s ease',

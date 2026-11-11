@@ -24,7 +24,7 @@ export function SetAdjustmentBar({ label, negative, positive, onAdjust, onIntera
           keepInputFocus(event);
           onAdjust(delta);
         }}
-        className={`px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl text-white tabular-nums text-xs transition select-none touch-manipulation ${increase ? 'bg-[var(--accent-primary)] hover:brightness-110 active:scale-95 font-bold shadow-sm' : 'bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 font-semibold'}`}
+        className={`px-3 py-2 min-h-[40px] min-w-[42px] flex items-center justify-center rounded-xl tabular-nums text-xs transition select-none touch-manipulation ${increase ? 'bg-[var(--accent-primary)] text-[var(--accent-text)] hover:brightness-110 active:scale-95 font-bold shadow-sm' : 'bg-white/[0.08] text-foreground hover:bg-white/[0.16] active:scale-95 font-semibold'}`}
       >
         {increase ? '+' : ''}
         {delta}
