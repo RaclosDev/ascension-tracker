@@ -5,6 +5,7 @@ import { signalText } from '../lib/coach/clientStatus';
 import { clientHref, searchName, useCoachRoster } from '../lib/coach/workspace';
 import { CoachPageHeader, CoachWorkspace } from '../components/coach/CoachWorkspace';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
+import { CoachReviewAgenda } from '../components/coach/CoachReviewAgenda';
 
 export default function CoachReviewsPage() {
   return (
@@ -18,6 +19,7 @@ function Reviews() {
   const { clients, status, rows, ready } = useCoachRoster();
   const [params, setParams] = useSearchParams();
   const waiting = params.get('vista') === 'esperando';
+  const agenda = params.get('vista') === 'agenda';
   const search = params.get('q') ?? '';
   const pending = rows.filter((r) => (r.status?.pendingReplies ?? 0) > 0);
   const missing = rows.filter((r) => r.status?.signals.some((s) => s.reason === 'CHECKIN_MISSING'));
@@ -45,11 +47,11 @@ function Reviews() {
           Configurar check-in
         </Link>
       </CoachPageHeader>
-      <div className="coach-chips" role="group" aria-label="Filtrar revisiones">
+      <div className="coach-chips coach-review-tabs" role="group" aria-label="Filtrar revisiones">
         <button
           type="button"
           className="coach-chip"
-          aria-pressed={!waiting}
+          aria-pressed={!waiting && !agenda}
           onClick={() => update('vista', '')}
         >
           Por responder <span className="coach-chip-count">{ready ? count : '—'}</span>
@@ -62,6 +64,14 @@ function Reviews() {
         >
           Pendiente del alumno{' '}
           <span className="coach-chip-count">{ready ? missing.length : '—'}</span>
+        </button>
+        <button
+          type="button"
+          className="coach-chip"
+          aria-pressed={agenda}
+          onClick={() => update('vista', 'agenda')}
+        >
+          Agenda semanal
         </button>
       </div>
       {clients.isError ? (
@@ -76,11 +86,13 @@ function Reviews() {
         </p>
       ) : (
         <>
-          <p className="coach-description">
-            {waiting
-              ? 'Alumnos sin check-in en semanas ya terminadas. Consulta su situación antes de hacer seguimiento.'
-              : `${count} ${count === 1 ? 'check-in' : 'check-ins'} por responder de ${pending.length} ${pending.length === 1 ? 'alumno' : 'alumnos'}.`}
-          </p>
+          {!agenda && (
+            <p className="coach-description">
+              {waiting
+                ? 'Alumnos que han superado la fecha acordada sin enviar su check-in. Consulta su situación antes de hacer seguimiento.'
+                : `${count} ${count === 1 ? 'check-in' : 'check-ins'} por responder de ${pending.length} ${pending.length === 1 ? 'alumno' : 'alumnos'}.`}
+            </p>
+          )}
           <label className="coach-search">
             <Search size={18} aria-hidden />
             <span className="sr-only">Buscar revisión por alumno</span>
@@ -91,57 +103,63 @@ function Reviews() {
               onChange={(e) => update('q', e.target.value)}
             />
           </label>
-          <section
-            className="card coach-worklist"
-            aria-label={waiting ? 'Pendiente del alumno' : 'Check-ins por responder'}
-          >
-            {visible.length === 0 ? (
-              <div className="coach-empty-inline">
-                <h2>
-                  {search
-                    ? 'No hay coincidencias'
-                    : waiting
-                      ? 'Sin semanas pendientes'
-                      : 'No hay check-ins por responder'}
-                </h2>
-                <p>
-                  {search
-                    ? 'Prueba con otro nombre.'
-                    : 'Puedes consultar el historial desde la ficha de cada alumno.'}
-                </p>
-                <Link to="/entrenador/alumnos">Ver alumnos</Link>
-              </div>
-            ) : (
-              <ul className="coach-action-list">
-                {visible.map(({ link, status: state }) => {
-                  const missingSignal = state?.signals.find((s) => s.reason === 'CHECKIN_MISSING');
-                  return (
-                    <li key={link.linkId}>
-                      <Link
-                        to={`${clientHref(link.linkId, 'revisiones')}&origen=revisiones&lista=${encodeURIComponent(params.toString())}`}
-                      >
-                        <span className="coach-avatar" aria-hidden>
-                          {personName(link.client).slice(0, 1).toUpperCase()}
-                        </span>
-                        <span>
-                          <strong>{personName(link.client)}</strong>
-                          <small>
-                            {waiting && missingSignal
-                              ? signalText(missingSignal)
-                              : `${state?.pendingReplies} por responder`}
-                          </small>
-                        </span>
-                        <span className="coach-row-action">
-                          {waiting ? 'Ver historial' : 'Revisar'}{' '}
-                          <ArrowUpRight size={16} aria-hidden />
-                        </span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
+          {agenda ? (
+            <CoachReviewAgenda rows={rows} search={search} />
+          ) : (
+            <section
+              className="card coach-worklist"
+              aria-label={waiting ? 'Pendiente del alumno' : 'Check-ins por responder'}
+            >
+              {visible.length === 0 ? (
+                <div className="coach-empty-inline">
+                  <h2>
+                    {search
+                      ? 'No hay coincidencias'
+                      : waiting
+                        ? 'Sin semanas pendientes'
+                        : 'No hay check-ins por responder'}
+                  </h2>
+                  <p>
+                    {search
+                      ? 'Prueba con otro nombre.'
+                      : 'Puedes consultar el historial desde la ficha de cada alumno.'}
+                  </p>
+                  <Link to="/entrenador/alumnos">Ver alumnos</Link>
+                </div>
+              ) : (
+                <ul className="coach-action-list">
+                  {visible.map(({ link, status: state }) => {
+                    const missingSignal = state?.signals.find(
+                      (s) => s.reason === 'CHECKIN_MISSING',
+                    );
+                    return (
+                      <li key={link.linkId}>
+                        <Link
+                          to={`${clientHref(link.linkId, 'revisiones')}&origen=revisiones&lista=${encodeURIComponent(params.toString())}`}
+                        >
+                          <span className="coach-avatar" aria-hidden>
+                            {personName(link.client).slice(0, 1).toUpperCase()}
+                          </span>
+                          <span>
+                            <strong>{personName(link.client)}</strong>
+                            <small>
+                              {waiting && missingSignal
+                                ? signalText(missingSignal)
+                                : `${state?.pendingReplies} por responder`}
+                            </small>
+                          </span>
+                          <span className="coach-row-action">
+                            {waiting ? 'Ver historial' : 'Revisar'}{' '}
+                            <ArrowUpRight size={16} aria-hidden />
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+          )}
         </>
       )}
     </>

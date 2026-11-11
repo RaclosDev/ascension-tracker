@@ -17,7 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,6 +31,7 @@ public class CoachController {
     private final com.ascension.service.ConsentService consentService;
     private final ClientStatusService clientStatusService;
     private final com.ascension.service.CoachSetupService setupService;
+    private final com.ascension.service.CoachScheduleService scheduleService;
 
     @GetMapping("/profile")
     public ResponseEntity<CoachStatus> profile(@AuthenticationPrincipal Jwt jwt) {
@@ -106,7 +107,7 @@ public class CoachController {
     public ResponseEntity<List<ClientStatus>> clientStatus(@AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(clientStatusService.forCoach(email, LocalDate.now()));
+        return ResponseEntity.ok(clientStatusService.forCoach(email, Instant.now()));
     }
 
     @PutMapping("/clients/{linkId}/setup")
@@ -122,7 +123,16 @@ public class CoachController {
     public ResponseEntity<ClientStatus> status(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(clientStatusService.forClient(email, linkId, LocalDate.now()));
+        return ResponseEntity.ok(clientStatusService.forClient(email, linkId, Instant.now()));
+    }
+
+    @PutMapping("/clients/{linkId}/schedule")
+    public ResponseEntity<com.ascension.dto.CoachScheduleDtos.Followup> schedule(
+            @PathVariable UUID linkId, @Valid @RequestBody com.ascension.dto.CoachScheduleDtos.Schedule schedule,
+            @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(scheduleService.save(email, linkId, schedule));
     }
 
     @PostMapping("/clients/{linkId}/end")

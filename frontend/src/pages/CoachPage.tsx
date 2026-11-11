@@ -92,7 +92,17 @@ function Dashboard() {
                 : 'Falta información de seguimiento de algún alumno.'}
             </p>
           )}
-          {ready && <CoachTaskBoard rows={rows} />}
+          {ready && (
+            <>
+              <Link
+                className="btn btn-secondary self-start"
+                to="/entrenador/revisiones?vista=agenda"
+              >
+                Ver agenda semanal
+              </Link>
+              <CoachTaskBoard rows={rows} />
+            </>
+          )}
         </>
       )}
     </>

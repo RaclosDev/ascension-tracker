@@ -35,6 +35,7 @@ export function clientTasks({ link, status }: CoachRow): CoachTask[] {
       section: 'revisiones',
       owner: 'coach',
     });
+  if (link.followup?.schedule.paused) return tasks;
   if (!link.setup)
     return [
       ...tasks,

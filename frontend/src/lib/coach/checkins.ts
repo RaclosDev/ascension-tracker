@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
 import type { CoachPerson } from './api';
+import type { CoachFollowup } from './coachSchedule';
 
 /** Mirrors the backend CheckinDtos records. */
 export interface CheckinTemplate {
@@ -33,6 +34,7 @@ export interface Checkin {
 }
 
 export interface ClientCheckin {
+  followup?: CoachFollowup;
   linkId: string;
   coach: CoachPerson;
   weekStart: string;

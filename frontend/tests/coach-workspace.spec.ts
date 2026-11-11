@@ -15,6 +15,11 @@ async function setupCoach(page: Page, empty = false) {
       editNutrition: true,
     },
     since: '2026-11-01T10:00:00Z',
+    followup: {
+      schedule: { day: i + 1, time: '18:00', timeZone: 'Europe/Madrid', paused: false },
+      startedAt: '2026-11-01T10:00:00Z',
+      nextDueAt: '2026-11-16T17:00:00Z',
+    },
     setup: {
       services: { training: true, nutrition: i === 2, progress: false },
       goal: 'Ganar fuerza',
@@ -228,3 +233,31 @@ test('new coach gets an invitation entry point with no invented metrics', async 
   await page.getByRole('button', { name: 'Invitar alumno' }).first().click();
   await expect(page.getByRole('dialog')).toBeVisible();
 });
+
+for (const width of [1440, 390]) {
+  test(`weekly review agenda at ${width}px`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await setupCoach(page);
+    await page.goto('/entrenador/revisiones?vista=agenda');
+    await expect(page.getByRole('heading', { name: 'Lunes' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Miércoles' })).toBeVisible();
+    await page.getByLabel('Buscar revisión por alumno').fill('garcia');
+    await expect(page.getByRole('link', { name: /Ana García.*Abrir revisión/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Miércoles' })).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page.screenshot({
+      path: testInfo.outputPath('review-agenda.png'),
+      fullPage: true,
+      animations: 'disabled',
+    });
+    await page.getByRole('link', { name: /Ana García.*Abrir revisión/ }).click();
+    await expect(page).toHaveURL(/seccion=revisiones/);
+    await page.getByRole('link', { name: 'Volver a revisiones' }).click();
+    await expect(page.getByRole('button', { name: 'Agenda semanal' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+}

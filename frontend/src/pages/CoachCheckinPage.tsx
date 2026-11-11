@@ -14,6 +14,7 @@ import {
 } from '../lib/coach/checkins';
 import { CheckinCard } from '../components/coach/CheckinCard';
 import { PushToggle } from '../components/coach/PushToggle';
+import { nextReviewLabel, scheduleLabel } from '../lib/coach/coachSchedule';
 
 const muted = { color: 'var(--text-secondary)' };
 
@@ -42,7 +43,20 @@ export default function CoachCheckinPage() {
         {current.isLoading && <p style={muted}>Cargando…</p>}
         {current.isError && <p role="alert">Ya no estás vinculado con este entrenador.</p>}
         {current.data && (
-          <PushToggle text="Activa los avisos para recibir el recordatorio del domingo y saber cuándo te responde tu entrenador." />
+          <>
+            {current.data.followup && (
+              <section className="card">
+                <h2>Tu horario de revisión</h2>
+                <p>{scheduleLabel(current.data.followup.schedule)}</p>
+                <p className="coach-description">
+                  {current.data.followup.schedule.paused
+                    ? 'El seguimiento está en pausa. Puedes enviar un check-in, pero no recibirás recordatorios.'
+                    : `Próxima fecha: ${nextReviewLabel(current.data.followup)}. Puedes enviarlo antes.`}
+                </p>
+              </section>
+            )}
+            <PushToggle text="Activa los avisos para recibir el recordatorio en el horario acordado y saber cuándo te responde tu entrenador." />
+          </>
         )}
         {current.data &&
           (current.data.current?.coachReply ? (
