@@ -1,13 +1,13 @@
 import type { PrescribedLoad, ProgramExercise, SetTarget } from '@/lib/coach/coachPrograms';
 
-export const SET_KINDS = {
+const SET_KINDS = {
   WORK: 'Trabajo',
   WARMUP: 'Calentamiento',
   TOP: 'Top set',
   BACKOFF: 'Back-off',
 };
 const number = (s: string) => (s === '' ? null : Number(s));
-export function LoadFields({
+function LoadFields({
   value,
   onChange,
 }: {

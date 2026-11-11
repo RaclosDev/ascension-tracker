@@ -39,7 +39,7 @@ export interface SetTarget {
   load: PrescribedLoad | null;
   notes?: string | null;
 }
-export interface ExercisePrescription {
+interface ExercisePrescription {
   load?: PrescribedLoad | null;
   sets?: SetTarget[] | null;
 }

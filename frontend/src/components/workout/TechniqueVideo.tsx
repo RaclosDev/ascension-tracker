@@ -1,7 +1,7 @@
 import type { WorkoutExercise } from '@/lib/workout/types';
 import { useWorkoutStore } from '@/lib/workout/store';
 
-export const safeVideoUrl = (value?: string | null) => {
+const safeVideoUrl = (value?: string | null) => {
   try {
     const url = new URL(value ?? '');
     return url.protocol === 'https:' && !url.username && !url.password ? url.href : null;
