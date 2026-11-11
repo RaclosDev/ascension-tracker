@@ -47,7 +47,7 @@ export function NutritionPlanSection({ linkId, canEdit }: { linkId: string; canE
       </div>
     );
   return (
-    <>
+    <div data-tour="nutrition-plan">
       {canEdit ? (
         <PlanForm
           key={`${linkId}:${plan.data?.id ?? 'none'}`}
@@ -63,7 +63,7 @@ export function NutritionPlanSection({ linkId, canEdit }: { linkId: string; canE
         </p>
       )}
       <NutritionPlanHistory key={linkId} linkId={linkId} />
-    </>
+    </div>
   );
 }
 

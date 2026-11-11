@@ -16,7 +16,7 @@ export function CheckinTemplateEditor({ linkId }: { linkId?: string }) {
   const template = useCheckinTemplate(true, linkId);
   const reset = useResetClientCheckinTemplate(linkId ?? '');
   return (
-    <section className="card">
+    <section data-tour="checkin-template" className="card">
       <h2 className="card-title flex items-center gap-2">
         <MessageSquareText size={18} aria-hidden /> Check-in semanal
       </h2>

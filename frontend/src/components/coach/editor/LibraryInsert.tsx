@@ -37,7 +37,7 @@ export function LibraryInsert({ onInsert }: { onInsert: (days: ProgramDay[]) => 
     );
   };
   return (
-    <details className="card">
+    <details data-tour="library-insert" className="card">
       <summary className="cursor-pointer font-bold">
         Añadir sesión o semana de la biblioteca
       </summary>

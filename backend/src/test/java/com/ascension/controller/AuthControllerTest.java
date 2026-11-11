@@ -438,7 +438,7 @@ class AuthControllerTest {
                 .andExpect(header().string("Strict-Transport-Security", containsString("includeSubDomains")))
                 .andExpect(header().string("X-Content-Type-Options", "nosniff"))
                 .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
-                .andExpect(header().string("X-Frame-Options", "DENY"));
+                .andExpect(header().string("X-Frame-Options", "SAMEORIGIN"));
     }
 
     @Test

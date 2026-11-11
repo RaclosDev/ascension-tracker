@@ -78,7 +78,10 @@ export default function CoachProgramsPage() {
           </Link>
         </div>
       </CoachPageHeader>
-      <div className="grid gap-3 mb-4 items-end sm:grid-cols-2 lg:grid-cols-3">
+      <div
+        data-tour="library-filters"
+        className="grid gap-3 mb-4 items-end sm:grid-cols-2 lg:grid-cols-3"
+      >
         <label className="flex flex-col gap-1 min-w-0">
           <span>Buscar programa o etiqueta</span>
           <input

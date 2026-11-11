@@ -48,7 +48,7 @@ export default function TrainingSection({ linkId }: { linkId: string }) {
   return (
     <Section title="Entrenamiento" icon={<Dumbbell size={18} aria-hidden />}>
       <h3 className="text-sm font-bold text-foreground mb-2">Historial de entrenamientos</h3>
-      <div className="flex flex-wrap gap-3 mb-3">
+      <div data-tour="training-history" className="flex flex-wrap gap-3 mb-3">
         <label>
           Buscar por nombre
           <input
