@@ -35,6 +35,18 @@ describe('estimateOneRepMax', () => {
 });
 
 describe('bestLifts', () => {
+  it('rejects partial numbers and fractional reps instead of inflating estimates', () => {
+    const best = bestLifts([
+      workout(1, 'ex-0025', [
+        set('999kg', '1'),
+        set('999', '1rep'),
+        set('999', '1.5'),
+        set('Infinity', '1'),
+        set('102,5', '1'),
+      ]),
+    ]);
+    expect(best.bench).toEqual({ e1rm: 102.5, actual: 102.5, date: 1 });
+  });
   it('keeps the best estimate per lift, skipping warm-ups and unfinished sets', () => {
     const best = bestLifts([
       workout(1, 'base-cuadriceps-sentadilla-libre-barra', [
@@ -61,6 +73,10 @@ describe('dotsScore', () => {
   });
 
   it('needs a total, bodyweight and sex', () => {
+    expect(dotsScore(-1, 80, 'M')).toBeNull();
+    expect(dotsScore(500, -80, 'M')).toBeNull();
+    expect(dotsScore(Infinity, 80, 'M')).toBeNull();
+    expect(dotsScore(500, Infinity, 'M')).toBeNull();
     expect(dotsScore(0, 80, 'M')).toBeNull();
     expect(dotsScore(500, undefined, 'M')).toBeNull();
     expect(dotsScore(500, 80, undefined)).toBeNull();

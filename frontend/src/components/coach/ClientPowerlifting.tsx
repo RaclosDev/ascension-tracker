@@ -16,6 +16,7 @@ import {
 import { QueryErrorNotice } from '../QueryErrorNotice';
 import { PowerMarksEditor } from './PowerMarksEditor';
 import { PowerMeets } from './PowerMeets';
+import { PowerProgress } from './PowerProgress';
 
 export default function ClientPowerlifting({
   linkId,
@@ -26,7 +27,9 @@ export default function ClientPowerlifting({
 }) {
   const query = usePowerProfile(linkId);
   const [params, setParams] = useSearchParams();
-  const view = params.get('vista') ?? 'perfil';
+  const requestedView = params.get('vista');
+  const view =
+    requestedView === 'competiciones' || requestedView === 'seguimiento' ? requestedView : 'perfil';
   return (
     <section className="card">
       <h2>Powerlifting</h2>
@@ -37,6 +40,7 @@ export default function ClientPowerlifting({
         {[
           ['perfil', 'Perfil y marcas'],
           ['competiciones', 'Competiciones'],
+          ['seguimiento', 'Seguimiento S/B/D'],
         ].map(([id, label]) => (
           <button
             key={id}
@@ -59,6 +63,8 @@ export default function ClientPowerlifting({
         <QueryErrorNotice pending={query.isFetching} retry={() => void query.refetch()} />
       ) : view === 'competiciones' ? (
         <PowerMeets linkId={linkId} profile={query.data.profile} canEdit={canEdit} />
+      ) : view === 'seguimiento' ? (
+        <PowerProgress linkId={linkId} profile={query.data.profile} />
       ) : (
         <PowerForm
           key={`${query.data.version}:${canEdit}`}
