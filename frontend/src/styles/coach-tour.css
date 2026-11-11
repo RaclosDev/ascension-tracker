@@ -1,0 +1,219 @@
+.coach-tour-notice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 6px;
+  background: var(--wall-highlight-bg);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+.coach-tour-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1.3fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+.coach-tour-guide,
+.coach-tour-scene {
+  min-width: 0;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+.coach-tour-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.coach-tour-guide p,
+.coach-tour-scene p {
+  line-height: 1.6;
+}
+.coach-tour-guide h2 {
+  margin: 0;
+}
+.coach-tour-guide progress {
+  width: 100%;
+  height: 6px;
+  accent-color: var(--accent-primary);
+  appearance: none;
+  border: 0;
+  background: var(--border-medium);
+}
+.coach-tour-guide progress::-webkit-progress-bar { background: var(--border-medium); }
+.coach-tour-guide progress::-webkit-progress-value { background: var(--accent-primary); }
+.coach-tour-guide progress::-moz-progress-bar { background: var(--accent-primary); }
+.coach-tour-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.coach-tour-guide .btn,
+.coach-tour-scene .btn {
+  white-space: normal;
+}
+.coach-tour-jump {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+.coach-tour-jump select {
+  width: 100%;
+}
+.coach-tour-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.coach-tour-scene-label {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.75rem;
+}
+.coach-tour-target {
+  border: 2px solid var(--accent-primary);
+  border-radius: 6px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 1rem;
+  min-width: 0;
+  background: var(--wall-highlight-bg);
+}
+.coach-tour-target > label,
+.coach-tour-target > input,
+.coach-tour-target > textarea,
+.coach-tour-target > .coach-tour-grid {
+  width: 100%;
+}
+.coach-tour-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr));
+  gap: 1rem;
+}
+.coach-tour-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.coach-tour-grid input {
+  width: 100%;
+  min-width: 0;
+}
+.coach-tour-tile,
+.coach-tour-preview {
+  padding: 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+}
+.coach-tour-tile strong {
+  display: block;
+}
+.coach-tour-person {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+.coach-tour-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+.coach-tour-facts dt {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+.coach-tour-facts dd {
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+.coach-tour-scene blockquote {
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--border-medium);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.coach-tour-scene textarea {
+  min-height: 78px;
+  resize: vertical;
+}
+.coach-tour-scene input,
+.coach-tour-scene textarea,
+.coach-tour-jump select {
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-medium);
+  border-radius: 4px;
+  padding: 0.75rem;
+  font: inherit;
+}
+.coach-tour-scene textarea:focus-visible,
+.coach-tour-guide select:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 3px;
+}
+.coach-tour-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+.coach-tour-table-scroll table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+.coach-tour-table-scroll caption {
+  text-align: left;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+.coach-tour-table-scroll td,
+.coach-tour-table-scroll th {
+  padding: 0.6rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.coach-tour-feedback {
+  color: var(--text-primary);
+  font-weight: 600;
+  min-height: 1.6em;
+  overflow-wrap: anywhere;
+}
+.coach-tour-checklist {
+  list-style: decimal;
+  padding-left: 1.5rem;
+  display: grid;
+  gap: 0.75rem;
+  line-height: 1.6;
+}
+@media (max-width: 760px) {
+  .coach-tour-controls {
+    position: fixed;
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    left: 1rem;
+    right: 1rem;
+    z-index: 40;
+    padding: 0.5rem;
+    border: 1px solid var(--border-medium);
+    border-radius: 6px;
+    background: var(--bg-card);
+    box-shadow: var(--shadow-elevated);
+  }
+  .coach-tour-layout {
+    grid-template-columns: 1fr;
+    padding-bottom: 5rem;
+  }
+  .coach-tour-guide,
+  .coach-tour-scene {
+    padding: 1rem;
+  }
+  .coach-tour-guide {
+    gap: 0.75rem;
+  }
+  .coach-tour-target {
+    padding: 1rem;
+  }
+}

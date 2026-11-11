@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Suspense } from 'react';
 import { ArrowUpRight, ClipboardList, MessageSquareText, Users } from 'lucide-react';
 import { followupSignals, useCoachRoster } from '../lib/coach/workspace';
 import { CoachTaskBoard } from '../components/coach/CoachTaskBoard';
@@ -8,6 +9,9 @@ import {
   InviteClientButton,
 } from '../components/coach/CoachWorkspace';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
+
+const CoachTourWelcome = lazyWithRetry(() => import('../components/coach/tour/CoachTourWelcome'));
 
 export default function CoachPage() {
   return (
@@ -29,8 +33,16 @@ function Dashboard() {
         title="Inicio"
         description="Organiza las revisiones y el seguimiento de tus alumnos."
       >
-        <InviteClientButton />
+        <div className="coach-inline-actions">
+          <Link className="btn btn-secondary" to="/entrenador/guia">
+            Guía interactiva
+          </Link>
+          <InviteClientButton />
+        </div>
       </CoachPageHeader>
+      <Suspense fallback={null}>
+        <CoachTourWelcome />
+      </Suspense>
       {clients.isPending ? (
         <p role="status">Cargando alumnos…</p>
       ) : clients.isError ? (

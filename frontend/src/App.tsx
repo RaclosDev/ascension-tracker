@@ -18,6 +18,7 @@ const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage'
 const WorkoutPage = lazyWithRetry(() => import('./pages/WorkoutPage'));
 const UtilitiesPage = lazyWithRetry(() => import('./pages/UtilitiesPage'));
 const CoachPage = lazyWithRetry(() => import('./pages/CoachPage'));
+const CoachTourPage = lazyWithRetry(() => import('./pages/CoachTourPage'));
 const CoachClientsPage = lazyWithRetry(() => import('./pages/CoachClientsPage'));
 const CoachReviewsPage = lazyWithRetry(() => import('./pages/CoachReviewsPage'));
 const CoachPlanningPage = lazyWithRetry(() => import('./pages/CoachPlanningPage'));
@@ -163,6 +164,7 @@ function AppContent() {
               <Route path="utilities" element={<UtilitiesPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="entrenador" element={<CoachPage />} />
+              <Route path="entrenador/guia" element={<CoachTourPage />} />
               <Route path="entrenador/alumnos" element={<CoachClientsPage />} />
               <Route path="entrenador/revisiones" element={<CoachReviewsPage />} />
               <Route path="entrenador/planificacion" element={<CoachPlanningPage />} />

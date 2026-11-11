@@ -311,7 +311,9 @@ export default function Layout() {
               }
             >
               <div key={location.pathname} className="route-fade">
-                {user?.email && <PasskeyPrompt email={user.email} />}
+                {user?.email && location.pathname !== '/entrenador/guia' && (
+                  <PasskeyPrompt email={user.email} />
+                )}
                 <Outlet />
               </div>
             </Suspense>
@@ -330,6 +332,7 @@ export default function Layout() {
           {
             '--nav-count': bottomItems.length + 1,
             '--nav-active': Math.max(activeBottomIndex, 0),
+            display: location.pathname === '/entrenador/guia' ? 'none' : undefined,
           } as CSSProperties
         }
       >
