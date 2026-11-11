@@ -75,6 +75,12 @@ async function setupCoach(page: Page, empty = false) {
           },
         },
       });
+    if (/clients\/l\d\/workouts$/.test(path))
+      return route.fulfill({ json: { content: [], totalPages: 0, totalElements: 0 } });
+    if (path.endsWith('/workouts/stats'))
+      return route.fulfill({
+        json: { totalWorkouts: 0, totalDurationSeconds: 0, totalVolume: 0, totalSets: 0 },
+      });
     if (path === 'settings') return route.fulfill({ json: coachSettings });
     if (path === 'clients') return route.fulfill({ json: empty ? [] : clients });
     const client = clients.find((c) => path === `clients/${c.linkId}`);
@@ -182,6 +188,14 @@ for (const width of [1440, 390]) {
       page.getByRole('heading', { name: 'No hay check-ins por responder' }),
     ).toBeVisible();
     await page.getByRole('link', { name: 'Ver alumnos' }).click();
+    await expect(page.getByRole('heading', { name: 'Alumnos', exact: true })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Ordenar' })).not.toBeVisible();
+    await page.screenshot({
+      path: testInfo.outputPath('roster-default.png'),
+      fullPage: true,
+      animations: 'disabled',
+    });
+    await page.getByText('Más filtros y vista', { exact: true }).click();
     await page.getByRole('combobox', { name: 'Servicio', exact: true }).selectOption('nutrition');
     await expect(page.getByText('1 de 3 alumnos')).toBeVisible();
     await expect(
@@ -206,12 +220,15 @@ for (const width of [1440, 390]) {
     });
     await page.getByRole('link', { name: 'Volver a alumnos' }).click();
     await expect(page.getByRole('searchbox', { name: 'Buscar alumno' })).toHaveValue('garcia');
+    await expect(page.getByText('Entrenamiento · Por nombre · Peso visible')).toBeVisible();
+    await page.locator('.coach-filter-options summary').click();
     await expect(page.getByRole('combobox', { name: 'Ordenar' })).toHaveValue('name');
     await expect(page.getByRole('combobox', { name: 'Servicio', exact: true })).toHaveValue(
       'training',
     );
     await expect(page.getByRole('checkbox', { name: 'Mostrar peso' })).toBeChecked();
     await noHorizontalOverflow(page);
+    await page.locator('.coach-filter-options summary').click();
     await page.screenshot({
       path: testInfo.outputPath('roster.png'),
       fullPage: true,
@@ -290,5 +307,88 @@ for (const width of [1440, 390]) {
       'aria-pressed',
       'true',
     );
+  });
+}
+
+for (const width of [1440, 320]) {
+  test(`roster disclosures preserve filters and task links at ${width}px`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await setupCoach(page);
+    await page.route('**/api/coach/clients/status', (route) =>
+      route.fulfill({
+        json: [
+          {
+            linkId: 'l0',
+            level: 'AMBER',
+            lastActivity: null,
+            pendingReplies: 1,
+            weightChange: null,
+            signals: [{ reason: 'NO_PROGRAM', level: 'AMBER', value: 0 }],
+          },
+          {
+            linkId: 'l1',
+            level: 'GREEN',
+            lastActivity: null,
+            pendingReplies: 0,
+            weightChange: null,
+            signals: [],
+          },
+          {
+            linkId: 'l2',
+            level: 'GREEN',
+            lastActivity: null,
+            pendingReplies: 0,
+            weightChange: null,
+            signals: [],
+          },
+        ],
+      }),
+    );
+    await page.goto('/entrenador/alumnos?filtro=noProgram&servicio=training');
+    await expect(page.getByText('1 de 3 alumnos')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Sin programa/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Sin programa/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    const options = page.locator('.coach-filter-options summary');
+    await expect(options).toContainText('Entrenamiento');
+    await expect(page.getByRole('combobox', { name: 'Servicio', exact: true })).not.toBeVisible();
+    await options.focus();
+    await page.keyboard.press('Enter');
+    await page.getByRole('combobox', { name: 'Ordenar' }).selectOption('name');
+    await options.click();
+    await expect(options).toContainText('Por nombre');
+    await page.reload();
+    await expect(page.getByText('1 de 3 alumnos')).toBeVisible();
+    await expect(options).toContainText('Por nombre');
+    await expect(
+      page.getByRole('link', { name: 'Preparar entrenamiento', exact: true }),
+    ).not.toBeVisible();
+    const moreTasks = page
+      .locator('.coach-row-details summary')
+      .filter({ hasText: '1 tarea más de Ana García', visible: true });
+    await moreTasks.focus();
+    await page.keyboard.press('Enter');
+    const task = page
+      .getByRole('link', { name: 'Preparar entrenamiento', exact: true })
+      .filter({ visible: true });
+    await expect(task).toHaveAttribute('href', /seccion=entrenamiento&lista=/);
+    await noHorizontalOverflow(page);
+    await page.screenshot({
+      path: testInfo.outputPath('roster-task-details.png'),
+      animations: 'disabled',
+    });
+    await task.click();
+    await expect(page.getByRole('link', { name: 'Volver a alumnos' })).toBeVisible();
+    await page.getByRole('link', { name: 'Volver a alumnos' }).click();
+    await expect(page.getByText('1 de 3 alumnos')).toBeVisible();
+    await page.getByRole('button', { name: 'Limpiar filtros', exact: true }).click();
+    await expect(page).toHaveURL(/\/entrenador\/alumnos$/);
+    await expect(page.getByText('3 de 3 alumnos')).toBeVisible();
+    await expect(options).not.toContainText('Entrenamiento');
+    await noHorizontalOverflow(page);
   });
 }
