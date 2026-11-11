@@ -30,16 +30,13 @@ import {
   Plus,
   LogOut,
   GraduationCap,
-  Users,
-  ClipboardList,
-  ChefHat,
-  CreditCard,
 } from 'lucide-react';
 import { ActiveWorkoutBanner } from './workout/ActiveWorkoutBanner';
 import { haptics } from '@/lib/haptics';
 import { useAuth } from '../context/AuthContext';
 import { isPathEnabled } from '../lib/appModules';
 import { useCoachProfile } from '../lib/coach/api';
+import { coachNavItems, coachBottomPaths, isItemActive } from './coach/navigation';
 
 const navItems = [
   {
@@ -88,48 +85,7 @@ const navItems = [
 
 const bottomNavPaths = ['/dashboard', '/tracking', '/nutrition', '/workout'];
 
-/**
- * Una cuenta de entrenador es solo para entrenar a otros: ve sus alumnos, programas, recetas y plan.
- * Si quiere llevar su propio seguimiento, usa otra cuenta.
- */
-const coachNavItems = [
-  {
-    path: '/entrenador',
-    icon: <Users className="w-5 h-5" />,
-    label: 'Alumnos',
-    shortLabel: 'Alumnos',
-  },
-  {
-    path: '/entrenador/programas',
-    icon: <ClipboardList className="w-5 h-5" />,
-    label: 'Programas',
-    shortLabel: 'Programas',
-  },
-  {
-    path: '/entrenador/recetas',
-    icon: <ChefHat className="w-5 h-5" />,
-    label: 'Recetas',
-    shortLabel: 'Recetas',
-  },
-  {
-    path: '/entrenador/plan',
-    icon: <CreditCard className="w-5 h-5" />,
-    label: 'Plan y facturación',
-    shortLabel: 'Plan',
-  },
-  ...navItems.filter((i) => i.path === '/utilities' || i.path === '/settings'),
-];
-const coachBottomPaths = coachNavItems.slice(0, 4).map((i) => i.path);
-/** Personal sections a coach account does not use; they open the coach panel instead. */
 const personalPaths = ['/dashboard', '/tracking', '/nutrition', '/workout'];
-
-/** The client pages belong to «Alumnos»; the other sections also cover their subpages. */
-function isItemActive(itemPath: string, pathname: string) {
-  if (itemPath === '/entrenador') {
-    return pathname === '/entrenador' || pathname.startsWith('/entrenador/alumnos/');
-  }
-  return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
-}
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -197,14 +153,14 @@ export default function Layout() {
   // commits inside its own transition.
   const navigateTo = useCallback(
     (path: string) => {
-      if (location.pathname !== path) {
+      if (`${location.pathname}${location.search}` !== path) {
         haptics.light();
         startTransition(() => {
           navigate(path);
         });
       }
     },
-    [location.pathname, navigate],
+    [location.pathname, location.search, navigate],
   );
 
   // Interceptar cualquier enlace de navegación interna en modo PWA standalone
@@ -333,7 +289,7 @@ export default function Layout() {
                 className="mobile-avatar-btn"
                 aria-label="Cuenta y ajustes"
                 title="Cuenta y ajustes"
-                onClick={() => navigateTo('/settings')}
+                onClick={() => navigateTo(isCoach ? '/entrenador/ajustes' : '/settings')}
               >
                 {user?.picture ? (
                   <img src={user.picture} alt="" referrerPolicy="no-referrer" />

@@ -25,6 +25,7 @@ import {
   markSessionLogoutPending,
 } from '@/auth/sessionBoundary';
 import { clearIdempotencyIntents } from '@/api/idempotency';
+import { clearSessionDrafts } from '@/lib/sessionDrafts';
 
 export interface User {
   email: string;
@@ -61,6 +62,7 @@ export const purgeAllCaches = async () => {
 const CACHED_USER_KEY = 'ascension_cached_user';
 
 const clearLocalSessionData = async () => {
+  clearSessionDrafts();
   clearIdempotencyIntents();
   await switchWorkoutAccount(null);
   for (const kind of ['localStorage', 'sessionStorage'] as const) {
@@ -72,6 +74,7 @@ const clearLocalSessionData = async () => {
         'ascension_custom_color',
         'ascension_theme',
         'ascension_color_mode',
+        'ascension_push_paused',
       ]);
       for (const key of Object.keys(storage)) {
         if ((key.startsWith('ascension_') || key.startsWith('ascension:')) && !preserved.has(key))

@@ -11,11 +11,14 @@ import com.ascension.dto.NutritionPlanDtos.NutritionPlan;
 import com.ascension.dto.NutritionPlanDtos.PlanExport;
 import com.ascension.dto.NutritionPlanDtos.PlanRequest;
 import com.ascension.dto.NutritionPlanDtos.PlannedMeal;
+import com.ascension.dto.NutritionPlanDtos.PublishRequest;
+import com.ascension.dto.NutritionPlanDtos.PlanVersion;
 import com.ascension.exception.EntityNotFoundException;
 import com.ascension.exception.InvalidInputException;
 import com.ascension.service.CoachAccessPolicy.ClientAccess;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -57,7 +61,7 @@ public class NutritionPlanService {
     public Optional<NutritionPlan> current(ClientAccess access) {
         return jdbcTemplate.query("""
                 SELECT %s, u.name, u.email, u.picture FROM nutrition_plans p
-                LEFT JOIN users u ON u.id = p.coach_user_id
+                LEFT JOIN coach_public_profiles u ON u.id = p.coach_user_id
                 WHERE p.coach_link_id = ? AND p.client_user_id = ? AND p.status = 'ACTIVE'
                 """.formatted(COLUMNS), PLAN, access.linkId(), access.clientUserId()).stream().findFirst()
                 .map(this::withMeals);
@@ -65,12 +69,21 @@ public class NutritionPlanService {
 
     @Transactional
     public NutritionPlan set(ClientAccess access, PlanRequest request) {
+        lockClient(access.clientUserId());
+        requireOwnActivePlan(access);
         requireCalories(request.training(), "entreno");
         requireCalories(request.rest(), "descanso");
         List<MealRequest> meals = request.meals() == null ? List.of() : request.meals();
         // Copies the coach's own recipes first: another coach's recipe id is a 404, as an unknown one.
         List<Recipe> recipes = meals.stream().map(m -> recipeService.require(access.coachUserId(), m.recipeId()))
                 .toList();
+        for (int i = 0; i < meals.size(); i++) {
+            Instant expected = meals.get(i).expectedRecipeUpdatedAt();
+            if (expected != null && !expected.equals(recipes.get(i).updatedAt())) {
+                throw new OptimisticLockingFailureException(
+                        "Una receta ha cambiado. Actualiza las recetas y revisa la vista previa antes de publicar.");
+            }
+        }
         endActive(access.clientUserId());
         String notes = request.notes() == null || request.notes().isBlank() ? null : request.notes().strip();
         UUID planId = jdbcTemplate.queryForObject("""
@@ -98,6 +111,7 @@ public class NutritionPlanService {
     /** The coach stops setting targets; the client's own settings apply again. */
     @Transactional
     public void end(ClientAccess access) {
+        lockClient(access.clientUserId());
         int updated = jdbcTemplate.update("""
                 UPDATE nutrition_plans SET status = 'ENDED', ended_at = NOW()
                 WHERE coach_link_id = ? AND client_user_id = ? AND status = 'ACTIVE'
@@ -107,6 +121,66 @@ public class NutritionPlanService {
         }
     }
 
+    @Transactional
+    public NutritionPlan publish(ClientAccess access, PublishRequest request) {
+        requireCurrentVersion(access, request.expectedPlanId());
+        return set(access, request.plan());
+    }
+
+    @Transactional
+    public void endVersion(ClientAccess access, UUID planId) {
+        requireCurrentVersion(access, planId);
+        end(access);
+    }
+
+    private void lockClient(UUID clientId) {
+        jdbcTemplate.queryForObject("SELECT id FROM users WHERE id = ? FOR UPDATE", UUID.class, clientId);
+    }
+
+    private void requireCurrentVersion(ClientAccess access, UUID expectedId) {
+        lockClient(access.clientUserId());
+        UUID actualId = requireOwnActivePlan(access);
+        if (!Objects.equals(expectedId, actualId)) {
+            throw new OptimisticLockingFailureException(
+                    "La pauta activa ha cambiado. Actualiza la ficha antes de publicar o retirar una versión.");
+        }
+    }
+
+    private UUID requireOwnActivePlan(ClientAccess access) {
+        List<UUID> active = jdbcTemplate.queryForList(
+                "SELECT id FROM nutrition_plans WHERE client_user_id = ? AND status = 'ACTIVE'", UUID.class,
+                access.clientUserId());
+        UUID actualId = active.isEmpty() ? null : active.getFirst();
+        boolean own = actualId == null || Boolean.TRUE.equals(jdbcTemplate.queryForObject(
+                "SELECT coach_link_id = ? FROM nutrition_plans WHERE id = ?", Boolean.class,
+                access.linkId(), actualId));
+        if (!own) {
+            throw new OptimisticLockingFailureException(
+                    "El alumno tiene una pauta activa de otro entrenador. Debe finalizarse antes de publicar otra.");
+        }
+        return actualId;
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlanVersion> history(ClientAccess access) {
+        return jdbcTemplate.query("""
+                SELECT %s FROM nutrition_plans p WHERE p.coach_link_id = ? AND p.client_user_id = ?
+                ORDER BY p.created_at DESC, p.id DESC LIMIT 20
+                """.formatted(COLUMNS), (rs, n) -> new PlanVersion(
+                rs.getObject("id", UUID.class), training(rs), rest(rs), rs.getString("status"),
+                instant(rs, "created_at"), instant(rs, "ended_at")), access.linkId(), access.clientUserId());
+    }
+
+    @Transactional(readOnly = true)
+    public NutritionPlan version(ClientAccess access, UUID planId) {
+        return jdbcTemplate.query("""
+                SELECT %s, u.name, u.email, u.picture FROM nutrition_plans p
+                LEFT JOIN coach_public_profiles u ON u.id = p.coach_user_id
+                WHERE p.id = ? AND p.coach_link_id = ? AND p.client_user_id = ?
+                """.formatted(COLUMNS), PLAN, planId, access.linkId(), access.clientUserId()).stream().findFirst()
+                .map(this::withMeals).orElseThrow(() -> new EntityNotFoundException("Pauta no encontrada"));
+    }
+
     /** The plan in force for this user, from a coach they still let edit their nutrition. */
     @Transactional(readOnly = true)
     public Optional<NutritionPlan> inForce(String email) {
@@ -114,7 +188,7 @@ public class NutritionPlanService {
                 SELECT %s, co.name, co.email, co.picture FROM nutrition_plans p
                 JOIN users cu ON cu.id = p.client_user_id
                 JOIN coach_clients cc ON cc.id = p.coach_link_id
-                JOIN users co ON co.id = cc.coach_user_id
+                JOIN coach_public_profiles co ON co.id = cc.coach_user_id
                 WHERE cu.email = ? AND p.status = 'ACTIVE'
                   AND cc.status = 'ACTIVE' AND cc.can_view_nutrition AND cc.can_edit_nutrition
                 """.formatted(COLUMNS), PLAN, Emails.normalize(email)).stream().findFirst().map(this::withMeals);
@@ -124,10 +198,11 @@ public class NutritionPlanService {
     public List<PlanExport> exportFor(UUID userId) {
         return jdbcTemplate.query("""
                 SELECT %s, CASE WHEN p.client_user_id = ? THEN 'CLIENT' ELSE 'COACH' END AS role,
-                       u.name, u.email, u.picture
+                       COALESCE(cp.name, u.name) AS name, u.email, CASE WHEN cp.id IS NULL THEN u.picture ELSE cp.picture END AS picture
                 FROM nutrition_plans p
                 LEFT JOIN users u ON u.id = CASE WHEN p.client_user_id = ? THEN p.coach_user_id
                                                  ELSE p.client_user_id END
+                LEFT JOIN coach_public_profiles cp ON cp.id = u.id AND cp.id = p.coach_user_id
                 WHERE p.client_user_id = ? OR p.coach_user_id = ?
                 ORDER BY p.created_at
                 """.formatted(COLUMNS),

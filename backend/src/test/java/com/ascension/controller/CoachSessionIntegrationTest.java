@@ -117,6 +117,40 @@ class CoachSessionIntegrationTest {
     }
 
     @Test
+    void completesOnboardingFirstSessionAndWeeklyReview() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach), EDIT);
+        mvc.perform(as(put("/api/coach/clients/{link}/setup", link), coach).contentType("application/json")
+                .content("""
+                        {"services":{"training":true,"nutrition":false,"progress":false},
+                         "goal":"Aprender los básicos", "trainingDays":3, "reviewed":true}
+                        """))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.reviewed").value(true));
+        String assignment = assign(coach, link, createProgram(coach), start);
+        String dayId = jdbc.queryForObject("""
+                SELECT d.id::text FROM program_days d JOIN program_assignments a ON a.program_id = d.program_id
+                WHERE a.id = ?::uuid AND d.week = 1
+                """, String.class, assignment);
+        String workout = saveWorkout(client, dayId);
+        mvc.perform(as(get("/api/coach/clients/{link}/programs/{id}/sessions", link, assignment), coach))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].workoutId").value(workout));
+        mvc.perform(as(put("/api/coach/checkin-template"), coach).contentType("application/json")
+                .content("{\"questions\":[\"¿Cómo fue la sesión?\"]}")).andExpect(status().isOk());
+        String review = json.readTree(mvc.perform(as(put("/api/coaching/coaches/{link}/checkin", link), client)
+                .contentType("application/json").content("""
+                        {"energy":4,"sleep":4,"trainingAdherence":5,"answers":["Completada sin molestias"]}
+                        """))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("id").asString();
+        mvc.perform(as(put("/api/coach/clients/{link}/checkins/{id}/reply", link, review), coach)
+                .contentType("application/json").content("{\"reply\":\"Mantenemos la carga esta semana\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(as(get("/api/coaching/coaches/{link}/checkins", link), client))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].coachReply").value("Mantenemos la carga esta semana"));
+        mvc.perform(as(get("/api/ruta-inexistente"), client)).andExpect(status().isNotFound());
+    }
+
+    @Test
     void sessionsAndCommentsStayWithinTheLinkAndItsConsent() throws Exception {
         String coach = coach();
         String client = user();
@@ -171,7 +205,7 @@ class CoachSessionIntegrationTest {
 
     private String createProgram(String coach) throws Exception {
         String program = """
-                {"name":"Fuerza","weeks":2,"days":[
+                {"name":"Fuerza","status":"READY","weeks":2,"days":[
                   {"week":2,"dayIndex":3,"name":"Pierna","exercises":[
                     {"exerciseId":"squat","exerciseName":"Sentadilla","sets":3}]},
                   {"week":1,"dayIndex":1,"name":"Torso","exercises":[

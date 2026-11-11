@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
+import { isAxiosError } from 'axios';
 import { WEEKDAY_LABELS } from './weekdays';
 
 /** Mirrors the backend ProgramDtos: the builder always saves the whole program at once. */
@@ -34,6 +35,7 @@ export interface Program {
   weeks: number;
   days: ProgramDay[];
   updatedAt?: string | null;
+  status?: 'DRAFT' | 'READY';
 }
 
 export interface ProgramSummary {
@@ -42,6 +44,7 @@ export interface ProgramSummary {
   weeks: number;
   dayCount: number;
   updatedAt: string;
+  status?: 'DRAFT' | 'READY';
 }
 
 export const MAX_WEEKS = 52;
@@ -54,6 +57,7 @@ export const emptyProgram = (): Program => ({
   notes: null,
   weeks: 4,
   days: [],
+  status: 'DRAFT',
 });
 
 export const newExercise = (exerciseId: string, exerciseName: string): ProgramExercise => ({
@@ -170,6 +174,67 @@ export function programProblems(program: Program): string[] {
   return problems;
 }
 
+export function publishProblems(program: Program): string[] {
+  const problems = programProblems(program);
+  if (!program.days.length)
+    problems.push('Añade al menos una sesión antes de marcarlo como listo.');
+  for (const day of program.days) {
+    if (!day.exercises.length)
+      problems.push(`Semana ${day.week}, ${day.name}: añade ejercicios o elimina el día vacío.`);
+  }
+  return problems;
+}
+
+export function isProgramDraft(value: unknown): value is Program {
+  if (!value || typeof value !== 'object') return false;
+  const p = value as Record<string, unknown>;
+  return (
+    (p.id === null || typeof p.id === 'string') &&
+    typeof p.name === 'string' &&
+    (p.notes === null || typeof p.notes === 'string') &&
+    typeof p.weeks === 'number' &&
+    Number.isInteger(p.weeks) &&
+    p.weeks >= 1 &&
+    p.weeks <= MAX_WEEKS &&
+    (p.updatedAt == null || typeof p.updatedAt === 'string') &&
+    (p.status === 'DRAFT' || p.status === 'READY' || p.status === undefined) &&
+    Array.isArray(p.days) &&
+    p.days.length <= 140 &&
+    p.days.every((day: unknown) => {
+      if (!day || typeof day !== 'object') return false;
+      const d = day as Record<string, unknown>;
+      return (
+        typeof d.name === 'string' &&
+        (d.notes == null || typeof d.notes === 'string') &&
+        typeof d.week === 'number' &&
+        Number.isInteger(d.week) &&
+        d.week >= 1 &&
+        d.week <= MAX_WEEKS &&
+        typeof d.dayIndex === 'number' &&
+        Number.isInteger(d.dayIndex) &&
+        d.dayIndex >= 1 &&
+        d.dayIndex <= 7 &&
+        Array.isArray(d.exercises) &&
+        d.exercises.length <= MAX_EXERCISES_PER_DAY &&
+        d.exercises.every((exercise: unknown) => {
+          if (!exercise || typeof exercise !== 'object') return false;
+          const e = exercise as Record<string, unknown>;
+          return (
+            typeof e.exerciseId === 'string' &&
+            typeof e.sets === 'number' &&
+            ['exerciseName', 'variantGrip', 'variantMachine', 'loadHint', 'notes'].every(
+              (key) => e[key] == null || typeof e[key] === 'string',
+            ) &&
+            ['repsMin', 'repsMax', 'targetRpe', 'targetRir', 'restSeconds', 'supersetGroup'].every(
+              (key) => e[key] == null || typeof e[key] === 'number',
+            )
+          );
+        })
+      );
+    })
+  );
+}
+
 // ---- API ----
 
 const keys = {
@@ -197,7 +262,7 @@ export function useSaveProgram() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (program: Program) => {
-      const body = { ...program, id: undefined, updatedAt: undefined };
+      const body = { ...program, id: undefined };
       return program.id
         ? (await api.put<Program>(programPath(program.id), body)).data
         : (await api.post<Program>('/coach/programs', body)).data;
@@ -205,6 +270,10 @@ export function useSaveProgram() {
     onSuccess: (saved) => {
       if (saved.id) queryClient.setQueryData(keys.one(saved.id), saved);
       return queryClient.invalidateQueries({ queryKey: keys.list, exact: true });
+    },
+    onError: (error, program) => {
+      if (program.id && isAxiosError(error) && error.response?.status === 409)
+        void queryClient.invalidateQueries({ queryKey: keys.one(program.id) });
     },
   });
 }
@@ -258,8 +327,11 @@ export const useClientAssignments = (linkId: string) =>
 export function useAssignProgram(linkId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (request: { programId: string; startDate: string }) =>
-      (await api.post<ProgramAssignment>(assignmentsPath(linkId), request)).data,
+    mutationFn: async (request: {
+      programId: string;
+      startDate: string;
+      programUpdatedAt?: string | null;
+    }) => (await api.post<ProgramAssignment>(assignmentsPath(linkId), request)).data,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentsKey(linkId) }),
   });
 }
@@ -270,6 +342,32 @@ export function useEndAssignment(linkId: string) {
     mutationFn: async (assignmentId: string) => {
       await api.post(`${assignmentsPath(linkId)}/${encodeURIComponent(assignmentId)}/end`);
     },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentsKey(linkId) }),
+  });
+}
+
+export const useAssignedProgram = (linkId: string, assignmentId: string) =>
+  useQuery({
+    queryKey: [...assignmentsKey(linkId), assignmentId, 'plan'],
+    queryFn: async () =>
+      (
+        await api.get<Program>(
+          `${assignmentsPath(linkId)}/${encodeURIComponent(assignmentId)}/plan`,
+        )
+      ).data,
+    retry: false,
+  });
+
+export function useAdaptProgram(linkId: string, assignmentId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (request: { program: Program; startDate: string }) =>
+      (
+        await api.post<ProgramAssignment>(
+          `${assignmentsPath(linkId)}/${encodeURIComponent(assignmentId)}/adapt`,
+          request,
+        )
+      ).data,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentsKey(linkId) }),
   });
 }

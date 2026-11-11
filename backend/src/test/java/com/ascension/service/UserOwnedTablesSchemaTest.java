@@ -34,6 +34,7 @@ class UserOwnedTablesSchemaTest {
         List<String> userKeyedTables = jdbcTemplate.queryForList(
                 "SELECT DISTINCT table_name FROM information_schema.columns "
                         + "WHERE table_schema = 'public' AND column_name IN ('user_email', 'email') "
+                        + "AND table_name IN (SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE') "
                         + "AND table_name NOT IN ('users', 'flyway_schema_history')",
                 String.class);
 

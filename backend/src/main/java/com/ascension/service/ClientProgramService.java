@@ -42,7 +42,7 @@ public class ClientProgramService {
                 FROM program_assignments a
                 JOIN programs p ON p.id = a.program_id
                 JOIN users u ON u.id = a.client_user_id
-                LEFT JOIN users c ON c.id = a.coach_user_id
+                LEFT JOIN coach_public_profiles c ON c.id = a.coach_user_id
                 WHERE u.email = ? AND a.status = 'ACTIVE' AND p.owner_user_id = u.id
                 ORDER BY a.start_date DESC, a.created_at DESC
                 """,

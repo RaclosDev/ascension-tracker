@@ -1,8 +1,10 @@
+import { scheduleLabel } from '../lib/coach/coachSchedule';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { hasBodyTracking, hasNutrition } from '../lib/appModules';
+import { serviceNames } from '../lib/coach/setup';
 import type { UserSettings } from '../types/api';
 import {
   PERMISSION_LABELS,
@@ -88,14 +90,62 @@ export default function InvitationPage() {
 
       {preview.data && !preview.data.alreadyLinked && (
         <section className="card">
-          <p className="mb-1 text-white">
+          <p className="mb-1 text-foreground">
             <strong>{personName(preview.data.coach)}</strong> quiere ser tu entrenador.
           </p>
           <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
             {preview.data.coach.email}
           </p>
+          {preview.data.coach.picture && (
+            <img
+              src={preview.data.coach.picture}
+              alt=""
+              className="h-14 w-14 rounded-full object-cover mb-3"
+              referrerPolicy="no-referrer"
+            />
+          )}
+          {preview.data.coachPresentation && (
+            <p className="whitespace-pre-wrap break-words mb-4">{preview.data.coachPresentation}</p>
+          )}
+          {preview.data.review && (
+            <p className="mb-4">Revisión semanal: {scheduleLabel(preview.data.review)}</p>
+          )}
+          {preview.data.setup && (
+            <div className="mb-4">
+              <h2 className="font-bold">Servicio propuesto</h2>
+              <p>{serviceNames(preview.data.setup)}</p>
+              {preview.data.setup.goal && (
+                <p className="mt-2 whitespace-pre-wrap">{preview.data.setup.goal}</p>
+              )}
+              {preview.data.setup.services.training && (
+                <dl className="grid gap-2 mt-2 [&_dt]:font-semibold [&_dd]:whitespace-pre-wrap">
+                  {preview.data.setup.experience && (
+                    <div>
+                      <dt>Experiencia</dt>
+                      <dd>{preview.data.setup.experience}</dd>
+                    </div>
+                  )}
+                  {preview.data.setup.trainingDays && (
+                    <div>
+                      <dt>Disponibilidad</dt>
+                      <dd>{preview.data.setup.trainingDays} días por semana</dd>
+                    </div>
+                  )}
+                  {preview.data.setup.equipment && (
+                    <div>
+                      <dt>Material</dt>
+                      <dd>{preview.data.setup.equipment}</dd>
+                    </div>
+                  )}
+                </dl>
+              )}
+              <p className="text-sm mt-2">
+                Revisa el objetivo con tu entrenador. Tú decides a qué datos puede acceder.
+              </p>
+            </div>
+          )}
           <fieldset className="flex flex-col gap-3 mb-4">
-            <legend className="mb-2 font-bold text-white">¿Qué quieres compartir?</legend>
+            <legend className="mb-2 font-bold text-foreground">¿Qué quieres compartir?</legend>
             {SCOPES.some((scope) => preview.data.requested?.[scope]) && (
               <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>
                 Viene marcado lo que te pide tu entrenador. Desmarca lo que no quieras compartir.

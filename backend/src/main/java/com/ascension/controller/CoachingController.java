@@ -134,7 +134,7 @@ public class CoachingController {
     public ResponseEntity<ClientCheckin> checkin(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(checkinService.current(email, linkId, LocalDate.now()));
+        return ResponseEntity.ok(checkinService.current(email, linkId, java.time.Instant.now()));
     }
 
     /** Sends this week's check-in, or changes it while the coach has not replied. */
@@ -143,7 +143,7 @@ public class CoachingController {
                                                @AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        Checkin sent = checkinService.submit(email, linkId, request, LocalDate.now());
+        Checkin sent = checkinService.submit(email, linkId, request, java.time.Instant.now());
         checkinNotifier.submitted(linkId, sent);
         return ResponseEntity.ok(sent);
     }

@@ -15,6 +15,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.UUID;
+import java.util.Map;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -23,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.contains;
 
 /** Weekly check-ins: the coach's questions, the client's answers and the coach's reply. */
 @SpringBootTest
@@ -170,6 +172,77 @@ class CoachCheckinIntegrationTest {
 
     private MockHttpServletRequestBuilder as(MockHttpServletRequestBuilder request, String email) {
         return request.with(jwt().jwt(j -> j.subject(email).claim("email", email)));
+    }
+
+    @Test
+    void nutritionOnlyUsesItsOwnMetricsAndKeepsSubmittedQuestions() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach), WITH_BODY);
+        configure(coach, link, false, true);
+        mvc.perform(as(get(CLIENT_PATH, link), client)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.scoreKeys").value(contains("energy", "sleep", "dietAdherence")))
+                .andExpect(jsonPath("$.questions[3]").value("¿Cómo han ido el hambre y la organización de las comidas?"));
+        mvc.perform(as(put(CLIENT_PATH, link), client).contentType("application/json")
+                .content("{\"energy\":4,\"sleep\":3}")).andExpect(status().isBadRequest());
+        mvc.perform(as(put(CLIENT_PATH, link), client).contentType("application/json").content(CHECKIN))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.trainingAdherence").doesNotExist())
+                .andExpect(jsonPath("$.dietAdherence").value(4));
+        configure(coach, link, true, false);
+        mvc.perform(as(get(CLIENT_PATH, link), client))
+                .andExpect(jsonPath("$.scoreKeys").value(contains("energy", "sleep", "dietAdherence")))
+                .andExpect(jsonPath("$.questions[3]").value("¿Cómo han ido el hambre y la organización de las comidas?"));
+    }
+
+    @Test
+    void trainingOnlyAndUnconfiguredLinksNeverRequireDietScores() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach), WITH_BODY);
+        mvc.perform(as(get(CLIENT_PATH, link), client))
+                .andExpect(jsonPath("$.scoreKeys").value(contains("energy", "sleep")))
+                .andExpect(jsonPath("$.followup.nextDueAt").doesNotExist());
+        configure(coach, link, true, false);
+        mvc.perform(as(get(CLIENT_PATH, link), client))
+                .andExpect(jsonPath("$.scoreKeys").value(contains("energy", "sleep", "trainingAdherence")))
+                .andExpect(jsonPath("$.questions[3]").value("¿Qué sesión o ejercicio necesita un ajuste?"));
+        mvc.perform(as(put(CLIENT_PATH, link), client).contentType("application/json")
+                        .content("{\"energy\":4,\"sleep\":3,\"trainingAdherence\":4}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.trainingAdherence").value(4))
+                .andExpect(jsonPath("$.dietAdherence").doesNotExist());
+    }
+
+    @Test
+    void repliesRejectStaleVersionsAndCannotOverwriteAnExistingReply() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach), WITH_BODY);
+        var sent = json.readTree(mvc.perform(as(put(CLIENT_PATH, link), client)
+                .contentType("application/json").content(CHECKIN)).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+        String id = sent.get("id").asString();
+        String previousVersion = sent.get("updatedAt").asString();
+        var updated = json.readTree(mvc.perform(as(put(CLIENT_PATH, link), client)
+                .contentType("application/json").content(CHECKIN.replace("Semana dura", "Mejor esta semana")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        mvc.perform(as(put(COACH_PATH + "/{id}/reply", link, id), coach).contentType("application/json")
+                        .content(json.writeValueAsString(Map.of("reply", "Antigua", "expectedUpdatedAt", previousVersion))))
+                .andExpect(status().isConflict());
+        String request = json.writeValueAsString(Map.of("reply", "Revisado", "expectedUpdatedAt", updated.get("updatedAt").asString()));
+        mvc.perform(as(put(COACH_PATH + "/{id}/reply", link, id), coach).contentType("application/json").content(request))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.coachReply").value("Revisado"));
+        mvc.perform(as(put(COACH_PATH + "/{id}/reply", link, id), coach).contentType("application/json").content(request))
+                .andExpect(status().isConflict());
+        mvc.perform(as(put(CLIENT_PATH, link), client).contentType("application/json").content(CHECKIN))
+                .andExpect(status().isBadRequest());
+        mvc.perform(as(get(COACH_PATH, link), coach)).andExpect(jsonPath("$[0].notes").value("Mejor esta semana"));
+    }
+
+    private void configure(String coach, String link, boolean training, boolean nutrition) throws Exception {
+        String setup = "{\"services\":{\"training\":" + training + ",\"nutrition\":" + nutrition
+                + ",\"progress\":false},\"reviewed\":true}";
+        mvc.perform(as(put("/api/coach/clients/{link}/setup", link), coach).contentType("application/json").content(setup))
+                .andExpect(status().isOk());
     }
 
     private String invite(String coach) throws Exception {

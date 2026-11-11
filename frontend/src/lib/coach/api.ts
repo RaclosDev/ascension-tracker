@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
 import type { Exercise } from '../workout/types';
+import type { CoachSetup } from './setup';
+import type { CoachFollowup, ReviewSchedule } from './coachSchedule';
 
 export interface CoachPermissions {
   training: boolean;
@@ -19,6 +21,8 @@ export interface CoachPerson {
 }
 
 export interface CoachClient {
+  followup?: CoachFollowup;
+  setup?: CoachSetup | null;
   linkId: string;
   client: CoachPerson;
   permissions: CoachPermissions;
@@ -26,6 +30,8 @@ export interface CoachClient {
 }
 
 export interface MyCoach {
+  coachPresentation?: string;
+  followup?: CoachFollowup;
   linkId: string;
   coach: CoachPerson;
   permissions: CoachPermissions;
@@ -44,6 +50,7 @@ export interface InvitationProfile {
 }
 
 export interface InvitationRequest {
+  setup?: CoachSetup;
   clientName?: string;
   permissions?: CoachPermissions;
   profile?: InvitationProfile;
@@ -63,6 +70,9 @@ export interface CreatedInvitation extends PendingInvitation {
 }
 
 export interface InvitationPreview {
+  coachPresentation?: string;
+  review?: ReviewSchedule;
+  setup?: CoachSetup | null;
   coach: CoachPerson;
   expiresAt: string;
   alreadyLinked: boolean;
@@ -126,7 +136,8 @@ const dateFmt = new Intl.DateTimeFormat('es-ES', {
   month: 'short',
   year: 'numeric',
 });
-export const formatCoachDate = (iso: string) => dateFmt.format(new Date(iso));
+export const formatCoachDate = (iso: string) =>
+  dateFmt.format(new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T12:00:00` : iso));
 
 export const sharedScopes = (permissions: CoachPermissions) =>
   (Object.keys(PERMISSION_LABELS) as (keyof CoachPermissions)[])
@@ -218,6 +229,14 @@ export const useCoachClients = (enabled: boolean) =>
     queryKey: keys.clients,
     enabled,
     queryFn: async () => (await api.get<CoachClient[]>('/coach/clients')).data,
+  });
+
+export const useCoachClient = (linkId: string) =>
+  useQuery({
+    queryKey: ['coach', 'clients', linkId] as const,
+    enabled: !!linkId,
+    queryFn: async () =>
+      (await api.get<CoachClient>(`/coach/clients/${encodeURIComponent(linkId)}`)).data,
   });
 
 export function useEndClient() {

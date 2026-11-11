@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -24,7 +26,7 @@ import java.util.stream.Stream;
  * each client shares with this coach:
  * <ul>
  *   <li>Days since the client last logged anything: amber from 3, red from 7.</li>
- *   <li>Finished weeks without a check-in since the link started: amber for one, red for two.</li>
+ *   <li>Missed scheduled check-ins after the incorporation or resumption grace period: amber for one, red for two.</li>
  *   <li>With nutrition shared, days with food logged in the last seven: amber under 4.</li>
  *   <li>With body data shared and a weight goal that is still over 1 kg away, the average weight of the last
  *       week has moved less than 0.3 kg towards it compared with three weeks earlier: amber.</li>
@@ -51,63 +53,86 @@ public class ClientStatusService {
 
     /** What the query returns per link; dates are null when not shared or never logged. */
     record Facts(UUID linkId, LocalDate since, boolean nutrition, LocalDate lastWorkout, LocalDate lastFood,
-                 LocalDate lastWeight, LocalDate lastCheckin, LocalDate lastCheckinWeek, int pendingReplies,
+                 LocalDate lastWeight, LocalDate lastCheckin, int missingCheckins, int pendingReplies,
                  int foodDays, Double recentWeight, Double earlierWeight, Double goalWeight,
                  boolean needsProgram, boolean needsNutritionPlan) {
     }
 
     @Transactional(readOnly = true)
-    public List<ClientStatus> forCoach(String coachEmail, LocalDate today) {
+    public List<ClientStatus> forCoach(String coachEmail, Instant now) {
+        return statuses(coachEmail, now, null);
+    }
+
+    @Transactional(readOnly = true)
+    public ClientStatus forClient(String coachEmail, UUID linkId, Instant now) {
+        return statuses(coachEmail, now, linkId).stream().findFirst()
+                .orElseThrow(() -> new com.ascension.exception.EntityNotFoundException("Alumno no encontrado"));
+    }
+
+    private List<ClientStatus> statuses(String coachEmail, Instant now, UUID linkId) {
         UUID coachId = requireCoachId(coachEmail);
-        Date weekAgo = Date.valueOf(today.minusDays(7));
-        Date yesterday = Date.valueOf(today.minusDays(1));
-        Date recentFrom = Date.valueOf(today.minusDays(6));
-        Date earlierFrom = Date.valueOf(today.minusDays(STALL_WEEKS * 7L + 6));
-        Date earlierTo = Date.valueOf(today.minusDays(STALL_WEEKS * 7L));
         return jdbcTemplate.query("""
-                SELECT cc.id, cc.created_at::date AS since, cc.can_view_nutrition,
+                SELECT %s, cc.id, clock.today,
+                       cc.coaching_setup IS NOT NULL AS configured,
+                       COALESCE((cc.coaching_setup ->> 'reviewed')::boolean, false) AS reviewed,
+                       cc.can_view_nutrition AND cc.coaching_setup #>> '{services,nutrition}' = 'true' AS can_view_nutrition,
                        CASE WHEN cc.can_view_training THEN (
-                           SELECT MAX(to_timestamp(CASE WHEN t > 100000000000 THEN t / 1000 ELSE t END)::date)
+                           SELECT MAX((to_timestamp(CASE WHEN t > 100000000000 THEN t / 1000 ELSE t END)
+                               AT TIME ZONE cc.review_zone)::date)
                            FROM (SELECT COALESCE(w.finished_at, w.started_at) AS t FROM workouts w
                                  WHERE w.user_email = u.email) x) END AS last_workout,
                        CASE WHEN cc.can_view_nutrition THEN (
                            SELECT MAX(f.log_date) FROM food_logs f WHERE f.user_email = u.email) END AS last_food,
                        CASE WHEN cc.can_view_body THEN (
                            SELECT MAX(we.date) FROM weight_entries we WHERE we.user_email = u.email) END AS last_weight,
-                       (SELECT MAX(c.updated_at)::date FROM checkins c WHERE c.link_id = cc.id) AS last_checkin,
+                       (SELECT (MAX(c.updated_at) AT TIME ZONE cc.review_zone)::date FROM checkins c WHERE c.link_id = cc.id) AS last_checkin,
                        (SELECT MAX(c.week_start) FROM checkins c WHERE c.link_id = cc.id) AS last_checkin_week,
                        (SELECT COUNT(*) FROM checkins c WHERE c.link_id = cc.id AND c.coach_reply IS NULL)
                            AS pending_replies,
                        CASE WHEN cc.can_view_nutrition THEN (
                            SELECT COUNT(DISTINCT f.log_date) FROM food_logs f
-                           WHERE f.user_email = u.email AND f.log_date BETWEEN ? AND ?) ELSE 0 END AS food_days,
+                           WHERE f.user_email = u.email AND f.log_date BETWEEN clock.today - 7 AND clock.today - 1) ELSE 0 END AS food_days,
                        CASE WHEN cc.can_view_body THEN (
                            SELECT AVG(we.weight) FROM weight_entries we
-                           WHERE we.user_email = u.email AND we.date BETWEEN ? AND ?) END AS recent_weight,
+                           WHERE we.user_email = u.email AND we.date BETWEEN clock.today - 6 AND clock.today) END AS recent_weight,
                        CASE WHEN cc.can_view_body THEN (
                            SELECT AVG(we.weight) FROM weight_entries we
-                           WHERE we.user_email = u.email AND we.date BETWEEN ? AND ?) END AS earlier_weight,
+                           WHERE we.user_email = u.email AND we.date BETWEEN clock.today - 27 AND clock.today - 21) END AS earlier_weight,
                        CASE WHEN cc.can_view_body THEN (
                            SELECT s.goal_weight FROM user_settings s
-                           WHERE s.user_email = u.email AND s.weekly_goal <> 0 AND s.goal_weight > 0) END AS goal_weight,
-                       cc.can_edit_training AND NOT EXISTS (
+                           WHERE s.user_email = u.email AND s.weekly_goal <> 0 AND s.goal_weight > 0
+                             AND cc.coaching_setup #>> '{services,progress}' = 'true') END AS goal_weight,
+                       cc.coaching_setup #>> '{services,training}' = 'true' AND cc.can_edit_training AND NOT EXISTS (
                            SELECT 1 FROM program_assignments pa
                            WHERE pa.coach_link_id = cc.id AND pa.status = 'ACTIVE') AS needs_program,
-                       cc.can_edit_nutrition AND NOT EXISTS (
+                       cc.coaching_setup #>> '{services,nutrition}' = 'true' AND cc.can_edit_nutrition AND NOT EXISTS (
                            SELECT 1 FROM nutrition_plans np
                            WHERE np.coach_link_id = cc.id AND np.status = 'ACTIVE') AS needs_nutrition_plan
                 FROM coach_clients cc JOIN users u ON u.id = cc.client_user_id
+                CROSS JOIN LATERAL (SELECT (?::timestamptz AT TIME ZONE cc.review_zone)::date AS today) clock
                 WHERE cc.coach_user_id = ? AND cc.status = 'ACTIVE'
-                """,
-                (rs, n) -> evaluate(new Facts(rs.getObject("id", UUID.class), date(rs.getDate("since")),
+                  AND (?::uuid IS NULL OR cc.id = ?)
+                """.formatted(CoachScheduleService.COLUMNS),
+                (rs, n) -> {
+                    var followup = CoachScheduleService.read(rs, now);
+                    LocalDate since = followup.startedAt().atZone(ZoneId.of(followup.schedule().timeZone())).toLocalDate();
+                    int missing = rs.getBoolean("reviewed")
+                            ? CoachScheduleService.missing(followup, date(rs.getDate("last_checkin_week")), now) : 0;
+                    return configuredStatus(evaluate(new Facts(rs.getObject("id", UUID.class), since,
                         rs.getBoolean("can_view_nutrition"), date(rs.getDate("last_workout")),
                         date(rs.getDate("last_food")), date(rs.getDate("last_weight")),
-                        date(rs.getDate("last_checkin")), date(rs.getDate("last_checkin_week")),
+                        date(rs.getDate("last_checkin")), missing,
                         rs.getInt("pending_replies"), rs.getInt("food_days"),
                         rs.getObject("recent_weight", Double.class), rs.getObject("earlier_weight", Double.class),
                         rs.getObject("goal_weight", Double.class), rs.getBoolean("needs_program"),
-                        rs.getBoolean("needs_nutrition_plan")), today),
-                weekAgo, yesterday, recentFrom, Date.valueOf(today), earlierFrom, earlierTo, coachId);
+                        rs.getBoolean("needs_nutrition_plan")), date(rs.getDate("today"))),
+                            rs.getBoolean("configured") && !followup.schedule().paused());
+                }, java.time.OffsetDateTime.ofInstant(now, java.time.ZoneOffset.UTC), coachId, linkId, linkId);
+    }
+
+    private static ClientStatus configuredStatus(ClientStatus status, boolean configured) {
+        return configured ? status : new ClientStatus(status.linkId(), Level.GREEN, status.lastActivity(),
+                status.pendingReplies(), List.of(), status.weightChange());
     }
 
     static ClientStatus evaluate(Facts facts, LocalDate today) {
@@ -125,7 +150,7 @@ public class ClientStatusService {
             signals.add(new Signal(Reason.INACTIVE, Level.AMBER, idle));
         }
 
-        int missing = missingCheckins(facts, today);
+        int missing = facts.missingCheckins();
         if (missing > 0) {
             signals.add(new Signal(Reason.CHECKIN_MISSING, missing >= 2 ? Level.RED : Level.AMBER, missing));
         }
@@ -169,18 +194,6 @@ public class ClientStatusService {
         }
         double progress = (facts.recentWeight() - facts.earlierWeight()) * Math.signum(distance);
         return progress < STALL_MIN_PROGRESS_KG;
-    }
-
-    /** Finished weeks (last week and the one before) without a check-in, counting only since the link started. */
-    private static int missingCheckins(Facts facts, LocalDate today) {
-        LocalDate firstWeek = CheckinService.weekOf(facts.since());
-        int missing = 0;
-        for (LocalDate week = CheckinService.weekOf(today).minusWeeks(1); missing < 2; week = week.minusWeeks(1)) {
-            if (week.isBefore(firstWeek)) break;
-            if (facts.lastCheckinWeek() != null && !facts.lastCheckinWeek().isBefore(week)) break;
-            missing++;
-        }
-        return missing;
     }
 
     private UUID requireCoachId(String coachEmail) {

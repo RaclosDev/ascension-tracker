@@ -29,12 +29,6 @@ export interface ClientStatus {
 
 export const LEVEL_ORDER: Record<StatusLevel, number> = { RED: 0, AMBER: 1, GREEN: 2 };
 
-export const LEVEL_LABELS: Record<StatusLevel, string> = {
-  RED: 'Necesita atención',
-  AMBER: 'Vigilar',
-  GREEN: 'Al día',
-};
-
 export const LEVEL_COLORS: Record<StatusLevel, string> = {
   RED: 'var(--color-danger)',
   AMBER: 'var(--color-warning)',
@@ -47,12 +41,12 @@ export function signalText({ reason, value }: StatusSignal): string {
       return `${value} días sin registrar nada`;
     case 'CHECKIN_MISSING':
       return value === 1
-        ? 'Falta el check-in de la semana pasada'
+        ? 'Falta un check-in tras la fecha acordada'
         : `${value} semanas sin check-in`;
     case 'FEW_FOOD_LOGS':
       return `Comida registrada ${value} de 7 días`;
     case 'WEIGHT_STALLED':
-      return `Peso estancado en las últimas ${value} semanas`;
+      return `Pocos cambios de peso en las últimas ${value} semanas`;
     case 'NO_PROGRAM':
       return 'Sin programa asignado';
     case 'NO_NUTRITION_PLAN':
@@ -60,11 +54,17 @@ export function signalText({ reason, value }: StatusSignal): string {
   }
 }
 
-export const useClientStatus = (enabled: boolean) =>
+export const useClientStatus = (enabled: boolean, linkId?: string) =>
   useQuery({
-    queryKey: ['coach', 'clients', 'status'] as const,
+    queryKey: linkId ? ['coach', 'clients', 'status', linkId] : ['coach', 'clients', 'status'],
     enabled,
     staleTime: 0,
     refetchOnWindowFocus: true,
-    queryFn: async () => (await api.get<ClientStatus[]>('/coach/clients/status')).data,
+    queryFn: async () =>
+      linkId
+        ? [
+            (await api.get<ClientStatus>(`/coach/clients/${encodeURIComponent(linkId)}/status`))
+              .data,
+          ]
+        : (await api.get<ClientStatus[]>('/coach/clients/status')).data,
   });

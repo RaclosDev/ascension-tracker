@@ -121,7 +121,7 @@ public class CoachSessionService {
                 SELECT c.body, c.updated_at, u.name, u.email, u.picture
                 FROM workout_comments c
                 JOIN workouts w ON w.id = c.workout_id
-                JOIN users u ON u.id = c.coach_user_id
+                JOIN coach_public_profiles u ON u.id = c.coach_user_id
                 WHERE c.workout_id = ? AND w.user_email = ?
                 ORDER BY c.updated_at
                 """,

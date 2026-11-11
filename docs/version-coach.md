@@ -22,7 +22,13 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 **Biblioteca de programas.** El entrenador crea sus programas de entrenamiento por semanas y días. Cada ejercicio lleva series, repeticiones, intensidad, descanso, carga orientativa, superseries y notas. Puede duplicar semanas y días, y copiar programas enteros. Los ejercicios se ordenan arrastrándolos con el ratón o el dedo, o con los botones de subir y bajar.
 
+La biblioteca permite buscar por nombre y separar borradores de programas listos para asignar. Un programa solo se marca como listo si tiene sesiones con ejercicios; la vista previa muestra lo que recibirá el alumno. Los cambios pendientes se recuperan en la misma pestaña durante siete días, separados por cuenta, y se eliminan al guardar, descartar o cerrar sesión. Si otra edición modifica la versión guardada, el entrenador puede conservar su trabajo como un nuevo borrador sin sobrescribirla.
+
 **Asignar un programa.** Si el alumno le da permiso para pautarle entrenos, el entrenador le asigna un programa con fecha de inicio. El alumno recibe su propia copia, así que los cambios posteriores en la biblioteca no le afectan.
+
+Antes de asignar se muestra la versión completa. Si cambia mientras se revisa, hay que actualizar la vista previa antes de enviarla. Sustituir un programa finaliza el anterior inmediatamente, aunque la nueva fecha de inicio sea posterior; la confirmación lo indica y se conservan tanto el historial de asignaciones como los entrenamientos registrados.
+
+**Adaptación individual.** Desde el programa activo de la ficha, «Adaptar» abre la copia del alumno. Permite cambiar las sesiones, previsualizarlas y publicar una nueva versión solo para él, desde la semana 1 y con una fecha entre hoy y los próximos 365 días. La publicación termina inmediatamente la asignación anterior y conserva su copia y sus registros; la biblioteca sigue igual. Los cambios y la fecha se recuperan en la misma pestaña durante siete días. Si la asignación ha terminado o se ha sustituido mientras se editaba, la publicación se rechaza y el borrador se conserva para revisarlo.
 
 **Pantalla «Hoy» del alumno.** El alumno ve qué le toca hoy y empieza el entreno pautado con un toque, con todo precargado. Si le viene mejor, puede hacer hoy otro día de esa semana que aún no haya hecho. También puede entrenar libre o seguir su propia rutina.
 
@@ -38,6 +44,8 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 **Biblioteca de recetas.** El entrenador guarda sus recetas con los macros por ración y las calorías calculadas.
 
+**Publicación e historial.** Editar una pauta prepara un borrador; la vista previa muestra los objetivos y las comidas antes de publicarlos. La confirmación aplica la nueva versión solo a ese alumno y conserva la anterior. El historial permite consultar las últimas 20 versiones, con las recetas tal como se publicaron, aunque después cambien o se borren. Los cambios locales se recuperan en la misma pestaña durante siete días, separados por cuenta. Si la pauta activa cambia mientras se edita, hay que revisar la versión publicada antes de sustituirla. Retirar una pauta también requiere confirmación y devuelve al alumno sus objetivos propios.
+
 **Comidas pautadas.** El entrenador indica qué comer en cada momento del día (desayuno, comida…), con la receta y las raciones, distinto para días de entreno y de descanso. El alumno las ve en su diario y las registra con un solo toque. Si el entrenador borra la receta después, la comida pautada no se pierde.
 
 **Adherencia.** En la ficha del alumno, el entrenador ve semana a semana cómo cumple la pauta: qué días acertó, qué días se salió, cuáles no registró, y el porcentaje de calorías y proteína frente a lo pautado. Un día cuenta como en objetivo si las calorías quedan a ±10 % y la proteína llega al menos al 90 %.
@@ -48,19 +56,37 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 ## Fase 4 — Seguimiento y feedback *(en curso)*
 
-**Check-in semanal.** Cada semana el alumno le cuenta a su entrenador cómo le ha ido: puntúa del 1 al 5 su energía, su sueño y cuánto ha cumplido el entreno y la dieta, y responde a las preguntas que el entrenador haya preparado. Si comparte su cuerpo, se añade solo su peso medio de la semana. Puede corregirlo hasta que el entrenador conteste.
+**Check-in semanal.** Cada semana el alumno puntúa del 1 al 5 su energía y su sueño, y valora el entrenamiento o la nutrición según los servicios acordados. Las preguntas por defecto también se adaptan al servicio; el entrenador puede sustituirlas por su plantilla. Si comparte su cuerpo, se añade su peso medio de la semana. Puede corregirlo hasta que el entrenador conteste. Los check-ins enviados conservan las preguntas y métricas originales aunque cambien los servicios.
 
 **El entrenador responde.** En la ficha del alumno el entrenador ve todos sus check-ins, del más reciente al más antiguo, y contesta a cada uno. El alumno lee la respuesta en su historial, que conserva aunque la relación termine.
+
+**Borradores y fechas.** Las respuestas del entrenador y el formulario del alumno se conservan en la pestaña al navegar o recargar, separados por cuenta y revisión. Se eliminan al enviarlos, descartarlos o cerrar sesión; los borradores guardados caducan a los siete días. Si el navegador impide guardarlos, se avisa y se mantienen en memoria mientras la app siga abierta. Antes de cerrar una pestaña con trabajo sin enviar aparece el aviso del navegador. La revisión muestra las fechas de envío, edición y respuesta. Si el alumno modifica sus respuestas durante la preparación del feedback, el entrenador debe revisarlas antes de enviarlo; una respuesta ya enviada no se sobrescribe.
 
 **Preguntas a medida.** El entrenador decide qué pregunta cada semana (hasta diez preguntas). Si las cambia, los check-ins ya enviados no se tocan.
 
 **Semáforo de alumnos.** La lista de alumnos marca a cada uno en verde (al día), ámbar (vigilar) o rojo (necesita atención), y pone primero a quien más lo necesita. Al lado se lee el motivo: varios días sin registrar nada, el check-in de la semana sin hacer, pocos días con la comida apuntada o un peso que lleva tres semanas sin acercarse a su objetivo. También avisa de los check-ins que el entrenador tiene sin responder. Solo tiene en cuenta lo que el alumno comparte.
 
-**Avisos en el móvil.** Quien active los avisos recibe una notificación cuando pasa algo con el check-in: el entrenador, cuando un alumno se lo envía; el alumno, cuando su entrenador le responde. El domingo por la tarde, quien aún no ha hecho el check-in de la semana recibe un recordatorio. Al tocar el aviso se abre directamente la página correspondiente. Se activan con un botón en el panel del entrenador y en la página del check-in.
+**Avisos en el móvil.** Quien active los avisos recibe una notificación cuando pasa algo con el check-in: el entrenador, cuando un alumno se lo envía; el alumno, cuando su entrenador le responde. El entrenador acuerda el día, la hora y la zona horaria de revisión desde Gestión en cada ficha. Quien aún no haya enviado el check-in recibe un recordatorio a partir de esa fecha (comprobación cada cinco minutos y un aviso como máximo por semana). La agenda semanal se consulta en Revisiones. Una pausa conserva la relación, los permisos y el historial, pero detiene las señales y recordatorios; el alumno sigue ocupando una plaza. La incorporación confirmada, un cambio de horario o la reanudación dan al menos siete días de margen antes del siguiente vencimiento. Al tocar el aviso se abre directamente la página correspondiente. Se activan con un botón en el panel del entrenador y en la página del check-in.
 
 **Fotos de progreso.** En Seguimiento el alumno puede hacerse fotos de frente, de perfil y de espalda y guardarlas con su fecha. Antes de subirlas, el móvil las reduce para que ocupen poco y les quita los datos ocultos, como la ubicación. Se guardan en un almacén privado: solo las ve el alumno y, si comparte su cuerpo, su entrenador, que las encuentra por días en la ficha del alumno. El alumno puede borrar cualquier foto; al borrar la cuenta se borran todas y la descarga de datos incluye la lista de fotos guardadas.
 
 ---
+
+## Ajustes profesionales
+
+En Ajustes del entrenador se define el nombre profesional, una presentación breve y si se muestra la foto de cuenta. La identidad profesional aparece en invitaciones, planes y revisiones, separada del nombre de cuenta. El correo sigue identificando al entrenador.
+
+Los servicios habituales y quién rellena los datos iniciales se proponen al abrir una invitación y pueden adaptarse antes de crearla. El alumno siempre elige sus permisos. El día, la hora y la zona horaria de revisión quedan fijados al crear el enlace: cambiar los valores iniciales no altera invitaciones ya enviadas ni agendas de alumnos actuales. Cada agenda se puede adaptar desde la ficha.
+
+Los cambios sin guardar se conservan como borrador en la pestaña, separados por cuenta. Las ediciones simultáneas se detectan antes de sobrescribir ajustes. La descarga de datos incluye la configuración profesional del titular.
+
+Los avisos solo aparecen como activados cuando el servidor confirma el registro de este dispositivo. Si falla, se puede reintentar. Desactivarlos afecta a revisiones y descansos en este navegador, conserva los avisos en los demás dispositivos y se recuerda al volver a entrar. El sonido de descanso permanece disponible.
+
+## Biblioteca de pautas de nutrición
+
+En Planificación, «Pautas de nutrición» guarda hasta 100 pautas privadas con objetivos para entreno y descanso, notas y comidas opcionales. El editor conserva los cambios pendientes en la pestaña y permite revisar la vista previa antes de guardarlos. Si otra sesión cambia la pauta, puedes recuperar la versión guardada o conservar tu trabajo como una nueva.
+
+Desde Nutrición en la ficha de un alumno, «Usar pauta de biblioteca» copia el contenido a su borrador. Puedes adaptarlo y publicarlo cuando esté listo. Editar o borrar la pauta de biblioteca no cambia las copias ya publicadas. Las comidas guardadas conservan su contenido; al preparar una nueva copia se usan las recetas actuales y hay que sustituir o quitar las que ya no estén disponibles. La descarga de datos incluye la biblioteca del entrenador.
 
 ## Fase 5 — Planes *(en curso)*
 
