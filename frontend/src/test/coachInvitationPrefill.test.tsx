@@ -15,6 +15,7 @@ import CoachClientsPage from '../pages/CoachClientsPage';
 import InvitationPage from '../pages/InvitationPage';
 import OnboardingScreen from '../components/OnboardingScreen';
 import { rememberPendingInvitation } from '../lib/coach/api';
+import { emptySetup } from '../lib/coach/setup';
 
 const TOKEN = 'b'.repeat(43);
 const mockedApi = vi.mocked(api);
@@ -79,8 +80,6 @@ describe('Invitación con datos del entrenador', () => {
     fireEvent.change(screen.getByLabelText(/Nombre del alumno/), {
       target: { value: '  Ana López ' },
     });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Nutrición' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Cuerpo' }));
     fireEvent.click(screen.getByRole('radio', { name: /Yo ahora/ }));
     fireEvent.change(screen.getByLabelText('Sexo'), { target: { value: 'F' } });
     fireEvent.change(screen.getByLabelText('Edad'), { target: { value: '31' } });
@@ -91,6 +90,7 @@ describe('Invitación con datos del entrenador', () => {
       expect(mockedApi.post).toHaveBeenCalledWith('/coach/invitations', {
         clientName: 'Ana López',
         permissions: trainingOnly,
+        setup: emptySetup(),
         profile: {
           sex: 'F',
           age: 31,

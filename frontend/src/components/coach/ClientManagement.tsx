@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { UserMinus } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { ClientSetupForm } from './ClientSetup';
 import {
   PERMISSION_LABELS,
   formatCoachDate,
@@ -16,6 +17,7 @@ export function ClientManagement({ link }: { link: CoachClient }) {
   const navigate = useNavigate();
   return (
     <>
+      <ClientSetupForm key={link.linkId} link={link} />
       <section className="card">
         <h2>Datos de la relación</h2>
         <dl className="coach-facts">

@@ -30,6 +30,7 @@ public class CoachController {
     private final CoachService coachService;
     private final com.ascension.service.ConsentService consentService;
     private final ClientStatusService clientStatusService;
+    private final com.ascension.service.CoachSetupService setupService;
 
     @GetMapping("/profile")
     public ResponseEntity<CoachStatus> profile(@AuthenticationPrincipal Jwt jwt) {
@@ -99,6 +100,15 @@ public class CoachController {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.ok(clientStatusService.forCoach(email, LocalDate.now()));
+    }
+
+    @PutMapping("/clients/{linkId}/setup")
+    public ResponseEntity<com.ascension.dto.CoachSetupDtos.Setup> setup(
+            @PathVariable UUID linkId, @Valid @RequestBody com.ascension.dto.CoachSetupDtos.Setup setup,
+            @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(setupService.save(email, linkId, setup));
     }
 
     @PostMapping("/clients/{linkId}/end")

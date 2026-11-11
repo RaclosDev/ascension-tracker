@@ -6,6 +6,7 @@ import { signalText, useClientStatus } from '../../lib/coach/clientStatus';
 import { useClientAssignments } from '../../lib/coach/coachPrograms';
 import { activityText, followupSignals } from '../../lib/coach/workspace';
 import { QueryErrorNotice } from '../QueryErrorNotice';
+import { ClientSetupSummary } from './ClientSetup';
 
 export function ClientOverview({
   link,
@@ -19,6 +20,7 @@ export function ClientOverview({
   const signals = followupSignals(status);
   return (
     <>
+      <ClientSetupSummary link={link} href={sectionHref('gestion')} />
       {query.isError && (
         <QueryErrorNotice retry={() => void query.refetch()} pending={query.isFetching} />
       )}
@@ -54,7 +56,11 @@ export function ClientOverview({
                   ))}
                 </ul>
               ) : (
-                <p className="coach-description">Sin señales de seguimiento pendientes.</p>
+                <p className="coach-description">
+                  {link.setup
+                    ? 'Sin señales de seguimiento pendientes.'
+                    : 'Configura el servicio para activar las señales de seguimiento.'}
+                </p>
               )}
             </>
           )}
@@ -76,7 +82,7 @@ export function ClientOverview({
         {link.permissions.training && (
           <ProgramOverview link={link} href={sectionHref('entrenamiento')} />
         )}
-        {link.permissions.nutrition && (
+        {link.permissions.nutrition && link.setup?.services.nutrition && (
           <section className="card">
             <h2>Nutrición</h2>
             <p className="coach-description">

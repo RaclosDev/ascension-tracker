@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { CoachSetupFields } from './CoachSetupFields';
+import { emptySetup } from '../../lib/coach/setup';
 import toast from 'react-hot-toast';
 import { Copy, Share2, Trash2 } from 'lucide-react';
 import { QueryErrorNotice } from '../QueryErrorNotice';
@@ -45,9 +47,10 @@ function InvitationForm() {
   const create = useCreateInvitation();
   const [link, setLink] = useState<string | null>(null);
   const [clientName, setClientName] = useState('');
-  const [asks, setAsks] = useState<CoachPermissions>(ASK_ALL);
+  const [asks, setAsks] = useState<CoachPermissions>(ASK_TRAINING);
   const [fillIn, setFillIn] = useState(false);
   const [profile, setProfile] = useState<ProfileForm>(EMPTY_PROFILE);
+  const [setup, setSetup] = useState(emptySetup);
 
   const createLink = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +58,7 @@ function InvitationForm() {
       clientName: clientName.trim() || undefined,
       permissions: asks,
       profile: fillIn ? toProfile(profile) : undefined,
+      setup,
     };
     create.mutate(request, {
       onSuccess: (created) => {
@@ -62,6 +66,8 @@ function InvitationForm() {
         setClientName('');
         setProfile(EMPTY_PROFILE);
         setFillIn(false);
+        setSetup(emptySetup());
+        setAsks(ASK_TRAINING);
       },
       onError: (err) => toast.error(apiErrorMessage(err, 'No se pudo crear la invitación')),
     });
@@ -92,82 +98,105 @@ function InvitationForm() {
 
   return (
     <div className="flex flex-col gap-4">
-      <form onSubmit={createLink} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1">
-          <span className="form-label">Nombre del alumno (opcional, solo lo ves tú)</span>
-          <input
-            className="form-input"
-            maxLength={80}
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-            placeholder="Ej.: Ana López"
-          />
-        </label>
-        <fieldset className="flex flex-col gap-2">
-          <legend className="form-label mb-1">Qué le pides compartir</legend>
-          {SCOPES.map((scope) => (
-            <label key={scope} className="flex items-start gap-3 cursor-pointer">
+      {!link && (
+        <form onSubmit={createLink} className="flex flex-col gap-4">
+          <label className="flex flex-col gap-1">
+            <span className="form-label">Nombre del alumno (opcional)</span>
+            <input
+              className="form-input"
+              maxLength={80}
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              placeholder="Ej.: Ana López"
+            />
+          </label>
+          <CoachSetupFields value={setup} onChange={setSetup} />
+          <fieldset className="flex flex-col gap-2">
+            <legend className="form-label mb-1">Qué le pides compartir</legend>
+            {SCOPES.map((scope) => (
+              <label key={scope} className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={asks[scope]}
+                  disabled={scopeDisabled(asks, scope)}
+                  onChange={(e) => setAsks((p) => withScope(p, scope, e.target.checked))}
+                />
+                <span className="text-foreground">{PERMISSION_LABELS[scope].title}</span>
+              </label>
+            ))}
+            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              Le llegará marcado; tu alumno decide al aceptar.
+            </span>
+          </fieldset>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="form-label mb-1">¿Quién rellena sus datos?</legend>
+            <label className="flex items-center gap-3 cursor-pointer">
               <input
-                type="checkbox"
-                className="mt-1"
-                checked={asks[scope]}
-                disabled={scopeDisabled(asks, scope)}
-                onChange={(e) => setAsks((p) => withScope(p, scope, e.target.checked))}
+                type="radio"
+                name="invitation-fill"
+                checked={!fillIn}
+                onChange={() => setFillIn(false)}
               />
-              <span className="text-foreground">{PERMISSION_LABELS[scope].title}</span>
+              <span className="text-foreground">Mi alumno, al registrarse</span>
             </label>
-          ))}
-          <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Le llegará marcado; tu alumno decide al aceptar.
-          </span>
-        </fieldset>
-        <fieldset className="flex flex-col gap-2">
-          <legend className="form-label mb-1">¿Quién rellena sus datos?</legend>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="radio"
-              name="invitation-fill"
-              checked={!fillIn}
-              onChange={() => setFillIn(false)}
-            />
-            <span className="text-foreground">Mi alumno, al registrarse</span>
-          </label>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="radio"
-              name="invitation-fill"
-              checked={fillIn}
-              onChange={() => setFillIn(true)}
-            />
-            <span className="text-foreground">Yo ahora: solo tendrá que aceptar y registrarse</span>
-          </label>
-        </fieldset>
-        {fillIn && <ProfileFields value={profile} onChange={setProfile} />}
-        <div>
-          <button type="submit" className="btn btn-primary" disabled={create.isPending}>
-            Crear enlace de invitación
-          </button>
-        </div>
-      </form>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="radio"
+                name="invitation-fill"
+                checked={fillIn}
+                onChange={() => setFillIn(true)}
+              />
+              <span className="text-foreground">
+                Yo ahora: solo tendrá que aceptar y registrarse
+              </span>
+            </label>
+          </fieldset>
+          {fillIn && <ProfileFields value={profile} onChange={setProfile} />}
+          <div>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={create.isPending || !Object.values(setup.services).some(Boolean)}
+            >
+              Crear enlace de invitación
+            </button>
+          </div>
+        </form>
+      )}
 
       {link && (
-        <div className="flex flex-col sm:flex-row gap-2">
-          <input
-            readOnly
-            aria-label="Enlace de invitación"
-            value={link}
-            className="form-input flex-1 min-w-0"
-            onFocus={(e) => e.currentTarget.select()}
-          />
-          <button type="button" className="btn btn-secondary" onClick={() => copy(link)}>
-            <Copy size={16} aria-hidden /> Copiar
-          </button>
-          {canShare && (
-            <button type="button" className="btn btn-primary" onClick={() => share(link)}>
-              <Share2 size={16} aria-hidden /> Compartir
+        <section className="flex flex-col gap-4">
+          <div>
+            <h3>Invitación preparada</h3>
+            <p className="coach-description">
+              Copia o comparte el enlace antes de cerrar. Cuando el alumno lo acepte, aparecerá en
+              tu cartera para revisar sus datos y preparar el primer plan.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              readOnly
+              aria-label="Enlace de invitación"
+              value={link}
+              className="form-input flex-1 min-w-0"
+              onFocus={(e) => e.currentTarget.select()}
+            />
+            <button type="button" className="btn btn-secondary" onClick={() => copy(link)}>
+              <Copy size={16} aria-hidden /> Copiar
             </button>
-          )}
-        </div>
+            {canShare && (
+              <button type="button" className="btn btn-primary" onClick={() => share(link)}>
+                <Share2 size={16} aria-hidden /> Compartir
+              </button>
+            )}
+          </div>
+          <div>
+            <button type="button" className="btn btn-secondary" onClick={() => setLink(null)}>
+              Invitar a otro alumno
+            </button>
+          </div>
+        </section>
       )}
     </div>
   );
@@ -218,12 +247,12 @@ export function PendingInvitations() {
 }
 
 const SCOPES = Object.keys(PERMISSION_LABELS) as (keyof CoachPermissions)[];
-const ASK_ALL: CoachPermissions = {
+const ASK_TRAINING: CoachPermissions = {
   training: true,
-  nutrition: true,
-  body: true,
+  nutrition: false,
+  body: false,
   editTraining: true,
-  editNutrition: true,
+  editNutrition: false,
 };
 
 interface ProfileForm {
