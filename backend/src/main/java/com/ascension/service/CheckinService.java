@@ -186,10 +186,11 @@ public class CheckinService {
     public List<CheckinExport> exportFor(UUID userId) {
         return jdbcTemplate.query("""
                 SELECT %s, CASE WHEN c.client_user_id = ? THEN 'CLIENT' ELSE 'COACH' END AS role,
-                       u.name, u.email, u.picture
+                       COALESCE(cp.name, u.name) AS name, u.email, CASE WHEN cp.id IS NULL THEN u.picture ELSE cp.picture END AS picture
                 FROM checkins c
                 LEFT JOIN users u ON u.id = CASE WHEN c.client_user_id = ? THEN c.coach_user_id
                                                  ELSE c.client_user_id END
+                LEFT JOIN coach_public_profiles cp ON cp.id = u.id AND cp.id = c.coach_user_id
                 WHERE c.client_user_id = ? OR c.coach_user_id = ?
                 ORDER BY c.week_start, c.created_at
                 """.formatted(COLUMNS),
@@ -212,7 +213,7 @@ public class CheckinService {
                        co.name, co.email, co.picture, cc.coaching_setup::text AS setup
                 FROM coach_clients cc
                 JOIN users cu ON cu.id = cc.client_user_id
-                JOIN users co ON co.id = cc.coach_user_id
+                JOIN coach_public_profiles co ON co.id = cc.coach_user_id
                 WHERE cc.id = ? AND cc.status = 'ACTIVE' AND cu.email = ?
                 """.formatted(CoachScheduleService.COLUMNS),
                 (rs, n) -> new Link(rs.getObject("id", UUID.class), rs.getObject("coach_user_id", UUID.class),

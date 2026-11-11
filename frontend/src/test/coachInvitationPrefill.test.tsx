@@ -16,6 +16,7 @@ import InvitationPage from '../pages/InvitationPage';
 import OnboardingScreen from '../components/OnboardingScreen';
 import { rememberPendingInvitation } from '../lib/coach/api';
 import { emptySetup } from '../lib/coach/setup';
+import { defaultSchedule } from '../lib/coach/coachSchedule';
 
 const TOKEN = 'b'.repeat(43);
 const mockedApi = vi.mocked(api);
@@ -57,6 +58,15 @@ describe('Invitación con datos del entrenador', () => {
   it('lets the coach name the client, say what to ask for and fill in their details', async () => {
     const responses: Record<string, unknown> = {
       '/coach/profile': { coach: true },
+      '/coach/settings': {
+        displayName: 'Coach',
+        presentation: '',
+        showAccountPhoto: true,
+        services: emptySetup().services,
+        prefill: false,
+        review: defaultSchedule(),
+        version: 0,
+      },
       '/coach/checkin-template': { questions: [], custom: false },
       '/coach/invitations': [
         {
@@ -77,7 +87,7 @@ describe('Invitación con datos del entrenador', () => {
     expect(screen.getByText(/datos rellenados/)).toBeDefined();
     fireEvent.click(screen.getAllByRole('button', { name: /Invitar alumno/ })[0]);
 
-    fireEvent.change(screen.getByLabelText(/Nombre del alumno/), {
+    fireEvent.change(await screen.findByLabelText(/Nombre del alumno/), {
       target: { value: '  Ana López ' },
     });
     fireEvent.click(screen.getByRole('radio', { name: /Yo ahora/ }));

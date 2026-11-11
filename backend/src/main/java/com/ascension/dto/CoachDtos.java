@@ -83,11 +83,12 @@ public final class CoachDtos {
 
     /** {@code requested} is what the coach asked for (pre-ticked); {@code profile} is null when nothing was filled in. */
     public record InvitationPreview(Person coach, Instant expiresAt, boolean alreadyLinked, String clientName,
-                                    Permissions requested, InvitationProfile profile, CoachSetupDtos.Setup setup) {
+                                    Permissions requested, InvitationProfile profile, CoachSetupDtos.Setup setup,
+                                    String coachPresentation, CoachScheduleDtos.Schedule review) {
     }
 
     public record MyCoach(UUID linkId, Person coach, Permissions permissions, Instant since,
-                          CoachScheduleDtos.Followup followup) {
+                          CoachScheduleDtos.Followup followup, String coachPresentation) {
     }
 
     /** Nutrition targets only; biometrics and workout preferences stay private to the client. */

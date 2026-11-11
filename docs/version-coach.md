@@ -72,6 +72,14 @@ Antes de asignar se muestra la versión completa. Si cambia mientras se revisa, 
 
 ---
 
+## Ajustes profesionales
+
+En Ajustes del entrenador se define el nombre profesional, una presentación breve y si se muestra la foto de cuenta. La identidad profesional aparece en invitaciones, planes y revisiones, separada del nombre de cuenta. El correo sigue identificando al entrenador.
+
+Los servicios habituales y quién rellena los datos iniciales se proponen al abrir una invitación y pueden adaptarse antes de crearla. El alumno siempre elige sus permisos. El día, la hora y la zona horaria de revisión quedan fijados al crear el enlace: cambiar los valores iniciales no altera invitaciones ya enviadas ni agendas de alumnos actuales. Cada agenda se puede adaptar desde la ficha.
+
+Los cambios sin guardar se conservan como borrador en la pestaña, separados por cuenta. Las ediciones simultáneas se detectan antes de sobrescribir ajustes. La descarga de datos incluye la configuración profesional del titular.
+
 ## Biblioteca de pautas de nutrición
 
 En Planificación, «Pautas de nutrición» guarda hasta 100 pautas privadas con objetivos para entreno y descanso, notas y comidas opcionales. El editor conserva los cambios pendientes en la pestaña y permite revisar la vista previa antes de guardarlos. Si otra sesión cambia la pauta, puedes recuperar la versión guardada o conservar tu trabajo como una nueva.

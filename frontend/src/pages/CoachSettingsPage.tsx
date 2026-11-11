@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { ProfessionalSettingsEditor } from '../components/coach/ProfessionalSettingsEditor';
 import { CheckinTemplateEditor } from '../components/coach/CheckinTemplateEditor';
 import { PushToggle } from '../components/coach/PushToggle';
 import { CoachPageHeader, CoachWorkspace } from '../components/coach/CoachWorkspace';
@@ -8,8 +9,9 @@ export default function CoachSettingsPage() {
     <CoachWorkspace>
       <CoachPageHeader
         title="Ajustes del entrenador"
-        description="Configura las preguntas de seguimiento y los avisos de tu espacio."
+        description="Tu identidad profesional, los valores iniciales de las incorporaciones y los avisos."
       />
+      <ProfessionalSettingsEditor />
       <div className="coach-settings-grid">
         <CheckinTemplateEditor />
         <div className="flex flex-col gap-5">

@@ -32,6 +32,7 @@ public class UserDataExportService {
     private final ProgramService programService;
     private final CoachRecipeService coachRecipeService;
     private final NutritionTemplateService nutritionTemplateService;
+    private final CoachSettingsService coachSettingsService;
     private final ProgressPhotoService progressPhotoService;
     private final ContactRequestService contactRequestService;
 
@@ -97,6 +98,7 @@ public class UserDataExportService {
                 .programs(programService.exportFor(userEmail))
                 .coachRecipes(coachRecipeService.exportFor(userEmail))
                 .nutritionTemplates(nutritionTemplateService.exportFor(userEmail))
+                .coachSettings(coachSettingsService.exportFor(userEmail))
                 .progressPhotos(progressPhotoService.exportFor(userEmail))
                 .contactRequests(contactRequestService.exportFor(userEmail))
                 .build();

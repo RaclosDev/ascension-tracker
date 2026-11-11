@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
 import type { Exercise } from '../workout/types';
 import type { CoachSetup } from './setup';
-import type { CoachFollowup } from './coachSchedule';
+import type { CoachFollowup, ReviewSchedule } from './coachSchedule';
 
 export interface CoachPermissions {
   training: boolean;
@@ -30,6 +30,7 @@ export interface CoachClient {
 }
 
 export interface MyCoach {
+  coachPresentation?: string;
   followup?: CoachFollowup;
   linkId: string;
   coach: CoachPerson;
@@ -69,6 +70,8 @@ export interface CreatedInvitation extends PendingInvitation {
 }
 
 export interface InvitationPreview {
+  coachPresentation?: string;
+  review?: ReviewSchedule;
   setup?: CoachSetup | null;
   coach: CoachPerson;
   expiresAt: string;
