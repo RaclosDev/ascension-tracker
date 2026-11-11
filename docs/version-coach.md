@@ -22,7 +22,11 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 **Biblioteca de programas.** El entrenador crea sus programas de entrenamiento por semanas y días. Cada ejercicio lleva series, repeticiones, intensidad, descanso, carga orientativa, superseries y notas. Puede duplicar semanas y días, y copiar programas enteros. Los ejercicios se ordenan arrastrándolos con el ratón o el dedo, o con los botones de subir y bajar.
 
+La biblioteca permite buscar por nombre y separar borradores de programas listos para asignar. Un programa solo se marca como listo si tiene sesiones con ejercicios; la vista previa muestra lo que recibirá el alumno. Los cambios pendientes se recuperan en la misma pestaña durante siete días, separados por cuenta, y se eliminan al guardar, descartar o cerrar sesión. Si otra edición modifica la versión guardada, el entrenador puede conservar su trabajo como un nuevo borrador sin sobrescribirla.
+
 **Asignar un programa.** Si el alumno le da permiso para pautarle entrenos, el entrenador le asigna un programa con fecha de inicio. El alumno recibe su propia copia, así que los cambios posteriores en la biblioteca no le afectan.
+
+Antes de asignar se muestra la versión completa. Si cambia mientras se revisa, hay que actualizar la vista previa antes de enviarla. Sustituir un programa finaliza el anterior inmediatamente, aunque la nueva fecha de inicio sea posterior; la confirmación lo indica y se conservan tanto el historial de asignaciones como los entrenamientos registrados.
 
 **Pantalla «Hoy» del alumno.** El alumno ve qué le toca hoy y empieza el entreno pautado con un toque, con todo precargado. Si le viene mejor, puede hacer hoy otro día de esa semana que aún no haya hecho. También puede entrenar libre o seguir su propia rutina.
 

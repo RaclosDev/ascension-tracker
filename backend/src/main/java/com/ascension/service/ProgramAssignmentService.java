@@ -7,6 +7,7 @@ import com.ascension.exception.EntityNotFoundException;
 import com.ascension.exception.InvalidInputException;
 import com.ascension.service.CoachAccessPolicy.ClientAccess;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,7 +59,7 @@ public class ProgramAssignmentService {
         }
         lockLink(access.linkId());
         List<UUID> found = jdbcTemplate.queryForList(
-                "SELECT id FROM programs WHERE id = ? AND owner_user_id = ? AND is_library",
+                "SELECT id FROM programs WHERE id = ? AND owner_user_id = ? AND is_library FOR UPDATE",
                 UUID.class, request.programId(), access.coachUserId());
         if (found.isEmpty()) {
             throw new EntityNotFoundException("Programa no encontrado");
@@ -69,8 +70,15 @@ public class ProgramAssignmentService {
         if (copies != null && copies >= MAX_COPIES_PER_CLIENT) {
             throw new InvalidInputException("Tu alumno ya tiene demasiados programas guardados");
         }
-        endActive(access.linkId());
         Program original = programService.readProgram(request.programId());
+        if (!"READY".equals(original.status())) {
+            throw new InvalidInputException("El programa es un borrador. Márcalo como listo antes de asignarlo.");
+        }
+        ProgramService.validateReady(original);
+        if (request.programUpdatedAt() != null && !request.programUpdatedAt().equals(original.updatedAt())) {
+            throw new OptimisticLockingFailureException("El programa ha cambiado. Revisa la vista previa antes de asignarlo.");
+        }
+        endActive(access.linkId());
         UUID copyId = programService.insertProgram(access.clientUserId(), original, false, original.id());
         UUID id = jdbcTemplate.queryForObject("""
                 INSERT INTO program_assignments (program_id, client_user_id, coach_user_id, coach_link_id,

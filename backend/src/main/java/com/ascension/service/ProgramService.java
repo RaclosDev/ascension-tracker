@@ -8,6 +8,7 @@ import com.ascension.dto.ProgramDtos.ProgramSummary;
 import com.ascension.exception.EntityNotFoundException;
 import com.ascension.exception.InvalidInputException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,14 +43,15 @@ public class ProgramService {
     public List<ProgramSummary> listLibrary(String coachEmail) {
         UUID coachId = coachService.requireCoachId(coachEmail);
         return jdbcTemplate.query("""
-                SELECT p.id, p.name, p.weeks, p.updated_at,
+                SELECT p.id, p.name, p.weeks, p.updated_at, p.library_status,
                        (SELECT COUNT(*) FROM program_days d WHERE d.program_id = p.id) AS day_count
                 FROM programs p
                 WHERE p.owner_user_id = ? AND p.is_library
                 ORDER BY LOWER(p.name), p.created_at
                 """,
                 (rs, n) -> new ProgramSummary(rs.getObject("id", UUID.class), rs.getString("name"),
-                        rs.getInt("weeks"), rs.getInt("day_count"), rs.getTimestamp("updated_at").toInstant()),
+                        rs.getInt("weeks"), rs.getInt("day_count"), rs.getTimestamp("updated_at").toInstant(),
+                        rs.getString("library_status")),
                 coachId);
     }
 
@@ -80,9 +82,13 @@ public class ProgramService {
         UUID coachId = coachService.requireCoachId(coachEmail);
         validate(program);
         requireLibraryProgram(coachId, programId, true);
+        Program current = readProgram(programId);
+        if (program.updatedAt() != null && !program.updatedAt().equals(current.updatedAt())) {
+            throw new OptimisticLockingFailureException("El programa ha cambiado. Recarga la versión guardada antes de editar.");
+        }
         jdbcTemplate.update("""
-                UPDATE programs SET name = ?, notes = ?, weeks = ?, updated_at = NOW() WHERE id = ?
-                """, program.name().trim(), blankToNull(program.notes()), program.weeks(), programId);
+                UPDATE programs SET name = ?, notes = ?, weeks = ?, library_status = ?, updated_at = clock_timestamp() WHERE id = ?
+                """, program.name().trim(), blankToNull(program.notes()), program.weeks(), status(program), programId);
         jdbcTemplate.update("DELETE FROM program_days WHERE program_id = ?", programId);
         insertDays(programId, program.days());
         return readProgram(programId);
@@ -98,7 +104,7 @@ public class ProgramService {
             name += COPY_SUFFIX;
         }
         return createLibraryProgram(coachEmail, new Program(null, name, original.notes(), original.weeks(),
-                original.days(), null));
+                original.days(), null, "DRAFT"));
     }
 
     @Transactional
@@ -126,9 +132,10 @@ public class ProgramService {
     /** Reads a program by id without any ownership check: callers must have checked it. */
     Program readProgram(UUID programId) {
         Program header = jdbcTemplate.queryForObject(
-                "SELECT id, name, notes, weeks, updated_at FROM programs WHERE id = ?",
+                "SELECT id, name, notes, weeks, updated_at, library_status FROM programs WHERE id = ?",
                 (rs, n) -> new Program(rs.getObject("id", UUID.class), rs.getString("name"), rs.getString("notes"),
-                        rs.getInt("weeks"), List.of(), rs.getTimestamp("updated_at").toInstant()),
+                        rs.getInt("weeks"), List.of(), rs.getTimestamp("updated_at").toInstant(),
+                        rs.getString("library_status")),
                 programId);
         Map<UUID, DayRow> days = new LinkedHashMap<>();
         jdbcTemplate.query("""
@@ -151,15 +158,15 @@ public class ProgramService {
         List<Day> dayList = days.values().stream()
                 .map(d -> new Day(d.week(), d.dayIndex(), d.name(), d.notes(), List.copyOf(d.exercises())))
                 .toList();
-        return new Program(header.id(), header.name(), header.notes(), header.weeks(), dayList, header.updatedAt());
+        return new Program(header.id(), header.name(), header.notes(), header.weeks(), dayList, header.updatedAt(), header.status());
     }
 
     UUID insertProgram(UUID ownerId, Program program, boolean library, UUID sourceProgramId) {
         UUID id = jdbcTemplate.queryForObject("""
-                INSERT INTO programs (owner_user_id, name, notes, weeks, is_library, source_program_id)
-                VALUES (?, ?, ?, ?, ?, ?) RETURNING id
+                INSERT INTO programs (owner_user_id, name, notes, weeks, is_library, source_program_id, library_status)
+                VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
                 """, UUID.class, ownerId, program.name().trim(), blankToNull(program.notes()), program.weeks(),
-                library, sourceProgramId);
+                library, sourceProgramId, library ? status(program) : "READY");
         insertDays(id, program.days());
         return id;
     }
@@ -213,6 +220,7 @@ public class ProgramService {
 
     /** Rules the annotations cannot express: days inside the program and one day per slot. */
     static void validate(Program program) {
+        if ("READY".equals(status(program))) validateReady(program);
         Set<String> slots = new HashSet<>();
         for (Day day : program.days()) {
             if (day.week() > program.weeks()) {
@@ -227,6 +235,16 @@ public class ProgramService {
                 }
             }
         }
+    }
+
+    static void validateReady(Program program) {
+        if (program.days().isEmpty() || program.days().stream().anyMatch(day -> day.exercises().isEmpty())) {
+            throw new InvalidInputException("Añade al menos una sesión y ejercicios en cada día antes de marcar el programa como listo.");
+        }
+    }
+
+    private static String status(Program program) {
+        return program.status() == null ? "DRAFT" : program.status();
     }
 
     static Exercise exercise(ResultSet rs) throws SQLException {
