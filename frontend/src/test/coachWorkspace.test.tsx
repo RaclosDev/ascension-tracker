@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import api from '../api/client';
@@ -131,7 +131,12 @@ describe('Espacio del entrenador', () => {
     mockData();
     renderAt('/entrenador/alumnos?orden=name&peso=si');
     const search = await screen.findByRole('searchbox', { name: 'Buscar alumno' });
-    fireEvent.change(search, { target: { value: 'angela' } });
+    act(() => {
+      fireEvent.change(search, { target: { value: 'angela' } });
+      fireEvent.change(screen.getByRole('combobox', { name: 'Ordenar' }), {
+        target: { value: 'name' },
+      });
+    });
     const table = await screen.findByRole('table');
     fireEvent.click(within(table).getByRole('link', { name: 'Ángela' }));
     await screen.findByRole('heading', { name: 'Programa asignado' });
@@ -143,5 +148,20 @@ describe('Espacio del entrenador', () => {
     expect(screen.getByRole('combobox', { name: 'Ordenar' })).toHaveValue('name');
     expect(screen.getByRole('checkbox', { name: 'Mostrar peso' })).toBeChecked();
     expect(within(screen.getByRole('table')).queryByText('Bruno')).not.toBeInTheDocument();
+  });
+
+  it('keeps a review search when changing its view before navigation commits', async () => {
+    mockData();
+    renderAt('/entrenador/revisiones');
+    const search = await screen.findByRole('searchbox');
+    act(() => {
+      fireEvent.change(search, { target: { value: 'Bruno' } });
+      fireEvent.click(screen.getByRole('button', { name: /Pendiente del alumno/ }));
+    });
+    expect(await screen.findByRole('searchbox')).toHaveValue('Bruno');
+    expect(screen.getByRole('button', { name: /Pendiente del alumno/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 });
