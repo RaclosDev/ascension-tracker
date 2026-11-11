@@ -32,6 +32,8 @@ export function DayEditor({
   onRemove: () => void;
   onCopy: (to: { week: number; dayIndex: number }) => void;
 }) {
+  const [initiallyOpen] = useState(() => !compact || day.exercises.length === 0);
+  const [searchInitiallyOpen] = useState(() => day.exercises.length === 0);
   const [copyWeekTarget, setCopyWeekTarget] = useState(day.week);
   const [copyDayTarget, setCopyDayTarget] = useState(day.dayIndex === 7 ? 1 : day.dayIndex + 1);
   const saveTemplate = useSaveProgram();
@@ -41,7 +43,7 @@ export function DayEditor({
     onChange((d) => ({ ...d, exercises: change(d.exercises) }));
 
   return (
-    <details className="card coach-day" open={!compact || day.exercises.length === 0}>
+    <details className="card coach-day" open={initiallyOpen}>
       <summary className="coach-day-summary">
         <span>{label}</span>
         <strong>{day.name || 'Sesión sin nombre'}</strong>
@@ -121,7 +123,7 @@ export function DayEditor({
         )}
 
         {day.exercises.length < MAX_EXERCISES_PER_DAY && (
-          <details open={day.exercises.length === 0} className="coach-add-exercise">
+          <details open={searchInitiallyOpen} className="coach-add-exercise">
             <summary>Añadir ejercicio</summary>
             <ExerciseSearch
               onPick={(ex) => setExercises((list) => [...list, newExercise(ex.id, ex.name)])}

@@ -384,7 +384,10 @@ export function WeekEditor({
                   }}
                 />
               ) : (
-                <div key={dayIndex} className="coach-rest-day flex justify-between gap-2 items-center">
+                <div
+                  key={dayIndex}
+                  className="coach-rest-day flex justify-between gap-2 items-center"
+                >
                   <span>{label} · descanso</span>
                   <button
                     className="btn btn-secondary"

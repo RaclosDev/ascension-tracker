@@ -118,14 +118,28 @@ for (const width of [390, 1920]) {
           ],
         });
       if (path === 'clients/l1/checkins')
-        return route.fulfill({ json: [{
-          id: 'c1', linkId: 'l1', weekStart: '2026-11-09',
-          energy: 2, sleep: 2, trainingAdherence: 4, dietAdherence: 4,
-          notes: 'He dormido peor por los turnos. Necesito ajustar la próxima semana.',
-          answers: [{ question: '¿Cómo te has encontrado?', answer: 'Más cansado en la última sesión.' }],
-          coachReply: 'Mantendremos la descarga y revisaremos la recuperación.',
-          updates: [],
-        }] });
+        return route.fulfill({
+          json: [
+            {
+              id: 'c1',
+              linkId: 'l1',
+              weekStart: '2026-11-09',
+              energy: 2,
+              sleep: 2,
+              trainingAdherence: 4,
+              dietAdherence: 4,
+              notes: 'He dormido peor por los turnos. Necesito ajustar la próxima semana.',
+              answers: [
+                {
+                  question: '¿Cómo te has encontrado?',
+                  answer: 'Más cansado en la última sesión.',
+                },
+              ],
+              coachReply: 'Mantendremos la descarga y revisaremos la recuperación.',
+              updates: [],
+            },
+          ],
+        });
       if (path === 'clients/l1/programs/a1/plan') return route.fulfill({ json: previous });
       if (path === 'clients/l1/weeks/2026-11-16') {
         if (route.request().method() === 'PUT') {
@@ -149,7 +163,9 @@ for (const width of [390, 1920]) {
     await page.getByText('Objetivo y material', { exact: true }).click();
     await expect(goal).toBeVisible();
     await page.getByText('Objetivo y material', { exact: true }).click();
-    await expect(page.getByText('He dormido peor por los turnos. Necesito ajustar la próxima semana.')).toBeVisible();
+    await expect(
+      page.getByText('He dormido peor por los turnos. Necesito ajustar la próxima semana.'),
+    ).toBeVisible();
     const reply = page.getByText('Mantendremos la descarga y revisaremos la recuperación.');
     await expect(reply).toBeHidden();
     await page.getByText('Respuestas y conversación', { exact: true }).focus();
