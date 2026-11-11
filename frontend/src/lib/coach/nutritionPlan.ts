@@ -78,26 +78,76 @@ export const useCoachNutritionPlan = (linkId: string) =>
 export function useSetNutritionPlan(linkId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (request: NutritionPlanRequest) =>
+    mutationFn: async (request: { plan: NutritionPlanRequest; expectedPlanId: string | null }) =>
       (
-        await api.put<NutritionPlan>(
-          `/coach/clients/${encodeURIComponent(linkId)}/nutrition-plan`,
+        await api.post<NutritionPlan>(
+          `/coach/clients/${encodeURIComponent(linkId)}/nutrition-plan/publish`,
           request,
         )
       ).data,
-    onSuccess: (plan) => queryClient.setQueryData(coachKey(linkId), plan),
+    onSuccess: (plan) => {
+      queryClient.setQueryData(coachKey(linkId), plan);
+      void queryClient.invalidateQueries({ queryKey: [...coachKey(linkId), 'history'] });
+      void queryClient.invalidateQueries({ queryKey: ['coach', 'client', linkId, 'targets'] });
+      void queryClient.invalidateQueries({
+        queryKey: ['coach', 'client', linkId, 'nutrition-adherence'],
+      });
+    },
   });
 }
 
 export function useEndNutritionPlan(linkId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async () => {
-      await api.delete(`/coach/clients/${encodeURIComponent(linkId)}/nutrition-plan`);
+    mutationFn: async (planId: string) => {
+      await api.post(
+        `/coach/clients/${encodeURIComponent(linkId)}/nutrition-plan/${encodeURIComponent(planId)}/end`,
+      );
     },
-    onSuccess: () => queryClient.setQueryData(coachKey(linkId), null),
+    onSuccess: () => {
+      queryClient.setQueryData(coachKey(linkId), null);
+      void queryClient.invalidateQueries({ queryKey: [...coachKey(linkId), 'history'] });
+      void queryClient.invalidateQueries({ queryKey: ['coach', 'client', linkId, 'targets'] });
+      void queryClient.invalidateQueries({
+        queryKey: ['coach', 'client', linkId, 'nutrition-adherence'],
+      });
+    },
   });
 }
+
+export interface NutritionPlanVersion {
+  id: string;
+  training: DayTargets;
+  rest: DayTargets;
+  status: 'ACTIVE' | 'ENDED';
+  createdAt: string;
+  endedAt: string | null;
+}
+
+export const useNutritionPlanHistory = (linkId: string, enabled: boolean) =>
+  useQuery({
+    queryKey: [...coachKey(linkId), 'history'],
+    enabled,
+    retry: false,
+    queryFn: async () =>
+      (
+        await api.get<NutritionPlanVersion[]>(
+          `/coach/clients/${encodeURIComponent(linkId)}/nutrition-plan/history`,
+        )
+      ).data,
+  });
+
+export const useNutritionPlanVersion = (linkId: string, planId: string) =>
+  useQuery({
+    queryKey: [...coachKey(linkId), 'version', planId],
+    retry: false,
+    queryFn: async () =>
+      (
+        await api.get<NutritionPlan>(
+          `/coach/clients/${encodeURIComponent(linkId)}/nutrition-plan/history/${encodeURIComponent(planId)}`,
+        )
+      ).data,
+  });
 
 /** The plan a coach set for the signed-in user, while in force. */
 export const useMyNutritionPlan = () =>
