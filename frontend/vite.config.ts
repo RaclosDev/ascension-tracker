@@ -22,6 +22,7 @@ export default defineConfig({
           '**/Coach*Page*',
           '**/CoachWorkspace-*',
           '**/ClientTraining-*',
+          '**/ClientPowerlifting-*',
           '**/ClientProgress-*',
           '**/ClientPrograms-*',
           '**/ClientNutrition-*',

@@ -58,6 +58,9 @@ class UserDataExportServiceTest {
     private CoachSettingsService coachSettingsService;
 
     @Mock
+    private PowerliftingService powerliftingService;
+
+    @Mock
     private ProgressPhotoService progressPhotoService;
 
     @Mock
