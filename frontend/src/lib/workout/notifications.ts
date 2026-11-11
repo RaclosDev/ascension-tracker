@@ -4,7 +4,28 @@ import { getWorkoutAccountRevision } from './accountIdentity';
 import { showRestPush } from './pushPayload';
 
 let audio: HTMLAudioElement | null = null;
-let pushSubscribed = false;
+let subscribedRevision: number | null = null;
+let subscriptionInFlight: { revision: number; promise: Promise<boolean> } | null = null;
+let pausedInMemory = false;
+const PUSH_PAUSED_KEY = 'ascension_push_paused';
+
+export function pushNotificationsPaused(): boolean {
+  try {
+    return pausedInMemory || localStorage.getItem(PUSH_PAUSED_KEY) === 'true';
+  } catch {
+    return pausedInMemory;
+  }
+}
+
+function setPushPaused(paused: boolean) {
+  pausedInMemory = paused;
+  try {
+    if (paused) localStorage.setItem(PUSH_PAUSED_KEY, 'true');
+    else localStorage.removeItem(PUSH_PAUSED_KEY);
+  } catch {
+    /* Keep the choice for this session when storage is unavailable. */
+  }
+}
 
 /**
  * Call from a user gesture (e.g. completing a set): preloads the bell, asks for notification
@@ -28,15 +49,8 @@ export async function initAudioAndNotifications() {
     }
   }
 
-  if ('Notification' in window && !pushSubscribed) {
-    if (Notification.permission === 'default') {
-      const perm = await Notification.requestPermission();
-      if (perm === 'granted') {
-        await subscribeToPush();
-      }
-    } else if (Notification.permission === 'granted') {
-      await subscribeToPush();
-    }
+  if (!pushNotificationsPaused() && subscribedRevision !== getWorkoutAccountRevision()) {
+    await enablePushNotifications();
   }
 }
 
@@ -78,7 +92,8 @@ export async function dismissRestNotifications() {
  * Replaces any existing notification with the same tag instead of accumulating in the system tray.
  */
 export async function notifyRestFinished() {
-  if (typeof window === 'undefined' || !('Notification' in window)) return;
+  if (typeof window === 'undefined' || !('Notification' in window) || pushNotificationsPaused())
+    return;
 
   if (Notification.permission === 'granted') {
     const tag =
@@ -112,19 +127,32 @@ export async function notifyRestFinished() {
  * to Web Push. Resolves to whether the device ends up subscribed.
  */
 export async function enablePushNotifications(): Promise<boolean> {
-  if (typeof window === 'undefined' || !('Notification' in window)) return false;
-  if (Notification.permission === 'default') await Notification.requestPermission();
-  if (Notification.permission !== 'granted') return false;
-  await subscribeToPush();
-  return pushSubscribed;
+  if (
+    typeof window === 'undefined' ||
+    !('Notification' in window) ||
+    !('serviceWorker' in navigator)
+  )
+    return false;
+  const revision = getWorkoutAccountRevision();
+  try {
+    if (Notification.permission === 'default') await Notification.requestPermission();
+    if (Notification.permission !== 'granted' || revision !== getWorkoutAccountRevision())
+      return false;
+    if (subscriptionInFlight?.revision === revision) return await subscriptionInFlight.promise;
+    const promise = subscribeToPush(revision);
+    subscriptionInFlight = { revision, promise };
+    return await promise;
+  } catch {
+    return false;
+  } finally {
+    if (subscriptionInFlight?.revision === revision) subscriptionInFlight = null;
+  }
 }
 
-async function subscribeToPush() {
-  if (pushSubscribed) return;
-
+async function subscribeToPush(revision: number): Promise<boolean> {
   try {
-    const reg = await navigator.serviceWorker?.ready;
-    if (!reg) return;
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg?.active || !reg.pushManager) return false;
 
     let sub = await reg.pushManager.getSubscription();
 
@@ -134,7 +162,7 @@ async function subscribeToPush() {
 
       if (!vapidKey) {
         console.warn('No VAPID key from server');
-        return;
+        return false;
       }
 
       const applicationServerKey = urlBase64ToUint8Array(vapidKey);
@@ -146,6 +174,7 @@ async function subscribeToPush() {
     }
 
     const subJSON = sub.toJSON();
+    if (revision !== getWorkoutAccountRevision()) return false;
     await api.post('/push/subscribe', {
       endpoint: subJSON.endpoint,
       keys: {
@@ -154,10 +183,26 @@ async function subscribeToPush() {
       },
     });
 
-    pushSubscribed = true;
+    if (revision !== getWorkoutAccountRevision()) return false;
+    subscribedRevision = revision;
+    setPushPaused(false);
+    return true;
   } catch (e: unknown) {
     console.warn('Push subscription failed', e instanceof Error ? e.message : String(e));
+    return false;
   }
+}
+
+export async function disablePushNotifications(): Promise<void> {
+  const revision = getWorkoutAccountRevision();
+  await subscriptionInFlight?.promise;
+  const reg = await navigator.serviceWorker?.getRegistration();
+  const subscription = await reg?.pushManager?.getSubscription();
+  if (revision !== getWorkoutAccountRevision()) throw new Error('La sesión ha cambiado');
+  if (subscription) await api.post('/push/unsubscribe', { endpoint: subscription.endpoint });
+  if (revision !== getWorkoutAccountRevision()) throw new Error('La sesión ha cambiado');
+  subscribedRevision = null;
+  setPushPaused(true);
 }
 
 let timerQueue: Promise<void> = Promise.resolve();

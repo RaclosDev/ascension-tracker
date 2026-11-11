@@ -74,6 +74,7 @@ const clearLocalSessionData = async () => {
         'ascension_custom_color',
         'ascension_theme',
         'ascension_color_mode',
+        'ascension_push_paused',
       ]);
       for (const key of Object.keys(storage)) {
         if ((key.startsWith('ascension_') || key.startsWith('ascension:')) && !preserved.has(key))
