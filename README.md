@@ -46,7 +46,8 @@ Aplicación full-stack con Java y React: desde el registro de una serie en el gi
 - **Entrenar:** crear rutinas, registrar series y variantes, consultar historial y récords, y controlar los descansos con avisos push. El entreno en curso se conserva localmente entre recargas.
 - **Registrar comidas:** buscar alimentos, escanear códigos de barras, guardar recetas y seguir calorías y macros. Gemini ayuda a estimar comidas a partir de una foto y propone recetas; las estimaciones se pueden revisar antes de guardarlas.
 - **Ver el progreso:** peso, pasos y resúmenes semanales, junto con fotos privadas y mapa de recuperación muscular. Importación de sesiones desde Hevy y exportación/restauración de datos.
-- **Trabajar como entrenador:** espacio independiente con alumnos, revisiones pendientes y señales de seguimiento. Permite asignar programas de entrenamiento y pautas nutricionales, revisar el cumplimiento y responder check-ins semanales.
+- **Trabajar como entrenador:** inicio con tareas pendientes, cartera de alumnos, agenda de revisiones y ajustes profesionales. Bibliotecas de programas y pautas nutricionales con versiones, adaptación individual, borradores y permisos de cada alumno.
+- **Preparar powerlifting:** perfiles y marcas de sentadilla, banca y peso muerto; competiciones con bloques y nueve intentos; seguimiento de cargas, volumen y RPE desde las sesiones. Las estimaciones de fuerza y los totales de competición se muestran por separado. [Funcionamiento y límites](docs/powerlifting.md).
 - **Empezar como alumno:** invitación del entrenador, configuración inicial guiada y permisos para decidir qué datos compartir y qué puede pautar el entrenador.
 - **Acceder a la cuenta:** Google, email y contraseña, o llaves de acceso (*passkeys*), con recuperación de contraseña por correo.
 

@@ -19,6 +19,7 @@ const ClientProgress = lazyWithRetry(() => import('../components/coach/ClientPro
 const ClientPrograms = lazyWithRetry(() => import('../components/coach/ClientPrograms'));
 const ClientTraining = lazyWithRetry(() => import('../components/coach/ClientTraining'));
 const ClientNutrition = lazyWithRetry(() => import('../components/coach/ClientNutrition'));
+const ClientPowerlifting = lazyWithRetry(() => import('../components/coach/ClientPowerlifting'));
 
 export default function CoachClientPage() {
   const { linkId = '' } = useParams();
@@ -48,6 +49,7 @@ export default function CoachClientPage() {
   const sections = [
     { id: 'resumen', label: 'Resumen', visible: true },
     { id: 'entrenamiento', label: 'Entrenamiento', visible: link?.permissions.training },
+    { id: 'powerlifting', label: 'Powerlifting', visible: link?.permissions.training },
     { id: 'nutricion', label: 'Nutrición', visible: link?.permissions.nutrition },
     { id: 'progreso', label: 'Progreso', visible: link?.permissions.body },
     { id: 'revisiones', label: 'Revisiones', visible: true },
@@ -111,6 +113,9 @@ export default function CoachClientPage() {
               )}
               {section === 'nutricion' && link.permissions.nutrition && (
                 <ClientNutrition linkId={linkId} canEditPlan={link.permissions.editNutrition} />
+              )}
+              {section === 'powerlifting' && link.permissions.training && (
+                <ClientPowerlifting linkId={linkId} canEdit={link.permissions.editTraining} />
               )}
               {section === 'progreso' && link.permissions.body && (
                 <ClientProgress linkId={linkId} />

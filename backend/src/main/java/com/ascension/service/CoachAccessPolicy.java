@@ -26,6 +26,8 @@ public class CoachAccessPolicy {
         VIEW_STEPS(Scope.BODY),
         VIEW_PHOTOS(Scope.BODY),
         VIEW_WORKOUTS(Scope.TRAINING),
+        VIEW_POWERLIFTING(Scope.TRAINING),
+        EDIT_POWERLIFTING(Scope.EDIT_TRAINING),
         VIEW_NUTRITION(Scope.NUTRITION),
         VIEW_TARGETS(Scope.NUTRITION),
         VIEW_PROGRAMS(Scope.TRAINING),
