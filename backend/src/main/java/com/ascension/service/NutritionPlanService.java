@@ -11,11 +11,14 @@ import com.ascension.dto.NutritionPlanDtos.NutritionPlan;
 import com.ascension.dto.NutritionPlanDtos.PlanExport;
 import com.ascension.dto.NutritionPlanDtos.PlanRequest;
 import com.ascension.dto.NutritionPlanDtos.PlannedMeal;
+import com.ascension.dto.NutritionPlanDtos.PublishRequest;
+import com.ascension.dto.NutritionPlanDtos.PlanVersion;
 import com.ascension.exception.EntityNotFoundException;
 import com.ascension.exception.InvalidInputException;
 import com.ascension.service.CoachAccessPolicy.ClientAccess;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -65,6 +69,7 @@ public class NutritionPlanService {
 
     @Transactional
     public NutritionPlan set(ClientAccess access, PlanRequest request) {
+        lockClient(access.clientUserId());
         requireCalories(request.training(), "entreno");
         requireCalories(request.rest(), "descanso");
         List<MealRequest> meals = request.meals() == null ? List.of() : request.meals();
@@ -98,6 +103,7 @@ public class NutritionPlanService {
     /** The coach stops setting targets; the client's own settings apply again. */
     @Transactional
     public void end(ClientAccess access) {
+        lockClient(access.clientUserId());
         int updated = jdbcTemplate.update("""
                 UPDATE nutrition_plans SET status = 'ENDED', ended_at = NOW()
                 WHERE coach_link_id = ? AND client_user_id = ? AND status = 'ACTIVE'
@@ -105,6 +111,61 @@ public class NutritionPlanService {
         if (updated == 0) {
             throw new EntityNotFoundException("Plan de nutrición no encontrado");
         }
+    }
+
+    @Transactional
+    public NutritionPlan publish(ClientAccess access, PublishRequest request) {
+        requireCurrentVersion(access, request.expectedPlanId());
+        return set(access, request.plan());
+    }
+
+    @Transactional
+    public void endVersion(ClientAccess access, UUID planId) {
+        requireCurrentVersion(access, planId);
+        end(access);
+    }
+
+    private void lockClient(UUID clientId) {
+        jdbcTemplate.queryForObject("SELECT id FROM users WHERE id = ? FOR UPDATE", UUID.class, clientId);
+    }
+
+    private void requireCurrentVersion(ClientAccess access, UUID expectedId) {
+        lockClient(access.clientUserId());
+        List<UUID> active = jdbcTemplate.queryForList(
+                "SELECT id FROM nutrition_plans WHERE client_user_id = ? AND status = 'ACTIVE'", UUID.class,
+                access.clientUserId());
+        UUID actualId = active.isEmpty() ? null : active.getFirst();
+        boolean own = actualId == null || Boolean.TRUE.equals(jdbcTemplate.queryForObject(
+                "SELECT coach_link_id = ? FROM nutrition_plans WHERE id = ?", Boolean.class,
+                access.linkId(), actualId));
+        if (!own) {
+            throw new OptimisticLockingFailureException(
+                    "El alumno tiene una pauta activa de otro entrenador. Debe finalizarse antes de publicar otra.");
+        }
+        if (!Objects.equals(expectedId, actualId)) {
+            throw new OptimisticLockingFailureException(
+                    "La pauta activa ha cambiado. Actualiza la ficha antes de publicar o retirar una versión.");
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlanVersion> history(ClientAccess access) {
+        return jdbcTemplate.query("""
+                SELECT %s FROM nutrition_plans p WHERE p.coach_link_id = ? AND p.client_user_id = ?
+                ORDER BY p.created_at DESC, p.id DESC LIMIT 20
+                """.formatted(COLUMNS), (rs, n) -> new PlanVersion(
+                rs.getObject("id", UUID.class), training(rs), rest(rs), rs.getString("status"),
+                instant(rs, "created_at"), instant(rs, "ended_at")), access.linkId(), access.clientUserId());
+    }
+
+    @Transactional(readOnly = true)
+    public NutritionPlan version(ClientAccess access, UUID planId) {
+        return jdbcTemplate.query("""
+                SELECT %s, u.name, u.email, u.picture FROM nutrition_plans p
+                LEFT JOIN users u ON u.id = p.coach_user_id
+                WHERE p.id = ? AND p.coach_link_id = ? AND p.client_user_id = ?
+                """.formatted(COLUMNS), PLAN, planId, access.linkId(), access.clientUserId()).stream().findFirst()
+                .map(this::withMeals).orElseThrow(() -> new EntityNotFoundException("Pauta no encontrada"));
     }
 
     /** The plan in force for this user, from a coach they still let edit their nutrition. */

@@ -44,6 +44,8 @@ Antes de asignar se muestra la versión completa. Si cambia mientras se revisa, 
 
 **Biblioteca de recetas.** El entrenador guarda sus recetas con los macros por ración y las calorías calculadas.
 
+**Publicación e historial.** Editar una pauta prepara un borrador; la vista previa muestra los objetivos y las comidas antes de publicarlos. La confirmación aplica la nueva versión solo a ese alumno y conserva la anterior. El historial permite consultar las últimas 20 versiones, con las recetas tal como se publicaron, aunque después cambien o se borren. Los cambios locales se recuperan en la misma pestaña durante siete días, separados por cuenta. Si la pauta activa cambia mientras se edita, hay que revisar la versión publicada antes de sustituirla. Retirar una pauta también requiere confirmación y devuelve al alumno sus objetivos propios.
+
 **Comidas pautadas.** El entrenador indica qué comer en cada momento del día (desayuno, comida…), con la receta y las raciones, distinto para días de entreno y de descanso. El alumno las ve en su diario y las registra con un solo toque. Si el entrenador borra la receta después, la comida pautada no se pierde.
 
 **Adherencia.** En la ficha del alumno, el entrenador ve semana a semana cómo cumple la pauta: qué días acertó, qué días se salió, cuáles no registró, y el porcentaje de calorías y proteína frente a lo pautado. Un día cuenta como en objetivo si las calorías quedan a ±10 % y la proteína llega al menos al 90 %.

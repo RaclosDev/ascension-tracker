@@ -71,6 +71,13 @@ public final class NutritionPlanDtos {
             @Size(max = 20, message = "Máximo 20 comidas pautadas") List<@Valid @NotNull MealRequest> meals) {
     }
 
+    public record PublishRequest(@Valid @NotNull PlanRequest plan, UUID expectedPlanId) {
+    }
+
+    public record PlanVersion(UUID id, DayTargets training, DayTargets rest, String status,
+                              Instant createdAt, Instant endedAt) {
+    }
+
     /** What the client logged on one day. */
     public record Intake(int kcal, double protein, double carbs, double fat) {
     }

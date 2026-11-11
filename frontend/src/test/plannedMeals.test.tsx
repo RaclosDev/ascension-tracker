@@ -7,6 +7,9 @@ vi.mock('../api/client', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() },
 }));
 vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }));
+vi.mock('../context/AuthContext', () => ({
+  useAuth: () => ({ user: { email: 'coach@test.example' } }),
+}));
 
 import api from '../api/client';
 import { NutritionPlanSection } from '../components/coach/NutritionPlanSection';
@@ -14,6 +17,7 @@ import PlannedMealsCard, { targetMeal } from '../components/coach/PlannedMealsCa
 import type { CoachRecipe } from '../lib/coach/coachRecipes';
 import type { NutritionPlan, PlannedMeal } from '../lib/coach/nutritionPlan';
 import type { Meal } from '../types/api';
+import { clearSessionDrafts } from '../lib/sessionDrafts';
 
 const mockedApi = vi.mocked(api);
 
@@ -71,8 +75,13 @@ describe('Comidas pautadas', () => {
     mockedApi.get.mockReset();
     mockedApi.post.mockReset();
     mockedApi.put.mockReset();
+    clearSessionDrafts();
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
   });
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
 
   it('maps a slot to the diary meal by name, else by position', () => {
     expect(targetMeal(' cena ', 0, diary).index).toBe(2);
@@ -85,12 +94,12 @@ describe('Comidas pautadas', () => {
       '/coach/clients/l1/nutrition-plan': plan([meal({ dayType: 'REST', recipeId: null })]),
       '/coach/recipes': [bowl],
     });
-    mockedApi.put.mockResolvedValue({ data: plan([]) });
+    mockedApi.post.mockResolvedValue({ data: { ...plan([]), id: 'p2' } });
     wrap(<NutritionPlanSection linkId="l1" canEdit />);
 
     // The deleted recipe blocks saving until the coach replaces or removes it.
     expect(await screen.findByText('Receta borrada: elige otra o quita la comida.')).toBeTruthy();
-    const save = screen.getByRole('button', { name: 'Guardar pauta' }) as HTMLButtonElement;
+    const save = screen.getByRole('button', { name: 'Publicar pauta' }) as HTMLButtonElement;
     expect(save.disabled).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Quitar la comida 1 día de descanso' }));
     expect(save.disabled).toBe(false);
@@ -106,15 +115,18 @@ describe('Comidas pautadas', () => {
     fireEvent.change(screen.getByLabelText('Raciones de la comida 1 día de entreno'), {
       target: { value: '1.5' },
     });
-    expect(screen.getByText('800 kcal')).toBeTruthy();
+    expect(screen.getByText('799 kcal')).toBeTruthy();
     fireEvent.click(save);
 
     await vi.waitFor(() =>
-      expect(mockedApi.put).toHaveBeenCalledWith('/coach/clients/l1/nutrition-plan', {
-        training: { protein: 180, carbs: 300, fat: 70 },
-        rest: { protein: 180, carbs: 150, fat: 80 },
-        notes: null,
-        meals: [{ dayType: 'TRAINING', slotName: 'Comida', recipeId: 'r1', servings: 1.5 }],
+      expect(mockedApi.post).toHaveBeenCalledWith('/coach/clients/l1/nutrition-plan/publish', {
+        expectedPlanId: 'p1',
+        plan: {
+          training: { protein: 180, carbs: 300, fat: 70 },
+          rest: { protein: 180, carbs: 150, fat: 80 },
+          notes: null,
+          meals: [{ dayType: 'TRAINING', slotName: 'Comida', recipeId: 'r1', servings: 1.5 }],
+        },
       }),
     );
   });

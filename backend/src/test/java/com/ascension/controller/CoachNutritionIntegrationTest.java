@@ -270,6 +270,81 @@ class CoachNutritionIntegrationTest {
                 .andExpect(status().is2xxSuccessful());
     }
 
+    @Test
+    void publicationKeepsHistoryAndRejectsStaleUpdatesAndWithdrawals() throws Exception {
+        String coach = coach();
+        String link = accept(user(), invite(coach), EDIT_ALL);
+        String first = json.readTree(mvc.perform(as(post(PATH + "/publish", link), coach)
+                        .contentType("application/json").content("{\"plan\":" + PLAN + "}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("id").asText();
+        String updated = PLAN.replace("180", "190");
+        String second = json.readTree(mvc.perform(as(post(PATH + "/publish", link), coach)
+                        .contentType("application/json")
+                        .content("{\"plan\":" + updated + ",\"expectedPlanId\":\"" + first + "\"}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("id").asText();
+        mvc.perform(as(post(PATH + "/publish", link), coach).contentType("application/json")
+                .content("{\"plan\":" + PLAN + ",\"expectedPlanId\":\"" + first + "\"}"))
+                .andExpect(status().isConflict());
+        mvc.perform(as(post(PATH + "/{id}/end", link, first), coach)).andExpect(status().isConflict());
+        mvc.perform(as(get(PATH + "/history", link), coach)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(second)).andExpect(jsonPath("$[0].status").value("ACTIVE"))
+                .andExpect(jsonPath("$[1].id").value(first)).andExpect(jsonPath("$[1].status").value("ENDED"));
+        mvc.perform(as(get(PATH + "/history/{id}", link, first), coach))
+                .andExpect(jsonPath("$.training.protein").value(180));
+        mvc.perform(as(get(PATH, link), coach)).andExpect(jsonPath("$.training.protein").value(190));
+        mvc.perform(as(post(PATH + "/{id}/end", link, second), coach)).andExpect(status().isNoContent());
+        mvc.perform(as(get(PATH + "/history", link), coach))
+                .andExpect(jsonPath("$[0].status").value("ENDED"));
+    }
+
+    @Test
+    void archivedRecipesStayReadableButHistoryNeverCrossesLinksOrPermissions() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach), EDIT_ALL);
+        String otherLink = accept(user(), invite(coach), EDIT_ALL);
+        String recipeId = recipe(coach, "Comida original", "30", "40", "10");
+        String withMeal = PLAN.strip().substring(0, PLAN.strip().length() - 1) + """
+                ,"meals":[{"dayType":"TRAINING","slotName":"Comida","recipeId":"%s","servings":2}]}
+                """.formatted(recipeId);
+        String id = json.readTree(mvc.perform(as(post(PATH + "/publish", link), coach)
+                        .contentType("application/json").content("{\"plan\":" + withMeal + "}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("id").asText();
+        mvc.perform(as(post(PATH + "/{id}/end", link, id), coach)).andExpect(status().isNoContent());
+        mvc.perform(as(delete("/api/coach/recipes/{id}", recipeId), coach)).andExpect(status().isNoContent());
+        mvc.perform(as(get(PATH + "/history/{id}", link, id), coach))
+                .andExpect(jsonPath("$.meals[0].name").value("Comida original"))
+                .andExpect(jsonPath("$.meals[0].protein").value(60))
+                .andExpect(jsonPath("$.meals[0].recipeId").doesNotExist());
+        mvc.perform(as(get(PATH + "/history/{id}", otherLink, id), coach)).andExpect(status().isNotFound());
+        mvc.perform(as(get(PATH + "/history", link), coach())).andExpect(status().isNotFound());
+        mvc.perform(as(patch("/api/coaching/coaches/{id}", link), client)
+                .contentType("application/json").content(VIEW_ONLY)).andExpect(status().isNoContent());
+        mvc.perform(as(get(PATH + "/history", link), coach)).andExpect(status().isOk());
+        mvc.perform(as(post(PATH + "/publish", link), coach).contentType("application/json")
+                .content("{\"plan\":" + PLAN + "}")).andExpect(status().isForbidden());
+        mvc.perform(as(post(PATH + "/{id}/end", link, id), coach)).andExpect(status().isForbidden());
+        mvc.perform(as(patch("/api/coaching/coaches/{id}", link), client)
+                .contentType("application/json").content(EDIT_WITHOUT_VIEW)).andExpect(status().isNoContent());
+        mvc.perform(as(get(PATH + "/history", link), coach)).andExpect(status().isForbidden());
+        mvc.perform(as(get(PATH + "/history/{id}", link, id), coach)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void publicationDoesNotOverwriteAnotherCoachsActivePlan() throws Exception {
+        String coach = coach();
+        String other = coach();
+        String client = user();
+        String link = accept(client, invite(coach), EDIT_ALL);
+        String otherLink = accept(client, invite(other), EDIT_ALL);
+        mvc.perform(as(post(PATH + "/publish", link), coach).contentType("application/json")
+                .content("{\"plan\":" + PLAN + "}")).andExpect(status().isOk());
+        mvc.perform(as(post(PATH + "/publish", otherLink), other).contentType("application/json")
+                .content("{\"plan\":" + PLAN + "}")).andExpect(status().isConflict());
+        mvc.perform(as(get(PATH, link), coach)).andExpect(status().isOk());
+    }
+
     private String recipe(String coach, String name, String protein, String carbs, String fat) throws Exception {
         String body = "{\"name\":\"" + name + "\",\"description\":\"Receta de prueba\",\"protein\":" + protein
                 + ",\"carbs\":" + carbs + ",\"fat\":" + fat + "}";

@@ -3,6 +3,8 @@ package com.ascension.controller;
 import com.ascension.dto.NutritionPlanDtos.AdherenceWeek;
 import com.ascension.dto.NutritionPlanDtos.NutritionPlan;
 import com.ascension.dto.NutritionPlanDtos.PlanRequest;
+import com.ascension.dto.NutritionPlanDtos.PublishRequest;
+import com.ascension.dto.NutritionPlanDtos.PlanVersion;
 import com.ascension.service.CoachAccessPolicy;
 import com.ascension.service.CoachAccessPolicy.Action;
 import com.ascension.service.NutritionAdherenceService;
@@ -58,6 +60,40 @@ public class CoachNutritionController {
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.ok(adherenceService.weeks(accessPolicy.require(email, linkId, Action.VIEW_NUTRITION),
                 Math.max(1, Math.min(12, weeks)), LocalDate.now()));
+    }
+
+    @PostMapping("/publish")
+    public ResponseEntity<NutritionPlan> publish(@PathVariable UUID linkId,
+                                                @Valid @RequestBody PublishRequest request,
+                                                @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(planService.publish(
+                accessPolicy.require(email, linkId, Action.SET_NUTRITION_PLAN), request));
+    }
+
+    @PostMapping("/{planId}/end")
+    public ResponseEntity<Void> endVersion(@PathVariable UUID linkId, @PathVariable UUID planId,
+                                          @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        planService.endVersion(accessPolicy.require(email, linkId, Action.SET_NUTRITION_PLAN), planId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<List<PlanVersion>> history(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(planService.history(accessPolicy.require(email, linkId, Action.VIEW_TARGETS)));
+    }
+
+    @GetMapping("/history/{planId}")
+    public ResponseEntity<NutritionPlan> version(@PathVariable UUID linkId, @PathVariable UUID planId,
+                                                @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(planService.version(accessPolicy.require(email, linkId, Action.VIEW_TARGETS), planId));
     }
 
     @DeleteMapping
