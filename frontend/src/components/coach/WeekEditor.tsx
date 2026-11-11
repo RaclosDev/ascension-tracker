@@ -117,11 +117,21 @@ export function WeekEditor({
                 ? 'Borrador guardado'
                 : 'Semana sin preparar'}
         </p>
+        <p className="coach-week-counts">
+          {program.days.length} {program.days.length === 1 ? 'sesión' : 'sesiones'} ·{' '}
+          {program.days
+            .flatMap((day) => day.exercises)
+            .reduce((sum, exercise) => sum + exercise.sets, 0)}{' '}
+          series · {INTENTS[value.content.intent]}
+        </p>
         {source && (
-          <p className="text-sm">
-            Origen para copiar: {source.programName}. Solo se copian los días vigentes de esa
-            semana.
-          </p>
+          <details className="coach-week-source">
+            <summary>Origen de la copia</summary>
+            <p className="text-sm">
+              Origen para copiar: {source.programName}. Solo se copian los días vigentes de esa
+              semana.
+            </p>
+          </details>
         )}
         {value.content.decision && (
           <p>
@@ -267,68 +277,71 @@ export function WeekEditor({
             </p>
           )}
         </div>
-        <div className="card grid gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 min-w-0">
-            Nombre
-            <input
-              className="form-input min-h-11"
-              maxLength={120}
-              value={program.name}
-              onChange={(e) => editProgram({ ...program, name: e.target.value })}
-            />
-          </label>
-          <label data-tour="week-intent" className="flex flex-col gap-1 min-w-0">
-            Objetivo de la semana
-            <select
-              className="form-input min-h-11"
-              value={value.content.intent}
-              onChange={(e) =>
-                edit({ ...value.content, intent: e.target.value as WeekContent['intent'] })
-              }
-            >
-              {Object.entries(INTENTS).map(([id, label]) => (
-                <option key={id} value={id}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label data-tour="week-comment" className="sm:col-span-2 flex flex-col gap-1 min-w-0">
-            Comentario para el alumno
-            <textarea
-              className="form-input min-h-11"
-              maxLength={2000}
-              rows={2}
-              value={program.notes ?? ''}
-              onChange={(e) => editProgram({ ...program, notes: e.target.value || null })}
-              placeholder="Por ejemplo: semana de descarga; prioriza técnica y recuperación."
-            />
-          </label>
-          <label className="sm:col-span-2 flex flex-col gap-1 min-w-0">
-            Decisión que aplicar al publicar
-            <textarea
-              className="form-input min-h-11"
-              maxLength={2000}
-              rows={2}
-              value={value.content.decision}
-              onChange={(e) => edit({ ...value.content, decision: e.target.value })}
-            />
-          </label>
-          <details data-tour="week-private" className="sm:col-span-2">
-            <summary className="cursor-pointer">Notas privadas del entrenador</summary>
-            <textarea
-              aria-label="Notas privadas del entrenador"
-              className="w-full mt-2 form-input min-h-11"
-              rows={3}
-              maxLength={4000}
-              value={value.content.privateNotes}
-              onChange={(e) => edit({ ...value.content, privateNotes: e.target.value })}
-            />
-            <p className="text-sm">
-              Solo tú puedes ver estas notas. No forman parte de la pauta del alumno.
-            </p>
-          </details>
-        </div>
+        <details className="card coach-week-notes">
+          <summary>Objetivo y notas de la semana</summary>
+          <div className="grid gap-4 sm:grid-cols-2 pt-4">
+            <label className="flex flex-col gap-1 min-w-0">
+              Nombre
+              <input
+                className="form-input min-h-11"
+                maxLength={120}
+                value={program.name}
+                onChange={(e) => editProgram({ ...program, name: e.target.value })}
+              />
+            </label>
+            <label data-tour="week-intent" className="flex flex-col gap-1 min-w-0">
+              Objetivo de la semana
+              <select
+                className="form-input min-h-11"
+                value={value.content.intent}
+                onChange={(e) =>
+                  edit({ ...value.content, intent: e.target.value as WeekContent['intent'] })
+                }
+              >
+                {Object.entries(INTENTS).map(([id, label]) => (
+                  <option key={id} value={id}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label data-tour="week-comment" className="sm:col-span-2 flex flex-col gap-1 min-w-0">
+              Comentario para el alumno
+              <textarea
+                className="form-input min-h-11"
+                maxLength={2000}
+                rows={2}
+                value={program.notes ?? ''}
+                onChange={(e) => editProgram({ ...program, notes: e.target.value || null })}
+                placeholder="Por ejemplo: semana de descarga; prioriza técnica y recuperación."
+              />
+            </label>
+            <label className="sm:col-span-2 flex flex-col gap-1 min-w-0">
+              Decisión que aplicar al publicar
+              <textarea
+                className="form-input min-h-11"
+                maxLength={2000}
+                rows={2}
+                value={value.content.decision}
+                onChange={(e) => edit({ ...value.content, decision: e.target.value })}
+              />
+            </label>
+            <details data-tour="week-private" className="sm:col-span-2">
+              <summary className="cursor-pointer">Notas privadas del entrenador</summary>
+              <textarea
+                aria-label="Notas privadas del entrenador"
+                className="w-full mt-2 form-input min-h-11"
+                rows={3}
+                maxLength={4000}
+                value={value.content.privateNotes}
+                onChange={(e) => edit({ ...value.content, privateNotes: e.target.value })}
+              />
+              <p className="text-sm">
+                Solo tú puedes ver estas notas. No forman parte de la pauta del alumno.
+              </p>
+            </details>
+          </div>
+        </details>
         {preview ? (
           <ProgramPreview program={program} />
         ) : (
@@ -341,6 +354,7 @@ export function WeekEditor({
               return day ? (
                 <DayEditor
                   key={dayIndex}
+                  compact
                   label={`${label} ${format(addDays(parseISO(saved.weekStart), i), 'dd/MM')}`}
                   day={day}
                   weeks={1}
@@ -370,7 +384,7 @@ export function WeekEditor({
                   }}
                 />
               ) : (
-                <div key={dayIndex} className="card flex justify-between gap-2 items-center">
+                <div key={dayIndex} className="coach-rest-day flex justify-between gap-2 items-center">
                   <span>{label} · descanso</span>
                   <button
                     className="btn btn-secondary"

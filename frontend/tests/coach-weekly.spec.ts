@@ -10,6 +10,9 @@ for (const width of [390, 1920]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.clock.setFixedTime(new Date('2026-11-11T12:00:00Z'));
     await setupAuthMocks(page);
+    await page.addInitScript((dark) => {
+      localStorage.setItem('ascension_color_mode', dark ? 'dark' : 'light');
+    }, width === 1920);
     await page.route('**/api/passkeys', (route) => route.fulfill({ json: [] }));
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
@@ -71,6 +74,11 @@ for (const width of [390, 1920]) {
             linkId: 'l1',
             client: { name: 'Alumno de prueba', email: 'athlete@example.test' },
             since: '2026-10-01',
+            setup: {
+              trainingDays: 4,
+              goal: 'Recuperar rendimiento y mejorar la técnica durante la descarga.',
+              equipment: 'Gimnasio completo y discos fraccionados.',
+            },
             permissions: {
               training: true,
               editTraining: true,
@@ -109,6 +117,15 @@ for (const width of [390, 1920]) {
             },
           ],
         });
+      if (path === 'clients/l1/checkins')
+        return route.fulfill({ json: [{
+          id: 'c1', linkId: 'l1', weekStart: '2026-11-09',
+          energy: 2, sleep: 2, trainingAdherence: 4, dietAdherence: 4,
+          notes: 'He dormido peor por los turnos. Necesito ajustar la próxima semana.',
+          answers: [{ question: '¿Cómo te has encontrado?', answer: 'Más cansado en la última sesión.' }],
+          coachReply: 'Mantendremos la descarga y revisaremos la recuperación.',
+          updates: [],
+        }] });
       if (path === 'clients/l1/programs/a1/plan') return route.fulfill({ json: previous });
       if (path === 'clients/l1/weeks/2026-11-16') {
         if (route.request().method() === 'PUT') {
@@ -126,6 +143,20 @@ for (const width of [390, 1920]) {
       return route.fulfill({ json: [] });
     });
     await page.goto('/entrenador/alumnos/l1');
+    await expect(page.getByText('4 días de entrenamiento por semana')).toBeVisible();
+    const goal = page.getByText('Recuperar rendimiento y mejorar la técnica durante la descarga.');
+    await expect(goal).toBeHidden();
+    await page.getByText('Objetivo y material', { exact: true }).click();
+    await expect(goal).toBeVisible();
+    await page.getByText('Objetivo y material', { exact: true }).click();
+    await expect(page.getByText('He dormido peor por los turnos. Necesito ajustar la próxima semana.')).toBeVisible();
+    const reply = page.getByText('Mantendremos la descarga y revisaremos la recuperación.');
+    await expect(reply).toBeHidden();
+    await page.getByText('Respuestas y conversación', { exact: true }).focus();
+    await page.keyboard.press('Enter');
+    await expect(reply).toBeVisible();
+    await page.keyboard.press('Enter');
+    await expect(reply).toBeHidden();
     const previousPrograms = page.getByText('Programas anteriores de esta semana (1)', {
       exact: true,
     });
@@ -135,7 +166,14 @@ for (const width of [390, 1920]) {
     await expect(previousHeading).toBeVisible();
     await previousPrograms.click();
     await page.getByRole('button', { name: 'Copiar semana anterior' }).click();
+    const session = page.locator('.coach-day').filter({ hasText: 'Torso' });
+    await expect(page.getByLabel('Nombre del día (Lunes 16/11)')).toBeHidden();
+    await expect(session.locator(':scope > summary')).toContainText('1 ejercicio · 3 series');
+    await page.screenshot({ path: info.outputPath('weekly-compact.png'), fullPage: true });
+    await session.locator(':scope > summary').click();
     await expect(page.getByLabel('Nombre del día (Lunes 16/11)')).toHaveValue('Torso');
+    await expect(page.getByPlaceholder('Añadir ejercicio: nombre o etiqueta')).toBeHidden();
+    await page.getByText('Objetivo y notas de la semana', { exact: true }).click();
     await page
       .getByLabel('Comentario para el alumno')
       .fill('Descarga: mantén la técnica y reduce la fatiga.');
@@ -144,8 +182,14 @@ for (const width of [390, 1920]) {
       .getByLabel('Notas privadas del entrenador')
       .fill('Revisar disponibilidad del miércoles.');
     await page.getByLabel('Objetivo de la semana').selectOption('DELOAD');
+    await expect(page.getByLabel('Carga (kg)', { exact: true })).toBeHidden();
+    await page.getByText('Editar pauta', { exact: true }).click();
     await page.getByLabel('Carga (kg)', { exact: true }).fill('45');
+    await page.screenshot({ path: info.outputPath('weekly-editing.png'), fullPage: true });
     await page.reload();
+    await page.locator('.coach-day > summary').filter({ hasText: 'Torso' }).click();
+    await page.getByText('Editar pauta', { exact: true }).click();
+    await page.getByText('Objetivo y notas de la semana', { exact: true }).click();
     await expect(page.getByLabel('Carga (kg)', { exact: true })).toHaveValue('45');
     await page.getByText('Notas privadas del entrenador', { exact: true }).click();
     await expect(page.getByLabel('Notas privadas del entrenador')).toHaveValue(

@@ -9,6 +9,7 @@ import { CheckinsSection } from '../components/coach/CheckinsSection';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import '../styles/coach-workspace.css';
+import '../styles/coach-student.css';
 
 const ClientProgress = lazyWithRetry(() => import('../components/coach/ClientProgress'));
 const ClientPrograms = lazyWithRetry(() => import('../components/coach/ClientPrograms'));
@@ -63,7 +64,7 @@ export default function CoachClientPage() {
   ].filter((s) => s.visible);
 
   return (
-    <div className="fade-in coach-page coach-workspace">
+    <div className="fade-in coach-page coach-workspace coach-student">
       <Link to={backTo} className="coach-back-link">
         <ArrowLeft size={16} aria-hidden />
         {params.get('origen') === 'revisiones' ? 'Volver a revisiones' : 'Volver a alumnos'}
@@ -87,14 +88,29 @@ export default function CoachClientPage() {
             <div className="min-w-0">
               <h1 className="coach-client-name">{personName(link.client)}</h1>
               <p className="coach-description">
-                {[
-                  link.setup?.goal,
-                  link.setup?.trainingDays ? `${link.setup.trainingDays} días por semana` : null,
-                  link.setup?.equipment,
-                ]
-                  .filter(Boolean)
-                  .join(' · ') || 'Completa su objetivo y disponibilidad en Ficha y gestión.'}
+                {link.setup?.trainingDays
+                  ? `${link.setup.trainingDays} días de entrenamiento por semana`
+                  : 'Sin disponibilidad definida'}
               </p>
+              {(link.setup?.goal || link.setup?.equipment) && (
+                <details className="coach-client-context">
+                  <summary>Objetivo y material</summary>
+                  <dl className="coach-facts">
+                    {link.setup.goal && (
+                      <div>
+                        <dt>Objetivo</dt>
+                        <dd>{link.setup.goal}</dd>
+                      </div>
+                    )}
+                    {link.setup.equipment && (
+                      <div>
+                        <dt>Material</dt>
+                        <dd>{link.setup.equipment}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </details>
+              )}
             </div>
             {section !== 'revisiones' && (
               <Link to={sectionHref('revisiones')} className="btn btn-primary">
@@ -160,3 +176,4 @@ export default function CoachClientPage() {
     </div>
   );
 }
+
