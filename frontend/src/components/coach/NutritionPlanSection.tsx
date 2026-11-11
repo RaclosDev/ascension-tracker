@@ -1,3 +1,4 @@
+import { confirmAction } from '../../lib/confirmation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useSessionDraft } from '@/hooks/useSessionDraft';
@@ -94,12 +95,16 @@ function PlanForm({
   );
   const ready = request !== null && !missingRecipe;
 
-  const submit = () => {
+  const submit = async () => {
     if (!request || !ready || stale || busy) return;
     if (
-      !window.confirm(
-        '¿Publicar esta pauta solo para este alumno? Se aplicará ahora y sustituirá la anterior, que se conservará en el historial.',
-      )
+      !(await confirmAction({
+        title: 'Publicar pauta nutricional',
+        description:
+          '¿Publicar esta pauta solo para este alumno? Se aplicará ahora y sustituirá la anterior, que se conservará en el historial.',
+        confirmLabel: 'Publicar pauta',
+        destructive: false,
+      }))
     )
       return;
     setError(null);
@@ -126,13 +131,17 @@ function PlanForm({
     );
   };
 
-  const remove = () => {
+  const remove = async () => {
     if (
       !plan ||
       busy ||
-      !window.confirm(
-        '¿Retirar la pauta activa? El alumno volverá a usar sus propios objetivos. Se conserva el historial y se descarta el borrador local.',
-      )
+      !(await confirmAction({
+        title: 'Retirar pauta nutricional',
+        description:
+          '¿Retirar la pauta activa? El alumno volverá a usar sus propios objetivos. Se conserva el historial y se descarta el borrador local.',
+        confirmLabel: 'Retirar pauta',
+        destructive: true,
+      }))
     )
       return;
     setError(null);
@@ -232,8 +241,15 @@ function PlanForm({
             type="button"
             className="btn btn-secondary"
             disabled={busy}
-            onClick={() => {
-              if (window.confirm('¿Descartar los cambios locales y volver a la pauta publicada?')) {
+            onClick={async () => {
+              if (
+                await confirmAction({
+                  title: 'Descartar cambios',
+                  description: '¿Descartar los cambios locales y volver a la pauta publicada?',
+                  confirmLabel: 'Descartar cambios',
+                  destructive: true,
+                })
+              ) {
                 draft.clear();
                 setPreview(false);
                 setError(null);

@@ -1,3 +1,5 @@
+import { confirmAction } from '../lib/confirmation';
+vi.mock('../lib/confirmation', () => ({ confirmAction: vi.fn().mockResolvedValue(true) }));
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -470,7 +472,7 @@ describe('CoachClientPage', () => {
   it('assigns a library program from a start date', async () => {
     mockClient({ ...clientLink.permissions, editTraining: true, editNutrition: false });
     mockedApi.post.mockResolvedValue({ data: {} });
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    vi.mocked(confirmAction).mockResolvedValue(true);
     renderAt('/entrenador/alumnos/link-9?seccion=entrenamiento', routes);
 
     const select = await screen.findByLabelText('Programa');
@@ -487,6 +489,6 @@ describe('CoachClientPage', () => {
         programUpdatedAt: '2026-11-11T10:00:00Z',
       }),
     );
-    expect(window.confirm).toHaveBeenCalled();
+    expect(confirmAction).toHaveBeenCalled();
   });
 });

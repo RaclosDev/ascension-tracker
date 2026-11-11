@@ -1,3 +1,5 @@
+import { confirmAction } from '../lib/confirmation';
+vi.mock('../lib/confirmation', () => ({ confirmAction: vi.fn().mockResolvedValue(true) }));
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -76,7 +78,7 @@ describe('Comidas pautadas', () => {
     mockedApi.post.mockReset();
     mockedApi.put.mockReset();
     clearSessionDrafts();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    vi.mocked(confirmAction).mockResolvedValue(true);
   });
   afterEach(() => {
     cleanup();

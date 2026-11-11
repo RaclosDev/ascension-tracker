@@ -1,3 +1,4 @@
+import { confirmAction } from '../lib/confirmation';
 import { useQueryClient } from '@tanstack/react-query';
 import { QueryErrorNotice } from './QueryErrorNotice';
 import { useState, useEffect, useEffectEvent } from 'react';
@@ -97,9 +98,13 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
 
   const handleDeleteMeal = async (id: number) => {
     if (
-      !window.confirm(
-        '¿Eliminar esta comida? Sus registros anteriores seguirán disponibles en el historial.',
-      )
+      !(await confirmAction({
+        title: 'Eliminar comida',
+        description:
+          '¿Eliminar esta comida? Sus registros anteriores seguirán disponibles en el historial.',
+        confirmLabel: 'Eliminar comida',
+        destructive: true,
+      }))
     )
       return;
     setSaving(true);
