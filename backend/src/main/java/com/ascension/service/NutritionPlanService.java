@@ -61,7 +61,7 @@ public class NutritionPlanService {
     public Optional<NutritionPlan> current(ClientAccess access) {
         return jdbcTemplate.query("""
                 SELECT %s, u.name, u.email, u.picture FROM nutrition_plans p
-                LEFT JOIN users u ON u.id = p.coach_user_id
+                LEFT JOIN coach_public_profiles u ON u.id = p.coach_user_id
                 WHERE p.coach_link_id = ? AND p.client_user_id = ? AND p.status = 'ACTIVE'
                 """.formatted(COLUMNS), PLAN, access.linkId(), access.clientUserId()).stream().findFirst()
                 .map(this::withMeals);
@@ -162,7 +162,7 @@ public class NutritionPlanService {
     public NutritionPlan version(ClientAccess access, UUID planId) {
         return jdbcTemplate.query("""
                 SELECT %s, u.name, u.email, u.picture FROM nutrition_plans p
-                LEFT JOIN users u ON u.id = p.coach_user_id
+                LEFT JOIN coach_public_profiles u ON u.id = p.coach_user_id
                 WHERE p.id = ? AND p.coach_link_id = ? AND p.client_user_id = ?
                 """.formatted(COLUMNS), PLAN, planId, access.linkId(), access.clientUserId()).stream().findFirst()
                 .map(this::withMeals).orElseThrow(() -> new EntityNotFoundException("Pauta no encontrada"));
@@ -175,7 +175,7 @@ public class NutritionPlanService {
                 SELECT %s, co.name, co.email, co.picture FROM nutrition_plans p
                 JOIN users cu ON cu.id = p.client_user_id
                 JOIN coach_clients cc ON cc.id = p.coach_link_id
-                JOIN users co ON co.id = cc.coach_user_id
+                JOIN coach_public_profiles co ON co.id = cc.coach_user_id
                 WHERE cu.email = ? AND p.status = 'ACTIVE'
                   AND cc.status = 'ACTIVE' AND cc.can_view_nutrition AND cc.can_edit_nutrition
                 """.formatted(COLUMNS), PLAN, Emails.normalize(email)).stream().findFirst().map(this::withMeals);
@@ -185,10 +185,11 @@ public class NutritionPlanService {
     public List<PlanExport> exportFor(UUID userId) {
         return jdbcTemplate.query("""
                 SELECT %s, CASE WHEN p.client_user_id = ? THEN 'CLIENT' ELSE 'COACH' END AS role,
-                       u.name, u.email, u.picture
+                       COALESCE(cp.name, u.name) AS name, u.email, CASE WHEN cp.id IS NULL THEN u.picture ELSE cp.picture END AS picture
                 FROM nutrition_plans p
                 LEFT JOIN users u ON u.id = CASE WHEN p.client_user_id = ? THEN p.coach_user_id
                                                  ELSE p.client_user_id END
+                LEFT JOIN coach_public_profiles cp ON cp.id = u.id AND cp.id = p.coach_user_id
                 WHERE p.client_user_id = ? OR p.coach_user_id = ?
                 ORDER BY p.created_at
                 """.formatted(COLUMNS),

@@ -1,3 +1,7 @@
+import {
+  useProfessionalSettings,
+  type ProfessionalSettings,
+} from '../../lib/coach/professionalSettings';
 import { useState } from 'react';
 import { CoachSetupFields } from './CoachSetupFields';
 import { emptySetup } from '../../lib/coach/setup';
@@ -37,20 +41,37 @@ export function InviteDialog({
             o compártelo. Ábrelo con la cuenta de tu alumno, no con la tuya.
           </DialogDescription>
         </DialogHeader>
-        <InvitationForm />
+        <InvitationDefaults />
       </DialogContent>
     </Dialog>
   );
 }
 
-function InvitationForm() {
+function InvitationDefaults() {
+  const settings = useProfessionalSettings();
+  if (settings.isPending) return <p role="status">Cargando valores de incorporación…</p>;
+  if (settings.isError)
+    return <QueryErrorNotice pending={settings.isFetching} retry={() => void settings.refetch()} />;
+  return <InvitationForm defaults={settings.data} />;
+}
+
+function InvitationForm({ defaults }: { defaults: ProfessionalSettings }) {
   const create = useCreateInvitation();
   const [link, setLink] = useState<string | null>(null);
   const [clientName, setClientName] = useState('');
-  const [asks, setAsks] = useState<CoachPermissions>(ASK_TRAINING);
-  const [fillIn, setFillIn] = useState(false);
+  const [asks, setAsks] = useState<CoachPermissions>({
+    training: defaults.services.training,
+    editTraining: defaults.services.training,
+    nutrition: defaults.services.nutrition,
+    editNutrition: defaults.services.nutrition,
+    body: defaults.services.progress,
+  });
+  const [fillIn, setFillIn] = useState(defaults.prefill);
   const [profile, setProfile] = useState<ProfileForm>(EMPTY_PROFILE);
-  const [setup, setSetup] = useState(emptySetup);
+  const [setup, setSetup] = useState(() => ({
+    ...emptySetup(),
+    services: { ...defaults.services },
+  }));
 
   const createLink = (e: React.FormEvent) => {
     e.preventDefault();

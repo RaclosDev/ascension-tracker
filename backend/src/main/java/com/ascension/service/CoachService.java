@@ -144,6 +144,11 @@ public class CoachService {
                 profile == null ? null : profile.heightCm(), profile == null ? null : profile.startWeight(),
                 profile == null ? null : profile.goalWeight(), profile == null ? null : profile.activityFactor(),
                 profile == null ? null : profile.appModules(), setupService.encode(request == null ? null : request.setup()));
+        jdbcTemplate.update("""
+                UPDATE coach_invitations i SET review_day = p.default_review_day,
+                    review_time = p.default_review_time, review_zone = p.default_review_zone
+                FROM coach_profiles p WHERE i.id = ? AND p.user_id = i.coach_user_id
+                """, id);
         return new CreatedInvitation(id, token, expiresAt);
     }
 
@@ -222,13 +227,16 @@ public class CoachService {
             throw new InvalidInputException("No puedes aceptar tu propia invitación.");
         }
         Person coach = jdbcTemplate.queryForObject(
-                "SELECT name, email, picture FROM users WHERE id = ?",
+                "SELECT name, email, picture FROM coach_public_profiles WHERE id = ?",
                 (rs, n) -> person(rs), invitation.coachUserId());
+        String presentation = jdbcTemplate.queryForObject(
+                "SELECT presentation FROM coach_profiles WHERE user_id = ?", String.class, invitation.coachUserId());
         boolean alreadyLinked = activeLinkExists(invitation.coachUserId(), clientId);
         return jdbcTemplate.queryForObject("""
                 SELECT client_name, asks_training, asks_nutrition, asks_body, asks_edit_training,
                        asks_edit_nutrition, prefill_sex, prefill_age, prefill_height_cm, prefill_start_weight,
-                       prefill_goal_weight, prefill_activity_factor, prefill_app_modules, coaching_setup
+                       prefill_goal_weight, prefill_activity_factor, prefill_app_modules, coaching_setup,
+                       review_day, review_time, review_zone
                 FROM coach_invitations WHERE id = ?
                 """, (rs, n) -> {
                     InvitationProfile profile = new InvitationProfile(rs.getString("prefill_sex"),
@@ -238,7 +246,9 @@ public class CoachService {
                             decimal(rs, "prefill_activity_factor"), rs.getString("prefill_app_modules"));
                     return new InvitationPreview(coach, invitation.expiresAt(), alreadyLinked,
                             rs.getString("client_name"), asks(rs), profile.isEmpty() ? null : profile,
-                            setupService.decode(rs.getString("coaching_setup")));
+                            setupService.decode(rs.getString("coaching_setup")), presentation,
+                            new com.ascension.dto.CoachScheduleDtos.Schedule(rs.getInt("review_day"),
+                                    rs.getObject("review_time", java.time.LocalTime.class), rs.getString("review_zone"), false));
                 }, invitation.id());
     }
 
@@ -273,7 +283,8 @@ public class CoachService {
         }
         jdbcTemplate.update("""
                 UPDATE coach_clients SET coaching_setup = i.coaching_setup, setup_updated_at = NOW(),
-                    setup_started_at = CASE WHEN i.coaching_setup IS NOT NULL THEN NOW() END
+                    setup_started_at = CASE WHEN i.coaching_setup IS NOT NULL THEN NOW() END,
+                    review_day = i.review_day, review_time = i.review_time, review_zone = i.review_zone
                 FROM coach_invitations i WHERE coach_clients.id = ? AND i.id = ?
                 """, linkId, invitation.id());
         jdbcTemplate.update("UPDATE coach_invitations SET accepted_at = NOW(), accepted_by = ?, " + CLEAR_PREFILL
@@ -287,15 +298,15 @@ public class CoachService {
     public List<MyCoach> listMyCoaches(String clientEmail) {
         return jdbcTemplate.query("""
                 SELECT %s, cc.id, cc.created_at, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
-                       co.name, co.email, co.picture
+                       co.name, co.email, co.picture, co.presentation
                 FROM coach_clients cc
                 JOIN users cu ON cu.id = cc.client_user_id
-                JOIN users co ON co.id = cc.coach_user_id
+                JOIN coach_public_profiles co ON co.id = cc.coach_user_id
                 WHERE cu.email = ? AND cc.status = 'ACTIVE'
                 ORDER BY cc.created_at
                 """.formatted(CoachScheduleService.COLUMNS),
                 (rs, n) -> new MyCoach(rs.getObject("id", UUID.class), person(rs),
-                        permissions(rs), instant(rs, "created_at"), CoachScheduleService.read(rs, Instant.now())),
+                        permissions(rs), instant(rs, "created_at"), CoachScheduleService.read(rs, Instant.now()), rs.getString("presentation")),
                 Emails.normalizeRequired(clientEmail));
     }
 
@@ -334,7 +345,7 @@ public class CoachService {
                 SELECT co.name, co.email, co.picture, l.action, l.access_date, l.last_at, l.hits
                 FROM coach_access_log l
                 JOIN users cu ON cu.id = l.client_user_id
-                JOIN users co ON co.id = l.coach_user_id
+                JOIN coach_public_profiles co ON co.id = l.coach_user_id
                 WHERE cu.email = ? AND l.access_date >= CURRENT_DATE - ?
                 ORDER BY l.access_date DESC, l.last_at DESC
                 LIMIT ?
@@ -370,11 +381,12 @@ public class CoachService {
         List<AssignmentExport> assignments = jdbcTemplate.query("""
                 SELECT a.id, CASE WHEN a.client_user_id = ? THEN 'CLIENT' ELSE 'COACH' END AS role,
                        a.program_id, p.name AS program_name, a.start_date, a.status, a.created_at, a.ended_at,
-                       u.name, u.email, u.picture
+                       COALESCE(cp.name, u.name) AS name, u.email, CASE WHEN cp.id IS NULL THEN u.picture ELSE cp.picture END AS picture
                 FROM program_assignments a
                 JOIN programs p ON p.id = a.program_id
                 LEFT JOIN users u ON u.id = CASE WHEN a.client_user_id = ? THEN a.coach_user_id
                                                  ELSE a.client_user_id END
+                LEFT JOIN coach_public_profiles cp ON cp.id = u.id AND cp.id = a.coach_user_id
                 WHERE a.client_user_id = ? OR a.coach_user_id = ?
                 ORDER BY a.created_at
                 """,
@@ -385,11 +397,12 @@ public class CoachService {
                 userId, userId, userId, userId);
         List<CommentExport> comments = jdbcTemplate.query("""
                 SELECT c.id, CASE WHEN c.coach_user_id = ? THEN 'COACH' ELSE 'CLIENT' END AS role,
-                       c.workout_id, c.body, c.created_at, c.updated_at, u.name, u.email, u.picture
+                       c.workout_id, c.body, c.created_at, c.updated_at, COALESCE(cp.name, u.name) AS name, u.email, CASE WHEN cp.id IS NULL THEN u.picture ELSE cp.picture END AS picture
                 FROM workout_comments c
                 JOIN workouts w ON w.id = c.workout_id
                 JOIN users u ON u.email = CASE WHEN c.coach_user_id = ? THEN w.user_email
                                                ELSE (SELECT email FROM users WHERE id = c.coach_user_id) END
+                LEFT JOIN coach_public_profiles cp ON cp.id = u.id AND cp.id = c.coach_user_id
                 WHERE c.coach_user_id = ? OR w.user_email = (SELECT email FROM users WHERE id = ?)
                 ORDER BY c.created_at
                 """,
@@ -415,21 +428,25 @@ public class CoachService {
                 SELECT %s, cc.id, cc.status, cc.created_at, cc.ended_at, cc.coaching_setup,
                        cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
                        u.name, u.email, u.picture
-                FROM coach_clients cc JOIN users u ON u.id = cc.%s
+                FROM coach_clients cc JOIN %s u ON u.id = cc.%s
                 WHERE cc.%s = ? ORDER BY cc.created_at
-                """.formatted(CoachScheduleService.COLUMNS, otherColumn, selfColumn),
+                """.formatted(CoachScheduleService.COLUMNS, identityTable(otherColumn), otherColumn, selfColumn),
                 (rs, n) -> new LinkExport(rs.getObject("id", UUID.class), person(rs), rs.getString("status"),
                         permissions(rs), instant(rs, "created_at"), instant(rs, "ended_at"),
                         setupService.decode(rs.getString("coaching_setup")), CoachScheduleService.read(rs, Instant.now())),
                 userId);
     }
 
+    private static String identityTable(String otherColumn) {
+        return "coach_user_id".equals(otherColumn) ? "coach_public_profiles" : "users";
+    }
+
     private List<AccessExport> exportAccesses(String selfColumn, String otherColumn, UUID userId) {
         return jdbcTemplate.query("""
                 SELECT u.name, u.email, u.picture, l.action, l.access_date, l.first_at, l.last_at, l.hits
-                FROM coach_access_log l JOIN users u ON u.id = l.%s
+                FROM coach_access_log l JOIN %s u ON u.id = l.%s
                 WHERE l.%s = ? ORDER BY l.access_date, l.first_at
-                """.formatted(otherColumn, selfColumn),
+                """.formatted(identityTable(otherColumn), otherColumn, selfColumn),
                 (rs, n) -> new AccessExport(person(rs), rs.getString("action"),
                         rs.getObject("access_date", LocalDate.class), instant(rs, "first_at"),
                         instant(rs, "last_at"), rs.getInt("hits")),
