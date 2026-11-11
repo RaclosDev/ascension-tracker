@@ -8,7 +8,7 @@ vi.mock('../api/client', () => ({
 }));
 
 import api from '../api/client';
-import CoachPage from '../pages/CoachPage';
+import CoachClientsPage from '../pages/CoachClientsPage';
 import { signalText, type ClientStatus } from '../lib/coach/clientStatus';
 
 const mockedApi = vi.mocked(api);
@@ -65,32 +65,29 @@ describe('Semáforo de alumnos', () => {
         client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
       >
         <MemoryRouter>
-          <CoachPage />
+          <CoachClientsPage />
         </MemoryRouter>
       </QueryClientProvider>,
     );
 
-    await screen.findAllByText('Necesita atención');
+    await screen.findAllByText('Sin avisos');
+    expect(screen.queryByRole('columnheader', { name: /Peso/ })).toBeNull();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Mostrar peso' }));
     const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
-    expect(rows.map((tr) => within(tr).getByRole('link').textContent)).toEqual([
+    expect(rows.map((tr) => within(tr).getAllByRole('link')[0].textContent)).toEqual([
       'Bruno',
       'Carla',
       'Ana',
     ]);
     expect(rows[0]).toHaveTextContent('9 días sin registrar nada');
     expect(rows[0]).toHaveTextContent('2 por responder');
-    expect(rows[1]).toHaveTextContent('Vigilar');
-    expect(rows[2]).toHaveTextContent('Al día');
+    expect(rows[1]).toHaveTextContent('Por revisar');
+    expect(rows[2]).toHaveTextContent('Sin avisos');
     expect(rows[2]).toHaveTextContent('-0,7 kg');
 
-    const counters = screen.getByText('Necesitan atención').closest('dl')!;
-    expect(counters).toHaveTextContent('Necesitan atención2');
-    expect(counters).toHaveTextContent('Check-ins por responder2');
-    expect(counters).toHaveTextContent('Al día1 de 3');
-
-    fireEvent.click(screen.getByRole('button', { name: /Check-in pendiente/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Por responder/ }));
     const filtered = within(screen.getByRole('table')).getAllByRole('row').slice(1);
-    expect(filtered.map((tr) => within(tr).getByRole('link').textContent)).toEqual(['Bruno']);
+    expect(filtered.map((tr) => within(tr).getAllByRole('link')[0].textContent)).toEqual(['Bruno']);
   });
 
   it('describes every reason in plain words', () => {
@@ -101,7 +98,7 @@ describe('Semáforo de alumnos', () => {
       'Comida registrada 3 de 7 días',
     );
     expect(signalText({ reason: 'WEIGHT_STALLED', level: 'AMBER', value: 3 })).toBe(
-      'Peso estancado en las últimas 3 semanas',
+      'Pocos cambios de peso en las últimas 3 semanas',
     );
   });
 });

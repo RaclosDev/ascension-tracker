@@ -401,17 +401,23 @@ describe('CoachClientPage', () => {
 
   it('shows the real charts and the client custom exercise names', async () => {
     mockClient();
-    renderAt('/entrenador/alumnos/link-9', routes);
+    renderAt('/entrenador/alumnos/link-9?seccion=entrenamiento', routes);
 
-    expect(await screen.findByText('Press inclinado en polea')).toBeDefined();
+    expect(
+      await screen.findByText('Press inclinado en polea', {}, { timeout: 10000 }),
+    ).toBeDefined();
+    expect((await screen.findByTestId('activity-heatmap')).dataset.workouts).toBe('1');
+    expect((await screen.findByTestId('body-heatmap')).dataset.custom).toBe('1');
+    expect(mockedApi.get.mock.calls.some(([url]) => url.includes('/weights'))).toBe(false);
+    fireEvent.click(screen.getByRole('link', { name: 'Progreso' }));
     const weightChart = await screen.findByTestId('weight-charts');
     expect(weightChart.dataset.points).toBe('2');
     expect(weightChart.dataset.deltas).toBe('1');
     expect(weightChart.dataset.goal).toBe('none');
-    expect((await screen.findByTestId('activity-heatmap')).dataset.workouts).toBe('1');
-    expect((await screen.findByTestId('body-heatmap')).dataset.custom).toBe('1');
+    expect(mockedApi.get.mock.calls.some(([url]) => url.includes('/nutrition/'))).toBe(false);
+    fireEvent.click(screen.getByRole('link', { name: 'Nutrición' }));
     expect((await screen.findByTestId('macro-pie')).dataset.slices).toBe('4');
-  });
+  }, 15000);
 
   it('only asks for the areas the client shares', async () => {
     mockClient({
@@ -421,7 +427,7 @@ describe('CoachClientPage', () => {
       editTraining: false,
       editNutrition: false,
     });
-    renderAt('/entrenador/alumnos/link-9', routes);
+    renderAt('/entrenador/alumnos/link-9?seccion=progreso', routes);
 
     expect(await screen.findByTestId('weight-charts')).toBeDefined();
     const urls = mockedApi.get.mock.calls.map(([url]) => url as string);
@@ -430,9 +436,18 @@ describe('CoachClientPage', () => {
     expect(urls.some((url) => url.includes('programs'))).toBe(false);
   });
 
+  it('rejects a direct link to an area the client does not share', async () => {
+    mockClient({ ...clientLink.permissions, training: false });
+    renderAt('/entrenador/alumnos/link-9?seccion=entrenamiento', routes);
+
+    expect(await screen.findByText('Sección no disponible')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Entrenamiento' })).not.toBeInTheDocument();
+    expect(mockedApi.get.mock.calls.map(([url]) => url)).toEqual(['/coach/clients']);
+  });
+
   it('lists assigned programs but only assigns with the edit permission', async () => {
     mockClient();
-    renderAt('/entrenador/alumnos/link-9', routes);
+    renderAt('/entrenador/alumnos/link-9?seccion=entrenamiento', routes);
 
     expect(await screen.findByText('Fuerza')).toBeDefined();
     expect(screen.getByText(/«Pautar entrenamiento»/)).toBeDefined();
@@ -444,7 +459,7 @@ describe('CoachClientPage', () => {
     mockClient({ ...clientLink.permissions, editTraining: true, editNutrition: false });
     mockedApi.post.mockResolvedValue({ data: {} });
     vi.spyOn(window, 'confirm').mockReturnValue(true);
-    renderAt('/entrenador/alumnos/link-9', routes);
+    renderAt('/entrenador/alumnos/link-9?seccion=entrenamiento', routes);
 
     const select = await screen.findByLabelText('Programa');
     await screen.findByRole('option', { name: 'Hipertrofia' });

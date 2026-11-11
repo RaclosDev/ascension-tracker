@@ -11,7 +11,7 @@ vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ logout: vi.fn() }) 
 vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }));
 
 import api from '../api/client';
-import CoachPage from '../pages/CoachPage';
+import CoachClientsPage from '../pages/CoachClientsPage';
 import InvitationPage from '../pages/InvitationPage';
 import OnboardingScreen from '../components/OnboardingScreen';
 import { rememberPendingInvitation } from '../lib/coach/api';
@@ -70,7 +70,7 @@ describe('Invitación con datos del entrenador', () => {
     };
     mockedApi.get.mockImplementation(async (url: string) => ({ data: responses[url] ?? [] }));
     mockedApi.post.mockResolvedValue({ data: { token: TOKEN } });
-    wrap(<CoachPage />);
+    wrap(<CoachClientsPage />);
 
     expect(await screen.findByText('Marta')).toBeDefined();
     expect(screen.getByText(/datos rellenados/)).toBeDefined();

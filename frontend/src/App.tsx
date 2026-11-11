@@ -17,6 +17,10 @@ const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage'
 const WorkoutPage = lazyWithRetry(() => import('./pages/WorkoutPage'));
 const UtilitiesPage = lazyWithRetry(() => import('./pages/UtilitiesPage'));
 const CoachPage = lazyWithRetry(() => import('./pages/CoachPage'));
+const CoachClientsPage = lazyWithRetry(() => import('./pages/CoachClientsPage'));
+const CoachReviewsPage = lazyWithRetry(() => import('./pages/CoachReviewsPage'));
+const CoachPlanningPage = lazyWithRetry(() => import('./pages/CoachPlanningPage'));
+const CoachSettingsPage = lazyWithRetry(() => import('./pages/CoachSettingsPage'));
 const CoachClientPage = lazyWithRetry(() => import('./pages/CoachClientPage'));
 const CoachProgramsPage = lazyWithRetry(() => import('./pages/CoachProgramsPage'));
 const CoachProgramEditorPage = lazyWithRetry(() => import('./pages/CoachProgramEditorPage'));
@@ -145,6 +149,10 @@ function AppContent() {
               <Route path="utilities" element={<UtilitiesPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="entrenador" element={<CoachPage />} />
+              <Route path="entrenador/alumnos" element={<CoachClientsPage />} />
+              <Route path="entrenador/revisiones" element={<CoachReviewsPage />} />
+              <Route path="entrenador/planificacion" element={<CoachPlanningPage />} />
+              <Route path="entrenador/ajustes" element={<CoachSettingsPage />} />
               <Route path="entrenador/alumnos/:linkId" element={<CoachClientPage />} />
               <Route path="entrenador/programas" element={<CoachProgramsPage />} />
               <Route path="entrenador/programas/:programId" element={<CoachProgramEditorPage />} />
