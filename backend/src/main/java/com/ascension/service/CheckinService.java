@@ -9,10 +9,12 @@ import com.ascension.dto.CheckinDtos.ClientCheckin;
 import com.ascension.dto.CheckinDtos.Template;
 import com.ascension.dto.CheckinDtos.TemplateRequest;
 import com.ascension.dto.CoachDtos.Person;
+import com.ascension.dto.CoachSetupDtos.Setup;
 import com.ascension.exception.EntityNotFoundException;
 import com.ascension.exception.InvalidInputException;
 import com.ascension.service.CoachAccessPolicy.ClientAccess;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,13 +88,21 @@ public class CheckinService {
     }
 
     @Transactional
-    public Checkin reply(ClientAccess access, UUID checkinId, String reply) {
+    public Checkin reply(ClientAccess access, UUID checkinId, String reply, Instant expectedUpdatedAt) {
         List<Checkin> updated = jdbcTemplate.query("""
                 UPDATE checkins c SET coach_reply = ?, replied_at = NOW()
-                WHERE c.id = ? AND c.link_id = ?
+                WHERE c.id = ? AND c.link_id = ? AND c.coach_reply IS NULL
+                  AND (?::timestamptz IS NULL OR c.updated_at = ?::timestamptz)
                 RETURNING %s
-                """.formatted(COLUMNS), checkin(access.body()), reply.strip(), checkinId, access.linkId());
+                """.formatted(COLUMNS), checkin(access.body()), reply.strip(), checkinId, access.linkId(),
+                expectedUpdatedAt == null ? null : Timestamp.from(expectedUpdatedAt),
+                expectedUpdatedAt == null ? null : Timestamp.from(expectedUpdatedAt));
         if (updated.isEmpty()) {
+            if (Boolean.TRUE.equals(jdbcTemplate.queryForObject(
+                    "SELECT EXISTS(SELECT 1 FROM checkins WHERE id = ? AND link_id = ?)",
+                    Boolean.class, checkinId, access.linkId()))) {
+                throw new OptimisticLockingFailureException("El check-in ha cambiado o ya tiene respuesta");
+            }
             throw new EntityNotFoundException("Check-in no encontrado");
         }
         return updated.get(0);
@@ -103,25 +113,25 @@ public class CheckinService {
     /** This week's questions from this coach and the check-in already sent, if any. */
     @Transactional(readOnly = true)
     public ClientCheckin current(String clientEmail, UUID linkId, Instant now) {
-        Link link = activeLink(clientEmail, linkId);
+        Link link = activeLink(clientEmail, linkId, now);
         LocalDate week = weekOf(now.atZone(java.time.ZoneId.of(link.followup().schedule().timeZone())).toLocalDate());
         Checkin sent = find(link, week);
         List<String> questions = sent == null
-                ? templateOf(link.coachUserId()).questions()
+                ? questionsFor(link)
                 : sent.answers().stream().map(Answer::question).toList();
-        return new ClientCheckin(linkId, link.coach(), week, questions, sent, link.followup());
+        return new ClientCheckin(linkId, link.coach(), week, questions, sent, link.followup(), scoreKeys(link, sent));
     }
 
     @Transactional
     public Checkin submit(String clientEmail, UUID linkId, CheckinRequest request, Instant now) {
-        Link link = activeLink(clientEmail, linkId);
+        Link link = activeLink(clientEmail, linkId, now);
         LocalDate week = weekOf(now.atZone(java.time.ZoneId.of(link.followup().schedule().timeZone())).toLocalDate());
         Checkin sent = find(link, week);
         if (sent != null && sent.coachReply() != null) {
             throw new InvalidInputException("Tu entrenador ya ha respondido a este check-in.");
         }
         List<String> questions = sent == null
-                ? templateOf(link.coachUserId()).questions()
+                ? questionsFor(link)
                 : sent.answers().stream().map(Answer::question).toList();
         List<String> given = request.answers() == null ? List.of() : request.answers();
         if (given.size() > questions.size()) {
@@ -137,7 +147,14 @@ public class CheckinService {
                 WHERE user_email = ? AND date BETWEEN ? AND ?
                 """, Double.class, link.clientEmail(), week, week.plusDays(6)) : null;
         String notes = request.notes() == null || request.notes().isBlank() ? null : request.notes().strip();
-        jdbcTemplate.update("""
+        List<String> metrics = scoreKeys(link, sent);
+        Integer training = metrics.contains("trainingAdherence") ? request.trainingAdherence() : null;
+        Integer diet = metrics.contains("dietAdherence") ? request.dietAdherence() : null;
+        if ((metrics.contains("trainingAdherence") && training == null)
+                || (metrics.contains("dietAdherence") && diet == null)) {
+            throw new InvalidInputException("Completa las valoraciones del servicio acordado.");
+        }
+        int updated = jdbcTemplate.update("""
                 INSERT INTO checkins (link_id, client_user_id, coach_user_id, week_start, weight_avg, energy, sleep,
                     training_adherence, diet_adherence, answers, notes)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS jsonb), ?)
@@ -145,9 +162,11 @@ public class CheckinService {
                     energy = EXCLUDED.energy, sleep = EXCLUDED.sleep,
                     training_adherence = EXCLUDED.training_adherence, diet_adherence = EXCLUDED.diet_adherence,
                     answers = EXCLUDED.answers, notes = EXCLUDED.notes, updated_at = NOW()
+                WHERE checkins.coach_reply IS NULL
                 """, linkId, link.clientUserId(), link.coachUserId(), week, weightAvg, request.energy(),
-                request.sleep(), request.trainingAdherence(), request.dietAdherence(),
+                request.sleep(), training, diet,
                 JSON.writeValueAsString(answers), notes);
+        if (updated == 0) throw new InvalidInputException("Tu entrenador ya ha respondido a este check-in.");
         return find(link, week);
     }
 
@@ -184,13 +203,13 @@ public class CheckinService {
     // ---- Helpers ----
 
     private record Link(UUID linkId, UUID coachUserId, UUID clientUserId, String clientEmail, boolean body, Person coach,
-                        com.ascension.dto.CoachScheduleDtos.Followup followup) {
+                        com.ascension.dto.CoachScheduleDtos.Followup followup, Setup setup) {
     }
 
-    private Link activeLink(String clientEmail, UUID linkId) {
+    private Link activeLink(String clientEmail, UUID linkId, Instant now) {
         List<Link> found = jdbcTemplate.query("""
                 SELECT %s, cc.id, cc.coach_user_id, cc.client_user_id, cu.email AS client_email, cc.can_view_body,
-                       co.name, co.email, co.picture
+                       co.name, co.email, co.picture, cc.coaching_setup::text AS setup
                 FROM coach_clients cc
                 JOIN users cu ON cu.id = cc.client_user_id
                 JOIN users co ON co.id = cc.coach_user_id
@@ -200,7 +219,8 @@ public class CheckinService {
                         rs.getObject("client_user_id", UUID.class), rs.getString("client_email"),
                         rs.getBoolean("can_view_body"),
                         new Person(rs.getString("name"), rs.getString("email"), rs.getString("picture")),
-                        CoachScheduleService.read(rs, Instant.now())),
+                        CoachScheduleService.read(rs, now),
+                        rs.getString("setup") == null ? null : JSON.readValue(rs.getString("setup"), Setup.class)),
                 linkId, Emails.normalizeRequired(clientEmail));
         if (found.isEmpty()) {
             throw new EntityNotFoundException("Entrenador no encontrado");
@@ -232,6 +252,27 @@ public class CheckinService {
         return stored == null ? new Template(DEFAULT_QUESTIONS, false) : new Template(JSON.readValue(stored, QUESTIONS), true);
     }
 
+    private List<String> questionsFor(Link link) {
+        Template template = templateOf(link.coachUserId());
+        if (template.custom() || link.setup() == null || !link.setup().reviewed()) return template.questions();
+        List<String> questions = new ArrayList<>(DEFAULT_QUESTIONS);
+        if (link.setup().services().training()) questions.add("¿Qué sesión o ejercicio necesita un ajuste?");
+        if (link.setup().services().nutrition()) questions.add("¿Cómo han ido el hambre y la organización de las comidas?");
+        return questions;
+    }
+
+    private List<String> scoreKeys(Link link, Checkin sent) {
+        List<String> keys = new ArrayList<>(List.of("energy", "sleep"));
+        boolean configured = link.setup() != null && link.setup().reviewed();
+        if (sent != null ? sent.trainingAdherence() != null : configured && link.setup().services().training()) {
+            keys.add("trainingAdherence");
+        }
+        if (sent != null ? sent.dietAdherence() != null : configured && link.setup().services().nutrition()) {
+            keys.add("dietAdherence");
+        }
+        return keys;
+    }
+
     static LocalDate weekOf(LocalDate day) {
         return day.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
     }
@@ -242,8 +283,8 @@ public class CheckinService {
             return new Checkin(rs.getObject("id", UUID.class), rs.getObject("link_id", UUID.class),
                     rs.getObject("week_start", LocalDate.class),
                     showWeight && weight != null ? weight.doubleValue() : null,
-                    rs.getInt("energy"), rs.getInt("sleep"), rs.getInt("training_adherence"),
-                    rs.getInt("diet_adherence"), JSON.readValue(rs.getString("answers"), ANSWERS),
+                    rs.getInt("energy"), rs.getInt("sleep"), rs.getObject("training_adherence", Integer.class),
+                    rs.getObject("diet_adherence", Integer.class), JSON.readValue(rs.getString("answers"), ANSWERS),
                     rs.getString("notes"), rs.getString("coach_reply"), instant(rs.getTimestamp("replied_at")),
                     instant(rs.getTimestamp("created_at")), instant(rs.getTimestamp("updated_at")));
         };

@@ -21,6 +21,7 @@ import java.util.UUID;
 public class CoachScheduleService {
     public static final String COLUMNS = """
             cc.review_day, cc.review_time, cc.review_zone, cc.followup_paused,
+            COALESCE(cc.coaching_setup ->> 'reviewed', 'false') = 'true' AS schedule_confirmed,
             GREATEST(cc.created_at, cc.setup_started_at, cc.followup_started_at) AS followup_started
             """;
     private final JdbcTemplate jdbc;
@@ -49,7 +50,7 @@ public class CoachScheduleService {
         Schedule schedule = new Schedule(rs.getInt("review_day"), rs.getObject("review_time", LocalTime.class),
                 rs.getString("review_zone"), rs.getBoolean("followup_paused"));
         Instant started = rs.getTimestamp("followup_started").toInstant();
-        return new Followup(schedule, started, nextDue(schedule, started, now));
+        return new Followup(schedule, started, rs.getBoolean("schedule_confirmed") ? nextDue(schedule, started, now) : null);
     }
 
     public static ZonedDateTime deadline(Schedule schedule, LocalDate week) {

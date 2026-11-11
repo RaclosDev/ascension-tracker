@@ -23,8 +23,8 @@ export interface Checkin {
   weightAvg: number | null;
   energy: number;
   sleep: number;
-  trainingAdherence: number;
-  dietAdherence: number;
+  trainingAdherence: number | null;
+  dietAdherence: number | null;
   answers: CheckinAnswer[];
   notes: string | null;
   coachReply: string | null;
@@ -34,6 +34,7 @@ export interface Checkin {
 }
 
 export interface ClientCheckin {
+  scoreKeys?: (keyof Scores)[];
   followup?: CoachFollowup;
   linkId: string;
   coach: CoachPerson;
@@ -96,13 +97,25 @@ export const useClientCheckins = (linkId: string) =>
 export function useReplyCheckin(linkId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, reply }: { id: string; reply: string }) =>
+    mutationFn: async ({
+      id,
+      reply,
+      expectedUpdatedAt,
+    }: {
+      id: string;
+      reply: string;
+      expectedUpdatedAt: string;
+    }) =>
       (
         await api.put<Checkin>(`/coach/clients/${enc(linkId)}/checkins/${enc(id)}/reply`, {
           reply,
+          expectedUpdatedAt,
         })
       ).data,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      queryClient.setQueryData<Checkin[]>(keys.client(linkId), (previous) =>
+        previous?.map((item) => (item.id === data.id ? data : item)),
+      );
       queryClient.invalidateQueries({ queryKey: keys.client(linkId) });
       // The pending replies count on the client list.
       queryClient.invalidateQueries({ queryKey: ['coach', 'clients', 'status'] });

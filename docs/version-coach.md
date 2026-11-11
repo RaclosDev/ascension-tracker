@@ -48,9 +48,11 @@ Este documento cuenta en lenguaje sencillo qué trae la versión para entrenador
 
 ## Fase 4 — Seguimiento y feedback *(en curso)*
 
-**Check-in semanal.** Cada semana el alumno le cuenta a su entrenador cómo le ha ido: puntúa del 1 al 5 su energía, su sueño y cuánto ha cumplido el entreno y la dieta, y responde a las preguntas que el entrenador haya preparado. Si comparte su cuerpo, se añade solo su peso medio de la semana. Puede corregirlo hasta que el entrenador conteste.
+**Check-in semanal.** Cada semana el alumno puntúa del 1 al 5 su energía y su sueño, y valora el entrenamiento o la nutrición según los servicios acordados. Las preguntas por defecto también se adaptan al servicio; el entrenador puede sustituirlas por su plantilla. Si comparte su cuerpo, se añade su peso medio de la semana. Puede corregirlo hasta que el entrenador conteste. Los check-ins enviados conservan las preguntas y métricas originales aunque cambien los servicios.
 
 **El entrenador responde.** En la ficha del alumno el entrenador ve todos sus check-ins, del más reciente al más antiguo, y contesta a cada uno. El alumno lee la respuesta en su historial, que conserva aunque la relación termine.
+
+**Borradores y fechas.** Las respuestas del entrenador y el formulario del alumno se conservan en la pestaña al navegar o recargar, separados por cuenta y revisión. Se eliminan al enviarlos, descartarlos o cerrar sesión; los borradores guardados caducan a los siete días. Si el navegador impide guardarlos, se avisa y se mantienen en memoria mientras la app siga abierta. Antes de cerrar una pestaña con trabajo sin enviar aparece el aviso del navegador. La revisión muestra las fechas de envío, edición y respuesta. Si el alumno modifica sus respuestas durante la preparación del feedback, el entrenador debe revisarlas antes de enviarlo; una respuesta ya enviada no se sobrescribe.
 
 **Preguntas a medida.** El entrenador decide qué pregunta cada semana (hasta diez preguntas). Si las cambia, los check-ins ya enviados no se tocan.
 
