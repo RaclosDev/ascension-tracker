@@ -28,6 +28,8 @@ La biblioteca permite buscar por nombre y separar borradores de programas listos
 
 Antes de asignar se muestra la versión completa. Si cambia mientras se revisa, hay que actualizar la vista previa antes de enviarla. Sustituir un programa finaliza el anterior inmediatamente, aunque la nueva fecha de inicio sea posterior; la confirmación lo indica y se conservan tanto el historial de asignaciones como los entrenamientos registrados.
 
+**Adaptación individual.** Desde el programa activo de la ficha, «Adaptar» abre la copia del alumno. Permite cambiar las sesiones, previsualizarlas y publicar una nueva versión solo para él, desde la semana 1 y con una fecha entre hoy y los próximos 365 días. La publicación termina inmediatamente la asignación anterior y conserva su copia y sus registros; la biblioteca sigue igual. Los cambios y la fecha se recuperan en la misma pestaña durante siete días. Si la asignación ha terminado o se ha sustituido mientras se editaba, la publicación se rechaza y el borrador se conserva para revisarlo.
+
 **Pantalla «Hoy» del alumno.** El alumno ve qué le toca hoy y empieza el entreno pautado con un toque, con todo precargado. Si le viene mejor, puede hacer hoy otro día de esa semana que aún no haya hecho. También puede entrenar libre o seguir su propia rutina.
 
 **Pautado frente a hecho.** El entrenador ve cada sesión del programa: si el alumno la hizo tal cual, con cambios o si no la registró, con lo pautado al lado de lo realizado.

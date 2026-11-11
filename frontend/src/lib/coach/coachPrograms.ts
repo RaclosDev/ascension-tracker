@@ -345,3 +345,29 @@ export function useEndAssignment(linkId: string) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentsKey(linkId) }),
   });
 }
+
+export const useAssignedProgram = (linkId: string, assignmentId: string) =>
+  useQuery({
+    queryKey: [...assignmentsKey(linkId), assignmentId, 'plan'],
+    queryFn: async () =>
+      (
+        await api.get<Program>(
+          `${assignmentsPath(linkId)}/${encodeURIComponent(assignmentId)}/plan`,
+        )
+      ).data,
+    retry: false,
+  });
+
+export function useAdaptProgram(linkId: string, assignmentId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (request: { program: Program; startDate: string }) =>
+      (
+        await api.post<ProgramAssignment>(
+          `${assignmentsPath(linkId)}/${encodeURIComponent(assignmentId)}/adapt`,
+          request,
+        )
+      ).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentsKey(linkId) }),
+  });
+}

@@ -1,6 +1,7 @@
 package com.ascension.service;
 
 import com.ascension.dto.ProgramDtos.AssignRequest;
+import com.ascension.dto.ProgramDtos.AdaptRequest;
 import com.ascension.dto.ProgramDtos.Assignment;
 import com.ascension.dto.ProgramDtos.Program;
 import com.ascension.exception.EntityNotFoundException;
@@ -52,11 +53,7 @@ public class ProgramAssignmentService {
 
     @Transactional
     public Assignment assign(ClientAccess access, AssignRequest request) {
-        LocalDate today = LocalDate.now();
-        if (request.startDate().isBefore(today.minusDays(MAX_START_OFFSET_DAYS))
-                || request.startDate().isAfter(today.plusDays(MAX_START_OFFSET_DAYS))) {
-            throw new InvalidInputException("La fecha de inicio debe estar a menos de un año de hoy");
-        }
+        validateDate(request.startDate());
         lockLink(access.linkId());
         List<UUID> found = jdbcTemplate.queryForList(
                 "SELECT id FROM programs WHERE id = ? AND owner_user_id = ? AND is_library FOR UPDATE",
@@ -64,12 +61,7 @@ public class ProgramAssignmentService {
         if (found.isEmpty()) {
             throw new EntityNotFoundException("Programa no encontrado");
         }
-        Integer copies = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM programs WHERE owner_user_id = ? AND NOT is_library",
-                Integer.class, access.clientUserId());
-        if (copies != null && copies >= MAX_COPIES_PER_CLIENT) {
-            throw new InvalidInputException("Tu alumno ya tiene demasiados programas guardados");
-        }
+        requireCopyCapacity(access.clientUserId());
         Program original = programService.readProgram(request.programId());
         if (!"READY".equals(original.status())) {
             throw new InvalidInputException("El programa es un borrador. Márcalo como listo antes de asignarlo.");
@@ -80,17 +72,56 @@ public class ProgramAssignmentService {
         }
         endActive(access.linkId());
         UUID copyId = programService.insertProgram(access.clientUserId(), original, false, original.id());
+        return createAssignment(access, copyId, request.startDate());
+    }
+
+    @Transactional(readOnly = true)
+    public Program plan(ClientAccess access, UUID assignmentId) {
+        return programService.readProgram(requireAssignment(access, assignmentId, false).programId());
+    }
+
+    @Transactional
+    public Assignment adapt(ClientAccess access, UUID assignmentId, AdaptRequest request) {
+        validateDate(request.startDate());
+        if (request.startDate().isBefore(LocalDate.now())) {
+            throw new InvalidInputException("La adaptación debe empezar hoy o más adelante; el historial anterior se conserva.");
+        }
+        ProgramService.validate(request.program());
+        ProgramService.validateReady(request.program());
+        lockLink(access.linkId());
+        Assignment original = requireAssignment(access, assignmentId, true);
+        if (!"ACTIVE".equals(original.status())) {
+            throw new OptimisticLockingFailureException(
+                    "Esta asignación ya ha terminado. Abre el programa actual del alumno antes de publicar cambios.");
+        }
+        requireCopyCapacity(access.clientUserId());
+        UUID copyId = programService.insertProgram(access.clientUserId(), request.program(), false,
+                original.sourceProgramId());
+        endActive(access.linkId());
+        return createAssignment(access, copyId, request.startDate());
+    }
+
+    private Assignment requireAssignment(ClientAccess access, UUID assignmentId, boolean lock) {
+        List<Assignment> found = jdbcTemplate.query(SELECT +
+                        " WHERE a.id = ? AND a.coach_link_id = ?" + (lock ? " FOR UPDATE OF a" : ""),
+                ProgramAssignmentService::assignment, assignmentId, access.linkId());
+        if (found.isEmpty()) throw new EntityNotFoundException("Asignación no encontrada");
+        return found.getFirst();
+    }
+
+    private Assignment createAssignment(ClientAccess access, UUID copyId, LocalDate startDate) {
         UUID id = jdbcTemplate.queryForObject("""
                 INSERT INTO program_assignments (program_id, client_user_id, coach_user_id, coach_link_id,
                                                  start_date, status)
                 VALUES (?, ?, ?, ?, ?, 'ACTIVE') RETURNING id
                 """, UUID.class, copyId, access.clientUserId(), access.coachUserId(), access.linkId(),
-                request.startDate());
+                startDate);
         return jdbcTemplate.queryForObject(SELECT + " WHERE a.id = ?", ProgramAssignmentService::assignment, id);
     }
 
     @Transactional
     public void end(ClientAccess access, UUID assignmentId) {
+        lockLink(access.linkId());
         int updated = jdbcTemplate.update("""
                 UPDATE program_assignments SET status = 'ENDED', ended_at = NOW()
                 WHERE id = ? AND coach_link_id = ? AND status = 'ACTIVE'
@@ -110,6 +141,22 @@ public class ProgramAssignmentService {
                 UPDATE program_assignments SET status = 'ENDED', ended_at = NOW()
                 WHERE coach_link_id = ? AND status = 'ACTIVE'
                 """, linkId);
+    }
+
+    private void requireCopyCapacity(UUID clientId) {
+        Integer copies = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM programs WHERE owner_user_id = ? AND NOT is_library", Integer.class, clientId);
+        if (copies != null && copies >= MAX_COPIES_PER_CLIENT) {
+            throw new InvalidInputException("Tu alumno ya tiene demasiados programas guardados");
+        }
+    }
+
+    private static void validateDate(LocalDate startDate) {
+        LocalDate today = LocalDate.now();
+        if (startDate.isBefore(today.minusDays(MAX_START_OFFSET_DAYS))
+                || startDate.isAfter(today.plusDays(MAX_START_OFFSET_DAYS))) {
+            throw new InvalidInputException("La fecha de inicio debe estar a menos de un año de hoy");
+        }
     }
 
     private static Assignment assignment(ResultSet rs, int n) throws SQLException {
