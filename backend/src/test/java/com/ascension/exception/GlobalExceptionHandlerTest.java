@@ -2,6 +2,8 @@ package com.ascension.exception;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 
@@ -12,6 +14,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
+
+    @Test
+    void missingResourceReturns404WithoutEchoingThePath() {
+        ResponseEntity<ApiErrorResponse> response = handler.handleNoResourceFound(
+                new NoResourceFoundException(HttpMethod.GET, "private-path", "private-path"));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getError()).isEqualTo("Recurso no encontrado");
+    }
 
     @Test
     void handleInvalidInputException_returnsCustomMessage() {

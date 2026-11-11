@@ -1,358 +1,276 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2 } from 'lucide-react';
+import { useSessionDraft } from '@/hooks/useSessionDraft';
 import { apiErrorMessage, formatCoachDate } from '@/lib/coach/api';
-import { useCoachRecipes, type CoachRecipe } from '@/lib/coach/coachRecipes';
+import { useCoachRecipes } from '@/lib/coach/coachRecipes';
 import {
-  dayKcal,
+  isNutritionDraft,
+  previewNutrition,
+  nutritionDraft,
+  nutritionRequest,
+  type NutritionDraft,
+} from '@/lib/coach/nutritionDraft';
+import {
   useCoachNutritionPlan,
   useEndNutritionPlan,
   useSetNutritionPlan,
-  type DayGrams,
-  type DayType,
-  type MealRequest,
   type NutritionPlan,
 } from '@/lib/coach/nutritionPlan';
+import { NutritionPlanFields } from './NutritionPlanFields';
+import { NutritionPlanHistory } from './NutritionPlanHistory';
+import { NutritionPlanSummary } from './NutritionPlanSummary';
+import { NutritionTemplatePicker } from './NutritionTemplatePicker';
 
-const DAYS = [
-  { key: 'training', type: 'TRAINING', label: 'Día de entreno' },
-  { key: 'rest', type: 'REST', label: 'Día de descanso' },
-] as const;
-const MAX_MEALS = 20;
-
-interface MealDraft {
-  id: number;
-  dayType: DayType;
-  slotName: string;
-  /** null: the prescribed recipe was deleted, or none chosen yet. */
-  recipeId: string | null;
-  deletedName: string | null;
-  servings: string;
+interface ClientDraft {
+  baseId: string | null;
+  fields: NutritionDraft;
 }
+const isClientDraft = (value: unknown): value is ClientDraft =>
+  typeof value === 'object' &&
+  value !== null &&
+  'baseId' in value &&
+  (value.baseId === null || typeof value.baseId === 'string') &&
+  'fields' in value &&
+  isNutritionDraft(value.fields);
 
-let nextMealId = 0;
-const toMealDrafts = (plan: NutritionPlan | null): MealDraft[] =>
-  (plan?.meals ?? []).map((meal) => ({
-    id: nextMealId++,
-    dayType: meal.dayType,
-    slotName: meal.slotName,
-    recipeId: meal.recipeId,
-    deletedName: meal.recipeId ? null : meal.name,
-    servings: String(meal.servings),
-  }));
-
-const parseServings = (value: string) => {
-  const n = Number(value.replace(',', '.'));
-  return value.trim() !== '' && Number.isFinite(n) && n >= 0.25 && n <= 10 ? n : null;
-};
-
-const toMealRequest = (meal: MealDraft): MealRequest | null => {
-  const servings = parseServings(meal.servings);
-  if (!meal.recipeId || !meal.slotName.trim() || servings == null) return null;
-  return {
-    dayType: meal.dayType,
-    slotName: meal.slotName.trim(),
-    recipeId: meal.recipeId,
-    servings,
-  };
-};
-const MACROS = [
-  { key: 'protein', label: 'Proteína' },
-  { key: 'carbs', label: 'Carbohidratos' },
-  { key: 'fat', label: 'Grasa' },
-] as const;
-
-type Draft = Record<'training' | 'rest', Record<keyof DayGrams, string>>;
-
-const toDraft = (plan: NutritionPlan | null | undefined): Draft => {
-  const grams = (day: 'training' | 'rest') => ({
-    protein: plan ? String(plan[day].protein) : '',
-    carbs: plan ? String(plan[day].carbs) : '',
-    fat: plan ? String(plan[day].fat) : '',
-  });
-  return { training: grams('training'), rest: grams('rest') };
-};
-
-const parseGrams = (value: string) => {
-  const n = Number(value);
-  return value.trim() !== '' && Number.isInteger(n) && n >= 0 && n <= 1000 ? n : null;
-};
-
-const parseDay = (day: Record<keyof DayGrams, string>): DayGrams | null => {
-  const protein = parseGrams(day.protein);
-  const carbs = parseGrams(day.carbs);
-  const fat = parseGrams(day.fat);
-  if (protein == null || carbs == null || fat == null || protein + carbs + fat === 0) return null;
-  return { protein, carbs, fat };
-};
-
-/** The calorie and macro targets the coach sets, per training and rest day. */
 export function NutritionPlanSection({ linkId, canEdit }: { linkId: string; canEdit: boolean }) {
   const plan = useCoachNutritionPlan(linkId);
-
-  if (plan.isLoading) return <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>;
-  if (plan.isError) return <p role="alert">No se pudo cargar la pauta de nutrición.</p>;
+  if (plan.isPending) return <p role="status">Cargando pauta…</p>;
+  if (plan.isError)
+    return (
+      <div role="alert">
+        No se pudo cargar la pauta de nutrición.
+        <button type="button" className="btn btn-secondary" onClick={() => void plan.refetch()}>
+          Reintentar pauta
+        </button>
+      </div>
+    );
   return (
-    <PlanForm
-      key={plan.data?.id ?? 'none'}
-      linkId={linkId}
-      plan={plan.data ?? null}
-      canEdit={canEdit}
-    />
+    <>
+      {canEdit ? (
+        <PlanForm
+          key={`${linkId}:${plan.data?.id ?? 'none'}`}
+          linkId={linkId}
+          plan={plan.data ?? null}
+          reload={() => void plan.refetch()}
+        />
+      ) : plan.data ? (
+        <NutritionPlanSummary plan={plan.data} />
+      ) : (
+        <p className="text-sm">
+          Sin pauta de nutrición. Tu alumno no te ha dado permiso para pautarla.
+        </p>
+      )}
+      <NutritionPlanHistory key={linkId} linkId={linkId} />
+    </>
   );
 }
 
 function PlanForm({
   linkId,
   plan,
-  canEdit,
+  reload,
 }: {
   linkId: string;
   plan: NutritionPlan | null;
-  canEdit: boolean;
+  reload: () => void;
 }) {
-  const [draft, setDraft] = useState(() => toDraft(plan));
-  const [notes, setNotes] = useState(plan?.notes ?? '');
-  const [meals, setMeals] = useState(() => toMealDrafts(plan));
+  const draft = useSessionDraft(
+    `nutrition:${linkId}`,
+    { baseId: plan?.id ?? null, fields: nutritionDraft(plan) },
+    isClientDraft,
+  );
   const recipes = useCoachRecipes();
   const save = useSetNutritionPlan(linkId);
   const end = useEndNutritionPlan(linkId);
-  const training = parseDay(draft.training);
-  const rest = parseDay(draft.rest);
+  const [preview, setPreview] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const request = nutritionRequest(draft.value.fields);
   const busy = save.isPending || end.isPending;
-  const mealRequests = meals.map(toMealRequest);
-  const mealsValid = mealRequests.every((meal) => meal !== null);
-
-  if (!canEdit && !plan) {
-    return (
-      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-        Sin pauta de nutrición. Tu alumno no te ha dado permiso para pautarla.
-      </p>
-    );
-  }
+  const stale = draft.value.baseId !== (plan?.id ?? null);
+  const knownRecipes = recipes.data ?? [];
+  const missingRecipe = draft.value.fields.meals.some(
+    (meal) => !knownRecipes.some((r) => r.id === meal.recipeId),
+  );
+  const ready = request !== null && !missingRecipe;
 
   const submit = () => {
-    if (!training || !rest || !mealsValid) return;
+    if (!request || !ready || stale || busy) return;
+    if (
+      !window.confirm(
+        '¿Publicar esta pauta solo para este alumno? Se aplicará ahora y sustituirá la anterior, que se conservará en el historial.',
+      )
+    )
+      return;
+    setError(null);
     save.mutate(
-      { training, rest, notes: notes.trim() || null, meals: mealRequests as MealRequest[] },
       {
-        onSuccess: () => toast.success('Pauta de nutrición guardada'),
-        onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo guardar la pauta')),
+        plan: {
+          ...request,
+          meals: request.meals.map((meal) => ({
+            ...meal,
+            expectedRecipeUpdatedAt: knownRecipes.find((recipe) => recipe.id === meal.recipeId)
+              ?.updatedAt,
+          })),
+        },
+        expectedPlanId: draft.value.baseId,
+      },
+      {
+        onSuccess: () => {
+          draft.clear();
+          toast.success('Pauta de nutrición publicada');
+        },
+        onError: (cause) =>
+          setError(apiErrorMessage(cause, 'No se pudo publicar. Conservamos tus cambios.')),
       },
     );
   };
 
-  const remove = () =>
-    end.mutate(undefined, {
-      onSuccess: () => toast.success('Pauta de nutrición retirada'),
-      onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo retirar la pauta')),
+  const remove = () => {
+    if (
+      !plan ||
+      busy ||
+      !window.confirm(
+        '¿Retirar la pauta activa? El alumno volverá a usar sus propios objetivos. Se conserva el historial y se descarta el borrador local.',
+      )
+    )
+      return;
+    setError(null);
+    end.mutate(plan.id, {
+      onSuccess: () => {
+        draft.clear();
+        toast.success('Pauta de nutrición retirada');
+      },
+      onError: (cause) => setError(apiErrorMessage(cause, 'No se pudo retirar la pauta.')),
     });
+  };
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      <p className="text-sm">
         {plan
           ? `Pauta activa desde ${formatCoachDate(plan.createdAt)}. Sustituye los objetivos de tu alumno.`
           : 'Sin pauta: tu alumno usa sus propios objetivos.'}
       </p>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {DAYS.map((day) => {
-          const parsed = day.key === 'training' ? training : rest;
-          return (
-            <fieldset key={day.key} className="flex flex-col gap-2" disabled={!canEdit || busy}>
-              <legend className="font-semibold text-white mb-1">{day.label}</legend>
-              {MACROS.map((macro) => (
-                <label key={macro.key} className="flex items-center justify-between gap-3 text-sm">
-                  <span style={{ color: 'var(--text-secondary)' }}>{macro.label} (g)</span>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    min={0}
-                    max={1000}
-                    step={1}
-                    className="w-24 rounded-lg px-3 py-2 bg-black/20 border text-right"
-                    style={{ borderColor: 'var(--border-subtle)' }}
-                    aria-label={`${macro.label} ${day.label.toLowerCase()}`}
-                    value={draft[day.key][macro.key]}
-                    onChange={(e) =>
-                      setDraft((d) => ({
-                        ...d,
-                        [day.key]: { ...d[day.key], [macro.key]: e.target.value },
-                      }))
-                    }
-                  />
-                </label>
-              ))}
-              <p className="text-sm font-bold text-white">
-                {parsed ? `${dayKcal(parsed)} kcal` : 'Gramos enteros entre 0 y 1000'}
-              </p>
-              <DayMeals
-                day={day}
-                meals={meals}
-                recipes={recipes.data ?? []}
-                canEdit={canEdit}
-                onChange={setMeals}
-              />
-            </fieldset>
-          );
-        })}
-      </div>
-      <label className="flex flex-col gap-1 text-sm">
-        <span style={{ color: 'var(--text-secondary)' }}>Notas para tu alumno</span>
-        <textarea
-          className="rounded-lg px-3 py-2 bg-black/20 border min-w-0"
-          style={{ borderColor: 'var(--border-subtle)' }}
-          rows={2}
-          maxLength={1000}
-          disabled={!canEdit || busy}
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
-      </label>
-      {canEdit && (
-        <div className="flex flex-wrap gap-2">
+      <p className="text-sm">
+        Los cambios son un borrador hasta publicarlos. Las comidas se copian de tus recetas
+        actuales; las versiones anteriores conservan su contenido.
+      </p>
+      {plan && (
+        <details>
+          <summary className="cursor-pointer py-2">Ver pauta publicada</summary>
+          <NutritionPlanSummary plan={plan} />
+        </details>
+      )}
+      <NutritionTemplatePicker
+        dirty={draft.dirty}
+        disabled={busy || stale}
+        onCopy={(fields) => {
+          draft.setValue({ ...draft.value, fields });
+          setPreview(false);
+          setError(null);
+        }}
+      />
+      {draft.notice && (
+        <p role="status" className="text-sm">
+          {draft.notice}
+        </p>
+      )}
+      {stale && (
+        <p role="alert">
+          La pauta publicada ha cambiado desde que empezaste este borrador. Revisa la versión actual
+          y descarta los cambios locales para empezar desde ella.
+        </p>
+      )}
+      {error && (
+        <div role="alert">
+          <p>{error}</p>
           <button
             type="button"
-            className="btn btn-primary"
-            disabled={busy || !training || !rest || !mealsValid}
-            onClick={submit}
+            className="btn btn-secondary"
+            disabled={busy}
+            onClick={() => {
+              reload();
+              void recipes.refetch();
+              setPreview(false);
+            }}
           >
-            Guardar pauta
+            Actualizar pauta y recetas
           </button>
-          {plan && (
-            <button type="button" className="btn btn-secondary" disabled={busy} onClick={remove}>
-              Quitar pauta
-            </button>
-          )}
         </div>
       )}
-    </div>
-  );
-}
-
-function DayMeals({
-  day,
-  meals,
-  recipes,
-  canEdit,
-  onChange,
-}: {
-  day: (typeof DAYS)[number];
-  meals: MealDraft[];
-  recipes: CoachRecipe[];
-  canEdit: boolean;
-  onChange: (update: (meals: MealDraft[]) => MealDraft[]) => void;
-}) {
-  const own = meals.filter((meal) => meal.dayType === day.type);
-  const dayLabel = day.label.toLowerCase();
-  const patch = (id: number, change: Partial<MealDraft>) =>
-    onChange((all) => all.map((meal) => (meal.id === id ? { ...meal, ...change } : meal)));
-  const input = 'rounded-lg px-3 py-2 bg-black/20 border min-w-0';
-  const border = { borderColor: 'var(--border-subtle)' };
-
-  return (
-    <div className="flex flex-col gap-2 mt-2">
-      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-        Comidas pautadas
-      </span>
-      {own.length === 0 && (
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Sin comidas: solo cuentan los macros.
+      {recipes.isError && (
+        <div role="alert">
+          No se pudieron cargar tus recetas.{' '}
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => void recipes.refetch()}
+          >
+            Reintentar recetas
+          </button>
+        </div>
+      )}
+      {missingRecipe && !recipes.isPending && !recipes.isError && (
+        <p role="alert">
+          Hay comidas sin receta disponible. Elige otra receta o quita esas comidas antes de
+          publicar.
         </p>
       )}
-      {own.map((meal, i) => {
-        const recipe = recipes.find((r) => r.id === meal.recipeId);
-        const servings = parseServings(meal.servings);
-        return (
-          <div key={meal.id} className="flex flex-col gap-1 rounded-lg p-2 bg-black/10">
-            <div className="flex gap-2">
-              <input
-                className={`${input} flex-1`}
-                style={border}
-                maxLength={60}
-                placeholder="Desayuno"
-                aria-label={`Nombre de la comida ${i + 1} ${dayLabel}`}
-                value={meal.slotName}
-                onChange={(e) => patch(meal.id, { slotName: e.target.value })}
-              />
-              <input
-                type="number"
-                inputMode="decimal"
-                min={0.25}
-                max={10}
-                step={0.25}
-                className={`${input} w-20 text-right`}
-                style={border}
-                aria-label={`Raciones de la comida ${i + 1} ${dayLabel}`}
-                value={meal.servings}
-                onChange={(e) => patch(meal.id, { servings: e.target.value })}
-              />
-              {canEdit && (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  aria-label={`Quitar la comida ${i + 1} ${dayLabel}`}
-                  onClick={() => onChange((all) => all.filter((m) => m.id !== meal.id))}
-                >
-                  <Trash2 size={16} aria-hidden />
-                </button>
-              )}
-            </div>
-            <select
-              className={input}
-              style={border}
-              aria-label={`Receta de la comida ${i + 1} ${dayLabel}`}
-              value={meal.recipeId ?? ''}
-              onChange={(e) =>
-                patch(meal.id, { recipeId: e.target.value || null, deletedName: null })
-              }
-            >
-              <option value="">
-                {meal.deletedName ? `${meal.deletedName} (receta borrada)` : 'Elige una receta'}
-              </option>
-              {recipes.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
-            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-              {meal.deletedName
-                ? 'Receta borrada: elige otra o quita la comida.'
-                : recipe && servings != null
-                  ? `${Math.round(recipe.kcal * servings)} kcal`
-                  : 'Raciones entre 0,25 y 10'}
-            </span>
-          </div>
-        );
-      })}
-      {canEdit && (
+      <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          className="btn btn-secondary self-start"
-          disabled={meals.length >= MAX_MEALS}
-          onClick={() =>
-            onChange((all) => [
-              ...all,
-              {
-                id: nextMealId++,
-                dayType: day.type,
-                slotName: '',
-                recipeId: null,
-                deletedName: null,
-                servings: '1',
-              },
-            ])
-          }
+          className="btn btn-secondary"
+          disabled={!ready}
+          aria-pressed={preview}
+          onClick={() => setPreview(!preview)}
         >
-          <Plus size={16} aria-hidden /> Añadir comida
+          {preview ? 'Volver al editor' : 'Vista previa de la pauta'}
         </button>
+        {draft.dirty && (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={busy}
+            onClick={() => {
+              if (window.confirm('¿Descartar los cambios locales y volver a la pauta publicada?')) {
+                draft.clear();
+                setPreview(false);
+                setError(null);
+              }
+            }}
+          >
+            Descartar cambios locales
+          </button>
+        )}
+      </div>
+      {preview && request && ready ? (
+        <section aria-label="Vista previa de la pauta">
+          <NutritionPlanSummary plan={previewNutrition(request, knownRecipes)} />
+        </section>
+      ) : (
+        <NutritionPlanFields
+          value={draft.value.fields}
+          onChange={(fields) => draft.setValue({ ...draft.value, fields })}
+          recipes={knownRecipes}
+          disabled={busy}
+        />
       )}
-      {canEdit && recipes.length === 0 && (
-        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-          Crea recetas en tu biblioteca para pautar comidas.
-        </p>
-      )}
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={busy || !ready || stale || (!draft.dirty && !!plan)}
+          onClick={submit}
+        >
+          Publicar pauta
+        </button>
+        {plan && (
+          <button type="button" className="btn btn-secondary" disabled={busy} onClick={remove}>
+            Quitar pauta
+          </button>
+        )}
+      </div>
     </div>
   );
 }

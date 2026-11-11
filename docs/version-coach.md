@@ -44,6 +44,8 @@ Antes de asignar se muestra la versión completa. Si cambia mientras se revisa, 
 
 **Biblioteca de recetas.** El entrenador guarda sus recetas con los macros por ración y las calorías calculadas.
 
+**Publicación e historial.** Editar una pauta prepara un borrador; la vista previa muestra los objetivos y las comidas antes de publicarlos. La confirmación aplica la nueva versión solo a ese alumno y conserva la anterior. El historial permite consultar las últimas 20 versiones, con las recetas tal como se publicaron, aunque después cambien o se borren. Los cambios locales se recuperan en la misma pestaña durante siete días, separados por cuenta. Si la pauta activa cambia mientras se edita, hay que revisar la versión publicada antes de sustituirla. Retirar una pauta también requiere confirmación y devuelve al alumno sus objetivos propios.
+
 **Comidas pautadas.** El entrenador indica qué comer en cada momento del día (desayuno, comida…), con la receta y las raciones, distinto para días de entreno y de descanso. El alumno las ve en su diario y las registra con un solo toque. Si el entrenador borra la receta después, la comida pautada no se pierde.
 
 **Adherencia.** En la ficha del alumno, el entrenador ve semana a semana cómo cumple la pauta: qué días acertó, qué días se salió, cuáles no registró, y el porcentaje de calorías y proteína frente a lo pautado. Un día cuenta como en objetivo si las calorías quedan a ±10 % y la proteína llega al menos al 90 %.
@@ -69,6 +71,12 @@ Antes de asignar se muestra la versión completa. Si cambia mientras se revisa, 
 **Fotos de progreso.** En Seguimiento el alumno puede hacerse fotos de frente, de perfil y de espalda y guardarlas con su fecha. Antes de subirlas, el móvil las reduce para que ocupen poco y les quita los datos ocultos, como la ubicación. Se guardan en un almacén privado: solo las ve el alumno y, si comparte su cuerpo, su entrenador, que las encuentra por días en la ficha del alumno. El alumno puede borrar cualquier foto; al borrar la cuenta se borran todas y la descarga de datos incluye la lista de fotos guardadas.
 
 ---
+
+## Biblioteca de pautas de nutrición
+
+En Planificación, «Pautas de nutrición» guarda hasta 100 pautas privadas con objetivos para entreno y descanso, notas y comidas opcionales. El editor conserva los cambios pendientes en la pestaña y permite revisar la vista previa antes de guardarlos. Si otra sesión cambia la pauta, puedes recuperar la versión guardada o conservar tu trabajo como una nueva.
+
+Desde Nutrición en la ficha de un alumno, «Usar pauta de biblioteca» copia el contenido a su borrador. Puedes adaptarlo y publicarlo cuando esté listo. Editar o borrar la pauta de biblioteca no cambia las copias ya publicadas. Las comidas guardadas conservan su contenido; al preparar una nueva copia se usan las recetas actuales y hay que sustituir o quitar las que ya no estén disponibles. La descarga de datos incluye la biblioteca del entrenador.
 
 ## Fase 5 — Planes *(en curso)*
 

@@ -58,9 +58,12 @@ export const coachBottomPaths = ['/entrenador', '/entrenador/alumnos', '/entrena
 export function isItemActive(itemPath: string, pathname: string) {
   if (itemPath === '/entrenador') return pathname === '/entrenador';
   if (itemPath === '/entrenador/planificacion')
-    return ['/entrenador/planificacion', '/entrenador/programas', '/entrenador/recetas'].some(
-      (path) => pathname === path || pathname.startsWith(`${path}/`),
-    );
+    return [
+      '/entrenador/planificacion',
+      '/entrenador/programas',
+      '/entrenador/recetas',
+      '/entrenador/pautas',
+    ].some((path) => pathname === path || pathname.startsWith(`${path}/`));
   if (itemPath === '/entrenador/ajustes' && pathname === '/settings') return true;
   return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
 }

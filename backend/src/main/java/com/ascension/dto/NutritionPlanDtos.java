@@ -52,7 +52,8 @@ public final class NutritionPlanDtos {
             @NotNull(message = "Elige una receta") UUID recipeId,
             @NotNull(message = "Indica las raciones")
             @DecimalMin(value = "0.25", message = "Mínimo un cuarto de ración")
-            @DecimalMax(value = "10", message = "Máximo 10 raciones") Double servings) {
+            @DecimalMax(value = "10", message = "Máximo 10 raciones") Double servings,
+            Instant expectedRecipeUpdatedAt) {
     }
 
     public record DayRequest(
@@ -69,6 +70,13 @@ public final class NutritionPlanDtos {
             @Valid @NotNull(message = "Faltan los objetivos de día de descanso") DayRequest rest,
             @Size(max = 1000, message = "Las notas no pueden pasar de 1000 caracteres") String notes,
             @Size(max = 20, message = "Máximo 20 comidas pautadas") List<@Valid @NotNull MealRequest> meals) {
+    }
+
+    public record PublishRequest(@Valid @NotNull PlanRequest plan, UUID expectedPlanId) {
+    }
+
+    public record PlanVersion(UUID id, DayTargets training, DayTargets rest, String status,
+                              Instant createdAt, Instant endedAt) {
     }
 
     /** What the client logged on one day. */

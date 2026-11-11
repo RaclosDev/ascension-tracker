@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, ClipboardList, ChefHat } from 'lucide-react';
+import { ArrowUpRight, ClipboardList, ChefHat, Utensils } from 'lucide-react';
 import { CoachPageHeader, CoachWorkspace } from '../components/coach/CoachWorkspace';
 
 export default function CoachPlanningPage() {
@@ -10,6 +10,17 @@ export default function CoachPlanningPage() {
         description="Prepara recursos reutilizables y adapta el trabajo desde la ficha de cada alumno."
       />
       <div className="coach-resource-grid">
+        <section className="card">
+          <Utensils size={24} aria-hidden />
+          <h2>Pautas de nutrición</h2>
+          <p>
+            Prepara objetivos y comidas para entreno y descanso. Copia cada pauta y adáptala al
+            alumno antes de publicarla.
+          </p>
+          <Link className="btn btn-secondary" to="/entrenador/pautas">
+            Abrir pautas <ArrowUpRight size={16} aria-hidden />
+          </Link>
+        </section>
         <section className="card">
           <ClipboardList size={24} aria-hidden />
           <h2>Programas de entrenamiento</h2>
