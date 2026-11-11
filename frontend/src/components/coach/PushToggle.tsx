@@ -11,7 +11,7 @@ const currentState = (): State => {
 };
 
 /** Turns on push notices on this device for check-ins: reminders, new check-ins and replies. */
-export function PushToggle({ text }: { text: string }) {
+export function PushToggle({ text, unsupportedText }: { text: string; unsupportedText?: string }) {
   const [state, setState] = useState<State>(currentState);
 
   // Permission already granted: make sure this device is registered, without asking again.
@@ -19,9 +19,11 @@ export function PushToggle({ text }: { text: string }) {
     if (currentState() === 'on') void enablePushNotifications();
   }, []);
 
-  if (state === 'unsupported') return null;
+  if (state === 'unsupported') {
+    return unsupportedText ? <p className="coach-description">{unsupportedText}</p> : null;
+  }
   return (
-    <div className="flex items-center justify-between gap-3 text-sm">
+    <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
       <span style={{ color: 'var(--text-secondary)' }}>
         {state === 'on' && 'Avisos activados en este dispositivo.'}
         {state === 'off' && text}

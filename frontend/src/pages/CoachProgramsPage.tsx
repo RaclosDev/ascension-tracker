@@ -19,8 +19,8 @@ export default function CoachProgramsPage() {
       <header className="mb-6 pb-2 border-b border-white/5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link
-            to="/entrenador"
-            aria-label="Volver al modo entrenador"
+            to="/entrenador/planificacion"
+            aria-label="Volver a planificación"
             className="btn btn-secondary"
           >
             <ArrowLeft size={16} aria-hidden />

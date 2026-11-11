@@ -3,6 +3,16 @@
 export const preloadRoute = (path: string): Promise<unknown> => {
   const loader = (() => {
     switch (path) {
+      case '/entrenador':
+        return import('../pages/CoachPage');
+      case '/entrenador/alumnos':
+        return import('../pages/CoachClientsPage');
+      case '/entrenador/revisiones':
+        return import('../pages/CoachReviewsPage');
+      case '/entrenador/planificacion':
+        return import('../pages/CoachPlanningPage');
+      case '/entrenador/ajustes':
+        return import('../pages/CoachSettingsPage');
       case '/settings':
         return import('../pages/SettingsPage');
       case '/utilities':

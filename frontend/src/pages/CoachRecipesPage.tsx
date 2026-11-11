@@ -35,7 +35,7 @@ export default function CoachRecipesPage() {
       <header className="mb-6 pb-2 border-b border-white/5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link
-            to="/entrenador"
+            to="/entrenador/planificacion"
             aria-label="Volver al modo entrenador"
             className="btn btn-secondary"
           >

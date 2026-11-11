@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { MessageSquareText, Plus, Trash2 } from 'lucide-react';
 import { apiErrorMessage } from '../../lib/coach/api';
 import { useCheckinTemplate, useSaveCheckinTemplate } from '../../lib/coach/checkins';
+import { QueryErrorNotice } from '../QueryErrorNotice';
 
 const MAX_QUESTIONS = 10;
 
@@ -19,7 +20,9 @@ export function CheckinTemplateEditor() {
         cumplimiento.
       </p>
       {template.isLoading && <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>}
-      {template.isError && <p role="alert">No se pudieron cargar las preguntas.</p>}
+      {template.isError && (
+        <QueryErrorNotice retry={() => void template.refetch()} pending={template.isFetching} />
+      )}
       {template.data && (
         <Editor key={template.data.questions.join('\n')} initial={template.data.questions} />
       )}
