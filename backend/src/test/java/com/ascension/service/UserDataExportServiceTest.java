@@ -55,6 +55,9 @@ class UserDataExportServiceTest {
     private NutritionTemplateService nutritionTemplateService;
 
     @Mock
+    private CoachSettingsService coachSettingsService;
+
+    @Mock
     private ProgressPhotoService progressPhotoService;
 
     @Mock

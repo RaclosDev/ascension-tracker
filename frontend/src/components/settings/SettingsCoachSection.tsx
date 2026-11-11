@@ -96,10 +96,21 @@ function CoachLink({ link }: { link: MyCoach }) {
 
   return (
     <li className="rounded-lg p-3 border" style={{ borderColor: 'var(--border-subtle)' }}>
-      <div className="font-bold text-white">{name}</div>
+      <div className="font-bold text-foreground">{name}</div>
       <div className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
         {link.coach.email} · desde {formatCoachDate(link.since)}
       </div>
+      {link.coach.picture && (
+        <img
+          src={link.coach.picture}
+          alt=""
+          className="h-14 w-14 rounded-full object-cover mb-3"
+          referrerPolicy="no-referrer"
+        />
+      )}
+      {link.coachPresentation && (
+        <p className="whitespace-pre-wrap break-words mb-3">{link.coachPresentation}</p>
+      )}
       <fieldset className="flex flex-col gap-2 mb-3">
         <legend className="sr-only">Qué compartes con {name}</legend>
         {SCOPES.map((scope) => (

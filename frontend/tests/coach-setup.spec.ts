@@ -1,3 +1,4 @@
+import { coachSettings } from './helpers/coachSettings';
 import { test, expect } from '@playwright/test';
 import { setupAuthMocks } from './helpers/auth';
 import type { CoachSetup } from '../src/lib/coach/setup';
@@ -19,6 +20,7 @@ for (const width of [1440, 390]) {
     await page.route('**/api/coach/**', async (route) => {
       const path = new URL(route.request().url()).pathname.replace('/api/coach/', '');
       if (path === 'profile') return route.fulfill({ json: { coach: true } });
+      if (path === 'settings') return route.fulfill({ json: coachSettings });
       const client = {
         linkId: 'l1',
         client: { name: 'Ana García', email: 'ana@example.com', picture: null },
