@@ -96,6 +96,17 @@ for (const width of [390, 1920]) {
               createdAt: '2026-11-09',
               endedAt: null,
             },
+            {
+              id: 'old',
+              programId: 'old-program',
+              sourceProgramId: null,
+              programName: 'Programa sustituido',
+              weeks: 1,
+              startDate: '2026-11-09',
+              status: 'ENDED',
+              createdAt: '2026-11-09',
+              endedAt: '2026-11-10T10:00:00Z',
+            },
           ],
         });
       if (path === 'clients/l1/programs/a1/plan') return route.fulfill({ json: previous });
@@ -115,6 +126,14 @@ for (const width of [390, 1920]) {
       return route.fulfill({ json: [] });
     });
     await page.goto('/entrenador/alumnos/l1');
+    const previousPrograms = page.getByText('Programas anteriores de esta semana (1)', {
+      exact: true,
+    });
+    const previousHeading = page.getByRole('heading', { name: 'Programa sustituido' });
+    await expect(previousHeading).toBeHidden();
+    await previousPrograms.click();
+    await expect(previousHeading).toBeVisible();
+    await previousPrograms.click();
     await page.getByRole('button', { name: 'Copiar semana anterior' }).click();
     await expect(page.getByLabel('Nombre del día (Lunes 16/11)')).toHaveValue('Torso');
     await page
