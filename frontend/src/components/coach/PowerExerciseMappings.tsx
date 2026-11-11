@@ -67,6 +67,7 @@ export function PowerExerciseMappings({
                 {row.variant?.machine && ` · ${row.variant.machine}`}
               </span>
               <select
+                className="form-input min-h-11"
                 value={mapping ? `${mapping.lift}:${mapping.kind}` : 'AUTO'}
                 onChange={(event) => {
                   const [lift, kind] = event.target.value.split(':');

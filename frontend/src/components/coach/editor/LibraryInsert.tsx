@@ -50,14 +50,19 @@ export function LibraryInsert({ onInsert }: { onInsert: (days: ProgramDay[]) => 
           />
           Solo favoritos
         </label>
-        <label>
+        <label className="flex flex-col gap-1 min-w-0">
           Buscar nombre, etiqueta o material
-          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input
+            className="form-input min-h-11"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 min-w-0">
           Duración máxima (min)
           <input
-            className="w-24"
+            className="w-24 form-input min-h-11"
             type="number"
             min={1}
             max={300}
@@ -65,9 +70,10 @@ export function LibraryInsert({ onInsert }: { onInsert: (days: ProgramDay[]) => 
             onChange={(e) => setMaxMinutes(e.target.value)}
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 min-w-0">
           Plantilla
           <select
+            className="form-input min-h-11"
             value={id}
             onChange={(e) => {
               setId(e.target.value);
@@ -116,16 +122,24 @@ export function LibraryInsert({ onInsert }: { onInsert: (days: ProgramDay[]) => 
         {source.isError && <p role="alert">No se pudo cargar la plantilla.</p>}
         {source.data && (
           <>
-            <label>
+            <label className="flex flex-col gap-1 min-w-0">
               Contenido
-              <select value={mode} onChange={(e) => setMode(e.target.value)}>
+              <select
+                className="form-input min-h-11"
+                value={mode}
+                onChange={(e) => setMode(e.target.value)}
+              >
                 <option value="session">Una sesión o bloque</option>
                 <option value="week">Una semana completa</option>
               </select>
             </label>
-            <label>
+            <label className="flex flex-col gap-1 min-w-0">
               {mode === 'week' ? 'Semana de origen (elige una sesión)' : 'Sesión de origen'}
-              <select value={day} onChange={(e) => setDay(e.target.value)}>
+              <select
+                className="form-input min-h-11"
+                value={day}
+                onChange={(e) => setDay(e.target.value)}
+              >
                 {source.data.days.map((d, i) => (
                   <option key={i} value={i}>
                     S{d.week} · {d.name}
@@ -134,9 +148,13 @@ export function LibraryInsert({ onInsert }: { onInsert: (days: ProgramDay[]) => 
               </select>
             </label>
             {mode === 'session' && (
-              <label>
+              <label className="flex flex-col gap-1 min-w-0">
                 Día de destino
-                <select value={target} onChange={(e) => setTarget(Number(e.target.value))}>
+                <select
+                  className="form-input min-h-11"
+                  value={target}
+                  onChange={(e) => setTarget(Number(e.target.value))}
+                >
                   {WEEKDAY_LABELS.map((label, i) => (
                     <option key={label} value={i + 1}>
                       {label}

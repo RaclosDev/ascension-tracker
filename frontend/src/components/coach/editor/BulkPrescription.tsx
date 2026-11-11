@@ -47,9 +47,10 @@ export function BulkPrescription({
     <details className="card">
       <summary className="cursor-pointer font-semibold">Ajustar varias pautas a la vez</summary>
       <div className="flex flex-wrap gap-3 mt-3">
-        <label>
+        <label className="flex flex-col gap-1 min-w-0">
           Sesión
           <select
+            className="form-input min-h-11"
             value={delta.day ?? ''}
             onChange={(e) => edit({ day: e.target.value ? Number(e.target.value) : null })}
           >
@@ -61,9 +62,10 @@ export function BulkPrescription({
             ))}
           </select>
         </label>
-        <label>
+        <label className="flex flex-col gap-1 min-w-0">
           Ejercicio
           <select
+            className="form-input min-h-11"
             value={delta.exerciseId ?? ''}
             onChange={(e) => edit({ exerciseId: e.target.value || null })}
           >
@@ -84,10 +86,10 @@ export function BulkPrescription({
             { key: 'rir', label: 'Cambio de RIR', step: 1 },
           ] as const
         ).map((field) => (
-          <label key={field.key}>
+          <label className="flex flex-col gap-1 min-w-0" key={field.key}>
             {field.label}
             <input
-              className="w-24"
+              className="w-24 form-input min-h-11"
               type="number"
               min={-100}
               max={100}

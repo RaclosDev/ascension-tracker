@@ -27,9 +27,10 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="card flex flex-wrap gap-4 items-end">
-        <label>
+        <label className="flex flex-col gap-1 min-w-0">
           Semana que revisas
           <input
+            className="form-input min-h-11"
             type="date"
             value={reviewWeek}
             onChange={(e) => {
@@ -37,9 +38,10 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
             }}
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 min-w-0">
           Semana que preparas
           <input
+            className="form-input min-h-11"
             type="date"
             value={planningWeek}
             min={weekDate()}
