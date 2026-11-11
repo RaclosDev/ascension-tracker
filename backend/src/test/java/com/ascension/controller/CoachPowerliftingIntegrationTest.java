@@ -76,7 +76,7 @@ class CoachPowerliftingIntegrationTest {
         mvc.perform(as(get(path), coach)).andExpect(status().isOk());
         mvc.perform(as(put(path), coach).contentType("application/json").content(PROFILE)).andExpect(status().isForbidden());
         mvc.perform(as(patch("/api/coaching/coaches/" + link), client).contentType("application/json")
-                        .content("{\"training\":false,\"nutrition\":false,\"body\":false,\"editTraining\":false}"))
+                        .content("{\"training\":false,\"nutrition\":true,\"body\":false,\"editTraining\":false}"))
                 .andExpect(status().isNoContent());
         mvc.perform(as(get(path), coach)).andExpect(status().isForbidden());
         mvc.perform(as(post("/api/coach/clients/" + link + "/end"), coach)).andExpect(status().isNoContent());
