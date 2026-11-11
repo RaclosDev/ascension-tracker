@@ -21,6 +21,7 @@ export default defineConfig({
           // Coach pages need the network anyway and most users never open them.
           '**/Coach*Page*',
           '**/CoachWorkspace-*',
+          '**/CoachTour*',
           '**/ClientTraining-*',
           '**/ClientWeek-*',
           '**/DayEditor-*',

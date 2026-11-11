@@ -10,7 +10,11 @@ export default function CoachSettingsPage() {
       <CoachPageHeader
         title="Ajustes del entrenador"
         description="Tu identidad profesional, los valores iniciales de las incorporaciones y los avisos."
-      />
+      >
+        <Link className="btn btn-secondary" to="/entrenador/guia">
+          Guía interactiva
+        </Link>
+      </CoachPageHeader>
       <ProfessionalSettingsEditor />
       <div className="coach-settings-grid">
         <CheckinTemplateEditor />

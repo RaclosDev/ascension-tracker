@@ -10,6 +10,8 @@ import CoachReviewsPage from '../pages/CoachReviewsPage';
 import { emptySetup } from '../lib/coach/setup';
 import type { ClientStatus } from '../lib/coach/clientStatus';
 
+vi.mock('../components/coach/tour/CoachTourWelcome', () => ({ default: () => null }));
+
 vi.mock('../api/client', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() },
 }));
