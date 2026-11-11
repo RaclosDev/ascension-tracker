@@ -88,6 +88,51 @@ class CoachPowerliftingIntegrationTest {
         users.ensureUserExists(email, "Power Test", null);
         return email;
     }
+
+    @Test
+    void storesCompetitionBlocksAndAttemptsWithVersionPermissionsAndExport() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = link(coach, client);
+        String path = "/api/coach/clients/" + link + "/powerlifting/meets";
+        String attempts = java.util.stream.Stream.of("SQUAT", "BENCH", "DEADLIFT")
+                .flatMap(lift -> java.util.stream.IntStream.rangeClosed(1, 3).mapToObj(number ->
+                        "{\"lift\":\"" + lift + "\",\"number\":" + number + ",\"plannedKg\":100,\"result\":\"PENDING\",\"recordAttempt\":false}"))
+                .collect(java.util.stream.Collectors.joining(","));
+        String request = """
+                {"expectedVersion":0,"content":{"name":"Campeonato","date":"2027-06-01","equipment":"CLASSIC",
+                "federation":"IPF","category":"Open","rules":"IPF_2026","targetTotal":500,"notes":"Preparación",
+                "archived":false,"blocks":[{"id":"00000000-0000-0000-0000-000000000001","name":"Base",
+                "start":"2027-01-01","end":"2027-02-01","goal":"Técnica"}],"attempts":[%s]}}
+                """.formatted(attempts);
+        mvc.perform(as(post(path), coach).contentType("application/json")
+                .content(request.replace("2027-02-01", "2027-07-01"))).andExpect(status().isBadRequest());
+        mvc.perform(as(post(path), coach).contentType("application/json")
+                .content(request.replace("PENDING", "VALID"))).andExpect(status().isBadRequest());
+        String id = json.readTree(mvc.perform(as(post(path), coach).contentType("application/json").content(request))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.content.attempts.length()").value(9))
+                .andReturn().getResponse().getContentAsString()).get("id").asString();
+        mvc.perform(as(put(path + "/" + id), coach).contentType("application/json").content(request))
+                .andExpect(status().isConflict());
+        mvc.perform(as(put(path + "/" + id), coach).contentType("application/json")
+                .content(request.replace("\"expectedVersion\":0", "\"expectedVersion\":1").replace("\"archived\":false", "\"archived\":true")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.version").value(2));
+        String otherLink = link(coach, user());
+        mvc.perform(as(put("/api/coach/clients/" + otherLink + "/powerlifting/meets/" + id), coach)
+                .contentType("application/json").content(request)).andExpect(status().isNotFound());
+        mvc.perform(as(get(path), coach())).andExpect(status().isNotFound());
+        for (String email : new String[]{coach, client}) {
+            mvc.perform(as(get("/api/user/export"), email)).andExpect(status().isOk())
+                    .andExpect(jsonPath("$.powerliftingMeets[0].content.archived").value(true));
+        }
+        mvc.perform(as(patch("/api/coaching/coaches/" + link), client).contentType("application/json")
+                        .content(EDIT.replace("\"editTraining\":true", "\"editTraining\":false")))
+                .andExpect(status().isNoContent());
+        mvc.perform(as(get(path), coach)).andExpect(status().isOk());
+        mvc.perform(as(post(path), coach).contentType("application/json").content(request)).andExpect(status().isForbidden());
+        jdbc.update("DELETE FROM users WHERE email = ?", coach);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM coach_powerlifting_meets WHERE id = ?::uuid", Integer.class, id)).isZero();
+    }
     private String coach() throws Exception {
         String email = user();
         mvc.perform(as(post("/api/coach/profile"), email)).andExpect(status().isOk());

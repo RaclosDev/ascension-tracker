@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useSessionDraft } from '../../hooks/useSessionDraft';
 import { apiErrorMessage } from '../../lib/coach/api';
@@ -14,6 +15,7 @@ import {
 } from '../../lib/coach/powerlifting';
 import { QueryErrorNotice } from '../QueryErrorNotice';
 import { PowerMarksEditor } from './PowerMarksEditor';
+import { PowerMeets } from './PowerMeets';
 
 export default function ClientPowerlifting({
   linkId,
@@ -23,16 +25,40 @@ export default function ClientPowerlifting({
   canEdit: boolean;
 }) {
   const query = usePowerProfile(linkId);
+  const [params, setParams] = useSearchParams();
+  const view = params.get('vista') ?? 'perfil';
   return (
     <section className="card">
       <h2>Powerlifting</h2>
       <p className="coach-description mb-5">
         Referencias de fuerza y seguimiento de sentadilla, banca y peso muerto.
       </p>
+      <nav aria-label="Áreas de powerlifting" className="flex flex-wrap gap-3 mb-5">
+        {[
+          ['perfil', 'Perfil y marcas'],
+          ['competiciones', 'Competiciones'],
+        ].map(([id, label]) => (
+          <button
+            key={id}
+            className={`btn ${view === id ? 'btn-primary' : 'btn-secondary'}`}
+            aria-current={view === id ? 'page' : undefined}
+            onClick={() => {
+              const next = new URLSearchParams(params);
+              next.set('vista', id);
+              next.delete('competicion');
+              setParams(next);
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
       {query.isPending ? (
         <p role="status">Cargando perfil de powerlifting…</p>
       ) : query.isError ? (
         <QueryErrorNotice pending={query.isFetching} retry={() => void query.refetch()} />
+      ) : view === 'competiciones' ? (
+        <PowerMeets linkId={linkId} profile={query.data.profile} canEdit={canEdit} />
       ) : (
         <PowerForm
           key={`${query.data.version}:${canEdit}`}
