@@ -342,7 +342,32 @@ class CoachNutritionIntegrationTest {
                 .content("{\"plan\":" + PLAN + "}")).andExpect(status().isOk());
         mvc.perform(as(post(PATH + "/publish", otherLink), other).contentType("application/json")
                 .content("{\"plan\":" + PLAN + "}")).andExpect(status().isConflict());
+        mvc.perform(as(put(PATH, otherLink), other).contentType("application/json")
+                .content(PLAN)).andExpect(status().isConflict());
         mvc.perform(as(get(PATH, link), coach)).andExpect(status().isOk());
+    }
+
+    @Test
+    void publicationRejectsARecipeChangedSincePreviewAndKeepsTheCurrentPlan() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach), EDIT_ALL);
+        String recipeId = recipe(coach, "Comida", "30", "40", "10");
+        String timestamp = jdbc.queryForObject("SELECT updated_at FROM coach_recipes WHERE id = ?::uuid",
+                java.sql.Timestamp.class, recipeId).toInstant().toString();
+        String withMeal = "{\"training\":{\"protein\":180,\"carbs\":300,\"fat\":70},"
+                + "\"rest\":{\"protein\":180,\"carbs\":150,\"fat\":80},\"meals\":[{\"dayType\":\"TRAINING\","
+                + "\"slotName\":\"Comida\",\"recipeId\":\"" + recipeId + "\",\"servings\":1,"
+                + "\"expectedRecipeUpdatedAt\":\"" + timestamp + "\"}]}";
+        mvc.perform(as(put(PATH, link), coach).contentType("application/json").content(PLAN))
+                .andExpect(status().isOk());
+        String currentId = json.readTree(mvc.perform(as(get(PATH, link), coach))
+                .andReturn().getResponse().getContentAsString()).get("id").asString();
+        jdbc.update("UPDATE coach_recipes SET protein = 50, updated_at = updated_at + INTERVAL '1 second' WHERE id = ?::uuid", recipeId);
+        mvc.perform(as(post(PATH + "/publish", link), coach).contentType("application/json")
+                .content("{\"expectedPlanId\":\"" + currentId + "\",\"plan\":" + withMeal + "}"))
+                .andExpect(status().isConflict());
+        mvc.perform(as(get(PATH, link), coach)).andExpect(jsonPath("$.id").value(currentId));
     }
 
     private String recipe(String coach, String name, String protein, String carbs, String fat) throws Exception {

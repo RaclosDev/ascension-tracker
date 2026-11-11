@@ -240,4 +240,18 @@ describe('Pauta de nutrición', () => {
     );
     expect(screen.getByText(/Pautado por Laura · Día de\s+entreno/)).toBeTruthy();
   });
+
+  it('does not unlock personal targets during a failed plan read and allows retry', async () => {
+    mockedApi.get.mockRejectedValueOnce(new Error('offline')).mockResolvedValue({ data: plan });
+    wrap(
+      <CoachNutritionGate>
+        <p>Editor de macros</p>
+      </CoachNutritionGate>,
+    );
+    expect(screen.getByRole('status')).toBeTruthy();
+    expect(screen.queryByText('Editor de macros')).toBeNull();
+    fireEvent.click(await screen.findByRole('button', { name: 'Reintentar objetivos' }));
+    expect(await screen.findByText(/Pautado por Laura/)).toBeTruthy();
+    expect(screen.queryByText('Editor de macros')).toBeNull();
+  });
 });

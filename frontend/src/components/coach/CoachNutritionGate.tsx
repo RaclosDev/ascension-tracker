@@ -9,12 +9,22 @@ import { useMyNutritionPlan, type DayTargets } from '@/lib/coach/nutritionPlan';
  */
 export function CoachNutritionGate({ children }: { children: ReactNode }) {
   const plan = useMyNutritionPlan();
+  if (plan.isPending) return <p role="status">Cargando objetivos de nutrición…</p>;
+  if (plan.isError)
+    return (
+      <div role="alert">
+        No se pudieron cargar tus objetivos de nutrición.
+        <button type="button" className="btn btn-secondary" onClick={() => void plan.refetch()}>
+          Reintentar objetivos
+        </button>
+      </div>
+    );
   if (!plan.data) return <>{children}</>;
   const { coach, training, rest, notes } = plan.data;
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="flex items-center gap-2 text-sm text-white">
+      <p className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-primary)' }}>
         <Lock size={16} aria-hidden />
         Pautado por {personName(coach)}. Tus objetivos los fija tu entrenador mientras la pauta esté
         activa.
@@ -35,8 +45,12 @@ export function CoachNutritionGate({ children }: { children: ReactNode }) {
 function DayCard({ title, targets }: { title: string; targets: DayTargets }) {
   return (
     <div className="rounded-lg border p-3" style={{ borderColor: 'var(--border-subtle)' }}>
-      <h3 className="font-semibold text-white">{title}</h3>
-      <p className="text-lg font-bold text-white">{targets.kcal} kcal</p>
+      <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+        {title}
+      </h3>
+      <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+        {targets.kcal} kcal
+      </p>
       <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
         P {targets.protein} g · C {targets.carbs} g · G {targets.fat} g
       </p>

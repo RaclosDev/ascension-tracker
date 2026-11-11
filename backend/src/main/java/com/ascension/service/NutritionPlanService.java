@@ -70,12 +70,20 @@ public class NutritionPlanService {
     @Transactional
     public NutritionPlan set(ClientAccess access, PlanRequest request) {
         lockClient(access.clientUserId());
+        requireOwnActivePlan(access);
         requireCalories(request.training(), "entreno");
         requireCalories(request.rest(), "descanso");
         List<MealRequest> meals = request.meals() == null ? List.of() : request.meals();
         // Copies the coach's own recipes first: another coach's recipe id is a 404, as an unknown one.
         List<Recipe> recipes = meals.stream().map(m -> recipeService.require(access.coachUserId(), m.recipeId()))
                 .toList();
+        for (int i = 0; i < meals.size(); i++) {
+            Instant expected = meals.get(i).expectedRecipeUpdatedAt();
+            if (expected != null && !expected.equals(recipes.get(i).updatedAt())) {
+                throw new OptimisticLockingFailureException(
+                        "Una receta ha cambiado. Actualiza las recetas y revisa la vista previa antes de publicar.");
+            }
+        }
         endActive(access.clientUserId());
         String notes = request.notes() == null || request.notes().isBlank() ? null : request.notes().strip();
         UUID planId = jdbcTemplate.queryForObject("""
@@ -131,6 +139,14 @@ public class NutritionPlanService {
 
     private void requireCurrentVersion(ClientAccess access, UUID expectedId) {
         lockClient(access.clientUserId());
+        UUID actualId = requireOwnActivePlan(access);
+        if (!Objects.equals(expectedId, actualId)) {
+            throw new OptimisticLockingFailureException(
+                    "La pauta activa ha cambiado. Actualiza la ficha antes de publicar o retirar una versión.");
+        }
+    }
+
+    private UUID requireOwnActivePlan(ClientAccess access) {
         List<UUID> active = jdbcTemplate.queryForList(
                 "SELECT id FROM nutrition_plans WHERE client_user_id = ? AND status = 'ACTIVE'", UUID.class,
                 access.clientUserId());
@@ -142,10 +158,7 @@ public class NutritionPlanService {
             throw new OptimisticLockingFailureException(
                     "El alumno tiene una pauta activa de otro entrenador. Debe finalizarse antes de publicar otra.");
         }
-        if (!Objects.equals(expectedId, actualId)) {
-            throw new OptimisticLockingFailureException(
-                    "La pauta activa ha cambiado. Actualiza la ficha antes de publicar o retirar una versión.");
-        }
+        return actualId;
     }
 
     @Transactional(readOnly = true)

@@ -52,7 +52,8 @@ public final class NutritionPlanDtos {
             @NotNull(message = "Elige una receta") UUID recipeId,
             @NotNull(message = "Indica las raciones")
             @DecimalMin(value = "0.25", message = "Mínimo un cuarto de ración")
-            @DecimalMax(value = "10", message = "Máximo 10 raciones") Double servings) {
+            @DecimalMax(value = "10", message = "Máximo 10 raciones") Double servings,
+            Instant expectedRecipeUpdatedAt) {
     }
 
     public record DayRequest(

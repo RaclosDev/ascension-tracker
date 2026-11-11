@@ -284,6 +284,7 @@ export default function App() {
     if (!googleClientId) {
       const baseUrl = import.meta.env.VITE_API_URL || '';
       const controller = new AbortController();
+      let disposed = false;
       const timeoutId = setTimeout(() => {
         controller.abort();
       }, 5000);
@@ -295,6 +296,7 @@ export default function App() {
         })
         .then((data: { googleClientId?: string }) => {
           clearTimeout(timeoutId);
+          if (disposed) return;
           if (data.googleClientId && data.googleClientId !== 'CHANGE_ME') {
             setGoogleClientId(data.googleClientId);
           } else {
@@ -303,10 +305,12 @@ export default function App() {
         })
         .catch((err: Error) => {
           clearTimeout(timeoutId);
+          if (disposed) return;
           console.error('Error al cargar la config de auth:', err);
           setAuthError(true);
         });
       return () => {
+        disposed = true;
         controller.abort();
         clearTimeout(timeoutId);
       };
