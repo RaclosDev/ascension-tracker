@@ -30,6 +30,8 @@ export interface CoachClient {
 }
 
 export interface MyCoach {
+  setup?: CoachSetup | null;
+  powerliftingEnabled?: boolean;
   coachPresentation?: string;
   followup?: CoachFollowup;
   linkId: string;

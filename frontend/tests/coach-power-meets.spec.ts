@@ -75,20 +75,17 @@ for (const width of [390, 1440]) {
     await page.getByLabel('Inicio', { exact: true }).fill('2027-04-01');
     await page.getByLabel('Fin', { exact: true }).fill('2027-05-25');
     await page.getByLabel('Objetivo del bloque').fill('Practicar comandos y afinar aperturas');
+    await page.getByRole('button', { name: 'Día de competición', exact: true }).click();
     for (const [lift, planned, actual] of [
       ['Sentadilla', '180', '177.5'],
       ['Press de banca', '110', '107.5'],
       ['Peso muerto', '220', '215'],
     ]) {
-      const first = page.getByRole('group', { name: `${lift} · Intento 1`, exact: true });
-      await first.getByLabel('Previsto (kg)').fill(planned);
-      await first.getByLabel('Realizado (kg)').fill(actual);
-      await first.getByRole('combobox', { name: 'Resultado', exact: true }).selectOption('VALID');
+      await page.getByLabel(`${lift} · Intento 1 · Previsto (kg)`).fill(planned);
+      await page.getByLabel(`${lift} · Intento 1 · Realizado (kg)`).fill(actual);
+      await page.getByLabel(`${lift} · Intento 1 · Resultado`).selectOption('VALID');
       for (const number of [2, 3]) {
-        await page
-          .getByRole('group', { name: `${lift} · Intento ${number}`, exact: true })
-          .getByRole('combobox', { name: 'Resultado', exact: true })
-          .selectOption('WITHDRAWN');
+        await page.getByLabel(`${lift} · Intento ${number} · Resultado`).selectOption('WITHDRAWN');
       }
     }
     await expect(page.getByText('510 kg', { exact: true })).toBeVisible();
@@ -115,6 +112,7 @@ for (const width of [390, 1440]) {
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
+    await page.getByRole('button', { name: 'Día de competición', exact: true }).click();
     await page.getByRole('heading', { name: 'Intentos y resultado' }).scrollIntoViewIfNeeded();
     await page.screenshot({ path: info.outputPath('powerlifting-meet.png'), fullPage: true });
     expect(errors).toEqual([]);

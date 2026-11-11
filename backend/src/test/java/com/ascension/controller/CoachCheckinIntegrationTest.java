@@ -50,6 +50,37 @@ class CoachCheckinIntegrationTest {
     private final LocalDate monday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
     @Test
+    void clientSpecificQuestionsAndFollowupsPreserveOriginalAnswersAndEveryCoachReply() throws Exception {
+        String coach = coach(); String client = user(); String link = accept(client, invite(coach), WITH_BODY);
+        mvc.perform(as(put("/api/coach/clients/{link}/checkin-template", link), coach).contentType("application/json")
+                .content("{\"questions\":[\"Disponibilidad\",\"Sesión relevante\"]}"))
+                .andExpect(status().isOk());
+        var sent = json.readTree(mvc.perform(as(put(CLIENT_PATH, link), client).contentType("application/json")
+                .content(CHECKIN.replace("\"energy\":4", "\"submissionStatus\":\"PARTIAL\",\"energy\":4")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.answers[0].question").value("Disponibilidad"))
+                .andReturn().getResponse().getContentAsString());
+        String id = sent.get("id").asString(); String version = sent.get("updatedAt").asString();
+        mvc.perform(as(put(COACH_PATH + "/{id}/reply",link,id),coach).contentType("application/json")
+                .content(json.writeValueAsString(Map.of("reply","Primera respuesta","expectedUpdatedAt",version))))
+                .andExpect(status().isOk());
+        String update = json.writeValueAsString(Map.of("body","Ya terminé; el miércoles solo tengo 30 minutos","expectedUpdatedAt",version,"finalReview",true));
+        mvc.perform(as(post("/api/coaching/coaches/{link}/checkins/{id}/updates",link,id),user()).contentType("application/json").content(update))
+                .andExpect(status().isNotFound());
+        var appended = json.readTree(mvc.perform(as(post("/api/coaching/coaches/{link}/checkins/{id}/updates",link,id),client).contentType("application/json").content(update))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.submissionStatus").value("FINAL"))
+                .andExpect(jsonPath("$.coachReply").value("Primera respuesta"))
+                .andExpect(jsonPath("$.updates[0].role").value("CLIENT"))
+                .andReturn().getResponse().getContentAsString());
+        mvc.perform(as(post("/api/coaching/coaches/{link}/checkins/{id}/updates",link,id),client).contentType("application/json").content(update))
+                .andExpect(status().isConflict());
+        mvc.perform(as(put(COACH_PATH + "/{id}/reply",link,id),coach).contentType("application/json")
+                .content(json.writeValueAsString(Map.of("reply","Adaptaré el miércoles","expectedUpdatedAt",appended.get("updatedAt").asString()))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.coachReply").value("Adaptaré el miércoles"))
+                .andExpect(jsonPath("$.updates[1].body").value("Primera respuesta"))
+                .andExpect(jsonPath("$.answers[0].answer").value("Subí peso en press"));
+    }
+
+    @Test
     void theClientAnswersTheCoachQuestionsAndTheCoachReplies() throws Exception {
         String coach = coach();
         String client = user();

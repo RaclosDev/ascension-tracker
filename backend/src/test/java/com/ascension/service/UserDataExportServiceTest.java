@@ -69,6 +69,12 @@ class UserDataExportServiceTest {
     @Mock
     private ContactRequestService contactRequestService;
 
+    @Mock
+    private CoachWeekService coachWeekService;
+
+    @Mock
+    private CoachLibraryService coachLibraryService;
+
     @InjectMocks
     private UserDataExportService exportService;
 

@@ -38,13 +38,14 @@ public class CoachSessionService {
     private record DayRow(UUID id, int week, int dayIndex, String name, String notes) {
     }
 
-    private record Done(String id, String name, Long finishedAt, String origin, String comment) {
+    private record Done(String id, String name, Long finishedAt, String origin, String comment,
+                        int completedSets, int recordedSets) {
     }
 
     @Transactional(readOnly = true)
     public List<Session> sessions(ClientAccess access, UUID assignmentId) {
         List<Map<String, Object>> found = jdbcTemplate.queryForList("""
-                SELECT a.program_id, a.start_date FROM program_assignments a
+                SELECT a.program_id, a.start_date, a.effective_until, a.ended_at FROM program_assignments a
                 JOIN programs p ON p.id = a.program_id
                 WHERE a.id = ? AND a.coach_link_id = ? AND p.owner_user_id = ?
                 """, assignmentId, access.linkId(), access.clientUserId());
@@ -52,6 +53,12 @@ public class CoachSessionService {
             throw new EntityNotFoundException("Programa no encontrado");
         }
         UUID programId = (UUID) found.get(0).get("program_id");
+        LocalDate starts = ((java.sql.Date) found.get(0).get("start_date")).toLocalDate();
+        java.sql.Date untilDate = (java.sql.Date) found.get(0).get("effective_until");
+        LocalDate until = untilDate == null ? null : untilDate.toLocalDate();
+        java.sql.Timestamp endedAt = (java.sql.Timestamp) found.get(0).get("ended_at");
+        LocalDate cutoff = endedAt == null ? until : until == null || endedAt.toLocalDateTime().toLocalDate().isBefore(until)
+                ? endedAt.toLocalDateTime().toLocalDate() : until;
         LocalDate firstMonday = ((java.sql.Date) found.get(0).get("start_date")).toLocalDate()
                 .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
@@ -76,7 +83,11 @@ public class CoachSessionService {
         Map<UUID, Done> done = new LinkedHashMap<>();
         jdbcTemplate.query("""
                 SELECT DISTINCT ON (w.program_day_id) w.program_day_id, w.id, w.name, w.finished_at,
-                       w.program_origin, c.body
+                       w.program_origin, c.body,
+                       (SELECT COUNT(*) FROM workout_sets s JOIN workout_exercises e ON e.id = s.workout_exercise_id
+                        WHERE e.workout_id = w.id AND s.completed) AS completed_sets,
+                       (SELECT COUNT(*) FROM workout_sets s JOIN workout_exercises e ON e.id = s.workout_exercise_id
+                        WHERE e.workout_id = w.id) AS recorded_sets
                 FROM workouts w
                 JOIN program_days d ON d.id = w.program_day_id
                 LEFT JOIN workout_comments c ON c.workout_id = w.id AND c.coach_user_id = ?
@@ -84,8 +95,10 @@ public class CoachSessionService {
                 ORDER BY w.program_day_id, w.started_at DESC
                 """, rs -> {
             long finishedAt = rs.getLong("finished_at");
+            boolean unfinished = rs.wasNull();
             done.put(rs.getObject("program_day_id", UUID.class), new Done(rs.getString("id"), rs.getString("name"),
-                    rs.wasNull() ? null : finishedAt, rs.getString("program_origin"), rs.getString("body")));
+                    unfinished ? null : finishedAt, rs.getString("program_origin"), rs.getString("body"),
+                    rs.getInt("completed_sets"), rs.getInt("recorded_sets")));
         }, access.coachUserId(), programId, access.clientEmail());
 
         return days.stream().map(d -> {
@@ -94,8 +107,10 @@ public class CoachSessionService {
                     firstMonday.plusWeeks(d.week() - 1L).plusDays(d.dayIndex() - 1L), d.name(), d.notes(),
                     exercises.getOrDefault(d.id(), List.of()),
                     w == null ? null : w.id(), w == null ? null : w.name(), w == null ? null : w.finishedAt(),
-                    w == null ? null : w.origin(), w == null ? null : w.comment());
-        }).toList();
+                    w == null ? null : w.origin(), w == null ? null : w.comment(),
+                    w == null ? null : w.completedSets(), w == null ? null : w.recordedSets());
+        }).filter(session -> session.workoutId() != null || (!session.date().isBefore(starts) &&
+                (cutoff == null || session.date().isBefore(cutoff)))).toList();
     }
 
     @Transactional
@@ -105,6 +120,13 @@ public class CoachSessionService {
                 INSERT INTO workout_comments (workout_id, coach_user_id, body) VALUES (?, ?, ?)
                 ON CONFLICT (workout_id, coach_user_id) DO UPDATE SET body = EXCLUDED.body, updated_at = NOW()
                 """, workoutId, access.coachUserId(), text.strip());
+    }
+
+    @Transactional(readOnly = true)
+    public String comment(ClientAccess access, String workoutId) {
+        requireClientWorkout(access, workoutId);
+        return jdbcTemplate.queryForList("SELECT body FROM workout_comments WHERE workout_id = ? AND coach_user_id = ?",
+                String.class, workoutId, access.coachUserId()).stream().findFirst().orElse("");
     }
 
     @Transactional

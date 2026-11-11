@@ -29,6 +29,9 @@ public class WorkoutSet implements Persistable<String> {
     private String distance;
     private String duration;
     private String rpe;
+    private String rir;
+    @Column(length = 200)
+    private String skipReason;
     private Boolean completed;
 
     @Transient

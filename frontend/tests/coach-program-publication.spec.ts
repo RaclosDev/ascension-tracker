@@ -30,12 +30,12 @@ for (const width of [390, 1440]) {
     });
 
     await page.goto('/entrenador/programas');
-    await expect(page.getByRole('heading', { name: 'Biblioteca de programas' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Biblioteca de entrenamiento' })).toBeVisible();
     await page.getByRole('link', { name: 'Nuevo programa', exact: true }).click();
     await page.getByLabel('Nombre', { exact: true }).fill('Fuerza · bloque inicial');
     await page.getByRole('button', { name: 'Añadir entrenamiento el lunes' }).click();
     await page.getByLabel('Buscar ejercicio para añadir').fill('banca');
-    await page.getByRole('button', { name: /Press de Banca Plano/ }).click();
+    await page.getByRole('button', { name: /^Press de Banca Plano$/ }).click();
     await page.reload();
     await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Fuerza · bloque inicial');
     await expect(

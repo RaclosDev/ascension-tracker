@@ -22,6 +22,7 @@ export function CheckinCard({ checkin, footer }: { checkin: Checkin; footer?: Re
         )}
       </div>
       <p className="text-xs" style={muted}>
+        {checkin.submissionStatus === 'PARTIAL' ? 'Avance parcial · ' : 'Revisión final · '}
         Enviado: {dateTime.format(new Date(checkin.createdAt))}
         {checkin.updatedAt !== checkin.createdAt &&
           ` · Editado: ${dateTime.format(new Date(checkin.updatedAt))}`}
@@ -54,7 +55,7 @@ export function CheckinCard({ checkin, footer }: { checkin: Checkin; footer?: Re
           {checkin.notes}
         </p>
       )}
-      {checkin.coachReply && (
+      {checkin.coachReply && !checkin.updates?.length && (
         <div className="rounded-lg p-3 bg-black/20">
           <div className="text-xs mb-1" style={muted}>
             <span>Respuesta del entrenador</span>
@@ -70,6 +71,37 @@ export function CheckinCard({ checkin, footer }: { checkin: Checkin; footer?: Re
           </div>
           <p className="text-white whitespace-pre-line">{checkin.coachReply}</p>
         </div>
+      )}
+      {!!checkin.updates?.length && (
+        <details open>
+          <summary>Seguimiento de la revisión</summary>
+          <ol className="flex flex-col gap-2 mt-2">
+            {[
+              ...checkin.updates,
+              ...(checkin.coachReply
+                ? [
+                    {
+                      role: 'COACH',
+                      body: checkin.coachReply,
+                      createdAt: checkin.repliedAt ?? checkin.updatedAt,
+                    },
+                  ]
+                : []),
+            ]
+              .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+              .map((update, i) => (
+                <li key={`${update.createdAt}:${i}`} className="rounded-lg p-3 bg-black/20">
+                  <p className="text-xs" style={muted}>
+                    {update.role === 'CLIENT' ? 'Alumno' : 'Entrenador'} ·{' '}
+                    <time dateTime={update.createdAt}>
+                      {dateTime.format(new Date(update.createdAt))}
+                    </time>
+                  </p>
+                  <p className="whitespace-pre-line">{update.body}</p>
+                </li>
+              ))}
+          </ol>
+        </details>
       )}
       {footer}
     </article>

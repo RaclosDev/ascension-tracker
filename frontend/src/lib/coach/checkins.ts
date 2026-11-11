@@ -31,6 +31,8 @@ export interface Checkin {
   repliedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  updates?: { role: 'CLIENT' | 'COACH'; body: string; createdAt: string }[];
+  submissionStatus?: 'PARTIAL' | 'FINAL';
 }
 
 export interface ClientCheckin {
@@ -48,7 +50,11 @@ export type Scores = Pick<Checkin, 'energy' | 'sleep' | 'trainingAdherence' | 'd
 export interface CheckinRequest extends Scores {
   answers: string[];
   notes: string;
+  submissionStatus?: 'PARTIAL' | 'FINAL';
 }
+
+export const needsReply = (checkin: Checkin) =>
+  !checkin.coachReply || (!!checkin.repliedAt && checkin.updatedAt > checkin.repliedAt);
 
 export const SCORE_LABELS: Record<keyof Scores, string> = {
   energy: 'Energía',
@@ -69,19 +75,62 @@ const keys = {
 
 // ---- Coach side ----
 
-export const useCheckinTemplate = (enabled = true) =>
+export const useCheckinTemplate = (enabled = true, linkId?: string) =>
   useQuery({
-    queryKey: keys.template,
+    queryKey: [...keys.template, linkId ?? 'default'],
     enabled,
-    queryFn: async () => (await api.get<CheckinTemplate>('/coach/checkin-template')).data,
+    queryFn: async () =>
+      (
+        await api.get<CheckinTemplate>(
+          linkId ? `/coach/clients/${enc(linkId)}/checkin-template` : '/coach/checkin-template',
+        )
+      ).data,
   });
 
-export function useSaveCheckinTemplate() {
+export function useSaveCheckinTemplate(linkId?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (questions: string[]) =>
-      (await api.put<CheckinTemplate>('/coach/checkin-template', { questions })).data,
-    onSuccess: (data) => queryClient.setQueryData(keys.template, data),
+      (
+        await api.put<CheckinTemplate>(
+          linkId ? `/coach/clients/${enc(linkId)}/checkin-template` : '/coach/checkin-template',
+          { questions },
+        )
+      ).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.template }),
+  });
+}
+
+export function useResetClientCheckinTemplate(linkId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.delete(`/coach/clients/${enc(linkId)}/checkin-template`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.template }),
+  });
+}
+
+export function useAddCheckinUpdate(linkId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...request
+    }: {
+      id: string;
+      body: string;
+      expectedUpdatedAt: string;
+      finalReview: boolean;
+    }) =>
+      (
+        await api.post<Checkin>(
+          `/coaching/coaches/${enc(linkId)}/checkins/${enc(id)}/updates`,
+          request,
+        )
+      ).data,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: keys.mine(linkId) });
+      void queryClient.invalidateQueries({ queryKey: keys.history(linkId) });
+    },
   });
 }
 

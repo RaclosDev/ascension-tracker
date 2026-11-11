@@ -272,14 +272,42 @@ export const SwipeableSetRow = React.memo(
             />
 
             {showRpe && (
-              <input
-                inputMode="decimal"
-                value={s.rpe || ''}
-                placeholder=""
-                onFocus={(e) => e.currentTarget.select()}
-                onChange={(e) => updateSet(rowId, s.id, { rpe: e.target.value.replace(',', '.') })}
-                className={`set-input ${s.completed ? 'completed' : ''}`}
-              />
+              <div className="min-w-0">
+                <select
+                  aria-label={`Método de esfuerzo de la serie ${i + 1}`}
+                  className="w-full text-xs"
+                  value={s.rir != null ? 'RIR' : 'RPE'}
+                  onChange={(e) =>
+                    updateSet(
+                      rowId,
+                      s.id,
+                      e.target.value === 'RIR'
+                        ? { rir: '', rpe: undefined }
+                        : { rpe: '', rir: undefined },
+                    )
+                  }
+                >
+                  <option>RPE</option>
+                  <option>RIR</option>
+                </select>
+                <input
+                  inputMode="decimal"
+                  aria-label={`${s.rir != null ? 'RIR' : 'RPE'} de la serie ${i + 1}`}
+                  value={s.rir ?? s.rpe ?? ''}
+                  placeholder=""
+                  onFocus={(e) => e.currentTarget.select()}
+                  onChange={(e) =>
+                    updateSet(
+                      rowId,
+                      s.id,
+                      s.rir != null
+                        ? { rir: e.target.value.replace(',', '.') }
+                        : { rpe: e.target.value.replace(',', '.') },
+                    )
+                  }
+                  className={`set-input ${s.completed ? 'completed' : ''}`}
+                />
+              </div>
             )}
 
             <button
@@ -373,6 +401,21 @@ export const SwipeableSetRow = React.memo(
               if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
             }}
           />
+        )}
+        {!s.completed && (
+          <details className="text-xs px-2 py-1">
+            <summary className="cursor-pointer">¿No vas a completar esta serie?</summary>
+            <label>
+              Motivo (opcional)
+              <input
+                className="w-full mt-1"
+                maxLength={200}
+                value={s.skipReason ?? ''}
+                onChange={(event) => updateSet(rowId, s.id, { skipReason: event.target.value })}
+                placeholder="Falta de tiempo, molestias, ajuste de la sesión…"
+              />
+            </label>
+          </details>
         )}
         {isRepsStepperOpen && (
           <SetAdjustmentBar

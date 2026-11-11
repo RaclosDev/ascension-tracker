@@ -16,11 +16,22 @@ import { useRatePreference, calcEstimatedDate } from '../hooks/useRatePreference
 import { hasBodyTracking, hasNutrition } from '../lib/appModules';
 import { PowerliftingCard } from '../components/workout/PowerliftingCard';
 import { TodayCard } from '../components/dashboard/TodayCard';
+import { useMyCoaches } from '../lib/coach/api';
 
 const DashboardCharts = lazyWithRetry(() => import('../components/DashboardCharts'));
 
 export default function DashboardPage() {
   const { pref, update: updateRatePref } = useRatePreference();
+  const coaches = useMyCoaches();
+  const powerlifting =
+    coaches.data?.some((coach) => coach.powerliftingEnabled && coach.permissions.training) ?? false;
+  const performance =
+    coaches.data?.some(
+      (coach) =>
+        ['PERFORMANCE', 'GENERAL'].includes(coach.setup?.goalFocus ?? '') ||
+        (coach.powerliftingEnabled && coach.setup?.services.nutrition === false),
+    ) ?? false;
+  const maintenance = coaches.data?.some((coach) => coach.setup?.goalFocus === 'MAINTAIN') ?? false;
 
   const {
     data: dashboard,
@@ -136,20 +147,69 @@ export default function DashboardPage() {
   const showNutrition = settings ? hasNutrition(settings.appModules) : false;
 
   // Sin el módulo de peso y medidas, el inicio se centra en el entreno en vez de pedir el peso.
-  if (settings && !hasBodyTracking(settings.appModules)) {
+  if (
+    settings &&
+    (!hasBodyTracking(settings.appModules) ||
+      settings.weeklyGoal === 0 ||
+      settings.startWeight === settings.goalWeight ||
+      performance ||
+      maintenance)
+  ) {
     return (
       <div className="fade-in">
         <h1 className="page-title-desktop">Inicio</h1>
         <p className="mb-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
           {todayLabel}
         </p>
-        <div className="dashboard-grid">
-          <div className="dashboard-today" style={{ gridArea: 'today' }}>
+        <div className="flex flex-col gap-4">
+          <div className="dashboard-today">
             <TodayCard showNutrition={showNutrition} />
           </div>
-          <div style={{ gridArea: 'stats' }}>
-            <PowerliftingCard />
-          </div>
+          {coaches.data
+            ?.filter((coach) => coach.setup?.goal)
+            .map((coach) => (
+              <section key={coach.linkId} className="card">
+                <h2>Objetivo acordado</h2>
+                <p>{coach.setup?.goal}</p>
+              </section>
+            ))}
+          {powerlifting && <PowerliftingCard />}
+          {hasBodyTracking(settings.appModules) && (
+            <>
+              <section className="card">
+                <h2>{performance ? 'Seguimiento del peso' : 'Mantenimiento del peso'}</h2>
+                <p>
+                  {dashboard?.currentWeeklyAverage
+                    ? `Media semanal: ${dashboard.currentWeeklyAverage.toFixed(1)} kg.`
+                    : 'Aún no hay registros suficientes para una media semanal.'}
+                </p>
+                <p className="text-sm">
+                  Referencia personal: {settings.goalWeight} kg.{' '}
+                  {performance
+                    ? 'El peso acompaña al seguimiento del rendimiento.'
+                    : 'Sin un objetivo semanal de ganancia o pérdida; no hay porcentaje de progreso ni fecha de llegada.'}
+                </p>
+              </section>
+              <details className="card">
+                <summary className="cursor-pointer">Registrar peso y consultar evolución</summary>
+                <QuickWeightCard
+                  todayLabel={todayLabel}
+                  todayDateStr={todayDateStr}
+                  todayWeight={todayEntry?.weight}
+                  recentWeight={recentWeight}
+                  yesterdayWeight={yesterdayWeight}
+                  hasTodayWeight={hasTodayWeight}
+                />
+                <Suspense fallback={<DashboardChartsSkeleton />}>
+                  <DashboardCharts
+                    weightChartData={weightChartData}
+                    deltaData={deltaData}
+                    goalWeight={settings.goalWeight}
+                  />
+                </Suspense>
+              </details>
+            </>
+          )}
         </div>
       </div>
     );

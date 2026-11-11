@@ -87,7 +87,7 @@ public class ClientStatusService {
                            SELECT MAX(we.date) FROM weight_entries we WHERE we.user_email = u.email) END AS last_weight,
                        (SELECT (MAX(c.updated_at) AT TIME ZONE cc.review_zone)::date FROM checkins c WHERE c.link_id = cc.id) AS last_checkin,
                        (SELECT MAX(c.week_start) FROM checkins c WHERE c.link_id = cc.id) AS last_checkin_week,
-                       (SELECT COUNT(*) FROM checkins c WHERE c.link_id = cc.id AND c.coach_reply IS NULL)
+                       (SELECT COUNT(*) FROM checkins c WHERE c.link_id = cc.id AND (c.coach_reply IS NULL OR c.updated_at > c.replied_at))
                            AS pending_replies,
                        CASE WHEN cc.can_view_nutrition THEN (
                            SELECT COUNT(DISTINCT f.log_date) FROM food_logs f
@@ -101,10 +101,28 @@ public class ClientStatusService {
                        CASE WHEN cc.can_view_body THEN (
                            SELECT s.goal_weight FROM user_settings s
                            WHERE s.user_email = u.email AND s.weekly_goal <> 0 AND s.goal_weight > 0
-                             AND cc.coaching_setup #>> '{services,progress}' = 'true') END AS goal_weight,
+                             AND cc.coaching_setup #>> '{services,progress}' = 'true'
+                             AND COALESCE(cc.coaching_setup ->> 'goalFocus', 'WEIGHT_CHANGE') = 'WEIGHT_CHANGE'
+                             AND NOT EXISTS (SELECT 1 FROM coach_powerlifting_profiles pp
+                                 WHERE pp.link_id = cc.id AND pp.content ->> 'enabled' = 'true'
+                                   AND cc.coaching_setup #>> '{services,nutrition}' <> 'true')) END AS goal_weight,
                        cc.coaching_setup #>> '{services,training}' = 'true' AND cc.can_edit_training AND NOT EXISTS (
                            SELECT 1 FROM program_assignments pa
-                           WHERE pa.coach_link_id = cc.id AND pa.status = 'ACTIVE') AS needs_program,
+                           JOIN programs p ON p.id = pa.program_id
+                           WHERE pa.coach_link_id = cc.id AND pa.status = 'ACTIVE'
+                             AND pa.start_date <= clock.today
+                             AND (pa.effective_until IS NULL OR pa.effective_until > clock.today)
+                             AND date_trunc('week', pa.start_date)::date + p.weeks * 7 > clock.today) AS needs_program,
+                       CASE WHEN NOT cc.can_view_training THEN NULL
+                         WHEN EXISTS (SELECT 1 FROM coach_week_plans wp WHERE wp.link_id = cc.id
+                           AND wp.week_start = date_trunc('week', clock.today)::date + 7
+                           AND wp.version > COALESCE(wp.published_version, 0)) THEN 'DRAFT'
+                         WHEN EXISTS (SELECT 1 FROM program_assignments pa JOIN programs p ON p.id = pa.program_id
+                           WHERE pa.coach_link_id = cc.id AND pa.status = 'ACTIVE'
+                             AND pa.start_date < date_trunc('week', clock.today)::date + 14
+                             AND (pa.effective_until IS NULL OR pa.effective_until > date_trunc('week', clock.today)::date + 7)
+                             AND date_trunc('week', pa.start_date)::date + p.weeks * 7 > date_trunc('week', clock.today)::date + 7)
+                           THEN 'SCHEDULED' ELSE 'MISSING' END AS next_week_status,
                        cc.coaching_setup #>> '{services,nutrition}' = 'true' AND cc.can_edit_nutrition AND NOT EXISTS (
                            SELECT 1 FROM nutrition_plans np
                            WHERE np.coach_link_id = cc.id AND np.status = 'ACTIVE') AS needs_nutrition_plan
@@ -118,7 +136,7 @@ public class ClientStatusService {
                     LocalDate since = followup.startedAt().atZone(ZoneId.of(followup.schedule().timeZone())).toLocalDate();
                     int missing = rs.getBoolean("reviewed")
                             ? CoachScheduleService.missing(followup, date(rs.getDate("last_checkin_week")), now) : 0;
-                    return configuredStatus(evaluate(new Facts(rs.getObject("id", UUID.class), since,
+                    ClientStatus evaluated = configuredStatus(evaluate(new Facts(rs.getObject("id", UUID.class), since,
                         rs.getBoolean("can_view_nutrition"), date(rs.getDate("last_workout")),
                         date(rs.getDate("last_food")), date(rs.getDate("last_weight")),
                         date(rs.getDate("last_checkin")), missing,
@@ -127,12 +145,15 @@ public class ClientStatusService {
                         rs.getObject("goal_weight", Double.class), rs.getBoolean("needs_program"),
                         rs.getBoolean("needs_nutrition_plan")), date(rs.getDate("today"))),
                             rs.getBoolean("configured") && !followup.schedule().paused());
+                    return new ClientStatus(evaluated.linkId(), evaluated.level(), evaluated.lastActivity(), evaluated.pendingReplies(),
+                            evaluated.signals(), evaluated.weightChange(), date(rs.getDate("last_workout")),
+                            date(rs.getDate("last_checkin")), rs.getString("next_week_status"));
                 }, java.time.OffsetDateTime.ofInstant(now, java.time.ZoneOffset.UTC), coachId, linkId, linkId);
     }
 
     private static ClientStatus configuredStatus(ClientStatus status, boolean configured) {
         return configured ? status : new ClientStatus(status.linkId(), Level.GREEN, status.lastActivity(),
-                status.pendingReplies(), List.of(), status.weightChange());
+                status.pendingReplies(), List.of(), status.weightChange(), status.lastWorkout(), status.lastCheckin(), status.nextWeekStatus());
     }
 
     static ClientStatus evaluate(Facts facts, LocalDate today) {
@@ -172,7 +193,7 @@ public class ClientStatusService {
 
         Level level = signals.stream().map(Signal::level).max(Comparator.naturalOrder()).orElse(Level.GREEN);
         return new ClientStatus(facts.linkId(), level, lastActivity, facts.pendingReplies(), signals,
-                weightChange(facts));
+                weightChange(facts), facts.lastWorkout(), facts.lastCheckin(), null);
     }
 
     /** Last week's average weight against the one three weeks before, rounded to 0.1 kg. */

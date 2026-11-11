@@ -50,6 +50,12 @@ public class WorkoutService {
     }
 
     @Transactional(readOnly = true)
+    public Page<WorkoutDTO> getCoachHistory(String email, int page, int size, String origin, String search) {
+        return workoutRepository.searchCoachHistory(email, origin, search,
+                PageRequest.of(Math.max(0, page), Math.min(Math.max(1, size), 100))).map(this::toFullDTO);
+    }
+
+    @Transactional(readOnly = true)
     public WorkoutDTO getWorkoutDetail(String userEmail, String id) {
         Workout workout = workoutRepository.findByIdAndUserEmail(id, userEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Entreno no encontrado"));
@@ -289,6 +295,9 @@ public class WorkoutService {
                     .workout(workout)
                     .exerciseId(resolvedExId)
                     .notes(weDTO.getNotes())
+                    .videoUrl(weDTO.getVideoUrl())
+                    .videoSet(weDTO.getVideoSet())
+                    .videoSeconds(weDTO.getVideoSeconds())
                     .variantGrip(weDTO.getVariant() != null ? weDTO.getVariant().getGrip() : null)
                     .variantMachine(weDTO.getVariant() != null ? weDTO.getVariant().getMachine() : null)
                     .supersetId(weDTO.getSupersetId())
@@ -309,6 +318,8 @@ public class WorkoutService {
                             .distance(setDTO.getDistance())
                             .duration(setDTO.getDuration())
                             .rpe(setDTO.getRpe())
+                            .rir(setDTO.getRir())
+                            .skipReason(Boolean.TRUE.equals(setDTO.getCompleted()) ? null : setDTO.getSkipReason())
                             .completed(setDTO.getCompleted() != null ? setDTO.getCompleted() : false)
                             .build();
                     we.getSets().add(set);

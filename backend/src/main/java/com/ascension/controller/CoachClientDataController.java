@@ -95,8 +95,10 @@ public class CoachClientDataController {
             @PathVariable UUID linkId,
             @RequestParam(defaultValue = "0") @Min(value = 0, message = "La página debe ser mayor o igual a 0") int page,
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "El tamaño de página debe ser al menos 1") @Max(value = 100, message = "El tamaño de página no puede exceder 100") int size,
+            @RequestParam(defaultValue = "ALL") @jakarta.validation.constraints.Pattern(regexp = "ALL|FREE|PRESCRIBED") String origin,
+            @RequestParam(defaultValue = "") @jakarta.validation.constraints.Size(max = 120) String search,
             @AuthenticationPrincipal Jwt jwt) {
-        return read(jwt, linkId, Action.VIEW_WORKOUTS, email -> workoutService.getWorkoutHistory(email, page, size));
+        return read(jwt, linkId, Action.VIEW_WORKOUTS, email -> workoutService.getCoachHistory(email, page, size, origin, search));
     }
 
     @GetMapping("/workouts/stats")
@@ -127,6 +129,15 @@ public class CoachClientDataController {
     public ResponseEntity<WorkoutDTO> workout(@PathVariable UUID linkId, @PathVariable String workoutId,
                                               @AuthenticationPrincipal Jwt jwt) {
         return read(jwt, linkId, Action.VIEW_WORKOUTS, email -> workoutService.getWorkoutDetail(email, workoutId));
+    }
+
+    @GetMapping("/workouts/{workoutId}/comment")
+    public ResponseEntity<java.util.Map<String, String>> workoutComment(@PathVariable UUID linkId, @PathVariable String workoutId,
+                                                                       @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(java.util.Map.of("text", sessionService.comment(
+                accessPolicy.require(email, linkId, Action.VIEW_WORKOUTS), workoutId)));
     }
 
     /** The coach's comment on one of the client's workouts; saving again replaces it. */

@@ -17,12 +17,15 @@ export interface ProgramSession {
   finishedAt: number | null;
   origin: ProgramOrigin | null;
   comment: string | null;
+  completedSets?: number | null;
+  recordedSets?: number | null;
 }
 
-export type SessionStatus = 'DONE' | 'MODIFIED' | 'MISSED' | 'PENDING';
+export type SessionStatus = 'DONE' | 'MODIFIED' | 'PARTIAL' | 'MISSED' | 'PENDING';
 
 export const SESSION_STATUS_LABELS: Record<SessionStatus, string> = {
   DONE: 'Hecho',
+  PARTIAL: 'Parcial',
   MODIFIED: 'Hecho con cambios',
   MISSED: 'No registrado',
   PENDING: 'Pendiente',
@@ -30,6 +33,13 @@ export const SESSION_STATUS_LABELS: Record<SessionStatus, string> = {
 
 /** Days before `today` (ISO date) without a workout count as missed. */
 export function sessionStatus(session: ProgramSession, today: string): SessionStatus {
+  if (
+    session.workoutId &&
+    session.completedSets != null &&
+    session.recordedSets != null &&
+    session.completedSets < session.recordedSets
+  )
+    return 'PARTIAL';
   if (session.workoutId) return session.origin === 'PRESCRIBED_MODIFIED' ? 'MODIFIED' : 'DONE';
   return session.date < today ? 'MISSED' : 'PENDING';
 }
@@ -58,6 +68,10 @@ export function useSaveComment(linkId: string, assignmentId: string) {
       if (text == null) await api.delete(path);
       else await api.put(path, { text });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: sessionsKey(linkId, assignmentId) }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: sessionsKey(linkId, assignmentId) });
+      await queryClient.invalidateQueries({ queryKey: ['coach', 'clients', linkId] });
+      await queryClient.invalidateQueries({ queryKey: ['coach', 'client', linkId] });
+    },
   });
 }
