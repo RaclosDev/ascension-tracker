@@ -298,7 +298,8 @@ public class CoachService {
     public List<MyCoach> listMyCoaches(String clientEmail) {
         return jdbcTemplate.query("""
                 SELECT %s, cc.id, cc.created_at, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
-                       co.name, co.email, co.picture, co.presentation
+                       co.name, co.email, co.picture, co.presentation, cc.coaching_setup,
+                       EXISTS (SELECT 1 FROM coach_powerlifting_profiles p WHERE p.link_id = cc.id AND p.content ->> 'enabled' = 'true') AS powerlifting_enabled
                 FROM coach_clients cc
                 JOIN users cu ON cu.id = cc.client_user_id
                 JOIN coach_public_profiles co ON co.id = cc.coach_user_id
@@ -306,7 +307,8 @@ public class CoachService {
                 ORDER BY cc.created_at
                 """.formatted(CoachScheduleService.COLUMNS),
                 (rs, n) -> new MyCoach(rs.getObject("id", UUID.class), person(rs),
-                        permissions(rs), instant(rs, "created_at"), CoachScheduleService.read(rs, Instant.now()), rs.getString("presentation")),
+                        permissions(rs), instant(rs, "created_at"), CoachScheduleService.read(rs, Instant.now()), rs.getString("presentation"),
+                        setupService.decode(rs.getString("coaching_setup")), rs.getBoolean("powerlifting_enabled")),
                 Emails.normalizeRequired(clientEmail));
     }
 

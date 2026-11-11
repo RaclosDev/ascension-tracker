@@ -30,8 +30,8 @@ export const coachNavItems = [
   {
     path: '/entrenador/planificacion',
     icon: <ClipboardList className="w-5 h-5" />,
-    label: 'Planificación',
-    shortLabel: 'Planificación',
+    label: 'Biblioteca',
+    shortLabel: 'Biblioteca',
   },
   {
     path: '/entrenador/ajustes',

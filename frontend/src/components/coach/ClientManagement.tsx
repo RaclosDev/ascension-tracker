@@ -4,6 +4,8 @@ import { UserMinus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ClientSetupForm } from './ClientSetup';
 import { ClientSchedule } from './ClientSchedule';
+import { PowerliftingToggle } from './PowerliftingToggle';
+import { CheckinTemplateEditor } from './CheckinTemplateEditor';
 import {
   PERMISSION_LABELS,
   formatCoachDate,
@@ -20,10 +22,17 @@ export function ClientManagement({ link }: { link: CoachClient }) {
   return (
     <>
       <ClientSetupForm key={link.linkId} link={link} />
+      {link.permissions.training && (
+        <PowerliftingToggle linkId={link.linkId} canEdit={link.permissions.editTraining} />
+      )}
       <ClientSchedule
         key={`${link.linkId}-${JSON.stringify(link.followup?.schedule)}`}
         link={link}
       />
+      <details>
+        <summary className="cursor-pointer">Preguntas de revisión de este alumno</summary>
+        <CheckinTemplateEditor linkId={link.linkId} />
+      </details>
       <section className="card">
         <h2>Datos de la relación</h2>
         <dl className="coach-facts">

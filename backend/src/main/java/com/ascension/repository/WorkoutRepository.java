@@ -16,6 +16,15 @@ import java.util.Optional;
 public interface WorkoutRepository extends JpaRepository<Workout, String> {
     
     Page<Workout> findByUserEmailOrderByStartedAtDesc(String userEmail, Pageable pageable);
+
+    @Query("""
+            SELECT w FROM Workout w WHERE w.userEmail = :email
+              AND (:origin = 'ALL' OR (:origin = 'FREE' AND w.programDayId IS NULL)
+                   OR (:origin = 'PRESCRIBED' AND w.programDayId IS NOT NULL))
+              AND LOWER(w.name) LIKE LOWER(CONCAT('%', :search, '%'))
+            ORDER BY w.startedAt DESC
+            """)
+    Page<Workout> searchCoachHistory(String email, String origin, String search, Pageable pageable);
     
     @EntityGraph(attributePaths = {"exercises", "exercises.sets"})
     List<Workout> findByUserEmailAndStartedAtGreaterThanEqualOrderByStartedAtDesc(String userEmail, Long startedAt);

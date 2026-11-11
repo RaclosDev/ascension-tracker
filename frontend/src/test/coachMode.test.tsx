@@ -354,7 +354,12 @@ describe('CoachClientPage', () => {
       ],
       'weights/weekly': [{ weekStart: '2026-11-02', average: 80.2, delta: -0.3 }],
       'steps/weekly': [],
-      'workouts?page=0&size=10': { content: [workout] },
+      'workouts?page=0&size=10&origin=ALL&search=': {
+        content: [workout],
+        totalPages: 1,
+        totalElements: 1,
+      },
+      'workouts/w-1/comment': { text: '' },
       'workouts/stats': {
         totalWorkouts: 1,
         totalDurationSeconds: 3600,
@@ -418,7 +423,7 @@ describe('CoachClientPage', () => {
     renderAt('/entrenador/alumnos/link-9?seccion=entrenamiento', routes);
 
     expect(
-      await screen.findByText('Press inclinado en polea', {}, { timeout: 10000 }),
+      await screen.findByText('1. Press inclinado en polea', {}, { timeout: 10000 }),
     ).toBeDefined();
     expect((await screen.findByTestId('activity-heatmap')).dataset.workouts).toBe('1');
     expect((await screen.findByTestId('body-heatmap')).dataset.custom).toBe('1');
@@ -430,7 +435,7 @@ describe('CoachClientPage', () => {
     expect(weightChart.dataset.goal).toBe('none');
     expect(mockedApi.get.mock.calls.some(([url]) => url.includes('/nutrition/'))).toBe(false);
     fireEvent.click(screen.getByRole('link', { name: 'Nutrición' }));
-    expect((await screen.findByTestId('macro-pie')).dataset.slices).toBe('4');
+    expect((await screen.findByTestId('macro-pie')).dataset.slices).toBe('3');
   }, 15000);
 
   it('only asks for the areas the client shares', async () => {

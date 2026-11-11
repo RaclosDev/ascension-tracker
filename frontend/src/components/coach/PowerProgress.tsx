@@ -14,6 +14,7 @@ export function PowerProgress({ linkId, profile }: { linkId: string; profile: Po
   const [now] = useState(Date.now);
   const [weeks, setWeeks] = useState(12);
   const [lift, setLift] = useState<Lift>('squat');
+  const [includeVariations, setIncludeVariations] = useState(false);
   const query = useClientData<CompletedWorkout[]>(
     linkId,
     `workouts/recent?since=${now - 364 * DAY}`,
@@ -21,13 +22,28 @@ export function PowerProgress({ linkId, profile }: { linkId: string; profile: Po
   );
   const since = now - weeks * 7 * DAY;
   const progress = useMemo(
-    () => powerProgress(query.data ?? [], since, now),
-    [query.data, since, now],
+    () =>
+      powerProgress(
+        query.data ?? [],
+        since,
+        now,
+        profile.exerciseMappings ?? [],
+        includeVariations,
+      ),
+    [query.data, since, now, profile.exerciseMappings, includeVariations],
   );
   const selected = progress.find((p) => p.lift === lift)!;
   const highestVolume = Math.max(1, ...selected.weeks.map((w) => w.volume));
   return (
     <div className="flex flex-col gap-5">
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={includeVariations}
+          onChange={(event) => setIncludeVariations(event.target.checked)}
+        />
+        Incluir variantes clasificadas por el entrenador
+      </label>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h3 className="font-semibold text-xl">Seguimiento de los tres básicos</h3>

@@ -5,6 +5,7 @@ import { WEEKDAY_LABELS } from './weekdays';
 
 /** Mirrors the backend ProgramDtos: the builder always saves the whole program at once. */
 export interface ProgramExercise {
+  prescription?: ExercisePrescription | null;
   exerciseId: string;
   exerciseName: string | null;
   variantGrip?: string | null;
@@ -18,6 +19,29 @@ export interface ProgramExercise {
   loadHint: string | null;
   supersetGroup: number | null;
   notes: string | null;
+}
+
+export interface PrescribedLoad {
+  mode: 'KG' | 'PERCENT_TM';
+  amount: number;
+  unit: 'TOTAL' | 'EACH';
+  lift?: 'squat' | 'bench' | 'deadlift' | null;
+  increment?: number | null;
+  referenceKg?: number | null;
+  resolvedKg?: number | null;
+  referenceDate?: string | null;
+}
+export interface SetTarget {
+  kind: 'WORK' | 'WARMUP' | 'TOP' | 'BACKOFF';
+  reps: number | null;
+  rpe: number | null;
+  rir: number | null;
+  load: PrescribedLoad | null;
+  notes?: string | null;
+}
+export interface ExercisePrescription {
+  load?: PrescribedLoad | null;
+  sets?: SetTarget[] | null;
 }
 
 export interface ProgramDay {
@@ -119,7 +143,7 @@ export function copyDay(
     ...source,
     week: to.week,
     dayIndex: to.dayIndex,
-    exercises: source.exercises.map((e) => ({ ...e })),
+    exercises: structuredClone(source.exercises),
   };
   const rest = removeDay(program, to.week, to.dayIndex);
   return { ...rest, days: sortDays([...rest.days, copy]) };
@@ -131,7 +155,7 @@ export function copyWeek(program: Program, fromWeek: number, toWeek: number): Pr
   const kept = program.days.filter((d) => d.week !== toWeek);
   const copies = program.days
     .filter((d) => d.week === fromWeek)
-    .map((d) => ({ ...d, week: toWeek, exercises: d.exercises.map((e) => ({ ...e })) }));
+    .map((d) => ({ ...d, week: toWeek, exercises: structuredClone(d.exercises) }));
   return { ...program, days: sortDays([...kept, ...copies]) };
 }
 
@@ -310,9 +334,10 @@ export interface ProgramAssignment {
   programName: string;
   weeks: number;
   startDate: string;
-  status: 'ACTIVE' | 'ENDED';
+  status: 'ACTIVE' | 'SCHEDULED' | 'ENDED';
   createdAt: string;
   endedAt: string | null;
+  effectiveUntil?: string | null;
 }
 
 const assignmentsKey = (linkId: string) => ['coach', 'clients', linkId, 'programs'] as const;
@@ -332,7 +357,7 @@ export function useAssignProgram(linkId: string) {
       startDate: string;
       programUpdatedAt?: string | null;
     }) => (await api.post<ProgramAssignment>(assignmentsPath(linkId), request)).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentsKey(linkId) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['coach', 'clients'] }),
   });
 }
 
@@ -342,12 +367,13 @@ export function useEndAssignment(linkId: string) {
     mutationFn: async (assignmentId: string) => {
       await api.post(`${assignmentsPath(linkId)}/${encodeURIComponent(assignmentId)}/end`);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentsKey(linkId) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['coach', 'clients'] }),
   });
 }
 
 export const useAssignedProgram = (linkId: string, assignmentId: string) =>
   useQuery({
+    enabled: !!assignmentId,
     queryKey: [...assignmentsKey(linkId), assignmentId, 'plan'],
     queryFn: async () =>
       (
@@ -368,6 +394,6 @@ export function useAdaptProgram(linkId: string, assignmentId: string) {
           request,
         )
       ).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentsKey(linkId) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['coach', 'clients'] }),
   });
 }

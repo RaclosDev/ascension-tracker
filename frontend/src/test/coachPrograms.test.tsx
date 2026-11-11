@@ -50,6 +50,11 @@ vi.mock('../lib/workout/api', () => ({
   }),
 }));
 vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }));
+vi.mock('../lib/coach/library', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../lib/coach/library')>()),
+  useLibraryItems: () => ({ data: [], isSuccess: true }),
+  useSaveLibraryItem: () => ({ mutate: vi.fn(), isPending: false }),
+}));
 
 const mockedApi = vi.mocked(api);
 
@@ -164,7 +169,7 @@ describe('CoachProgramEditorPage', () => {
       target: { value: 'press' },
     });
     expect(screen.getByText('Press en polea propio')).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: /Press banca/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Press banca$/ }));
     fireEvent.change(screen.getByLabelText('RPE'), { target: { value: '8' } });
     expect(screen.getByLabelText('Arrastrar Press banca')).toBeDefined();
 
@@ -216,7 +221,7 @@ describe('CoachProgramEditorPage', () => {
     fireEvent.change(screen.getByLabelText('Buscar ejercicio para añadir'), {
       target: { value: 'press' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Press banca/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Press banca$/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Vista previa' }));
     expect(screen.getByRole('region', { name: 'Vista previa del programa' })).toHaveTextContent(
       'Press banca',
@@ -291,7 +296,7 @@ describe('CoachProgramEditorPage', () => {
     );
     renderAt('/entrenador/programas/p-1');
 
-    expect(await screen.findByDisplayValue('Torso')).toBeDefined();
+    expect(await screen.findByLabelText('Nombre del día (Lunes)')).toHaveValue('Torso');
     fireEvent.change(screen.getByLabelText('Copiar la semana 1 a'), { target: { value: '2' } });
     fireEvent.click(screen.getByRole('button', { name: 'Copiar semana 1' }));
     fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
@@ -369,7 +374,7 @@ describe('individual program adaptation', () => {
     await screen.findByDisplayValue('Fuerza original');
     fireEvent.click(screen.getByRole('button', { name: 'Publicar adaptación' }));
     expect(confirm).toHaveBeenCalledWith(
-      expect.objectContaining({ description: expect.stringContaining('termina ahora') }),
+      expect.objectContaining({ description: expect.stringContaining('continúa hasta esa fecha') }),
     );
     expect(mockedApi.post).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText('Empieza la nueva versión el'), {

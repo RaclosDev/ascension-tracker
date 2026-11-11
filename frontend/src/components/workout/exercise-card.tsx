@@ -1,4 +1,5 @@
 import { ExerciseActionsMenu } from './ExerciseActionsMenu';
+import { TechniqueVideoEditor } from './TechniqueVideo';
 import React, { useState, useRef, useEffect } from 'react';
 import { Check, ChevronDown, Plus, Timer } from 'lucide-react';
 import { getExerciseMap } from '@/lib/workout/exercises';
@@ -125,7 +126,9 @@ export const ExerciseCard = React.memo(function ExerciseCard({
   }, [historicalMachines, customMachinesArray]);
 
   const settings = useWorkoutStore((s) => s.settings);
-  const showRpe = settings?.showRpe ?? false;
+  const prescribed = useWorkoutStore((state) => !!state.active?.programDayId);
+  const showRpe =
+    (settings?.showRpe ?? false) || prescribed || !!row?.sets.some((set) => set.rir || set.rpe);
   const isCardio = meta?.muscle === 'cardio';
 
   // Compact columns: set#(with prev below), kg, reps, [rpe], check
@@ -344,12 +347,13 @@ export const ExerciseCard = React.memo(function ExerciseCard({
           </div>
 
           {/* Sets */}
+          <TechniqueVideoEditor exercise={row} />
           <div style={{ padding: '0.25rem 0.5rem 0.75rem' }}>
             <div className="set-grid-header" style={{ gridTemplateColumns: cols }}>
               <span>#</span>
               <span>{isCardio ? 'Km' : 'Kg'}</span>
               <span>{isCardio ? 'Tpo' : 'Reps'}</span>
-              {showRpe && <span>RPE</span>}
+              {showRpe && <span>Esfuerzo</span>}
               <span />
             </div>
 

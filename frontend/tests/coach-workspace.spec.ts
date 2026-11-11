@@ -56,6 +56,25 @@ async function setupCoach(page: Page, empty = false) {
   await page.route('**/api/coach/**', async (route) => {
     const path = new URL(route.request().url()).pathname.replace('/api/coach/', '');
     if (path === 'profile') return route.fulfill({ json: { coach: true } });
+    if (path.endsWith('/powerlifting'))
+      return route.fulfill({ json: { profile: { enabled: false } } });
+    if (path.includes('/weeks/'))
+      return route.fulfill({
+        json: {
+          linkId: path.split('/')[1],
+          weekStart: path.split('/')[3],
+          version: 0,
+          assignmentId: null,
+          publishedVersion: null,
+          updatedAt: null,
+          content: {
+            program: { id: null, name: 'Semana', notes: null, weeks: 1, days: [], status: 'DRAFT' },
+            privateNotes: '',
+            intent: 'BUILD',
+            decision: '',
+          },
+        },
+      });
     if (path === 'settings') return route.fulfill({ json: coachSettings });
     if (path === 'clients') return route.fulfill({ json: empty ? [] : clients });
     const client = clients.find((c) => path === `clients/${c.linkId}`);
@@ -98,7 +117,7 @@ async function setupCoach(page: Page, empty = false) {
       return route.fulfill({ json: checkin() });
     }
     if (path === 'clients/l0/checkins') return route.fulfill({ json: [checkin()] });
-    if (/clients\/l\d\/programs/.test(path))
+    if (/clients\/l\d\/programs$/.test(path))
       return route.fulfill({
         json: [
           {
@@ -177,7 +196,7 @@ for (const width of [1440, 390]) {
       .getByRole('link', { name: /^Ana García/ })
       .filter({ visible: true })
       .click();
-    await expect(page.getByRole('heading', { name: 'Programa asignado' })).toBeVisible();
+    await expect(page.getByLabel('Semana que preparas')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Terminar relación' })).toHaveCount(0);
     await noHorizontalOverflow(page);
     await page.screenshot({

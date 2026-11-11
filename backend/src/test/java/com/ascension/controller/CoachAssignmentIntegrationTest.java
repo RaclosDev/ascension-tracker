@@ -49,6 +49,47 @@ class CoachAssignmentIntegrationTest {
     @Autowired ObjectMapper json;
 
     @Test
+    void libraryFavoritesArePersonalAndCannotReferToAnotherCoachsProgram() throws Exception {
+        String coach=coach(); String other=coach(); String program=createProgram(coach);
+        String item="""
+                {"type":"PROGRAM","id":"%s","favorite":true,"category":"SESSION","tags":["casa","30 min"],"minutes":30,"equipment":"mancuernas","used":true}
+                """.formatted(program);
+        mvc.perform(as(put("/api/coach/library-items"),coach).contentType("application/json").content(item))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].favorite").value(true)).andExpect(jsonPath("$[0].lastUsed").exists());
+        mvc.perform(as(get("/api/coach/library-items"),other)).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(as(put("/api/coach/library-items"),other).contentType("application/json").content(item)).andExpect(status().isNotFound());
+        mvc.perform(as(get("/api/user/export"),coach)).andExpect(jsonPath("$.coachLibraryItems[0].tags[0]").value("casa"));
+    }
+
+    @Test
+    void structuredLoadsSnapshotTrainingMaxAndDoNotTrustClientSuppliedReferences() throws Exception {
+        String coach = coach(); String client = user(); String link = accept(client,invite(coach),EDIT);
+        String profile = """
+                {"expectedVersion":0,"profile":{"enabled":true,"equipment":"CLASSIC","federation":"",
+                "trainingMax":{"squat":150,"bench":100,"deadlift":180},"marks":[],"notes":""}}
+                """;
+        mvc.perform(as(put("/api/coach/clients/{link}/powerlifting",link),coach).contentType("application/json").content(profile))
+                .andExpect(status().isOk());
+        String structured = PROGRAM.replace("\"sets\":4", """
+                "sets":1,"prescription":{"load":{"mode":"PERCENT_TM","amount":82,"unit":"TOTAL","lift":"bench","increment":2.5,"referenceKg":999,"resolvedKg":999},
+                "sets":[{"kind":"TOP","reps":3,"rpe":8,"load":null}]}
+                """);
+        String program = json.readTree(mvc.perform(as(post("/api/coach/programs"),coach).contentType("application/json").content(structured))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("id").asString();
+        String assignment = assign(coach,link,program).get("id").asString();
+        String read = "/api/coach/clients/"+link+"/programs/"+assignment+"/plan";
+        mvc.perform(as(get(read),coach)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.days[0].exercises[0].prescription.load.referenceKg").value(100))
+                .andExpect(jsonPath("$.days[0].exercises[0].prescription.load.resolvedKg").value(82.5));
+        mvc.perform(as(put("/api/coach/clients/{link}/powerlifting",link),coach).contentType("application/json")
+                .content(profile.replace("\"expectedVersion\":0","\"expectedVersion\":1").replace("\"bench\":100","\"bench\":120")))
+                .andExpect(status().isOk());
+        mvc.perform(as(get(read),coach)).andExpect(jsonPath("$.days[0].exercises[0].prescription.load.resolvedKg").value(82.5));
+        mvc.perform(as(post("/api/coach/programs"),coach).contentType("application/json")
+                .content(structured.replace("\"rpe\":8","\"rpe\":8,\"rir\":2"))).andExpect(status().isBadRequest());
+    }
+
+    @Test
     void draftsAndStalePreviewsCannotReplaceAnActiveAssignment() throws Exception {
         String coach = coach();
         String link = accept(user(), invite(coach), EDIT);
@@ -312,6 +353,66 @@ class CoachAssignmentIntegrationTest {
         mvc.perform(as(get("/api/coach/clients/{link}/programs", link), coach))
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].status").value("ACTIVE"));
+    }
+
+    @Test
+    void futureAdaptationKeepsTodayAndCancellationRestoresThePreviousSchedule() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach), EDIT);
+        JsonNode current = assign(coach, link, createProgram(coach));
+        LocalDate future = LocalDate.now().plusDays(2);
+        JsonNode scheduled = json.readTree(mvc.perform(adaptRequest(coach, link, current.get("id").asString(),
+                        PROGRAM.replace("Fuerza", "Semana siguiente"), future))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("SCHEDULED"))
+                .andReturn().getResponse().getContentAsString());
+        mvc.perform(as(get("/api/coach/clients/{link}/programs", link), coach))
+                .andExpect(jsonPath("$[0].status").value("SCHEDULED"))
+                .andExpect(jsonPath("$[1].status").value("ACTIVE"))
+                .andExpect(jsonPath("$[1].endedAt").doesNotExist());
+        mvc.perform(as(get("/api/coaching/today").param("date", LocalDate.now().toString()), client))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].phase").value("UPCOMING"))
+                .andExpect(jsonPath("$[1].programId").value(current.get("programId").asString()));
+        mvc.perform(as(get("/api/coaching/today").param("date", future.toString()), client))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].programId").value(scheduled.get("programId").asString()));
+        mvc.perform(as(post("/api/coaching/programs/{id}/end", scheduled.get("id").asString()), client))
+                .andExpect(status().isNoContent());
+        mvc.perform(as(get("/api/coaching/today").param("date", future.toString()), client))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].programId").value(current.get("programId").asString()));
+    }
+
+    @Test
+    void weeklyDraftChecksOwnershipVersionsAndKeepsPrivateNotesOutOfThePublishedCopy() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach), EDIT);
+        String monday = LocalDate.now().with(java.time.temporal.TemporalAdjusters.next(java.time.DayOfWeek.MONDAY)).toString();
+        String path = "/api/coach/clients/" + link + "/weeks/" + monday;
+        String body = """
+                {"expectedVersion":0,"content":{"program":%s,"privateNotes":"Solo entrenador",
+                "intent":"DELOAD","decision":"Reducir fatiga"}}
+                """.formatted(PROGRAM.replace("\"weeks\":2", "\"weeks\":1"));
+        mvc.perform(as(put(path), coach).contentType("application/json").content(body))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.version").value(1));
+        mvc.perform(as(put(path), coach).contentType("application/json").content(body))
+                .andExpect(status().isConflict());
+        mvc.perform(as(get(path), coach())).andExpect(status().isNotFound());
+        mvc.perform(as(get(path), client)).andExpect(status().isNotFound());
+        JsonNode published = json.readTree(mvc.perform(as(post(path + "/publish"), coach)
+                        .contentType("application/json").content("{\"expectedVersion\":1}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.publishedVersion").value(1))
+                .andReturn().getResponse().getContentAsString());
+        String assignment = published.get("assignmentId").asString();
+        String copy = mvc.perform(as(get("/api/coach/clients/{link}/programs/{id}/plan", link, assignment), coach))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(copy).doesNotContain("Solo entrenador", "Reducir fatiga");
+        mvc.perform(as(post(path + "/publish"), coach).contentType("application/json").content("{\"expectedVersion\":1}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.assignmentId").value(assignment));
+        mvc.perform(as(get("/api/user/export"), coach)).andExpect(jsonPath("$.coachWeekPlans[0].content.privateNotes").value("Solo entrenador"));
+        mvc.perform(as(get("/api/user/export"), client)).andExpect(jsonPath("$.coachWeekPlans").doesNotExist());
     }
 
     private MockHttpServletRequestBuilder adaptRequest(String coach, String link, String assignment, String program, LocalDate start) {

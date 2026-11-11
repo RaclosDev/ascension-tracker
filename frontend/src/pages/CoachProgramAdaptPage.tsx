@@ -67,7 +67,7 @@ export default function CoachProgramAdaptPage() {
     if (
       !(await confirmAction({
         title: 'Publicar adaptación',
-        description: `¿Publicar solo para ${personName(client.data.client)}? La asignación anterior termina ahora, aunque la nueva empiece más adelante. Se conserva el historial.`,
+        description: `¿Publicar solo para ${personName(client.data.client)} a partir del ${date.value}? Su programa actual continúa hasta esa fecha. Si ya hay una versión para ese día, se sustituirá. Se conserva el historial.`,
         confirmLabel: 'Publicar adaptación',
         destructive: false,
       }))

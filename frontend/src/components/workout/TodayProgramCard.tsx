@@ -3,15 +3,10 @@ import toast from 'react-hot-toast';
 import { CalendarCheck, Check, Play } from 'lucide-react';
 import { apiErrorMessage, formatCoachDate } from '@/lib/coach/api';
 import { WEEKDAY_LABELS } from '@/lib/coach/weekdays';
-import {
-  prescriptionText,
-  toPrescribedDay,
-  useLeaveProgram,
-  useTodayPlans,
-  type TodayPlan,
-} from '@/lib/coach/today';
+import { toPrescribedDay, useLeaveProgram, useTodayPlans, type TodayPlan } from '@/lib/coach/today';
 import { useWorkoutStore } from '@/lib/workout/store';
 import type { CompletedWorkout } from '@/lib/workout/types';
+import { PrescriptionSummary } from '../coach/PrescriptionSummary';
 
 /** "Hoy": what each program a coach assigned prescribes for today, ready to start. */
 export function TodayProgramCard({
@@ -95,6 +90,11 @@ function PlanCard({
           </span>
         )}
       </header>
+      {plan.programNotes && (
+        <p className="text-sm whitespace-pre-wrap">
+          <strong>Indicaciones del entrenador:</strong> {plan.programNotes}
+        </p>
+      )}
 
       {plan.phase === 'UPCOMING' && (
         <p style={{ color: 'var(--text-secondary)' }}>
@@ -121,15 +121,14 @@ function PlanCard({
           {plan.day.notes && <p className="text-sm text-white">{plan.day.notes}</p>}
           <ol className="flex flex-col gap-1">
             {plan.day.exercises.map((e, i) => {
-              const target = prescriptionText(e);
               return (
                 <li key={i} className="text-sm">
                   <span className="text-white font-semibold">
                     {e.exerciseName ?? exerciseName(e.exerciseId)}
                   </span>{' '}
-                  <span style={{ color: 'var(--text-secondary)' }}>
-                    {e.sets} × {target || 'series'}
-                  </span>
+                  <div style={{ color: 'var(--text-secondary)' }}>
+                    <PrescriptionSummary exercise={e} />
+                  </div>
                 </li>
               );
             })}

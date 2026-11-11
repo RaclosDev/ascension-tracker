@@ -17,6 +17,7 @@ import { QueryErrorNotice } from '../QueryErrorNotice';
 import { PowerMarksEditor } from './PowerMarksEditor';
 import { PowerMeets } from './PowerMeets';
 import { PowerProgress } from './PowerProgress';
+import { PowerExerciseMappings } from './PowerExerciseMappings';
 
 export default function ClientPowerlifting({
   linkId,
@@ -117,6 +118,11 @@ function PowerForm({
         </p>
       )}
       <fieldset disabled={!canEdit || save.isPending} className="flex flex-col gap-5 min-w-0">
+        <PowerExerciseMappings
+          linkId={saved.linkId}
+          value={profile.exerciseMappings ?? []}
+          onChange={(exerciseMappings) => set({ exerciseMappings })}
+        />
         <label className="flex items-center gap-3 min-h-11">
           <input
             type="checkbox"

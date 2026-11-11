@@ -1,8 +1,16 @@
 import { estimateOneRepMax, recordedPowerSets, type Lift } from '../powerlifting';
 import type { CompletedWorkout } from '../workout/types';
 
-export function powerProgress(history: CompletedWorkout[], since: number, until: number) {
-  const sets = recordedPowerSets(history).filter((s) => s.date >= since && s.date <= until);
+export function powerProgress(
+  history: CompletedWorkout[],
+  since: number,
+  until: number,
+  mappings: import('./powerlifting').PowerExerciseMapping[] = [],
+  includeVariations = false,
+) {
+  const sets = recordedPowerSets(history, mappings, includeVariations).filter(
+    (s) => s.date >= since && s.date <= until,
+  );
   return (['squat', 'bench', 'deadlift'] as Lift[]).map((lift) => {
     const rows = sets.filter((s) => s.lift === lift);
     const single = rows

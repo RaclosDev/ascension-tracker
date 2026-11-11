@@ -15,6 +15,9 @@ public final class PowerliftingDtos {
     public enum Lift { SQUAT, BENCH, DEADLIFT }
     public enum Equipment { CLASSIC, EQUIPPED, OTHER }
     public enum Context { TRAINING, COMPETITION }
+    public enum MappingKind { COMPETITION, VARIATION, EXCLUDE }
+    public record ExerciseMapping(@NotBlank @Size(max=120) String exerciseId, @Size(max=100) String grip,
+            @Size(max=100) String machine, @NotNull Lift lift, @NotNull MappingKind kind) { }
 
     public record Maxes(
             @DecimalMin("0.01") @DecimalMax("1500") BigDecimal squat,
@@ -35,7 +38,8 @@ public final class PowerliftingDtos {
             @NotNull @Size(max = 100) String federation,
             @NotNull @Valid Maxes trainingMax,
             @NotNull @Size(max = 200) List<@NotNull @Valid Mark> marks,
-            @NotNull @Size(max = 2000) String notes) { }
+            @NotNull @Size(max = 2000) String notes,
+            @Size(max=200) List<@NotNull @Valid ExerciseMapping> exerciseMappings) { }
 
     public record Saved(UUID linkId, Profile profile, int version, Instant updatedAt) { }
 

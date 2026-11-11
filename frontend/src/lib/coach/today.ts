@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
 import type { ProgramExercise } from './coachPrograms';
 import type { PrescribedDay } from '../workout/store';
+import { loadText, resolvedWeight, setText } from './prescription';
 
 /** Mirrors the backend ProgramDtos.TodayDay: the prescribed day, with its id for linking the workout. */
 export interface TodayDay {
@@ -18,6 +19,7 @@ export interface TodayPlan {
   assignmentId: string;
   programId: string;
   programName: string;
+  programNotes?: string | null;
   coachName: string | null;
   startDate: string;
   weeks: number;
@@ -64,6 +66,8 @@ const restLabel = (seconds: number) =>
 
 /** The coach's targets for one exercise, in one line: "6–8 reps · RPE 8 · descanso 2:00". */
 export function prescriptionText(e: ProgramExercise): string {
+  if (e.prescription?.sets?.length)
+    return e.prescription.sets.map((s, i) => `${i + 1}: ${setText(s, e)}`).join(' / ');
   const parts: string[] = [];
   if (e.repsMin != null && e.repsMax != null && e.repsMin !== e.repsMax) {
     parts.push(`${e.repsMin}–${e.repsMax} reps`);
@@ -73,7 +77,8 @@ export function prescriptionText(e: ProgramExercise): string {
   if (e.targetRpe != null) parts.push(`RPE ${e.targetRpe}`);
   if (e.targetRir != null) parts.push(`RIR ${e.targetRir}`);
   if (e.restSeconds != null) parts.push(`descanso ${restLabel(e.restSeconds)}`);
-  if (e.loadHint) parts.push(e.loadHint);
+  if (e.prescription?.load) parts.push(loadText(e.prescription.load));
+  else if (e.loadHint) parts.push(e.loadHint);
   if (e.notes) parts.push(e.notes);
   return parts.join(' · ');
 }
@@ -91,6 +96,14 @@ export function toPrescribedDay(day: TodayDay): PrescribedDay {
           : undefined,
       sets: e.sets,
       reps: e.repsMin ?? e.repsMax,
+      targets: Array.from({ length: e.sets }, (_, i) => {
+        const target = e.prescription?.sets?.[i];
+        return {
+          weight: resolvedWeight(target?.load ?? e.prescription?.load),
+          reps: target?.reps ?? e.repsMin ?? e.repsMax,
+          type: target?.kind === 'WARMUP' ? ('warmup' as const) : ('normal' as const),
+        };
+      }),
       notes: prescriptionText(e),
     })),
   };

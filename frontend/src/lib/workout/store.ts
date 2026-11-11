@@ -43,6 +43,7 @@ export interface PrescribedDay {
     variant?: { grip?: string; machine?: string };
     sets: number;
     reps?: number | null;
+    targets?: { weight: number | null; reps: number | null; type: 'normal' | 'warmup' }[];
     notes: string;
   }[];
 }
@@ -114,6 +115,10 @@ interface WorkoutState {
   addExercises: (selections: (ExerciseSelection | string)[], history: CompletedWorkout[]) => void;
   removeExercise: (id: string) => void;
   setExerciseNotes: (id: string, notes: string) => void;
+  setExerciseVideo: (
+    id: string,
+    video: Pick<WorkoutExercise, 'videoUrl' | 'videoSet' | 'videoSeconds'>,
+  ) => void;
   moveExercise: (id: string, dir: -1 | 1) => void;
 
   addSet: (exerciseRowId: string, history: CompletedWorkout[]) => void;
@@ -222,10 +227,17 @@ export const useWorkoutStore = create<WorkoutState>()(
               notes: e.notes,
               sets: Array.from({ length: e.sets }, (_, i) => {
                 const fill = previousFill(e.exerciseId, e.variant, i, history);
-                return blankSet({
-                  weight: fill?.weight ?? '',
-                  reps: fill?.reps || (e.reps ? String(e.reps) : ''),
-                });
+                const target = e.targets?.[i];
+                return {
+                  ...blankSet({
+                    weight: target?.weight != null ? String(target.weight) : (fill?.weight ?? ''),
+                    reps:
+                      target?.reps != null
+                        ? String(target.reps)
+                        : fill?.reps || (e.reps ? String(e.reps) : ''),
+                  }),
+                  type: target?.type ?? 'normal',
+                };
               }),
             })),
           },
@@ -348,6 +360,9 @@ export const useWorkoutStore = create<WorkoutState>()(
         set({
           active: patchActive(get().active, id, (ex) => ({ ...ex, notes })),
         });
+      },
+      setExerciseVideo: (id, video) => {
+        set({ active: patchActive(get().active, id, (exercise) => ({ ...exercise, ...video })) });
       },
 
       updateExerciseVariant: (id, variant) => {

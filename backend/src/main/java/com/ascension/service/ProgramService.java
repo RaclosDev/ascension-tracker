@@ -28,6 +28,7 @@ import java.util.UUID;
  */
 @Service
 public class ProgramService {
+    private static final tools.jackson.databind.json.JsonMapper JSON = tools.jackson.databind.json.JsonMapper.builder().build();
 
     static final int MAX_LIBRARY_PROGRAMS = 100;
     private static final String COPY_SUFFIX = " (copia)";
@@ -189,14 +190,14 @@ public class ProgramService {
                 rows.add(new Object[]{dayId, i, e.exerciseId(), blankToNull(e.exerciseName()),
                         blankToNull(e.variantGrip()), blankToNull(e.variantMachine()), e.sets(), e.repsMin(),
                         e.repsMax(), e.targetRpe(), e.targetRir(), e.restSeconds(), blankToNull(e.loadHint()),
-                        e.supersetGroup(), blankToNull(e.notes())});
+                        e.supersetGroup(), blankToNull(e.notes()), e.prescription() == null ? null : JSON.writeValueAsString(e.prescription())});
             }
             if (!rows.isEmpty()) {
                 jdbcTemplate.batchUpdate("""
                         INSERT INTO program_exercises (program_day_id, order_index, exercise_id, exercise_name,
                             variant_grip, variant_machine, sets, reps_min, reps_max, target_rpe, target_rir,
-                            rest_seconds, load_hint, superset_group, notes)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            rest_seconds, load_hint, superset_group, notes, prescription)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS jsonb))
                         """, rows);
             }
         }
@@ -230,6 +231,7 @@ public class ProgramService {
                 throw new InvalidInputException("Hay dos días en el mismo hueco de la semana.");
             }
             for (Exercise e : day.exercises()) {
+                PrescriptionService.validate(e);
                 if (e.repsMin() != null && e.repsMax() != null && e.repsMin() > e.repsMax()) {
                     throw new InvalidInputException("Las repeticiones mínimas superan a las máximas.");
                 }
@@ -252,7 +254,8 @@ public class ProgramService {
                 rs.getString("variant_grip"), rs.getString("variant_machine"), rs.getInt("sets"),
                 integer(rs, "reps_min"), integer(rs, "reps_max"), rs.getBigDecimal("target_rpe"),
                 integer(rs, "target_rir"), integer(rs, "rest_seconds"), rs.getString("load_hint"),
-                integer(rs, "superset_group"), rs.getString("notes"));
+                integer(rs, "superset_group"), rs.getString("notes"),
+                rs.getString("prescription") == null ? null : JSON.readValue(rs.getString("prescription"), com.ascension.dto.PrescriptionDtos.Prescription.class));
     }
 
     private static Integer integer(ResultSet rs, String column) throws SQLException {
