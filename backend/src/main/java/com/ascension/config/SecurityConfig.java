@@ -48,7 +48,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    public static final String CSP_POLICY = "default-src 'self'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://lh3.googleusercontent.com https://images.openfoodfacts.org https://raw.githubusercontent.com https://*.r2.cloudflarestorage.com; connect-src 'self' https://ascension-backend-7dd8e6190a75.herokuapp.com https://ascension.raclos.es https://accounts.google.com; frame-src https://accounts.google.com; media-src 'self' data: blob:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+    public static final String CSP_POLICY = "default-src 'self'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://lh3.googleusercontent.com https://images.openfoodfacts.org https://raw.githubusercontent.com https://*.r2.cloudflarestorage.com; connect-src 'self' https://ascension-backend-7dd8e6190a75.herokuapp.com https://ascension.raclos.es https://accounts.google.com; frame-src 'self' https://accounts.google.com; media-src 'self' data: blob:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'";
 
     public static final String PERMISSIONS_POLICY = "camera=(self), microphone=(self), geolocation=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()";
 
@@ -154,7 +154,7 @@ public class SecurityConfig {
 
     private static void securityHeaders(HeadersConfigurer<HttpSecurity> headers) {
         headers
-            .frameOptions(frameOptions -> frameOptions.deny())
+            .frameOptions(frameOptions -> frameOptions.sameOrigin())
             .httpStrictTransportSecurity(hsts -> hsts
                 .includeSubDomains(true)
                 .maxAgeInSeconds(31536000)

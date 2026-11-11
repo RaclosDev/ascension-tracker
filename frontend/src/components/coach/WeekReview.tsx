@@ -30,7 +30,7 @@ export function WeekReview({
   const visible = current.length ? current : relevant;
   const checkin = checkins.data?.find((c) => c.weekStart === week);
   return (
-    <section className="card min-w-0 flex flex-col gap-4">
+    <section data-tour="week-review" className="card min-w-0 flex flex-col gap-4">
       <h2>Revisión · {formatCoachDate(week)}</h2>
       <p className="text-sm">
         Hasta el {formatCoachDate(format(addDays(parseISO(week), 6), 'yyyy-MM-dd'))}

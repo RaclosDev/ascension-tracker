@@ -205,6 +205,7 @@ export function WeekEditor({
           <button
             type="button"
             className="btn btn-secondary"
+            data-tour="copy-week"
             disabled={!previous.data || previous.isFetching}
             onClick={async () => {
               if (!previous.data || !source) return;
@@ -251,6 +252,7 @@ export function WeekEditor({
           <button
             type="button"
             className="btn btn-secondary"
+            data-tour="student-preview"
             aria-pressed={preview}
             onClick={() => setPreview(!preview)}
           >
@@ -275,7 +277,7 @@ export function WeekEditor({
               onChange={(e) => editProgram({ ...program, name: e.target.value })}
             />
           </label>
-          <label className="flex flex-col gap-1 min-w-0">
+          <label data-tour="week-intent" className="flex flex-col gap-1 min-w-0">
             Objetivo de la semana
             <select
               className="form-input min-h-11"
@@ -291,7 +293,7 @@ export function WeekEditor({
               ))}
             </select>
           </label>
-          <label className="sm:col-span-2 flex flex-col gap-1 min-w-0">
+          <label data-tour="week-comment" className="sm:col-span-2 flex flex-col gap-1 min-w-0">
             Comentario para el alumno
             <textarea
               className="form-input min-h-11"
@@ -312,7 +314,7 @@ export function WeekEditor({
               onChange={(e) => edit({ ...value.content, decision: e.target.value })}
             />
           </label>
-          <details className="sm:col-span-2">
+          <details data-tour="week-private" className="sm:col-span-2">
             <summary className="cursor-pointer">Notas privadas del entrenador</summary>
             <textarea
               aria-label="Notas privadas del entrenador"
@@ -385,6 +387,7 @@ export function WeekEditor({
       </fieldset>
       {canEdit && (
         <footer
+          data-tour="week-publish"
           className="card sticky bottom-3 z-10 flex flex-wrap gap-2"
           style={{ background: 'var(--bg-card)' }}
         >

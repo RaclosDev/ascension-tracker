@@ -61,6 +61,7 @@ export function ExerciseRow({
 
   return (
     <li
+      data-tour="exercise-prescription"
       ref={drag.innerRef}
       {...drag.draggableProps}
       className="rounded-lg border p-3 flex flex-col gap-2"

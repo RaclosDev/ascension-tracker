@@ -16,6 +16,7 @@ import { useWorkoutStore } from '@/lib/workout/store';
 import { useQuery } from '@tanstack/react-query';
 import { WorkoutElapsedTimer } from './workout/WorkoutElapsedTimer';
 import OnboardingScreen from './OnboardingScreen';
+import { isCoachTourFrame } from './coach/tour/frame';
 import { PasskeyPrompt } from './PasskeyPrompt';
 import { preloadRoute } from '../utils/routePreload';
 
@@ -235,6 +236,7 @@ export default function Layout() {
               return (
                 <button
                   key={item.path}
+                  data-tour-nav={item.path}
                   type="button"
                   className={`nav-item ${isActive ? 'active' : ''}`}
                   aria-current={isActive ? 'page' : undefined}
@@ -311,7 +313,7 @@ export default function Layout() {
               }
             >
               <div key={location.pathname} className="route-fade">
-                {user?.email && location.pathname !== '/entrenador/guia' && (
+                {user?.email && !isCoachTourFrame() && location.pathname !== '/entrenador/guia' && (
                   <PasskeyPrompt email={user.email} />
                 )}
                 <Outlet />
@@ -332,7 +334,6 @@ export default function Layout() {
           {
             '--nav-count': bottomItems.length + 1,
             '--nav-active': Math.max(activeBottomIndex, 0),
-            display: location.pathname === '/entrenador/guia' ? 'none' : undefined,
           } as CSSProperties
         }
       >
@@ -346,6 +347,7 @@ export default function Layout() {
           return (
             <button
               key={item.path}
+              data-tour-nav={item.path}
               type="button"
               className={`mobile-bottom-item ${isActive ? 'active' : ''}`}
               onMouseEnter={() => preloadRoute(item.path)}
@@ -409,6 +411,7 @@ export default function Layout() {
             return (
               <button
                 key={item.path}
+                data-tour-nav={item.path}
                 type="button"
                 className={`bottom-sheet-item ${isActive ? 'active' : ''}`}
                 aria-current={isActive ? 'page' : undefined}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { isCoachTourFrame } from './frame';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../../ui/dialog';
@@ -7,7 +8,7 @@ import { readTourProgress, saveTourProgress } from './progress';
 export default function CoachTourWelcome() {
   const { user } = useAuth();
   const { pathname } = useLocation();
-  if (!user?.email || pathname === '/entrenador/guia') return null;
+  if (!user?.email || isCoachTourFrame() || pathname.startsWith('/entrenador/guia')) return null;
   return <Welcome key={user.email} account={user.email} />;
 }
 
@@ -28,8 +29,8 @@ function Welcome({ account }: { account: string }) {
       <DialogContent>
         <DialogTitle>Conoce tu espacio de entrenador</DialogTitle>
         <DialogDescription>
-          Prueba el recorrido completo con Lucía, una alumna ficticia: revisa su feedback, prepara
-          una semana y comprueba cómo la recibe. Puedes ir paso a paso o reproducir la demo.
+          Recorre las pantallas con Lucía, una alumna de ejemplo. Iremos abriendo las pestañas y
+          señalando dónde revisar su feedback, preparar la semana y comprobar cómo la recibe.
         </DialogDescription>
         <p className="text-sm text-muted-foreground">
           No necesitas tener alumnos. La demo no modifica tus datos.
@@ -39,7 +40,7 @@ function Welcome({ account }: { account: string }) {
           onClick={() => {
             saveTourProgress(account, { status: 'started', step: 0 });
             setOpen(false);
-            navigate('/entrenador/guia');
+            navigate('/entrenador/guia/recorrido');
           }}
         >
           Empezar guía interactiva
@@ -48,7 +49,7 @@ function Welcome({ account }: { account: string }) {
           Ahora no
         </button>
         <p className="text-sm text-muted-foreground">
-          Podrás abrirla de nuevo desde Inicio o Ajustes.
+          Podrás repetirlo o continuarlo desde la pestaña Tour.
         </p>
       </DialogContent>
     </Dialog>

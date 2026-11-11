@@ -2,6 +2,7 @@ import React, { StrictMode } from 'react';
 import ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { isCoachTourFrame } from './components/coach/tour/frame';
 import './index.css';
 import './paper.css';
 import { applyColorMode, readColorMode } from './utils/colorMode';
@@ -69,13 +70,21 @@ window.addEventListener('error', (event) => {
   }
 });
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </StrictMode>,
-);
+const renderApp = () =>
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </StrictMode>,
+  );
+
+if (isCoachTourFrame()) {
+  void import('./components/coach/tour/CoachTourPreview').then(({ installCoachTourPreview }) => {
+    installCoachTourPreview();
+    renderApp();
+  });
+} else renderApp();
 
 import { registerSW } from 'virtual:pwa-register';
 

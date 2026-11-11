@@ -10,6 +10,7 @@ const dateTime = new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeSty
 export function CheckinCard({ checkin, footer }: { checkin: Checkin; footer?: ReactNode }) {
   return (
     <article
+      data-tour="checkin-card"
       className="rounded-lg p-3 border flex flex-col gap-3"
       style={{ borderColor: 'var(--border-subtle)' }}
     >

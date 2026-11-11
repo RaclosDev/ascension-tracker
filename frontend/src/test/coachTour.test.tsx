@@ -1,206 +1,132 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import api from '../api/client';
 import CoachTourPage from '../pages/CoachTourPage';
-import CoachTourWelcome from '../components/coach/tour/CoachTourWelcome';
 import { readTourProgress, saveTourProgress } from '../components/coach/tour/progress';
 import { COACH_TOUR_STEPS } from '../components/coach/tour/steps';
+import { installCoachTourPreview, tourResponse } from '../components/coach/tour/CoachTourPreview';
+import { tourPopupPosition } from '../components/coach/tour/CoachTourOverlay';
+import { tourRouteAllowed } from '../components/coach/tour/frame';
+import { useSessionDraft } from '../hooks/useSessionDraft';
 
 const auth = vi.hoisted(() => ({ user: { email: 'tour@test.example' } }));
 vi.mock('../context/AuthContext', () => ({ useAuth: () => auth }));
-vi.mock('../lib/coach/api', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../lib/coach/api')>()),
+vi.mock('../lib/coach/api', async (original) => ({
+  ...(await original<typeof import('../lib/coach/api')>()),
   useCoachProfile: () => ({ data: { coach: true } }),
 }));
-
-function mount(path = '/entrenador/guia?desde=inicio') {
-  return render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/entrenador/guia" element={<CoachTourPage />} />
-        <Route
-          path="/entrenador"
-          element={
-            <>
-              <h1>Inicio del entrenador</h1>
-              <CoachTourWelcome />
-            </>
-          }
-        />
-      </Routes>
-    </MemoryRouter>,
-  );
-}
-const jump = (index: number) =>
-  fireEvent.change(screen.getByLabelText('Ir a un paso'), { target: { value: String(index) } });
-
-beforeEach(() => {
-  localStorage.clear();
-  auth.user = { email: `tour-${Math.random()}@test.example` };
-});
 afterEach(() => {
   cleanup();
+  localStorage.clear();
   vi.restoreAllMocks();
-  vi.useRealTimers();
 });
 
-describe('Guía del entrenador', () => {
-  it('offers the tour, permits dismissal and keeps it account-scoped', () => {
-    const first = auth.user.email;
-    const view = mount('/entrenador');
-    expect(screen.getByRole('dialog')).toHaveTextContent('Conoce tu espacio de entrenador');
-    fireEvent.click(screen.getByRole('button', { name: 'Ahora no' }));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(readTourProgress(first)?.status).toBe('dismissed');
-    view.unmount();
-    mount('/entrenador');
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(readTourProgress('another@test.example')).toBeNull();
-  });
-
-  it('starts from the welcome dialog and traverses every demonstration', () => {
-    mount('/entrenador');
-    fireEvent.click(screen.getByRole('button', { name: 'Empezar guía interactiva' }));
-    for (const [index, step] of COACH_TOUR_STEPS.entries()) {
-      expect(screen.getByRole('heading', { name: step.title })).toBeInTheDocument();
-      expect(screen.getByRole('progressbar')).toHaveAttribute('value', String(index + 1));
-      const scene = screen.getByRole('region', { name: `Demostración: ${step.section}` });
-      fireEvent.click(within(scene).getByRole('button', { name: step.action }));
-      if (index < COACH_TOUR_STEPS.length - 1)
-        fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
-    }
-    expect(screen.getByRole('heading', { name: 'Inicio del entrenador' })).toBeInTheDocument();
-    expect(readTourProgress(auth.user.email)?.status).toBe('completed');
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  });
-
-  it('updates the prescription and separates private notes from the student preview', () => {
-    mount();
-    jump(3);
-    fireEvent.change(screen.getByLabelText('Tu respuesta'), {
-      target: { value: 'Revisado, Lucía.' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Responder al check-in' }));
-    expect(screen.getByLabelText('Tu respuesta')).toHaveValue('Revisado, Lucía.');
-    jump(6);
-    for (const [label, value] of [
-      ['Carga (kg)', '72.5'],
-      ['Repeticiones', '6'],
-      ['RPE', '7.5'],
-    ]) {
-      fireEvent.change(screen.getByLabelText(label), { target: { value } });
-    }
-    expect(screen.getByText(/Vista previa:/)).toHaveTextContent('72.5');
-    jump(8);
-    fireEvent.change(screen.getByLabelText('Comentario para Lucía'), {
-      target: { value: 'Prioriza la técnica.' },
-    });
-    fireEvent.change(screen.getByLabelText('Nota privada del entrenador'), {
-      target: { value: 'SOLO ENTRENADOR' },
-    });
-    jump(9);
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador de ejemplo' }));
-    expect(screen.getByRole('region', { name: 'Vista de Lucía' })).toHaveTextContent(
-      'todavía no aparece',
+describe('Coach tour', () => {
+  it('never restores, replaces or clears real drafts and does not block leaving the tour', () => {
+    const frame = document.createElement('iframe');
+    frame.dataset.coachTour = 'v2';
+    vi.spyOn(window, 'frameElement', 'get').mockReturnValue(frame);
+    const key = `ascension:draft:${auth.user.email}:professional-settings`;
+    const original = JSON.stringify({ savedAt: Date.now(), value: 'Real draft' });
+    sessionStorage.setItem(key, original);
+    const { result } = renderHook(() =>
+      useSessionDraft(
+        'professional-settings',
+        'Example',
+        (value): value is string => typeof value === 'string',
+      ),
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Publicar semana de ejemplo' }));
-    const preview = screen.getByRole('region', { name: 'Vista de Lucía' });
-    expect(preview).toHaveTextContent('Prioriza la técnica.');
-    expect(preview).toHaveTextContent('72.5');
-    expect(preview).not.toHaveTextContent('SOLO ENTRENADOR');
-    jump(12);
-    fireEvent.change(screen.getByLabelText('Pregunta de tu plantilla de check-in'), {
-      target: { value: '¿Qué tal?' },
-    });
-    expect(screen.getByLabelText('Pregunta de tu plantilla de check-in')).toHaveValue('¿Qué tal?');
+    expect(result.current.value).toBe('Example');
+    act(() => result.current.setValue('Changed example'));
+    expect(result.current.value).toBe('Changed example');
+    expect(window.dispatchEvent(new Event('beforeunload', { cancelable: true }))).toBe(true);
+    expect(sessionStorage.getItem(key)).toBe(original);
+    act(() => result.current.clear());
+    expect(sessionStorage.getItem(key)).toBe(original);
+    sessionStorage.removeItem(key);
   });
-
-  it('resumes the saved step, goes back and resets the sandbox', () => {
-    saveTourProgress(auth.user.email, { status: 'started', step: 9 });
-    mount('/entrenador/guia');
-    expect(screen.getByRole('heading', { name: COACH_TOUR_STEPS[9].title })).toHaveFocus();
-    fireEvent.click(screen.getByRole('button', { name: 'Anterior' }));
-    expect(screen.getByLabelText('Comentario para Lucía')).toHaveValue(
-      'Semana de descarga. Prioriza la técnica y registra cómo te encuentras.',
+  it('starts a chapter in the real-screen route and persists its position', () => {
+    render(
+      <MemoryRouter initialEntries={['/entrenador/guia']}>
+        <Routes>
+          <Route path="/entrenador/guia" element={<CoachTourPage />} />
+          <Route path="/entrenador/guia/recorrido" element={<p>Recorrido abierto</p>} />
+        </Routes>
+      </MemoryRouter>,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Reiniciar demo' }));
-    expect(screen.getByRole('button', { name: 'Anterior' })).toBeDisabled();
-    jump(6);
-    expect(screen.getByLabelText('Carga (kg)')).toHaveValue(80);
+    const chapter = COACH_TOUR_STEPS.find((step) => step.id === 'copy') ?? COACH_TOUR_STEPS[0];
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(chapter.chapter) }));
+    expect(screen.getByText('Recorrido abierto')).toBeInTheDocument();
+    expect(readTourProgress(auth.user.email)?.status).toBe('started');
   });
-
-  it('demonstrates automatically, pauses on interaction and stops timers on exit', () => {
-    vi.useFakeTimers();
-    const view = mount();
-    fireEvent.click(screen.getByRole('button', { name: 'Reproducir recorrido' }));
-    act(() => vi.advanceTimersByTime(1800));
-    expect(screen.getByRole('status')).toHaveTextContent('Lucía tiene un check-in pendiente');
-    act(() => vi.advanceTimersByTime(8200));
-    expect(screen.getByRole('heading', { name: COACH_TOUR_STEPS[1].title })).toBeInTheDocument();
-    fireEvent.keyDown(window, { key: 'Escape' });
-    expect(screen.getByRole('button', { name: 'Reproducir recorrido' })).toBeInTheDocument();
-    act(() => vi.advanceTimersByTime(20000));
-    expect(readTourProgress(auth.user.email)?.step).toBe(1);
-    view.unmount();
-    expect(vi.getTimerCount()).toBe(0);
-  });
-
-  it('pauses when the tab is hidden and when editing', () => {
-    vi.useFakeTimers();
-    mount();
-    jump(6);
-    fireEvent.click(screen.getByRole('button', { name: 'Reproducir recorrido' }));
-    fireEvent.change(screen.getByLabelText('Carga (kg)'), { target: { value: '77.5' } });
-    expect(screen.getByRole('button', { name: 'Reproducir recorrido' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Reproducir recorrido' }));
-    vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
-    fireEvent(document, new Event('visibilitychange'));
-    act(() => vi.advanceTimersByTime(15000));
-    expect(screen.getByLabelText('Carga (kg)')).toHaveValue(77.5);
-  });
-
-  it('stops playback at the last step and completes from the guide controls', () => {
-    vi.useFakeTimers();
-    mount();
-    jump(13);
-    fireEvent.click(screen.getByRole('button', { name: 'Reproducir recorrido' }));
-    act(() => vi.advanceTimersByTime(10000));
-    expect(screen.getByRole('button', { name: 'Reproducir recorrido' })).toBeInTheDocument();
-    fireEvent.click(
-      within(screen.getByRole('complementary')).getByRole('button', { name: 'Terminar guía' }),
-    );
-    expect(readTourProgress(auth.user.email)?.status).toBe('completed');
-  });
-
-  it('supports Escape to exit while preserving the current step', () => {
-    mount();
-    jump(5);
-    fireEvent.keyDown(window, { key: 'Tab' });
-    expect(screen.getByLabelText('Ir a un paso')).toHaveValue('5');
-    fireEvent.keyDown(window, { key: 'Escape' });
-    expect(readTourProgress(auth.user.email)).toEqual({ status: 'started', step: 5 });
-    expect(screen.getByRole('heading', { name: 'Inicio del entrenador' })).toBeInTheDocument();
-  });
-
-  it('ignores invalid progress and remains usable when storage is unavailable', () => {
-    localStorage.setItem(
-      `ascension:coach-tour:v1:${encodeURIComponent(auth.user.email)}`,
-      '{broken',
-    );
-    expect(readTourProgress(auth.user.email)).toBeNull();
-    localStorage.setItem(
-      `ascension:coach-tour:v1:${encodeURIComponent(auth.user.email)}`,
-      JSON.stringify({ status: 'started', step: -2 }),
-    );
-    expect(readTourProgress(auth.user.email)).toBeNull();
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-      throw new Error('blocked');
-    });
+  it('keeps progress account-scoped and survives blocked storage', () => {
+    const account = 'private-tour@test';
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('blocked');
+      throw new Error('Blocked');
     });
-    mount('/entrenador');
-    fireEvent.click(screen.getByRole('button', { name: 'Ahora no' }));
-    expect(readTourProgress(auth.user.email)).toEqual({ status: 'dismissed', step: 0 });
+    saveTourProgress(account, { status: 'started', step: 8 });
+    expect(readTourProgress(account)).toEqual({ status: 'started', step: 8 });
+    expect(readTourProgress('another-account@test')).toBeNull();
+  });
+  it('allows only coach screens and utilities in navigation messages', () => {
+    for (const step of COACH_TOUR_STEPS) expect(tourRouteAllowed(step.path)).toBe(true);
+    for (const path of [
+      'https://example.com',
+      '/settings',
+      '/entrenador/guia/recorrido',
+      '//example.com',
+      '/entrenador/../settings',
+    ])
+      expect(tourRouteAllowed(path)).toBe(false);
+  });
+  it('fits popovers within narrow and wide screens', () => {
+    for (const width of [390, 1920]) {
+      const position = tourPopupPosition(
+        { left: width - 120, top: 760, width: 110, height: 70 },
+        360,
+        320,
+        { width, height: 844 },
+      );
+      expect(position.left).toBeGreaterThanOrEqual(12);
+      expect(position.left + 360).toBeLessThanOrEqual(width - 12);
+      expect(position.top + 320).toBeLessThanOrEqual(832);
+    }
+  });
+  it('cannot install example transport in the real app', () => {
+    expect(() => installCoachTourPreview()).toThrow('pantalla aislada');
+  });
+  it('isolates example reads and rejects every mutation before the network', async () => {
+    const frame = document.createElement('iframe');
+    frame.dataset.coachTour = 'v2';
+    vi.spyOn(window, 'frameElement', 'get').mockReturnValue(frame);
+    const interceptor = installCoachTourPreview();
+    try {
+      const result = await api.get('/coach/clients');
+      expect(result.data[0].client.name).toBe('Lucía Vega');
+      result.data[0].client.name = 'Changed';
+      expect((await api.get('/coach/clients')).data[0].client.name).toBe('Lucía Vega');
+      for (const url of [
+        '/coach/clients/tour-lucia/weeks/2026-11-16',
+        '/settings',
+        '/workouts',
+        '/coaching/permissions',
+      ]) {
+        await expect(api.post(url, {})).rejects.toMatchObject({ code: 'ERR_TOUR_READ_ONLY' });
+      }
+      await expect(api.get('/coach/unexpected')).rejects.toThrow('sin datos');
+    } finally {
+      api.interceptors.request.eject(interceptor);
+    }
+  });
+  it('provides the shapes expected by real library, workout and photo screens', () => {
+    expect(tourResponse('/coach/library-items')).toMatchObject([
+      { type: 'PROGRAM', category: 'SESSION', favorite: true },
+    ]);
+    expect(tourResponse('/coach/clients/tour-lucia/workouts')).toMatchObject({
+      content: [],
+      totalPages: 0,
+    });
+    expect(tourResponse('/coach/clients/tour-lucia/progress-photos')).toEqual({ photos: [] });
   });
 });

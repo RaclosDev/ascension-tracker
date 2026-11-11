@@ -24,7 +24,7 @@ export async function setupAuthMocks(
   if (!options.showCoachTour) {
     await page.addInitScript(() => {
       localStorage.setItem(
-        'ascension:coach-tour:v1:test%40example.com',
+        'ascension:coach-tour:v2:test%40example.com',
         JSON.stringify({ status: 'dismissed', step: 0 }),
       );
     });
