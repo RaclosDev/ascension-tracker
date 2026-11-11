@@ -58,6 +58,16 @@ public class ClientStatusService {
 
     @Transactional(readOnly = true)
     public List<ClientStatus> forCoach(String coachEmail, LocalDate today) {
+        return statuses(coachEmail, today, null);
+    }
+
+    @Transactional(readOnly = true)
+    public ClientStatus forClient(String coachEmail, UUID linkId, LocalDate today) {
+        return statuses(coachEmail, today, linkId).stream().findFirst()
+                .orElseThrow(() -> new com.ascension.exception.EntityNotFoundException("Alumno no encontrado"));
+    }
+
+    private List<ClientStatus> statuses(String coachEmail, LocalDate today, UUID linkId) {
         UUID coachId = requireCoachId(coachEmail);
         Date weekAgo = Date.valueOf(today.minusDays(7));
         Date yesterday = Date.valueOf(today.minusDays(1));
@@ -101,6 +111,7 @@ public class ClientStatusService {
                            WHERE np.coach_link_id = cc.id AND np.status = 'ACTIVE') AS needs_nutrition_plan
                 FROM coach_clients cc JOIN users u ON u.id = cc.client_user_id
                 WHERE cc.coach_user_id = ? AND cc.status = 'ACTIVE'
+                  AND (?::uuid IS NULL OR cc.id = ?)
                 """,
                 (rs, n) -> configuredStatus(evaluate(new Facts(rs.getObject("id", UUID.class), date(rs.getDate("since")),
                         rs.getBoolean("can_view_nutrition"), date(rs.getDate("last_workout")),
@@ -110,7 +121,7 @@ public class ClientStatusService {
                         rs.getObject("recent_weight", Double.class), rs.getObject("earlier_weight", Double.class),
                         rs.getObject("goal_weight", Double.class), rs.getBoolean("needs_program"),
                         rs.getBoolean("needs_nutrition_plan")), today), rs.getBoolean("configured")),
-                weekAgo, yesterday, recentFrom, Date.valueOf(today), earlierFrom, earlierTo, coachId);
+                weekAgo, yesterday, recentFrom, Date.valueOf(today), earlierFrom, earlierTo, coachId, linkId, linkId);
     }
 
     private static ClientStatus configuredStatus(ClientStatus status, boolean configured) {
