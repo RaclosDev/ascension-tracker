@@ -273,6 +273,8 @@ function Clients() {
 
 function ClientState({ row }: { row: CoachRow }) {
   if (!row.status) return <span className="coach-muted">Seguimiento no disponible</span>;
+  if (!row.link.setup) return <span className="coach-muted">Servicio por configurar</span>;
+  if (!row.link.setup.reviewed) return <span className="coach-muted">Incorporación pendiente</span>;
   const signal = followupSignals(row.status)[0];
   return (
     <span className="coach-status">

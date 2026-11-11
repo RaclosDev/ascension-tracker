@@ -67,7 +67,7 @@ public final class CoachDtos {
 
     /** Optional body of a new invitation: who it is for, what the coach asks to see, and known details. */
     public record InvitationRequest(@Size(max = 80) String clientName, Permissions permissions,
-                                    @Valid InvitationProfile profile) {
+                                    @Valid InvitationProfile profile, @Valid CoachSetupDtos.Setup setup) {
     }
 
     public record PendingInvitation(UUID id, String clientName, Permissions permissions, boolean prefilled,
@@ -77,12 +77,13 @@ public final class CoachDtos {
     public record Person(String name, String email, String picture) {
     }
 
-    public record CoachClient(UUID linkId, Person client, Permissions permissions, Instant since) {
+    public record CoachClient(UUID linkId, Person client, Permissions permissions, Instant since,
+                              CoachSetupDtos.Setup setup) {
     }
 
     /** {@code requested} is what the coach asked for (pre-ticked); {@code profile} is null when nothing was filled in. */
     public record InvitationPreview(Person coach, Instant expiresAt, boolean alreadyLinked, String clientName,
-                                    Permissions requested, InvitationProfile profile) {
+                                    Permissions requested, InvitationProfile profile, CoachSetupDtos.Setup setup) {
     }
 
     public record MyCoach(UUID linkId, Person coach, Permissions permissions, Instant since) {
@@ -132,7 +133,7 @@ public final class CoachDtos {
 
     /** {@code other} is the coach when exported as client, and the client when exported as coach. */
     public record LinkExport(UUID linkId, Person other, String status, Permissions permissions,
-                             Instant createdAt, Instant endedAt) {
+                             Instant createdAt, Instant endedAt, CoachSetupDtos.Setup setup) {
     }
 
     public record InvitationExport(UUID id, Instant createdAt, Instant expiresAt, Instant acceptedAt,

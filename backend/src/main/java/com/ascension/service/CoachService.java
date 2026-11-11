@@ -58,16 +58,18 @@ public class CoachService {
     private final CheckinService checkinService;
     private final CoachSubscriptionService subscriptionService;
     private final UserIdLookup userIdLookup;
+    private final CoachSetupService setupService;
     private final SecureRandom random = new SecureRandom();
 
     public CoachService(JdbcTemplate jdbcTemplate, NutritionPlanService nutritionPlanService,
                         CheckinService checkinService, CoachSubscriptionService subscriptionService,
-                        UserIdLookup userIdLookup) {
+                        UserIdLookup userIdLookup, CoachSetupService setupService) {
         this.jdbcTemplate = jdbcTemplate;
         this.nutritionPlanService = nutritionPlanService;
         this.checkinService = checkinService;
         this.subscriptionService = subscriptionService;
         this.userIdLookup = userIdLookup;
+        this.setupService = setupService;
     }
 
     // ---- Coach side ----
@@ -134,14 +136,14 @@ public class CoachService {
                                                asks_training, asks_nutrition, asks_body,
                                                asks_edit_training, asks_edit_nutrition,
                                                prefill_sex, prefill_age, prefill_height_cm, prefill_start_weight,
-                                               prefill_goal_weight, prefill_activity_factor, prefill_app_modules)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+                                               prefill_goal_weight, prefill_activity_factor, prefill_app_modules, coaching_setup)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb) RETURNING id
                 """, UUID.class, coachId, RefreshToken.hashToken(token), Timestamp.from(expiresAt), clientName,
                 asks.training(), asks.nutrition(), asks.body(), asks.grantsEdit(), asks.grantsEditNutrition(),
                 profile == null ? null : profile.sex(), profile == null ? null : profile.age(),
                 profile == null ? null : profile.heightCm(), profile == null ? null : profile.startWeight(),
                 profile == null ? null : profile.goalWeight(), profile == null ? null : profile.activityFactor(),
-                profile == null ? null : profile.appModules());
+                profile == null ? null : profile.appModules(), setupService.encode(request == null ? null : request.setup()));
         return new CreatedInvitation(id, token, expiresAt);
     }
 
@@ -177,14 +179,14 @@ public class CoachService {
     public List<CoachClient> listClients(String coachEmail) {
         UUID coachId = requireCoachId(coachEmail);
         return jdbcTemplate.query("""
-                SELECT cc.id, cc.created_at, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
+                SELECT cc.id, cc.created_at, cc.coaching_setup, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
                        u.name, u.email, u.picture
                 FROM coach_clients cc JOIN users u ON u.id = cc.client_user_id
                 WHERE cc.coach_user_id = ? AND cc.status = 'ACTIVE'
                 ORDER BY LOWER(COALESCE(u.name, u.email))
                 """,
                 (rs, n) -> new CoachClient(rs.getObject("id", UUID.class), person(rs),
-                        permissions(rs), instant(rs, "created_at")),
+                        permissions(rs), instant(rs, "created_at"), setupService.decode(rs.getString("coaching_setup"))),
                 coachId);
     }
 
@@ -215,7 +217,7 @@ public class CoachService {
         return jdbcTemplate.queryForObject("""
                 SELECT client_name, asks_training, asks_nutrition, asks_body, asks_edit_training,
                        asks_edit_nutrition, prefill_sex, prefill_age, prefill_height_cm, prefill_start_weight,
-                       prefill_goal_weight, prefill_activity_factor, prefill_app_modules
+                       prefill_goal_weight, prefill_activity_factor, prefill_app_modules, coaching_setup
                 FROM coach_invitations WHERE id = ?
                 """, (rs, n) -> {
                     InvitationProfile profile = new InvitationProfile(rs.getString("prefill_sex"),
@@ -224,7 +226,8 @@ public class CoachService {
                             decimal(rs, "prefill_goal_weight"),
                             decimal(rs, "prefill_activity_factor"), rs.getString("prefill_app_modules"));
                     return new InvitationPreview(coach, invitation.expiresAt(), alreadyLinked,
-                            rs.getString("client_name"), asks(rs), profile.isEmpty() ? null : profile);
+                            rs.getString("client_name"), asks(rs), profile.isEmpty() ? null : profile,
+                            setupService.decode(rs.getString("coaching_setup")));
                 }, invitation.id());
     }
 
@@ -257,6 +260,11 @@ public class CoachService {
         } catch (DuplicateKeyException e) {
             throw new InvalidInputException("Ya estás vinculado con este entrenador.");
         }
+        jdbcTemplate.update("""
+                UPDATE coach_clients SET coaching_setup = i.coaching_setup, setup_updated_at = NOW(),
+                    setup_started_at = CASE WHEN i.coaching_setup IS NOT NULL THEN NOW() END
+                FROM coach_invitations i WHERE coach_clients.id = ? AND i.id = ?
+                """, linkId, invitation.id());
         jdbcTemplate.update("UPDATE coach_invitations SET accepted_at = NOW(), accepted_by = ?, " + CLEAR_PREFILL
                 + " WHERE id = ?", clientId, invitation.id());
         return listMyCoaches(clientEmail).stream()
@@ -393,14 +401,15 @@ public class CoachService {
     // Column names come from the two callers above, never from input.
     private List<LinkExport> exportLinks(String selfColumn, String otherColumn, UUID userId) {
         return jdbcTemplate.query("""
-                SELECT cc.id, cc.status, cc.created_at, cc.ended_at,
+                SELECT cc.id, cc.status, cc.created_at, cc.ended_at, cc.coaching_setup,
                        cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
                        u.name, u.email, u.picture
                 FROM coach_clients cc JOIN users u ON u.id = cc.%s
                 WHERE cc.%s = ? ORDER BY cc.created_at
                 """.formatted(otherColumn, selfColumn),
                 (rs, n) -> new LinkExport(rs.getObject("id", UUID.class), person(rs), rs.getString("status"),
-                        permissions(rs), instant(rs, "created_at"), instant(rs, "ended_at")),
+                        permissions(rs), instant(rs, "created_at"), instant(rs, "ended_at"),
+                        setupService.decode(rs.getString("coaching_setup"))),
                 userId);
     }
 
@@ -424,7 +433,7 @@ public class CoachService {
                  WHERE expires_at <= NOW() AND (client_name IS NOT NULL OR prefill_sex IS NOT NULL
                    OR prefill_age IS NOT NULL OR prefill_height_cm IS NOT NULL OR prefill_start_weight IS NOT NULL
                    OR prefill_goal_weight IS NOT NULL OR prefill_activity_factor IS NOT NULL
-                   OR prefill_app_modules IS NOT NULL)
+                   OR prefill_app_modules IS NOT NULL OR coaching_setup IS NOT NULL)
                 """);
     }
 
@@ -433,7 +442,7 @@ public class CoachService {
     /** The client's details on an invitation, name included: once used or dead they are not kept. */
     private static final String CLEAR_PREFILL = "client_name = NULL, prefill_sex = NULL, prefill_age = NULL, "
             + "prefill_height_cm = NULL, prefill_start_weight = NULL, prefill_goal_weight = NULL, "
-            + "prefill_activity_factor = NULL, prefill_app_modules = NULL";
+            + "prefill_activity_factor = NULL, prefill_app_modules = NULL, coaching_setup = NULL";
 
     private static Double decimal(ResultSet rs, String column) throws SQLException {
         java.math.BigDecimal value = rs.getBigDecimal(column);

@@ -65,7 +65,9 @@ public class ClientStatusService {
         Date earlierFrom = Date.valueOf(today.minusDays(STALL_WEEKS * 7L + 6));
         Date earlierTo = Date.valueOf(today.minusDays(STALL_WEEKS * 7L));
         return jdbcTemplate.query("""
-                SELECT cc.id, cc.created_at::date AS since, cc.can_view_nutrition,
+                SELECT cc.id, GREATEST(cc.created_at, cc.setup_started_at)::date AS since,
+                       cc.coaching_setup IS NOT NULL AS configured,
+                       cc.can_view_nutrition AND cc.coaching_setup #>> '{services,nutrition}' = 'true' AS can_view_nutrition,
                        CASE WHEN cc.can_view_training THEN (
                            SELECT MAX(to_timestamp(CASE WHEN t > 100000000000 THEN t / 1000 ELSE t END)::date)
                            FROM (SELECT COALESCE(w.finished_at, w.started_at) AS t FROM workouts w
@@ -89,25 +91,31 @@ public class ClientStatusService {
                            WHERE we.user_email = u.email AND we.date BETWEEN ? AND ?) END AS earlier_weight,
                        CASE WHEN cc.can_view_body THEN (
                            SELECT s.goal_weight FROM user_settings s
-                           WHERE s.user_email = u.email AND s.weekly_goal <> 0 AND s.goal_weight > 0) END AS goal_weight,
-                       cc.can_edit_training AND NOT EXISTS (
+                           WHERE s.user_email = u.email AND s.weekly_goal <> 0 AND s.goal_weight > 0
+                             AND cc.coaching_setup #>> '{services,progress}' = 'true') END AS goal_weight,
+                       cc.coaching_setup #>> '{services,training}' = 'true' AND cc.can_edit_training AND NOT EXISTS (
                            SELECT 1 FROM program_assignments pa
                            WHERE pa.coach_link_id = cc.id AND pa.status = 'ACTIVE') AS needs_program,
-                       cc.can_edit_nutrition AND NOT EXISTS (
+                       cc.coaching_setup #>> '{services,nutrition}' = 'true' AND cc.can_edit_nutrition AND NOT EXISTS (
                            SELECT 1 FROM nutrition_plans np
                            WHERE np.coach_link_id = cc.id AND np.status = 'ACTIVE') AS needs_nutrition_plan
                 FROM coach_clients cc JOIN users u ON u.id = cc.client_user_id
                 WHERE cc.coach_user_id = ? AND cc.status = 'ACTIVE'
                 """,
-                (rs, n) -> evaluate(new Facts(rs.getObject("id", UUID.class), date(rs.getDate("since")),
+                (rs, n) -> configuredStatus(evaluate(new Facts(rs.getObject("id", UUID.class), date(rs.getDate("since")),
                         rs.getBoolean("can_view_nutrition"), date(rs.getDate("last_workout")),
                         date(rs.getDate("last_food")), date(rs.getDate("last_weight")),
                         date(rs.getDate("last_checkin")), date(rs.getDate("last_checkin_week")),
                         rs.getInt("pending_replies"), rs.getInt("food_days"),
                         rs.getObject("recent_weight", Double.class), rs.getObject("earlier_weight", Double.class),
                         rs.getObject("goal_weight", Double.class), rs.getBoolean("needs_program"),
-                        rs.getBoolean("needs_nutrition_plan")), today),
+                        rs.getBoolean("needs_nutrition_plan")), today), rs.getBoolean("configured")),
                 weekAgo, yesterday, recentFrom, Date.valueOf(today), earlierFrom, earlierTo, coachId);
+    }
+
+    private static ClientStatus configuredStatus(ClientStatus status, boolean configured) {
+        return configured ? status : new ClientStatus(status.linkId(), Level.GREEN, status.lastActivity(),
+                status.pendingReplies(), List.of(), status.weightChange());
     }
 
     static ClientStatus evaluate(Facts facts, LocalDate today) {
