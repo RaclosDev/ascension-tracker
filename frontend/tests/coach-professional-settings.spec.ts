@@ -96,8 +96,11 @@ for (const width of [390, 1440]) {
     );
     await page.getByRole('button', { name: 'Consultar versión guardada' }).click();
     await expect(page.getByText('Hay una versión más reciente.', { exact: false })).toBeVisible();
-    page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Descartar borrador' }).click();
+    await page
+      .getByRole('dialog', { name: 'Descartar borrador' })
+      .getByRole('button', { name: 'Descartar borrador' })
+      .click();
     await expect(page.getByLabel('Presentación para tus alumnos')).toHaveValue(
       'Guardado desde otra sesión',
     );

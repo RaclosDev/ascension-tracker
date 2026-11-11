@@ -1,3 +1,5 @@
+import { confirmAction } from '../lib/confirmation';
+vi.mock('../lib/confirmation', () => ({ confirmAction: vi.fn().mockResolvedValue(true) }));
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -335,7 +337,7 @@ describe('individual program adaptation', () => {
 
   it('recovers an adaptation after a conflicting publication and only publishes for that client', async () => {
     setup();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    vi.mocked(confirmAction).mockResolvedValue(true);
     mockedApi.post.mockRejectedValueOnce({
       response: { data: { error: 'Esta asignación ya ha terminado.' } },
     });
@@ -362,11 +364,13 @@ describe('individual program adaptation', () => {
 
   it('requires a valid start date and confirmation before replacing the active assignment', async () => {
     setup();
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const confirm = vi.mocked(confirmAction).mockResolvedValue(false);
     renderAt(path);
     await screen.findByDisplayValue('Fuerza original');
     fireEvent.click(screen.getByRole('button', { name: 'Publicar adaptación' }));
-    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('termina ahora'));
+    expect(confirm).toHaveBeenCalledWith(
+      expect.objectContaining({ description: expect.stringContaining('termina ahora') }),
+    );
     expect(mockedApi.post).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText('Empieza la nueva versión el'), {
       target: { value: '2000-01-01' },

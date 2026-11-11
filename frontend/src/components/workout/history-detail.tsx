@@ -414,7 +414,14 @@ function CoachComments({ workoutId }: { workoutId: string }) {
           <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>
             Comentario de {personName(c.coach)}
           </p>
-          <p style={{ fontSize: '0.9rem', color: 'white', margin: 0, whiteSpace: 'pre-wrap' }}>
+          <p
+            style={{
+              fontSize: '0.9rem',
+              color: 'var(--text-primary)',
+              margin: 0,
+              whiteSpace: 'pre-wrap',
+            }}
+          >
             {c.text}
           </p>
         </div>

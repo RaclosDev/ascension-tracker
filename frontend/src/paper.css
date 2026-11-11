@@ -60,8 +60,11 @@
   --text-muted: #c4c0b6;
 
   --color-success: #5fd39a;
+  --success-text: #111827;
   --color-success-bg: rgba(95, 211, 154, 0.14);
   --color-danger: #f87171;
+  --danger-text: #111827;
+  --gradient-danger: linear-gradient(var(--color-danger), var(--color-danger));
   --color-danger-bg: rgba(248, 113, 113, 0.14);
   --color-warning: #fbbf24;
   --color-warning-bg: rgba(251, 191, 36, 0.14);
@@ -149,8 +152,11 @@ svg.lucide[stroke-width='2'] {
   --text-muted: #565c63;
 
   --color-success: #166544;
+  --success-text: #fffdf7;
+  --color-success-foreground: var(--success-text);
   --color-success-bg: rgba(22, 101, 68, 0.12);
   --color-danger: #b91c1c;
+  --danger-text: #fffdf7;
   --color-danger-bg: rgba(185, 28, 28, 0.1);
   --color-warning: #87500b;
   --color-warning-bg: rgba(135, 80, 11, 0.12);
@@ -643,8 +649,7 @@ body,
   outline-offset: 2px;
 }
 
-.sidebar,
-.mobile-bottom-nav {
+.sidebar {
   background: var(--wall);
   color: var(--text-primary);
 }
@@ -666,31 +671,14 @@ body,
   box-shadow: 3px 4px 0 var(--wall-shadow);
 }
 .mobile-bottom-nav {
-  border: 2px solid var(--wall-ink);
-  border-radius: 6px;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: 4px 5px 0 var(--wall-shadow);
+  background: var(--bg-card);
+  box-shadow: 0 4px 16px var(--wall-shadow);
 }
-.mobile-bottom-label {
-  font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  /* Sin transparencia: a 10px la etiqueta necesita el contraste completo en los dos modos. */
-  color: var(--text-secondary);
-  opacity: 1;
+.mobile-bottom-item.active {
+  color: var(--wall-ink);
 }
-.mobile-bottom-item.active .mobile-bottom-icon,
-.mobile-bottom-item.active .mobile-bottom-label {
-  color: var(--wall-highlight);
-}
-.mobile-bottom-pill-glow {
-  background: var(--wall-highlight-bg);
-  border-radius: 4px;
-}
-.mobile-bottom-icon {
-  border-radius: 4px;
+.mobile-bottom-pill {
+  background: var(--bg-glass-strong);
 }
 
 /* Pestañas segmentadas: tira oscura con borde de papel; la activa es un recorte de papel. */
@@ -1001,8 +989,11 @@ html[data-mode='light'] {
   --text-muted: #4b515b;
 
   --color-success: #166544;
+  --success-text: #fffdf7;
+  --color-success-foreground: var(--success-text);
   --color-success-bg: rgba(22, 101, 68, 0.12);
   --color-danger: #b91c1c;
+  --danger-text: #fffdf7;
   --color-danger-bg: rgba(185, 28, 28, 0.1);
   --color-warning: #7a4708;
   --color-warning-bg: rgba(135, 80, 11, 0.12);
@@ -1091,6 +1082,8 @@ html[data-mode='light'] .btn-primary:hover {
     --accent-primary: oklch(from var(--accent-raw) max(l, 0.74) c h);
     --accent-primary-light: oklch(from var(--accent-raw) max(l, 0.8) c h);
     --accent-primary-dark: oklch(from var(--accent-raw) max(l, 0.66) c h);
+    /* El fondo de acento ya está aclarado: su tinta debe seguir al color renderizado. */
+    --accent-text: #111827;
     --gradient-primary: linear-gradient(var(--accent-primary), var(--accent-primary));
   }
 }
@@ -1143,8 +1136,11 @@ html:not([data-mode='light'])
   --text-secondary: inherit;
   --text-muted: inherit;
   --color-success: inherit;
+  --success-text: inherit;
+  --color-success-foreground: inherit;
   --color-success-bg: inherit;
   --color-danger: inherit;
+  --danger-text: inherit;
   --color-danger-bg: inherit;
   --color-warning: inherit;
   --color-warning-bg: inherit;

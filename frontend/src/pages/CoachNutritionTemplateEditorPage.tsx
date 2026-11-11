@@ -1,3 +1,4 @@
+import { confirmAction } from '../lib/confirmation';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -181,8 +182,15 @@ function TemplateEditor({
           <button
             className="btn btn-secondary"
             disabled={save.isPending}
-            onClick={() => {
-              if (window.confirm('¿Descartar los cambios locales de esta pauta?')) {
+            onClick={async () => {
+              if (
+                await confirmAction({
+                  title: 'Descartar cambios',
+                  description: '¿Descartar los cambios locales de esta pauta?',
+                  confirmLabel: 'Descartar cambios',
+                  destructive: true,
+                })
+              ) {
                 draft.clear();
                 setPreview(false);
                 setError(null);

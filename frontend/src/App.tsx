@@ -1,5 +1,6 @@
 import React, { Component, useEffect, useState, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { ConfirmationDialog } from './components/ui/ConfirmationDialog';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -48,6 +49,12 @@ import { preloadAllRoutes } from './utils/routePreload';
 import { useWorkoutStore } from './lib/workout/store';
 
 let currentAppVersion: string | null = null;
+
+function AppConfirmations() {
+  const { token, user } = useAuth();
+  const location = useLocation();
+  return <ConfirmationDialog scope={`${location.key}:${user?.email ?? ''}:${!!token}`} />;
+}
 
 function AppContent() {
   const { token, isReady } = useAuth();
@@ -366,6 +373,7 @@ export default function App() {
               }}
             />
             <AppContent />
+            <AppConfirmations />
           </AuthProvider>
         </GoogleOAuthProvider>
       </BrowserRouter>

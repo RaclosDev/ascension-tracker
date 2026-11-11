@@ -130,11 +130,10 @@ for (const width of [390, 1440]) {
       path: info.outputPath('individual-session.png'),
       animations: 'disabled',
     });
-    page.once('dialog', (dialog) => {
-      expect(dialog.message()).toContain('termina ahora');
-      void dialog.accept();
-    });
     await page.getByRole('button', { name: 'Publicar adaptación' }).click();
+    const confirmation = page.getByRole('dialog', { name: 'Publicar adaptación' });
+    await expect(confirmation).toContainText('termina ahora');
+    await confirmation.getByRole('button', { name: 'Publicar adaptación' }).click();
     await expect(page).toHaveURL(/alumnos\/l1\?seccion=entrenamiento$/);
     await expect(page.getByText('Fuerza · adaptación Ana', { exact: true })).toBeVisible();
     await expect(page.getByText('Fuerza original', { exact: true })).toBeVisible();

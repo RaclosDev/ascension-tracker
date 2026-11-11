@@ -1,3 +1,4 @@
+import { confirmAction } from '../../lib/confirmation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useSessionDraft } from '../../hooks/useSessionDraft';
@@ -226,8 +227,15 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
             type="button"
             className="btn btn-secondary"
             disabled={save.isPending}
-            onClick={() => {
-              if (window.confirm('¿Descartar este borrador y recuperar los ajustes guardados?')) {
+            onClick={async () => {
+              if (
+                await confirmAction({
+                  title: 'Descartar borrador',
+                  description: '¿Descartar este borrador y recuperar los ajustes guardados?',
+                  confirmLabel: 'Descartar borrador',
+                  destructive: true,
+                })
+              ) {
                 draft.clear();
                 setError(null);
               }

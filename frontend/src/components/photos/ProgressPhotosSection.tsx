@@ -1,3 +1,4 @@
+import { confirmAction } from '../../lib/confirmation';
 import { useRef, useState } from 'react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -125,8 +126,16 @@ export default function ProgressPhotosSection() {
             <PhotoGallery
               photos={photos.data.photos}
               deleting={remove.isPending}
-              onDelete={(photo) => {
-                if (!window.confirm('¿Borrar esta foto? No se puede deshacer.')) return;
+              onDelete={async (photo) => {
+                if (
+                  !(await confirmAction({
+                    title: 'Borrar foto',
+                    description: '¿Borrar esta foto? No se puede deshacer.',
+                    confirmLabel: 'Borrar foto',
+                    destructive: true,
+                  }))
+                )
+                  return;
                 remove.mutate(photo.id, {
                   onSuccess: () => toast.success('Foto borrada'),
                   onError: (err) => toast.error(errorMessage(err, 'No se pudo borrar la foto')),

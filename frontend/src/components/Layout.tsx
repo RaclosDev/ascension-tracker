@@ -337,10 +337,7 @@ export default function Layout() {
         <span
           className={`mobile-bottom-pill${activeBottomIndex < 0 ? ' is-hidden' : ''}`}
           aria-hidden="true"
-        >
-          <span className="mobile-bottom-pill-glow" />
-          <span className="mobile-bottom-pill-ghost">&nbsp;</span>
-        </span>
+        />
         {bottomItems.map((item) => {
           const isActive = isItemActive(item.path, location.pathname);
           return (
@@ -357,24 +354,12 @@ export default function Layout() {
                 navigateTo(item.path);
               }}
               aria-current={isActive ? 'page' : undefined}
-              style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+              title={item.shortLabel}
             >
-              <span className="mobile-bottom-icon" style={{ pointerEvents: 'none' }}>
+              <span className="mobile-bottom-icon" aria-hidden="true">
                 {item.icon}
               </span>
-              <span className="mobile-bottom-label" style={{ pointerEvents: 'none' }}>
-                {item.shortLabel}
-              </span>
-              {isActive && (
-                <span className="mobile-bottom-indicator" style={{ pointerEvents: 'none' }} />
-              )}
+              <span className="sr-only">{item.shortLabel}</span>
             </button>
           );
         })}
@@ -399,24 +384,13 @@ export default function Layout() {
             setMoreMenuOpen(!moreMenuOpen);
           }}
           aria-label="Más opciones"
-          style={{
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
+          aria-expanded={moreMenuOpen}
+          aria-haspopup="dialog"
+          title="Más opciones"
         >
-          <span className="mobile-bottom-icon" style={{ pointerEvents: 'none' }}>
+          <span className="mobile-bottom-icon" aria-hidden="true">
             <Plus className="w-5 h-5" />
           </span>
-          <span className="mobile-bottom-label" style={{ pointerEvents: 'none' }}>
-            Más
-          </span>
-          {isMoreActive && (
-            <span className="mobile-bottom-indicator" style={{ pointerEvents: 'none' }} />
-          )}
         </button>
       </nav>
 

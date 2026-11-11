@@ -173,9 +173,9 @@ export const AiFoodAssistantView: React.FC<AiFoodAssistantViewProps> = ({
             type="button"
             onClick={stopListening}
             style={{
-              background: 'var(--color-danger)',
+              background: 'var(--color-danger-bg)',
               border: 'none',
-              color: '#fff',
+              color: 'var(--color-danger)',
               borderRadius: '6px',
               padding: '0.2rem 0.5rem',
               fontSize: '0.75rem',

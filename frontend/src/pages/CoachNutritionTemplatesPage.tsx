@@ -1,3 +1,4 @@
+import { confirmAction } from '../lib/confirmation';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CoachPageHeader, CoachWorkspace } from '../components/coach/CoachWorkspace';
@@ -71,11 +72,14 @@ export default function CoachNutritionTemplatesPage() {
                   className="btn btn-secondary"
                   disabled={remove.isPending}
                   aria-label={`Borrar ${item.name}`}
-                  onClick={() => {
+                  onClick={async () => {
                     if (
-                      !window.confirm(
-                        `¿Borrar «${item.name}» de la biblioteca? Las pautas de tus alumnos se conservarán.`,
-                      )
+                      !(await confirmAction({
+                        title: 'Borrar pauta de biblioteca',
+                        description: `¿Borrar «${item.name}» de la biblioteca? Las pautas de tus alumnos se conservarán.`,
+                        confirmLabel: 'Borrar pauta',
+                        destructive: true,
+                      }))
                     )
                       return;
                     setError(null);

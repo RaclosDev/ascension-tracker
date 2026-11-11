@@ -1,3 +1,5 @@
+import { confirmAction } from '../lib/confirmation';
+vi.mock('../lib/confirmation', () => ({ confirmAction: vi.fn().mockResolvedValue(true) }));
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -84,7 +86,7 @@ describe('Biblioteca de recetas del entrenador', () => {
     mockedApi.get.mockResolvedValue({ data: [bowl] });
     mockedApi.put.mockResolvedValue({ data: bowl });
     mockedApi.delete.mockResolvedValue({ data: '' });
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    vi.mocked(confirmAction).mockResolvedValue(true);
     renderPage();
 
     expect(await screen.findByText(/533 kcal · P 45 g/)).toBeTruthy();

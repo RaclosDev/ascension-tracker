@@ -1,3 +1,4 @@
+import { confirmAction } from '../lib/confirmation';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -166,9 +167,18 @@ export function ProgramEditor({
             to={publication?.returnTo ?? '/entrenador/programas'}
             aria-label={publication ? 'Volver al alumno' : 'Volver a programas'}
             className="btn btn-secondary"
-            onClick={(e) => {
-              if (dirty && !window.confirm('Tienes cambios sin guardar. ¿Salir igualmente?'))
-                e.preventDefault();
+            onClick={async (e) => {
+              if (!dirty) return;
+              e.preventDefault();
+              if (
+                await confirmAction({
+                  title: 'Salir del editor',
+                  description: `Tienes cambios sin guardar. ${draft.notice ?? ''}`.trim(),
+                  confirmLabel: 'Salir del editor',
+                })
+              ) {
+                navigate(publication?.returnTo ?? '/entrenador/programas');
+              }
             }}
           >
             <ArrowLeft size={16} aria-hidden />
@@ -258,8 +268,15 @@ export function ProgramEditor({
           type="button"
           className="btn btn-secondary mb-3"
           disabled={pending}
-          onClick={() => {
-            if (window.confirm('¿Descartar los cambios locales y volver a la versión guardada?')) {
+          onClick={async () => {
+            if (
+              await confirmAction({
+                title: 'Descartar cambios',
+                description: '¿Descartar los cambios locales y volver a la versión guardada?',
+                confirmLabel: 'Descartar cambios',
+                destructive: true,
+              })
+            ) {
               draft.clear();
               setSaveError(null);
             }
@@ -297,14 +314,17 @@ export function ProgramEditor({
                 min={1}
                 max={MAX_WEEKS}
                 value={program.weeks}
-                onChange={(e) => {
+                onChange={async (e) => {
                   const weeks = Number(e.target.value);
                   const dropped = program.days.filter((d) => d.week > weeks).length;
                   if (
                     dropped > 0 &&
-                    !window.confirm(
-                      `Se borrarán ${dropped} días de las semanas que quitas. ¿Seguir?`,
-                    )
+                    !(await confirmAction({
+                      title: 'Reducir semanas',
+                      description: `Se borrarán ${dropped} días de las semanas que quitas. ¿Seguir?`,
+                      confirmLabel: 'Reducir semanas',
+                      destructive: true,
+                    }))
                   )
                     return;
                   edit((p) => setWeeks(p, weeks));
@@ -343,10 +363,15 @@ export function ProgramEditor({
             weeks={program.weeks}
             current={currentWeek}
             onSelect={setWeek}
-            onCopy={(to) => {
+            onCopy={async (to) => {
               if (
                 program.days.some((d) => d.week === to) &&
-                !window.confirm(`La semana ${to} ya tiene días y se sustituirán. ¿Seguir?`)
+                !(await confirmAction({
+                  title: `Sustituir la semana ${to}`,
+                  description: `Se copiarán los entrenamientos de la semana ${currentWeek} a la semana ${to}. Todo el contenido de la semana de destino se sustituirá, incluidas sus cargas y notas. La semana de origen se conserva.`,
+                  confirmLabel: 'Sustituir semana',
+                  destructive: true,
+                }))
               )
                 return;
               edit((p) => copyWeek(p, currentWeek, to));
@@ -380,20 +405,28 @@ export function ProgramEditor({
                   day={day}
                   weeks={program.weeks}
                   onChange={(change) => edit((p) => updateDay(p, currentWeek, dayIndex, change))}
-                  onRemove={() => {
+                  onRemove={async () => {
                     if (
                       day.exercises.length > 0 &&
-                      !window.confirm(
-                        `¿Quitar «${day.name}» y sus ${day.exercises.length} ejercicios?`,
-                      )
+                      !(await confirmAction({
+                        title: 'Quitar día de entrenamiento',
+                        description: `¿Quitar «${day.name}» y sus ${day.exercises.length} ejercicios?`,
+                        confirmLabel: 'Quitar día',
+                        destructive: true,
+                      }))
                     )
                       return;
                     edit((p) => removeDay(p, currentWeek, dayIndex));
                   }}
-                  onCopy={(to) => {
+                  onCopy={async (to) => {
                     if (
                       findDay(program, to.week, to.dayIndex) &&
-                      !window.confirm('Ese día ya tiene entrenamiento y se sustituirá. ¿Seguir?')
+                      !(await confirmAction({
+                        title: 'Sustituir entrenamiento',
+                        description: `Se copiará «${day.name}» al ${WEEKDAY_LABELS[to.dayIndex - 1].toLowerCase()} de la semana ${to.week}. Se sustituirán los ejercicios, cargas y notas de ese día. El entrenamiento de origen se conserva.`,
+                        confirmLabel: 'Sustituir entrenamiento',
+                        destructive: true,
+                      }))
                     )
                       return;
                     edit((p) => copyDay(p, { week: currentWeek, dayIndex }, to));

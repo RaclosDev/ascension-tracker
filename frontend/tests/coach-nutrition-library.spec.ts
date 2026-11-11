@@ -131,8 +131,11 @@ for (const width of [390, 1440]) {
       true,
     );
     await page.screenshot({ path: info.outputPath('client-copy.png'), animations: 'disabled' });
-    page.once('dialog', (dialog) => void dialog.accept());
     await page.getByRole('button', { name: 'Publicar pauta', exact: true }).click();
+    await page
+      .getByRole('dialog', { name: 'Publicar pauta nutricional' })
+      .getByRole('button', { name: 'Publicar pauta', exact: true })
+      .click();
     await expect(page.getByText('Pauta de nutrición publicada', { exact: true })).toBeVisible();
     expect(publications).toBe(1);
     await page.goto('/entrenador/pautas/t1');

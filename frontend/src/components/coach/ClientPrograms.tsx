@@ -1,3 +1,4 @@
+import { confirmAction } from '../../lib/confirmation';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -41,13 +42,16 @@ export default function ProgramsSection({
   );
   const exerciseName = (id: string) => exerciseMap.get(id)?.name ?? 'Ejercicio';
 
-  const submit = () => {
+  const submit = async () => {
     if (!programId || !startDate || !selected.data || selected.data.status === 'DRAFT') return;
     if (
       active &&
-      !window.confirm(
-        `Esto termina ahora «${active.programName}», aunque el nuevo programa empiece más adelante. Los entrenamientos registrados se conservan. ¿Asignar el nuevo programa?`,
-      )
+      !(await confirmAction({
+        title: 'Sustituir programa del alumno',
+        description: `Esto termina ahora «${active.programName}», aunque el nuevo programa empiece más adelante. Los entrenamientos registrados se conservan. ¿Asignar el nuevo programa?`,
+        confirmLabel: 'Asignar programa',
+        destructive: false,
+      }))
     )
       return;
     assign.mutate(
@@ -111,11 +115,14 @@ export default function ProgramsSection({
                       className="btn btn-secondary"
                       aria-label={`Terminar ${a.programName}`}
                       disabled={end.isPending}
-                      onClick={() => {
+                      onClick={async () => {
                         if (
-                          !window.confirm(
-                            `¿Terminar «${a.programName}»? Tu alumno conserva su copia.`,
-                          )
+                          !(await confirmAction({
+                            title: 'Terminar programa',
+                            description: `¿Terminar «${a.programName}»? Tu alumno conserva su copia.`,
+                            confirmLabel: 'Terminar programa',
+                            destructive: true,
+                          }))
                         )
                           return;
                         end.mutate(a.id, {

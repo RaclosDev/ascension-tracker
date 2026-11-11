@@ -151,11 +151,10 @@ for (const width of [390, 1440]) {
     });
     const targetReadsBefore = targetReads;
     const adherenceReadsBefore = adherenceReads;
-    page.once('dialog', (dialog) => {
-      expect(dialog.message()).toContain('solo para este alumno');
-      void dialog.accept();
-    });
     await page.getByRole('button', { name: 'Publicar pauta', exact: true }).click();
+    const confirmation = page.getByRole('dialog', { name: 'Publicar pauta nutricional' });
+    await expect(confirmation).toContainText('solo para este alumno');
+    await confirmation.getByRole('button', { name: 'Publicar pauta', exact: true }).click();
     await expect(page.getByText('Pauta de nutrición publicada', { exact: true })).toBeVisible();
     await expect.poll(() => targetReads).toBeGreaterThan(targetReadsBefore);
     await expect.poll(() => adherenceReads).toBeGreaterThan(adherenceReadsBefore);

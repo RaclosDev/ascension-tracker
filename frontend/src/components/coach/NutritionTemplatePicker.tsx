@@ -1,3 +1,4 @@
+import { confirmAction } from '../../lib/confirmation';
 import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNutritionTemplate, useNutritionTemplates } from '@/lib/coach/nutritionTemplates';
@@ -90,10 +91,15 @@ export function NutritionTemplatePicker({
                   type="button"
                   className="btn btn-primary self-start"
                   disabled={disabled}
-                  onClick={() => {
+                  onClick={async () => {
                     if (
                       dirty &&
-                      !window.confirm('¿Sustituir tu borrador por esta pauta de biblioteca?')
+                      !(await confirmAction({
+                        title: 'Sustituir borrador',
+                        description: '¿Sustituir tu borrador por esta pauta de biblioteca?',
+                        confirmLabel: 'Sustituir borrador',
+                        destructive: true,
+                      }))
                     )
                       return;
                     onCopy(nutritionDraft(selected.data.content));

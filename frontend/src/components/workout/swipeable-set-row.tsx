@@ -359,7 +359,7 @@ export const SwipeableSetRow = React.memo(
               outlineOffset: '-2px',
             }}
           >
-            <Trash2 size={18} color="white" />
+            <Trash2 size={18} color="var(--danger-text)" />
           </button>
         </div>
 

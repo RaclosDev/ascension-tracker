@@ -1,3 +1,4 @@
+import { confirmAction } from '../lib/confirmation';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -96,8 +97,16 @@ export default function CoachRecipesPage() {
                   className="btn btn-secondary"
                   aria-label={`Borrar ${recipe.name}`}
                   disabled={remove.isPending}
-                  onClick={() => {
-                    if (!window.confirm(`¿Borrar «${recipe.name}»? No se puede deshacer.`)) return;
+                  onClick={async () => {
+                    if (
+                      !(await confirmAction({
+                        title: 'Borrar receta',
+                        description: `¿Borrar «${recipe.name}»? No se puede deshacer.`,
+                        confirmLabel: 'Borrar receta',
+                        destructive: true,
+                      }))
+                    )
+                      return;
                     remove.mutate(recipe.id, {
                       onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo borrar')),
                     });

@@ -1,3 +1,4 @@
+import { confirmAction } from '../../lib/confirmation';
 import toast from 'react-hot-toast';
 import { CalendarCheck, Check, Play } from 'lucide-react';
 import { apiErrorMessage, formatCoachDate } from '@/lib/coach/api';
@@ -54,8 +55,16 @@ function PlanCard({
       type="button"
       className="btn btn-secondary"
       disabled={leave.isPending}
-      onClick={() => {
-        if (!window.confirm(confirmText)) return;
+      onClick={async () => {
+        if (
+          !(await confirmAction({
+            title: 'Quitar programa',
+            description: confirmText,
+            confirmLabel: 'Quitar programa',
+            destructive: true,
+          }))
+        )
+          return;
         leave.mutate(plan.assignmentId, {
           onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo quitar el programa')),
         });

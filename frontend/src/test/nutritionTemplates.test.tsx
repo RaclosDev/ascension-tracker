@@ -1,3 +1,5 @@
+import { confirmAction } from '../lib/confirmation';
+vi.mock('../lib/confirmation', () => ({ confirmAction: vi.fn().mockResolvedValue(true) }));
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -55,7 +57,7 @@ describe('Biblioteca de pautas', () => {
     vi.resetAllMocks();
     clearSessionDrafts();
     sessionStorage.clear();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    vi.mocked(confirmAction).mockResolvedValue(true);
   });
   afterEach(() => {
     cleanup();
@@ -151,12 +153,14 @@ describe('Biblioteca de pautas', () => {
     await screen.findByLabelText('Pauta de biblioteca');
     fill('Pauta de biblioteca', 't1');
     await screen.findByRole('button', { name: 'Copiar al borrador' });
-    vi.mocked(window.confirm).mockReturnValueOnce(false);
+    vi.mocked(confirmAction).mockResolvedValueOnce(false);
     fireEvent.click(screen.getByRole('button', { name: 'Copiar al borrador' }));
     expect(copy).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Copiar al borrador' }));
-    expect(copy).toHaveBeenCalledWith(
-      expect.objectContaining({ training: { protein: '180', carbs: '300', fat: '70' } }),
+    await vi.waitFor(() =>
+      expect(copy).toHaveBeenCalledWith(
+        expect.objectContaining({ training: { protein: '180', carbs: '300', fat: '70' } }),
+      ),
     );
     expect(mocked.post).not.toHaveBeenCalled();
     expect(mocked.put).not.toHaveBeenCalled();
