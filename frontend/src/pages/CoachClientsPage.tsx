@@ -1,4 +1,5 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useCoachFilters } from '../lib/coach/useCoachFilters';
 import { ArrowUpRight, Search } from 'lucide-react';
 import { personName, sharedScopes } from '../lib/coach/api';
 import { LEVEL_COLORS, signalText } from '../lib/coach/clientStatus';
@@ -64,22 +65,12 @@ export default function CoachClientsPage() {
 
 function Clients() {
   const { clients, status, rows, ready } = useCoachRoster();
-  const [params, setParams] = useSearchParams();
+  const { params, update, clear } = useCoachFilters();
   const filter = FILTERS.find((f) => f.value === params.get('filtro')) ?? FILTERS[0];
   const search = params.get('q') ?? '';
   const sort = params.get('orden') ?? 'priority';
   const showWeight = params.get('peso') === 'si';
   const service = params.get('servicio') ?? '';
-  const update = (key: string, value: string) =>
-    setParams(
-      (previous) => {
-        const next = new URLSearchParams(previous);
-        if (value) next.set(key, value);
-        else next.delete(key);
-        return next;
-      },
-      { replace: true },
-    );
   const visible = rows.filter(
     (r) =>
       filter.matches(r) &&
@@ -203,7 +194,7 @@ function Clients() {
           ) : visible.length === 0 ? (
             <div className="card coach-empty-inline">
               <h2>No hay alumnos con estos filtros</h2>
-              <button type="button" className="btn btn-secondary" onClick={() => setParams({})}>
+              <button type="button" className="btn btn-secondary" onClick={clear}>
                 Limpiar filtros
               </button>
             </div>
