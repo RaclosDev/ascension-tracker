@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 const require = createRequire(new URL('../../frontend/package.json', import.meta.url));
 const { chromium, expect } = require('@playwright/test');
 const ts = require('typescript');
-const origin = 'http://localhost:5173';
+const origin = process.argv[2] ?? 'http://localhost:5173';
 const output = fileURLToPath(new URL('./', import.meta.url));
 
 // Reutiliza las fixtures de navegador del repositorio para la sesión y los ajustes.
@@ -138,6 +138,8 @@ const dashboard = {
 async function mockDemoApi(page) {
   const json = (data) => (route) => route.fulfill({ json: data });
   await setupAuthMocks(page);
+  await page.route('**/api/passkeys', json([{ id: 'demo-passkey', name: 'Este dispositivo', createdAt: '2026-11-01T12:00:00Z' }]));
+  await page.route('**/api/coach/profile', json({ coach: false }));
   // Las rutas registradas después tienen prioridad sobre las fixtures base.
   await page.route('**/exercises.json**', (route) => route.continue());
   await page.route('**/exercises-base.json**', (route) => route.continue());
@@ -151,7 +153,45 @@ async function mockDemoApi(page) {
   await page.route('**/api/workouts/recent**', json(recent));
   await page.route('**/api/workouts/templates**', json(templates));
   await page.route('**/api/coaching/today**', json(null));
+  await page.route('**/api/coaching/coaches', json([]));
   await page.route('**/api/progress-photos**', json([]));
+}
+
+async function mockCoachApi(page) {
+  const json = (data) => (route) => route.fulfill({ json: data });
+  const clients = ['Ana García', 'Bruno Martín', 'Carla López'].map((name, i) => ({
+    linkId: `showcase-${i}`,
+    client: { name, email: `alumno${i}@example.invalid`, picture: null },
+    permissions: { training: true, nutrition: true, body: true, editTraining: true, editNutrition: true },
+    since: '2026-11-01T10:00:00Z',
+  }));
+  await page.route('**/api/coach/profile', json({ coach: true }));
+  await page.route('**/api/coach/invitations', json([]));
+  await page.route('**/api/coach/clients', json(clients));
+  await page.route('**/api/coach/clients/status', json(clients.map((client, i) => ({
+    linkId: client.linkId,
+    level: i === 1 ? 'RED' : 'GREEN',
+    lastActivity: iso(daysAgo(i + 1)),
+    pendingReplies: i === 0 ? 1 : 0,
+    weightChange: i === 0 ? -0.4 : null,
+    signals: i === 1 ? [{ reason: 'CHECKIN_MISSING', level: 'RED', value: 2 }] : [],
+  }))));
+  await page.route('**/api/coach/clients/showcase-0/checkins', json([{
+    id: 'showcase-checkin',
+    linkId: 'showcase-0',
+    weekStart: iso(monday(today)),
+    weightAvg: 80.2,
+    energy: 4,
+    sleep: 3,
+    trainingAdherence: 4,
+    dietAdherence: 4,
+    answers: [{ question: '¿Cómo te has encontrado esta semana?', answer: 'Con más energía. He completado las cuatro sesiones y mejorado el press de banca.' }],
+    notes: null,
+    coachReply: null,
+    repliedAt: null,
+    createdAt: `${iso(daysAgo(1))}T10:00:00Z`,
+    updatedAt: `${iso(daysAgo(1))}T10:00:00Z`,
+  }]));
 }
 
 // ---------- Captura ----------
@@ -196,7 +236,13 @@ try {
   };
   const capture = async (page, name) => {
     await page.evaluate(async () => {
+      await Promise.all(['400 16px Inter', '400 16px Anton'].map((font) => document.fonts.load(font)));
       await document.fonts.ready;
+      for (const family of ['Inter', 'Anton']) {
+        if (![...document.fonts].some((font) => font.family.replaceAll('"', '').replaceAll("'", '') === family && font.status === 'loaded')) {
+          throw new Error(`No se ha cargado la fuente ${family}`);
+        }
+      }
       window.scrollTo(0, 0);
     });
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -236,6 +282,20 @@ try {
   await page.context().clock.setFixedTime(at(19, 12));
   await page.waitForTimeout(1500);
   await capture(page, 'workout');
+
+  const coach = await open(true);
+  await mockCoachApi(coach);
+  await coach.goto(origin + '/entrenador');
+  await expect(coach.getByRole('heading', { name: 'Pendiente de ti' })).toBeVisible();
+  await capture(coach, 'coach');
+
+  await coach.goto(origin + '/entrenador/alumnos');
+  await expect(coach.getByRole('searchbox', { name: 'Buscar alumno' })).toBeVisible();
+  await capture(coach, 'coach-clients');
+
+  await coach.goto(origin + '/entrenador/alumnos/showcase-0?seccion=revisiones');
+  await expect(coach.getByRole('heading', { name: 'Revisiones semanales' })).toBeVisible();
+  await capture(coach, 'coach-review');
 
   if (failures.length) throw new Error('Llamadas sin simular o errores: ' + [...new Set(failures)].join(', '));
 } finally {
