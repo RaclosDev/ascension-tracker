@@ -98,7 +98,9 @@ describe('Comidas pautadas', () => {
     wrap(<NutritionPlanSection linkId="l1" canEdit />);
 
     // The deleted recipe blocks saving until the coach replaces or removes it.
-    expect(await screen.findByText('Receta borrada: elige otra o quita la comida.')).toBeTruthy();
+    expect(
+      await screen.findByText('Receta no disponible: elige otra o quita la comida.'),
+    ).toBeTruthy();
     const save = screen.getByRole('button', { name: 'Publicar pauta' }) as HTMLButtonElement;
     expect(save.disabled).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Quitar la comida 1 día de descanso' }));
