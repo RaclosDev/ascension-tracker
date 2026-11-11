@@ -251,79 +251,117 @@ test.describe('Sesión de Entrenamiento en Vivo (Workout Live)', () => {
     await expect(page.locator('.set-row.completed')).toHaveCount(1);
   });
 
-  test('5. Terminar y guardar entreno enviando POST /api/workouts', async ({ page }) => {
-    let postReceived = false;
-    let savedPayload: Record<string, unknown> | null = null;
+  for (const viewport of [
+    { width: 1920, height: 1080 },
+    { width: 390, height: 844 },
+  ]) {
+    test(`5. Revisar series pendientes solo al guardar (${viewport.width}px)`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      let postReceived = false;
+      let savedPayload: Record<string, unknown> | null = null;
 
-    await setupWorkoutCatalogMocks(page);
+      await setupWorkoutCatalogMocks(page);
 
-    // Interceptar POST /api/workouts para verificar el payload y la petición de guardado
-    await page.route(/\/api\/workouts(\?.*)?$/, async (route) => {
-      if (route.request().method() === 'POST') {
-        postReceived = true;
-        savedPayload = route.request().postDataJSON();
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          json: { id: 'saved-workout-101', ...savedPayload },
-        });
-      } else {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          json: { content: [], number: 0, totalPages: 0 },
-        });
-      }
+      // Interceptar POST /api/workouts para verificar el payload y la petición de guardado
+      await page.route(/\/api\/workouts(\?.*)?$/, async (route) => {
+        if (route.request().method() === 'POST') {
+          postReceived = true;
+          savedPayload = route.request().postDataJSON();
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            json: { id: 'saved-workout-101', ...savedPayload },
+          });
+        } else {
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            json: { content: [], number: 0, totalPages: 0 },
+          });
+        }
+      });
+
+      await page.goto('/workout');
+
+      // Iniciar y añadir ejercicio
+      const startBtn = page.getByRole('button', { name: /empezar entrenamiento/i });
+      await expect(startBtn).toBeVisible({ timeout: 15000 });
+      await startBtn.click();
+
+      const emptyOption = page
+        .locator('.start-workout-option')
+        .filter({ hasText: /entrenamiento vac[ií]o/i });
+      await expect(emptyOption).toBeVisible({ timeout: 10000 });
+      await emptyOption.click();
+
+      const exerciseItem = page.locator('.picker-exercise-item').first();
+      await expect(exerciseItem).toBeVisible({ timeout: 10000 });
+      await exerciseItem.click();
+
+      const addToWorkoutBtn = page.getByRole('button', { name: /a[ñn]adir al entreno/i });
+      await expect(addToWorkoutBtn).toBeVisible({ timeout: 5000 });
+      await addToWorkoutBtn.click();
+
+      // Marcar al menos una serie completada para que se habilite el guardado real
+      const checkBtn = page
+        .locator('.set-row')
+        .first()
+        .getByRole('button')
+        .filter({ has: page.locator('svg.lucide-check') });
+      await checkBtn.click();
+      await expect(page.getByText('¿No vas a completar esta serie?')).toHaveCount(0);
+      await expect(page.getByText('Quedan series sin completar')).toHaveCount(0);
+
+      // Pulsar "Terminar Entrenamiento"
+      const finishBtn = page.getByRole('button', { name: /terminar entrenamiento/i });
+      await expect(finishBtn).toBeVisible({ timeout: 5000 });
+      await finishBtn.click();
+
+      // Confirmación en el modal
+      const dialogTitle = page.getByRole('heading', { name: /finalizar sesi[oó]n/i });
+      await expect(dialogTitle).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText('Quedan series sin completar')).toHaveCount(0);
+      await page.getByLabel('Nombre del entrenamiento').fill('Sesión de descarga');
+
+      const confirmBtn = page.getByRole('button', { name: /^guardar$/i });
+      await expect(confirmBtn).toBeVisible({ timeout: 5000 });
+      await confirmBtn.click();
+
+      const review = page.getByRole('dialog', { name: 'Quedan series sin completar' });
+      await expect(review).toBeVisible();
+      await expect(review.getByRole('textbox')).toHaveCount(2);
+      expect(postReceived).toBe(false);
+      await review.getByRole('button', { name: 'Cerrar', exact: true }).click();
+      await expect(page.getByLabel('Nombre del entrenamiento')).toHaveValue('Sesión de descarga');
+      await confirmBtn.click();
+      await review.getByRole('button', { name: 'Volver al entrenamiento' }).click();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await expect(page.locator('.set-row.completed')).toHaveCount(1);
+      await finishBtn.click();
+      await page.getByLabel('Nombre del entrenamiento').fill('Sesión de descarga');
+      await confirmBtn.click();
+      await review.getByLabel('Serie 2 · motivo (opcional)').fill('Ajuste de volumen');
+      await review.getByRole('button', { name: 'Guardar sin completar' }).click();
+
+      // Verificar que se realizó el POST /api/workouts con los datos de la sesión
+      await expect.poll(() => postReceived, { timeout: 10000 }).toBe(true);
+      expect(savedPayload).not.toBeNull();
+      expect(Array.isArray((savedPayload as { exercises?: unknown[] })?.exercises)).toBe(true);
+      expect(savedPayload).toMatchObject({
+        name: 'Sesión de descarga',
+        exercises: [
+          {
+            sets: [
+              expect.objectContaining({ completed: true }),
+              expect.objectContaining({ completed: false, skipReason: 'Ajuste de volumen' }),
+              expect.objectContaining({ completed: false }),
+            ],
+          },
+        ],
+      });
+
+      // La sesión activa finaliza y el botón de terminar ya no está visible
+      await expect(finishBtn).toHaveCount(0);
     });
-
-    await page.goto('/workout');
-
-    // Iniciar y añadir ejercicio
-    const startBtn = page.getByRole('button', { name: /empezar entrenamiento/i });
-    await expect(startBtn).toBeVisible({ timeout: 15000 });
-    await startBtn.click();
-
-    const emptyOption = page
-      .locator('.start-workout-option')
-      .filter({ hasText: /entrenamiento vac[ií]o/i });
-    await expect(emptyOption).toBeVisible({ timeout: 10000 });
-    await emptyOption.click();
-
-    const exerciseItem = page.locator('.picker-exercise-item').first();
-    await expect(exerciseItem).toBeVisible({ timeout: 10000 });
-    await exerciseItem.click();
-
-    const addToWorkoutBtn = page.getByRole('button', { name: /a[ñn]adir al entreno/i });
-    await expect(addToWorkoutBtn).toBeVisible({ timeout: 5000 });
-    await addToWorkoutBtn.click();
-
-    // Marcar al menos una serie completada para que se habilite el guardado real
-    const checkBtn = page
-      .locator('.set-row')
-      .first()
-      .getByRole('button')
-      .filter({ has: page.locator('svg.lucide-check') });
-    await checkBtn.click();
-
-    // Pulsar "Terminar Entrenamiento"
-    const finishBtn = page.getByRole('button', { name: /terminar entrenamiento/i });
-    await expect(finishBtn).toBeVisible({ timeout: 5000 });
-    await finishBtn.click();
-
-    // Confirmación en el modal
-    const dialogTitle = page.getByRole('heading', { name: /finalizar sesi[oó]n/i });
-    await expect(dialogTitle).toBeVisible({ timeout: 5000 });
-
-    const confirmBtn = page.getByRole('button', { name: /^guardar$/i });
-    await expect(confirmBtn).toBeVisible({ timeout: 5000 });
-    await confirmBtn.click();
-
-    // Verificar que se realizó el POST /api/workouts con los datos de la sesión
-    await expect.poll(() => postReceived, { timeout: 10000 }).toBe(true);
-    expect(savedPayload).not.toBeNull();
-    expect(Array.isArray((savedPayload as { exercises?: unknown[] })?.exercises)).toBe(true);
-
-    // La sesión activa finaliza y el botón de terminar ya no está visible
-    await expect(finishBtn).toHaveCount(0);
-  });
+  }
 });

@@ -402,21 +402,6 @@ export const SwipeableSetRow = React.memo(
             }}
           />
         )}
-        {!s.completed && (
-          <details className="text-xs px-2 py-1">
-            <summary className="cursor-pointer">¿No vas a completar esta serie?</summary>
-            <label>
-              Motivo (opcional)
-              <input
-                className="w-full mt-1"
-                maxLength={200}
-                value={s.skipReason ?? ''}
-                onChange={(event) => updateSet(rowId, s.id, { skipReason: event.target.value })}
-                placeholder="Falta de tiempo, molestias, ajuste de la sesión…"
-              />
-            </label>
-          </details>
-        )}
         {isRepsStepperOpen && (
           <SetAdjustmentBar
             label="Reps"
