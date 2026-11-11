@@ -134,7 +134,7 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
           transition: 'opacity 0.15s ease',
         }}
       >
-        <Edit3 size={18} color="var(--bg-primary)" />
+        <Edit3 size={18} color="var(--accent-text)" />
       </div>
 
       {/* Delete button behind (right side) */}
@@ -157,7 +157,7 @@ export function SwipeableRow({ children, onDelete, onEdit }: SwipeableRowProps) 
           transition: 'opacity 0.15s ease',
         }}
       >
-        <Trash2 size={18} color="white" />
+        <Trash2 size={18} color="var(--danger-text)" />
       </div>
 
       <div
