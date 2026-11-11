@@ -51,7 +51,7 @@ export function WeekReview({
       {checkin ? (
         <div className="flex flex-col gap-2">
           <h3 className="font-bold">Feedback del alumno</h3>
-          <dl className="grid grid-cols-2 gap-2 text-sm">
+          <dl className="coach-review-scores">
             {SCORE_KEYS.filter((k) => checkin[k] != null).map((k) => (
               <div key={k}>
                 <dt>{SCORE_LABELS[k]}</dt>
@@ -60,28 +60,35 @@ export function WeekReview({
             ))}
           </dl>
           {checkin.notes && <p className="whitespace-pre-wrap">{checkin.notes}</p>}
-          {checkin.answers
-            .filter((a) => a.answer.trim())
-            .map((a, i) => (
-              <div key={i}>
-                <strong>{a.question}</strong>
-                <p className="whitespace-pre-wrap">{a.answer}</p>
-              </div>
-            ))}
-          {checkin.coachReply && (
-            <blockquote className="border-l-2 pl-3">
-              <strong>Tu respuesta</strong>
-              <p className="whitespace-pre-wrap">{checkin.coachReply}</p>
-            </blockquote>
+          {(checkin.answers.some((answer) => answer.answer.trim()) ||
+            checkin.coachReply ||
+            checkin.updates?.some((update) => update.role === 'CLIENT')) && (
+            <details className="coach-review-conversation">
+              <summary>Respuestas y conversación</summary>
+              {checkin.answers
+                .filter((a) => a.answer.trim())
+                .map((a, i) => (
+                  <div key={i}>
+                    <strong>{a.question}</strong>
+                    <p className="whitespace-pre-wrap">{a.answer}</p>
+                  </div>
+                ))}
+              {checkin.coachReply && (
+                <blockquote className="border-l-2 pl-3">
+                  <strong>Tu respuesta</strong>
+                  <p className="whitespace-pre-wrap">{checkin.coachReply}</p>
+                </blockquote>
+              )}
+              {checkin.updates
+                ?.filter((update) => update.role === 'CLIENT')
+                .map((update, i) => (
+                  <blockquote key={i} className="border-l-2 pl-3">
+                    <strong>Actualización del alumno · {formatCoachDate(update.createdAt)}</strong>
+                    <p className="whitespace-pre-wrap">{update.body}</p>
+                  </blockquote>
+                ))}
+            </details>
           )}
-          {checkin.updates
-            ?.filter((update) => update.role === 'CLIENT')
-            .map((update, i) => (
-              <blockquote key={i} className="border-l-2 pl-3">
-                <strong>Actualización del alumno · {formatCoachDate(update.createdAt)}</strong>
-                <p className="whitespace-pre-wrap">{update.body}</p>
-              </blockquote>
-            ))}
         </div>
       ) : (
         !checkins.isPending && !checkins.isError && <p>Sin revisión enviada para esta semana.</p>

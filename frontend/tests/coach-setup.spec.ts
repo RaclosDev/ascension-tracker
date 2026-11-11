@@ -119,10 +119,17 @@ for (const width of [1440, 390]) {
     await expect(page.getByRole('button', { name: 'Guardar agenda' })).toBeDisabled();
     await page.getByRole('link', { name: 'Resumen', exact: true }).click();
     await expect(
-      page.getByText('Preparar la primera competición · 4 días por semana · Rack, barra y discos', {
-        exact: true,
-      }),
+      page.getByText('4 días de entrenamiento por semana', { exact: true }),
     ).toBeVisible();
+    const context = page.locator('.coach-client-context');
+    await expect(
+      context.getByText('Preparar la primera competición', { exact: true }),
+    ).toBeHidden();
+    await context.locator('summary').click();
+    await expect(
+      context.getByText('Preparar la primera competición', { exact: true }),
+    ).toBeVisible();
+    await expect(context.getByText('Rack, barra y discos', { exact: true })).toBeVisible();
     await expect(page.getByText(/Falta autorización para entrenamiento/)).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,

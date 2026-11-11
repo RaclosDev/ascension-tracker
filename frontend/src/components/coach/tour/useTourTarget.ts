@@ -53,7 +53,17 @@ export function useTourTarget(
         }
         return;
       }
+      const reveal = (selector: string) => {
+        const element = doc.querySelector(selector);
+        let parent = element?.parentElement;
+        while (parent) {
+          if (parent.tagName === 'DETAILS') parent.setAttribute('open', '');
+          parent = parent.parentElement;
+        }
+      };
+      reveal(step.target);
       for (const action of step.prepare ?? []) {
+        reveal(action.click);
         if (visibleTarget(doc, action.until)) continue;
         const control = visibleTarget(doc, action.click);
         if (control && !control.matches(':disabled') && !clicked.has(action.click)) {

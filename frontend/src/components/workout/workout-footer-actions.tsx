@@ -14,6 +14,8 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { WorkoutCelebrationModal } from '@/components/workout/WorkoutCelebrationModal';
+import { IncompleteSetsDialog } from './IncompleteSetsDialog';
+import type { ActiveWorkout } from '@/lib/workout/types';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { useSaveWorkout, useSaveTemplate } from '@/lib/workout/api';
 import { haptics } from '@/lib/haptics';
@@ -31,6 +33,8 @@ export function FooterActions() {
   const saveTemplateMutation = useSaveTemplate();
 
   const [finishOpen, setFinishOpen] = useState(false);
+  const [finishingWorkout, setFinishingWorkout] = useState<ActiveWorkout | null>(null);
+  const [pendingSave, setPendingSave] = useState<(() => void) | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
   const [cancelEditOpen, setCancelEditOpen] = useState(false);
   const [emptyOpen, setEmptyOpen] = useState(false);
@@ -53,8 +57,31 @@ export function FooterActions() {
     dismissRestNotifications();
 
     setSaveError(null);
+    setFinishingWorkout(active);
     setFinishOpen(true);
   }
+
+  function requestSave(save: () => void) {
+    const active = useWorkoutStore.getState().active;
+    if (active?.exercises.some((row) => row.sets.some((set) => !set.completed))) {
+      setPendingSave(() => save);
+    } else save();
+  }
+
+  const incompleteReview = pendingSave && activeWorkout && (
+    <IncompleteSetsDialog
+      workout={activeWorkout}
+      onClose={() => setPendingSave(null)}
+      onReturn={() => {
+        setPendingSave(null);
+        setFinishOpen(false);
+      }}
+      onSave={() => {
+        setPendingSave(null);
+        pendingSave();
+      }}
+    />
+  );
 
   function doSaveTemplate() {
     haptics.light();
@@ -95,7 +122,13 @@ export function FooterActions() {
     return (
       <div className="workout-footer-actions">
         <button
-          onClick={handleSaveEdit}
+          onClick={() => {
+            const hasWork = activeWorkout?.exercises.some((row) =>
+              row.sets.some((set) => set.completed),
+            );
+            if (hasWork) requestSave(handleSaveEdit);
+            else handleSaveEdit();
+          }}
           disabled={saveWorkoutMutation.isPending}
           className="workout-finish-btn btn-press"
           style={{ background: 'var(--accent-primary, #0284c7)' }}
@@ -108,6 +141,8 @@ export function FooterActions() {
           <X size={16} />
           Cancelar edición
         </button>
+
+        {incompleteReview}
 
         <AlertDialog open={cancelEditOpen} onOpenChange={setCancelEditOpen}>
           <AlertDialogContent
@@ -284,27 +319,30 @@ export function FooterActions() {
       <WorkoutCelebrationModal
         open={finishOpen}
         onClose={() => setFinishOpen(false)}
-        activeWorkout={useWorkoutStore.getState().active}
-        onSave={async (name, durationMin, notes, selectedStartedAt) => {
-          setSaveError(null);
-          const record = finishWorkout(name, durationMin * 60000, selectedStartedAt);
-          if (!record) return;
-          if (notes) record.notes = notes;
-          saveWorkoutMutation.mutate(record, {
-            onSuccess: () => {
-              setFinishOpen(false);
-              clearActiveWorkout();
-            },
-            onError: () => {
-              setSaveError(
-                'No se pudo sincronizar con el servidor. Tu entrenamiento sigue protegido y guardado localmente en este dispositivo. Puedes reintentar cuando recuperes conexión.',
-              );
-            },
-          });
-        }}
+        activeWorkout={finishingWorkout}
+        onSave={(name, durationMin, notes, selectedStartedAt) =>
+          requestSave(() => {
+            setSaveError(null);
+            const record = finishWorkout(name, durationMin * 60000, selectedStartedAt);
+            if (!record) return;
+            if (notes) record.notes = notes;
+            saveWorkoutMutation.mutate(record, {
+              onSuccess: () => {
+                setFinishOpen(false);
+                clearActiveWorkout();
+              },
+              onError: () => {
+                setSaveError(
+                  'No se pudo sincronizar con el servidor. Tu entrenamiento sigue protegido y guardado localmente en este dispositivo. Puedes reintentar cuando recuperes conexión.',
+                );
+              },
+            });
+          })
+        }
         isSaving={saveWorkoutMutation.isPending}
         saveError={saveError}
       />
+      {incompleteReview}
     </div>
   );
 }

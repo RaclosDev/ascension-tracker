@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { formatCoachDate, type CoachClient } from '@/lib/coach/api';
+import { type CoachClient } from '@/lib/coach/api';
 import { useClientAssignments } from '@/lib/coach/coachPrograms';
 import { overlapsWeek, shiftWeek, useCoachWeek, weekDate } from '@/lib/coach/weeks';
 import { WeekReview } from './WeekReview';
@@ -51,9 +51,6 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
             }}
           />
         </label>
-        <p className="text-sm">
-          Revisar {formatCoachDate(reviewWeek)} → preparar {formatCoachDate(planningWeek)}
-        </p>
       </div>
       {assignments.isPending || draft.isPending ? (
         <p role="status">Cargando semana…</p>
