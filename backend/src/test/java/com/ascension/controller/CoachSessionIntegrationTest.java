@@ -46,11 +46,37 @@ class CoachSessionIntegrationTest {
     private final LocalDate monday = start.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
     @Test
+    void freeWorkoutsKeepEffortSkipReasonsAndContextualVideosUnderTrainingConsent() throws Exception {
+        String coach = coach(); String client = user(); String link = accept(client,invite(coach),EDIT);
+        String body = """
+                {"name":"Casa","startedAt":1000,"finishedAt":2000,"notes":"Solo tenía media hora","exercises":[
+                  {"exerciseId":"goblet","notes":"Buena técnica","videoUrl":"https://example.com/technique","videoSet":1,"videoSeconds":12,
+                   "sets":[{"type":"normal","weight":"10","reps":"12","rir":"2","completed":true},
+                           {"type":"normal","weight":"10","reps":"12","completed":false,"skipReason":"Falta de tiempo"}]}]}
+                """;
+        var workout = json.readTree(mvc.perform(as(post("/api/workouts"),client).contentType("application/json").content(body))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.exercises[0].sets[0].rir").value("2"))
+                .andReturn().getResponse().getContentAsString());
+        String id=workout.get("id").asString();
+        mvc.perform(as(get("/api/coach/clients/{link}/workouts/{id}",link,id),coach))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.exercises[0].videoSeconds").value(12))
+                .andExpect(jsonPath("$.exercises[0].sets[1].skipReason").value("Falta de tiempo"));
+        mvc.perform(as(get("/api/coach/clients/{link}/workouts",link).param("origin","FREE").param("search","Casa"),coach))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1));
+        mvc.perform(as(post("/api/workouts"),client).contentType("application/json").content(body.replace("https://example.com/technique","javascript:alert(1)")))
+                .andExpect(status().isBadRequest());
+        mvc.perform(as(post("/api/workouts"),client).contentType("application/json").content(body.replace("\"rir\":\"2\"","\"rir\":\"11\"")))
+                .andExpect(status().isBadRequest());
+        mvc.perform(as(patch("/api/coaching/coaches/{link}",link),client).contentType("application/json").content(NO_TRAINING)).andExpect(status().isNoContent());
+        mvc.perform(as(get("/api/coach/clients/{link}/workouts/{id}",link,id),coach)).andExpect(status().isForbidden());
+    }
+
+    @Test
     void showsEachPrescribedDayNextToTheWorkoutAndTheCoachComment() throws Exception {
         String coach = coach();
         String client = user();
         String linkId = accept(client, invite(coach), EDIT);
-        String assignmentId = assign(coach, linkId, createProgram(coach), start);
+        String assignmentId = assign(coach, linkId, createProgram(coach), monday);
         String sessions = "/api/coach/clients/{linkId}/programs/{id}/sessions";
 
         mvc.perform(as(get(sessions, linkId, assignmentId), coach))

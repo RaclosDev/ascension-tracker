@@ -49,11 +49,25 @@ function recordedNumber(value: unknown): number {
   return /^\d+(\.\d+)?$/.test(normalized) ? Number(normalized) : NaN;
 }
 
-export function recordedPowerSets(history: CompletedWorkout[]) {
+export function recordedPowerSets(
+  history: CompletedWorkout[],
+  mappings: import('./coach/powerlifting').PowerExerciseMapping[] = [],
+  includeVariations = false,
+) {
   return history.flatMap((workout) => {
     if (!Number.isFinite(workout.startedAt)) return [];
     return workout.exercises.flatMap((exercise) => {
-      const lift = LIFT_BY_EXERCISE.get(exercise.exerciseId);
+      const mapping = mappings.find(
+        (m) =>
+          m.exerciseId === exercise.exerciseId &&
+          (m.grip ?? '') === (exercise.variant?.grip ?? '') &&
+          (m.machine ?? '') === (exercise.variant?.machine ?? ''),
+      );
+      const lift = mapping
+        ? mapping.kind === 'EXCLUDE' || (mapping.kind === 'VARIATION' && !includeVariations)
+          ? undefined
+          : (mapping.lift.toLowerCase() as Lift)
+        : LIFT_BY_EXERCISE.get(exercise.exerciseId);
       if (!lift) return [];
       return exercise.sets.flatMap((set) => {
         const weight = recordedNumber(set.weight);

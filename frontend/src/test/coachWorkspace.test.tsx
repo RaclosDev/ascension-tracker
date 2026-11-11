@@ -15,6 +15,7 @@ vi.mock('../api/client', () => ({
 }));
 
 const mockedApi = vi.mocked(api);
+vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ user: { email: 'coach@test' } }) }));
 const permissions = {
   training: true,
   nutrition: true,
@@ -51,6 +52,24 @@ const statuses: ClientStatus[] = [
 function mockData(statusData: ClientStatus[] | Error = statuses) {
   mockedApi.get.mockImplementation(async (url) => {
     if (url === '/coach/profile') return { data: { coach: true } };
+    if (url.endsWith('/powerlifting')) return { data: { profile: { enabled: false } } };
+    if (url.includes('/weeks/'))
+      return {
+        data: {
+          linkId: 'l0',
+          weekStart: url.split('/').at(-1),
+          version: 0,
+          assignmentId: null,
+          publishedVersion: null,
+          updatedAt: null,
+          content: {
+            program: { id: null, name: 'Semana', notes: null, weeks: 1, days: [], status: 'DRAFT' },
+            privateNotes: '',
+            intent: 'BUILD',
+            decision: '',
+          },
+        },
+      };
     if (url === '/coach/clients') return { data: clients };
     if (url === '/coach/clients/l0') return { data: clients[0] };
     if (url === '/coach/clients/l1') return { data: clients[1] };
@@ -127,7 +146,7 @@ describe('Espacio del entrenador', () => {
     expect(screen.queryByText('Sin señales pendientes')).not.toBeInTheDocument();
   });
 
-  it('preserves the roster filters when returning from a summary and only loads summary data', async () => {
+  it('opens weekly planning and preserves the roster filters on return', async () => {
     mockData();
     renderAt('/entrenador/alumnos?orden=name&peso=si');
     const search = await screen.findByRole('searchbox', { name: 'Buscar alumno' });
@@ -139,9 +158,9 @@ describe('Espacio del entrenador', () => {
     });
     const table = await screen.findByRole('table');
     fireEvent.click(within(table).getByRole('link', { name: 'Ángela' }));
-    await screen.findByRole('heading', { name: 'Programa asignado' });
+    await screen.findByLabelText('Semana que preparas', {}, { timeout: 10000 });
     const urls = mockedApi.get.mock.calls.map(([url]) => url);
-    expect(urls.some((url) => /\/weights|\/workouts|\/nutrition|\/checkins/.test(url))).toBe(false);
+    expect(urls.some((url) => /\/weights|\/nutrition/.test(url))).toBe(false);
     expect(screen.queryByRole('button', { name: 'Terminar relación' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('link', { name: 'Volver a alumnos' }));
     expect(await screen.findByRole('searchbox', { name: 'Buscar alumno' })).toHaveValue('angela');

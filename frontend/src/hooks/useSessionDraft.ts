@@ -40,7 +40,7 @@ export function useSessionDraft<T>(
     setState({ key, value: initial, dirty: false, persisted: true });
   };
   return {
-    value: state.value,
+    value: state.dirty ? state.value : initial,
     setValue,
     clear,
     dirty: state.dirty,

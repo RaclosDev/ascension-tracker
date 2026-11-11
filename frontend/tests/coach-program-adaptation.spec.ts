@@ -59,6 +59,8 @@ for (const width of [390, 1440]) {
     await page.route('**/api/coach/**', async (route) => {
       const path = new URL(route.request().url()).pathname.replace('/api/coach/', '');
       if (path === 'profile') return route.fulfill({ json: { coach: true } });
+      if (path.endsWith('/powerlifting'))
+        return route.fulfill({ json: { profile: { enabled: false } } });
       if (path === 'clients/l1')
         return route.fulfill({
           json: {
@@ -132,10 +134,11 @@ for (const width of [390, 1440]) {
     });
     await page.getByRole('button', { name: 'Publicar adaptación' }).click();
     const confirmation = page.getByRole('dialog', { name: 'Publicar adaptación' });
-    await expect(confirmation).toContainText('termina ahora');
+    await expect(confirmation).toContainText('continúa hasta esa fecha');
     await confirmation.getByRole('button', { name: 'Publicar adaptación' }).click();
     await expect(page).toHaveURL(/alumnos\/l1\?seccion=entrenamiento$/);
     await expect(page.getByText('Fuerza · adaptación Ana', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Ver programas anteriores' }).click();
     await expect(page.getByText('Fuerza original', { exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Adaptar', exact: true })).toHaveCount(1);
     expect(submitted).toMatchObject({

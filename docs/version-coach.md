@@ -26,9 +26,9 @@ La biblioteca permite buscar por nombre y separar borradores de programas listos
 
 **Asignar un programa.** Si el alumno le da permiso para pautarle entrenos, el entrenador le asigna un programa con fecha de inicio. El alumno recibe su propia copia, así que los cambios posteriores en la biblioteca no le afectan.
 
-Antes de asignar se muestra la versión completa. Si cambia mientras se revisa, hay que actualizar la vista previa antes de enviarla. Sustituir un programa finaliza el anterior inmediatamente, aunque la nueva fecha de inicio sea posterior; la confirmación lo indica y se conservan tanto el historial de asignaciones como los entrenamientos registrados.
+Antes de asignar se muestra la versión completa. Si cambia mientras se revisa, hay que actualizar la vista previa antes de enviarla. Una pauta futura queda programada y la actual continúa hasta su fecha de inicio. Cancelar esa pauta futura vuelve a ampliar la vigencia de la anterior. Las copias y los entrenamientos registrados se conservan; los días posteriores al final de una asignación no se cuentan como faltas.
 
-**Adaptación individual.** Desde el programa activo de la ficha, «Adaptar» abre la copia del alumno. Permite cambiar las sesiones, previsualizarlas y publicar una nueva versión solo para él, desde la semana 1 y con una fecha entre hoy y los próximos 365 días. La publicación termina inmediatamente la asignación anterior y conserva su copia y sus registros; la biblioteca sigue igual. Los cambios y la fecha se recuperan en la misma pestaña durante siete días. Si la asignación ha terminado o se ha sustituido mientras se editaba, la publicación se rechaza y el borrador se conserva para revisarlo.
+**Adaptación individual.** Desde el programa activo de la ficha, «Adaptar» abre la copia del alumno. Permite cambiar las sesiones, previsualizarlas y publicar una nueva versión solo para él, desde la semana 1 y con una fecha entre hoy y los próximos 365 días. La publicación sustituye la asignación en la fecha elegida y conserva su copia y sus registros; la biblioteca sigue igual. Los cambios y la fecha se recuperan en la misma pestaña durante siete días. Si la asignación ha terminado o se ha sustituido mientras se editaba, la publicación se rechaza y el borrador se conserva para revisarlo.
 
 **Pantalla «Hoy» del alumno.** El alumno ve qué le toca hoy y empieza el entreno pautado con un toque, con todo precargado. Si le viene mejor, puede hacer hoy otro día de esa semana que aún no haya hecho. También puede entrenar libre o seguir su propia rutina.
 
@@ -111,3 +111,26 @@ Desde Nutrición en la ficha de un alumno, «Usar pauta de biblioteca» copia el
 *El pago con tarjeta llegará más adelante.*
 
 *Se irá completando a medida que avance.*
+
+
+## Planificación semanal y revisión detallada
+
+La ficha abre en **Semana** cuando el alumno comparte entrenamiento. Permite elegir por separado la semana que se revisa y la que se prepara. El feedback, las actualizaciones del alumno y las sesiones registradas aparecen junto al borrador de planificación. El historial completo y los entrenamientos libres están en **Entrenamientos**.
+
+El entrenador puede empezar desde cero, copiar la semana anterior o insertar una sesión o semana de su biblioteca. La biblioteca admite sesiones de un día, semanas y programas, favoritos, etiquetas, material y duración. Cada sesión del editor puede guardarse como plantilla independiente. La copia se adapta para ese alumno sin cambiar el original.
+
+La pauta admite kg totales o por mancuerna/lado, porcentajes del training max y objetivos individuales por serie: calentamiento, trabajo, top set o back-off, repeticiones y RPE o RIR. Los ajustes en bloque muestran los valores anteriores y nuevos antes de aplicarse; el texto libre no se interpreta como un número. Al publicar porcentajes se guarda el TM y la carga calculada de esa publicación. Cambiar después el TM no modifica lo ya enviado.
+
+**Borrador y publicación.** Guardar conserva el trabajo del entrenador; publicar crea la copia del alumno. Las notas privadas y la decisión interna no se incluyen en esa copia. Publicar la semana actual empieza hoy: sus días ya transcurridos no pasan a ser sesiones pendientes. Una edición concurrente bloquea la publicación hasta resolverla, conserva el borrador local y permite descargar ambas versiones completas en JSON. Esa descarga es una copia de consulta y recuperación manual, no una restauración automática de vínculos.
+
+**Revisión de sesiones.** Se muestran todas las series, las pendientes, los motivos indicados por el alumno, las notas y el esfuerzo real. La pauta no se rellena como si fuera esfuerzo registrado. Los comentarios pueden mencionar un ejercicio, una serie y un segundo de vídeo. El alumno puede adjuntar un enlace HTTPS de técnica, con serie y segundo opcionales: Ascension guarda la referencia, no aloja el vídeo, no comprueba sus permisos ni lo descarga. El acceso y la conservación del archivo dependen del proveedor del alumno; puede retirar la referencia editando el entrenamiento. La referencia se incluye en la exportación del entrenamiento y desaparece al borrarlo.
+
+**Check-ins.** Las preguntas pueden personalizarse para cada alumno o heredarse de la configuración general. El alumno distingue una revisión parcial de una final y puede añadir información después de la respuesta. Esa actualización vuelve a quedar pendiente para el entrenador. La revisión original y las respuestas anteriores permanecen en el historial.
+
+**Servicios y objetivos.** La ficha recoge el enfoque del objetivo y permite mostrar las herramientas de powerlifting por alumno. Los avisos separan última sesión y último check-in; no se exige una pauta nutricional sin ese servicio ni se interpreta mantenimiento como pérdida de peso. La adherencia nutricional diferencia días registrados de días pautados: un día sin registro no equivale a un consumo de cero.
+
+## Mantenimiento del flujo semanal
+
+Las migraciones V24–V30 incorporan vigencias, borradores semanales, prescripciones, metadatos de biblioteca, actualizaciones del check-in, motivos de series pendientes y enlaces de técnica. Las escrituras de planificación bloquean el vínculo antes de comprobar su versión y crear asignaciones. Los endpoints siguen comprobando consentimiento y permisos en cada petición.
+
+Los borradores semanales y los metadatos privados de biblioteca se exportan solo para su entrenador. Las copias publicadas y los entrenamientos siguen perteneciendo al alumno. Los borradores de servidor se conservan hasta el borrado del vínculo o de la cuenta; los temporales de la pestaña siguen la política de siete días y se eliminan al cerrar sesión. No se cambia ninguna migración ya compartida.

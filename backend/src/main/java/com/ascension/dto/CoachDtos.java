@@ -88,7 +88,8 @@ public final class CoachDtos {
     }
 
     public record MyCoach(UUID linkId, Person coach, Permissions permissions, Instant since,
-                          CoachScheduleDtos.Followup followup, String coachPresentation) {
+                          CoachScheduleDtos.Followup followup, String coachPresentation,
+                          CoachSetupDtos.Setup setup, boolean powerliftingEnabled) {
     }
 
     /** Nutrition targets only; biometrics and workout preferences stay private to the client. */

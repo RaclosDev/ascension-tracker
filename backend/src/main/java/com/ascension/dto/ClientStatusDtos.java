@@ -27,6 +27,7 @@ public final class ClientStatusDtos {
      * client does not share body data or has no weights in either week.
      */
     public record ClientStatus(UUID linkId, Level level, LocalDate lastActivity, int pendingReplies,
-                               List<Signal> signals, Double weightChange) {
+                               List<Signal> signals, Double weightChange, LocalDate lastWorkout,
+                               LocalDate lastCheckin, String nextWeekStatus) {
     }
 }

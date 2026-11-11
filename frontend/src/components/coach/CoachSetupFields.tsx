@@ -28,6 +28,25 @@ export function CoachSetupFields({
         </p>
       </fieldset>
       <label className="flex flex-col gap-1">
+        Prioridad del seguimiento
+        <select
+          className="form-input"
+          value={value.goalFocus ?? ''}
+          onChange={(event) =>
+            onChange({
+              ...value,
+              goalFocus: (event.target.value as CoachSetup['goalFocus']) || null,
+            })
+          }
+        >
+          <option value="">Según ajustes actuales del alumno</option>
+          <option value="GENERAL">Salud y condición física general</option>
+          <option value="PERFORMANCE">Rendimiento y fuerza</option>
+          <option value="MAINTAIN">Mantenimiento de peso</option>
+          <option value="WEIGHT_CHANGE">Cambio de peso</option>
+        </select>
+      </label>
+      <label className="flex flex-col gap-1">
         <span className="form-label">Objetivo del servicio (opcional)</span>
         <textarea
           className="form-input"

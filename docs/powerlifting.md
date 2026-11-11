@@ -25,3 +25,10 @@ Los formularios conservan un borrador por cuenta y ficha en la pestaña actual. 
 La exportación de datos incluye perfiles y competiciones para entrenador y alumno. Son secciones de consulta del archivo exportado: la restauración de datos personales no vuelve a crear vínculos ni concede permisos a entrenadores.
 
 Las pruebas de integración cubren permisos, vínculos ajenos o finalizados, versiones, validación y borrado. Las pruebas de navegador cubren móvil/escritorio, borradores, resultados, archivo, errores y solo lectura. Los cálculos de seguimiento y totales tienen pruebas independientes.
+
+
+## Clasificación y semana de competición
+
+Desde Ficha y gestión se activa la especialidad de cada alumno. Ocultarla conserva sus perfiles y resultados. El perfil permite clasificar ejercicios personalizados y combinaciones de agarre/máquina como competición, variante o excluidos. El seguimiento respeta estas asignaciones y permite incluir variantes expresamente.
+
+La competición separa **Preparación** y **Día de competición**. Los nueve intentos se registran en una tabla con previsto, realizado y resultado. Los bloques enlazan con sus semanas de planificación, sin modificar automáticamente las sesiones. Los porcentajes prescritos guardan el TM de publicación; los indicadores retrospectivos de seguimiento mantienen su referencia al TM actual.

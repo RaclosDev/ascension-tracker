@@ -27,6 +27,8 @@ for (const width of [390, 1440]) {
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route('**/api/coach/**', async (route) => {
       const path = new URL(route.request().url()).pathname.replace('/api/coach/', '');
+      if (path.endsWith('/checkin-template'))
+        return route.fulfill({ json: { questions: [], custom: false } });
       if (path === 'profile') return route.fulfill({ json: { coach: true } });
       if (path === 'clients/l1')
         return route.fulfill({
@@ -68,8 +70,10 @@ for (const width of [390, 1440]) {
       }
       return route.fulfill({ json: [] });
     });
-    await page.goto('/entrenador/alumnos/l1?seccion=powerlifting');
-    await page.getByLabel('Especialización en powerlifting activa').check();
+    await page.goto('/entrenador/alumnos/l1?seccion=gestion');
+    await page.getByLabel('Mostrar herramientas de powerlifting').click();
+    await expect(page.getByLabel('Mostrar herramientas de powerlifting')).toBeChecked();
+    await page.getByRole('link', { name: 'Powerlifting', exact: true }).click();
     await page.getByLabel('Sentadilla (kg)', { exact: true }).fill('180');
     await page.getByRole('button', { name: 'Añadir marca' }).click();
     await page.getByLabel('Peso (kg)', { exact: true }).fill('190');

@@ -40,6 +40,10 @@ public class PowerliftingService {
             throw new OptimisticLockingFailureException("El perfil de powerlifting ha cambiado. Revisa la versión guardada antes de continuar.");
         }
         Profile profile = request.profile();
+        if (profile.exerciseMappings() != null && profile.exerciseMappings().stream()
+                .map(m -> List.of(m.exerciseId(), m.grip() == null ? "" : m.grip(), m.machine() == null ? "" : m.machine()))
+                .distinct().count() != profile.exerciseMappings().size())
+            throw new InvalidInputException("Cada variante debe tener una sola clasificación.");
         if (profile.marks().stream().map(Mark::id).distinct().count() != profile.marks().size()) {
             throw new InvalidInputException("Cada marca debe tener un identificador distinto.");
         }
@@ -64,6 +68,6 @@ public class PowerliftingService {
     private Saved current(UUID linkId) {
         return jdbc.query("SELECT * FROM coach_powerlifting_profiles WHERE link_id = ?", MAPPER, linkId)
                 .stream().findFirst().orElseGet(() -> new Saved(linkId,
-                        new Profile(false, Equipment.CLASSIC, "", new Maxes(null, null, null), List.of(), ""), 0, null));
+                        new Profile(false, Equipment.CLASSIC, "", new Maxes(null, null, null), List.of(), "", List.of()), 0, null));
     }
 }

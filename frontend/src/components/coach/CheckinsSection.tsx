@@ -1,6 +1,11 @@
 import toast from 'react-hot-toast';
 import { apiErrorMessage } from '../../lib/coach/api';
-import { useClientCheckins, useReplyCheckin, type Checkin } from '../../lib/coach/checkins';
+import {
+  useClientCheckins,
+  useReplyCheckin,
+  needsReply,
+  type Checkin,
+} from '../../lib/coach/checkins';
 import { CheckinCard } from './CheckinCard';
 import { QueryErrorNotice } from '../QueryErrorNotice';
 import { useSessionDraft } from '../../hooks/useSessionDraft';
@@ -23,14 +28,13 @@ export function CheckinsSection({ linkId }: { linkId: string }) {
       {[...checkins.data]
         .sort(
           (a, b) =>
-            Number(!!a.coachReply) - Number(!!b.coachReply) ||
-            b.weekStart.localeCompare(a.weekStart),
+            Number(needsReply(b)) - Number(needsReply(a)) || b.weekStart.localeCompare(a.weekStart),
         )
         .map((c) => (
           <CheckinCard
             key={c.id}
             checkin={c}
-            footer={c.coachReply ? null : <ReplyForm linkId={linkId} checkin={c} />}
+            footer={needsReply(c) ? <ReplyForm linkId={linkId} checkin={c} /> : null}
           />
         ))}
     </div>

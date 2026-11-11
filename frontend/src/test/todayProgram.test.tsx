@@ -121,6 +121,26 @@ describe('Hoy: programa pautado', () => {
     expect(screen.queryByRole('button', { name: /Empezar entreno pautado/ })).toBeNull();
   });
 
+  it('keeps the active prescription first and labels future plans separately', async () => {
+    mockedApi.get.mockResolvedValue({
+      data: [
+        plan({
+          assignmentId: 'future',
+          programName: 'Semana próxima',
+          phase: 'UPCOMING',
+          day: null,
+        }),
+        plan({ programName: 'Semana actual' }),
+      ],
+    });
+    renderCard();
+    await screen.findByText(/Próximamente · Semana próxima/);
+    const cards = screen.getAllByRole('article');
+    expect(cards[0].textContent).toContain('Hoy · Semana actual');
+    expect(cards[1].textContent).toContain('Próximamente · Semana próxima');
+    expect(cards[1].textContent).not.toContain('Hoy ·');
+  });
+
   it('lets the client move another day of the week to today', async () => {
     const legs = {
       id: 'd2',

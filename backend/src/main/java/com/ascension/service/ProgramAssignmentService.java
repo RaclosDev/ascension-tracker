@@ -32,17 +32,25 @@ public class ProgramAssignmentService {
     private static final int MAX_START_OFFSET_DAYS = 365;
 
     private static final String SELECT = """
-            SELECT a.id, a.program_id, p.source_program_id, p.name, p.weeks, a.start_date, a.status,
-                   a.created_at, a.ended_at
+            SELECT a.id, a.program_id, p.source_program_id, p.name, p.weeks, a.start_date,
+                   CASE WHEN a.status = 'ENDED' THEN 'ENDED'
+                        WHEN a.effective_until <= CURRENT_DATE THEN 'ENDED'
+                        WHEN a.start_date > CURRENT_DATE THEN 'SCHEDULED' ELSE 'ACTIVE' END AS status,
+                   a.created_at, a.effective_until, COALESCE(a.ended_at,
+                     CASE WHEN a.effective_until <= CURRENT_DATE THEN a.effective_until::timestamptz END) AS ended_at
             FROM program_assignments a JOIN programs p ON p.id = a.program_id
             """;
 
     private final JdbcTemplate jdbcTemplate;
     private final ProgramService programService;
+    private final ProgramSchedule schedule;
+    private final PrescriptionService prescriptions;
 
-    public ProgramAssignmentService(JdbcTemplate jdbcTemplate, ProgramService programService) {
+    public ProgramAssignmentService(JdbcTemplate jdbcTemplate, ProgramService programService, ProgramSchedule schedule, PrescriptionService prescriptions) {
         this.jdbcTemplate = jdbcTemplate;
         this.programService = programService;
+        this.schedule = schedule;
+        this.prescriptions = prescriptions;
     }
 
     @Transactional(readOnly = true)
@@ -54,7 +62,7 @@ public class ProgramAssignmentService {
     @Transactional
     public Assignment assign(ClientAccess access, AssignRequest request) {
         validateDate(request.startDate());
-        lockLink(access.linkId());
+        schedule.lock(access.linkId());
         List<UUID> found = jdbcTemplate.queryForList(
                 "SELECT id FROM programs WHERE id = ? AND owner_user_id = ? AND is_library FOR UPDATE",
                 UUID.class, request.programId(), access.coachUserId());
@@ -70,14 +78,24 @@ public class ProgramAssignmentService {
         if (request.programUpdatedAt() != null && !request.programUpdatedAt().equals(original.updatedAt())) {
             throw new OptimisticLockingFailureException("El programa ha cambiado. Revisa la vista previa antes de asignarlo.");
         }
-        endActive(access.linkId());
-        UUID copyId = programService.insertProgram(access.clientUserId(), original, false, original.id());
+        UUID copyId = programService.insertProgram(access.clientUserId(), prescriptions.snapshot(original, access.linkId()), false, original.id());
         return createAssignment(access, copyId, request.startDate());
     }
 
     @Transactional(readOnly = true)
     public Program plan(ClientAccess access, UUID assignmentId) {
         return programService.readProgram(requireAssignment(access, assignmentId, false).programId());
+    }
+
+    @Transactional
+    public Assignment publishWeek(ClientAccess access, Program program, LocalDate startDate) {
+        validateDate(startDate);
+        ProgramService.validate(program);
+        ProgramService.validateReady(program);
+        schedule.lock(access.linkId());
+        requireCopyCapacity(access.clientUserId());
+        UUID copy = programService.insertProgram(access.clientUserId(), prescriptions.snapshot(program, access.linkId()), false, null);
+        return createAssignment(access, copy, startDate);
     }
 
     @Transactional
@@ -88,16 +106,16 @@ public class ProgramAssignmentService {
         }
         ProgramService.validate(request.program());
         ProgramService.validateReady(request.program());
-        lockLink(access.linkId());
+        schedule.lock(access.linkId());
         Assignment original = requireAssignment(access, assignmentId, true);
-        if (!"ACTIVE".equals(original.status())) {
+        if ("ENDED".equals(original.status())) {
             throw new OptimisticLockingFailureException(
                     "Esta asignación ya ha terminado. Abre el programa actual del alumno antes de publicar cambios.");
         }
         requireCopyCapacity(access.clientUserId());
-        UUID copyId = programService.insertProgram(access.clientUserId(), request.program(), false,
+        UUID copyId = programService.insertProgram(access.clientUserId(), prescriptions.snapshot(request.program(), access.linkId()), false,
                 original.sourceProgramId());
-        endActive(access.linkId());
+        if ("SCHEDULED".equals(original.status())) schedule.end(original.id());
         return createAssignment(access, copyId, request.startDate());
     }
 
@@ -110,37 +128,24 @@ public class ProgramAssignmentService {
     }
 
     private Assignment createAssignment(ClientAccess access, UUID copyId, LocalDate startDate) {
+        LocalDate until = schedule.prepare(access.linkId(), startDate);
         UUID id = jdbcTemplate.queryForObject("""
                 INSERT INTO program_assignments (program_id, client_user_id, coach_user_id, coach_link_id,
-                                                 start_date, status)
-                VALUES (?, ?, ?, ?, ?, 'ACTIVE') RETURNING id
+                                                 start_date, effective_until, status)
+                VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE') RETURNING id
                 """, UUID.class, copyId, access.clientUserId(), access.coachUserId(), access.linkId(),
-                startDate);
+                startDate, until);
         return jdbcTemplate.queryForObject(SELECT + " WHERE a.id = ?", ProgramAssignmentService::assignment, id);
     }
 
     @Transactional
     public void end(ClientAccess access, UUID assignmentId) {
-        lockLink(access.linkId());
-        int updated = jdbcTemplate.update("""
-                UPDATE program_assignments SET status = 'ENDED', ended_at = NOW()
-                WHERE id = ? AND coach_link_id = ? AND status = 'ACTIVE'
-                """, assignmentId, access.linkId());
+        schedule.lock(access.linkId());
+        Assignment assignment = requireAssignment(access, assignmentId, true);
+        int updated = "ENDED".equals(assignment.status()) ? 0 : schedule.end(assignmentId);
         if (updated == 0) {
             throw new EntityNotFoundException("Asignación no encontrada");
         }
-    }
-
-    // Serialises assignments per link so the single active program holds without an index error.
-    private void lockLink(UUID linkId) {
-        jdbcTemplate.queryForObject("SELECT id FROM coach_clients WHERE id = ? FOR UPDATE", UUID.class, linkId);
-    }
-
-    private void endActive(UUID linkId) {
-        jdbcTemplate.update("""
-                UPDATE program_assignments SET status = 'ENDED', ended_at = NOW()
-                WHERE coach_link_id = ? AND status = 'ACTIVE'
-                """, linkId);
     }
 
     private void requireCopyCapacity(UUID clientId) {
@@ -164,6 +169,7 @@ public class ProgramAssignmentService {
         return new Assignment(rs.getObject("id", UUID.class), rs.getObject("program_id", UUID.class),
                 rs.getObject("source_program_id", UUID.class), rs.getString("name"), rs.getInt("weeks"),
                 rs.getObject("start_date", LocalDate.class), rs.getString("status"),
-                rs.getTimestamp("created_at").toInstant(), ended == null ? null : ended.toInstant());
+                rs.getTimestamp("created_at").toInstant(), ended == null ? null : ended.toInstant(),
+                rs.getObject("effective_until", LocalDate.class));
     }
 }

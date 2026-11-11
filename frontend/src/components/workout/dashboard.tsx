@@ -10,6 +10,7 @@ import { useWorkoutStore } from '@/lib/workout/store';
 import { useRecentWorkouts, useWorkoutTemplates, useCustomExercises } from '@/lib/workout/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PowerliftingCard } from '@/components/workout/PowerliftingCard';
+import { useMyCoaches } from '@/lib/coach/api';
 
 // Outside the precache like the coach pages: it needs the network, and offline it just renders nothing.
 const TodayProgramCard = lazy(() =>
@@ -19,6 +20,11 @@ const TodayProgramCard = lazy(() =>
 );
 
 function Dashboard() {
+  const coaches = useMyCoaches();
+  const showPowerlifting =
+    coaches.data != null &&
+    (coaches.data.length === 0 ||
+      coaches.data.some((coach) => coach.powerliftingEnabled && coach.permissions.training));
   const { data: history = [], isLoading: isLoadingHistory } = useRecentWorkouts(60);
   const { data: templates = [] } = useWorkoutTemplates();
   const { data: customExercises = [] } = useCustomExercises();
@@ -306,7 +312,7 @@ function Dashboard() {
         <BodyHeatmap history={history} customExercises={customExercises} />
       </section>
 
-      <PowerliftingCard />
+      {showPowerlifting && <PowerliftingCard />}
 
       <section style={{ marginBottom: '1.5rem' }}>
         <div className="card">

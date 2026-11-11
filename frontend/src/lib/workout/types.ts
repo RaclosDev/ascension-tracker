@@ -73,10 +73,15 @@ export interface WorkoutSet {
   distance?: string;
   duration?: string;
   rpe?: string;
+  rir?: string;
+  skipReason?: string;
   completed: boolean;
 }
 
 export interface WorkoutExercise {
+  videoUrl?: string | null;
+  videoSet?: number | null;
+  videoSeconds?: number | null;
   id: string;
   exerciseId: string;
   variant?: {

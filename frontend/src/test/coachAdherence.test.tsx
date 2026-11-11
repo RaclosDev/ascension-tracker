@@ -73,7 +73,9 @@ describe('Adherencia a la pauta', () => {
     });
     renderSection();
 
-    expect(await screen.findByText('1 de 3 días en objetivo · 2 registrados')).toBeTruthy();
+    expect(
+      await screen.findByText('1 de 2 días registrados en objetivo · cobertura 2/3 días pautados'),
+    ).toBeTruthy();
     expect(screen.getByText('kcal 92 % · proteína 88 %')).toBeTruthy();
     expect(screen.getByText('Sin pauta')).toBeTruthy();
     expect(mockedApi.get).toHaveBeenCalledWith('/coach/clients/l1/nutrition-plan/adherence', {

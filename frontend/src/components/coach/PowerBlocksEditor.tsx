@@ -1,15 +1,19 @@
 import type { PowerBlock } from '../../lib/coach/powerMeets';
+import { Link } from 'react-router-dom';
+import { shiftWeek, weekDate } from '../../lib/coach/weeks';
 
 export function PowerBlocksEditor({
   blocks,
   date,
   canEdit,
   onChange,
+  linkId,
 }: {
   blocks: PowerBlock[];
   date: string;
   canEdit: boolean;
   onChange: (blocks: PowerBlock[]) => void;
+  linkId: string;
 }) {
   const change = (id: string, patch: Partial<PowerBlock>) =>
     onChange(blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)));
@@ -17,7 +21,8 @@ export function PowerBlocksEditor({
     <section className="flex flex-col gap-3">
       <h3 className="font-semibold">Bloques de preparación</h3>
       <p className="coach-description">
-        Define fechas y objetivos. El programa de sesiones se gestiona en Entrenamiento.
+        Define fechas y objetivos y abre cada semana para programar sus sesiones. Cambiar estas
+        fechas no modifica las pautas ya publicadas.
       </p>
       {blocks.length === 0 && <p>No hay bloques definidos.</p>}
       {blocks.map((block, index) => (
@@ -36,6 +41,23 @@ export function PowerBlocksEditor({
               onChange={(e) => change(block.id, { name: e.target.value })}
             />
           </label>
+          {block.start && block.end && block.start <= block.end && (
+            <div className="sm:col-span-2 flex flex-wrap gap-2">
+              {Array.from({ length: 53 }, (_, i) =>
+                shiftWeek(weekDate(new Date(`${block.start}T12:00:00`)), i),
+              )
+                .filter((week) => week <= block.end)
+                .map((week) => (
+                  <Link
+                    key={week}
+                    className="btn btn-secondary text-sm"
+                    to={`/entrenador/alumnos/${linkId}?seccion=semana&semana=${week}`}
+                  >
+                    Semana {week}
+                  </Link>
+                ))}
+            </div>
+          )}
           <label className="flex flex-col gap-1">
             Inicio
             <input

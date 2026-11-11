@@ -16,10 +16,10 @@ export function PowerAttemptsEditor({
   onChange: (attempts: PowerAttempt[]) => void;
 }) {
   const totals = meetTotals(attempts);
-  const change = (a: PowerAttempt, patch: Partial<PowerAttempt>) =>
+  const change = (attempt: PowerAttempt, patch: Partial<PowerAttempt>) =>
     onChange(
       attempts.map((item) =>
-        item.lift === a.lift && item.number === a.number ? { ...item, ...patch } : item,
+        item.lift === attempt.lift && item.number === attempt.number ? { ...item, ...patch } : item,
       ),
     );
   return (
@@ -29,7 +29,7 @@ export function PowerAttemptsEditor({
         Mantén el plan previsto y registra aparte el peso realizado. Los resultados los anota el
         entrenador.
       </p>
-      <dl className="grid gap-3 sm:grid-cols-2" aria-live="polite">
+      <dl className="flex flex-wrap gap-6" aria-live="polite">
         <div>
           <dt>Total previsto</dt>
           <dd className="font-semibold">
@@ -45,92 +45,109 @@ export function PowerAttemptsEditor({
           </dd>
         </div>
       </dl>
-      {POWER_LIFTS.map((lift) => (
-        <div key={lift} className="flex flex-col gap-3">
-          <h4 className="font-semibold">{POWER_LABELS[lift]}</h4>
-          <div className="grid gap-3 xl:grid-cols-3">
-            {attempts
-              .filter((a) => a.lift === lift)
-              .sort((a, b) => a.number - b.number)
-              .map((a) => {
-                const warning = attemptWarning(
-                  a,
-                  attempts.find((p) => p.lift === lift && p.number === a.number - 1),
-                  rules,
-                );
-                return (
-                  <fieldset
-                    key={a.number}
-                    className="min-w-0 rounded-xl border border-[var(--border-color)] p-3 flex flex-col gap-3"
-                  >
-                    <legend className="font-semibold px-1">
-                      {POWER_LABELS[lift]} · Intento {a.number}
-                    </legend>
-                    <label className="flex flex-col gap-1">
-                      Previsto (kg)
-                      <input
-                        className="form-input min-h-11"
-                        type="number"
-                        min="0.01"
-                        max="1500"
-                        step="0.01"
-                        value={a.plannedKg ?? ''}
-                        onChange={(e) =>
-                          change(a, { plannedKg: e.target.value ? Number(e.target.value) : null })
-                        }
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1">
-                      Realizado (kg)
-                      <input
-                        className="form-input min-h-11"
-                        type="number"
-                        min="0.01"
-                        max="1500"
-                        step="0.01"
-                        required={a.result === 'VALID' || a.result === 'INVALID'}
-                        value={a.actualKg ?? ''}
-                        onChange={(e) =>
-                          change(a, { actualKg: e.target.value ? Number(e.target.value) : null })
-                        }
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1">
-                      Resultado
-                      <select
-                        className="form-input min-h-11"
-                        value={a.result}
-                        onChange={(e) =>
-                          change(a, { result: e.target.value as PowerAttempt['result'] })
-                        }
-                      >
-                        <option value="PENDING">Pendiente</option>
-                        <option value="VALID">Válido</option>
-                        <option value="INVALID">Nulo</option>
-                        <option value="WITHDRAWN">No realizado</option>
-                      </select>
-                    </label>
-                    {rules === 'IPF_2026' && (
-                      <label className="flex items-center gap-2 min-h-11">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left">
+          <caption className="sr-only">Los nueve intentos de competición</caption>
+          <thead>
+            <tr>
+              <th scope="col">Intento</th>
+              <th scope="col">Previsto (kg)</th>
+              <th scope="col">Realizado (kg)</th>
+              <th scope="col">Resultado</th>
+              {rules === 'IPF_2026' && <th scope="col">Récord</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {POWER_LIFTS.flatMap((lift) =>
+              attempts
+                .filter((a) => a.lift === lift)
+                .sort((a, b) => a.number - b.number)
+                .map((attempt) => {
+                  const label = `${POWER_LABELS[lift]} · Intento ${attempt.number}`;
+                  const warning = attemptWarning(
+                    attempt,
+                    attempts.find((a) => a.lift === lift && a.number === attempt.number - 1),
+                    rules,
+                  );
+                  return (
+                    <tr
+                      key={`${lift}:${attempt.number}`}
+                      className="border-t"
+                      style={{ borderColor: 'var(--border-subtle)' }}
+                    >
+                      <th scope="row" className="py-2 pr-3 font-semibold">
+                        {label}
+                        {warning && (
+                          <p className="max-w-xs text-xs font-normal" role="status">
+                            {warning}
+                          </p>
+                        )}
+                      </th>
+                      <td className="p-1">
                         <input
-                          type="checkbox"
-                          checked={a.recordAttempt}
-                          onChange={(e) => change(a, { recordAttempt: e.target.checked })}
+                          className="form-input min-h-11 w-24"
+                          aria-label={`${label} · Previsto (kg)`}
+                          type="number"
+                          min={0.01}
+                          max={1500}
+                          step={0.01}
+                          value={attempt.plannedKg ?? ''}
+                          onChange={(e) =>
+                            change(attempt, {
+                              plannedKg: e.target.value ? Number(e.target.value) : null,
+                            })
+                          }
                         />
-                        Intento de récord
-                      </label>
-                    )}
-                    {warning && (
-                      <p className="text-sm" role="status">
-                        {warning}
-                      </p>
-                    )}
-                  </fieldset>
-                );
-              })}
-          </div>
-        </div>
-      ))}
+                      </td>
+                      <td className="p-1">
+                        <input
+                          className="form-input min-h-11 w-24"
+                          aria-label={`${label} · Realizado (kg)`}
+                          type="number"
+                          min={0.01}
+                          max={1500}
+                          step={0.01}
+                          required={attempt.result === 'VALID' || attempt.result === 'INVALID'}
+                          value={attempt.actualKg ?? ''}
+                          onChange={(e) =>
+                            change(attempt, {
+                              actualKg: e.target.value ? Number(e.target.value) : null,
+                            })
+                          }
+                        />
+                      </td>
+                      <td className="p-1">
+                        <select
+                          className="form-input min-h-11"
+                          aria-label={`${label} · Resultado`}
+                          value={attempt.result}
+                          onChange={(e) =>
+                            change(attempt, { result: e.target.value as PowerAttempt['result'] })
+                          }
+                        >
+                          <option value="PENDING">Pendiente</option>
+                          <option value="VALID">Válido</option>
+                          <option value="INVALID">Nulo</option>
+                          <option value="WITHDRAWN">No realizado</option>
+                        </select>
+                      </td>
+                      {rules === 'IPF_2026' && (
+                        <td>
+                          <input
+                            type="checkbox"
+                            aria-label={`${label} · Récord`}
+                            checked={attempt.recordAttempt}
+                            onChange={(e) => change(attempt, { recordAttempt: e.target.checked })}
+                          />
+                        </td>
+                      )}
+                    </tr>
+                  );
+                }),
+            )}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

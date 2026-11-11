@@ -131,6 +131,8 @@ class PiiLogVerificationTest {
                 org.mockito.Mockito.mock(com.ascension.service.CoachSettingsService.class),
                 org.mockito.Mockito.mock(com.ascension.service.PowerliftingService.class),
                 org.mockito.Mockito.mock(com.ascension.service.PowerMeetService.class),
+                org.mockito.Mockito.mock(com.ascension.service.CoachWeekService.class),
+                org.mockito.Mockito.mock(com.ascension.service.CoachLibraryService.class),
                 org.mockito.Mockito.mock(com.ascension.service.ProgressPhotoService.class),
                 org.mockito.Mockito.mock(com.ascension.service.ContactRequestService.class)
         );

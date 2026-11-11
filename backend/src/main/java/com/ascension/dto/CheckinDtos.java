@@ -32,16 +32,20 @@ public final class CheckinDtos {
     public record CheckinRequest(@Min(1) @Max(5) int energy, @Min(1) @Max(5) int sleep,
                                  @Min(1) @Max(5) Integer trainingAdherence, @Min(1) @Max(5) Integer dietAdherence,
                                  @Size(max = 10) List<@Size(max = 1000) String> answers,
-                                 @Size(max = 2000) String notes) {
+                                 @Size(max = 2000) String notes,
+                                 @jakarta.validation.constraints.Pattern(regexp = "PARTIAL|FINAL") String submissionStatus) {
     }
 
     public record ReplyRequest(@NotBlank @Size(max = 2000) String reply, Instant expectedUpdatedAt) {
     }
+    public record Update(String role, String body, Instant createdAt) { }
+    public record UpdateRequest(@NotBlank @Size(max = 2000) String body, @NotNull Instant expectedUpdatedAt, boolean finalReview) { }
 
     /** {@code weightAvg} is the week's average weight, only while the client shares body data. */
     public record Checkin(UUID id, UUID linkId, LocalDate weekStart, Double weightAvg, int energy, int sleep,
                           Integer trainingAdherence, Integer dietAdherence, List<Answer> answers, String notes,
-                          String coachReply, Instant repliedAt, Instant createdAt, Instant updatedAt) {
+                          String coachReply, Instant repliedAt, Instant createdAt, Instant updatedAt,
+                          List<Update> updates, String submissionStatus) {
     }
 
     /** This week's check-in for one coach: the questions to answer and what was sent, if anything. */

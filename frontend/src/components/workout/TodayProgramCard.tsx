@@ -3,17 +3,14 @@ import toast from 'react-hot-toast';
 import { CalendarCheck, Check, Play } from 'lucide-react';
 import { apiErrorMessage, formatCoachDate } from '@/lib/coach/api';
 import { WEEKDAY_LABELS } from '@/lib/coach/weekdays';
-import {
-  prescriptionText,
-  toPrescribedDay,
-  useLeaveProgram,
-  useTodayPlans,
-  type TodayPlan,
-} from '@/lib/coach/today';
+import { toPrescribedDay, useLeaveProgram, useTodayPlans, type TodayPlan } from '@/lib/coach/today';
 import { useWorkoutStore } from '@/lib/workout/store';
 import type { CompletedWorkout } from '@/lib/workout/types';
+import { PrescriptionSummary } from '../coach/PrescriptionSummary';
 
-/** "Hoy": what each program a coach assigned prescribes for today, ready to start. */
+const PHASE_ORDER = { ACTIVE: 0, UPCOMING: 1, FINISHED: 2 };
+const PHASE_LABEL = { ACTIVE: 'Hoy', UPCOMING: 'Próximamente', FINISHED: 'Completado' };
+
 export function TodayProgramCard({
   history,
   exerciseName,
@@ -25,14 +22,16 @@ export function TodayProgramCard({
   if (!plans.data?.length) return null;
   return (
     <section aria-label="Hoy" className="flex flex-col gap-3" style={{ marginBottom: '1.5rem' }}>
-      {plans.data.map((plan) => (
-        <PlanCard
-          key={plan.assignmentId}
-          plan={plan}
-          history={history}
-          exerciseName={exerciseName}
-        />
-      ))}
+      {[...plans.data]
+        .sort((a, b) => PHASE_ORDER[a.phase] - PHASE_ORDER[b.phase])
+        .map((plan) => (
+          <PlanCard
+            key={plan.assignmentId}
+            plan={plan}
+            history={history}
+            exerciseName={exerciseName}
+          />
+        ))}
     </section>
   );
 }
@@ -82,7 +81,7 @@ function PlanCard({
             className="text-xs font-semibold uppercase"
             style={{ color: 'var(--text-secondary)' }}
           >
-            Hoy · {plan.programName}
+            {PHASE_LABEL[plan.phase]} · {plan.programName}
             {byCoach}
           </div>
           {plan.phase === 'ACTIVE' && plan.day && (
@@ -95,6 +94,11 @@ function PlanCard({
           </span>
         )}
       </header>
+      {plan.programNotes && (
+        <p className="text-sm whitespace-pre-wrap">
+          <strong>Indicaciones del entrenador:</strong> {plan.programNotes}
+        </p>
+      )}
 
       {plan.phase === 'UPCOMING' && (
         <p style={{ color: 'var(--text-secondary)' }}>
@@ -121,15 +125,14 @@ function PlanCard({
           {plan.day.notes && <p className="text-sm text-white">{plan.day.notes}</p>}
           <ol className="flex flex-col gap-1">
             {plan.day.exercises.map((e, i) => {
-              const target = prescriptionText(e);
               return (
                 <li key={i} className="text-sm">
                   <span className="text-white font-semibold">
                     {e.exerciseName ?? exerciseName(e.exerciseId)}
                   </span>{' '}
-                  <span style={{ color: 'var(--text-secondary)' }}>
-                    {e.sets} × {target || 'series'}
-                  </span>
+                  <div style={{ color: 'var(--text-secondary)' }}>
+                    <PrescriptionSummary exercise={e} />
+                  </div>
                 </li>
               );
             })}

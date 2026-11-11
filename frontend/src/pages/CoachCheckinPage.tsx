@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { ArrowLeft } from 'lucide-react';
 import { apiErrorMessage, formatCoachDate, personName } from '../lib/coach/api';
@@ -12,6 +13,7 @@ import {
   type Scores,
 } from '../lib/coach/checkins';
 import { CheckinCard } from '../components/coach/CheckinCard';
+import { CheckinUpdateForm } from '../components/coach/CheckinUpdateForm';
 import { PushToggle } from '../components/coach/PushToggle';
 import { nextReviewLabel, scheduleLabel } from '../lib/coach/coachSchedule';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
@@ -74,6 +76,7 @@ export default function CoachCheckinPage() {
             <section className="card">
               <h2 className="card-title">Esta semana</h2>
               <CheckinCard checkin={current.data.current} />
+              <CheckinUpdateForm linkId={linkId} checkin={current.data.current} />
             </section>
           ) : (
             <CheckinForm
@@ -128,6 +131,9 @@ function isCheckinDraft(value: unknown): value is CheckinDraft {
 function CheckinForm({ linkId, data }: { linkId: string; data: ClientCheckin }) {
   const send = useSendCheckin(linkId);
   const sent = data.current;
+  const [submissionStatus, setSubmissionStatus] = useState<'PARTIAL' | 'FINAL'>(
+    sent?.submissionStatus ?? 'FINAL',
+  );
   const draft = useSessionDraft<CheckinDraft>(
     `checkin:${linkId}:${data.weekStart}:${sent?.updatedAt ?? JSON.stringify(data.questions)}`,
     {
@@ -166,6 +172,7 @@ function CheckinForm({ linkId, data }: { linkId: string; data: ClientCheckin }) 
               : null,
             answers,
             notes,
+            submissionStatus,
           },
           {
             onSuccess: () => {
@@ -178,6 +185,16 @@ function CheckinForm({ linkId, data }: { linkId: string; data: ClientCheckin }) 
       }}
     >
       <h2 className="card-title">{sent ? 'Tu check-in de esta semana' : '¿Qué tal la semana?'}</h2>
+      <label>
+        Tipo de envío
+        <select
+          value={submissionStatus}
+          onChange={(event) => setSubmissionStatus(event.target.value as 'PARTIAL' | 'FINAL')}
+        >
+          <option value="FINAL">Revisión final de la semana</option>
+          <option value="PARTIAL">Avance parcial; quedan sesiones o datos</option>
+        </select>
+      </label>
       {sent && (
         <p className="text-sm" style={muted}>
           Puedes cambiarlo hasta que tu entrenador responda.

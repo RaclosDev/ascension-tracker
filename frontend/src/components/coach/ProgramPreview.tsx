@@ -1,6 +1,6 @@
 import type { Program } from '../../lib/coach/coachPrograms';
 import { WEEKDAY_LABELS } from '../../lib/coach/weekdays';
-import { prescriptionText } from '../../lib/coach/today';
+import { PrescriptionSummary } from './PrescriptionSummary';
 
 export function ProgramPreview({ program }: { program: Program }) {
   return (
@@ -25,9 +25,7 @@ export function ProgramPreview({ program }: { program: Program }) {
                 {day.exercises.map((exercise, index) => (
                   <li key={index} className="break-words">
                     <strong>{exercise.exerciseName || exercise.exerciseId}</strong>
-                    <p>
-                      {exercise.sets} × {prescriptionText({ ...exercise, notes: null }) || 'series'}
-                    </p>
+                    <PrescriptionSummary exercise={exercise} />
                     {(exercise.variantGrip || exercise.variantMachine) && (
                       <p>
                         {[exercise.variantGrip, exercise.variantMachine]

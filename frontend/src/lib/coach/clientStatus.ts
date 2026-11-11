@@ -21,6 +21,9 @@ export interface ClientStatus {
   linkId: string;
   level: StatusLevel;
   lastActivity: string | null;
+  lastWorkout?: string | null;
+  lastCheckin?: string | null;
+  nextWeekStatus?: 'DRAFT' | 'SCHEDULED' | 'MISSING' | null;
   pendingReplies: number;
   /** Kilos gained (+) or lost (-) between the last week and three weeks earlier; null if unknown. */
   weightChange: number | null;

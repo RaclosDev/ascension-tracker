@@ -8,6 +8,8 @@ import com.ascension.dto.CheckinDtos.CheckinRequest;
 import com.ascension.dto.CheckinDtos.ClientCheckin;
 import com.ascension.dto.CheckinDtos.Template;
 import com.ascension.dto.CheckinDtos.TemplateRequest;
+import com.ascension.dto.CheckinDtos.Update;
+import com.ascension.dto.CheckinDtos.UpdateRequest;
 import com.ascension.dto.CoachDtos.Person;
 import com.ascension.dto.CoachSetupDtos.Setup;
 import com.ascension.exception.EntityNotFoundException;
@@ -52,7 +54,7 @@ public class CheckinService {
     private static final String COLUMNS = """
             c.id, c.link_id, c.week_start, c.weight_avg, c.energy, c.sleep, c.training_adherence,
             c.diet_adherence, c.answers::text AS answers, c.notes, c.coach_reply, c.replied_at, c.created_at,
-            c.updated_at
+            c.updated_at, c.updates::text AS updates, c.submission_status
             """;
 
     private final JdbcTemplate jdbcTemplate;
@@ -79,6 +81,25 @@ public class CheckinService {
         return new Template(questions, true);
     }
 
+    @Transactional(readOnly = true)
+    public Template clientTemplate(ClientAccess access) {
+        String questions = jdbcTemplate.queryForObject("SELECT checkin_questions::text FROM coach_clients WHERE id = ?", String.class, access.linkId());
+        return questions == null ? new Template(questionsFor(activeLink(access.clientEmail(), access.linkId(), Instant.now())), false) : new Template(JSON.readValue(questions, QUESTIONS), true);
+    }
+
+    @Transactional
+    public Template saveClientTemplate(ClientAccess access, TemplateRequest request) {
+        var questions = request.questions().stream().map(String::strip).toList();
+        jdbcTemplate.update("UPDATE coach_clients SET checkin_questions = CAST(? AS jsonb) WHERE id = ?",
+                JSON.writeValueAsString(questions), access.linkId());
+        return new Template(questions, true);
+    }
+
+    @Transactional
+    public void resetClientTemplate(ClientAccess access) {
+        jdbcTemplate.update("UPDATE coach_clients SET checkin_questions = NULL WHERE id = ?", access.linkId());
+    }
+
     /** The client's check-ins through this link, newest first. The weight is hidden without body consent. */
     @Transactional(readOnly = true)
     public List<Checkin> forCoach(ClientAccess access) {
@@ -90,8 +111,11 @@ public class CheckinService {
     @Transactional
     public Checkin reply(ClientAccess access, UUID checkinId, String reply, Instant expectedUpdatedAt) {
         List<Checkin> updated = jdbcTemplate.query("""
-                UPDATE checkins c SET coach_reply = ?, replied_at = NOW()
-                WHERE c.id = ? AND c.link_id = ? AND c.coach_reply IS NULL
+                UPDATE checkins c SET updates = CASE WHEN c.coach_reply IS NULL THEN c.updates ELSE
+                    c.updates || jsonb_build_array(jsonb_build_object('role','COACH','body',c.coach_reply,'createdAt',c.replied_at)) END,
+                    coach_reply = ?, replied_at = NOW()
+                WHERE c.id = ? AND c.link_id = ? AND (c.coach_reply IS NULL OR c.updated_at > c.replied_at)
+                  AND jsonb_array_length(c.updates) < 50
                   AND (?::timestamptz IS NULL OR c.updated_at = ?::timestamptz)
                 RETURNING %s
                 """.formatted(COLUMNS), checkin(access.body()), reply.strip(), checkinId, access.linkId(),
@@ -156,18 +180,33 @@ public class CheckinService {
         }
         int updated = jdbcTemplate.update("""
                 INSERT INTO checkins (link_id, client_user_id, coach_user_id, week_start, weight_avg, energy, sleep,
-                    training_adherence, diet_adherence, answers, notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS jsonb), ?)
+                    training_adherence, diet_adherence, answers, notes, submission_status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS jsonb), ?, ?)
                 ON CONFLICT (link_id, week_start) DO UPDATE SET weight_avg = EXCLUDED.weight_avg,
                     energy = EXCLUDED.energy, sleep = EXCLUDED.sleep,
                     training_adherence = EXCLUDED.training_adherence, diet_adherence = EXCLUDED.diet_adherence,
-                    answers = EXCLUDED.answers, notes = EXCLUDED.notes, updated_at = NOW()
+                    answers = EXCLUDED.answers, notes = EXCLUDED.notes, submission_status = EXCLUDED.submission_status, updated_at = NOW()
                 WHERE checkins.coach_reply IS NULL
                 """, linkId, link.clientUserId(), link.coachUserId(), week, weightAvg, request.energy(),
                 request.sleep(), training, diet,
-                JSON.writeValueAsString(answers), notes);
+                JSON.writeValueAsString(answers), notes, request.submissionStatus() == null ? "FINAL" : request.submissionStatus());
         if (updated == 0) throw new InvalidInputException("Tu entrenador ya ha respondido a este check-in.");
         return find(link, week);
+    }
+
+    @Transactional
+    public Checkin addUpdate(String clientEmail, UUID linkId, UUID checkinId, UpdateRequest request, Instant now) {
+        Link link = activeLink(clientEmail, linkId, now);
+        List<Checkin> result = jdbcTemplate.query("""
+                UPDATE checkins c SET updates = c.updates || CAST(? AS jsonb), updated_at = clock_timestamp(),
+                    submission_status = CASE WHEN ? THEN 'FINAL' ELSE submission_status END
+                WHERE c.id = ? AND c.link_id = ? AND c.client_user_id = ? AND c.updated_at = ?
+                  AND jsonb_array_length(c.updates) < 49
+                RETURNING %s
+                """.formatted(COLUMNS), checkin(true), JSON.writeValueAsString(List.of(new Update("CLIENT", request.body().strip(), now))),
+                request.finalReview(), checkinId, linkId, link.clientUserId(), Timestamp.from(request.expectedUpdatedAt()));
+        if (result.isEmpty()) throw new OptimisticLockingFailureException("La revisión ha cambiado o alcanzó su límite de actualizaciones. Recárgala antes de continuar.");
+        return result.getFirst();
     }
 
     /** What the client sent this coach and what the coach replied, newest first. Kept after the link ends. */
@@ -254,10 +293,13 @@ public class CheckinService {
     }
 
     private List<String> questionsFor(Link link) {
+        String custom = jdbcTemplate.queryForObject("SELECT checkin_questions::text FROM coach_clients WHERE id = ?", String.class, link.linkId());
+        if (custom != null) return JSON.readValue(custom, QUESTIONS);
         Template template = templateOf(link.coachUserId());
         if (template.custom() || link.setup() == null || !link.setup().reviewed()) return template.questions();
         List<String> questions = new ArrayList<>(DEFAULT_QUESTIONS);
         if (link.setup().services().training()) questions.add("¿Qué sesión o ejercicio necesita un ajuste?");
+        if (link.setup().services().training()) questions.add("¿Qué días y cuánto tiempo tendrás para entrenar la próxima semana?");
         if (link.setup().services().nutrition()) questions.add("¿Cómo han ido el hambre y la organización de las comidas?");
         return questions;
     }
@@ -287,7 +329,8 @@ public class CheckinService {
                     rs.getInt("energy"), rs.getInt("sleep"), rs.getObject("training_adherence", Integer.class),
                     rs.getObject("diet_adherence", Integer.class), JSON.readValue(rs.getString("answers"), ANSWERS),
                     rs.getString("notes"), rs.getString("coach_reply"), instant(rs.getTimestamp("replied_at")),
-                    instant(rs.getTimestamp("created_at")), instant(rs.getTimestamp("updated_at")));
+                    instant(rs.getTimestamp("created_at")), instant(rs.getTimestamp("updated_at")),
+                    JSON.readValue(rs.getString("updates"), new TypeReference<List<Update>>() {}), rs.getString("submission_status"));
         };
     }
 

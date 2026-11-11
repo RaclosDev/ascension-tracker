@@ -18,12 +18,20 @@ export interface PowerMark {
   reference: string;
 }
 export interface PowerProfile {
+  exerciseMappings?: PowerExerciseMapping[] | null;
   enabled: boolean;
   equipment: 'CLASSIC' | 'EQUIPPED' | 'OTHER';
   federation: string;
   trainingMax: Record<'squat' | 'bench' | 'deadlift', number | null>;
   marks: PowerMark[];
   notes: string;
+}
+export interface PowerExerciseMapping {
+  exerciseId: string;
+  grip: string | null;
+  machine: string | null;
+  lift: PowerLift;
+  kind: 'COMPETITION' | 'VARIATION' | 'EXCLUDE';
 }
 export interface SavedPowerProfile {
   linkId: string;
@@ -67,9 +75,10 @@ export function isSavedPowerProfile(v: unknown): v is SavedPowerProfile {
 }
 const key = (linkId: string) => ['coach', 'powerlifting', linkId];
 const path = (linkId: string) => `/coach/clients/${encodeURIComponent(linkId)}/powerlifting`;
-export function usePowerProfile(linkId: string) {
+export function usePowerProfile(linkId: string, enabled = true) {
   return useQuery({
     queryKey: key(linkId),
+    enabled,
     retry: false,
     queryFn: async () => (await api.get<SavedPowerProfile>(path(linkId))).data,
   });

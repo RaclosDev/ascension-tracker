@@ -41,7 +41,7 @@ function WeekRow({ week }: { week: AdherenceWeek }) {
       <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
         {week.plannedDays === 0
           ? 'Sin pauta'
-          : `${week.onTargetDays} de ${week.plannedDays} días en objetivo · ${week.loggedDays} registrados`}
+          : `${week.onTargetDays} de ${week.loggedDays} días registrados en objetivo · cobertura ${week.loggedDays}/${week.plannedDays} días pautados`}
       </span>
       {week.plannedDays > 0 && (
         <span className="text-sm text-white">
@@ -78,7 +78,8 @@ export function NutritionAdherenceSection({ linkId }: { linkId: string }) {
       </ul>
       <p className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
         En objetivo: kcal a ±10 % de la pauta y al menos el 90 % de la proteína. Los porcentajes
-        comparan los días registrados con su pauta.
+        comparan solo los días registrados con su pauta. Los días sin registro no cuentan como
+        ingesta cero; un registro puede estar incompleto.
       </p>
     </div>
   );
