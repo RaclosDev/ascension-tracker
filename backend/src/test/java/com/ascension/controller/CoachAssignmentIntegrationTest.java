@@ -391,12 +391,20 @@ class CoachAssignmentIntegrationTest {
         String link = accept(client, invite(coach), EDIT);
         String monday = LocalDate.now().with(java.time.temporal.TemporalAdjusters.next(java.time.DayOfWeek.MONDAY)).toString();
         String path = "/api/coach/clients/" + link + "/weeks/" + monday;
+        mvc.perform(as(get(path), coach)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").value(0));
         String body = """
                 {"expectedVersion":0,"content":{"program":%s,"privateNotes":"Solo entrenador",
                 "intent":"DELOAD","decision":"Reducir fatiga"}}
                 """.formatted(PROGRAM.replace("\"weeks\":2", "\"weeks\":1"));
         mvc.perform(as(put(path), coach).contentType("application/json").content(body))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.version").value(1));
+        mvc.perform(as(get(path), coach)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.privateNotes").value("Solo entrenador"));
+        assertThat(jdbc.queryForObject("""
+                SELECT SUM(hits) FROM coach_access_log l JOIN users u ON u.id = l.coach_user_id
+                WHERE u.email = ? AND l.action = 'VIEW_PROGRAMS'
+                """, Integer.class, coach)).isEqualTo(2);
         mvc.perform(as(put(path), coach).contentType("application/json").content(body))
                 .andExpect(status().isConflict());
         mvc.perform(as(get(path), coach())).andExpect(status().isNotFound());
