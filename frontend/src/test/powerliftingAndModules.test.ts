@@ -35,6 +35,13 @@ describe('estimateOneRepMax', () => {
 });
 
 describe('bestLifts', () => {
+  it('ignores missing numeric fields returned for empty persisted sets', () => {
+    const history = [workout(1, 'ex-0025', [set('100', '5'), set('100', '5'), set('80', '1')])];
+    Object.assign(history[0].exercises[0].sets[0], { weight: null });
+    Object.assign(history[0].exercises[0].sets[1], { reps: null });
+    expect(bestLifts(history).bench).toEqual({ e1rm: 80, actual: 80, date: 1 });
+  });
+
   it('rejects partial numbers and fractional reps instead of inflating estimates', () => {
     const best = bestLifts([
       workout(1, 'ex-0025', [

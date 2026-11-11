@@ -43,7 +43,8 @@ export interface LiftBest {
   date: number;
 }
 
-function recordedNumber(value: string): number {
+function recordedNumber(value: unknown): number {
+  if (typeof value !== 'string') return NaN;
   const normalized = value.trim().replace(',', '.');
   return /^\d+(\.\d+)?$/.test(normalized) ? Number(normalized) : NaN;
 }
