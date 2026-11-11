@@ -266,17 +266,19 @@ export function WeekEditor({
           )}
         </div>
         <div className="card grid gap-3 sm:grid-cols-2">
-          <label>
+          <label className="flex flex-col gap-1 min-w-0">
             Nombre
             <input
+              className="form-input min-h-11"
               maxLength={120}
               value={program.name}
               onChange={(e) => editProgram({ ...program, name: e.target.value })}
             />
           </label>
-          <label>
+          <label className="flex flex-col gap-1 min-w-0">
             Objetivo de la semana
             <select
+              className="form-input min-h-11"
               value={value.content.intent}
               onChange={(e) =>
                 edit({ ...value.content, intent: e.target.value as WeekContent['intent'] })
@@ -289,9 +291,10 @@ export function WeekEditor({
               ))}
             </select>
           </label>
-          <label className="sm:col-span-2">
+          <label className="sm:col-span-2 flex flex-col gap-1 min-w-0">
             Comentario para el alumno
             <textarea
+              className="form-input min-h-11"
               maxLength={2000}
               rows={2}
               value={program.notes ?? ''}
@@ -299,9 +302,10 @@ export function WeekEditor({
               placeholder="Por ejemplo: semana de descarga; prioriza técnica y recuperación."
             />
           </label>
-          <label className="sm:col-span-2">
+          <label className="sm:col-span-2 flex flex-col gap-1 min-w-0">
             Decisión que aplicar al publicar
             <textarea
+              className="form-input min-h-11"
               maxLength={2000}
               rows={2}
               value={value.content.decision}
@@ -312,7 +316,7 @@ export function WeekEditor({
             <summary className="cursor-pointer">Notas privadas del entrenador</summary>
             <textarea
               aria-label="Notas privadas del entrenador"
-              className="w-full mt-2"
+              className="w-full mt-2 form-input min-h-11"
               rows={3}
               maxLength={4000}
               value={value.content.privateNotes}

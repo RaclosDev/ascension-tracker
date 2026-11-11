@@ -47,10 +47,10 @@ export function CheckinUpdateForm({ linkId, checkin }: { linkId: string; checkin
         );
       }}
     >
-      <label>
+      <label className="flex flex-col gap-1 min-w-0">
         Añadir información a esta revisión
         <textarea
-          className="w-full"
+          className="w-full form-input min-h-11"
           rows={3}
           maxLength={2000}
           value={draft.value.body}
@@ -60,7 +60,7 @@ export function CheckinUpdateForm({ linkId, checkin }: { linkId: string; checkin
       </label>
       <p className="text-sm">Se conserva lo enviado y se avisa a tu entrenador.</p>
       {checkin.submissionStatus === 'PARTIAL' && (
-        <label>
+        <label className="flex items-center gap-2 min-h-11">
           <input
             type="checkbox"
             checked={finalReview}

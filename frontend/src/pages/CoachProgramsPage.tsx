@@ -66,37 +66,49 @@ export default function CoachProgramsPage() {
         title="Biblioteca de entrenamiento"
         description="Sesiones cortas, bloques, semanas y programas que puedes reutilizar y personalizar para cada alumno."
       >
-        <Link to="/entrenador/programas/nuevo?tipo=sesion" className="btn btn-secondary">
-          <Plus size={16} aria-hidden /> Nueva sesión
-        </Link>
-        <Link to="/entrenador/programas/nuevo?tipo=semana" className="btn btn-secondary">
-          <Plus size={16} aria-hidden /> Nueva semana
-        </Link>
-        <Link to="/entrenador/programas/nuevo" className="btn btn-primary">
-          <Plus size={16} aria-hidden /> Nuevo programa
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/entrenador/programas/nuevo?tipo=sesion" className="btn btn-secondary">
+            <Plus size={16} aria-hidden /> Nueva sesión
+          </Link>
+          <Link to="/entrenador/programas/nuevo?tipo=semana" className="btn btn-secondary">
+            <Plus size={16} aria-hidden /> Nueva semana
+          </Link>
+          <Link to="/entrenador/programas/nuevo" className="btn btn-primary">
+            <Plus size={16} aria-hidden /> Nuevo programa
+          </Link>
+        </div>
       </CoachPageHeader>
-      <div className="coach-list-controls mb-4">
-        <label className="coach-search">
-          <span className="sr-only">Buscar programa</span>
+      <div className="grid gap-3 mb-4 items-end sm:grid-cols-2 lg:grid-cols-3">
+        <label className="flex flex-col gap-1 min-w-0">
+          <span>Buscar programa o etiqueta</span>
           <input
+            className="form-input min-h-11"
+            aria-label="Buscar programa"
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar programa"
           />
         </label>
-        <label className="coach-sort">
+        <label className="flex flex-col gap-1 min-w-0">
           <span>Estado</span>
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <select
+            className="form-input min-h-11"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
             <option value="ALL">Todos</option>
             <option value="DRAFT">Borradores</option>
             <option value="READY">Listos para asignar</option>
           </select>
         </label>
-        <label>
+        <label className="flex flex-col gap-1 min-w-0">
           Tipo
-          <select value={category} onChange={(e) => setCategory(e.target.value)}>
+          <select
+            className="form-input min-h-11"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
             <option value="ALL">Todos</option>
             {Object.entries(CATEGORIES)
               .filter(([id]) => id !== 'EXERCISE')
@@ -107,7 +119,7 @@ export default function CoachProgramsPage() {
               ))}
           </select>
         </label>
-        <label className="flex gap-2 items-center">
+        <label className="flex gap-2 items-center min-h-11">
           <input
             type="checkbox"
             checked={favorites}
@@ -115,14 +127,18 @@ export default function CoachProgramsPage() {
           />
           Favoritos
         </label>
-        <label>
+        <label className="flex flex-col gap-1 min-w-0">
           Material
-          <input value={material} onChange={(e) => setMaterial(e.target.value)} />
+          <input
+            className="form-input min-h-11"
+            value={material}
+            onChange={(e) => setMaterial(e.target.value)}
+          />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 min-w-0">
           Hasta (min)
           <input
-            className="w-24"
+            className="form-input min-h-11"
             type="number"
             min={1}
             max={300}

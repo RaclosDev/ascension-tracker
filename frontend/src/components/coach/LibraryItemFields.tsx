@@ -10,9 +10,10 @@ export function LibraryItemFields({ item }: { item: LibraryItem }) {
     <details className="w-full">
       <summary className="cursor-pointer text-sm">Tipo, etiquetas, material y duración</summary>
       <div className="flex flex-wrap gap-3 mt-3">
-        <label>
+        <label className="flex flex-col gap-1 min-w-0">
           Tipo
           <select
+            className="form-input min-h-11"
             value={value.category}
             onChange={(e) =>
               setValue({ ...value, category: e.target.value as LibraryItem['category'] })
@@ -27,25 +28,28 @@ export function LibraryItemFields({ item }: { item: LibraryItem }) {
               ))}
           </select>
         </label>
-        <label>
+        <label className="flex flex-col gap-1 min-w-0">
           Etiquetas (separadas por comas)
           <input
+            className="form-input min-h-11"
             maxLength={491}
             value={value.tags.join(',')}
             onChange={(e) => setValue({ ...value, tags: e.target.value.split(',').slice(0, 12) })}
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 min-w-0">
           Material
           <input
+            className="form-input min-h-11"
             maxLength={120}
             value={value.equipment}
             onChange={(e) => setValue({ ...value, equipment: e.target.value })}
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 min-w-0">
           Duración (min)
           <input
+            className="form-input min-h-11"
             type="number"
             min={1}
             max={300}

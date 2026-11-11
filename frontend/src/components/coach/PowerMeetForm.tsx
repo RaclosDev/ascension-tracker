@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useSessionDraft } from '../../hooks/useSessionDraft';
-import { apiErrorMessage } from '../../lib/coach/api';
+import { apiErrorMessage, formatCoachDate } from '../../lib/coach/api';
 import {
   isPowerMeet,
   useSavePowerMeet,
@@ -203,7 +203,8 @@ export function PowerMeetForm({
         {view === 'DAY' && (
           <>
             <p>
-              {content.date} · {content.category || 'Sin categoría'} · {content.equipment}
+              {formatCoachDate(content.date)} · {content.category || 'Sin categoría'} ·{' '}
+              {{ CLASSIC: 'Clásico / raw', EQUIPPED: 'Equipado', OTHER: 'Otro' }[content.equipment]}
             </p>
             <PowerAttemptsEditor
               attempts={content.attempts}
