@@ -88,7 +88,15 @@ export default function ProgramsSection({
                       ` · terminado el ${formatCoachDate(a.endedAt)}`}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                  {a.status === 'ACTIVE' && canAssign && (
+                    <Link
+                      className="btn btn-secondary"
+                      to={`/entrenador/alumnos/${encodeURIComponent(linkId)}/programas/${encodeURIComponent(a.id)}/adaptar`}
+                    >
+                      Adaptar
+                    </Link>
+                  )}
                   <button
                     type="button"
                     className="btn btn-secondary"

@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import api from '../api/client';
 import CoachProgramEditorPage from '../pages/CoachProgramEditorPage';
 import CoachProgramsPage from '../pages/CoachProgramsPage';
+import CoachProgramAdaptPage from '../pages/CoachProgramAdaptPage';
 import { clearSessionDrafts } from '../lib/sessionDrafts';
 import {
   addDay,
@@ -58,6 +59,11 @@ function renderAt(path: string) {
         <Routes>
           <Route path="/entrenador/programas" element={<CoachProgramsPage />} />
           <Route path="/entrenador/programas/:programId" element={<CoachProgramEditorPage />} />
+          <Route
+            path="/entrenador/alumnos/:linkId/programas/:assignmentId/adaptar"
+            element={<CoachProgramAdaptPage />}
+          />
+          <Route path="/entrenador/alumnos/:linkId" element={<p>Ficha del alumno</p>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -69,7 +75,10 @@ beforeEach(() => {
   sessionStorage.clear();
   clearSessionDrafts();
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe('program editor helpers', () => {
   const withDay = (): Program => {
@@ -289,5 +298,88 @@ describe('CoachProgramEditorPage', () => {
     const [url, body] = mockedApi.put.mock.calls[0] as [string, Program];
     expect(url).toBe('/coach/programs/p-1');
     expect(body.days.map((d) => d.week)).toEqual([1, 2]);
+  });
+});
+
+describe('individual program adaptation', () => {
+  const path = '/entrenador/alumnos/l1/programas/a1/adaptar';
+  const program: Program = {
+    ...emptyProgram(),
+    id: 'copy1',
+    name: 'Fuerza original',
+    status: 'READY',
+    updatedAt: '2026-11-11T10:00:00Z',
+    days: [
+      {
+        week: 1,
+        dayIndex: 1,
+        name: 'Torso',
+        notes: null,
+        exercises: [newExercise('bench-press', 'Press banca')],
+      },
+    ],
+  };
+  function setup(editTraining = true) {
+    mockedApi.get.mockImplementation((url: string) =>
+      Promise.resolve({
+        data: url.endsWith('/plan')
+          ? program
+          : {
+              linkId: 'l1',
+              client: { name: 'Ana', email: 'ana@example.test' },
+              permissions: { training: true, editTraining },
+            },
+      }),
+    );
+  }
+
+  it('recovers an adaptation after a conflicting publication and only publishes for that client', async () => {
+    setup();
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    mockedApi.post.mockRejectedValueOnce({
+      response: { data: { error: 'Esta asignación ya ha terminado.' } },
+    });
+    const first = renderAt(path);
+    await screen.findByDisplayValue('Fuerza original');
+    expect(screen.queryByRole('button', { name: 'Guardar borrador' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Fuerza para Ana' } });
+    fireEvent.change(screen.getByLabelText('Series'), { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar adaptación' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Esta asignación ya ha terminado');
+    first.unmount();
+    renderAt(path);
+    await screen.findByDisplayValue('Fuerza para Ana');
+    expect(screen.getByLabelText('Series')).toHaveValue(5);
+    mockedApi.post.mockResolvedValueOnce({ data: { id: 'a2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar adaptación' }));
+    await screen.findByText('Ficha del alumno');
+    expect(mockedApi.post).toHaveBeenLastCalledWith('/coach/clients/l1/programs/a1/adapt', {
+      program: expect.objectContaining({ name: 'Fuerza para Ana', status: 'READY' }),
+      startDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    });
+    expect(mockedApi.put).not.toHaveBeenCalled();
+  });
+
+  it('requires a valid start date and confirmation before replacing the active assignment', async () => {
+    setup();
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    renderAt(path);
+    await screen.findByDisplayValue('Fuerza original');
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar adaptación' }));
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('termina ahora'));
+    expect(mockedApi.post).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText('Empieza la nueva versión el'), {
+      target: { value: '2000-01-01' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar adaptación' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('próximos 365 días');
+    expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+
+  it('hides the editor when prescribing permission has been revoked', async () => {
+    setup(false);
+    renderAt(path);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Necesitas permiso');
+    expect(screen.queryByRole('button', { name: 'Publicar adaptación' })).not.toBeInTheDocument();
   });
 });

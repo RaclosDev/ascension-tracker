@@ -229,6 +229,96 @@ class CoachAssignmentIntegrationTest {
                 Integer.class, copyId)).isZero();
     }
 
+    @Test
+    void adaptationPublishesANewCopyAndPreservesLibraryAndRecordedWorkouts() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach), EDIT);
+        String library = createProgram(coach);
+        JsonNode original = assign(coach, link, library);
+        String assignmentId = original.get("id").asString();
+        String copyId = original.get("programId").asString();
+        String dayId = jdbc.queryForObject("SELECT id::text FROM program_days WHERE program_id = ?::uuid LIMIT 1",
+                String.class, copyId);
+        mvc.perform(as(post("/api/workouts"), client).contentType("application/json").content("""
+                {"name":"Torso","startedAt":1000,"finishedAt":2000,"exercises":[],"programDayId":"%s"}
+                """.formatted(dayId))).andExpect(status().isOk());
+
+        JsonNode adapted = json.readTree(mvc.perform(adaptRequest(coach, link, assignmentId,
+                        PROGRAM.replace("Fuerza", "Fuerza adaptada").replace("\"sets\":4", "\"sets\":3"), LocalDate.now()))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+        assertThat(adapted.get("programId").asString()).isNotEqualTo(copyId);
+        assertThat(adapted.get("sourceProgramId").asString()).isEqualTo(library);
+        mvc.perform(as(get("/api/coach/clients/{link}/programs/{id}/plan", link, assignmentId), coach))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Fuerza"))
+                .andExpect(jsonPath("$.days[0].exercises[0].sets").value(4));
+        mvc.perform(as(get("/api/coach/clients/{link}/programs/{id}/plan", link, adapted.get("id").asString()), coach))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Fuerza adaptada"))
+                .andExpect(jsonPath("$.days[0].exercises[0].sets").value(3));
+        mvc.perform(as(get("/api/coach/programs/{id}", library), coach))
+                .andExpect(jsonPath("$.name").value("Fuerza"));
+        mvc.perform(as(get("/api/coach/clients/{link}/programs", link), coach))
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].status").value("ACTIVE"))
+                .andExpect(jsonPath("$[1].status").value("ENDED"));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM workouts WHERE program_day_id = ?::uuid", Integer.class, dayId))
+                .isEqualTo(1);
+        mvc.perform(adaptRequest(coach, link, assignmentId, PROGRAM, LocalDate.now()))
+                .andExpect(status().isConflict());
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM program_assignments WHERE coach_link_id = ?::uuid", Integer.class, link))
+                .isEqualTo(2);
+    }
+
+    @Test
+    void adaptationChecksConsentAndAssignmentOwnershipOnReadAndPublish() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach), EDIT);
+        String assignment = assign(coach, link, createProgram(coach)).get("id").asString();
+        String otherLink = accept(user(), invite(coach), EDIT);
+        String otherCoach = coach();
+        mvc.perform(as(get("/api/coach/clients/{link}/programs/{id}/plan", otherLink, assignment), coach))
+                .andExpect(status().isNotFound());
+        mvc.perform(adaptRequest(coach, otherLink, assignment, PROGRAM, LocalDate.now()))
+                .andExpect(status().isNotFound());
+        mvc.perform(as(get("/api/coach/clients/{link}/programs/{id}/plan", link, assignment), otherCoach))
+                .andExpect(status().isNotFound());
+        mvc.perform(adaptRequest(otherCoach, link, assignment, PROGRAM, LocalDate.now()))
+                .andExpect(status().isNotFound());
+
+        mvc.perform(as(patch("/api/coaching/coaches/{link}", link), client).contentType("application/json").content(VIEW))
+                .andExpect(status().isNoContent());
+        mvc.perform(as(get("/api/coach/clients/{link}/programs/{id}/plan", link, assignment), coach))
+                .andExpect(status().isOk());
+        mvc.perform(adaptRequest(coach, link, assignment, PROGRAM, LocalDate.now()))
+                .andExpect(status().isForbidden());
+        mvc.perform(as(patch("/api/coaching/coaches/{link}", link), client).contentType("application/json").content(EDIT_WITHOUT_VIEW))
+                .andExpect(status().isNoContent());
+        mvc.perform(as(get("/api/coach/clients/{link}/programs/{id}/plan", link, assignment), coach))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void invalidAdaptationCannotEndTheCurrentProgram() throws Exception {
+        String coach = coach();
+        String link = accept(user(), invite(coach), EDIT);
+        String assignment = assign(coach, link, createProgram(coach)).get("id").asString();
+        mvc.perform(adaptRequest(coach, link, assignment, PROGRAM, LocalDate.now().minusDays(1)))
+                .andExpect(status().isBadRequest());
+        mvc.perform(adaptRequest(coach, link, assignment, "{\"name\":\"Vacío\",\"weeks\":1,\"days\":[]}", LocalDate.now()))
+                .andExpect(status().isBadRequest());
+        mvc.perform(adaptRequest(coach, link, assignment, PROGRAM.replace("\"sets\":4", "\"sets\":0"), LocalDate.now()))
+                .andExpect(status().isBadRequest());
+        mvc.perform(as(get("/api/coach/clients/{link}/programs", link), coach))
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].status").value("ACTIVE"));
+    }
+
+    private MockHttpServletRequestBuilder adaptRequest(String coach, String link, String assignment, String program, LocalDate start) {
+        return as(post("/api/coach/clients/{link}/programs/{id}/adapt", link, assignment), coach)
+                .contentType("application/json").content("{\"program\":" + program + ",\"startDate\":\"" + start + "\"}");
+    }
+
     private JsonNode assign(String coach, String linkId, String programId) throws Exception {
         return json.readTree(mvc.perform(assignRequest(coach, linkId, programId))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());

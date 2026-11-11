@@ -68,6 +68,11 @@ public final class ProgramDtos {
             Instant programUpdatedAt) {
     }
 
+    public record AdaptRequest(
+            @Valid @NotNull Program program,
+            @NotNull(message = "Elige la fecha de inicio") LocalDate startDate) {
+    }
+
     /** A program copied to a client. {@code programId} is the client's copy; {@code sourceProgramId} the original. */
     public record Assignment(UUID id, UUID programId, UUID sourceProgramId, String programName, int weeks,
                              LocalDate startDate, String status, Instant createdAt, Instant endedAt) {
