@@ -80,6 +80,8 @@ Los servicios habituales y quién rellena los datos iniciales se proponen al abr
 
 Los cambios sin guardar se conservan como borrador en la pestaña, separados por cuenta. Las ediciones simultáneas se detectan antes de sobrescribir ajustes. La descarga de datos incluye la configuración profesional del titular.
 
+Los avisos solo aparecen como activados cuando el servidor confirma el registro de este dispositivo. Si falla, se puede reintentar. Desactivarlos afecta a revisiones y descansos en este navegador, conserva los avisos en los demás dispositivos y se recuerda al volver a entrar. El sonido de descanso permanece disponible.
+
 ## Biblioteca de pautas de nutrición
 
 En Planificación, «Pautas de nutrición» guarda hasta 100 pautas privadas con objetivos para entreno y descanso, notas y comidas opcionales. El editor conserva los cambios pendientes en la pestaña y permite revisar la vista previa antes de guardarlos. Si otra sesión cambia la pauta, puedes recuperar la versión guardada o conservar tu trabajo como una nueva.
