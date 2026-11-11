@@ -16,7 +16,7 @@ import { QueryErrorNotice } from '../QueryErrorNotice';
 export function ProfessionalSettingsEditor() {
   const settings = useProfessionalSettings();
   return (
-    <section className="card">
+    <section data-tour="professional-settings" className="card">
       <h2>Tu perfil y forma de trabajar</h2>
       {settings.isPending ? (
         <p role="status">Cargando ajustes profesionales…</p>

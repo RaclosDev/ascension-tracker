@@ -4,7 +4,7 @@ export interface TourProgress {
 }
 
 const memory = new Map<string, TourProgress>();
-const keyFor = (account: string) => `ascension:coach-tour:v1:${encodeURIComponent(account)}`;
+const keyFor = (account: string) => `ascension:coach-tour:v2:${encodeURIComponent(account)}`;
 
 export function readTourProgress(account: string): TourProgress | null {
   try {

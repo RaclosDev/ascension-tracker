@@ -22,6 +22,7 @@ export default defineConfig({
           '**/Coach*Page*',
           '**/CoachWorkspace-*',
           '**/CoachTour*',
+          '**/coach-tour-*',
           '**/ClientTraining-*',
           '**/ClientWeek-*',
           '**/DayEditor-*',

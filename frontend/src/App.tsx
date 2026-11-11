@@ -5,6 +5,9 @@ import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
+import { isCoachTourFrame } from './components/coach/tour/frame';
+const CoachTourRunPage = lazyWithRetry(() => import('./pages/CoachTourRunPage'));
+const CoachTourBridge = lazyWithRetry(() => import('./components/coach/tour/CoachTourBridge'));
 import api from './api/client';
 import { applyThemeColor, readThemeColor } from './utils/colorHelper';
 import { applyColorMode, readColorMode, watchSystemColorMode } from './utils/colorMode';
@@ -154,7 +157,9 @@ function AppContent() {
     <ErrorBoundary>
       <ConsentGate>
         <Suspense fallback={<PageLoader />}>
+          {isCoachTourFrame() && <CoachTourBridge />}
           <Routes>
+            <Route path="/entrenador/guia/recorrido" element={<CoachTourRunPage />} />
             <Route path="/" element={<Layout />}>
               <Route index element={<HomeRedirect />} />
               <Route path="dashboard" element={<DashboardPage />} />
