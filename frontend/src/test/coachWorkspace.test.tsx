@@ -152,6 +152,7 @@ describe('Espacio del entrenador', () => {
     mockData();
     renderAt('/entrenador/alumnos?orden=name&peso=si');
     const search = await screen.findByRole('searchbox', { name: 'Buscar alumno' });
+    fireEvent.click(screen.getByText('Más filtros y vista'));
     act(() => {
       fireEvent.change(search, { target: { value: 'angela' } });
       fireEvent.change(screen.getByRole('combobox', { name: 'Ordenar' }), {
@@ -166,6 +167,7 @@ describe('Espacio del entrenador', () => {
     expect(screen.queryByRole('button', { name: 'Terminar relación' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('link', { name: 'Volver a alumnos' }));
     expect(await screen.findByRole('searchbox', { name: 'Buscar alumno' })).toHaveValue('angela');
+    fireEvent.click(screen.getByText('Más filtros y vista'));
     expect(screen.getByRole('combobox', { name: 'Ordenar' })).toHaveValue('name');
     expect(screen.getByRole('checkbox', { name: 'Mostrar peso' })).toBeChecked();
     expect(within(screen.getByRole('table')).queryByText('Bruno')).not.toBeInTheDocument();

@@ -1,0 +1,97 @@
+.coach-roster-controls {
+  display: grid;
+  gap: 0.85rem;
+}
+.coach-roster-controls .coach-search {
+  flex: none;
+}
+.coach-roster-controls .coach-chips {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+.coach-filter-options {
+  border-bottom: 1px solid var(--border-medium);
+}
+.coach-filter-options summary,
+.coach-row-details summary {
+  min-height: 44px;
+  padding: 0.7rem 0;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+.coach-filter-options summary {
+  font-weight: 600;
+}
+.coach-filter-selection {
+  display: inline;
+  margin-left: 1rem;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.coach-filter-content {
+  display: grid;
+  gap: 1.25rem;
+  padding: 0.75rem 0 1.25rem;
+}
+.coach-filter-content .coach-sort {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+}
+.coach-clear-filters {
+  justify-self: start;
+  min-height: 44px;
+}
+.coach-roster-tasks {
+  margin-top: 0.5rem;
+}
+.coach-roster-tasks ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.coach-task-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.coach-workspace .coach-cards li {
+  border-left: 0;
+}
+.coach-workspace .coach-cards > li {
+  padding: 1.25rem;
+}
+.coach-workspace .coach-card-link {
+  padding: 0;
+  align-items: flex-start;
+}
+.coach-workspace .coach-card-name {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 1.05rem;
+}
+.coach-workspace .coach-cards .coach-roster-tasks li {
+  border: 0;
+}
+.coach-workspace .coach-table td {
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+.coach-workspace summary:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 3px;
+}
+@media (max-width: 640px) {
+  .coach-filter-selection {
+    display: block;
+    margin: 0.35rem 0 0 1rem;
+  }
+  .coach-filter-content .coach-sort {
+    flex-basis: 100%;
+  }
+}

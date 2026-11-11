@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useCoachFilters } from '../lib/coach/useCoachFilters';
-import { ArrowUpRight, Search } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { personName, sharedScopes } from '../lib/coach/api';
 import { LEVEL_COLORS, signalText } from '../lib/coach/clientStatus';
 import { clientTasks } from '../lib/coach/tasks';
-import { SERVICE_LABELS, serviceNames } from '../lib/coach/setup';
+import { serviceNames } from '../lib/coach/setup';
 import {
   activityText,
   clientHref,
@@ -21,50 +21,9 @@ import {
 } from '../components/coach/CoachWorkspace';
 import { PendingInvitations } from '../components/coach/CoachInvitations';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
+import { CoachRosterFilters, ROSTER_FILTERS } from '../components/coach/CoachRosterFilters';
+import '../styles/coach-roster.css';
 
-type Filter =
-  | 'all'
-  | 'attention'
-  | 'checkin'
-  | 'noProgram'
-  | 'setup'
-  | 'tasks'
-  | 'waiting'
-  | 'paused'
-  | 'nextWeek';
-const FILTERS: { value: Filter; label: string; matches: (row: CoachRow) => boolean }[] = [
-  { value: 'all', label: 'Todos', matches: () => true },
-  {
-    value: 'nextWeek',
-    label: 'Semana por preparar',
-    matches: (r) =>
-      r.link.setup?.services.training === true &&
-      (r.status?.nextWeekStatus === 'MISSING' || r.status?.nextWeekStatus === 'DRAFT'),
-  },
-  { value: 'paused', label: 'En pausa', matches: (r) => !!r.link.followup?.schedule.paused },
-  { value: 'setup', label: 'Incorporación', matches: (r) => !r.link.setup?.reviewed },
-  {
-    value: 'tasks',
-    label: 'Tareas del entrenador',
-    matches: (r) => clientTasks(r).some((t) => t.owner === 'coach'),
-  },
-  {
-    value: 'waiting',
-    label: 'Pendiente del alumno',
-    matches: (r) => clientTasks(r).some((t) => t.owner === 'client'),
-  },
-  {
-    value: 'attention',
-    label: 'Por revisar',
-    matches: (r) => followupSignals(r.status).length > 0,
-  },
-  { value: 'checkin', label: 'Por responder', matches: (r) => (r.status?.pendingReplies ?? 0) > 0 },
-  {
-    value: 'noProgram',
-    label: 'Sin programa',
-    matches: (r) => !!r.status?.signals.some((s) => s.reason === 'NO_PROGRAM'),
-  },
-];
 const weightFormat = new Intl.NumberFormat('es-ES', {
   maximumFractionDigits: 1,
   signDisplay: 'exceptZero',
@@ -81,7 +40,7 @@ export default function CoachClientsPage() {
 function Clients() {
   const { clients, status, rows, ready } = useCoachRoster();
   const { params, update, clear } = useCoachFilters();
-  const filter = FILTERS.find((f) => f.value === params.get('filtro')) ?? FILTERS[0];
+  const filter = ROSTER_FILTERS.find((f) => f.value === params.get('filtro')) ?? ROSTER_FILTERS[0];
   const search = params.get('q') ?? '';
   const sort = params.get('orden') ?? 'priority';
   const showWeight = params.get('peso') === 'si';
@@ -126,62 +85,13 @@ function Clients() {
         </section>
       ) : (
         <>
-          <div className="coach-list-controls">
-            <label className="coach-search">
-              <Search size={18} aria-hidden />
-              <span className="sr-only">Buscar alumno</span>
-              <input
-                type="search"
-                placeholder="Buscar por nombre"
-                value={search}
-                onChange={(e) => update('q', e.target.value)}
-              />
-            </label>
-            <label className="coach-sort">
-              <span>Ordenar</span>
-              <select value={sort} onChange={(e) => update('orden', e.target.value)}>
-                <option value="priority">Prioridad</option>
-                <option value="name">Nombre</option>
-                <option value="recent">Altas recientes</option>
-              </select>
-            </label>
-            <label className="coach-weight-toggle">
-              <input
-                type="checkbox"
-                checked={showWeight}
-                onChange={(e) => update('peso', e.target.checked ? 'si' : '')}
-              />{' '}
-              Mostrar peso
-            </label>
-            <label className="coach-sort">
-              <span>Servicio</span>
-              <select value={service} onChange={(e) => update('servicio', e.target.value)}>
-                <option value="">Todos los servicios</option>
-                {Object.entries(SERVICE_LABELS).map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="coach-chips" role="group" aria-label="Filtrar alumnos">
-            {FILTERS.map((f) => (
-              <button
-                key={f.value}
-                type="button"
-                className="coach-chip"
-                aria-pressed={filter.value === f.value}
-                disabled={f.value !== 'all' && !ready}
-                onClick={() => update('filtro', f.value === 'all' ? '' : f.value)}
-              >
-                {f.label}{' '}
-                <span className="coach-chip-count">
-                  {f.value === 'all' || ready ? rows.filter(f.matches).length : '—'}
-                </span>
-              </button>
-            ))}
-          </div>
+          <CoachRosterFilters
+            rows={rows}
+            ready={ready}
+            params={params}
+            update={update}
+            clear={clear}
+          />
           {status.isError && (
             <QueryErrorNotice retry={() => void status.refetch()} pending={status.isFetching} />
           )}
@@ -242,9 +152,10 @@ function Clients() {
                           <Link className="coach-row-link" to={href(row.link.linkId)}>
                             {personName(row.link.client)}
                           </Link>
-                          <span className="coach-muted">
-                            Acceso: {sharedScopes(row.link.permissions)}
-                          </span>
+                          <details className="coach-row-details">
+                            <summary>Ver accesos</summary>
+                            <p className="coach-muted">{sharedScopes(row.link.permissions)}</p>
+                          </details>
                           {row.link.setup && (
                             <span className="coach-muted">{serviceNames(row.link.setup)}</span>
                           )}
@@ -364,19 +275,28 @@ function TaskLinks({
 }) {
   const tasks = clientTasks(row);
   if (tasks.length === 0) return null;
+  const taskLink = (task: (typeof tasks)[number]) => (
+    <Link className="coach-task-link" to={href(row.link.linkId, task.section)}>
+      {task.title}
+    </Link>
+  );
   return (
-    <ul className="mt-2 space-y-2">
-      {tasks.map((task) => (
-        <li key={task.id}>
-          <Link
-            className="text-sm underline inline-flex items-center min-h-11 py-2"
-            to={href(row.link.linkId, task.section)}
-          >
-            {task.title}
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <div className="coach-roster-tasks">
+      {taskLink(tasks[0])}
+      {tasks.length > 1 && (
+        <details className="coach-row-details">
+          <summary>
+            {tasks.length - 1} {tasks.length === 2 ? 'tarea más' : 'tareas más'}
+            <span className="sr-only"> de {personName(row.link.client)}</span>
+          </summary>
+          <ul>
+            {tasks.slice(1).map((task) => (
+              <li key={task.id}>{taskLink(task)}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
   );
 }
 

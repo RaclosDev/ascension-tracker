@@ -27,7 +27,6 @@ export function CoachPageHeader({
   return (
     <header className="coach-page-heading">
       <div>
-        <p className="coach-eyebrow">Espacio de entrenador</p>
         <h1>{title}</h1>
         <p className="coach-description">{description}</p>
       </div>
