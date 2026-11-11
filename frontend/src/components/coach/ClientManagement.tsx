@@ -1,3 +1,4 @@
+import { confirmAction } from '../../lib/confirmation';
 import { useNavigate } from 'react-router-dom';
 import { UserMinus } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -65,11 +66,14 @@ export function ClientManagement({ link }: { link: CoachClient }) {
           type="button"
           className="btn btn-secondary mt-4"
           disabled={end.isPending}
-          onClick={() => {
+          onClick={async () => {
             if (
-              !window.confirm(
-                `¿Terminar la relación con ${personName(link.client)}? Dejarás de ver sus datos.`,
-              )
+              !(await confirmAction({
+                title: 'Terminar relación con el alumno',
+                description: `¿Terminar la relación con ${personName(link.client)}? Dejarás de ver sus datos.`,
+                confirmLabel: 'Terminar relación',
+                destructive: true,
+              }))
             )
               return;
             end.mutate(link.linkId, {

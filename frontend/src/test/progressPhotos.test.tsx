@@ -1,3 +1,5 @@
+import { confirmAction } from '../lib/confirmation';
+vi.mock('../lib/confirmation', () => ({ confirmAction: vi.fn().mockResolvedValue(true) }));
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -90,9 +92,9 @@ describe('Fotos de progreso del alumno', () => {
     mockedApi.get.mockResolvedValue({ data: { enabled: true, photos: [photo()] } });
     mockedApi.delete.mockResolvedValue({ data: null });
     const confirm = vi
-      .spyOn(window, 'confirm')
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(true);
+      .mocked(confirmAction)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
     wrap(<ProgressPhotosSection />);
 
     const button = await screen.findByRole('button', { name: /Borrar foto: Frente/ });

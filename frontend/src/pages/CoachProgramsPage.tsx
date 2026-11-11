@@ -1,3 +1,4 @@
+import { confirmAction } from '../lib/confirmation';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -117,11 +118,14 @@ export default function CoachProgramsPage() {
                   className="btn btn-secondary"
                   aria-label={`Borrar ${program.name}`}
                   disabled={remove.isPending}
-                  onClick={() => {
+                  onClick={async () => {
                     if (
-                      !window.confirm(
-                        `¿Borrar «${program.name}» de la biblioteca? Los alumnos conservan sus copias. No se puede deshacer.`,
-                      )
+                      !(await confirmAction({
+                        title: 'Borrar programa de biblioteca',
+                        description: `¿Borrar «${program.name}» de la biblioteca? Los alumnos conservan sus copias. No se puede deshacer.`,
+                        confirmLabel: 'Borrar programa',
+                        destructive: true,
+                      }))
                     )
                       return;
                     remove.mutate(program.id, {

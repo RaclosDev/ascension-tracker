@@ -1,3 +1,4 @@
+import { confirmAction } from '../../lib/confirmation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
 import { Recipe, FoodLog, SavedFood } from '../../types/api';
@@ -37,7 +38,15 @@ export function useMyFoodsData() {
   };
 
   const deleteSavedFood = async (id: number | string) => {
-    if (!confirm('¿Borrar este alimento?')) return;
+    if (
+      !(await confirmAction({
+        title: 'Borrar alimento',
+        description: '¿Borrar este alimento?',
+        confirmLabel: 'Borrar alimento',
+        destructive: true,
+      }))
+    )
+      return;
     try {
       await api.delete(`/nutrition/my-foods/${id}`);
       toast.success('Eliminado');
@@ -48,7 +57,15 @@ export function useMyFoodsData() {
   };
 
   const deleteRecipe = async (id: number | string) => {
-    if (!window.confirm('¿Seguro que quieres eliminar esta receta?')) return;
+    if (
+      !(await confirmAction({
+        title: 'Borrar receta',
+        description: '¿Seguro que quieres eliminar esta receta?',
+        confirmLabel: 'Borrar receta',
+        destructive: true,
+      }))
+    )
+      return;
     try {
       await api.delete(`/nutrition/recipes/${id}`);
       toast.success('Eliminada');
@@ -60,7 +77,15 @@ export function useMyFoodsData() {
   };
 
   const deleteFoodsBulk = async (selectedIds: Set<number>) => {
-    if (!confirm(`¿Borrar los ${selectedIds.size} alimentos seleccionados?`)) return false;
+    if (
+      !(await confirmAction({
+        title: 'Borrar alimentos seleccionados',
+        description: `¿Borrar los ${selectedIds.size} alimentos seleccionados?`,
+        confirmLabel: 'Borrar alimentos',
+        destructive: true,
+      }))
+    )
+      return false;
     try {
       await Promise.all(
         Array.from(selectedIds).map((id) => api.delete(`/nutrition/my-foods/${id}`)),
