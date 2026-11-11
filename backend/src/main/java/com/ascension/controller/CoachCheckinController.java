@@ -52,6 +52,28 @@ public class CoachCheckinController {
         return ResponseEntity.ok(checkinService.forCoach(accessPolicy.require(email, linkId, Action.VIEW_CHECKINS)));
     }
 
+    @GetMapping("/clients/{linkId}/checkin-template")
+    public ResponseEntity<Template> clientTemplate(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(checkinService.clientTemplate(accessPolicy.require(email, linkId, Action.VIEW_CHECKINS)));
+    }
+
+    @PutMapping("/clients/{linkId}/checkin-template")
+    public ResponseEntity<Template> saveClientTemplate(@PathVariable UUID linkId, @Valid @RequestBody TemplateRequest request, @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(checkinService.saveClientTemplate(accessPolicy.require(email, linkId, Action.REPLY_CHECKIN), request));
+    }
+
+    @DeleteMapping("/clients/{linkId}/checkin-template")
+    public ResponseEntity<Void> resetClientTemplate(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        checkinService.resetClientTemplate(accessPolicy.require(email, linkId, Action.REPLY_CHECKIN));
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/clients/{linkId}/checkins/{checkinId}/reply")
     public ResponseEntity<Checkin> reply(@PathVariable UUID linkId, @PathVariable UUID checkinId,
                                          @Valid @RequestBody ReplyRequest request, @AuthenticationPrincipal Jwt jwt) {

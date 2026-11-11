@@ -198,7 +198,10 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
           >
             <span>
               A ritmo de{' '}
-              <span className="font-semibold tabular-nums whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
+              <span
+                className="font-semibold tabular-nums whitespace-nowrap"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 {numWeeklyRate.toFixed(2)} kg/sem
               </span>
               <span className="sr-only">, cambiar ritmo de proyección</span>
@@ -287,7 +290,7 @@ export const ElevatedKpiGrid = React.memo(function ElevatedKpiGrid({
                           <span className="flex flex-col min-w-0">
                             <span
                               className="text-[0.75rem] font-semibold"
-                              style={{ color: active ? 'white' : 'var(--text-primary)' }}
+                              style={{ color: 'var(--text-primary)' }}
                             >
                               {label}
                               {mode === 'goal' && weeklyGoal != null && (

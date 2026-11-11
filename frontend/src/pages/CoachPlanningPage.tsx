@@ -6,7 +6,7 @@ export default function CoachPlanningPage() {
   return (
     <CoachWorkspace>
       <CoachPageHeader
-        title="Planificación"
+        title="Biblioteca"
         description="Prepara recursos reutilizables y adapta el trabajo desde la ficha de cada alumno."
       />
       <div className="coach-resource-grid">
@@ -23,9 +23,10 @@ export default function CoachPlanningPage() {
         </section>
         <section className="card">
           <ClipboardList size={24} aria-hidden />
-          <h2>Programas de entrenamiento</h2>
+          <h2>Sesiones, semanas y programas</h2>
           <p>
-            Organiza semanas, sesiones y ejercicios. Cada asignación crea una copia para el alumno.
+            Guarda sesiones cortas, bloques y semanas completas. Insértalos en la semana del alumno
+            y ajusta su copia.
           </p>
           <Link className="btn btn-primary" to="/entrenador/programas">
             Abrir programas <ArrowUpRight size={16} aria-hidden />
@@ -45,8 +46,8 @@ export default function CoachPlanningPage() {
       <section className="coach-note">
         <h2>La planificación de cada alumno, en su ficha</h2>
         <p>
-          En Entrenamiento puedes asignar un programa. En Nutrición puedes ajustar su pauta si te ha
-          dado permiso.
+          En Semana puedes revisar el feedback, copiar la semana anterior e insertar sesiones
+          guardadas. En Nutrición puedes ajustar su pauta si te ha dado permiso.
         </p>
         <Link to="/entrenador/alumnos">
           Elegir alumno <ArrowUpRight size={14} aria-hidden />

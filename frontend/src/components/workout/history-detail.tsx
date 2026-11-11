@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { TechniqueVideoLink } from './TechniqueVideo';
 import { buildWorkoutRecords, beatsWorkoutRecord, workoutVariantKey } from '@/utils/workoutRecords';
 import { Repeat2, Trash2, Dumbbell } from 'lucide-react';
 import { Dialog, DialogContentFullScreen } from '@/components/ui/dialog';
@@ -126,7 +127,7 @@ export function WorkoutHistoryDetail({
                 </p>
               </div>
             ) : null}
-            {detail.programOrigin ? <CoachComments workoutId={detail.id} /> : null}
+            <CoachComments workoutId={detail.id} />
           </div>
 
           <div
@@ -234,13 +235,14 @@ export function WorkoutHistoryDetail({
                       </p>
                     )}
 
+                    <TechniqueVideoLink exercise={ex} />
                     <table className="detail-set-table">
                       <thead>
                         <tr>
                           <th>Serie</th>
                           <th>{isCardio ? 'Km' : 'Kg'}</th>
                           <th>{isCardio ? 'Tiempo' : 'Reps'}</th>
-                          {showRpe && <th>RPE</th>}
+                          {showRpe && <th>Esfuerzo</th>}
                           <th></th>
                         </tr>
                       </thead>
@@ -281,7 +283,11 @@ export function WorkoutHistoryDetail({
                               </td>
                               {showRpe && (
                                 <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                                  {s.rpe || ''}
+                                  {s.rir != null && s.rir !== ''
+                                    ? `RIR ${s.rir}`
+                                    : s.rpe
+                                      ? `RPE ${s.rpe}`
+                                      : ''}
                                 </td>
                               )}
                               <td>
@@ -414,7 +420,14 @@ function CoachComments({ workoutId }: { workoutId: string }) {
           <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>
             Comentario de {personName(c.coach)}
           </p>
-          <p style={{ fontSize: '0.9rem', color: 'white', margin: 0, whiteSpace: 'pre-wrap' }}>
+          <p
+            style={{
+              fontSize: '0.9rem',
+              color: 'var(--text-primary)',
+              margin: 0,
+              whiteSpace: 'pre-wrap',
+            }}
+          >
             {c.text}
           </p>
         </div>

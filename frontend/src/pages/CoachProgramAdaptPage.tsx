@@ -1,3 +1,4 @@
+import { confirmAction } from '../lib/confirmation';
 import { Link, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { addDays, format } from 'date-fns';
@@ -64,9 +65,12 @@ export default function CoachProgramAdaptPage() {
     }
     setDateError(null);
     if (
-      !window.confirm(
-        `¿Publicar solo para ${personName(client.data.client)}? La asignación anterior termina ahora, aunque la nueva empiece más adelante. Se conserva el historial.`,
-      )
+      !(await confirmAction({
+        title: 'Publicar adaptación',
+        description: `¿Publicar solo para ${personName(client.data.client)} a partir del ${date.value}? Su programa actual continúa hasta esa fecha. Si ya hay una versión para ese día, se sustituirá. Se conserva el historial.`,
+        confirmLabel: 'Publicar adaptación',
+        destructive: false,
+      }))
     )
       return false;
     await publish.mutateAsync({ program: adapted, startDate: date.value });

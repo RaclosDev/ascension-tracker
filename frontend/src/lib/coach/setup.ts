@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
 
 export interface CoachSetup {
+  goalFocus?: 'GENERAL' | 'PERFORMANCE' | 'MAINTAIN' | 'WEIGHT_CHANGE' | null;
   services: { training: boolean; nutrition: boolean; progress: boolean };
   goal: string | null;
   experience: string | null;

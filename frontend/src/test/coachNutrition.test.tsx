@@ -1,3 +1,5 @@
+import { confirmAction } from '../lib/confirmation';
+vi.mock('../lib/confirmation', () => ({ confirmAction: vi.fn().mockResolvedValue(true) }));
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -46,7 +48,7 @@ describe('Pauta de nutrición', () => {
     mockedApi.delete.mockReset();
     mockedApi.post.mockReset();
     clearSessionDrafts();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    vi.mocked(confirmAction).mockResolvedValue(true);
   });
   afterEach(() => {
     cleanup();
@@ -129,7 +131,7 @@ describe('Pauta de nutrición', () => {
     expect(screen.getByRole('button', { name: 'Publicar pauta' })).toBeDisabled();
     expect(screen.getByText(/ha cambiado desde que empezaste este borrador/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Descartar cambios locales' }));
-    expect(protein).toHaveValue(200);
+    await vi.waitFor(() => expect(protein).toHaveValue(200));
   });
 
   it('keeps cancelled edits and withdraws only the version the coach reviewed', async () => {
@@ -140,12 +142,12 @@ describe('Pauta de nutrición', () => {
     wrap(<NutritionPlanSection linkId="l1" canEdit />);
     await screen.findByLabelText('Proteína día de entreno');
     fill('Proteína día de entreno', '190');
-    vi.mocked(window.confirm).mockReturnValue(false);
+    vi.mocked(confirmAction).mockResolvedValue(false);
     fireEvent.click(screen.getByRole('button', { name: 'Publicar pauta' }));
     fireEvent.click(screen.getByRole('button', { name: 'Quitar pauta' }));
     expect(mockedApi.post).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Proteína día de entreno')).toHaveValue(190);
-    vi.mocked(window.confirm).mockReturnValue(true);
+    vi.mocked(confirmAction).mockResolvedValue(true);
     fireEvent.click(screen.getByRole('button', { name: 'Quitar pauta' }));
     await vi.waitFor(() =>
       expect(mockedApi.post).toHaveBeenCalledWith('/coach/clients/l1/nutrition-plan/p1/end'),

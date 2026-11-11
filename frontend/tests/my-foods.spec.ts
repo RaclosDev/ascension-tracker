@@ -451,9 +451,6 @@ test.describe('Mis Alimentos & Recetas (MyFoodsPage)', () => {
       },
     });
 
-    // Configurar aceptación automática del confirm de borrado
-    page.on('dialog', (dialog) => dialog.accept());
-
     await navigateToMyFoods(page);
 
     // 4.1 Crear receta
@@ -501,8 +498,11 @@ test.describe('Mis Alimentos & Recetas (MyFoodsPage)', () => {
     const deleteRecipeBtn = page.getByRole('button', { name: /eliminar receta/i });
     await expect(deleteRecipeBtn).toBeVisible();
     await deleteRecipeBtn.click();
-
-    expect(deletedRecipeId).toBe('201');
+    await page
+      .getByRole('dialog', { name: 'Borrar receta', exact: true })
+      .getByRole('button', { name: 'Borrar receta', exact: true })
+      .click();
+    await expect.poll(() => deletedRecipeId).toBe('201');
   });
 
   test('5. Selección múltiple y borrado masivo: BulkSelectionToolbar con contador y DELETE en lote', async ({
@@ -517,9 +517,6 @@ test.describe('Mis Alimentos & Recetas (MyFoodsPage)', () => {
         deletedFoodIds.push(id);
       },
     });
-
-    // Aceptar automáticamente los diálogos window.confirm
-    page.on('dialog', (dialog) => dialog.accept());
 
     await navigateToMyFoods(page);
 
@@ -552,9 +549,13 @@ test.describe('Mis Alimentos & Recetas (MyFoodsPage)', () => {
     // Ejecutar borrado en lote
     const bulkDeleteBtn = bulkToolbar.getByRole('button', { name: /borrar/i });
     await bulkDeleteBtn.click();
+    await page
+      .getByRole('dialog', { name: 'Borrar alimentos seleccionados' })
+      .getByRole('button', { name: 'Borrar alimentos', exact: true })
+      .click();
 
     // Verificar que se invocó DELETE para ambos IDs
-    expect(deletedFoodIds).toContain('101');
-    expect(deletedFoodIds).toContain('102');
+    await expect.poll(() => deletedFoodIds).toContain('101');
+    await expect.poll(() => deletedFoodIds).toContain('102');
   });
 });

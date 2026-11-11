@@ -40,7 +40,12 @@ export function InviteClientButton() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button className="btn btn-primary" type="button" onClick={() => setOpen(true)}>
+      <button
+        data-tour="invite-client"
+        className="btn btn-primary"
+        type="button"
+        onClick={() => setOpen(true)}
+      >
         <UserPlus size={16} aria-hidden /> Invitar alumno
       </button>
       <InviteDialog open={open} onOpenChange={setOpen} />

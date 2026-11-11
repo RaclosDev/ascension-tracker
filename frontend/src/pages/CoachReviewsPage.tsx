@@ -1,4 +1,5 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useCoachFilters } from '../lib/coach/useCoachFilters';
 import { ArrowUpRight, Search } from 'lucide-react';
 import { personName } from '../lib/coach/api';
 import { signalText } from '../lib/coach/clientStatus';
@@ -17,7 +18,7 @@ export default function CoachReviewsPage() {
 
 function Reviews() {
   const { clients, status, rows, ready } = useCoachRoster();
-  const [params, setParams] = useSearchParams();
+  const { params, update } = useCoachFilters();
   const waiting = params.get('vista') === 'esperando';
   const agenda = params.get('vista') === 'agenda';
   const search = params.get('q') ?? '';
@@ -27,16 +28,6 @@ function Reviews() {
     searchName(personName(r.link.client)).includes(searchName(search.trim())),
   );
   const count = pending.reduce((n, row) => n + (row.status?.pendingReplies ?? 0), 0);
-  const update = (key: string, value: string) =>
-    setParams(
-      (previous) => {
-        const next = new URLSearchParams(previous);
-        if (value) next.set(key, value);
-        else next.delete(key);
-        return next;
-      },
-      { replace: true },
-    );
   return (
     <>
       <CoachPageHeader

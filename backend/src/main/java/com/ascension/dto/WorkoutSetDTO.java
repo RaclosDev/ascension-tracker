@@ -28,5 +28,10 @@ public class WorkoutSetDTO {
     private String duration;
     @Size(max = 20, message = "El valor es demasiado largo")
     private String rpe;
+    @Size(max = 20)
+    @Pattern(regexp = "^([0-9](\\.[05])?|10(\\.0)?)?$", message = "El RIR debe estar entre 0 y 10")
+    private String rir;
+    @Size(max = 200)
+    private String skipReason;
     private Boolean completed;
 }

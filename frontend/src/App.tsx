@@ -1,9 +1,13 @@
 import React, { Component, useEffect, useState, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { ConfirmationDialog } from './components/ui/ConfirmationDialog';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
+import { isCoachTourFrame } from './components/coach/tour/frame';
+const CoachTourRunPage = lazyWithRetry(() => import('./pages/CoachTourRunPage'));
+const CoachTourBridge = lazyWithRetry(() => import('./components/coach/tour/CoachTourBridge'));
 import api from './api/client';
 import { applyThemeColor, readThemeColor } from './utils/colorHelper';
 import { applyColorMode, readColorMode, watchSystemColorMode } from './utils/colorMode';
@@ -17,6 +21,7 @@ const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage'
 const WorkoutPage = lazyWithRetry(() => import('./pages/WorkoutPage'));
 const UtilitiesPage = lazyWithRetry(() => import('./pages/UtilitiesPage'));
 const CoachPage = lazyWithRetry(() => import('./pages/CoachPage'));
+const CoachTourPage = lazyWithRetry(() => import('./pages/CoachTourPage'));
 const CoachClientsPage = lazyWithRetry(() => import('./pages/CoachClientsPage'));
 const CoachReviewsPage = lazyWithRetry(() => import('./pages/CoachReviewsPage'));
 const CoachPlanningPage = lazyWithRetry(() => import('./pages/CoachPlanningPage'));
@@ -48,6 +53,12 @@ import { preloadAllRoutes } from './utils/routePreload';
 import { useWorkoutStore } from './lib/workout/store';
 
 let currentAppVersion: string | null = null;
+
+function AppConfirmations() {
+  const { token, user } = useAuth();
+  const location = useLocation();
+  return <ConfirmationDialog scope={`${location.key}:${user?.email ?? ''}:${!!token}`} />;
+}
 
 function AppContent() {
   const { token, isReady } = useAuth();
@@ -146,7 +157,9 @@ function AppContent() {
     <ErrorBoundary>
       <ConsentGate>
         <Suspense fallback={<PageLoader />}>
+          {isCoachTourFrame() && <CoachTourBridge />}
           <Routes>
+            <Route path="/entrenador/guia/recorrido" element={<CoachTourRunPage />} />
             <Route path="/" element={<Layout />}>
               <Route index element={<HomeRedirect />} />
               <Route path="dashboard" element={<DashboardPage />} />
@@ -156,6 +169,7 @@ function AppContent() {
               <Route path="utilities" element={<UtilitiesPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="entrenador" element={<CoachPage />} />
+              <Route path="entrenador/guia" element={<CoachTourPage />} />
               <Route path="entrenador/alumnos" element={<CoachClientsPage />} />
               <Route path="entrenador/revisiones" element={<CoachReviewsPage />} />
               <Route path="entrenador/planificacion" element={<CoachPlanningPage />} />
@@ -366,6 +380,7 @@ export default function App() {
               }}
             />
             <AppContent />
+            <AppConfirmations />
           </AuthProvider>
         </GoogleOAuthProvider>
       </BrowserRouter>

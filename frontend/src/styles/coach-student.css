@@ -1,0 +1,121 @@
+.coach-student h2,
+.coach-student h3,
+.coach-student h4 {
+  font-family: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.coach-student {
+  line-height: 1.6;
+}
+.coach-student .card {
+  box-shadow: none;
+  border-color: var(--border-subtle);
+}
+.coach-page.coach-workspace.coach-student .card::before {
+  box-shadow: none;
+  border: 1px solid var(--border-medium);
+}
+.coach-rest-day {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+.coach-student .card h2 {
+  font-size: 1.15rem;
+}
+.coach-student summary {
+  min-height: 44px;
+  padding-block: 0.6rem;
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.coach-student summary:focus-visible,
+.coach-student textarea:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 3px;
+}
+.coach-student p,
+.coach-student dd {
+  overflow-wrap: anywhere;
+}
+.coach-student .coach-client-context {
+  margin-top: 0.25rem;
+  max-width: 65ch;
+}
+.coach-student .coach-client-context summary,
+.coach-student .coach-week-source,
+.coach-student .coach-prescription-summary {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.coach-student .coach-day {
+  padding: 0.75rem 1.25rem;
+}
+.coach-day-summary strong {
+  margin-inline: 0.75rem;
+}
+.coach-day-summary > span:last-child {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+.coach-student .coach-exercise {
+  background: var(--bg-card);
+}
+.coach-student .coach-exercise label:not(:has(input[type='checkbox'])) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+  font-size: 0.875rem;
+}
+.coach-student .coach-exercise input:not([type='checkbox']),
+.coach-student .coach-exercise select,
+.coach-student .coach-add-exercise select {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 6px;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  font: inherit;
+}
+.coach-review-scores {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1.25rem;
+  padding-block: 0.5rem;
+}
+.coach-review-scores dt {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+.coach-review-scores dd {
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.coach-review-conversation > :not(summary) {
+  margin-top: 1rem;
+}
+.coach-week-counts {
+  font-weight: 600;
+  margin-top: 0.75rem;
+}
+.coach-student .coach-week-notes,
+.coach-student .coach-review-conversation {
+  border-top: 1px solid var(--border-subtle);
+}
+@media (max-width: 640px) {
+  .coach-day-summary strong {
+    display: block;
+    margin-inline: 0;
+  }
+  .coach-student .coach-day {
+    padding: 0.75rem;
+  }
+}

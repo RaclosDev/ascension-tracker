@@ -1,31 +1,30 @@
 import { Suspense, useEffect, useRef } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, MessageSquareText } from 'lucide-react';
-import {
-  apiErrorMessage,
-  formatCoachDate,
-  personName,
-  sharedScopes,
-  useCoachClient,
-} from '../lib/coach/api';
+import { apiErrorMessage, personName, useCoachClient } from '../lib/coach/api';
 import { ClientOverview } from '../components/coach/ClientOverview';
+import { usePowerProfile } from '../lib/coach/powerlifting';
 import { ClientManagement } from '../components/coach/ClientManagement';
 import { CheckinsSection } from '../components/coach/CheckinsSection';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import '../styles/coach-workspace.css';
+import '../styles/coach-student.css';
 
 const ClientProgress = lazyWithRetry(() => import('../components/coach/ClientProgress'));
 const ClientPrograms = lazyWithRetry(() => import('../components/coach/ClientPrograms'));
 const ClientTraining = lazyWithRetry(() => import('../components/coach/ClientTraining'));
 const ClientNutrition = lazyWithRetry(() => import('../components/coach/ClientNutrition'));
+const ClientPowerlifting = lazyWithRetry(() => import('../components/coach/ClientPowerlifting'));
+const ClientWeek = lazyWithRetry(() => import('../components/coach/ClientWeek'));
 
 export default function CoachClientPage() {
   const { linkId = '' } = useParams();
   const clients = useCoachClient(linkId);
   const link = clients.data;
+  const power = usePowerProfile(linkId, !!link?.permissions.training);
   const [params] = useSearchParams();
-  const section = params.get('seccion') ?? 'resumen';
+  const section = params.get('seccion') ?? (link?.permissions.training ? 'semana' : 'resumen');
   const sectionNav = useRef<HTMLElement>(null);
   useEffect(() => {
     const nav = sectionNav.current;
@@ -46,16 +45,26 @@ export default function CoachClientPage() {
     return `/entrenador/alumnos/${encodeURIComponent(linkId)}?${next}`;
   };
   const sections = [
+    { id: 'semana', label: 'Semana', visible: link?.permissions.training },
     { id: 'resumen', label: 'Resumen', visible: true },
-    { id: 'entrenamiento', label: 'Entrenamiento', visible: link?.permissions.training },
-    { id: 'nutricion', label: 'Nutrición', visible: link?.permissions.nutrition },
+    { id: 'entrenamiento', label: 'Entrenamientos', visible: link?.permissions.training },
+    {
+      id: 'powerlifting',
+      label: 'Powerlifting',
+      visible: link?.permissions.training && power.data?.profile.enabled,
+    },
+    {
+      id: 'nutricion',
+      label: 'Nutrición',
+      visible: link?.permissions.nutrition && link.setup?.services.nutrition !== false,
+    },
     { id: 'progreso', label: 'Progreso', visible: link?.permissions.body },
     { id: 'revisiones', label: 'Revisiones', visible: true },
     { id: 'gestion', label: 'Ficha y gestión', visible: true },
   ].filter((s) => s.visible);
 
   return (
-    <div className="fade-in coach-page coach-workspace">
+    <div className="fade-in coach-page coach-workspace coach-student">
       <Link to={backTo} className="coach-back-link">
         <ArrowLeft size={16} aria-hidden />
         {params.get('origen') === 'revisiones' ? 'Volver a revisiones' : 'Volver a alumnos'}
@@ -77,10 +86,31 @@ export default function CoachClientPage() {
         <>
           <header className="coach-client-header">
             <div className="min-w-0">
-              <p className="coach-eyebrow">Ficha del alumno</p>
               <h1 className="coach-client-name">{personName(link.client)}</h1>
-              <p className="coach-description">Alumno desde {formatCoachDate(link.since)}</p>
-              <p className="coach-description">Comparte: {sharedScopes(link.permissions)}</p>
+              <p className="coach-description">
+                {link.setup?.trainingDays
+                  ? `${link.setup.trainingDays} días de entrenamiento por semana`
+                  : 'Sin disponibilidad definida'}
+              </p>
+              {(link.setup?.goal || link.setup?.equipment) && (
+                <details className="coach-client-context">
+                  <summary>Objetivo y material</summary>
+                  <dl className="coach-facts">
+                    {link.setup.goal && (
+                      <div>
+                        <dt>Objetivo</dt>
+                        <dd>{link.setup.goal}</dd>
+                      </div>
+                    )}
+                    {link.setup.equipment && (
+                      <div>
+                        <dt>Material</dt>
+                        <dd>{link.setup.equipment}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </details>
+              )}
             </div>
             {section !== 'revisiones' && (
               <Link to={sectionHref('revisiones')} className="btn btn-primary">
@@ -103,15 +133,23 @@ export default function CoachClientPage() {
           <div className="coach-client-content" key={`${linkId}:${section}`}>
             <Suspense fallback={<p role="status">Cargando sección…</p>}>
               {section === 'resumen' && <ClientOverview link={link} sectionHref={sectionHref} />}
+              {section === 'semana' && link.permissions.training && <ClientWeek link={link} />}
               {section === 'entrenamiento' && link.permissions.training && (
                 <>
                   <ClientPrograms linkId={linkId} canAssign={link.permissions.editTraining} />
                   <ClientTraining linkId={linkId} />
                 </>
               )}
-              {section === 'nutricion' && link.permissions.nutrition && (
-                <ClientNutrition linkId={linkId} canEditPlan={link.permissions.editNutrition} />
-              )}
+              {section === 'nutricion' &&
+                link.permissions.nutrition &&
+                link.setup?.services.nutrition !== false && (
+                  <ClientNutrition linkId={linkId} canEditPlan={link.permissions.editNutrition} />
+                )}
+              {section === 'powerlifting' &&
+                link.permissions.training &&
+                power.data?.profile.enabled && (
+                  <ClientPowerlifting linkId={linkId} canEdit={link.permissions.editTraining} />
+                )}
               {section === 'progreso' && link.permissions.body && (
                 <ClientProgress linkId={linkId} />
               )}

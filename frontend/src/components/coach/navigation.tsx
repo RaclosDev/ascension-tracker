@@ -6,6 +6,7 @@ import {
   Settings,
   CreditCard,
   Wrench,
+  Compass,
 } from 'lucide-react';
 
 export const coachNavItems = [
@@ -30,8 +31,8 @@ export const coachNavItems = [
   {
     path: '/entrenador/planificacion',
     icon: <ClipboardList className="w-5 h-5" />,
-    label: 'Planificación',
-    shortLabel: 'Planificación',
+    label: 'Biblioteca',
+    shortLabel: 'Biblioteca',
   },
   {
     path: '/entrenador/ajustes',
@@ -50,6 +51,12 @@ export const coachNavItems = [
     icon: <Wrench className="w-5 h-5" />,
     label: 'Utilidades',
     shortLabel: 'Utilidades',
+  },
+  {
+    path: '/entrenador/guia',
+    icon: <Compass className="w-5 h-5" />,
+    label: 'Tour',
+    shortLabel: 'Tour',
   },
 ];
 

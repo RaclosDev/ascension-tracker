@@ -17,7 +17,18 @@ export const FAKE_JWT =
  * Mocks the complete authentication flow and standard API endpoints
  * to simulate an authenticated user with valid settings across all pages.
  */
-export async function setupAuthMocks(page: Page): Promise<void> {
+export async function setupAuthMocks(
+  page: Page,
+  options: { showCoachTour?: boolean } = {},
+): Promise<void> {
+  if (!options.showCoachTour) {
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        'ascension:coach-tour:v2:test%40example.com',
+        JSON.stringify({ status: 'dismissed', step: 0 }),
+      );
+    });
+  }
   await page.route('**/api/push/rest-timer', (route) => route.fulfill({ status: 200, body: '' }));
   await page.route('**/api/push/rest-timer/cancel', (route) =>
     route.fulfill({ status: 200, body: '' }),

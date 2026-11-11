@@ -43,31 +43,77 @@ export interface LiftBest {
   date: number;
 }
 
+function recordedNumber(value: unknown): number {
+  if (typeof value !== 'string') return NaN;
+  const normalized = value.trim().replace(',', '.');
+  return /^\d+(\.\d+)?$/.test(normalized) ? Number(normalized) : NaN;
+}
+
+export function recordedPowerSets(
+  history: CompletedWorkout[],
+  mappings: import('./coach/powerlifting').PowerExerciseMapping[] = [],
+  includeVariations = false,
+) {
+  return history.flatMap((workout) => {
+    if (!Number.isFinite(workout.startedAt)) return [];
+    return workout.exercises.flatMap((exercise) => {
+      const mapping = mappings.find(
+        (m) =>
+          m.exerciseId === exercise.exerciseId &&
+          (m.grip ?? '') === (exercise.variant?.grip ?? '') &&
+          (m.machine ?? '') === (exercise.variant?.machine ?? ''),
+      );
+      const lift = mapping
+        ? mapping.kind === 'EXCLUDE' || (mapping.kind === 'VARIATION' && !includeVariations)
+          ? undefined
+          : (mapping.lift.toLowerCase() as Lift)
+        : LIFT_BY_EXERCISE.get(exercise.exerciseId);
+      if (!lift) return [];
+      return exercise.sets.flatMap((set) => {
+        const weight = recordedNumber(set.weight);
+        const reps = recordedNumber(set.reps);
+        if (
+          !set.completed ||
+          set.type === 'warmup' ||
+          !Number.isFinite(weight) ||
+          weight <= 0 ||
+          !Number.isInteger(reps) ||
+          reps <= 0
+        )
+          return [];
+        const rpe = recordedNumber(set.rpe ?? '');
+        return [
+          {
+            lift,
+            weight,
+            reps,
+            rpe: rpe >= 1 && rpe <= 10 ? rpe : null,
+            date: workout.startedAt,
+            workoutId: workout.id,
+          },
+        ];
+      });
+    });
+  });
+}
+
 export function bestLifts(history: CompletedWorkout[]): Partial<Record<Lift, LiftBest>> {
   const best: Partial<Record<Lift, LiftBest>> = {};
-  for (const workout of history) {
-    for (const exercise of workout.exercises) {
-      const lift = LIFT_BY_EXERCISE.get(exercise.exerciseId);
-      if (!lift) continue;
-      for (const set of exercise.sets) {
-        if (!set.completed || set.type === 'warmup') continue;
-        const weight = Number.parseFloat(set.weight);
-        const reps = Number.parseInt(set.reps, 10);
-        const e1rm = estimateOneRepMax(weight, reps);
-        if (e1rm == null) continue;
-        const current = best[lift];
-        const rounded = Math.round(e1rm * 2) / 2;
-        const actual = reps === 1 ? weight : null;
-        if (!current || rounded > current.e1rm) {
-          best[lift] = {
-            e1rm: rounded,
-            actual: Math.max(actual ?? 0, current?.actual ?? 0) || null,
-            date: workout.startedAt,
-          };
-        } else if (actual && actual > (current.actual ?? 0)) {
-          current.actual = actual;
-        }
-      }
+  for (const set of recordedPowerSets(history)) {
+    const { weight, reps, lift } = set;
+    const e1rm = estimateOneRepMax(weight, reps);
+    if (e1rm == null) continue;
+    const current = best[lift];
+    const rounded = Math.round(e1rm * 2) / 2;
+    const actual = reps === 1 ? weight : null;
+    if (!current || rounded > current.e1rm) {
+      best[lift] = {
+        e1rm: rounded,
+        actual: Math.max(actual ?? 0, current?.actual ?? 0) || null,
+        date: set.date,
+      };
+    } else if (actual && actual > (current.actual ?? 0)) {
+      current.actual = actual;
     }
   }
   return best;
@@ -80,7 +126,15 @@ const DOTS = {
 
 /** DOTS score: a total compared across bodyweights. Null without sex or bodyweight. */
 export function dotsScore(total: number, bodyweight: number | undefined, sex: string | undefined) {
-  if (!total || !bodyweight || (sex !== 'M' && sex !== 'F')) return null;
+  if (
+    !Number.isFinite(total) ||
+    total <= 0 ||
+    bodyweight === undefined ||
+    !Number.isFinite(bodyweight) ||
+    bodyweight <= 0 ||
+    (sex !== 'M' && sex !== 'F')
+  )
+    return null;
   const k = DOTS[sex];
   const bw = Math.min(Math.max(bodyweight, 40), k.max);
   const denominator = k.a * bw ** 4 + k.b * bw ** 3 + k.c * bw ** 2 + k.d * bw + k.e;

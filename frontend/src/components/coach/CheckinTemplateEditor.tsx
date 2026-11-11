@@ -2,37 +2,67 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { MessageSquareText, Plus, Trash2 } from 'lucide-react';
 import { apiErrorMessage } from '../../lib/coach/api';
-import { useCheckinTemplate, useSaveCheckinTemplate } from '../../lib/coach/checkins';
+import {
+  useCheckinTemplate,
+  useSaveCheckinTemplate,
+  useResetClientCheckinTemplate,
+} from '../../lib/coach/checkins';
 import { QueryErrorNotice } from '../QueryErrorNotice';
 
 const MAX_QUESTIONS = 10;
 
 /** The questions every client of this coach answers in the weekly check-in. */
-export function CheckinTemplateEditor() {
-  const template = useCheckinTemplate();
+export function CheckinTemplateEditor({ linkId }: { linkId?: string }) {
+  const template = useCheckinTemplate(true, linkId);
+  const reset = useResetClientCheckinTemplate(linkId ?? '');
   return (
-    <section className="card">
+    <section data-tour="checkin-template" className="card">
       <h2 className="card-title flex items-center gap-2">
         <MessageSquareText size={18} aria-hidden /> Check-in semanal
       </h2>
       <p className="mb-3" style={{ color: 'var(--text-secondary)' }}>
-        Sin personalizar, se añaden preguntas según el servicio de cada alumno. Si guardas estas
-        preguntas, serán comunes a todos. Las valoraciones de cumplimiento se piden solo para los
-        servicios acordados; los check-ins anteriores conservan sus preguntas.
+        {linkId ? (
+          'Personaliza las preguntas para este alumno. Las revisiones ya enviadas conservan sus preguntas originales.'
+        ) : (
+          <>
+            Sin personalizar, se añaden preguntas según el servicio de cada alumno. Si guardas estas
+            preguntas, serán comunes a todos. Las valoraciones de cumplimiento se piden solo para
+            los servicios acordados; los check-ins anteriores conservan sus preguntas.
+          </>
+        )}
       </p>
       {template.isLoading && <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>}
       {template.isError && (
         <QueryErrorNotice retry={() => void template.refetch()} pending={template.isFetching} />
       )}
       {template.data && (
-        <Editor key={template.data.questions.join('\n')} initial={template.data.questions} />
+        <Editor
+          key={template.data.questions.join('\n')}
+          initial={template.data.questions}
+          linkId={linkId}
+        />
+      )}
+      {linkId && template.data?.custom && (
+        <button
+          type="button"
+          className="btn btn-secondary mt-2"
+          disabled={reset.isPending}
+          onClick={() =>
+            reset.mutate(undefined, {
+              onError: (error) =>
+                toast.error(apiErrorMessage(error, 'No se pudieron restaurar las preguntas')),
+            })
+          }
+        >
+          Usar preguntas generales
+        </button>
       )}
     </section>
   );
 }
 
-function Editor({ initial }: { initial: string[] }) {
-  const save = useSaveCheckinTemplate();
+function Editor({ initial, linkId }: { initial: string[]; linkId?: string }) {
+  const save = useSaveCheckinTemplate(linkId);
   const [questions, setQuestions] = useState(initial);
   const valid = questions.every((q) => q.trim()) && questions.length <= MAX_QUESTIONS;
 

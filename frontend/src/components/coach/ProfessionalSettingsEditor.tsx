@@ -1,3 +1,4 @@
+import { confirmAction } from '../../lib/confirmation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useSessionDraft } from '../../hooks/useSessionDraft';
@@ -15,7 +16,7 @@ import { QueryErrorNotice } from '../QueryErrorNotice';
 export function ProfessionalSettingsEditor() {
   const settings = useProfessionalSettings();
   return (
-    <section className="card">
+    <section data-tour="professional-settings" className="card">
       <h2>Tu perfil y forma de trabajar</h2>
       {settings.isPending ? (
         <p role="status">Cargando ajustes profesionales…</p>
@@ -226,8 +227,15 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
             type="button"
             className="btn btn-secondary"
             disabled={save.isPending}
-            onClick={() => {
-              if (window.confirm('¿Descartar este borrador y recuperar los ajustes guardados?')) {
+            onClick={async () => {
+              if (
+                await confirmAction({
+                  title: 'Descartar borrador',
+                  description: '¿Descartar este borrador y recuperar los ajustes guardados?',
+                  confirmLabel: 'Descartar borrador',
+                  destructive: true,
+                })
+              ) {
                 draft.clear();
                 setError(null);
               }

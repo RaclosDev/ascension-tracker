@@ -145,11 +145,12 @@ describe('Check-ins del alumno', () => {
         dietAdherence: 4,
         answers: ['Bien'],
         notes: '',
+        submissionStatus: 'FINAL',
       }),
     );
   });
 
-  it('is read-only once the coach has replied', async () => {
+  it('preserves the answered review and allows an appended update', async () => {
     const replied = checkin({ coachReply: 'Buen trabajo' });
     mockedApi.get.mockImplementation(async (url: string) => ({
       data: url.endsWith('/checkin')
@@ -165,7 +166,7 @@ describe('Check-ins del alumno', () => {
     wrap(<CoachCheckinPage />, '/checkin/l1');
 
     expect(await screen.findByText('Buen trabajo')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Guardar cambios|Enviar/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Enviar actualización' })).toBeDisabled();
     expect(screen.queryByText('Semanas anteriores')).toBeNull();
   });
 });
@@ -272,6 +273,7 @@ describe('Check-ins en la ficha del entrenador', () => {
         dietAdherence: 4,
         answers: ['Mejor'],
         notes: '',
+        submissionStatus: 'FINAL',
       }),
     );
   });

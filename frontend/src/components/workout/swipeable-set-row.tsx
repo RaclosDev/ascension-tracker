@@ -272,14 +272,42 @@ export const SwipeableSetRow = React.memo(
             />
 
             {showRpe && (
-              <input
-                inputMode="decimal"
-                value={s.rpe || ''}
-                placeholder=""
-                onFocus={(e) => e.currentTarget.select()}
-                onChange={(e) => updateSet(rowId, s.id, { rpe: e.target.value.replace(',', '.') })}
-                className={`set-input ${s.completed ? 'completed' : ''}`}
-              />
+              <div className="min-w-0">
+                <select
+                  aria-label={`Método de esfuerzo de la serie ${i + 1}`}
+                  className="w-full text-xs"
+                  value={s.rir != null ? 'RIR' : 'RPE'}
+                  onChange={(e) =>
+                    updateSet(
+                      rowId,
+                      s.id,
+                      e.target.value === 'RIR'
+                        ? { rir: '', rpe: undefined }
+                        : { rpe: '', rir: undefined },
+                    )
+                  }
+                >
+                  <option>RPE</option>
+                  <option>RIR</option>
+                </select>
+                <input
+                  inputMode="decimal"
+                  aria-label={`${s.rir != null ? 'RIR' : 'RPE'} de la serie ${i + 1}`}
+                  value={s.rir ?? s.rpe ?? ''}
+                  placeholder=""
+                  onFocus={(e) => e.currentTarget.select()}
+                  onChange={(e) =>
+                    updateSet(
+                      rowId,
+                      s.id,
+                      s.rir != null
+                        ? { rir: e.target.value.replace(',', '.') }
+                        : { rpe: e.target.value.replace(',', '.') },
+                    )
+                  }
+                  className={`set-input ${s.completed ? 'completed' : ''}`}
+                />
+              </div>
             )}
 
             <button
@@ -359,7 +387,7 @@ export const SwipeableSetRow = React.memo(
               outlineOffset: '-2px',
             }}
           >
-            <Trash2 size={18} color="white" />
+            <Trash2 size={18} color="var(--danger-text)" />
           </button>
         </div>
 

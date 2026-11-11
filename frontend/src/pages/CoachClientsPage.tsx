@@ -1,4 +1,5 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useCoachFilters } from '../lib/coach/useCoachFilters';
 import { ArrowUpRight, Search } from 'lucide-react';
 import { personName, sharedScopes } from '../lib/coach/api';
 import { LEVEL_COLORS, signalText } from '../lib/coach/clientStatus';
@@ -22,9 +23,24 @@ import { PendingInvitations } from '../components/coach/CoachInvitations';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
 
 type Filter =
-  'all' | 'attention' | 'checkin' | 'noProgram' | 'setup' | 'tasks' | 'waiting' | 'paused';
+  | 'all'
+  | 'attention'
+  | 'checkin'
+  | 'noProgram'
+  | 'setup'
+  | 'tasks'
+  | 'waiting'
+  | 'paused'
+  | 'nextWeek';
 const FILTERS: { value: Filter; label: string; matches: (row: CoachRow) => boolean }[] = [
   { value: 'all', label: 'Todos', matches: () => true },
+  {
+    value: 'nextWeek',
+    label: 'Semana por preparar',
+    matches: (r) =>
+      r.link.setup?.services.training === true &&
+      (r.status?.nextWeekStatus === 'MISSING' || r.status?.nextWeekStatus === 'DRAFT'),
+  },
   { value: 'paused', label: 'En pausa', matches: (r) => !!r.link.followup?.schedule.paused },
   { value: 'setup', label: 'Incorporación', matches: (r) => !r.link.setup?.reviewed },
   {
@@ -64,22 +80,12 @@ export default function CoachClientsPage() {
 
 function Clients() {
   const { clients, status, rows, ready } = useCoachRoster();
-  const [params, setParams] = useSearchParams();
+  const { params, update, clear } = useCoachFilters();
   const filter = FILTERS.find((f) => f.value === params.get('filtro')) ?? FILTERS[0];
   const search = params.get('q') ?? '';
   const sort = params.get('orden') ?? 'priority';
   const showWeight = params.get('peso') === 'si';
   const service = params.get('servicio') ?? '';
-  const update = (key: string, value: string) =>
-    setParams(
-      (previous) => {
-        const next = new URLSearchParams(previous);
-        if (value) next.set(key, value);
-        else next.delete(key);
-        return next;
-      },
-      { replace: true },
-    );
   const visible = rows.filter(
     (r) =>
       filter.matches(r) &&
@@ -94,8 +100,12 @@ function Clients() {
       personName(a.link.client).localeCompare(personName(b.link.client), 'es'),
     );
   if (sort === 'recent') visible.sort((a, b) => b.link.since.localeCompare(a.link.since));
-  const href = (linkId: string, section = 'resumen') =>
-    `${clientHref(linkId, section)}&lista=${encodeURIComponent(params.toString())}`;
+  const href = (
+    linkId: string,
+    section = rows.find((row) => row.link.linkId === linkId)?.link.permissions.training
+      ? 'semana'
+      : 'resumen',
+  ) => `${clientHref(linkId, section)}&lista=${encodeURIComponent(params.toString())}`;
 
   return (
     <>
@@ -203,7 +213,7 @@ function Clients() {
           ) : visible.length === 0 ? (
             <div className="card coach-empty-inline">
               <h2>No hay alumnos con estos filtros</h2>
-              <button type="button" className="btn btn-secondary" onClick={() => setParams({})}>
+              <button type="button" className="btn btn-secondary" onClick={clear}>
                 Limpiar filtros
               </button>
             </div>
@@ -219,7 +229,8 @@ function Clients() {
                     <tr>
                       <th scope="col">Alumno</th>
                       <th scope="col">Seguimiento</th>
-                      <th scope="col">Última actividad</th>
+                      <th scope="col">Actividad y entrenos</th>
+                      <th scope="col">Semana siguiente</th>
                       {showWeight && <th scope="col">Peso (4 sem.)</th>}
                       <th scope="col">Revisiones</th>
                     </tr>
@@ -242,7 +253,28 @@ function Clients() {
                           <ClientState row={row} />
                           <TaskLinks row={row} href={href} />
                         </td>
-                        <td>{activityText(row.status?.lastActivity)}</td>
+                        <td>
+                          <span>Actividad: {activityText(row.status?.lastActivity)}</span>
+                          <span className="coach-muted">
+                            Entreno: {activityText(row.status?.lastWorkout)}
+                          </span>
+                          <span className="coach-muted">
+                            Revisión: {activityText(row.status?.lastCheckin)}
+                          </span>
+                        </td>
+                        <td>
+                          {row.link.permissions.training ? (
+                            <Link to={href(row.link.linkId, 'semana')}>
+                              {row.status?.nextWeekStatus === 'SCHEDULED'
+                                ? 'Programada'
+                                : row.status?.nextWeekStatus === 'DRAFT'
+                                  ? 'Borrador'
+                                  : 'Sin preparar'}
+                            </Link>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
                         {showWeight && (
                           <td>
                             {row.link.permissions.body && row.status?.weightChange != null
@@ -284,6 +316,17 @@ function Clients() {
                         <span className="coach-muted">
                           Última actividad: {activityText(row.status?.lastActivity)}
                         </span>
+                        {row.link.permissions.training && (
+                          <span className="coach-muted">
+                            Último entreno: {activityText(row.status?.lastWorkout)} · Próxima
+                            semana:{' '}
+                            {row.status?.nextWeekStatus === 'SCHEDULED'
+                              ? 'programada'
+                              : row.status?.nextWeekStatus === 'DRAFT'
+                                ? 'borrador'
+                                : 'sin preparar'}
+                          </span>
+                        )}
                         {(row.status?.pendingReplies ?? 0) > 0 && (
                           <span className="coach-pending">
                             {row.status?.pendingReplies} por responder

@@ -1,3 +1,4 @@
+import { confirmAction } from '../../lib/confirmation';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -32,6 +33,7 @@ export default function ProgramsSection({
   const ready = library.data?.filter((program) => program.status !== 'DRAFT') ?? [];
   const [startDate, setStartDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
   const [openAssignment, setOpenAssignment] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const active = assignments.data?.find((a) => a.status === 'ACTIVE');
   const custom = useClientCustomExercises(linkId);
   const catalog = useExerciseCatalog();
@@ -41,13 +43,16 @@ export default function ProgramsSection({
   );
   const exerciseName = (id: string) => exerciseMap.get(id)?.name ?? 'Ejercicio';
 
-  const submit = () => {
+  const submit = async () => {
     if (!programId || !startDate || !selected.data || selected.data.status === 'DRAFT') return;
     if (
       active &&
-      !window.confirm(
-        `Esto termina ahora «${active.programName}», aunque el nuevo programa empiece más adelante. Los entrenamientos registrados se conservan. ¿Asignar el nuevo programa?`,
-      )
+      !(await confirmAction({
+        title: 'Sustituir programa del alumno',
+        description: `«${active.programName}» continuará hasta el ${formatCoachDate(startDate)}. Si ya hay una versión para esa fecha, se sustituirá. Los entrenamientos registrados se conservan. ¿Asignar el nuevo programa?`,
+        confirmLabel: 'Asignar programa',
+        destructive: false,
+      }))
     )
       return;
     assign.mutate(
@@ -74,66 +79,89 @@ export default function ProgramsSection({
         </p>
       )}
       {assignments.data && assignments.data.length > 0 && (
-        <ul className="flex flex-col gap-2 mb-4">
-          {assignments.data.map((a) => (
-            <li key={a.id} className="flex flex-col gap-1">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="font-bold text-foreground truncate">{a.programName}</div>
-                  <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    {a.weeks} {a.weeks === 1 ? 'semana' : 'semanas'} · empieza el{' '}
-                    {formatCoachDate(a.startDate)}
-                    {a.status === 'ENDED' &&
-                      a.endedAt &&
-                      ` · terminado el ${formatCoachDate(a.endedAt)}`}
+        <>
+          {!!assignments.data.some((a) => a.status === 'ENDED') && (
+            <button
+              type="button"
+              className="btn btn-secondary mb-3"
+              aria-expanded={showHistory}
+              onClick={() => setShowHistory(!showHistory)}
+            >
+              {showHistory ? 'Ocultar programas anteriores' : 'Ver programas anteriores'}
+            </button>
+          )}
+          <ul className="flex flex-col gap-2 mb-4">
+            {assignments.data
+              .filter((a) => showHistory || a.status !== 'ENDED')
+              .map((a) => (
+                <li key={a.id} className="flex flex-col gap-1">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-bold text-foreground truncate">{a.programName}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {a.weeks} {a.weeks === 1 ? 'semana' : 'semanas'} · empieza el{' '}
+                        {formatCoachDate(a.startDate)}
+                        {a.status === 'SCHEDULED' && ' · Programado'}
+                        {a.status === 'ENDED' &&
+                          a.endedAt &&
+                          ` · terminado el ${formatCoachDate(a.endedAt)}`}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {a.status !== 'ENDED' && canAssign && (
+                        <Link
+                          className="btn btn-secondary"
+                          to={`/entrenador/alumnos/${encodeURIComponent(linkId)}/programas/${encodeURIComponent(a.id)}/adaptar`}
+                        >
+                          Adaptar
+                        </Link>
+                      )}
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        aria-expanded={openAssignment === a.id}
+                        onClick={() => setOpenAssignment(openAssignment === a.id ? null : a.id)}
+                      >
+                        {openAssignment === a.id ? 'Ocultar sesiones' : 'Sesiones'}
+                      </button>
+                      {a.status !== 'ENDED' && canAssign && (
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          aria-label={`Terminar ${a.programName}`}
+                          disabled={end.isPending}
+                          onClick={async () => {
+                            if (
+                              !(await confirmAction({
+                                title: 'Terminar programa',
+                                description: `¿Terminar «${a.programName}»? Tu alumno conserva su copia.`,
+                                confirmLabel: 'Terminar programa',
+                                destructive: true,
+                              }))
+                            )
+                              return;
+                            end.mutate(a.id, {
+                              onError: (e) =>
+                                toast.error(apiErrorMessage(e, 'No se pudo terminar')),
+                            });
+                          }}
+                        >
+                          {a.status === 'SCHEDULED' ? 'Cancelar programación' : 'Terminar'}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {a.status === 'ACTIVE' && canAssign && (
-                    <Link
-                      className="btn btn-secondary"
-                      to={`/entrenador/alumnos/${encodeURIComponent(linkId)}/programas/${encodeURIComponent(a.id)}/adaptar`}
-                    >
-                      Adaptar
-                    </Link>
+                  {openAssignment === a.id && (
+                    <ProgramSessions
+                      linkId={linkId}
+                      assignmentId={a.id}
+                      exerciseName={exerciseName}
+                    />
                   )}
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    aria-expanded={openAssignment === a.id}
-                    onClick={() => setOpenAssignment(openAssignment === a.id ? null : a.id)}
-                  >
-                    {openAssignment === a.id ? 'Ocultar sesiones' : 'Sesiones'}
-                  </button>
-                  {a.status === 'ACTIVE' && canAssign && (
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      aria-label={`Terminar ${a.programName}`}
-                      disabled={end.isPending}
-                      onClick={() => {
-                        if (
-                          !window.confirm(
-                            `¿Terminar «${a.programName}»? Tu alumno conserva su copia.`,
-                          )
-                        )
-                          return;
-                        end.mutate(a.id, {
-                          onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo terminar')),
-                        });
-                      }}
-                    >
-                      Terminar
-                    </button>
-                  )}
-                </div>
-              </div>
-              {openAssignment === a.id && (
-                <ProgramSessions linkId={linkId} assignmentId={a.id} exerciseName={exerciseName} />
-              )}
-            </li>
-          ))}
-        </ul>
+                </li>
+              ))}
+          </ul>
+        </>
       )}
       {!canAssign && (
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
@@ -212,8 +240,9 @@ export default function ProgramsSection({
             <>
               <p className="text-sm">
                 Se publicará una copia de este programa solo para este alumno, con inicio el{' '}
-                {formatCoachDate(startDate)}. {active && 'La asignación actual terminará ahora.'}{' '}
-                Los registros anteriores se conservan.
+                {formatCoachDate(startDate)}.{' '}
+                {active && 'El programa actual continúa hasta esa fecha.'} Los registros anteriores
+                se conservan.
               </p>
               {selected.data.status === 'DRAFT' && (
                 <p role="alert">

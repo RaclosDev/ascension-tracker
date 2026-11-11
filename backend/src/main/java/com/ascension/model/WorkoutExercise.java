@@ -22,6 +22,10 @@ public class WorkoutExercise implements Persistable<String> {
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+    @Column(length = 2048)
+    private String videoUrl;
+    private Integer videoSet;
+    private Integer videoSeconds;
 
     @Column(name = "variant_grip")
     private String variantGrip;

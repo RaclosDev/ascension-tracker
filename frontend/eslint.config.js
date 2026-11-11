@@ -41,6 +41,7 @@ export default tseslint.config(
       'prefer-const': 'warn',
       'no-undef': 'off',
       'no-empty': 'off',
+      'no-alert': 'error',
     },
     settings: {
       react: {

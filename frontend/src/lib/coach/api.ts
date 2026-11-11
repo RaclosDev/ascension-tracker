@@ -30,6 +30,8 @@ export interface CoachClient {
 }
 
 export interface MyCoach {
+  setup?: CoachSetup | null;
+  powerliftingEnabled?: boolean;
   coachPresentation?: string;
   followup?: CoachFollowup;
   linkId: string;
@@ -121,6 +123,8 @@ const ACTION_LABELS: Record<string, string> = {
   VIEW_WEIGHT: 'Peso',
   VIEW_STEPS: 'Pasos',
   VIEW_WORKOUTS: 'Entrenamientos',
+  VIEW_POWERLIFTING: 'Perfil de powerlifting',
+  EDIT_POWERLIFTING: 'Editar powerlifting',
   VIEW_NUTRITION: 'Comidas',
   VIEW_TARGETS: 'Objetivos de nutrición',
   VIEW_PROGRAMS: 'Programas asignados',

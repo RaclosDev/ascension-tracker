@@ -96,12 +96,20 @@ describe('Pautado frente a hecho', () => {
         : workout,
     }));
     mockedApi.put.mockResolvedValue({ data: undefined });
-    wrap(<ProgramSessions linkId="l1" assignmentId="a1" exerciseName={() => 'Press banca'} />);
+    wrap(
+      <ProgramSessions
+        linkId="l1"
+        assignmentId="a1"
+        weekStart="2026-11-02"
+        exerciseName={() => 'Press banca'}
+      />,
+    );
 
     fireEvent.click(await screen.findByRole('button', { name: /Torso/ }));
     expect(screen.getByText('Hecho con cambios')).toBeTruthy();
     expect(screen.getByText('3 × 6–8 reps')).toBeTruthy();
-    expect(await screen.findByText('60 kg × 8')).toBeTruthy();
+    expect((await screen.findAllByText('60 kg')).length).toBe(2);
+    expect(screen.getByText('8')).toBeTruthy();
     expect(mockedApi.get).toHaveBeenCalledWith('/coach/clients/l1/workouts/w1');
 
     fireEvent.change(screen.getByLabelText('Comentario para tu alumno'), {
@@ -117,7 +125,14 @@ describe('Pautado frente a hecho', () => {
 
   it('offers no comment box for a day without a workout', async () => {
     mockedApi.get.mockResolvedValue({ data: [session()] });
-    wrap(<ProgramSessions linkId="l1" assignmentId="a1" exerciseName={() => 'Press banca'} />);
+    wrap(
+      <ProgramSessions
+        linkId="l1"
+        assignmentId="a1"
+        weekStart="2026-11-02"
+        exerciseName={() => 'Press banca'}
+      />,
+    );
 
     fireEvent.click(await screen.findByRole('button', { name: /Torso/ }));
     expect(screen.getByText('Sin entreno registrado para este día.')).toBeTruthy();

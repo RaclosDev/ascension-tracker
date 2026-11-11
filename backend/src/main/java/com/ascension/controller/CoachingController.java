@@ -155,6 +155,16 @@ public class CoachingController {
         return ResponseEntity.ok(checkinService.history(email, linkId));
     }
 
+    @PostMapping("/coaches/{linkId}/checkins/{checkinId}/updates")
+    public ResponseEntity<Checkin> addCheckinUpdate(@PathVariable UUID linkId, @PathVariable UUID checkinId,
+            @Valid @RequestBody com.ascension.dto.CheckinDtos.UpdateRequest request, @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        Checkin updated = checkinService.addUpdate(email, linkId, checkinId, request, java.time.Instant.now());
+        checkinNotifier.submitted(linkId, updated);
+        return ResponseEntity.ok(updated);
+    }
+
     @GetMapping("/access-log")
     public ResponseEntity<List<AccessLogEntry>> accessLog(@AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);

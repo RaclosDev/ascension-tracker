@@ -1,3 +1,4 @@
+import { confirmAction } from '../../lib/confirmation';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { GraduationCap } from 'lucide-react';
@@ -136,11 +137,14 @@ function CoachLink({ link }: { link: MyCoach }) {
           type="button"
           className="btn btn-secondary"
           disabled={end.isPending}
-          onClick={() => {
+          onClick={async () => {
             if (
-              !window.confirm(
-                `¿Terminar la relación con ${name}? Dejará de ver tus datos al momento.`,
-              )
+              !(await confirmAction({
+                title: 'Terminar relación con el entrenador',
+                description: `¿Terminar la relación con ${name}? Dejará de ver tus datos al momento.`,
+                confirmLabel: 'Terminar relación',
+                destructive: true,
+              }))
             )
               return;
             end.mutate(link.linkId, {

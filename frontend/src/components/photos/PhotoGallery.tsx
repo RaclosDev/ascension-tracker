@@ -42,7 +42,7 @@ export function PhotoGallery({
                   {onDelete && (
                     <button
                       type="button"
-                      className="absolute top-1 right-1 rounded-full p-2 bg-black/60 text-white"
+                      className="absolute top-1 right-1 rounded-full p-2 bg-black/60 text-[#fff]"
                       aria-label={`Borrar foto: ${label}`}
                       disabled={deleting}
                       onClick={() => onDelete(photo)}

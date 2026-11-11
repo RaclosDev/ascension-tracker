@@ -58,7 +58,8 @@ public final class ProgramDtos {
             @Min(0) @Max(900) Integer restSeconds,
             @Size(max = 60) String loadHint,
             @Min(1) @Max(20) Integer supersetGroup,
-            @Size(max = 500) String notes) {
+            @Size(max = 500) String notes,
+            @Valid PrescriptionDtos.Prescription prescription) {
     }
 
     /** A coach assigns one of their library programs to a client, starting on {@code startDate}. */
@@ -75,7 +76,7 @@ public final class ProgramDtos {
 
     /** A program copied to a client. {@code programId} is the client's copy; {@code sourceProgramId} the original. */
     public record Assignment(UUID id, UUID programId, UUID sourceProgramId, String programName, int weeks,
-                             LocalDate startDate, String status, Instant createdAt, Instant endedAt) {
+                             LocalDate startDate, String status, Instant createdAt, Instant endedAt, LocalDate effectiveUntil) {
     }
 
     /** The prescribed day for a given date, with the program's own day id so a workout can point at it. */
@@ -93,11 +94,11 @@ public final class ProgramDtos {
      */
     public record Session(UUID dayId, int week, int dayIndex, LocalDate date, String name, String notes,
                           List<Exercise> exercises, String workoutId, String workoutName, Long finishedAt,
-                          String origin, String comment) {
+                          String origin, String comment, Integer completedSets, Integer recordedSets) {
     }
 
     public record TodayPlan(UUID assignmentId, UUID programId, String programName, String coachName,
                             LocalDate startDate, int weeks, String phase, Integer week, Integer dayIndex,
-                            TodayDay day, String completedWorkoutId, List<TodayDay> otherDays) {
+                            TodayDay day, String completedWorkoutId, List<TodayDay> otherDays, String programNotes) {
     }
 }

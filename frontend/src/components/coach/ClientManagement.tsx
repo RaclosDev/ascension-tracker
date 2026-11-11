@@ -1,8 +1,11 @@
+import { confirmAction } from '../../lib/confirmation';
 import { useNavigate } from 'react-router-dom';
 import { UserMinus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ClientSetupForm } from './ClientSetup';
 import { ClientSchedule } from './ClientSchedule';
+import { PowerliftingToggle } from './PowerliftingToggle';
+import { CheckinTemplateEditor } from './CheckinTemplateEditor';
 import {
   PERMISSION_LABELS,
   formatCoachDate,
@@ -19,10 +22,17 @@ export function ClientManagement({ link }: { link: CoachClient }) {
   return (
     <>
       <ClientSetupForm key={link.linkId} link={link} />
+      {link.permissions.training && (
+        <PowerliftingToggle linkId={link.linkId} canEdit={link.permissions.editTraining} />
+      )}
       <ClientSchedule
         key={`${link.linkId}-${JSON.stringify(link.followup?.schedule)}`}
         link={link}
       />
+      <details>
+        <summary className="cursor-pointer">Preguntas de revisión de este alumno</summary>
+        <CheckinTemplateEditor linkId={link.linkId} />
+      </details>
       <section className="card">
         <h2>Datos de la relación</h2>
         <dl className="coach-facts">
@@ -65,11 +75,14 @@ export function ClientManagement({ link }: { link: CoachClient }) {
           type="button"
           className="btn btn-secondary mt-4"
           disabled={end.isPending}
-          onClick={() => {
+          onClick={async () => {
             if (
-              !window.confirm(
-                `¿Terminar la relación con ${personName(link.client)}? Dejarás de ver sus datos.`,
-              )
+              !(await confirmAction({
+                title: 'Terminar relación con el alumno',
+                description: `¿Terminar la relación con ${personName(link.client)}? Dejarás de ver sus datos.`,
+                confirmLabel: 'Terminar relación',
+                destructive: true,
+              }))
             )
               return;
             end.mutate(link.linkId, {

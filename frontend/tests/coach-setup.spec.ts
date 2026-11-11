@@ -19,6 +19,8 @@ for (const width of [1440, 390]) {
     };
     await page.route('**/api/coach/**', async (route) => {
       const path = new URL(route.request().url()).pathname.replace('/api/coach/', '');
+      if (path.endsWith('/checkin-template'))
+        return route.fulfill({ json: { questions: [], custom: false } });
       if (path === 'profile') return route.fulfill({ json: { coach: true } });
       if (path === 'settings') return route.fulfill({ json: coachSettings });
       const client = {
@@ -116,7 +118,18 @@ for (const width of [1440, 390]) {
     await page.getByRole('button', { name: 'Guardar agenda' }).click();
     await expect(page.getByRole('button', { name: 'Guardar agenda' })).toBeDisabled();
     await page.getByRole('link', { name: 'Resumen', exact: true }).click();
-    await expect(page.getByText('Preparar la primera competición')).toBeVisible();
+    await expect(
+      page.getByText('4 días de entrenamiento por semana', { exact: true }),
+    ).toBeVisible();
+    const context = page.locator('.coach-client-context');
+    await expect(
+      context.getByText('Preparar la primera competición', { exact: true }),
+    ).toBeHidden();
+    await context.locator('summary').click();
+    await expect(
+      context.getByText('Preparar la primera competición', { exact: true }),
+    ).toBeVisible();
+    await expect(context.getByText('Rack, barra y discos', { exact: true })).toBeVisible();
     await expect(page.getByText(/Falta autorización para entrenamiento/)).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,

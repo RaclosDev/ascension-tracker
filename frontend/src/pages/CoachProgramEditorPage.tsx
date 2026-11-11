@@ -1,23 +1,12 @@
+import { confirmAction } from '../lib/confirmation';
 import { useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import {
-  ArrowDown,
-  ArrowLeft,
-  ArrowUp,
-  Copy,
-  GripVertical,
-  Plus,
-  Save,
-  Trash2,
-  X,
-} from 'lucide-react';
-import { DragDropContext, Draggable, Droppable, type DraggableProvided } from '@hello-pangea/dnd';
+import { ArrowLeft, Plus, Save } from 'lucide-react';
 import { apiErrorMessage } from '../lib/coach/api';
 import { useSessionDraft } from '../hooks/useSessionDraft';
 import { ProgramPreview } from '../components/coach/ProgramPreview';
 import {
-  MAX_EXERCISES_PER_DAY,
   MAX_WEEKS,
   WEEKDAY_LABELS,
   addDay,
@@ -25,8 +14,6 @@ import {
   copyWeek,
   emptyProgram,
   findDay,
-  moveItem,
-  newExercise,
   programProblems,
   publishProblems,
   isProgramDraft,
@@ -36,23 +23,20 @@ import {
   useCoachProgram,
   useSaveProgram,
   type Program,
-  type ProgramDay,
-  type ProgramExercise,
 } from '../lib/coach/coachPrograms';
-import { useExerciseCatalog } from '../lib/workout/catalog-query';
-import { BASE_EXERCISES } from '../lib/workout/exercises';
-import { useCustomExercises } from '../lib/workout/api';
-import { normalizeString } from '../lib/workout/format';
-import type { Exercise } from '../lib/workout/types';
+import { WeekBar } from '../components/coach/editor/WeekBar';
+import { DayEditor } from '../components/coach/editor/DayEditor';
+import { inputClass, inputStyle } from '../components/coach/editor/fields';
 
 const NEW_ID = 'nuevo';
-const inputClass = 'rounded-lg px-3 py-2 bg-black/20 border min-w-0';
-const inputStyle = { borderColor: 'var(--border-subtle)' };
 
 /** Builder for one library program: weeks, the days of each week and the prescribed exercises. */
 export default function CoachProgramEditorPage() {
   const { programId = NEW_ID } = useParams();
   const isNew = programId === NEW_ID;
+  const [search] = useSearchParams();
+  const kind = search.get('tipo');
+  const fresh = { ...emptyProgram(), weeks: kind === 'sesion' || kind === 'semana' ? 1 : 4 };
   const loaded = useCoachProgram(isNew ? null : programId);
 
   if (!isNew && loaded.isLoading) {
@@ -68,8 +52,8 @@ export default function CoachProgramEditorPage() {
   // Keyed so a different program (or a fresh save) starts from its own data.
   return (
     <ProgramEditor
-      key={`${programId}:${loaded.data?.updatedAt ?? ''}`}
-      initial={isNew ? emptyProgram() : (loaded.data as Program)}
+      key={`${programId}:${kind}:${loaded.data?.updatedAt ?? ''}`}
+      initial={isNew ? (kind === 'sesion' ? addDay(fresh, 1, 1) : fresh) : (loaded.data as Program)}
     />
   );
 }
@@ -103,7 +87,11 @@ export function ProgramEditor({
   const navigate = useNavigate();
   const save = useSaveProgram();
   const pending = save.isPending || publication?.pending;
-  const draft = useSessionDraft(`program:${initial.id ?? 'new'}`, initial, isProgramDraft);
+  const draft = useSessionDraft(
+    `program:${initial.id ?? `new:${initial.weeks}:${initial.days.length}`}`,
+    initial,
+    isProgramDraft,
+  );
   const program = draft.value;
   const dirty = draft.dirty;
   const stale = dirty && program.updatedAt !== initial.updatedAt;
@@ -166,9 +154,18 @@ export function ProgramEditor({
             to={publication?.returnTo ?? '/entrenador/programas'}
             aria-label={publication ? 'Volver al alumno' : 'Volver a programas'}
             className="btn btn-secondary"
-            onClick={(e) => {
-              if (dirty && !window.confirm('Tienes cambios sin guardar. ¿Salir igualmente?'))
-                e.preventDefault();
+            onClick={async (e) => {
+              if (!dirty) return;
+              e.preventDefault();
+              if (
+                await confirmAction({
+                  title: 'Salir del editor',
+                  description: `Tienes cambios sin guardar. ${draft.notice ?? ''}`.trim(),
+                  confirmLabel: 'Salir del editor',
+                })
+              ) {
+                navigate(publication?.returnTo ?? '/entrenador/programas');
+              }
             }}
           >
             <ArrowLeft size={16} aria-hidden />
@@ -212,8 +209,8 @@ export function ProgramEditor({
       {publication ? (
         <section className="card mb-3">
           <p>
-            Adaptación solo para <strong>{publication.clientName}</strong>. Al publicar, termina la
-            asignación actual y empieza una nueva copia desde la semana 1 en la fecha elegida. La
+            Adaptación solo para <strong>{publication.clientName}</strong>. La versión actual
+            continúa hasta la fecha elegida; entonces empieza la nueva copia desde la semana 1. La
             biblioteca y los entrenamientos registrados se conservan.
           </p>
           {publication.controls}
@@ -258,8 +255,15 @@ export function ProgramEditor({
           type="button"
           className="btn btn-secondary mb-3"
           disabled={pending}
-          onClick={() => {
-            if (window.confirm('¿Descartar los cambios locales y volver a la versión guardada?')) {
+          onClick={async () => {
+            if (
+              await confirmAction({
+                title: 'Descartar cambios',
+                description: '¿Descartar los cambios locales y volver a la versión guardada?',
+                confirmLabel: 'Descartar cambios',
+                destructive: true,
+              })
+            ) {
               draft.clear();
               setSaveError(null);
             }
@@ -297,14 +301,17 @@ export function ProgramEditor({
                 min={1}
                 max={MAX_WEEKS}
                 value={program.weeks}
-                onChange={(e) => {
+                onChange={async (e) => {
                   const weeks = Number(e.target.value);
                   const dropped = program.days.filter((d) => d.week > weeks).length;
                   if (
                     dropped > 0 &&
-                    !window.confirm(
-                      `Se borrarán ${dropped} días de las semanas que quitas. ¿Seguir?`,
-                    )
+                    !(await confirmAction({
+                      title: 'Reducir semanas',
+                      description: `Se borrarán ${dropped} días de las semanas que quitas. ¿Seguir?`,
+                      confirmLabel: 'Reducir semanas',
+                      destructive: true,
+                    }))
                   )
                     return;
                   edit((p) => setWeeks(p, weeks));
@@ -343,10 +350,15 @@ export function ProgramEditor({
             weeks={program.weeks}
             current={currentWeek}
             onSelect={setWeek}
-            onCopy={(to) => {
+            onCopy={async (to) => {
               if (
                 program.days.some((d) => d.week === to) &&
-                !window.confirm(`La semana ${to} ya tiene días y se sustituirán. ¿Seguir?`)
+                !(await confirmAction({
+                  title: `Sustituir la semana ${to}`,
+                  description: `Se copiarán los entrenamientos de la semana ${currentWeek} a la semana ${to}. Todo el contenido de la semana de destino se sustituirá, incluidas sus cargas y notas. La semana de origen se conserva.`,
+                  confirmLabel: 'Sustituir semana',
+                  destructive: true,
+                }))
               )
                 return;
               edit((p) => copyWeek(p, currentWeek, to));
@@ -380,20 +392,28 @@ export function ProgramEditor({
                   day={day}
                   weeks={program.weeks}
                   onChange={(change) => edit((p) => updateDay(p, currentWeek, dayIndex, change))}
-                  onRemove={() => {
+                  onRemove={async () => {
                     if (
                       day.exercises.length > 0 &&
-                      !window.confirm(
-                        `¿Quitar «${day.name}» y sus ${day.exercises.length} ejercicios?`,
-                      )
+                      !(await confirmAction({
+                        title: 'Quitar día de entrenamiento',
+                        description: `¿Quitar «${day.name}» y sus ${day.exercises.length} ejercicios?`,
+                        confirmLabel: 'Quitar día',
+                        destructive: true,
+                      }))
                     )
                       return;
                     edit((p) => removeDay(p, currentWeek, dayIndex));
                   }}
-                  onCopy={(to) => {
+                  onCopy={async (to) => {
                     if (
                       findDay(program, to.week, to.dayIndex) &&
-                      !window.confirm('Ese día ya tiene entrenamiento y se sustituirá. ¿Seguir?')
+                      !(await confirmAction({
+                        title: 'Sustituir entrenamiento',
+                        description: `Se copiará «${day.name}» al ${WEEKDAY_LABELS[to.dayIndex - 1].toLowerCase()} de la semana ${to.week}. Se sustituirán los ejercicios, cargas y notas de ese día. El entrenamiento de origen se conserva.`,
+                        confirmLabel: 'Sustituir entrenamiento',
+                        destructive: true,
+                      }))
                     )
                       return;
                     edit((p) => copyDay(p, { week: currentWeek, dayIndex }, to));
@@ -406,452 +426,6 @@ export function ProgramEditor({
             })}
           </div>
         </fieldset>
-      )}
-    </div>
-  );
-}
-
-function WeekBar({
-  weeks,
-  current,
-  onSelect,
-  onCopy,
-}: {
-  weeks: number;
-  current: number;
-  onSelect: (week: number) => void;
-  onCopy: (to: number) => void;
-}) {
-  const [target, setTarget] = useState('');
-  return (
-    <div className="mb-4 flex flex-wrap items-center gap-2">
-      <div role="tablist" aria-label="Semanas" className="flex flex-wrap gap-1">
-        {Array.from({ length: weeks }, (_, i) => i + 1).map((w) => (
-          <button
-            key={w}
-            type="button"
-            role="tab"
-            aria-selected={w === current}
-            className={w === current ? 'btn btn-primary' : 'btn btn-secondary'}
-            onClick={() => onSelect(w)}
-          >
-            S{w}
-          </button>
-        ))}
-      </div>
-      {weeks > 1 && (
-        <div className="flex items-center gap-2 ml-auto">
-          <select
-            aria-label={`Copiar la semana ${current} a`}
-            className={inputClass}
-            style={inputStyle}
-            value={target}
-            onChange={(e) => setTarget(e.target.value)}
-          >
-            <option value="">Copiar semana {current} a…</option>
-            {Array.from({ length: weeks }, (_, i) => i + 1)
-              .filter((w) => w !== current)
-              .map((w) => (
-                <option key={w} value={w}>
-                  Semana {w}
-                </option>
-              ))}
-          </select>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            aria-label={`Copiar semana ${current}`}
-            disabled={!target}
-            onClick={() => {
-              onCopy(Number(target));
-              setTarget('');
-            }}
-          >
-            <Copy size={16} aria-hidden /> Copiar
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DayEditor({
-  label,
-  day,
-  weeks,
-  onChange,
-  onRemove,
-  onCopy,
-}: {
-  label: string;
-  day: ProgramDay;
-  weeks: number;
-  onChange: (change: (day: ProgramDay) => ProgramDay) => void;
-  onRemove: () => void;
-  onCopy: (to: { week: number; dayIndex: number }) => void;
-}) {
-  const [copyWeekTarget, setCopyWeekTarget] = useState(day.week);
-  const [copyDayTarget, setCopyDayTarget] = useState(day.dayIndex === 7 ? 1 : day.dayIndex + 1);
-
-  const setExercises = (change: (list: ProgramExercise[]) => ProgramExercise[]) =>
-    onChange((d) => ({ ...d, exercises: change(d.exercises) }));
-
-  return (
-    <section className="card flex flex-col gap-3" aria-label={`${label}: ${day.name}`}>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-bold text-white w-24">{label}</span>
-        <input
-          aria-label={`Nombre del día (${label})`}
-          className={`${inputClass} flex-1`}
-          style={inputStyle}
-          maxLength={120}
-          value={day.name}
-          onChange={(e) => onChange((d) => ({ ...d, name: e.target.value }))}
-        />
-        <button
-          type="button"
-          className="btn btn-secondary"
-          aria-label={`Quitar el día ${label.toLowerCase()}`}
-          onClick={onRemove}
-        >
-          <Trash2 size={16} aria-hidden />
-        </button>
-      </div>
-      <textarea
-        aria-label={`Notas del día (${label})`}
-        placeholder="Notas del día (calentamiento, indicaciones…)"
-        className={inputClass}
-        style={inputStyle}
-        rows={1}
-        maxLength={2000}
-        value={day.notes ?? ''}
-        onChange={(e) => onChange((d) => ({ ...d, notes: e.target.value || null }))}
-      />
-
-      {day.exercises.length > 0 && (
-        <DragDropContext
-          onDragEnd={({ source, destination }) => {
-            if (destination)
-              setExercises((list) => moveItem(list, source.index, destination.index));
-          }}
-        >
-          <Droppable droppableId={`day-${day.week}-${day.dayIndex}`}>
-            {(drop) => (
-              <ol className="flex flex-col gap-2" ref={drop.innerRef} {...drop.droppableProps}>
-                {day.exercises.map((exercise, i) => (
-                  <Draggable
-                    key={`${i}-${exercise.exerciseId}`}
-                    draggableId={`${i}-${exercise.exerciseId}`}
-                    index={i}
-                  >
-                    {(drag) => (
-                      <ExerciseRow
-                        drag={drag}
-                        index={i}
-                        count={day.exercises.length}
-                        exercise={exercise}
-                        onChange={(next) =>
-                          setExercises((list) => list.map((e, j) => (j === i ? next : e)))
-                        }
-                        onMove={(to) => setExercises((list) => moveItem(list, i, to))}
-                        onRemove={() => setExercises((list) => list.filter((_, j) => j !== i))}
-                      />
-                    )}
-                  </Draggable>
-                ))}
-                {drop.placeholder}
-              </ol>
-            )}
-          </Droppable>
-        </DragDropContext>
-      )}
-
-      {day.exercises.length < MAX_EXERCISES_PER_DAY && (
-        <ExerciseSearch
-          onPick={(ex) => setExercises((list) => [...list, newExercise(ex.id, ex.name)])}
-        />
-      )}
-
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span style={{ color: 'var(--text-secondary)' }}>Copiar este día a</span>
-        <select
-          aria-label="Semana de destino"
-          className={inputClass}
-          style={inputStyle}
-          value={copyWeekTarget}
-          onChange={(e) => setCopyWeekTarget(Number(e.target.value))}
-        >
-          {Array.from({ length: weeks }, (_, i) => i + 1).map((w) => (
-            <option key={w} value={w}>
-              Semana {w}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label="Día de destino"
-          className={inputClass}
-          style={inputStyle}
-          value={copyDayTarget}
-          onChange={(e) => setCopyDayTarget(Number(e.target.value))}
-        >
-          {WEEKDAY_LABELS.map((name, i) => (
-            <option key={name} value={i + 1}>
-              {name}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          disabled={copyWeekTarget === day.week && copyDayTarget === day.dayIndex}
-          onClick={() => onCopy({ week: copyWeekTarget, dayIndex: copyDayTarget })}
-        >
-          <Copy size={16} aria-hidden /> Copiar
-        </button>
-      </div>
-    </section>
-  );
-}
-
-const toNumber = (value: string) => (value.trim() === '' ? null : Number(value));
-
-function NumberField({
-  label,
-  value,
-  onChange,
-  min,
-  max,
-  step,
-}: {
-  label: string;
-  value: number | null;
-  onChange: (value: number | null) => void;
-  min: number;
-  max: number;
-  step?: number;
-}) {
-  return (
-    <label className="flex flex-col gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
-      {label}
-      <input
-        className={`${inputClass} w-20`}
-        style={inputStyle}
-        type="number"
-        inputMode="decimal"
-        min={min}
-        max={max}
-        step={step}
-        value={value ?? ''}
-        onChange={(e) => onChange(toNumber(e.target.value))}
-      />
-    </label>
-  );
-}
-
-function ExerciseRow({
-  drag,
-  index,
-  count,
-  exercise,
-  onChange,
-  onMove,
-  onRemove,
-}: {
-  drag: DraggableProvided;
-  index: number;
-  count: number;
-  exercise: ProgramExercise;
-  onChange: (next: ProgramExercise) => void;
-  onMove: (to: number) => void;
-  onRemove: () => void;
-}) {
-  const name = exercise.exerciseName || exercise.exerciseId;
-  const set = <K extends keyof ProgramExercise>(key: K, value: ProgramExercise[K]) =>
-    onChange({ ...exercise, [key]: value });
-
-  return (
-    <li
-      ref={drag.innerRef}
-      {...drag.draggableProps}
-      className="rounded-lg border p-3 flex flex-col gap-2"
-      style={{ ...inputStyle, ...drag.draggableProps.style }}
-    >
-      <div className="flex items-center gap-2">
-        <span
-          {...drag.dragHandleProps}
-          aria-label={`Arrastrar ${name}`}
-          className="cursor-grab touch-none"
-          style={{ color: 'var(--text-secondary)' }}
-        >
-          <GripVertical size={18} aria-hidden />
-        </span>
-        <span className="font-bold text-white flex-1 min-w-0 truncate">
-          {index + 1}. {name}
-        </span>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          aria-label={`Subir ${name}`}
-          disabled={index === 0}
-          onClick={() => onMove(index - 1)}
-        >
-          <ArrowUp size={16} aria-hidden />
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          aria-label={`Bajar ${name}`}
-          disabled={index === count - 1}
-          onClick={() => onMove(index + 1)}
-        >
-          <ArrowDown size={16} aria-hidden />
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          aria-label={`Quitar ${name}`}
-          onClick={onRemove}
-        >
-          <X size={16} aria-hidden />
-        </button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <NumberField
-          label="Series"
-          value={exercise.sets}
-          min={1}
-          max={20}
-          onChange={(v) => set('sets', v ?? 0)}
-        />
-        <NumberField
-          label="Reps mín."
-          value={exercise.repsMin}
-          min={1}
-          max={100}
-          onChange={(v) => set('repsMin', v)}
-        />
-        <NumberField
-          label="Reps máx."
-          value={exercise.repsMax}
-          min={1}
-          max={100}
-          onChange={(v) => set('repsMax', v)}
-        />
-        <NumberField
-          label="RPE"
-          value={exercise.targetRpe}
-          min={1}
-          max={10}
-          step={0.5}
-          onChange={(v) => set('targetRpe', v)}
-        />
-        <NumberField
-          label="RIR"
-          value={exercise.targetRir}
-          min={0}
-          max={10}
-          onChange={(v) => set('targetRir', v)}
-        />
-        <NumberField
-          label="Descanso (s)"
-          value={exercise.restSeconds}
-          min={0}
-          max={900}
-          step={15}
-          onChange={(v) => set('restSeconds', v)}
-        />
-        <NumberField
-          label="Superserie"
-          value={exercise.supersetGroup}
-          min={1}
-          max={20}
-          onChange={(v) => set('supersetGroup', v)}
-        />
-        <label className="flex flex-col gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
-          Carga
-          <input
-            className={`${inputClass} w-28`}
-            style={inputStyle}
-            placeholder="75 %, 40 kg…"
-            maxLength={60}
-            value={exercise.loadHint ?? ''}
-            onChange={(e) => set('loadHint', e.target.value || null)}
-          />
-        </label>
-      </div>
-      <input
-        aria-label={`Notas de ${name}`}
-        placeholder="Notas (técnica, tempo…)"
-        className={inputClass}
-        style={inputStyle}
-        maxLength={500}
-        value={exercise.notes ?? ''}
-        onChange={(e) => set('notes', e.target.value || null)}
-      />
-    </li>
-  );
-}
-
-const MAX_RESULTS = 8;
-
-/** Searches the coach's own exercises, the Spanish base list and the shared catalog. */
-function ExerciseSearch({ onPick }: { onPick: (exercise: Exercise) => void }) {
-  const { data: catalog = [] } = useExerciseCatalog();
-  const { data: custom = [] } = useCustomExercises();
-  const [query, setQuery] = useState('');
-
-  const results = useMemo(() => {
-    const q = normalizeString(query.trim());
-    if (!q) return [];
-    // BASE_EXERCISES se rellena al cargar el catálogo; sin él no salen los nombres en español.
-    const seen = new Set<string>();
-    return [...custom, ...BASE_EXERCISES, ...catalog]
-      .filter((ex) => {
-        if (seen.has(ex.id) || !normalizeString(ex.name).includes(q)) return false;
-        seen.add(ex.id);
-        return true;
-      })
-      .slice(0, MAX_RESULTS);
-  }, [query, catalog, custom]);
-
-  return (
-    <div className="flex flex-col gap-1">
-      <input
-        type="search"
-        aria-label="Buscar ejercicio para añadir"
-        placeholder="Añadir ejercicio: escribe para buscar"
-        className={inputClass}
-        style={inputStyle}
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
-      {query.trim() !== '' && (
-        <ul className="flex flex-col gap-1" aria-label="Resultados">
-          {results.length === 0 && (
-            <li className="text-sm px-1" style={{ color: 'var(--text-secondary)' }}>
-              Nada coincide.
-            </li>
-          )}
-          {results.map((ex) => (
-            <li key={ex.id}>
-              <button
-                type="button"
-                className="btn btn-secondary w-full justify-start"
-                onClick={() => {
-                  onPick(ex);
-                  setQuery('');
-                }}
-              >
-                <Plus size={14} aria-hidden /> {ex.name}
-                {ex.custom && (
-                  <span className="text-xs ml-auto" style={{ color: 'var(--text-secondary)' }}>
-                    propio
-                  </span>
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
       )}
     </div>
   );
