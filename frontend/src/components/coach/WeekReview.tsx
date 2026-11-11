@@ -25,6 +25,9 @@ export function WeekReview({
     [custom.data, catalog.data],
   );
   const relevant = assignments.filter((a) => overlapsWeek(a, week));
+  const current = relevant.filter((a) => a.status !== 'ENDED');
+  const previous = current.length ? relevant.filter((a) => a.status === 'ENDED') : [];
+  const visible = current.length ? current : relevant;
   const checkin = checkins.data?.find((c) => c.weekStart === week);
   return (
     <section className="card min-w-0 flex flex-col gap-4">
@@ -88,7 +91,7 @@ export function WeekReview({
       </Link>
       <h3 className="font-bold">Pautado y registrado</h3>
       {relevant.length === 0 && <p>No hay programa para esta semana.</p>}
-      {relevant.map((a) => (
+      {visible.map((a) => (
         <div key={a.id}>
           <h4>{a.programName}</h4>
           <ProgramSessions
@@ -99,6 +102,26 @@ export function WeekReview({
           />
         </div>
       ))}
+      {previous.length > 0 && (
+        <details className="border-t pt-3">
+          <summary className="cursor-pointer min-h-11">
+            Programas anteriores de esta semana ({previous.length})
+          </summary>
+          <div className="flex flex-col gap-4 pt-3">
+            {previous.map((a) => (
+              <div key={a.id}>
+                <h4>{a.programName}</h4>
+                <ProgramSessions
+                  linkId={linkId}
+                  assignmentId={a.id}
+                  weekStart={week}
+                  exerciseName={(id) => exercises.get(id)?.name ?? 'Ejercicio'}
+                />
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
       <Link
         className="btn btn-secondary"
         to={`/entrenador/alumnos/${linkId}?seccion=entrenamiento`}
