@@ -73,7 +73,8 @@ export function PowerProgress({ linkId, profile }: { linkId: string; profile: Po
                   ) : (
                     <>
                       <p>
-                        <strong>{p.sets}</strong> series · {p.reps} repeticiones
+                        <strong>{p.sets}</strong> {p.sets === 1 ? 'serie' : 'series'} · {p.reps}{' '}
+                        {p.reps === 1 ? 'repetición' : 'repeticiones'}
                       </p>
                       <dl className="flex flex-col gap-3">
                         <div>
@@ -110,7 +111,7 @@ export function PowerProgress({ linkId, profile }: { linkId: string; profile: Po
                           <dd>
                             {p.rpe === null
                               ? 'Sin RPE registrado'
-                              : `${number(p.rpe)} / 10 · ${p.rpeCount} de ${p.sets} series`}
+                              : `${number(p.rpe)} / 10 · ${p.rpeCount} de ${p.sets} ${p.sets === 1 ? 'serie' : 'series'}`}
                           </dd>
                         </div>
                       </dl>
@@ -168,11 +169,12 @@ export function PowerProgress({ linkId, profile }: { linkId: string; profile: Po
                       />
                     </div>
                     <p>
-                      {w.sets} series · {w.reps} repeticiones · Carga máxima {number(w.maxLoad)} kg
-                      ·{' '}
+                      {w.sets} {w.sets === 1 ? 'serie' : 'series'} · {w.reps}{' '}
+                      {w.reps === 1 ? 'repetición' : 'repeticiones'} · Carga máxima{' '}
+                      {number(w.maxLoad)} kg ·{' '}
                       {w.rpe === null
                         ? 'RPE sin datos'
-                        : `RPE ${number(w.rpe)} (${w.rpeCount} series)`}
+                        : `RPE ${number(w.rpe)} (${w.rpeCount} ${w.rpeCount === 1 ? 'serie' : 'series'})`}
                     </p>
                   </li>
                 ))}
