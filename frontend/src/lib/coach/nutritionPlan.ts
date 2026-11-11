@@ -37,7 +37,7 @@ export interface PlannedMeal {
   fat: number;
 }
 
-export interface MealRequest {
+interface MealRequest {
   dayType: DayType;
   slotName: string;
   recipeId: string;
