@@ -29,12 +29,6 @@ export interface ClientStatus {
 
 export const LEVEL_ORDER: Record<StatusLevel, number> = { RED: 0, AMBER: 1, GREEN: 2 };
 
-export const LEVEL_LABELS: Record<StatusLevel, string> = {
-  RED: 'Necesita atención',
-  AMBER: 'Vigilar',
-  GREEN: 'Al día',
-};
-
 export const LEVEL_COLORS: Record<StatusLevel, string> = {
   RED: 'var(--color-danger)',
   AMBER: 'var(--color-warning)',
@@ -52,7 +46,7 @@ export function signalText({ reason, value }: StatusSignal): string {
     case 'FEW_FOOD_LOGS':
       return `Comida registrada ${value} de 7 días`;
     case 'WEIGHT_STALLED':
-      return `Peso estancado en las últimas ${value} semanas`;
+      return `Pocos cambios de peso en las últimas ${value} semanas`;
     case 'NO_PROGRAM':
       return 'Sin programa asignado';
     case 'NO_NUTRITION_PLAN':

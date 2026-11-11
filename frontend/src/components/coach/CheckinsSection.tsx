@@ -3,13 +3,15 @@ import toast from 'react-hot-toast';
 import { apiErrorMessage } from '../../lib/coach/api';
 import { useClientCheckins, useReplyCheckin, type Checkin } from '../../lib/coach/checkins';
 import { CheckinCard } from './CheckinCard';
+import { QueryErrorNotice } from '../QueryErrorNotice';
 
-/** The client's weekly check-ins in the coach's view of a client, newest first. */
+/** Unanswered check-ins first, then newest week within each group. */
 export function CheckinsSection({ linkId }: { linkId: string }) {
   const checkins = useClientCheckins(linkId);
 
   if (checkins.isLoading) return <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>;
-  if (checkins.isError) return <p role="alert">No se pudieron cargar los check-ins.</p>;
+  if (checkins.isError)
+    return <QueryErrorNotice retry={() => void checkins.refetch()} pending={checkins.isFetching} />;
   if (!checkins.data?.length) {
     return (
       <p style={{ color: 'var(--text-secondary)' }}>Tu alumno aún no ha enviado ningún check-in.</p>
@@ -17,13 +19,19 @@ export function CheckinsSection({ linkId }: { linkId: string }) {
   }
   return (
     <div className="flex flex-col gap-3">
-      {checkins.data.map((c) => (
-        <CheckinCard
-          key={c.id}
-          checkin={c}
-          footer={c.coachReply ? null : <ReplyForm linkId={linkId} checkin={c} />}
-        />
-      ))}
+      {[...checkins.data]
+        .sort(
+          (a, b) =>
+            Number(!!a.coachReply) - Number(!!b.coachReply) ||
+            b.weekStart.localeCompare(a.weekStart),
+        )
+        .map((c) => (
+          <CheckinCard
+            key={c.id}
+            checkin={c}
+            footer={c.coachReply ? null : <ReplyForm linkId={linkId} checkin={c} />}
+          />
+        ))}
     </div>
   );
 }
