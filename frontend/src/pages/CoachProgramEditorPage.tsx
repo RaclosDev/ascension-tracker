@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { DragDropContext, Draggable, Droppable, type DraggableProvided } from '@hello-pangea/dnd';
 import { apiErrorMessage } from '../lib/coach/api';
+import { useSessionDraft } from '../hooks/useSessionDraft';
+import { ProgramPreview } from '../components/coach/ProgramPreview';
 import {
   MAX_EXERCISES_PER_DAY,
   MAX_WEEKS,
@@ -26,6 +28,8 @@ import {
   moveItem,
   newExercise,
   programProblems,
+  publishProblems,
+  isProgramDraft,
   removeDay,
   setWeeks,
   updateDay,
@@ -62,7 +66,12 @@ export default function CoachProgramEditorPage() {
     );
   }
   // Keyed so a different program (or a fresh save) starts from its own data.
-  return <Editor key={programId} initial={isNew ? emptyProgram() : (loaded.data as Program)} />;
+  return (
+    <Editor
+      key={`${programId}:${loaded.data?.updatedAt ?? ''}`}
+      initial={isNew ? emptyProgram() : (loaded.data as Program)}
+    />
+  );
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
@@ -79,40 +88,50 @@ function Shell({ children }: { children: React.ReactNode }) {
 function Editor({ initial }: { initial: Program }) {
   const navigate = useNavigate();
   const save = useSaveProgram();
-  const [program, setProgram] = useState<Program>(initial);
+  const draft = useSessionDraft(`program:${initial.id ?? 'new'}`, initial, isProgramDraft);
+  const program = draft.value;
+  const dirty = draft.dirty;
+  const stale = dirty && program.updatedAt !== initial.updatedAt;
   const [week, setWeek] = useState(1);
-  const [dirty, setDirty] = useState(false);
+  const [preview, setPreview] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const problems = useMemo(() => programProblems(program), [program]);
 
   const edit = (change: (p: Program) => Program) => {
-    setProgram((p) => change(p));
-    setDirty(true);
+    draft.setValue(change(program));
+    setSaveError(null);
   };
 
-  const onSave = () => {
-    if (problems.length > 0) {
-      toast.error(problems[0]);
+  const onSave = (status: 'DRAFT' | 'READY', asCopy = false) => {
+    const errors = status === 'READY' ? publishProblems(program) : problems;
+    if (errors.length > 0) {
+      setSaveError(errors[0]);
       return;
     }
-    save.mutate(program, {
-      onSuccess: (saved) => {
-        toast.success('Programa guardado');
-        setDirty(false);
-        if (!program.id && saved.id) {
-          navigate(`/entrenador/programas/${saved.id}`, { replace: true });
-        } else {
-          setProgram(saved);
-        }
+    setSaveError(null);
+    save.mutate(
+      { ...program, status, ...(asCopy ? { id: null, updatedAt: null } : {}) },
+      {
+        onSuccess: (saved) => {
+          toast.success(status === 'READY' ? 'Programa listo para asignar' : 'Borrador guardado');
+          draft.clear();
+          if (saved.id && program.id !== saved.id) {
+            navigate(`/entrenador/programas/${saved.id}`, { replace: true });
+          }
+        },
+        onError: (e) =>
+          setSaveError(
+            apiErrorMessage(e, 'No se pudo guardar el programa. Conservamos tus cambios.'),
+          ),
       },
-      onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo guardar el programa')),
-    });
+    );
   };
 
   const currentWeek = Math.min(week, program.weeks);
 
   return (
     <div className="fade-in max-w-6xl mx-auto px-4 pt-2 sm:pt-4 pb-16">
-      <header className="mb-4 pb-2 border-b border-white/5 flex items-center justify-between gap-3">
+      <header className="mb-4 pb-2 border-b border-white/5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link
             to="/entrenador/programas"
@@ -125,143 +144,229 @@ function Editor({ initial }: { initial: Program }) {
           >
             <ArrowLeft size={16} aria-hidden />
           </Link>
-          <h1 className="text-2xl font-black text-white tracking-tight truncate">
+          <h1 className="text-2xl font-black text-foreground tracking-tight">
             {program.id ? 'Editar programa' : 'Nuevo programa'}
           </h1>
         </div>
-        <button
-          type="button"
-          className="btn btn-primary"
-          disabled={save.isPending || (!dirty && program.id != null)}
-          onClick={onSave}
-        >
-          <Save size={16} aria-hidden /> Guardar
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            aria-pressed={preview}
+            onClick={() => setPreview(!preview)}
+          >
+            {preview ? 'Volver al editor' : 'Vista previa'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={
+              save.isPending ||
+              stale ||
+              (!dirty && program.id != null && program.status === 'DRAFT')
+            }
+            onClick={() => onSave('DRAFT')}
+          >
+            <Save size={16} aria-hidden /> Guardar borrador
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={save.isPending || stale || (!dirty && program.status === 'READY')}
+            onClick={() => onSave('READY')}
+          >
+            Guardar listo para asignar
+          </button>
+        </div>
       </header>
 
-      <section className="card mb-4 grid gap-3 sm:grid-cols-[1fr_8rem]">
-        <label className="flex flex-col gap-1">
-          <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Nombre
-          </span>
-          <input
-            className={inputClass}
-            style={inputStyle}
-            maxLength={120}
-            value={program.name}
-            onChange={(e) => edit((p) => ({ ...p, name: e.target.value }))}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Semanas
-          </span>
-          <input
-            className={inputClass}
-            style={inputStyle}
-            type="number"
-            min={1}
-            max={MAX_WEEKS}
-            value={program.weeks}
-            onChange={(e) => {
-              const weeks = Number(e.target.value);
-              const dropped = program.days.filter((d) => d.week > weeks).length;
-              if (
-                dropped > 0 &&
-                !window.confirm(`Se borrarán ${dropped} días de las semanas que quitas. ¿Seguir?`)
-              )
-                return;
-              edit((p) => setWeeks(p, weeks));
-            }}
-          />
-        </label>
-        <label className="flex flex-col gap-1 sm:col-span-2">
-          <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Notas para el alumno
-          </span>
-          <textarea
-            className={inputClass}
-            style={inputStyle}
-            rows={2}
-            maxLength={2000}
-            value={program.notes ?? ''}
-            onChange={(e) => edit((p) => ({ ...p, notes: e.target.value || null }))}
-          />
-        </label>
-      </section>
-
-      {problems.length > 0 && dirty && (
-        <ul className="card mb-4 text-sm flex flex-col gap-1" aria-label="Problemas del programa">
-          {problems.slice(0, 5).map((problem) => (
-            <li key={problem} style={{ color: 'var(--danger, #f87171)' }}>
-              {problem}
-            </li>
-          ))}
-        </ul>
+      <p className="text-sm mb-3">
+        {initial.status === 'READY'
+          ? 'Versión guardada: lista para asignar.'
+          : 'Borrador de biblioteca.'}{' '}
+        Guardar aquí no cambia los programas que ya tienen tus alumnos. La asignación se publica
+        desde cada ficha.
+      </p>
+      {draft.notice && (
+        <p role="status" className="text-sm mb-3">
+          {draft.notice}
+        </p>
+      )}
+      {saveError && (
+        <p role="alert" className="card mb-3">
+          {saveError}
+        </p>
+      )}
+      {stale && (
+        <div role="alert" className="card mb-3">
+          <p>
+            La versión guardada ha cambiado desde que empezaste este borrador. Puedes conservar tus
+            cambios como un programa nuevo o descartarlos para cargar la versión actual.
+          </p>
+          <button
+            type="button"
+            className="btn btn-secondary mt-2"
+            disabled={save.isPending}
+            onClick={() => onSave('DRAFT', true)}
+          >
+            Guardar como nuevo borrador
+          </button>
+        </div>
+      )}
+      {dirty && (
+        <button
+          type="button"
+          className="btn btn-secondary mb-3"
+          disabled={save.isPending}
+          onClick={() => {
+            if (window.confirm('¿Descartar los cambios locales y volver a la versión guardada?')) {
+              draft.clear();
+              setSaveError(null);
+            }
+          }}
+        >
+          Descartar cambios locales
+        </button>
       )}
 
-      <WeekBar
-        weeks={program.weeks}
-        current={currentWeek}
-        onSelect={setWeek}
-        onCopy={(to) => {
-          if (
-            program.days.some((d) => d.week === to) &&
-            !window.confirm(`La semana ${to} ya tiene días y se sustituirán. ¿Seguir?`)
-          )
-            return;
-          edit((p) => copyWeek(p, currentWeek, to));
-          setWeek(to);
-        }}
-      />
+      {preview ? (
+        <ProgramPreview program={program} />
+      ) : (
+        <fieldset disabled={save.isPending} className="min-w-0">
+          <section className="card mb-4 grid gap-3 sm:grid-cols-[1fr_8rem]">
+            <label className="flex flex-col gap-1">
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Nombre
+              </span>
+              <input
+                className={inputClass}
+                style={inputStyle}
+                maxLength={120}
+                value={program.name}
+                onChange={(e) => edit((p) => ({ ...p, name: e.target.value }))}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Semanas
+              </span>
+              <input
+                className={inputClass}
+                style={inputStyle}
+                type="number"
+                min={1}
+                max={MAX_WEEKS}
+                value={program.weeks}
+                onChange={(e) => {
+                  const weeks = Number(e.target.value);
+                  const dropped = program.days.filter((d) => d.week > weeks).length;
+                  if (
+                    dropped > 0 &&
+                    !window.confirm(
+                      `Se borrarán ${dropped} días de las semanas que quitas. ¿Seguir?`,
+                    )
+                  )
+                    return;
+                  edit((p) => setWeeks(p, weeks));
+                }}
+              />
+            </label>
+            <label className="flex flex-col gap-1 sm:col-span-2">
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Notas para el alumno
+              </span>
+              <textarea
+                className={inputClass}
+                style={inputStyle}
+                rows={2}
+                maxLength={2000}
+                value={program.notes ?? ''}
+                onChange={(e) => edit((p) => ({ ...p, notes: e.target.value || null }))}
+              />
+            </label>
+          </section>
 
-      <div className="flex flex-col gap-3">
-        {WEEKDAY_LABELS.map((label, i) => {
-          const dayIndex = i + 1;
-          const day = findDay(program, currentWeek, dayIndex);
-          if (!day) {
-            return (
-              <div key={dayIndex} className="card flex items-center justify-between gap-3 py-3">
-                <span style={{ color: 'var(--text-secondary)' }}>{label} · descanso</span>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  aria-label={`Añadir entrenamiento el ${label.toLowerCase()}`}
-                  onClick={() => edit((p) => addDay(p, currentWeek, dayIndex))}
-                >
-                  <Plus size={16} aria-hidden /> Añadir día
-                </button>
-              </div>
-            );
-          }
-          return (
-            <DayEditor
-              key={dayIndex}
-              label={label}
-              day={day}
-              weeks={program.weeks}
-              onChange={(change) => edit((p) => updateDay(p, currentWeek, dayIndex, change))}
-              onRemove={() => {
-                if (
-                  day.exercises.length > 0 &&
-                  !window.confirm(`¿Quitar «${day.name}» y sus ${day.exercises.length} ejercicios?`)
-                )
-                  return;
-                edit((p) => removeDay(p, currentWeek, dayIndex));
-              }}
-              onCopy={(to) => {
-                if (
-                  findDay(program, to.week, to.dayIndex) &&
-                  !window.confirm('Ese día ya tiene entrenamiento y se sustituirá. ¿Seguir?')
-                )
-                  return;
-                edit((p) => copyDay(p, { week: currentWeek, dayIndex }, to));
-                toast.success(`Copiado a semana ${to.week}, ${WEEKDAY_LABELS[to.dayIndex - 1]}`);
-              }}
-            />
-          );
-        })}
-      </div>
+          {problems.length > 0 && dirty && !saveError && (
+            <ul
+              className="card mb-4 text-sm flex flex-col gap-1"
+              aria-label="Problemas del programa"
+            >
+              {problems.slice(0, 5).map((problem) => (
+                <li key={problem} style={{ color: 'var(--danger, #f87171)' }}>
+                  {problem}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <WeekBar
+            weeks={program.weeks}
+            current={currentWeek}
+            onSelect={setWeek}
+            onCopy={(to) => {
+              if (
+                program.days.some((d) => d.week === to) &&
+                !window.confirm(`La semana ${to} ya tiene días y se sustituirán. ¿Seguir?`)
+              )
+                return;
+              edit((p) => copyWeek(p, currentWeek, to));
+              setWeek(to);
+            }}
+          />
+
+          <div className="flex flex-col gap-3">
+            {WEEKDAY_LABELS.map((label, i) => {
+              const dayIndex = i + 1;
+              const day = findDay(program, currentWeek, dayIndex);
+              if (!day) {
+                return (
+                  <div key={dayIndex} className="card flex items-center justify-between gap-3 py-3">
+                    <span style={{ color: 'var(--text-secondary)' }}>{label} · descanso</span>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      aria-label={`Añadir entrenamiento el ${label.toLowerCase()}`}
+                      onClick={() => edit((p) => addDay(p, currentWeek, dayIndex))}
+                    >
+                      <Plus size={16} aria-hidden /> Añadir día
+                    </button>
+                  </div>
+                );
+              }
+              return (
+                <DayEditor
+                  key={dayIndex}
+                  label={label}
+                  day={day}
+                  weeks={program.weeks}
+                  onChange={(change) => edit((p) => updateDay(p, currentWeek, dayIndex, change))}
+                  onRemove={() => {
+                    if (
+                      day.exercises.length > 0 &&
+                      !window.confirm(
+                        `¿Quitar «${day.name}» y sus ${day.exercises.length} ejercicios?`,
+                      )
+                    )
+                      return;
+                    edit((p) => removeDay(p, currentWeek, dayIndex));
+                  }}
+                  onCopy={(to) => {
+                    if (
+                      findDay(program, to.week, to.dayIndex) &&
+                      !window.confirm('Ese día ya tiene entrenamiento y se sustituirá. ¿Seguir?')
+                    )
+                      return;
+                    edit((p) => copyDay(p, { week: currentWeek, dayIndex }, to));
+                    toast.success(
+                      `Copiado a semana ${to.week}, ${WEEKDAY_LABELS[to.dayIndex - 1]}`,
+                    );
+                  }}
+                />
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
     </div>
   );
 }

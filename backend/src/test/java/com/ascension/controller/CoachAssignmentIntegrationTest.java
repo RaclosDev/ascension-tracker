@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CoachAssignmentIntegrationTest {
 
     private static final String PROGRAM = """
-            {"name":"Fuerza","weeks":2,"days":[{"week":1,"dayIndex":1,"name":"Torso","exercises":[
+            {"name":"Fuerza","status":"READY","weeks":2,"days":[{"week":1,"dayIndex":1,"name":"Torso","exercises":[
               {"exerciseId":"bench-press","exerciseName":"Press banca","sets":4,"repsMin":6,"repsMax":8}]}]}
             """;
     private static final String EDIT = "{\"training\":true,\"nutrition\":false,\"body\":false,\"editTraining\":true}";
@@ -47,6 +47,30 @@ class CoachAssignmentIntegrationTest {
     @Autowired UserService users;
     @Autowired AccountDeletionService accountDeletion;
     @Autowired ObjectMapper json;
+
+    @Test
+    void draftsAndStalePreviewsCannotReplaceAnActiveAssignment() throws Exception {
+        String coach = coach();
+        String link = accept(user(), invite(coach), EDIT);
+        String program = createProgram(coach);
+        String active = assign(coach, link, program).get("id").asString();
+        String version = json.readTree(mvc.perform(as(get("/api/coach/programs/{id}", program), coach))
+                .andReturn().getResponse().getContentAsString()).get("updatedAt").asString();
+        mvc.perform(as(put("/api/coach/programs/{id}", program), coach).contentType("application/json")
+                .content(PROGRAM.replace("READY", "DRAFT"))).andExpect(status().isOk());
+        mvc.perform(assignRequest(coach, link, program)).andExpect(status().isBadRequest());
+        mvc.perform(as(put("/api/coach/programs/{id}", program), coach).contentType("application/json")
+                .content(PROGRAM)).andExpect(status().isOk());
+        mvc.perform(as(post("/api/coach/clients/{link}/programs", link), coach).contentType("application/json")
+                .content("""
+                        {"programId":"%s","startDate":"%s","programUpdatedAt":"%s"}
+                        """.formatted(program, LocalDate.now(), version)))
+                .andExpect(status().isConflict());
+        mvc.perform(as(get("/api/coach/clients/{link}/programs", link), coach))
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(active))
+                .andExpect(jsonPath("$[0].status").value("ACTIVE"));
+    }
 
     @Test
     void assignsACopyOwnedByTheClientThatOutlivesTheOriginal() throws Exception {

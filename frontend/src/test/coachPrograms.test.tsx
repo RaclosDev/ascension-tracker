@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import api from '../api/client';
 import CoachProgramEditorPage from '../pages/CoachProgramEditorPage';
 import CoachProgramsPage from '../pages/CoachProgramsPage';
+import { clearSessionDrafts } from '../lib/sessionDrafts';
 import {
   addDay,
   copyDay,
@@ -20,6 +21,9 @@ import {
 
 vi.mock('../api/client', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
+}));
+vi.mock('../context/AuthContext', () => ({
+  useAuth: () => ({ user: { email: 'coach@example.test' } }),
 }));
 vi.mock('../lib/workout/catalog-query', () => ({
   useExerciseCatalog: () => ({
@@ -60,7 +64,11 @@ function renderAt(path: string) {
   );
 }
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  sessionStorage.clear();
+  clearSessionDrafts();
+});
 afterEach(cleanup);
 
 describe('program editor helpers', () => {
@@ -149,7 +157,7 @@ describe('CoachProgramEditorPage', () => {
     fireEvent.change(screen.getByLabelText('RPE'), { target: { value: '8' } });
     expect(screen.getByLabelText('Arrastrar Press banca')).toBeDefined();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
     await waitFor(() => expect(mockedApi.post).toHaveBeenCalledTimes(1));
     const [url, body] = mockedApi.post.mock.calls[0] as [string, Program];
     expect(url).toBe('/coach/programs');
@@ -164,10 +172,88 @@ describe('CoachProgramEditorPage', () => {
     });
   });
 
+  it('recovers an unsaved program after navigation and keeps it after a failed save', async () => {
+    mockedApi.get.mockImplementation(() => new Promise(() => {}));
+    mockedApi.post.mockRejectedValue(new Error('offline'));
+    const first = renderAt('/entrenador/programas/nuevo');
+    fireEvent.change(screen.getByLabelText('Nombre'), {
+      target: { value: 'Borrador recuperable' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir entrenamiento el lunes' }));
+    first.unmount();
+    renderAt('/entrenador/programas/nuevo');
+    expect(screen.getByLabelText('Nombre')).toHaveValue('Borrador recuperable');
+    expect(screen.getByLabelText('Buscar ejercicio para añadir')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Conservamos tus cambios');
+    expect(screen.getByLabelText('Nombre')).toHaveValue('Borrador recuperable');
+  });
+
+  it('blocks publishing empty days and previews the program before publication', async () => {
+    mockedApi.get.mockImplementation(() => new Promise(() => {}));
+    mockedApi.post.mockImplementation((_url: string, body: unknown) =>
+      Promise.resolve({
+        data: { ...(body as Program), id: 'p-ready', updatedAt: '2026-11-11T12:00:00Z' },
+      }),
+    );
+    renderAt('/entrenador/programas/nuevo');
+    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Listo' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir entrenamiento el lunes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar listo para asignar' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('añade ejercicios');
+    expect(mockedApi.post).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText('Buscar ejercicio para añadir'), {
+      target: { value: 'press' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Press banca/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Vista previa' }));
+    expect(screen.getByRole('region', { name: 'Vista previa del programa' })).toHaveTextContent(
+      'Press banca',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar listo para asignar' }));
+    await waitFor(() =>
+      expect(mockedApi.post).toHaveBeenCalledWith(
+        '/coach/programs',
+        expect.objectContaining({ status: 'READY' }),
+      ),
+    );
+  });
+
+  it('preserves a conflicting local draft as a separate program', async () => {
+    const original: Program = {
+      ...emptyProgram(),
+      id: 'p-1',
+      name: 'Original',
+      updatedAt: '2026-11-11T10:00:00Z',
+    };
+    mockedApi.get.mockResolvedValue({ data: original });
+    const first = renderAt('/entrenador/programas/p-1');
+    await screen.findByDisplayValue('Original');
+    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Mis cambios' } });
+    first.unmount();
+    mockedApi.get.mockResolvedValue({
+      data: { ...original, name: 'Otra edición', updatedAt: '2026-11-11T11:00:00Z' },
+    });
+    mockedApi.post.mockImplementation((_url: string, body: unknown) =>
+      Promise.resolve({ data: { ...(body as Program), id: 'p-2' } }),
+    );
+    renderAt('/entrenador/programas/p-1');
+    await screen.findByDisplayValue('Mis cambios');
+    expect(screen.getByRole('button', { name: 'Guardar borrador' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar como nuevo borrador' }));
+    await waitFor(() =>
+      expect(mockedApi.post).toHaveBeenCalledWith(
+        '/coach/programs',
+        expect.objectContaining({ name: 'Mis cambios', updatedAt: null, status: 'DRAFT' }),
+      ),
+    );
+    expect(mockedApi.put).not.toHaveBeenCalled();
+  });
+
   it('does not save an invalid program', async () => {
     renderAt('/entrenador/programas/nuevo');
     fireEvent.click(screen.getByRole('button', { name: 'Añadir entrenamiento el martes' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
     expect(await screen.findByText('El programa necesita un nombre.')).toBeDefined();
     expect(mockedApi.post).not.toHaveBeenCalled();
   });
@@ -197,7 +283,7 @@ describe('CoachProgramEditorPage', () => {
     expect(await screen.findByDisplayValue('Torso')).toBeDefined();
     fireEvent.change(screen.getByLabelText('Copiar la semana 1 a'), { target: { value: '2' } });
     fireEvent.click(screen.getByRole('button', { name: 'Copiar semana 1' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
 
     await waitFor(() => expect(mockedApi.put).toHaveBeenCalledTimes(1));
     const [url, body] = mockedApi.put.mock.calls[0] as [string, Program];

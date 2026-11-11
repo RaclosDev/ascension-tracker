@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Copy, Plus, Trash2 } from 'lucide-react';
 import { apiErrorMessage, formatCoachDate } from '../lib/coach/api';
+import { CoachPageHeader } from '../components/coach/CoachWorkspace';
 import {
   useCoachPrograms,
   useDeleteProgram,
@@ -13,30 +15,63 @@ export default function CoachProgramsPage() {
   const programs = useCoachPrograms();
   const duplicate = useDuplicateProgram();
   const remove = useDeleteProgram();
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('ALL');
+  const filtered = programs.data?.filter(
+    (program) =>
+      program.name.toLocaleLowerCase('es').includes(search.trim().toLocaleLowerCase('es')) &&
+      (status === 'ALL' || (program.status ?? 'READY') === status),
+  );
 
   return (
-    <div className="fade-in max-w-5xl mx-auto px-4 pt-2 sm:pt-4">
-      <header className="mb-6 pb-2 border-b border-white/5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <Link
-            to="/entrenador/planificacion"
-            aria-label="Volver a planificación"
-            className="btn btn-secondary"
-          >
-            <ArrowLeft size={16} aria-hidden />
-          </Link>
-          <h1 className="text-2xl font-black text-white tracking-tight truncate">Programas</h1>
-        </div>
+    <div className="fade-in coach-page coach-workspace">
+      <Link
+        to="/entrenador/planificacion"
+        aria-label="Volver a planificación"
+        className="btn btn-secondary w-fit"
+      >
+        <ArrowLeft size={16} aria-hidden /> Planificación
+      </Link>
+      <CoachPageHeader
+        title="Biblioteca de programas"
+        description="Prepara borradores y revisa cada programa antes de asignarlo. Las copias de tus alumnos conservan su versión."
+      >
         <Link to="/entrenador/programas/nuevo" className="btn btn-primary">
           <Plus size={16} aria-hidden /> Nuevo programa
         </Link>
-      </header>
+      </CoachPageHeader>
+      <div className="coach-list-controls mb-4">
+        <label className="coach-search">
+          <span className="sr-only">Buscar programa</span>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar programa"
+          />
+        </label>
+        <label className="coach-sort">
+          <span>Estado</span>
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="ALL">Todos</option>
+            <option value="DRAFT">Borradores</option>
+            <option value="READY">Listos para asignar</option>
+          </select>
+        </label>
+      </div>
 
       {programs.isLoading && <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>}
       {programs.isError && (
-        <p role="alert">
+        <div role="alert">
           {apiErrorMessage(programs.error, 'No se pudieron cargar tus programas.')}
-        </p>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => void programs.refetch()}
+          >
+            Reintentar
+          </button>
+        </div>
       )}
       {programs.data?.length === 0 && (
         <section className="card">
@@ -49,10 +84,13 @@ export default function CoachProgramsPage() {
 
       {programs.data && programs.data.length > 0 && (
         <ul className="flex flex-col gap-3">
-          {programs.data.map((program) => (
-            <li key={program.id} className="card flex items-center justify-between gap-3">
+          {filtered?.map((program) => (
+            <li key={program.id} className="card flex flex-wrap items-center justify-between gap-3">
               <Link to={`/entrenador/programas/${program.id}`} className="min-w-0 flex-1">
-                <div className="font-bold text-white truncate">{program.name}</div>
+                <div className="font-bold text-foreground break-words">{program.name}</div>
+                <span className="text-sm">
+                  {program.status === 'DRAFT' ? 'Borrador' : 'Listo para asignar'}
+                </span>
                 <div className="text-sm truncate" style={{ color: 'var(--text-secondary)' }}>
                   {program.weeks} {program.weeks === 1 ? 'semana' : 'semanas'} · {program.dayCount}{' '}
                   {program.dayCount === 1 ? 'día' : 'días'} · editado el{' '}
@@ -80,7 +118,12 @@ export default function CoachProgramsPage() {
                   aria-label={`Borrar ${program.name}`}
                   disabled={remove.isPending}
                   onClick={() => {
-                    if (!window.confirm(`¿Borrar «${program.name}»? No se puede deshacer.`)) return;
+                    if (
+                      !window.confirm(
+                        `¿Borrar «${program.name}» de la biblioteca? Los alumnos conservan sus copias. No se puede deshacer.`,
+                      )
+                    )
+                      return;
                     remove.mutate(program.id, {
                       onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo borrar')),
                     });
@@ -92,6 +135,9 @@ export default function CoachProgramsPage() {
             </li>
           ))}
         </ul>
+      )}
+      {programs.data && programs.data.length > 0 && filtered?.length === 0 && (
+        <p role="status">No hay programas con esos filtros.</p>
       )}
     </div>
   );

@@ -8,11 +8,13 @@ import {
   useAssignProgram,
   useClientAssignments,
   useCoachPrograms,
+  useCoachProgram,
   useEndAssignment,
 } from '../../lib/coach/coachPrograms';
 import { useExerciseCatalog, getExerciseMap } from '../../lib/workout/exercises';
 import { ProgramSessions } from './ProgramSessions';
 import { Section, QueryState } from './ClientSection';
+import { ProgramPreview } from './ProgramPreview';
 
 export default function ProgramsSection({
   linkId,
@@ -26,6 +28,8 @@ export default function ProgramsSection({
   const assign = useAssignProgram(linkId);
   const end = useEndAssignment(linkId);
   const [programId, setProgramId] = useState('');
+  const selected = useCoachProgram(programId || null);
+  const ready = library.data?.filter((program) => program.status !== 'DRAFT') ?? [];
   const [startDate, setStartDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
   const [openAssignment, setOpenAssignment] = useState<string | null>(null);
   const active = assignments.data?.find((a) => a.status === 'ACTIVE');
@@ -38,20 +42,25 @@ export default function ProgramsSection({
   const exerciseName = (id: string) => exerciseMap.get(id)?.name ?? 'Ejercicio';
 
   const submit = () => {
-    if (!programId || !startDate) return;
+    if (!programId || !startDate || !selected.data || selected.data.status === 'DRAFT') return;
     if (
       active &&
-      !window.confirm(`Esto termina «${active.programName}». ¿Asignar el nuevo programa?`)
+      !window.confirm(
+        `Esto termina ahora «${active.programName}», aunque el nuevo programa empiece más adelante. Los entrenamientos registrados se conservan. ¿Asignar el nuevo programa?`,
+      )
     )
       return;
     assign.mutate(
-      { programId, startDate },
+      { programId, startDate, programUpdatedAt: selected.data.updatedAt },
       {
         onSuccess: () => {
           setProgramId('');
           toast.success('Programa asignado');
         },
-        onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo asignar el programa')),
+        onError: (e) => {
+          toast.error(apiErrorMessage(e, 'No se pudo asignar el programa'));
+          void selected.refetch();
+        },
       },
     );
   };
@@ -68,7 +77,7 @@ export default function ProgramsSection({
         <ul className="flex flex-col gap-2 mb-4">
           {assignments.data.map((a) => (
             <li key={a.id} className="flex flex-col gap-1">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                   <div className="font-bold text-foreground truncate">{a.programName}</div>
                   <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
@@ -124,36 +133,88 @@ export default function ProgramsSection({
           sus ajustes.
         </p>
       )}
-      {canAssign && library.data?.length === 0 && (
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Crea un programa en tu <Link to="/entrenador/programas">biblioteca</Link> para asignarlo.
-        </p>
-      )}
-      {canAssign && library.data && library.data.length > 0 && (
-        <div className="flex flex-wrap items-end gap-3">
-          <label className="flex flex-col gap-1 text-sm">
-            Programa
-            <select value={programId} onChange={(e) => setProgramId(e.target.value)}>
-              <option value="">Elige un programa</option>
-              {library.data.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Empieza el
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-          </label>
+      {canAssign && library.isError && (
+        <p role="alert">
+          No se pudo cargar la biblioteca.{' '}
           <button
             type="button"
-            className="btn btn-primary"
-            disabled={!programId || !startDate || assign.isPending}
-            onClick={submit}
+            className="btn btn-secondary"
+            onClick={() => void library.refetch()}
           >
-            Asignar
+            Reintentar
           </button>
+        </p>
+      )}
+      {canAssign && library.data && ready.length === 0 && (
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          Prepara un programa y márcalo como listo en tu{' '}
+          <Link to="/entrenador/programas">biblioteca</Link> para asignarlo.
+        </p>
+      )}
+      {canAssign && ready.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex flex-col gap-1 text-sm">
+              Programa
+              <select value={programId} onChange={(e) => setProgramId(e.target.value)}>
+                <option value="">Elige un programa</option>
+                {ready.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              Empieza el
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            </label>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={
+                !programId ||
+                !startDate ||
+                assign.isPending ||
+                !selected.data ||
+                selected.data.status === 'DRAFT' ||
+                selected.isFetching ||
+                assignments.isError ||
+                assignments.isPending
+              }
+              onClick={submit}
+            >
+              Asignar
+            </button>
+          </div>
+          {programId && selected.isLoading && <p role="status">Cargando vista previa…</p>}
+          {programId && selected.isError && (
+            <p role="alert">
+              No se pudo cargar la vista previa.{' '}
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => void selected.refetch()}
+              >
+                Reintentar
+              </button>
+            </p>
+          )}
+          {selected.data && (
+            <>
+              <p className="text-sm">
+                Se publicará una copia de este programa solo para este alumno, con inicio el{' '}
+                {formatCoachDate(startDate)}. {active && 'La asignación actual terminará ahora.'}{' '}
+                Los registros anteriores se conservan.
+              </p>
+              {selected.data.status === 'DRAFT' && (
+                <p role="alert">
+                  Este programa ha vuelto a borrador. Márcalo como listo antes de asignarlo.
+                </p>
+              )}
+              <ProgramPreview program={selected.data} />
+            </>
+          )}
         </div>
       )}
     </Section>

@@ -171,7 +171,7 @@ class CoachSessionIntegrationTest {
 
     private String createProgram(String coach) throws Exception {
         String program = """
-                {"name":"Fuerza","weeks":2,"days":[
+                {"name":"Fuerza","status":"READY","weeks":2,"days":[
                   {"week":2,"dayIndex":3,"name":"Pierna","exercises":[
                     {"exerciseId":"squat","exerciseName":"Sentadilla","sets":3}]},
                   {"week":1,"dayIndex":1,"name":"Torso","exercises":[

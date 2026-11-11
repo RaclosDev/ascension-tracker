@@ -194,7 +194,7 @@ class ClientProgramIntegrationTest {
 
     private String createProgram(String coach, int dayIndex) throws Exception {
         String program = """
-                {"name":"Fuerza","weeks":2,"days":[{"week":1,"dayIndex":%d,"name":"Torso","exercises":[
+                {"name":"Fuerza","status":"READY","weeks":2,"days":[{"week":1,"dayIndex":%d,"name":"Torso","exercises":[
                   {"exerciseId":"bench-press","exerciseName":"Press banca","sets":4,"repsMin":6,"repsMax":8}]}]}
                 """.formatted(dayIndex);
         return json.readTree(mvc.perform(as(post("/api/coach/programs"), coach)
