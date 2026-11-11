@@ -1,7 +1,13 @@
 import { Suspense, useEffect, useRef } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, MessageSquareText } from 'lucide-react';
-import { formatCoachDate, personName, sharedScopes, useCoachClients } from '../lib/coach/api';
+import {
+  apiErrorMessage,
+  formatCoachDate,
+  personName,
+  sharedScopes,
+  useCoachClient,
+} from '../lib/coach/api';
 import { ClientOverview } from '../components/coach/ClientOverview';
 import { ClientManagement } from '../components/coach/ClientManagement';
 import { CheckinsSection } from '../components/coach/CheckinsSection';
@@ -16,8 +22,8 @@ const ClientNutrition = lazyWithRetry(() => import('../components/coach/ClientNu
 
 export default function CoachClientPage() {
   const { linkId = '' } = useParams();
-  const clients = useCoachClients(true);
-  const link = clients.data?.find((c) => c.linkId === linkId);
+  const clients = useCoachClient(linkId);
+  const link = clients.data;
   const [params] = useSearchParams();
   const section = params.get('seccion') ?? 'resumen';
   const sectionNav = useRef<HTMLElement>(null);
@@ -57,7 +63,11 @@ export default function CoachClientPage() {
       {clients.isPending ? (
         <p role="status">Cargando ficha…</p>
       ) : clients.isError ? (
-        <QueryErrorNotice retry={() => void clients.refetch()} pending={clients.isFetching} />
+        <section className="card">
+          <h1>Ficha no disponible</h1>
+          <p>{apiErrorMessage(clients.error, 'No se pudo cargar la ficha del alumno.')}</p>
+          <QueryErrorNotice retry={() => void clients.refetch()} pending={clients.isFetching} />
+        </section>
       ) : !link ? (
         <section className="card">
           <h1>Alumno no disponible</h1>

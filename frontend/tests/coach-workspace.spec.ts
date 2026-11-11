@@ -15,6 +15,14 @@ async function setupCoach(page: Page, empty = false) {
       editNutrition: true,
     },
     since: '2026-11-01T10:00:00Z',
+    setup: {
+      services: { training: true, nutrition: i === 2, progress: false },
+      goal: 'Ganar fuerza',
+      experience: '',
+      trainingDays: 3,
+      equipment: '',
+      reviewed: true,
+    },
   }));
   let reply: string | null = null;
   let questions = ['¿Cómo te has encontrado esta semana?'];
@@ -43,6 +51,19 @@ async function setupCoach(page: Page, empty = false) {
     const path = new URL(route.request().url()).pathname.replace('/api/coach/', '');
     if (path === 'profile') return route.fulfill({ json: { coach: true } });
     if (path === 'clients') return route.fulfill({ json: empty ? [] : clients });
+    const client = clients.find((c) => path === `clients/${c.linkId}`);
+    if (client) return route.fulfill({ json: client });
+    if (/^clients\/l[0-2]\/status$/.test(path))
+      return route.fulfill({
+        json: {
+          linkId: path.split('/')[1],
+          level: 'GREEN',
+          lastActivity: '2026-11-09',
+          pendingReplies: path.includes('l0') && !reply ? 1 : 0,
+          weightChange: null,
+          signals: [],
+        },
+      });
     if (path === 'clients/status')
       return route.fulfill({
         json: empty
@@ -56,7 +77,9 @@ async function setupCoach(page: Page, empty = false) {
               signals:
                 i === 1
                   ? [{ reason: 'CHECKIN_MISSING', level: 'RED', value: 2 }]
-                  : [{ reason: 'NO_NUTRITION_PLAN', level: 'AMBER', value: 0 }],
+                  : i === 2
+                    ? [{ reason: 'NO_NUTRITION_PLAN', level: 'AMBER', value: 0 }]
+                    : [],
             })),
       });
     if (path === 'checkin-template') {
@@ -123,6 +146,12 @@ for (const width of [1440, 390]) {
       page.getByRole('heading', { name: 'No hay check-ins por responder' }),
     ).toBeVisible();
     await page.getByRole('link', { name: 'Ver alumnos' }).click();
+    await page.getByRole('combobox', { name: 'Servicio', exact: true }).selectOption('nutrition');
+    await expect(page.getByText('1 de 3 alumnos')).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Preparar pauta nutricional' }).filter({ visible: true }),
+    ).toBeVisible();
+    await page.getByRole('combobox', { name: 'Servicio', exact: true }).selectOption('training');
     await page.getByRole('searchbox', { name: 'Buscar alumno' }).fill('garcia');
     await page.getByRole('combobox', { name: 'Ordenar' }).selectOption('name');
     await page.getByRole('checkbox', { name: 'Mostrar peso' }).click();
@@ -142,6 +171,9 @@ for (const width of [1440, 390]) {
     await page.getByRole('link', { name: 'Volver a alumnos' }).click();
     await expect(page.getByRole('searchbox', { name: 'Buscar alumno' })).toHaveValue('garcia');
     await expect(page.getByRole('combobox', { name: 'Ordenar' })).toHaveValue('name');
+    await expect(page.getByRole('combobox', { name: 'Servicio', exact: true })).toHaveValue(
+      'training',
+    );
     await expect(page.getByRole('checkbox', { name: 'Mostrar peso' })).toBeChecked();
     await noHorizontalOverflow(page);
     await page.screenshot({

@@ -377,8 +377,8 @@ describe('CoachClientPage', () => {
       ],
     };
     mockedApi.get.mockImplementation((url: string) => {
-      if (url === '/coach/clients')
-        return Promise.resolve({ data: [{ ...clientLink, permissions }] });
+      if (url === '/coach/clients/link-9')
+        return Promise.resolve({ data: { ...clientLink, permissions } });
       if (url === '/coach/programs')
         return Promise.resolve({
           data: [{ id: 'p-2', name: 'Hipertrofia', weeks: 6, dayCount: 4, updatedAt: '' }],
@@ -442,7 +442,7 @@ describe('CoachClientPage', () => {
 
     expect(await screen.findByText('Sección no disponible')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Entrenamiento' })).not.toBeInTheDocument();
-    expect(mockedApi.get.mock.calls.map(([url]) => url)).toEqual(['/coach/clients']);
+    expect(mockedApi.get.mock.calls.map(([url]) => url)).toEqual(['/coach/clients/link-9']);
   });
 
   it('lists assigned programs but only assigns with the edit permission', async () => {

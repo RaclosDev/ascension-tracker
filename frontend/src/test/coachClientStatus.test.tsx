@@ -10,6 +10,7 @@ vi.mock('../api/client', () => ({
 import api from '../api/client';
 import CoachClientsPage from '../pages/CoachClientsPage';
 import { signalText, type ClientStatus } from '../lib/coach/clientStatus';
+import { emptySetup } from '../lib/coach/setup';
 
 const mockedApi = vi.mocked(api);
 const permissions = {
@@ -23,6 +24,7 @@ const client = (linkId: string, name: string) => ({
   linkId,
   client: { name, email: `${linkId}@test`, picture: null },
   permissions,
+  setup: { ...emptySetup(), reviewed: true },
   since: '2026-09-01T10:00:00Z',
 });
 const status = (linkId: string, over: Partial<ClientStatus>): ClientStatus => ({

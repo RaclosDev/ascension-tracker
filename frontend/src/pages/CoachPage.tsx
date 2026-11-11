@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, ClipboardList, MessageSquareText, Users } from 'lucide-react';
-import { personName } from '../lib/coach/api';
-import { signalText } from '../lib/coach/clientStatus';
-import { activityText, clientHref, followupSignals, useCoachRoster } from '../lib/coach/workspace';
+import { followupSignals, useCoachRoster } from '../lib/coach/workspace';
+import { CoachTaskBoard } from '../components/coach/CoachTaskBoard';
 import {
   CoachPageHeader,
   CoachWorkspace,
@@ -93,78 +92,7 @@ function Dashboard() {
                 : 'Falta información de seguimiento de algún alumno.'}
             </p>
           )}
-          {ready && (
-            <div className="coach-dashboard-grid">
-              <section className="card coach-worklist" aria-labelledby="coach-pending-title">
-                <div className="coach-section-heading">
-                  <h2 id="coach-pending-title">Pendiente de ti</h2>
-                  <Link to="/entrenador/revisiones">
-                    Ver revisiones <ArrowUpRight size={14} aria-hidden />
-                  </Link>
-                </div>
-                {replies.length === 0 ? (
-                  <div className="coach-empty-inline">
-                    <MessageSquareText size={24} aria-hidden />
-                    <h3>No tienes respuestas pendientes</h3>
-                    <p>Los nuevos check-ins aparecerán aquí cuando tus alumnos los envíen.</p>
-                  </div>
-                ) : (
-                  <ul className="coach-action-list">
-                    {replies.slice(0, 5).map(({ link, status: state }) => (
-                      <li key={link.linkId}>
-                        <Link to={clientHref(link.linkId, 'revisiones')}>
-                          <span className="coach-avatar" aria-hidden>
-                            {personName(link.client).slice(0, 1).toUpperCase()}
-                          </span>
-                          <span>
-                            <strong>{personName(link.client)}</strong>
-                            <small>
-                              {state?.pendingReplies}{' '}
-                              {state?.pendingReplies === 1
-                                ? 'check-in por responder'
-                                : 'check-ins por responder'}
-                            </small>
-                          </span>
-                          <span className="coach-row-action">
-                            Revisar <ArrowUpRight size={15} aria-hidden />
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-              <section className="card coach-worklist" aria-labelledby="coach-followup-title">
-                <div className="coach-section-heading">
-                  <h2 id="coach-followup-title">Seguimiento</h2>
-                  <Link to="/entrenador/alumnos?filtro=attention">
-                    Ver todos <ArrowUpRight size={14} aria-hidden />
-                  </Link>
-                </div>
-                {followups.length === 0 ? (
-                  <div className="coach-empty-inline">
-                    <h3>Sin señales pendientes</h3>
-                    <p>Puedes abrir la ficha de cualquier alumno desde tu lista.</p>
-                  </div>
-                ) : (
-                  <ul className="coach-action-list">
-                    {followups.slice(0, 4).map(({ link, status: state }) => (
-                      <li key={link.linkId}>
-                        <Link to={clientHref(link.linkId)}>
-                          <span>
-                            <strong>{personName(link.client)}</strong>
-                            <small>{signalText(followupSignals(state)[0])}</small>
-                            <small>Última actividad: {activityText(state?.lastActivity)}</small>
-                          </span>
-                          <ArrowUpRight size={16} aria-hidden />
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            </div>
-          )}
+          {ready && <CoachTaskBoard rows={rows} />}
         </>
       )}
     </>
