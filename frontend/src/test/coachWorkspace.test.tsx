@@ -92,8 +92,8 @@ function renderAt(path = '/entrenador') {
       <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route path="/entrenador" element={<CoachPage />} />
-          <Route path="/entrenador/alumnos" element={<CoachClientsPage />} />
-          <Route path="/entrenador/alumnos/:linkId" element={<CoachClientPage />} />
+          <Route path="/entrenador/atletas" element={<CoachClientsPage />} />
+          <Route path="/entrenador/atletas/:linkId" element={<CoachClientPage />} />
           <Route path="/entrenador/revisiones" element={<CoachReviewsPage />} />
         </Routes>
       </MemoryRouter>
@@ -112,17 +112,17 @@ describe('Espacio del entrenador', () => {
     renderAt();
     await screen.findByRole('heading', { name: 'Pendiente de ti' });
     expect(screen.getByRole('link', { name: /Check-ins por responder/ })).toHaveTextContent(
-      '2De 1 alumno',
+      '2De 1 atleta',
     );
-    expect(screen.getByRole('link', { name: /Alumnos por revisar/ })).toHaveTextContent('1');
-    expect(screen.getByRole('link', { name: /Alumnos activos/ })).toHaveTextContent('2');
+    expect(screen.getByRole('link', { name: /Atletas por revisar/ })).toHaveTextContent('1');
+    expect(screen.getByRole('link', { name: /Atletas activos/ })).toHaveTextContent('2');
     expect(screen.getByRole('link', { name: /Ángela.*Configurar servicio/ })).toHaveAttribute(
       'href',
-      '/entrenador/alumnos/l0?seccion=gestion',
+      '/entrenador/atletas/l0?seccion=gestion',
     );
     fireEvent.click(screen.getByRole('link', { name: /Check-ins por responder/ }));
-    expect(await screen.findByText('2 check-ins por responder de 1 alumno.')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Pendiente del alumno/ }));
+    expect(await screen.findByText('2 check-ins por responder de 1 atleta.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Pendiente del atleta/ }));
     expect(await screen.findByText('2 semanas sin check-in')).toBeInTheDocument();
   });
 
@@ -142,16 +142,16 @@ describe('Espacio del entrenador', () => {
     mockData(statuses.slice(0, 1));
     renderAt();
     expect(
-      await screen.findByText('Falta información de seguimiento de algún alumno.'),
+      await screen.findByText('Falta información de seguimiento de algún atleta.'),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Alumnos por revisar/ })).toHaveTextContent('—');
+    expect(screen.getByRole('link', { name: /Atletas por revisar/ })).toHaveTextContent('—');
     expect(screen.queryByText('Sin señales pendientes')).not.toBeInTheDocument();
   });
 
   it('opens weekly planning and preserves the roster filters on return', async () => {
     mockData();
-    renderAt('/entrenador/alumnos?orden=name&peso=si');
-    const search = await screen.findByRole('searchbox', { name: 'Buscar alumno' });
+    renderAt('/entrenador/atletas?orden=name&peso=si');
+    const search = await screen.findByRole('searchbox', { name: 'Buscar atleta' });
     act(() => {
       fireEvent.change(search, { target: { value: 'angela' } });
       fireEvent.change(screen.getByRole('combobox', { name: 'Ordenar' }), {
@@ -164,8 +164,8 @@ describe('Espacio del entrenador', () => {
     const urls = mockedApi.get.mock.calls.map(([url]) => url);
     expect(urls.some((url) => /\/weights|\/nutrition/.test(url))).toBe(false);
     expect(screen.queryByRole('button', { name: 'Terminar relación' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('link', { name: 'Volver a alumnos' }));
-    expect(await screen.findByRole('searchbox', { name: 'Buscar alumno' })).toHaveValue('angela');
+    fireEvent.click(screen.getByRole('link', { name: 'Volver a atletas' }));
+    expect(await screen.findByRole('searchbox', { name: 'Buscar atleta' })).toHaveValue('angela');
     expect(screen.getByRole('combobox', { name: 'Ordenar' })).toHaveValue('name');
     expect(screen.getByRole('checkbox', { name: 'Mostrar peso' })).toBeChecked();
     expect(within(screen.getByRole('table')).queryByText('Bruno')).not.toBeInTheDocument();
@@ -177,10 +177,10 @@ describe('Espacio del entrenador', () => {
     const search = await screen.findByRole('searchbox');
     act(() => {
       fireEvent.change(search, { target: { value: 'Bruno' } });
-      fireEvent.click(screen.getByRole('button', { name: /Pendiente del alumno/ }));
+      fireEvent.click(screen.getByRole('button', { name: /Pendiente del atleta/ }));
     });
     expect(await screen.findByRole('searchbox')).toHaveValue('Bruno');
-    expect(screen.getByRole('button', { name: /Pendiente del alumno/ })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /Pendiente del atleta/ })).toHaveAttribute(
       'aria-pressed',
       'true',
     );

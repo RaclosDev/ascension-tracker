@@ -67,7 +67,7 @@ export default function CoachRecipesPage() {
         <section className="card">
           <p style={{ color: 'var(--text-secondary)' }}>
             Aún no tienes recetas. Guarda platos con sus macros por ración para pautar comidas a tus
-            alumnos.
+            atletas.
           </p>
         </section>
       )}

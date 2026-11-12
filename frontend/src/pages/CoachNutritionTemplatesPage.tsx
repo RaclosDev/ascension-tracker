@@ -17,7 +17,7 @@ export default function CoachNutritionTemplatesPage() {
     <CoachWorkspace>
       <CoachPageHeader
         title="Biblioteca de pautas"
-        description="Guarda pautas completas para copiarlas y adaptarlas desde la ficha de cada alumno."
+        description="Guarda pautas completas para copiarlas y adaptarlas desde la ficha de cada atleta."
       />
       <div className="flex flex-wrap gap-2">
         <Link className="btn btn-secondary" to="/entrenador/planificacion">
@@ -29,7 +29,7 @@ export default function CoachNutritionTemplatesPage() {
       </div>
       <p>
         La biblioteca es privada. Editar o borrar una pauta no modifica las copias publicadas para
-        tus alumnos.
+        tus atletas.
       </p>
       <label className="flex flex-col gap-1">
         Buscar pauta
@@ -76,7 +76,7 @@ export default function CoachNutritionTemplatesPage() {
                     if (
                       !(await confirmAction({
                         title: 'Borrar pauta de biblioteca',
-                        description: `¿Borrar «${item.name}» de la biblioteca? Las pautas de tus alumnos se conservarán.`,
+                        description: `¿Borrar «${item.name}» de la biblioteca? Las pautas de tus atletas se conservarán.`,
                         confirmLabel: 'Borrar pauta',
                         destructive: true,
                       }))

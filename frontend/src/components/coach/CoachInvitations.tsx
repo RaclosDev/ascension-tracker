@@ -35,10 +35,10 @@ export function InviteDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Invitar alumno</DialogTitle>
+          <DialogTitle>Invitar atleta</DialogTitle>
           <DialogDescription>
-            Cada enlace sirve para un alumno y caduca a los 7 días. Solo se muestra una vez: cópialo
-            o compártelo. Ábrelo con la cuenta de tu alumno, no con la tuya.
+            Cada enlace sirve para un atleta y caduca a los 7 días. Solo se muestra una vez: cópialo
+            o compártelo. Ábrelo con la cuenta de tu atleta, no con la tuya.
           </DialogDescription>
         </DialogHeader>
         <InvitationDefaults />
@@ -122,7 +122,7 @@ function InvitationForm({ defaults }: { defaults: ProfessionalSettings }) {
       {!link && (
         <form onSubmit={createLink} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
-            <span className="form-label">Nombre del alumno (opcional)</span>
+            <span className="form-label">Nombre del atleta (opcional)</span>
             <input
               className="form-input"
               maxLength={80}
@@ -147,7 +147,7 @@ function InvitationForm({ defaults }: { defaults: ProfessionalSettings }) {
               </label>
             ))}
             <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              Le llegará marcado; tu alumno decide al aceptar.
+              Le llegará marcado; tu atleta decide al aceptar.
             </span>
           </fieldset>
           <fieldset className="flex flex-col gap-2">
@@ -159,7 +159,7 @@ function InvitationForm({ defaults }: { defaults: ProfessionalSettings }) {
                 checked={!fillIn}
                 onChange={() => setFillIn(false)}
               />
-              <span className="text-foreground">Mi alumno, al registrarse</span>
+              <span className="text-foreground">Mi atleta, al registrarse</span>
             </label>
             <label className="flex items-center gap-3 cursor-pointer">
               <input
@@ -191,7 +191,7 @@ function InvitationForm({ defaults }: { defaults: ProfessionalSettings }) {
           <div>
             <h3>Invitación preparada</h3>
             <p className="coach-description">
-              Copia o comparte el enlace antes de cerrar. Cuando el alumno lo acepte, aparecerá en
+              Copia o comparte el enlace antes de cerrar. Cuando el atleta lo acepte, aparecerá en
               tu cartera para revisar sus datos y preparar el primer plan.
             </p>
           </div>
@@ -214,7 +214,7 @@ function InvitationForm({ defaults }: { defaults: ProfessionalSettings }) {
           </div>
           <div>
             <button type="button" className="btn btn-secondary" onClick={() => setLink(null)}>
-              Invitar a otro alumno
+              Invitar a otro atleta
             </button>
           </div>
         </section>

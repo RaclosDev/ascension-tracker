@@ -112,7 +112,7 @@ describe('Pautado frente a hecho', () => {
     expect(screen.getByText('8')).toBeTruthy();
     expect(mockedApi.get).toHaveBeenCalledWith('/coach/clients/l1/workouts/w1');
 
-    fireEvent.change(screen.getByLabelText('Comentario para tu alumno'), {
+    fireEvent.change(screen.getByLabelText('Comentario para tu atleta'), {
       target: { value: '  Sube peso  ' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Guardar comentario' }));
@@ -136,7 +136,7 @@ describe('Pautado frente a hecho', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /Torso/ }));
     expect(screen.getByText('Sin entreno registrado para este día.')).toBeTruthy();
-    expect(screen.queryByLabelText('Comentario para tu alumno')).toBeNull();
+    expect(screen.queryByLabelText('Comentario para tu atleta')).toBeNull();
   });
 
   it('shows the client the coach comment on a prescribed workout', async () => {

@@ -50,7 +50,7 @@ export function WeekReview({
       )}
       {checkin ? (
         <div className="flex flex-col gap-2">
-          <h3 className="font-bold">Feedback del alumno</h3>
+          <h3 className="font-bold">Feedback del atleta</h3>
           <dl className="coach-review-scores">
             {SCORE_KEYS.filter((k) => checkin[k] != null).map((k) => (
               <div key={k}>
@@ -83,7 +83,7 @@ export function WeekReview({
                 ?.filter((update) => update.role === 'CLIENT')
                 .map((update, i) => (
                   <blockquote key={i} className="border-l-2 pl-3">
-                    <strong>Actualización del alumno · {formatCoachDate(update.createdAt)}</strong>
+                    <strong>Actualización del atleta · {formatCoachDate(update.createdAt)}</strong>
                     <p className="whitespace-pre-wrap">{update.body}</p>
                   </blockquote>
                 ))}
@@ -93,7 +93,7 @@ export function WeekReview({
       ) : (
         !checkins.isPending && !checkins.isError && <p>Sin revisión enviada para esta semana.</p>
       )}
-      <Link className="btn btn-secondary" to={`/entrenador/alumnos/${linkId}?seccion=revisiones`}>
+      <Link className="btn btn-secondary" to={`/entrenador/atletas/${linkId}?seccion=revisiones`}>
         Abrir revisiones y responder
       </Link>
       <h3 className="font-bold">Pautado y registrado</h3>
@@ -131,7 +131,7 @@ export function WeekReview({
       )}
       <Link
         className="btn btn-secondary"
-        to={`/entrenador/alumnos/${linkId}?seccion=entrenamiento`}
+        to={`/entrenador/atletas/${linkId}?seccion=entrenamiento`}
       >
         Abrir historial completo y entrenos libres
       </Link>

@@ -52,7 +52,7 @@ export default function BodySection({ linkId }: { linkId: string }) {
       <Section title="Fotos de progreso" icon={<Camera size={18} aria-hidden />}>
         <QueryState isLoading={photos.isLoading} isError={photos.isError} />
         {photos.data?.photos.length === 0 && (
-          <p style={{ color: 'var(--text-secondary)' }}>Tu alumno aún no ha subido fotos.</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Tu atleta aún no ha subido fotos.</p>
         )}
         {photos.data && photos.data.photos.length > 0 && (
           <PhotoGallery photos={photos.data.photos} />

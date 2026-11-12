@@ -85,9 +85,9 @@ describe('Invitación con datos del entrenador', () => {
 
     expect(await screen.findByText('Marta')).toBeDefined();
     expect(screen.getByText(/datos rellenados/)).toBeDefined();
-    fireEvent.click(screen.getAllByRole('button', { name: /Invitar alumno/ })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: /Invitar atleta/ })[0]);
 
-    fireEvent.change(await screen.findByLabelText(/Nombre del alumno/), {
+    fireEvent.change(await screen.findByLabelText(/Nombre del atleta/), {
       target: { value: '  Ana López ' },
     });
     fireEvent.click(screen.getByRole('radio', { name: /Yo ahora/ }));

@@ -72,7 +72,7 @@ for (const width of [390, 1920]) {
         return route.fulfill({
           json: {
             linkId: 'l1',
-            client: { name: 'Alumno de prueba', email: 'athlete@example.test' },
+            client: { name: 'Atleta de prueba', email: 'athlete@example.test' },
             since: '2026-10-01',
             setup: {
               trainingDays: 4,
@@ -156,7 +156,7 @@ for (const width of [390, 1920]) {
       }
       return route.fulfill({ json: [] });
     });
-    await page.goto('/entrenador/alumnos/l1');
+    await page.goto('/entrenador/atletas/l1');
     await expect(page.getByText('4 días de entrenamiento por semana')).toBeVisible();
     const goal = page.getByText('Recuperar rendimiento y mejorar la técnica durante la descarga.');
     await expect(goal).toBeHidden();
@@ -191,7 +191,7 @@ for (const width of [390, 1920]) {
     await expect(page.getByPlaceholder('Añadir ejercicio: nombre o etiqueta')).toBeHidden();
     await page.getByText('Objetivo y notas de la semana', { exact: true }).click();
     await page
-      .getByLabel('Comentario para el alumno')
+      .getByLabel('Comentario para el atleta')
       .fill('Descarga: mantén la técnica y reduce la fatiga.');
     await page.getByText('Notas privadas del entrenador', { exact: true }).click();
     await page
@@ -211,7 +211,7 @@ for (const width of [390, 1920]) {
     await expect(page.getByLabel('Notas privadas del entrenador')).toHaveValue(
       'Revisar disponibilidad del miércoles.',
     );
-    await page.getByRole('button', { name: 'Vista del alumno' }).click();
+    await page.getByRole('button', { name: 'Vista del atleta' }).click();
     const preview = page.getByRole('region', { name: 'Vista previa del programa' });
     await expect(preview).toContainText('45 kg');
     await expect(preview).not.toContainText('Revisar disponibilidad del miércoles.');

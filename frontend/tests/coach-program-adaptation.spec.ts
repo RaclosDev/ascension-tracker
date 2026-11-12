@@ -100,7 +100,7 @@ for (const width of [390, 1440]) {
         });
       return route.fulfill({ json: [] });
     });
-    await page.goto('/entrenador/alumnos/l1?seccion=entrenamiento');
+    await page.goto('/entrenador/atletas/l1?seccion=entrenamiento');
     await page.getByRole('link', { name: 'Adaptar', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Adaptar programa' })).toBeVisible();
     await expect(page.getByText('Adaptación solo para', { exact: false })).toContainText(
@@ -136,7 +136,7 @@ for (const width of [390, 1440]) {
     const confirmation = page.getByRole('dialog', { name: 'Publicar adaptación' });
     await expect(confirmation).toContainText('continúa hasta esa fecha');
     await confirmation.getByRole('button', { name: 'Publicar adaptación' }).click();
-    await expect(page).toHaveURL(/alumnos\/l1\?seccion=entrenamiento$/);
+    await expect(page).toHaveURL(/atletas\/l1\?seccion=entrenamiento$/);
     await expect(page.getByText('Fuerza · adaptación Ana', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Ver programas anteriores' }).click();
     await expect(page.getByText('Fuerza original', { exact: true })).toBeVisible();

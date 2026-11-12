@@ -21,15 +21,14 @@ export function CoachPageHeader({
   children,
 }: {
   title: string;
-  description: string;
+  description?: string;
   children?: ReactNode;
 }) {
   return (
     <header className="coach-page-heading">
       <div>
-        <p className="coach-eyebrow">Espacio de entrenador</p>
         <h1>{title}</h1>
-        <p className="coach-description">{description}</p>
+        {description && <p className="coach-description">{description}</p>}
       </div>
       {children}
     </header>
@@ -46,7 +45,7 @@ export function InviteClientButton() {
         type="button"
         onClick={() => setOpen(true)}
       >
-        <UserPlus size={16} aria-hidden /> Invitar alumno
+        <UserPlus size={16} aria-hidden /> Invitar atleta
       </button>
       <InviteDialog open={open} onOpenChange={setOpen} />
     </>

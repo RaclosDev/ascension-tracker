@@ -20,7 +20,7 @@ export function CheckinsSection({ linkId }: { linkId: string }) {
     return <QueryErrorNotice retry={() => void checkins.refetch()} pending={checkins.isFetching} />;
   if (!checkins.data?.length) {
     return (
-      <p style={{ color: 'var(--text-secondary)' }}>Tu alumno aún no ha enviado ningún check-in.</p>
+      <p style={{ color: 'var(--text-secondary)' }}>Tu atleta aún no ha enviado ningún check-in.</p>
     );
   }
   return (
@@ -112,7 +112,7 @@ function ReplyForm({ linkId, checkin }: { linkId: string; checkin: Checkin }) {
       {changed && (
         <div role="alert">
           <p>
-            El alumno ha cambiado el check-in desde que empezaste la respuesta. Revisa los datos
+            El atleta ha cambiado el check-in desde que empezaste la respuesta. Revisa los datos
             actualizados.
           </p>
           <button

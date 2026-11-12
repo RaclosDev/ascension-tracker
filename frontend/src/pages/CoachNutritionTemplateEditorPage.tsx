@@ -48,7 +48,7 @@ export default function CoachNutritionTemplateEditorPage() {
     <CoachWorkspace>
       <CoachPageHeader
         title={existing ? 'Editar pauta de biblioteca' : 'Nueva pauta de biblioteca'}
-        description="Los cambios se quedan en tu biblioteca. Desde la ficha podrás copiarlos, adaptarlos y publicarlos para un alumno."
+        description="Los cambios se quedan en tu biblioteca. Desde la ficha podrás copiarlos, adaptarlos y publicarlos para un atleta."
       />
       <Link className="btn btn-secondary self-start" to="/entrenador/pautas">
         Volver a la biblioteca

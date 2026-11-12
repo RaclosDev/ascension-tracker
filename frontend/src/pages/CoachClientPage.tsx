@@ -38,11 +38,11 @@ export default function CoachClientPage() {
   const backTo =
     params.get('origen') === 'revisiones'
       ? `/entrenador/revisiones${listQuery ? `?${listQuery}` : ''}`
-      : `/entrenador/alumnos${listQuery ? `?${listQuery}` : ''}`;
+      : `/entrenador/atletas${listQuery ? `?${listQuery}` : ''}`;
   const sectionHref = (value: string) => {
     const next = new URLSearchParams(params);
     next.set('seccion', value);
-    return `/entrenador/alumnos/${encodeURIComponent(linkId)}?${next}`;
+    return `/entrenador/atletas/${encodeURIComponent(linkId)}?${next}`;
   };
   const sections = [
     { id: 'semana', label: 'Semana', visible: link?.permissions.training },
@@ -67,20 +67,20 @@ export default function CoachClientPage() {
     <div className="fade-in coach-page coach-workspace coach-student">
       <Link to={backTo} className="coach-back-link">
         <ArrowLeft size={16} aria-hidden />
-        {params.get('origen') === 'revisiones' ? 'Volver a revisiones' : 'Volver a alumnos'}
+        {params.get('origen') === 'revisiones' ? 'Volver a revisiones' : 'Volver a atletas'}
       </Link>
       {clients.isPending ? (
         <p role="status">Cargando ficha…</p>
       ) : clients.isError ? (
         <section className="card">
           <h1>Ficha no disponible</h1>
-          <p>{apiErrorMessage(clients.error, 'No se pudo cargar la ficha del alumno.')}</p>
+          <p>{apiErrorMessage(clients.error, 'No se pudo cargar la ficha del atleta.')}</p>
           <QueryErrorNotice retry={() => void clients.refetch()} pending={clients.isFetching} />
         </section>
       ) : !link ? (
         <section className="card">
-          <h1>Alumno no disponible</h1>
-          <p>Este alumno ya no está vinculado contigo o no tienes acceso a su ficha.</p>
+          <h1>Atleta no disponible</h1>
+          <p>Este atleta ya no está vinculado contigo o no tienes acceso a su ficha.</p>
         </section>
       ) : (
         <>
@@ -119,7 +119,7 @@ export default function CoachClientPage() {
               </Link>
             )}
           </header>
-          <nav ref={sectionNav} className="coach-client-nav" aria-label="Secciones del alumno">
+          <nav ref={sectionNav} className="coach-client-nav" aria-label="Secciones del atleta">
             {sections.map((s) => (
               <Link
                 key={s.id}

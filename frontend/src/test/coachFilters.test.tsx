@@ -37,7 +37,7 @@ it('keeps edits and links current while a URL transition is suspended, then foll
   }
   render(
     <MemoryRouter
-      initialEntries={['/alumnos?q=anterior', '/alumnos?servicio=training']}
+      initialEntries={['/atletas?q=anterior', '/atletas?servicio=training']}
       initialIndex={1}
     >
       <Suspense fallback="Cargando">

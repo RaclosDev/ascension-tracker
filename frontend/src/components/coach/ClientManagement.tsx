@@ -30,7 +30,7 @@ export function ClientManagement({ link }: { link: CoachClient }) {
         link={link}
       />
       <details>
-        <summary className="cursor-pointer">Preguntas de revisión de este alumno</summary>
+        <summary className="cursor-pointer">Preguntas de revisión de este atleta</summary>
         <CheckinTemplateEditor linkId={link.linkId} />
       </details>
       <section className="card">
@@ -45,15 +45,15 @@ export function ClientManagement({ link }: { link: CoachClient }) {
             <dd>{link.client.email}</dd>
           </div>
           <div>
-            <dt>Alumno desde</dt>
+            <dt>Atleta desde</dt>
             <dd>{formatCoachDate(link.since)}</dd>
           </div>
         </dl>
       </section>
       <section className="card">
-        <h2>Permisos del alumno</h2>
+        <h2>Permisos del atleta</h2>
         <p className="coach-description">
-          El alumno controla estos permisos desde sus ajustes. Indican a qué puedes acceder; no
+          El atleta controla estos permisos desde sus ajustes. Indican a qué puedes acceder; no
           definen los servicios que habéis acordado.
         </p>
         <dl className="coach-facts">
@@ -68,7 +68,7 @@ export function ClientManagement({ link }: { link: CoachClient }) {
       <section className="card coach-end-section">
         <h2>Terminar relación</h2>
         <p className="coach-description">
-          Dejarás de acceder a sus datos. El alumno conserva sus registros y los programas que ya
+          Dejarás de acceder a sus datos. El atleta conserva sus registros y los programas que ya
           tiene asignados.
         </p>
         <button
@@ -78,7 +78,7 @@ export function ClientManagement({ link }: { link: CoachClient }) {
           onClick={async () => {
             if (
               !(await confirmAction({
-                title: 'Terminar relación con el alumno',
+                title: 'Terminar relación con el atleta',
                 description: `¿Terminar la relación con ${personName(link.client)}? Dejarás de ver sus datos.`,
                 confirmLabel: 'Terminar relación',
                 destructive: true,
@@ -86,7 +86,7 @@ export function ClientManagement({ link }: { link: CoachClient }) {
             )
               return;
             end.mutate(link.linkId, {
-              onSuccess: () => navigate('/entrenador/alumnos'),
+              onSuccess: () => navigate('/entrenador/atletas'),
               onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo terminar la relación')),
             });
           }}

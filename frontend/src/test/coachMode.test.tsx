@@ -326,7 +326,7 @@ describe('SettingsCoachSection', () => {
 describe('CoachClientPage', () => {
   const clientLink = {
     linkId: 'link-9',
-    client: { name: 'Ana Alumna', email: 'ana@example.com', picture: null },
+    client: { name: 'Ana Atleta', email: 'ana@example.com', picture: null },
     permissions: {
       training: true,
       nutrition: true,
@@ -416,11 +416,11 @@ describe('CoachClientPage', () => {
     });
   }
 
-  const routes = <Route path="/entrenador/alumnos/:linkId" element={<CoachClientPage />} />;
+  const routes = <Route path="/entrenador/atletas/:linkId" element={<CoachClientPage />} />;
 
   it('shows the real charts and the client custom exercise names', async () => {
     mockClient();
-    renderAt('/entrenador/alumnos/link-9?seccion=entrenamiento', routes);
+    renderAt('/entrenador/atletas/link-9?seccion=entrenamiento', routes);
 
     expect(
       await screen.findByText('1. Press inclinado en polea', {}, { timeout: 10000 }),
@@ -446,7 +446,7 @@ describe('CoachClientPage', () => {
       editTraining: false,
       editNutrition: false,
     });
-    renderAt('/entrenador/alumnos/link-9?seccion=progreso', routes);
+    renderAt('/entrenador/atletas/link-9?seccion=progreso', routes);
 
     expect(await screen.findByTestId('weight-charts')).toBeDefined();
     const urls = mockedApi.get.mock.calls.map(([url]) => url as string);
@@ -457,7 +457,7 @@ describe('CoachClientPage', () => {
 
   it('rejects a direct link to an area the client does not share', async () => {
     mockClient({ ...clientLink.permissions, training: false });
-    renderAt('/entrenador/alumnos/link-9?seccion=entrenamiento', routes);
+    renderAt('/entrenador/atletas/link-9?seccion=entrenamiento', routes);
 
     expect(await screen.findByText('Sección no disponible')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Entrenamiento' })).not.toBeInTheDocument();
@@ -466,7 +466,7 @@ describe('CoachClientPage', () => {
 
   it('lists assigned programs but only assigns with the edit permission', async () => {
     mockClient();
-    renderAt('/entrenador/alumnos/link-9?seccion=entrenamiento', routes);
+    renderAt('/entrenador/atletas/link-9?seccion=entrenamiento', routes);
 
     expect(await screen.findByText('Fuerza')).toBeDefined();
     expect(screen.getByText(/«Pautar entrenamiento»/)).toBeDefined();
@@ -478,7 +478,7 @@ describe('CoachClientPage', () => {
     mockClient({ ...clientLink.permissions, editTraining: true, editNutrition: false });
     mockedApi.post.mockResolvedValue({ data: {} });
     vi.mocked(confirmAction).mockResolvedValue(true);
-    renderAt('/entrenador/alumnos/link-9?seccion=entrenamiento', routes);
+    renderAt('/entrenador/atletas/link-9?seccion=entrenamiento', routes);
 
     const select = await screen.findByLabelText('Programa');
     await screen.findByRole('option', { name: 'Hipertrofia' });

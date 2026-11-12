@@ -42,7 +42,7 @@ afterEach(() => {
   vi.resetAllMocks();
 });
 
-describe('Semáforo de alumnos', () => {
+describe('Semáforo de atletas', () => {
   it('puts the clients who need attention first and says why', async () => {
     const responses: Record<string, unknown> = {
       '/coach/profile': { coach: true },

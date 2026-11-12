@@ -45,7 +45,7 @@ export function activityText(iso: string | null | undefined) {
 }
 
 export const clientHref = (linkId: string, section = 'resumen') =>
-  `/entrenador/alumnos/${encodeURIComponent(linkId)}?seccion=${section}`;
+  `/entrenador/atletas/${encodeURIComponent(linkId)}?seccion=${section}`;
 
 export const searchName = (text: string) =>
   text

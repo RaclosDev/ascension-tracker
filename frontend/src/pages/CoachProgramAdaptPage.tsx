@@ -21,11 +21,11 @@ export default function CoachProgramAdaptPage() {
     format(new Date(), 'yyyy-MM-dd'),
     isDate,
   );
-  const returnTo = `/entrenador/alumnos/${encodeURIComponent(linkId)}?seccion=entrenamiento`;
+  const returnTo = `/entrenador/atletas/${encodeURIComponent(linkId)}?seccion=entrenamiento`;
   const allowed = client.data?.permissions.training && client.data.permissions.editTraining;
 
   if (client.isPending || program.isPending)
-    return <p role="status">Cargando programa del alumno…</p>;
+    return <p role="status">Cargando programa del atleta…</p>;
   if (client.isError || program.isError || !client.data || !program.data || !allowed) {
     return (
       <section className="card">
@@ -48,7 +48,7 @@ export default function CoachProgramAdaptPage() {
           </button>
         )}
         <Link to={returnTo} className="btn btn-secondary">
-          Volver al alumno
+          Volver al atleta
         </Link>
       </section>
     );

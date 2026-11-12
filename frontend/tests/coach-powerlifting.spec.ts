@@ -70,7 +70,7 @@ for (const width of [390, 1440]) {
       }
       return route.fulfill({ json: [] });
     });
-    await page.goto('/entrenador/alumnos/l1?seccion=gestion');
+    await page.goto('/entrenador/atletas/l1?seccion=gestion');
     await page.getByLabel('Mostrar herramientas de powerlifting').click();
     await expect(page.getByLabel('Mostrar herramientas de powerlifting')).toBeChecked();
     await page.getByRole('link', { name: 'Powerlifting', exact: true }).click();

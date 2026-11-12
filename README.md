@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="docs/screenshots/hero.jpg" alt="Ascension: entrenamiento, nutrición y seguimiento de alumnos desde el móvil" width="100%">
+<img src="docs/screenshots/hero.jpg" alt="Ascension: entrenamiento, nutrición y seguimiento de atletas desde el móvil" width="100%">
 
 # Ascension Tracker
 
-**Entrenamiento, nutrición y progreso personal, con un espacio propio para entrenadores y alumnos.**
+**Entrenamiento, nutrición y progreso personal, con un espacio propio para entrenadores y atletas.**
 
-Aplicación full-stack con Java y React: desde el registro de una serie en el gimnasio hasta la revisión semanal de un alumno.
+Aplicación full-stack con Java y React: desde el registro de una serie en el gimnasio hasta la revisión semanal de un atleta.
 
 [![Abrir la app](https://img.shields.io/badge/Abrir_la_app-ascension.raclos.es-f2c94c?style=for-the-badge&logo=googlechrome&logoColor=black)](https://ascension.raclos.es)
 [![CI](https://img.shields.io/github/actions/workflow/status/RaclosDev/ascension-tracker/ci.yml?branch=main&style=for-the-badge&label=CI&logo=githubactions&logoColor=white)](https://github.com/RaclosDev/ascension-tracker/actions/workflows/ci.yml)
@@ -33,9 +33,9 @@ Aplicación full-stack con Java y React: desde el registro de una serie en el gi
     <td align="center" width="33%"><img src="docs/screenshots/nutrition.png" alt="Diario de nutrición con calorías y macronutrientes" width="240"><br><sub><b>Nutrición</b> · calorías y macros del día</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/coach.png" alt="Espacio del entrenador con revisiones pendientes y alumnos que necesitan seguimiento" width="240"><br><sub><b>Entrenador</b> · qué necesita atención</sub></td>
-    <td align="center"><img src="docs/screenshots/coach-clients.png" alt="Listado de alumnos con búsqueda y acceso a su ficha" width="240"><br><sub><b>Alumnos</b> · una ficha para cada persona</sub></td>
-    <td align="center"><img src="docs/screenshots/coach-review.png" alt="Revisión semanal de una alumna con energía, sueño, adherencia y respuesta del entrenador" width="240"><br><sub><b>Revisiones</b> · seguimiento y respuesta semanal</sub></td>
+    <td align="center"><img src="docs/screenshots/coach.png" alt="Espacio del entrenador con revisiones pendientes y atletas que necesitan seguimiento" width="240"><br><sub><b>Entrenador</b> · qué necesita atención</sub></td>
+    <td align="center"><img src="docs/screenshots/coach-clients.png" alt="Listado de atletas con búsqueda y acceso a su ficha" width="240"><br><sub><b>Atletas</b> · una ficha para cada persona</sub></td>
+    <td align="center"><img src="docs/screenshots/coach-review.png" alt="Revisión semanal de una atleta con energía, sueño, adherencia y respuesta del entrenador" width="240"><br><sub><b>Revisiones</b> · seguimiento y respuesta semanal</sub></td>
   </tr>
 </table>
 
@@ -46,9 +46,9 @@ Aplicación full-stack con Java y React: desde el registro de una serie en el gi
 - **Entrenar:** crear rutinas, registrar series y variantes, consultar historial y récords, y controlar los descansos con avisos push. El entreno en curso se conserva localmente entre recargas.
 - **Registrar comidas:** buscar alimentos, escanear códigos de barras, guardar recetas y seguir calorías y macros. Gemini ayuda a estimar comidas a partir de una foto y propone recetas; las estimaciones se pueden revisar antes de guardarlas.
 - **Ver el progreso:** peso, pasos y resúmenes semanales, junto con fotos privadas y mapa de recuperación muscular. Importación de sesiones desde Hevy y exportación/restauración de datos.
-- **Trabajar como entrenador:** inicio con tareas pendientes, cartera de alumnos, agenda de revisiones y ajustes profesionales. Bibliotecas de programas y pautas nutricionales con versiones, adaptación individual, borradores y permisos de cada alumno.
+- **Trabajar como entrenador:** inicio con tareas pendientes, cartera de atletas, agenda de revisiones y ajustes profesionales. Bibliotecas de programas y pautas nutricionales con versiones, adaptación individual, borradores y permisos de cada atleta.
 - **Preparar powerlifting:** perfiles y marcas de sentadilla, banca y peso muerto; competiciones con bloques y nueve intentos; seguimiento de cargas, volumen y RPE desde las sesiones. Las estimaciones de fuerza y los totales de competición se muestran por separado. [Funcionamiento y límites](docs/powerlifting.md).
-- **Empezar como alumno:** invitación del entrenador, configuración inicial guiada y permisos para decidir qué datos compartir y qué puede pautar el entrenador.
+- **Empezar como atleta:** invitación del entrenador, configuración inicial guiada y permisos para decidir qué datos compartir y qué puede pautar el entrenador.
 - **Acceder a la cuenta:** Google, email y contraseña, o llaves de acceso (*passkeys*), con recuperación de contraseña por correo.
 
 ## Decisiones técnicas
@@ -61,7 +61,7 @@ El proyecto reúne interfaz, reglas de negocio, persistencia e infraestructura. 
 | **Concurrencia en PostgreSQL** | Límites de uso con *token bucket* atómico compartido entre instancias, y temporizadores push reclamados con `FOR UPDATE SKIP LOCKED`. |
 | **Tres formas de acceso, una sesión** | Google OAuth, email/contraseña y WebAuthn convergen en JWT de acceso en memoria y refresh token rotatorio en cookie `HttpOnly`. La [política de seguridad](SECURITY.md) recoge el alcance y cómo reportar problemas. |
 | **Persistencia durante el entreno** | IndexedDB conserva el entreno activo y aísla el almacenamiento por cuenta. Los datos locales permiten recuperar esa sesión aunque se recargue la página; la sincronización con la API requiere conexión. |
-| **Permisos por alumno** | El alumno controla por separado el acceso a cuerpo, entrenamiento y nutrición, además de la capacidad de pautar. El backend aplica esos permisos y registra el acceso del entrenador. |
+| **Permisos por atleta** | El atleta controla por separado el acceso a cuerpo, entrenamiento y nutrición, además de la capacidad de pautar. El backend aplica esos permisos y registra el acceso del entrenador. |
 | **Rendimiento medido** | Tests que cuentan las consultas SQL para detectar N+1, y presupuestos de tamaño de JS, CSS y precache comprobados en CI. |
 
 ```mermaid

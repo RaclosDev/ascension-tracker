@@ -110,7 +110,7 @@ public class ProgramAssignmentService {
         Assignment original = requireAssignment(access, assignmentId, true);
         if ("ENDED".equals(original.status())) {
             throw new OptimisticLockingFailureException(
-                    "Esta asignación ya ha terminado. Abre el programa actual del alumno antes de publicar cambios.");
+                    "Esta asignación ya ha terminado. Abre el programa actual del atleta antes de publicar cambios.");
         }
         requireCopyCapacity(access.clientUserId());
         UUID copyId = programService.insertProgram(access.clientUserId(), prescriptions.snapshot(request.program(), access.linkId()), false,
@@ -152,7 +152,7 @@ public class ProgramAssignmentService {
         Integer copies = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM programs WHERE owner_user_id = ? AND NOT is_library", Integer.class, clientId);
         if (copies != null && copies >= MAX_COPIES_PER_CLIENT) {
-            throw new InvalidInputException("Tu alumno ya tiene demasiados programas guardados");
+            throw new InvalidInputException("Tu atleta ya tiene demasiados programas guardados");
         }
     }
 

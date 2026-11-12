@@ -249,7 +249,7 @@ export function WeekEditor({
                 (await confirmAction({
                   title: 'Empezar de cero',
                   description:
-                    'Se quitarán los días del borrador. Los registros del alumno se conservan.',
+                    'Se quitarán los días del borrador. Los registros del atleta se conservan.',
                   confirmLabel: 'Vaciar días',
                   destructive: true,
                 }))
@@ -266,7 +266,7 @@ export function WeekEditor({
             aria-pressed={preview}
             onClick={() => setPreview(!preview)}
           >
-            {preview ? 'Editar' : 'Vista del alumno'}
+            {preview ? 'Editar' : 'Vista del atleta'}
           </button>
           {previous.isError && (
             <p role="alert">
@@ -306,7 +306,7 @@ export function WeekEditor({
               </select>
             </label>
             <label data-tour="week-comment" className="sm:col-span-2 flex flex-col gap-1 min-w-0">
-              Comentario para el alumno
+              Comentario para el atleta
               <textarea
                 className="form-input min-h-11"
                 maxLength={2000}
@@ -337,7 +337,7 @@ export function WeekEditor({
                 onChange={(e) => edit({ ...value.content, privateNotes: e.target.value })}
               />
               <p className="text-sm">
-                Solo tú puedes ver estas notas. No forman parte de la pauta del alumno.
+                Solo tú puedes ver estas notas. No forman parte de la pauta del atleta.
               </p>
             </details>
           </div>
@@ -439,7 +439,7 @@ export function WeekEditor({
               if (
                 !(await confirmAction({
                   title: 'Publicar semana',
-                  description: `${sessions} sesiones y ${sets} series en la semana, con vigencia desde el ${formatCoachDate(start)}. El alumno verá las notas públicas. Su plan actual continúa hasta el inicio; se sustituirá cualquier plan previsto para esa fecha. Los días transcurridos no se asignan como pendientes.`,
+                  description: `${sessions} sesiones y ${sets} series en la semana, con vigencia desde el ${formatCoachDate(start)}. El atleta verá las notas públicas. Su plan actual continúa hasta el inicio; se sustituirá cualquier plan previsto para esa fecha. Los días transcurridos no se asignan como pendientes.`,
                   confirmLabel: 'Publicar semana',
                 }))
               )

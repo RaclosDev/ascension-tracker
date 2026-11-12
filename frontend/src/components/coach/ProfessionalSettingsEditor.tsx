@@ -65,7 +65,7 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
       }}
     >
       <fieldset className="flex flex-col gap-3" disabled={save.isPending}>
-        <legend className="font-semibold mb-2">Lo que ve tu alumno</legend>
+        <legend className="font-semibold mb-2">Lo que ve tu atleta</legend>
         <p className="coach-description">
           Esta identidad aparece en tus invitaciones, planes y revisiones. Se guarda separada del
           nombre de tu cuenta.
@@ -81,7 +81,7 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
           />
         </label>
         <label className="flex flex-col gap-1">
-          Presentación para tus alumnos
+          Presentación para tus atletas
           <textarea
             className="form-input"
             rows={3}
@@ -97,7 +97,7 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
             checked={value.showAccountPhoto}
             onChange={(e) => set({ showAccountPhoto: e.target.checked })}
           />
-          Mostrar mi foto de cuenta a mis alumnos
+          Mostrar mi foto de cuenta a mis atletas
         </label>
         <aside className="rounded-lg border p-4" aria-label="Vista previa del perfil">
           <p className="text-sm mb-2">Así te presentas</p>
@@ -113,7 +113,7 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
         <legend className="font-semibold mb-2">Nuevas incorporaciones</legend>
         <p className="coach-description">
           Se proponen al crear invitaciones. Puedes adaptar los servicios y quién rellena los datos
-          antes de enviarlas. El alumno decide sus permisos.
+          antes de enviarlas. El atleta decide sus permisos.
         </p>
         {(Object.keys(SERVICE_LABELS) as (keyof typeof SERVICE_LABELS)[]).map((key) => (
           <label key={key} className="flex items-center gap-3 min-h-11">
@@ -131,7 +131,7 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
             checked={value.prefill}
             onChange={(e) => set({ prefill: e.target.checked })}
           />
-          Yo relleno los datos iniciales del alumno
+          Yo relleno los datos iniciales del atleta
         </label>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
@@ -185,7 +185,7 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
         </datalist>
         <p className="coach-description">
           La agenda se fija al crear la invitación. Estos cambios no modifican invitaciones enviadas
-          ni alumnos actuales. Podrás ajustar cada agenda en la ficha del alumno.
+          ni atletas actuales. Podrás ajustar cada agenda en la ficha del atleta.
         </p>
       </fieldset>
 

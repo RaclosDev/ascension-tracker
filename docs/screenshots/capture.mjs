@@ -161,7 +161,7 @@ async function mockCoachApi(page) {
   const json = (data) => (route) => route.fulfill({ json: data });
   const clients = ['Ana García', 'Bruno Martín', 'Carla López'].map((name, i) => ({
     linkId: `showcase-${i}`,
-    client: { name, email: `alumno${i}@example.invalid`, picture: null },
+    client: { name, email: `atleta${i}@example.invalid`, picture: null },
     permissions: { training: true, nutrition: true, body: true, editTraining: true, editNutrition: true },
     since: '2026-11-01T10:00:00Z',
   }));
@@ -289,11 +289,11 @@ try {
   await expect(coach.getByRole('heading', { name: 'Pendiente de ti' })).toBeVisible();
   await capture(coach, 'coach');
 
-  await coach.goto(origin + '/entrenador/alumnos');
-  await expect(coach.getByRole('searchbox', { name: 'Buscar alumno' })).toBeVisible();
+  await coach.goto(origin + '/entrenador/atletas');
+  await expect(coach.getByRole('searchbox', { name: 'Buscar atleta' })).toBeVisible();
   await capture(coach, 'coach-clients');
 
-  await coach.goto(origin + '/entrenador/alumnos/showcase-0?seccion=revisiones');
+  await coach.goto(origin + '/entrenador/atletas/showcase-0?seccion=revisiones');
   await expect(coach.getByRole('heading', { name: 'Revisiones semanales' })).toBeVisible();
   await capture(coach, 'coach-review');
 

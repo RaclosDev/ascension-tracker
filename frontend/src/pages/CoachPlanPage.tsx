@@ -80,14 +80,14 @@ function CurrentPlan({ subscription }: { subscription: CoachSubscription }) {
   } else if (status === 'ACTIVE' && currentPeriodEnd && effectivePlan !== 'FREE') {
     detail = `Pagado hasta el ${formatDate(new Date(new Date(currentPeriodEnd).getTime() - 1).toISOString())}.`;
   } else if (effectivePlan === 'FREE' && status !== 'FREE') {
-    detail = 'Tu periodo terminó y ahora estás en el plan gratis. Tus alumnos siguen ahí.';
+    detail = 'Tu periodo terminó y ahora estás en el plan gratis. Tus atletas siguen ahí.';
   }
   return (
     <section className="card">
       <h2 className="card-title">Tu plan: {planName(effectivePlan)}</h2>
       <p style={{ color: 'var(--text-secondary)' }}>
         {STATUS_TEXT[status] ?? status} · {subscription.activeClients} de {subscription.maxClients}{' '}
-        alumnos · {subscription.aiDailyLimit} consultas de IA al día
+        atletas · {subscription.aiDailyLimit} consultas de IA al día
       </p>
       {detail && <p className="mt-2 text-sm">{detail}</p>}
     </section>
@@ -120,14 +120,14 @@ function Plans({ billing, current }: { billing: CoachBilling; current?: CoachSub
               </p>
             )}
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              Hasta {plan.maxClients} {plan.maxClients === 1 ? 'alumno' : 'alumnos'} ·{' '}
+              Hasta {plan.maxClients} {plan.maxClients === 1 ? 'atleta' : 'atletas'} ·{' '}
               {plan.aiDailyLimit} IA/día
             </p>
           </li>
         ))}
       </ul>
       <p className="mt-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
-        ¿{top > 0 ? `Más de ${top} alumnos, un` : 'Un'} equipo de entrenadores o algo a medida?
+        ¿{top > 0 ? `Más de ${top} atletas, un` : 'Un'} equipo de entrenadores o algo a medida?
         Escríbenos con el formulario de abajo y te preparamos un plan.
       </p>
     </section>
@@ -234,7 +234,7 @@ function ContactForm() {
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span style={{ color: 'var(--text-secondary)' }}>
-              ¿Cuántos alumnos llevas? (opcional)
+              ¿Cuántos atletas llevas? (opcional)
             </span>
             <input
               type="number"
