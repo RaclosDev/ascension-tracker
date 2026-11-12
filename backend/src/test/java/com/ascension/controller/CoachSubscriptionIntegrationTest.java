@@ -90,7 +90,7 @@ class CoachSubscriptionIntegrationTest {
         mvc.perform(as(get("/api/coach/clients"), coach)).andExpect(jsonPath("$.length()").value(2));
         mvc.perform(as(post("/api/coach/invitations"), coach))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("Tu plan admite 1 alumno activo")));
+                .andExpect(jsonPath("$.error", containsString("Tu plan admite 1 atleta activo")));
         accept(user(), pending).andExpect(status().isBadRequest());
     }
 

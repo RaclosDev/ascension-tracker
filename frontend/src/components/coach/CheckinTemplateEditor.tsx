@@ -22,10 +22,10 @@ export function CheckinTemplateEditor({ linkId }: { linkId?: string }) {
       </h2>
       <p className="mb-3" style={{ color: 'var(--text-secondary)' }}>
         {linkId ? (
-          'Personaliza las preguntas para este alumno. Las revisiones ya enviadas conservan sus preguntas originales.'
+          'Personaliza las preguntas para este atleta. Las revisiones ya enviadas conservan sus preguntas originales.'
         ) : (
           <>
-            Sin personalizar, se añaden preguntas según el servicio de cada alumno. Si guardas estas
+            Sin personalizar, se añaden preguntas según el servicio de cada atleta. Si guardas estas
             preguntas, serán comunes a todos. Las valoraciones de cumplimiento se piden solo para
             los servicios acordados; los check-ins anteriores conservan sus preguntas.
           </>

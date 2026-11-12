@@ -3,7 +3,7 @@ export const isCoachTourFrame = () => window.frameElement?.getAttribute('data-co
 export const tourRouteAllowed = (path: string) =>
   !path.includes('..') &&
   !path.includes('\\') &&
-  (/^\/entrenador(?:\/(?:alumnos|revisiones|planificacion|programas|recetas|pautas|ajustes|plan)(?:\/[\w-]+)*)?(?:\?[^#]*)?$/.test(
+  (/^\/entrenador(?:\/(?:atletas|revisiones|planificacion|programas|recetas|pautas|ajustes|plan)(?:\/[\w-]+)*)?(?:\?[^#]*)?$/.test(
     path,
   ) ||
     path === '/utilities');

@@ -73,7 +73,7 @@ public class CoachAccessPolicy {
     @Transactional
     public ClientAccess require(String coachEmail, UUID linkId, Action action) {
         if (coachEmail == null || linkId == null) {
-            throw new EntityNotFoundException("Alumno no encontrado");
+            throw new EntityNotFoundException("Atleta no encontrado");
         }
         List<ClientAccess> found = jdbcTemplate.query("""
                 SELECT cc.id, cc.coach_user_id, cc.client_user_id, cu.email AS client_email,
@@ -96,7 +96,7 @@ public class CoachAccessPolicy {
                         rs.getBoolean("can_edit_nutrition")),
                 linkId, Emails.normalize(coachEmail));
         if (found.isEmpty()) {
-            throw new EntityNotFoundException("Alumno no encontrado");
+            throw new EntityNotFoundException("Atleta no encontrado");
         }
         ClientAccess access = found.get(0);
         if (!access.grants(action.scope())) {

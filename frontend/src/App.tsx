@@ -60,6 +60,12 @@ function AppConfirmations() {
   return <ConfirmationDialog scope={`${location.key}:${user?.email ?? ''}:${!!token}`} />;
 }
 
+function LegacyCoachClientsRedirect() {
+  const { pathname, search, hash } = useLocation();
+  const athletePath = pathname.replace(/^\/entrenador\/alumnos(?=\/|$)/i, '/entrenador/atletas');
+  return <Navigate to={{ pathname: athletePath, search, hash }} replace />;
+}
+
 function AppContent() {
   const { token, isReady } = useAuth();
 
@@ -170,13 +176,14 @@ function AppContent() {
               <Route path="settings" element={<SettingsPage />} />
               <Route path="entrenador" element={<CoachPage />} />
               <Route path="entrenador/guia" element={<CoachTourPage />} />
-              <Route path="entrenador/alumnos" element={<CoachClientsPage />} />
+              <Route path="entrenador/atletas" element={<CoachClientsPage />} />
+              <Route path="entrenador/alumnos/*" element={<LegacyCoachClientsRedirect />} />
               <Route path="entrenador/revisiones" element={<CoachReviewsPage />} />
               <Route path="entrenador/planificacion" element={<CoachPlanningPage />} />
               <Route path="entrenador/ajustes" element={<CoachSettingsPage />} />
-              <Route path="entrenador/alumnos/:linkId" element={<CoachClientPage />} />
+              <Route path="entrenador/atletas/:linkId" element={<CoachClientPage />} />
               <Route
-                path="entrenador/alumnos/:linkId/programas/:assignmentId/adaptar"
+                path="entrenador/atletas/:linkId/programas/:assignmentId/adaptar"
                 element={<CoachProgramAdaptPage />}
               />
               <Route path="entrenador/programas" element={<CoachProgramsPage />} />

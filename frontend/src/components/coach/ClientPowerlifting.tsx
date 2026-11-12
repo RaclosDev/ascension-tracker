@@ -114,7 +114,7 @@ function PowerForm({
     >
       {!canEdit && (
         <p role="status">
-          Solo lectura. El alumno debe permitirte editar su entrenamiento para guardar cambios.
+          Solo lectura. El atleta debe permitirte editar su entrenamiento para guardar cambios.
         </p>
       )}
       <fieldset disabled={!canEdit || save.isPending} className="flex flex-col gap-5 min-w-0">

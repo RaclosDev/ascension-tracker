@@ -66,7 +66,7 @@ describe('Plan y facturación', () => {
     mockApi(true, billing('Ascension SL', 'ES00 1234'));
     renderPage();
     expect(await screen.findByText('Tu plan: Pro')).toBeTruthy();
-    expect(screen.getByText(/4 de 25 alumnos/)).toBeTruthy();
+    expect(screen.getByText(/4 de 25 atletas/)).toBeTruthy();
     expect(screen.getByText(/Te quedan 5 días de prueba/)).toBeTruthy();
     expect(await screen.findByText('19 €/mes')).toBeTruthy();
     expect(screen.getByText('o 190 €/año (2 meses gratis)')).toBeTruthy();
@@ -86,7 +86,7 @@ describe('Plan y facturación', () => {
     expect(await screen.findByText(/Activa el modo entrenador/)).toBeTruthy();
     expect(mockedApi.get).not.toHaveBeenCalledWith('/coach/billing');
 
-    fireEvent.change(screen.getByLabelText('¿Cuántos alumnos llevas? (opcional)'), {
+    fireEvent.change(screen.getByLabelText('¿Cuántos atletas llevas? (opcional)'), {
       target: { value: '80' },
     });
     fireEvent.change(screen.getByLabelText('Mensaje'), {

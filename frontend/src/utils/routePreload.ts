@@ -5,7 +5,7 @@ export const preloadRoute = (path: string): Promise<unknown> => {
     switch (path) {
       case '/entrenador':
         return import('../pages/CoachPage');
-      case '/entrenador/alumnos':
+      case '/entrenador/atletas':
         return import('../pages/CoachClientsPage');
       case '/entrenador/revisiones':
         return import('../pages/CoachReviewsPage');

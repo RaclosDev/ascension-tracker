@@ -29,11 +29,11 @@ function Welcome({ account }: { account: string }) {
       <DialogContent>
         <DialogTitle>Conoce tu espacio de entrenador</DialogTitle>
         <DialogDescription>
-          Recorre las pantallas con Lucía, una alumna de ejemplo. Iremos abriendo las pestañas y
+          Recorre las pantallas con Lucía, una atleta de ejemplo. Iremos abriendo las pestañas y
           señalando dónde revisar su feedback, preparar la semana y comprobar cómo la recibe.
         </DialogDescription>
         <p className="text-sm text-muted-foreground">
-          No necesitas tener alumnos. La demo no modifica tus datos.
+          No necesitas tener atletas. La demo no modifica tus datos.
         </p>
         <button
           className="btn btn-primary"

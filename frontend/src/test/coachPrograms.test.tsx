@@ -67,10 +67,10 @@ function renderAt(path: string) {
           <Route path="/entrenador/programas" element={<CoachProgramsPage />} />
           <Route path="/entrenador/programas/:programId" element={<CoachProgramEditorPage />} />
           <Route
-            path="/entrenador/alumnos/:linkId/programas/:assignmentId/adaptar"
+            path="/entrenador/atletas/:linkId/programas/:assignmentId/adaptar"
             element={<CoachProgramAdaptPage />}
           />
-          <Route path="/entrenador/alumnos/:linkId" element={<p>Ficha del alumno</p>} />
+          <Route path="/entrenador/atletas/:linkId" element={<p>Ficha del atleta</p>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -309,7 +309,7 @@ describe('CoachProgramEditorPage', () => {
 });
 
 describe('individual program adaptation', () => {
-  const path = '/entrenador/alumnos/l1/programas/a1/adaptar';
+  const path = '/entrenador/atletas/l1/programas/a1/adaptar';
   const program: Program = {
     ...emptyProgram(),
     id: 'copy1',
@@ -359,7 +359,7 @@ describe('individual program adaptation', () => {
     expect(screen.getByLabelText('Series')).toHaveValue(5);
     mockedApi.post.mockResolvedValueOnce({ data: { id: 'a2' } });
     fireEvent.click(screen.getByRole('button', { name: 'Publicar adaptación' }));
-    await screen.findByText('Ficha del alumno');
+    await screen.findByText('Ficha del atleta');
     expect(mockedApi.post).toHaveBeenLastCalledWith('/coach/clients/l1/programs/a1/adapt', {
       program: expect.objectContaining({ name: 'Fuerza para Ana', status: 'READY' }),
       startDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),

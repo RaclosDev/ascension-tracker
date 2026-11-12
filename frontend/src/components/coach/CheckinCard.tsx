@@ -93,7 +93,7 @@ export function CheckinCard({ checkin, footer }: { checkin: Checkin; footer?: Re
               .map((update, i) => (
                 <li key={`${update.createdAt}:${i}`} className="rounded-lg p-3 bg-black/20">
                   <p className="text-xs" style={muted}>
-                    {update.role === 'CLIENT' ? 'Alumno' : 'Entrenador'} ·{' '}
+                    {update.role === 'CLIENT' ? 'Atleta' : 'Entrenador'} ·{' '}
                     <time dateTime={update.createdAt}>
                       {dateTime.format(new Date(update.createdAt))}
                     </time>

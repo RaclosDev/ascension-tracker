@@ -46,7 +46,7 @@ export function InviteClientButton() {
         type="button"
         onClick={() => setOpen(true)}
       >
-        <UserPlus size={16} aria-hidden /> Invitar alumno
+        <UserPlus size={16} aria-hidden /> Invitar atleta
       </button>
       <InviteDialog open={open} onOpenChange={setOpen} />
     </>

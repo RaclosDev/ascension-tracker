@@ -156,7 +156,7 @@ public class NutritionPlanService {
                 access.linkId(), actualId));
         if (!own) {
             throw new OptimisticLockingFailureException(
-                    "El alumno tiene una pauta activa de otro entrenador. Debe finalizarse antes de publicar otra.");
+                    "El atleta tiene una pauta activa de otro entrenador. Debe finalizarse antes de publicar otra.");
         }
         return actualId;
     }

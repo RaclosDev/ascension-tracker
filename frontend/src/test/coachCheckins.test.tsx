@@ -110,7 +110,7 @@ describe('private session drafts', () => {
   });
 });
 
-describe('Check-ins del alumno', () => {
+describe('Check-ins del atleta', () => {
   it('needs every score before sending and sends the answers', async () => {
     const current: ClientCheckin = {
       linkId: 'l1',
@@ -235,7 +235,7 @@ describe('Check-ins en la ficha del entrenador', () => {
     cleanup();
     mockedApi.get.mockResolvedValue({ data: [checkin({ updatedAt: '2026-11-04T10:00:00Z' })] });
     wrap(<CheckinsSection linkId="l1" />);
-    expect(await screen.findByRole('alert')).toHaveTextContent('El alumno ha cambiado');
+    expect(await screen.findByRole('alert')).toHaveTextContent('El atleta ha cambiado');
     expect(screen.getByRole('button', { name: 'Responder' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'He revisado los cambios' }));
     expect(screen.getByRole('button', { name: 'Responder' })).toBeEnabled();

@@ -148,7 +148,7 @@ function ProgramOverview({ link, href }: { link: CoachClient; href: string }) {
           Sin programa activo.{' '}
           {link.permissions.editTraining
             ? 'Puedes asignar uno desde su entrenamiento.'
-            : 'El alumno debe permitirte pautar entrenamiento para asignar un programa.'}
+            : 'El atleta debe permitirte pautar entrenamiento para asignar un programa.'}
         </p>
       )}
       <Link className="btn btn-secondary mt-4" to={href}>

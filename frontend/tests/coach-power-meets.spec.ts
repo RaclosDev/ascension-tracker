@@ -65,7 +65,7 @@ for (const width of [390, 1440]) {
       }
       return route.fulfill({ json: [] });
     });
-    await page.goto('/entrenador/alumnos/l1?seccion=powerlifting&vista=competiciones');
+    await page.goto('/entrenador/atletas/l1?seccion=powerlifting&vista=competiciones');
     await page.getByRole('button', { name: 'Nueva competición' }).click();
     await page.getByLabel('Nombre de la competición').fill('Campeonato de primavera');
     await page.getByLabel('Fecha de competición').fill('2027-06-01');

@@ -27,11 +27,11 @@ export default function CoachTourPage() {
       <section className="card coach-tour-intro">
         <h2>Del feedback a la siguiente semana</h2>
         <p>
-          Abre Alumnos, entra en el perfil de Lucía y aprende a revisar su semana, copiar
+          Abre Atletas, entra en el perfil de Lucía y aprende a revisar su semana, copiar
           entrenamientos, ajustar la pauta y comprobar cómo la verá.
         </p>
         <p>
-          El recorrido usa datos de ejemplo. Puedes seguirlo aunque todavía no tengas alumnos, salir
+          El recorrido usa datos de ejemplo. Puedes seguirlo aunque todavía no tengas atletas, salir
           en cualquier momento y retomarlo después.
         </p>
         <div className="coach-tour-actions">

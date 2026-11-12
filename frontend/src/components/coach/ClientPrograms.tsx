@@ -48,7 +48,7 @@ export default function ProgramsSection({
     if (
       active &&
       !(await confirmAction({
-        title: 'Sustituir programa del alumno',
+        title: 'Sustituir programa del atleta',
         description: `«${active.programName}» continuará hasta el ${formatCoachDate(startDate)}. Si ya hay una versión para esa fecha, se sustituirá. Los entrenamientos registrados se conservan. ¿Asignar el nuevo programa?`,
         confirmLabel: 'Asignar programa',
         destructive: false,
@@ -111,7 +111,7 @@ export default function ProgramsSection({
                       {a.status !== 'ENDED' && canAssign && (
                         <Link
                           className="btn btn-secondary"
-                          to={`/entrenador/alumnos/${encodeURIComponent(linkId)}/programas/${encodeURIComponent(a.id)}/adaptar`}
+                          to={`/entrenador/atletas/${encodeURIComponent(linkId)}/programas/${encodeURIComponent(a.id)}/adaptar`}
                         >
                           Adaptar
                         </Link>
@@ -134,7 +134,7 @@ export default function ProgramsSection({
                             if (
                               !(await confirmAction({
                                 title: 'Terminar programa',
-                                description: `¿Terminar «${a.programName}»? Tu alumno conserva su copia.`,
+                                description: `¿Terminar «${a.programName}»? Tu atleta conserva su copia.`,
                                 confirmLabel: 'Terminar programa',
                                 destructive: true,
                               }))
@@ -165,7 +165,7 @@ export default function ProgramsSection({
       )}
       {!canAssign && (
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Para asignarle programas, tu alumno tiene que darte el permiso «Pautar entrenamiento» en
+          Para asignarle programas, tu atleta tiene que darte el permiso «Pautar entrenamiento» en
           sus ajustes.
         </p>
       )}
@@ -239,7 +239,7 @@ export default function ProgramsSection({
           {selected.data && (
             <>
               <p className="text-sm">
-                Se publicará una copia de este programa solo para este alumno, con inicio el{' '}
+                Se publicará una copia de este programa solo para este atleta, con inicio el{' '}
                 {formatCoachDate(startDate)}.{' '}
                 {active && 'El programa actual continúa hasta esa fecha.'} Los registros anteriores
                 se conservan.

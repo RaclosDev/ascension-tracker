@@ -64,7 +64,7 @@ export default function CoachProgramsPage() {
       </Link>
       <CoachPageHeader
         title="Biblioteca de entrenamiento"
-        description="Sesiones cortas, bloques, semanas y programas que puedes reutilizar y personalizar para cada alumno."
+        description="Sesiones cortas, bloques, semanas y programas que puedes reutilizar y personalizar para cada atleta."
       >
         <div className="flex flex-wrap gap-2">
           <Link to="/entrenador/programas/nuevo?tipo=sesion" className="btn btn-secondary">
@@ -176,7 +176,7 @@ export default function CoachProgramsPage() {
         <section className="card">
           <p style={{ color: 'var(--text-secondary)' }}>
             Aún no tienes programas. Crea uno con sus semanas, días y ejercicios pautados para
-            asignarlo después a tus alumnos.
+            asignarlo después a tus atletas.
           </p>
         </section>
       )}
@@ -247,7 +247,7 @@ export default function CoachProgramsPage() {
                     if (
                       !(await confirmAction({
                         title: 'Borrar programa de biblioteca',
-                        description: `¿Borrar «${program.name}» de la biblioteca? Los alumnos conservan sus copias. No se puede deshacer.`,
+                        description: `¿Borrar «${program.name}» de la biblioteca? Los atletas conservan sus copias. No se puede deshacer.`,
                         confirmLabel: 'Borrar programa',
                         destructive: true,
                       }))

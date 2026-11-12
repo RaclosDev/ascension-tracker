@@ -61,7 +61,7 @@ describe('groupByDay', () => {
   });
 });
 
-describe('Fotos de progreso del alumno', () => {
+describe('Fotos de progreso del atleta', () => {
   it('says so when the server has no photo storage', async () => {
     mockedApi.get.mockResolvedValue({ data: { enabled: false, photos: [] } });
     wrap(<ProgressPhotosSection />);

@@ -32,7 +32,7 @@ export const LEGAL_TEXTS: Record<LegalDoc, LegalText> = {
         paragraphs: [
           'Los de tu acceso: tu email y, según cómo entres, tu contraseña (guardada solo como hash, nunca en claro), la clave pública de tus llaves de acceso o el nombre y la foto de perfil de tu cuenta de Google.',
           'Lo que registras en la app: entrenamientos, comidas, peso, pasos, medidas, fotos de progreso, check-ins y ajustes. Varios de estos datos (peso, medidas, fotos, alimentación) son datos relativos a la salud.',
-          'Si nos escribes desde el formulario de contacto, tu mensaje y el número de alumnos que nos indiques.',
+          'Si nos escribes desde el formulario de contacto, tu mensaje y el número de atletas que nos indiques.',
           'Datos técnicos necesarios para que el servicio funcione y sea seguro: registros de acceso, dirección IP y suscripciones a avisos del navegador.',
         ],
       },
@@ -129,7 +129,7 @@ export const LEGAL_TEXTS: Record<LegalDoc, LegalText> = {
         title: 'Planes y prueba',
         paragraphs: [
           'Al activar el modo entrenador empiezas una prueba gratuita de 14 días con el plan Pro, sin tarjeta. Al terminar pasas al plan gratis salvo que contrates otro.',
-          'Cada plan tiene un límite de alumnos activos y una cuota diaria de IA, que se muestran en Plan y facturación. Si superas el límite no pierdes a ningún alumno, pero no podrás añadir más hasta que cambies de plan.',
+          'Cada plan tiene un límite de atletas activos y una cuota diaria de IA, que se muestran en Plan y facturación. Si superas el límite no pierdes a ningún atleta, pero no podrás añadir más hasta que cambies de plan.',
         ],
       },
       {
@@ -141,26 +141,26 @@ export const LEGAL_TEXTS: Record<LegalDoc, LegalText> = {
         ],
       },
       {
-        title: 'Tus alumnos y sus datos',
+        title: 'Tus atletas y sus datos',
         paragraphs: [
-          'Cada alumno decide qué te comparte y puede retirarlo o terminar la relación cuando quiera. Usa sus datos solo para entrenarle y con la confidencialidad propia de tu profesión.',
-          'Respecto a los datos de tus alumnos que tratas para tu servicio de entrenamiento, tú eres responsable del tratamiento y Ascension actúa como encargado según el anexo siguiente.',
+          'Cada atleta decide qué te comparte y puede retirarlo o terminar la relación cuando quiera. Usa sus datos solo para entrenarle y con la confidencialidad propia de tu profesión.',
+          'Respecto a los datos de tus atletas que tratas para tu servicio de entrenamiento, tú eres responsable del tratamiento y Ascension actúa como encargado según el anexo siguiente.',
         ],
       },
       {
         title: 'Anexo: encargo del tratamiento',
         paragraphs: [
-          'Objeto: alojar y mostrar al entrenador los datos que sus alumnos le comparten (entrenamiento, nutrición, peso, medidas, fotos y check-ins), mientras dure la relación.',
+          'Objeto: alojar y mostrar al entrenador los datos que sus atletas le comparten (entrenamiento, nutrición, peso, medidas, fotos y check-ins), mientras dure la relación.',
           'Ascension solo trata esos datos siguiendo las instrucciones del entrenador que resultan del uso normal de la app, con personal sujeto a confidencialidad y con medidas de seguridad adecuadas (cifrado en tránsito, almacenamiento privado, acceso limitado al entrenador vinculado).',
           'El entrenador autoriza los subencargados indicados en la política de privacidad. Avisaremos de cualquier cambio con antelación para que pueda oponerse.',
-          'Ascension ayudará al entrenador a atender los derechos de los alumnos y le avisará sin demora de cualquier brecha de seguridad que les afecte.',
-          'Al terminar la relación o el encargo, el entrenador deja de ver esos datos; siguen siendo del alumno, que los conserva en su cuenta.',
+          'Ascension ayudará al entrenador a atender los derechos de los atletas y le avisará sin demora de cualquier brecha de seguridad que les afecte.',
+          'Al terminar la relación o el encargo, el entrenador deja de ver esos datos; siguen siendo del atleta, que los conserva en su cuenta.',
         ],
       },
       {
         title: 'Planes a medida',
         paragraphs: [
-          'Si necesitas más alumnos de los que permite el plan más alto, o eres un equipo o un gimnasio, escríbenos desde Plan y facturación y acordaremos las condiciones por escrito.',
+          'Si necesitas más atletas de los que permite el plan más alto, o eres un equipo o un gimnasio, escríbenos desde Plan y facturación y acordaremos las condiciones por escrito.',
         ],
       },
     ],

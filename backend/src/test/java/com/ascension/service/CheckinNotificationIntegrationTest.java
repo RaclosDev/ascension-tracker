@@ -55,7 +55,7 @@ class CheckinNotificationIntegrationTest {
         mvc.perform(as(put(CLIENT_PATH, linkId), client).contentType("application/json").content(CHECKIN))
                 .andExpect(status().isOk());
         verify(push).sendAsync(coach, "Nuevo check-in", "Pablo ha enviado su check-in semanal.",
-                "ascension-checkin-" + linkId, "/entrenador/alumnos/" + linkId);
+                "ascension-checkin-" + linkId, "/entrenador/atletas/" + linkId);
 
         // Editing it does not notify the coach again.
         mvc.perform(as(put(CLIENT_PATH, linkId), client).contentType("application/json")
