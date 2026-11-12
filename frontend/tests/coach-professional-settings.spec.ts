@@ -61,9 +61,9 @@ for (const width of [390, 1440]) {
       .getByLabel('Nombre profesional', { exact: true })
       .fill('Ana · Entrenamiento de fuerza');
     await page
-      .getByLabel('Presentación para tus alumnos')
+      .getByLabel('Presentación para tus atletas')
       .fill('Revisamos tu progreso cada semana.');
-    await page.getByLabel('Mostrar mi foto de cuenta a mis alumnos').uncheck();
+    await page.getByLabel('Mostrar mi foto de cuenta a mis atletas').uncheck();
     await page.getByLabel('Entrenamiento', { exact: true }).uncheck();
     await page.getByLabel('Nutrición', { exact: true }).check();
     await page.getByLabel('Día de revisión inicial').selectOption('3');
@@ -88,10 +88,10 @@ for (const width of [390, 1440]) {
     });
 
     conflict = true;
-    await page.getByLabel('Presentación para tus alumnos').fill('Mi borrador se conserva');
+    await page.getByLabel('Presentación para tus atletas').fill('Mi borrador se conserva');
     await page.getByRole('button', { name: 'Guardar ajustes profesionales' }).click();
     await expect(page.getByRole('alert')).toContainText('otra sesión');
-    await expect(page.getByLabel('Presentación para tus alumnos')).toHaveValue(
+    await expect(page.getByLabel('Presentación para tus atletas')).toHaveValue(
       'Mi borrador se conserva',
     );
     await page.getByRole('button', { name: 'Consultar versión guardada' }).click();
@@ -101,11 +101,11 @@ for (const width of [390, 1440]) {
       .getByRole('dialog', { name: 'Descartar borrador' })
       .getByRole('button', { name: 'Descartar borrador' })
       .click();
-    await expect(page.getByLabel('Presentación para tus alumnos')).toHaveValue(
+    await expect(page.getByLabel('Presentación para tus atletas')).toHaveValue(
       'Guardado desde otra sesión',
     );
-    await page.goto('/entrenador/alumnos');
-    await page.getByRole('button', { name: 'Invitar alumno' }).first().click();
+    await page.goto('/entrenador/atletas');
+    await page.getByRole('button', { name: 'Invitar atleta' }).first().click();
     const dialog = page.getByRole('dialog');
     await expect(
       dialog
@@ -117,7 +117,7 @@ for (const width of [390, 1440]) {
         .getByRole('group', { name: 'Servicios acordados' })
         .getByLabel('Entrenamiento', { exact: true }),
     ).not.toBeChecked();
-    await dialog.getByLabel('Nombre del alumno (opcional)').fill('Alumno nuevo');
+    await dialog.getByLabel('Nombre del atleta (opcional)').fill('Atleta nuevo');
     await dialog.getByRole('button', { name: 'Crear enlace de invitación' }).click();
     await expect(dialog.getByLabel('Enlace de invitación')).toBeVisible();
     expect(invitation).not.toBeNull();

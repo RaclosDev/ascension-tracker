@@ -1327,7 +1327,7 @@ html:not([data-mode='light']) .marker-ink {
 }
 
 /*
- * Panel de entrenador: contadores y filtros sobre la pared; la lista de alumnos es una sola hoja.
+ * Panel de entrenador: contadores y filtros sobre la pared; la lista de atletas es una sola hoja.
  * Desde 1024px, tabla; por debajo, filas apiladas con el borde izquierdo del color del estado.
  */
 .coach-page {
@@ -1527,7 +1527,7 @@ html:not([data-mode='light']) .marker-ink {
   }
 }
 
-/* Ficha del alumno: nombre, qué comparte y la salida de la relación a mano, sin buscarla. */
+/* Ficha del atleta: nombre, qué comparte y la salida de la relación a mano, sin buscarla. */
 .coach-client-header {
   display: flex;
   flex-wrap: wrap;

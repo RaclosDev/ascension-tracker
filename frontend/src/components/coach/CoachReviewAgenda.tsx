@@ -14,13 +14,13 @@ export function CoachReviewAgenda({ rows, search }: { rows: CoachRow[]; search: 
     <section aria-label="Agenda semanal" className="flex flex-col gap-4">
       <p className="coach-description">
         Horario semanal de envío del check-in. Cada hora se muestra en la zona acordada con ese
-        alumno. La próxima fecha incluye el margen de incorporación o reanudación.
+        atleta. La próxima fecha incluye el margen de incorporación o reanudación.
       </p>
       {visible.length === 0 && (
         <div className="card coach-empty-inline">
           <h2>{search ? 'No hay coincidencias' : 'Sin revisiones programadas'}</h2>
-          <p>Configura el servicio y la agenda desde Gestión en la ficha del alumno.</p>
-          <Link to="/entrenador/alumnos">Ver alumnos</Link>
+          <p>Configura el servicio y la agenda desde Gestión en la ficha del atleta.</p>
+          <Link to="/entrenador/atletas">Ver atletas</Link>
         </div>
       )}
       {REVIEW_DAYS.map((day, index) => {

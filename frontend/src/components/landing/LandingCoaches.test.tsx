@@ -12,11 +12,11 @@ describe('Landing para entrenadores', () => {
     const plans = within(await screen.findByRole('list', { name: 'Planes para entrenadores' }));
     expect(plans.getAllByRole('listitem')).toHaveLength(4);
     expect(plans.getByText('Élite')).toBeInTheDocument();
-    expect(plans.getByText('Hasta 50 alumnos')).toBeInTheDocument();
+    expect(plans.getByText('Hasta 50 atletas')).toBeInTheDocument();
     expect(screen.getByText('Pagando el año entero, 2 meses gratis.')).toBeInTheDocument();
     expect(screen.getByText(/14 días gratis, sin tarjeta/)).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: '¿Más de 50 alumnos o un plan a medida?' }),
+      screen.getByRole('heading', { name: '¿Más de 50 atletas o un plan a medida?' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'hola@ascension.test' })).toHaveAttribute(
       'href',
@@ -30,9 +30,7 @@ describe('Landing para entrenadores', () => {
 
   it('leaves the prices out and points to the app when the backend does not answer', async () => {
     render(<LandingCoaches />, { wrapper: mockPublicInfo(null) });
-    expect(
-      await screen.findByText(/entra con tu cuenta y escríbenos/),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/entra con tu cuenta y escríbenos/)).toBeInTheDocument();
     expect(
       screen.queryByRole('list', { name: 'Planes para entrenadores' }),
     ).not.toBeInTheDocument();

@@ -33,7 +33,7 @@ public class CheckinNotifier {
         if (!checkin.createdAt().equals(checkin.updatedAt())) return;
         parties(linkId).ifPresent(p -> push.sendAsync(p.coachEmail(), "Nuevo check-in",
                 firstName(p.clientName()) + " ha enviado su check-in semanal.",
-                "ascension-checkin-" + linkId, "/entrenador/alumnos/" + linkId));
+                "ascension-checkin-" + linkId, "/entrenador/atletas/" + linkId));
     }
 
     /** Tells the client their coach answered a check-in. */

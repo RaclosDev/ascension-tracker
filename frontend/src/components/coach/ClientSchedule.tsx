@@ -31,7 +31,7 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
       <div>
         <h2>Agenda de revisiones</h2>
         <p className="coach-description">
-          Acuerda con el alumno cuándo debe enviar su check-in semanal. Recibirá un recordatorio si
+          Acuerda con el atleta cuándo debe enviar su check-in semanal. Recibirá un recordatorio si
           aún no lo ha enviado y tiene los avisos activados.
         </p>
       </div>
@@ -95,7 +95,7 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
       </fieldset>
       <p className="coach-description">
         La pausa detiene recordatorios y alertas de seguimiento. Conserva el historial y los
-        permisos; el alumno sigue ocupando una plaza. Al reanudar o cambiar el horario, dispone de
+        permisos; el atleta sigue ocupando una plaza. Al reanudar o cambiar el horario, dispone de
         al menos siete días para la siguiente revisión.
       </p>
       {link.followup && (

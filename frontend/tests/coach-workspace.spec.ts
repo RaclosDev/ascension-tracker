@@ -7,7 +7,7 @@ async function setupCoach(page: Page, empty = false) {
   await page.route('**/api/passkeys', (route) => route.fulfill({ json: [] }));
   const clients = ['Ana García', 'Bruno Martín', 'Carla López'].map((name, i) => ({
     linkId: `l${i}`,
-    client: { name, email: `alumno${i}@example.com`, picture: null },
+    client: { name, email: `atleta${i}@example.com`, picture: null },
     permissions: {
       training: true,
       nutrition: true,
@@ -181,14 +181,14 @@ for (const width of [1440, 390]) {
     await expect(
       page.getByRole('heading', { name: 'No hay check-ins por responder' }),
     ).toBeVisible();
-    await page.getByRole('link', { name: 'Ver alumnos' }).click();
+    await page.getByRole('link', { name: 'Ver atletas' }).click();
     await page.getByRole('combobox', { name: 'Servicio', exact: true }).selectOption('nutrition');
-    await expect(page.getByText('1 de 3 alumnos')).toBeVisible();
+    await expect(page.getByText('1 de 3 atletas')).toBeVisible();
     await expect(
       page.getByRole('link', { name: 'Preparar pauta nutricional' }).filter({ visible: true }),
     ).toBeVisible();
     await page.getByRole('combobox', { name: 'Servicio', exact: true }).selectOption('training');
-    await page.getByRole('searchbox', { name: 'Buscar alumno' }).fill('garcia');
+    await page.getByRole('searchbox', { name: 'Buscar atleta' }).fill('garcia');
     await page.getByRole('combobox', { name: 'Ordenar' }).selectOption('name');
     await page.getByRole('checkbox', { name: 'Mostrar peso' }).click();
     await expect(page.getByRole('checkbox', { name: 'Mostrar peso' })).toBeChecked();
@@ -204,8 +204,8 @@ for (const width of [1440, 390]) {
       fullPage: true,
       animations: 'disabled',
     });
-    await page.getByRole('link', { name: 'Volver a alumnos' }).click();
-    await expect(page.getByRole('searchbox', { name: 'Buscar alumno' })).toHaveValue('garcia');
+    await page.getByRole('link', { name: 'Volver a atletas' }).click();
+    await expect(page.getByRole('searchbox', { name: 'Buscar atleta' })).toHaveValue('garcia');
     await expect(page.getByRole('combobox', { name: 'Ordenar' })).toHaveValue('name');
     await expect(page.getByRole('combobox', { name: 'Servicio', exact: true })).toHaveValue(
       'training',
@@ -254,14 +254,14 @@ test('new coach gets an invitation entry point with no invented metrics', async 
   await setupCoach(page, true);
   await page.goto('/entrenador');
   await expect(page.getByRole('heading', { name: 'Empieza por una invitación' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Alumnos activos/ })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /Atletas activos/ })).toHaveCount(0);
   await noHorizontalOverflow(page);
   await page.screenshot({
     path: testInfo.outputPath('empty-dashboard.png'),
     fullPage: true,
     animations: 'disabled',
   });
-  await page.getByRole('button', { name: 'Invitar alumno' }).first().click();
+  await page.getByRole('button', { name: 'Invitar atleta' }).first().click();
   await expect(page.getByRole('dialog')).toBeVisible();
 });
 
@@ -272,7 +272,7 @@ for (const width of [1440, 390]) {
     await page.goto('/entrenador/revisiones?vista=agenda');
     await expect(page.getByRole('heading', { name: 'Lunes' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Miércoles' })).toBeVisible();
-    await page.getByLabel('Buscar revisión por alumno').fill('garcia');
+    await page.getByLabel('Buscar revisión por atleta').fill('garcia');
     await expect(page.getByRole('link', { name: /Ana García.*Abrir revisión/ })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Miércoles' })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -292,3 +292,12 @@ for (const width of [1440, 390]) {
     );
   });
 }
+
+test('old athlete links open the renamed route with the selected section and fragment', async ({
+  page,
+}) => {
+  await setupCoach(page);
+  await page.goto('/entrenador/alumnos/l0?seccion=revisiones#seguimiento');
+  await expect(page).toHaveURL(/\/entrenador\/atletas\/l0\?seccion=revisiones#seguimiento$/);
+  await expect(page.getByRole('heading', { name: 'Revisiones semanales' })).toBeVisible();
+});

@@ -21,7 +21,7 @@ vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() 
 const mocked = vi.mocked(api);
 const link = {
   linkId: 'l1',
-  client: { name: 'Alumno', email: 'athlete@test', picture: null },
+  client: { name: 'Atleta', email: 'athlete@test', picture: null },
   since: '2026-10-01',
   permissions: {
     training: true,
@@ -159,8 +159,8 @@ describe('preparación semanal', () => {
   });
   it('keeps the local text when another session saves first', async () => {
     show();
-    await screen.findByLabelText('Comentario para el alumno');
-    fireEvent.change(screen.getByLabelText('Comentario para el alumno'), {
+    await screen.findByLabelText('Comentario para el atleta');
+    fireEvent.change(screen.getByLabelText('Comentario para el atleta'), {
       target: { value: 'Mi descarga' },
     });
     mocked.put.mockImplementation(async () => {
@@ -169,7 +169,7 @@ describe('preparación semanal', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
     await screen.findByText(/Esta semana cambió en otra sesión/);
-    expect(screen.getByLabelText('Comentario para el alumno')).toHaveValue('Mi descarga');
+    expect(screen.getByLabelText('Comentario para el atleta')).toHaveValue('Mi descarga');
     expect(screen.getByRole('button', { name: 'Publicar semana' })).toBeDisabled();
     expect(
       screen.getByRole('button', { name: 'Descargar ambas versiones completas (JSON)' }),

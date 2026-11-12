@@ -66,7 +66,7 @@ public class ClientStatusService {
     @Transactional(readOnly = true)
     public ClientStatus forClient(String coachEmail, UUID linkId, Instant now) {
         return statuses(coachEmail, now, linkId).stream().findFirst()
-                .orElseThrow(() -> new com.ascension.exception.EntityNotFoundException("Alumno no encontrado"));
+                .orElseThrow(() -> new com.ascension.exception.EntityNotFoundException("Atleta no encontrado"));
     }
 
     private List<ClientStatus> statuses(String coachEmail, Instant now, UUID linkId) {

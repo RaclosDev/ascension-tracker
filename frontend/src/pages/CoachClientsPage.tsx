@@ -50,7 +50,7 @@ const FILTERS: { value: Filter; label: string; matches: (row: CoachRow) => boole
   },
   {
     value: 'waiting',
-    label: 'Pendiente del alumno',
+    label: 'Pendiente del atleta',
     matches: (r) => clientTasks(r).some((t) => t.owner === 'client'),
   },
   {
@@ -110,26 +110,26 @@ function Clients() {
   return (
     <>
       <CoachPageHeader
-        title="Alumnos"
-        description="Encuentra a cada alumno y retoma su seguimiento."
+        title="Atletas"
+        description="Encuentra a cada atleta y retoma su seguimiento."
       >
         <InviteClientButton />
       </CoachPageHeader>
       {clients.isPending ? (
-        <p role="status">Cargando alumnos…</p>
+        <p role="status">Cargando atletas…</p>
       ) : clients.isError ? (
         <QueryErrorNotice retry={() => void clients.refetch()} pending={clients.isFetching} />
       ) : rows.length === 0 ? (
         <section className="card coach-empty-inline">
-          <h2>Aún no tienes alumnos</h2>
-          <p>Invita a tu primer alumno para empezar a trabajar juntos.</p>
+          <h2>Aún no tienes atletas</h2>
+          <p>Invita a tu primer atleta para empezar a trabajar juntos.</p>
         </section>
       ) : (
         <>
           <div className="coach-list-controls">
             <label className="coach-search">
               <Search size={18} aria-hidden />
-              <span className="sr-only">Buscar alumno</span>
+              <span className="sr-only">Buscar atleta</span>
               <input
                 type="search"
                 placeholder="Buscar por nombre"
@@ -165,7 +165,7 @@ function Clients() {
               </select>
             </label>
           </div>
-          <div className="coach-chips" role="group" aria-label="Filtrar alumnos">
+          <div className="coach-chips" role="group" aria-label="Filtrar atletas">
             {FILTERS.map((f) => (
               <button
                 key={f.value}
@@ -189,12 +189,12 @@ function Clients() {
             <p role="status">
               {status.isPending
                 ? 'Cargando seguimiento…'
-                : 'El seguimiento de algunos alumnos no está disponible.'}
+                : 'El seguimiento de algunos atletas no está disponible.'}
             </p>
           )}
           {filter.value === 'noProgram' && (
             <p className="coach-description">
-              Alumnos con servicio de entrenamiento acordado, permiso para pautarlo y sin programa
+              Atletas con servicio de entrenamiento acordado, permiso para pautarlo y sin programa
               activo.
             </p>
           )}
@@ -206,13 +206,13 @@ function Clients() {
                 className="coach-text-button"
                 onClick={() => update('filtro', '')}
               >
-                ver todos los alumnos
+                ver todos los atletas
               </button>
               .
             </p>
           ) : visible.length === 0 ? (
             <div className="card coach-empty-inline">
-              <h2>No hay alumnos con estos filtros</h2>
+              <h2>No hay atletas con estos filtros</h2>
               <button type="button" className="btn btn-secondary" onClick={clear}>
                 Limpiar filtros
               </button>
@@ -220,14 +220,14 @@ function Clients() {
           ) : (
             <>
               <p className="coach-list-count" role="status">
-                {visible.length} de {rows.length} alumnos
+                {visible.length} de {rows.length} atletas
               </p>
               <div className="card coach-table-wrap">
                 <table className="coach-table">
-                  <caption className="sr-only">Seguimiento de alumnos</caption>
+                  <caption className="sr-only">Seguimiento de atletas</caption>
                   <thead>
                     <tr>
-                      <th scope="col">Alumno</th>
+                      <th scope="col">Atleta</th>
                       <th scope="col">Seguimiento</th>
                       <th scope="col">Actividad y entrenos</th>
                       <th scope="col">Semana siguiente</th>

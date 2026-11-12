@@ -64,8 +64,8 @@ export function clientTasks({ link, status }: CoachRow): CoachTask[] {
   if (missing.length)
     tasks.push({
       id: 'consent',
-      title: 'Confirmar permisos con el alumno',
-      detail: `Falta acceso a ${missing.join(' y ')}. Solo el alumno puede autorizarlo.`,
+      title: 'Confirmar permisos con el atleta',
+      detail: `Falta acceso a ${missing.join(' y ')}. Solo el atleta puede autorizarlo.`,
       section: 'gestion',
       owner: 'client',
     });

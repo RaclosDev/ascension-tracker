@@ -120,10 +120,10 @@ for (const width of [390, 1440]) {
       if (path === 'clients/l1/nutrition-plan/adherence') adherenceReads++;
       return route.fulfill({ json: [] });
     });
-    await page.goto('/entrenador/alumnos/l1?seccion=nutricion');
+    await page.goto('/entrenador/atletas/l1?seccion=nutricion');
     await page.getByLabel('Proteína día de entreno', { exact: true }).fill('200');
     await page.getByLabel('Raciones de la comida 1 día de entreno').fill('1.5');
-    await page.getByLabel('Notas para tu alumno').fill('Versión preparada para Ana');
+    await page.getByLabel('Notas para tu atleta').fill('Versión preparada para Ana');
     await page.reload();
     await expect(page.getByLabel('Proteína día de entreno', { exact: true })).toHaveValue('200');
     await expect(page.getByLabel('Raciones de la comida 1 día de entreno')).toHaveValue('1.5');
@@ -153,7 +153,7 @@ for (const width of [390, 1440]) {
     const adherenceReadsBefore = adherenceReads;
     await page.getByRole('button', { name: 'Publicar pauta', exact: true }).click();
     const confirmation = page.getByRole('dialog', { name: 'Publicar pauta nutricional' });
-    await expect(confirmation).toContainText('solo para este alumno');
+    await expect(confirmation).toContainText('solo para este atleta');
     await confirmation.getByRole('button', { name: 'Publicar pauta', exact: true }).click();
     await expect(page.getByText('Pauta de nutrición publicada', { exact: true })).toBeVisible();
     await expect.poll(() => targetReads).toBeGreaterThan(targetReadsBefore);

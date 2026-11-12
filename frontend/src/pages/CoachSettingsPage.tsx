@@ -22,7 +22,7 @@ export default function CoachSettingsPage() {
           <section className="card">
             <h2>Avisos de check-in</h2>
             <PushToggle
-              text="Recibe un aviso en este dispositivo cuando un alumno envíe su check-in."
+              text="Recibe un aviso en este dispositivo cuando un atleta envíe su check-in."
               unsupportedText="Este navegador no admite avisos. Puedes consultar los nuevos check-ins en Revisiones."
             />
           </section>

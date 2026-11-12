@@ -53,7 +53,7 @@ function Reviews() {
           aria-pressed={waiting}
           onClick={() => update('vista', 'esperando')}
         >
-          Pendiente del alumno{' '}
+          Pendiente del atleta{' '}
           <span className="coach-chip-count">{ready ? missing.length : '—'}</span>
         </button>
         <button
@@ -80,16 +80,16 @@ function Reviews() {
           {!agenda && (
             <p className="coach-description">
               {waiting
-                ? 'Alumnos que han superado la fecha acordada sin enviar su check-in. Consulta su situación antes de hacer seguimiento.'
-                : `${count} ${count === 1 ? 'check-in' : 'check-ins'} por responder de ${pending.length} ${pending.length === 1 ? 'alumno' : 'alumnos'}.`}
+                ? 'Atletas que han superado la fecha acordada sin enviar su check-in. Consulta su situación antes de hacer seguimiento.'
+                : `${count} ${count === 1 ? 'check-in' : 'check-ins'} por responder de ${pending.length} ${pending.length === 1 ? 'atleta' : 'atletas'}.`}
             </p>
           )}
           <label className="coach-search">
             <Search size={18} aria-hidden />
-            <span className="sr-only">Buscar revisión por alumno</span>
+            <span className="sr-only">Buscar revisión por atleta</span>
             <input
               type="search"
-              placeholder="Buscar alumno"
+              placeholder="Buscar atleta"
               value={search}
               onChange={(e) => update('q', e.target.value)}
             />
@@ -99,7 +99,7 @@ function Reviews() {
           ) : (
             <section
               className="card coach-worklist"
-              aria-label={waiting ? 'Pendiente del alumno' : 'Check-ins por responder'}
+              aria-label={waiting ? 'Pendiente del atleta' : 'Check-ins por responder'}
             >
               {visible.length === 0 ? (
                 <div className="coach-empty-inline">
@@ -113,9 +113,9 @@ function Reviews() {
                   <p>
                     {search
                       ? 'Prueba con otro nombre.'
-                      : 'Puedes consultar el historial desde la ficha de cada alumno.'}
+                      : 'Puedes consultar el historial desde la ficha de cada atleta.'}
                   </p>
-                  <Link to="/entrenador/alumnos">Ver alumnos</Link>
+                  <Link to="/entrenador/atletas">Ver atletas</Link>
                 </div>
               ) : (
                 <ul className="coach-action-list">
