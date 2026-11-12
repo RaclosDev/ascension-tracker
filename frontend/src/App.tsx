@@ -15,6 +15,7 @@ import { lazyWithRetry, isChunkLoadError } from './utils/lazyWithRetry';
 
 const DashboardPage = lazyWithRetry(() => import('./pages/DashboardPage'));
 const TrackingPage = lazyWithRetry(() => import('./pages/TrackingPage'));
+const TrackingMetricPage = lazyWithRetry(() => import('./pages/TrackingMetricPage'));
 const NutritionPage = lazyWithRetry(() => import('./pages/NutritionPage'));
 const SettingsPage = lazyWithRetry(() => import('./pages/SettingsPage'));
 const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage'));
@@ -170,6 +171,14 @@ function AppContent() {
               <Route index element={<HomeRedirect />} />
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="tracking" element={<TrackingPage />} />
+              <Route
+                path="tracking/pasos"
+                element={<TrackingMetricPage key="steps" metric="steps" />}
+              />
+              <Route
+                path="tracking/peso"
+                element={<TrackingMetricPage key="weight" metric="weight" />}
+              />
               <Route path="nutrition" element={<NutritionPage />} />
               <Route path="workout" element={<WorkoutPage />} />
               <Route path="utilities" element={<UtilitiesPage />} />
