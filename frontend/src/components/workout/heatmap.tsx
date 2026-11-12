@@ -1,8 +1,12 @@
 import { format } from 'date-fns';
 import { ActivityCalendar } from '@/components/ui/ActivityCalendar';
+import { useMounted } from '@/hooks/use-mounted';
 import type { CompletedWorkout } from '@/lib/workout/types';
 
 export function ActivityHeatmap({ history }: { history: CompletedWorkout[] }) {
+  const mounted = useMounted();
+  if (!mounted) return <div className="h-[200px]" />;
+
   const volumeByDay = new Map<string, number>();
 
   for (const w of history) {
