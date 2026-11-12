@@ -21,6 +21,7 @@ import {
 } from '../components/coach/CoachWorkspace';
 import { PendingInvitations } from '../components/coach/CoachInvitations';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
+import { ClientAvatar } from '../components/coach/ClientAvatar';
 
 type Filter =
   | 'all'
@@ -236,15 +237,20 @@ function Clients() {
                     {visible.map((row) => (
                       <tr key={row.link.linkId}>
                         <td>
-                          <Link className="coach-row-link" to={href(row.link.linkId)}>
-                            {personName(row.link.client)}
-                          </Link>
-                          <span className="coach-muted">
-                            Acceso: {sharedScopes(row.link.permissions)}
-                          </span>
-                          {row.link.setup && (
-                            <span className="coach-muted">{serviceNames(row.link.setup)}</span>
-                          )}
+                          <div className="coach-client-identity">
+                            <ClientAvatar client={row.link.client} />
+                            <div>
+                              <Link className="coach-row-link" to={href(row.link.linkId)}>
+                                {personName(row.link.client)}
+                              </Link>
+                              <span className="coach-muted">
+                                Acceso: {sharedScopes(row.link.permissions)}
+                              </span>
+                              {row.link.setup && (
+                                <span className="coach-muted">{serviceNames(row.link.setup)}</span>
+                              )}
+                            </div>
+                          </div>
                         </td>
                         <td>
                           <ClientState row={row} />
