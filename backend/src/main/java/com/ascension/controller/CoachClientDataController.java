@@ -6,6 +6,7 @@ import com.ascension.dto.CustomExerciseDTO;
 import com.ascension.dto.DashboardDTO;
 import com.ascension.dto.FoodLogDTO;
 import com.ascension.dto.ProgressPhotoDtos.PhotoList;
+import com.ascension.dto.ProgramDtos.TodayDay;
 import com.ascension.dto.UserSettingsDTO;
 import com.ascension.dto.WeekSummaryDTO;
 import com.ascension.dto.WeightEntryDTO;
@@ -139,6 +140,16 @@ public class CoachClientDataController {
         return ResponseEntity.ok(java.util.Map.of("text", sessionService.comment(
                 accessPolicy.require(email, linkId, Action.VIEW_WORKOUTS), workoutId)));
     }
+
+    @GetMapping("/workouts/{workoutId}/prescription")
+    public ResponseEntity<TodayDay> workoutPrescription(@PathVariable UUID linkId, @PathVariable String workoutId,
+                                                         @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return sessionService.workoutPrescription(accessPolicy.require(email, linkId, Action.VIEW_WORKOUTS), workoutId)
+                .map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
 
     /** The coach's comment on one of the client's workouts; saving again replaces it. */
     @PutMapping("/workouts/{workoutId}/comment")

@@ -311,7 +311,7 @@
 .coach-client-summary,
 .coach-resource-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 1.5rem;
   align-items: start;
 }
@@ -466,4 +466,102 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.coach-week-quick {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+.coach-week-quick[open] {
+  display: flex;
+  flex-direction: column;
+}
+.coach-week-quick::backdrop {
+  background: rgb(0 0 0 / 60%);
+}
+.coach-week-quick-header,
+.coach-week-quick-nav,
+.coach-week-quick-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 24px;
+  flex-shrink: 0;
+}
+.coach-week-quick-header h2 {
+  margin: 0;
+  font-family: var(--font-body, sans-serif);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.coach-week-quick-nav {
+  border-block: 1px solid var(--border-color);
+  padding-block: 8px;
+  font-size: 0.9rem;
+}
+.coach-quick-icon {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 6px;
+}
+.coach-quick-icon:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text-primary) 10%, transparent);
+}
+.coach-quick-icon:disabled {
+  opacity: 0.35;
+}
+.coach-week-quick-content {
+  padding: 16px 24px;
+  min-height: 0;
+  overflow-y: auto;
+}
+.coach-week-quick-footer {
+  border-top: 1px solid var(--border-color);
+}
+.coach-quick-day {
+  padding-block: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+.coach-quick-day summary {
+  min-height: 44px;
+  padding-block: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.coach-quick-day summary .coach-muted {
+  display: inline;
+  margin-left: 8px;
+  font-weight: 400;
+}
+.coach-quick-foods li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block: 10px;
+  font-size: 0.85rem;
+}
+.coach-quick-foods .coach-muted {
+  display: block;
+}
+.coach-quick-measurements {
+  width: 100%;
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .coach-week-quick-header,
+  .coach-week-quick-nav,
+  .coach-week-quick-footer,
+  .coach-week-quick-content {
+    padding-inline: 16px;
+  }
 }

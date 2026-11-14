@@ -31,7 +31,7 @@ export function WeekReview({
   const checkin = checkins.data?.find((c) => c.weekStart === week);
   return (
     <section data-tour="week-review" className="card min-w-0 flex flex-col gap-4">
-      <h2>Revisión · {formatCoachDate(week)}</h2>
+      <h2>Seguimiento semanal · {formatCoachDate(week)}</h2>
       <p className="text-sm">
         Hasta el {formatCoachDate(format(addDays(parseISO(week), 6), 'yyyy-MM-dd'))}
       </p>
@@ -91,10 +91,10 @@ export function WeekReview({
           )}
         </div>
       ) : (
-        !checkins.isPending && !checkins.isError && <p>Sin revisión enviada para esta semana.</p>
+        !checkins.isPending && !checkins.isError && <p>Sin seguimiento enviado para esta semana.</p>
       )}
       <Link className="btn btn-secondary" to={`/entrenador/atletas/${linkId}?seccion=revisiones`}>
-        Abrir revisiones y responder
+        Abrir seguimientos y responder
       </Link>
       <h3 className="font-bold">Pautado y registrado</h3>
       {relevant.length === 0 && <p>No hay programa para esta semana.</p>}

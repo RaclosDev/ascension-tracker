@@ -1,6 +1,7 @@
 import { confirmAction } from '../lib/confirmation';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowLeft, Plus } from 'lucide-react';
 import { CoachPageHeader, CoachWorkspace } from '../components/coach/CoachWorkspace';
 import { useDeleteNutritionTemplate, useNutritionTemplates } from '../lib/coach/nutritionTemplates';
 import { apiErrorMessage, formatCoachDate } from '../lib/coach/api';
@@ -15,18 +16,17 @@ export default function CoachNutritionTemplatesPage() {
   );
   return (
     <CoachWorkspace>
+      <Link to="/entrenador/planificacion" className="coach-back-link">
+        <ArrowLeft size={16} aria-hidden /> Volver a biblioteca
+      </Link>
       <CoachPageHeader
         title="Biblioteca de pautas"
         description="Guarda pautas completas para copiarlas y adaptarlas desde la ficha de cada atleta."
-      />
-      <div className="flex flex-wrap gap-2">
-        <Link className="btn btn-secondary" to="/entrenador/planificacion">
-          Volver a Planificación
-        </Link>
+      >
         <Link className="btn btn-primary" to="/entrenador/pautas/nueva">
-          Crear pauta
+          <Plus size={16} aria-hidden /> Crear pauta
         </Link>
-      </div>
+      </CoachPageHeader>
       <p>
         La biblioteca es privada. Editar o borrar una pauta no modifica las copias publicadas para
         tus atletas.

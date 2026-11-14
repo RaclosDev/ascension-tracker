@@ -13,12 +13,12 @@ export function CoachReviewAgenda({ rows, search }: { rows: CoachRow[]; search: 
   return (
     <section aria-label="Agenda semanal" className="flex flex-col gap-4">
       <p className="coach-description">
-        Horario semanal de envío del check-in. Cada hora se muestra en la zona acordada con ese
+        Horario semanal de envío del seguimiento. Cada hora se muestra en la zona acordada con ese
         atleta. La próxima fecha incluye el margen de incorporación o reanudación.
       </p>
       {visible.length === 0 && (
         <div className="card coach-empty-inline">
-          <h2>{search ? 'No hay coincidencias' : 'Sin revisiones programadas'}</h2>
+          <h2>{search ? 'No hay coincidencias' : 'Sin seguimientos programados'}</h2>
           <p>Configura el servicio y la agenda desde Gestión en la ficha del atleta.</p>
           <Link to="/entrenador/atletas">Ver atletas</Link>
         </div>
@@ -53,7 +53,7 @@ export function CoachReviewAgenda({ rows, search }: { rows: CoachRow[]; search: 
                         </small>
                         <small>Próxima: {nextReviewLabel(followup)}</small>
                       </span>
-                      <span className="coach-row-action">Abrir revisión</span>
+                      <span className="coach-row-action">Abrir seguimiento</span>
                     </Link>
                   </li>
                 );

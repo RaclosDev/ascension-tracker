@@ -6,28 +6,38 @@ import { InviteDialog } from './CoachInvitations';
 import { QueryErrorNotice } from '../QueryErrorNotice';
 import '../../styles/coach-workspace.css';
 
-export function CoachWorkspace({ children }: { children: ReactNode }) {
+export function CoachWorkspace({
+  children,
+  className = '',
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   const profile = useCoachProfile();
   if (profile.isPending) return <p role="status">Cargando tu espacio de entrenador…</p>;
   if (profile.isError)
     return <QueryErrorNotice retry={() => void profile.refetch()} pending={profile.isFetching} />;
   if (!profile.data?.coach) return <ActivateCoach />;
-  return <div className="fade-in coach-page coach-workspace">{children}</div>;
+  return <div className={`fade-in coach-page coach-workspace ${className}`}>{children}</div>;
 }
 
 export function CoachPageHeader({
   title,
   description,
   children,
+  level = 1,
 }: {
   title: string;
+  /** Use 2 when the page already has its own h1, e.g. inside the athlete workspace. */
+  level?: 1 | 2;
   description?: string;
   children?: ReactNode;
 }) {
+  const Heading = level === 1 ? 'h1' : 'h2';
   return (
     <header className="coach-page-heading">
       <div>
-        <h1>{title}</h1>
+        <Heading>{title}</Heading>
         {description && <p className="coach-description">{description}</p>}
       </div>
       {children}

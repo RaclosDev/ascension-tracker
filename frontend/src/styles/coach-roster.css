@@ -1,0 +1,310 @@
+.coach-roster-toolbar {
+  gap: 12px;
+}
+.coach-roster-toolbar .coach-search {
+  flex-basis: 320px;
+}
+.coach-roster-options {
+  position: relative;
+  font-size: 0.875rem;
+}
+.coach-roster-options summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border-medium);
+  border-radius: 6px;
+  cursor: pointer;
+  list-style: none;
+}
+.coach-roster-options summary::-webkit-details-marker {
+  display: none;
+}
+.coach-options-active {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+}
+.coach-roster-options-panel {
+  position: absolute;
+  z-index: 10;
+  right: 0;
+  top: calc(100% + 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 260px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+}
+.coach-roster-options-panel .coach-sort {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.coach-workspace .coach-roster-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  overflow: visible;
+  gap: 8px;
+}
+.coach-workspace .coach-roster-filters .coach-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: none;
+}
+.coach-workspace .coach-roster-filters .coach-chip[aria-pressed='true'] {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-weight: 600;
+}
+.coach-roster-filters .coach-chip-count {
+  display: inline-flex;
+  justify-content: center;
+  min-width: 20px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+.coach-roster-filters .coach-more-filters {
+  margin-left: auto;
+}
+.coach-more-filters select {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-medium);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  max-width: 100%;
+}
+.coach-roster-wrap {
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  box-shadow: none;
+}
+.coach-roster-table {
+  table-layout: fixed;
+}
+.coach-roster-table[data-show-weight='true'] {
+  table-layout: auto;
+  min-width: 1000px;
+}
+.coach-roster-table th:first-child {
+  width: 32%;
+}
+.coach-roster-table th:nth-child(2) {
+  width: 29%;
+}
+.coach-roster-table th:nth-child(3) {
+  width: 23%;
+}
+.coach-roster-table th {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-medium);
+  font-size: 0.72rem;
+  letter-spacing: 0.035em;
+}
+.coach-roster-table td {
+  padding: 20px;
+  vertical-align: middle;
+  overflow-wrap: normal;
+}
+.coach-roster-table .coach-client-identity {
+  align-items: center;
+  gap: 14px;
+}
+.coach-roster-person {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+.coach-roster-person .coach-row-link {
+  display: block;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+.coach-quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 0;
+}
+.coach-quick-links :is(a, button) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.coach-quick-links :is(a, button) svg {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+.coach-quick-links :is(a, button):hover {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.coach-roster-tasks {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.coach-roster-tasks li {
+  max-width: 100%;
+}
+.coach-workspace .coach-roster-action,
+.coach-workspace .coach-roster-week {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+.coach-roster-action svg,
+.coach-roster-week svg {
+  flex-shrink: 0;
+}
+.coach-workspace .coach-roster-action-primary {
+  border-color: var(--border-medium);
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
+}
+.coach-roster-reply-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 21px;
+  min-height: 21px;
+  border-radius: 4px;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.coach-workspace .coach-roster-week {
+  border-color: var(--border-subtle);
+  font-weight: 500;
+}
+.coach-workspace .coach-roster-week[data-state='SCHEDULED'] {
+  color: var(--color-success);
+}
+.coach-roster-quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.coach-roster-activity {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.coach-roster-table .coach-muted {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.8125rem;
+}
+.coach-workspace .coach-roster-action:hover,
+.coach-workspace .coach-roster-week:hover,
+.coach-roster-options summary:hover,
+.coach-workspace .coach-roster-filters .coach-chip:hover:not(:disabled):not([aria-pressed='true']) {
+  background: color-mix(in srgb, var(--text-primary) 9%, transparent);
+  color: var(--text-primary);
+}
+.coach-roster-action:focus-visible,
+.coach-roster-week:focus-visible,
+.coach-quick-links :is(a, button):focus-visible,
+.coach-roster-options summary:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 3px;
+}
+.coach-roster-cards > li {
+  border-left: 0;
+  padding-bottom: 16px;
+}
+.coach-roster-cards .coach-roster-tasks li {
+  border: 0;
+}
+.coach-roster-cards .coach-card-link {
+  align-items: flex-start;
+}
+.coach-roster-cards > li > .coach-quick-links,
+.coach-roster-cards > li > .coach-roster-tasks {
+  margin: 4px 16px 0;
+}
+@media (pointer: coarse) {
+  .coach-quick-links :is(a, button) {
+    min-height: 44px;
+  }
+}
+@media (max-width: 640px) {
+  .coach-roster-toolbar .coach-search {
+    flex-basis: 100%;
+  }
+  .coach-roster-toolbar .coach-sort {
+    flex: 1;
+  }
+  .coach-roster-toolbar .coach-sort select {
+    flex: 1;
+  }
+  .coach-workspace .coach-roster-filters .coach-chip {
+    padding-inline: 10px;
+    font-size: 0.8125rem;
+  }
+  .coach-roster-filters .coach-more-filters {
+    margin-left: 0;
+  }
+  .coach-more-filters select {
+    width: 100%;
+  }
+  .coach-roster-options-panel {
+    min-width: min(260px, calc(100vw - 48px));
+  }
+}
+
+.coach-roster-name-line { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; }
+.coach-register-link { display: inline-flex; align-items: center; gap: 7px; min-height: 32px; padding: 5px 9px; white-space: nowrap; flex-shrink: 0; border: 1px solid var(--border-subtle); border-radius: 5px; color: var(--text-primary); font-size: .8rem; font-weight: 600; text-decoration: none; }
+.coach-register-link:hover { background: var(--bg-secondary); border-color: var(--text-secondary); }
+.coach-roster-cards > li > .coach-register-link { margin: 0 16px 12px; }
+
+.coach-register-link svg { flex-shrink: 0; }
+.coach-register-link:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 3px; }

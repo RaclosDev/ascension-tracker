@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Pencil, Plus, Trash2 } from 'lucide-react';
+import { CoachPageHeader } from '../components/coach/CoachWorkspace';
 import { apiErrorMessage } from '../lib/coach/api';
 import {
   recipeKcal,
@@ -32,24 +33,20 @@ export default function CoachRecipesPage() {
   const [editing, setEditing] = useState<CoachRecipe | 'new' | null>(null);
 
   return (
-    <div className="fade-in max-w-5xl mx-auto px-4 pt-2 sm:pt-4">
-      <header className="mb-6 pb-2 border-b border-white/5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <Link
-            to="/entrenador/planificacion"
-            aria-label="Volver al modo entrenador"
-            className="btn btn-secondary"
-          >
-            <ArrowLeft size={16} aria-hidden />
-          </Link>
-          <h1 className="text-2xl font-black text-white tracking-tight truncate">Recetas</h1>
-        </div>
+    <div className="fade-in coach-page coach-workspace">
+      <Link to="/entrenador/planificacion" className="coach-back-link">
+        <ArrowLeft size={16} aria-hidden /> Volver a biblioteca
+      </Link>
+      <CoachPageHeader
+        title="Recetas"
+        description="Platos con sus macros por ración para pautar comidas a tus atletas."
+      >
         {editing === null && (
           <button type="button" className="btn btn-primary" onClick={() => setEditing('new')}>
             <Plus size={16} aria-hidden /> Nueva receta
           </button>
         )}
-      </header>
+      </CoachPageHeader>
 
       {editing !== null && (
         <RecipeForm

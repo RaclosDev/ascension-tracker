@@ -55,12 +55,8 @@ export default function CoachProgramsPage() {
 
   return (
     <div className="fade-in coach-page coach-workspace">
-      <Link
-        to="/entrenador/planificacion"
-        aria-label="Volver a planificación"
-        className="btn btn-secondary w-fit"
-      >
-        <ArrowLeft size={16} aria-hidden /> Planificación
+      <Link to="/entrenador/planificacion" className="coach-back-link">
+        <ArrowLeft size={16} aria-hidden /> Volver a biblioteca
       </Link>
       <CoachPageHeader
         title="Biblioteca de entrenamiento"

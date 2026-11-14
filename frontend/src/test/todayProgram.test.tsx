@@ -64,7 +64,7 @@ function renderCard() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <TodayProgramCard history={[]} exerciseName={(id) => id} />
+      <TodayProgramCard exerciseName={(id) => id} />
     </QueryClientProvider>,
   );
 }
@@ -169,7 +169,7 @@ describe('Hoy: programa pautado', () => {
   });
 
   it('marks the workout as modified when the client changes the prescription', () => {
-    useWorkoutStore.getState().startFromProgramDay(toPrescribedDay(plan().day!), []);
+    useWorkoutStore.getState().startFromProgramDay(toPrescribedDay(plan().day!));
     const store = useWorkoutStore.getState();
     const ex = store.active!.exercises[0];
     store.toggleSet(ex.id, ex.sets[0].id);
