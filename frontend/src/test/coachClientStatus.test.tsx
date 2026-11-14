@@ -72,7 +72,7 @@ describe('Semáforo de atletas', () => {
       </QueryClientProvider>,
     );
 
-    await screen.findAllByText('Sin avisos');
+    await screen.findAllByText('Semana pendiente');
     expect(screen.queryByRole('columnheader', { name: /Peso/ })).toBeNull();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Mostrar peso' }));
     const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
@@ -81,20 +81,20 @@ describe('Semáforo de atletas', () => {
       'Carla',
       'Ana',
     ]);
-    expect(rows[0]).toHaveTextContent('9 días sin registrar nada');
-    expect(rows[0]).toHaveTextContent('2 por responder');
-    expect(rows[1]).toHaveTextContent('Por revisar');
-    expect(rows[2]).toHaveTextContent('Sin avisos');
+    expect(rows[0]).toHaveTextContent('Responder seguimiento');
+    expect(rows[0]).toHaveTextContent('2');
+    expect(rows[1]).toHaveTextContent('Consultar seguimiento pendiente');
+    expect(rows[2]).toHaveTextContent('Semana pendiente');
     expect(rows[2]).toHaveTextContent('-0,7 kg');
 
-    fireEvent.click(screen.getByRole('button', { name: /Por responder/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Seguimientos por responder/ }));
     const filtered = within(screen.getByRole('table')).getAllByRole('row').slice(1);
     expect(filtered.map((tr) => within(tr).getAllByRole('link')[0].textContent)).toEqual(['Bruno']);
   });
 
   it('describes every reason in plain words', () => {
     expect(signalText({ reason: 'CHECKIN_MISSING', level: 'RED', value: 2 })).toBe(
-      '2 semanas sin check-in',
+      '2 semanas sin seguimiento',
     );
     expect(signalText({ reason: 'FEW_FOOD_LOGS', level: 'AMBER', value: 3 })).toBe(
       'Comida registrada 3 de 7 días',
