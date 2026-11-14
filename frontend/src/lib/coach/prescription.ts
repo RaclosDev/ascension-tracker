@@ -21,7 +21,7 @@ export function setText(set: SetTarget, exercise: ProgramExercise): string {
     .filter(Boolean)
     .join(' · ');
 }
-export function resolvedWeight(load?: PrescribedLoad | null): number | null {
+function resolvedWeight(load?: PrescribedLoad | null): number | null {
   return load?.mode === 'KG' ? load.amount : (load?.resolvedKg ?? null);
 }
 

@@ -10,21 +10,6 @@ import '../../styles/coach-workspace.css';
 import '../../styles/coach-student.css';
 import '../../styles/coach-athlete.css';
 
-export type AthleteView =
-  | 'resumen'
-  | 'registro'
-  | 'entrenos'
-  | 'comidas'
-  | 'pasos'
-  | 'peso'
-  | 'progreso'
-  | 'semana'
-  | 'entrenamiento'
-  | 'nutricion'
-  | 'powerlifting'
-  | 'revisiones'
-  | 'gestion';
-
 const RECORD_ROUTES = ['registro', 'entrenos', 'comidas', 'pasos', 'peso'];
 
 /** Links between the athlete's views. Only the roster filters and the origin travel with them. */

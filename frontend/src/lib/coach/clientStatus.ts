@@ -32,12 +32,6 @@ export interface ClientStatus {
 
 export const LEVEL_ORDER: Record<StatusLevel, number> = { RED: 0, AMBER: 1, GREEN: 2 };
 
-export const LEVEL_COLORS: Record<StatusLevel, string> = {
-  RED: 'var(--color-danger)',
-  AMBER: 'var(--color-warning)',
-  GREEN: 'var(--color-success)',
-};
-
 export function signalText({ reason, value }: StatusSignal): string {
   switch (reason) {
     case 'INACTIVE':
