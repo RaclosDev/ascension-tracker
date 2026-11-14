@@ -27,7 +27,7 @@ class CoachNutritionTemplateIntegrationTest {
     private static final String PATH = "/api/coach/nutrition-templates";
     private static final String PLAN = """
             {"training":{"protein":180,"carbs":300,"fat":70},
-             "rest":{"protein":180,"carbs":150,"fat":80},"notes":"Adaptar al alumno","meals":[]}
+             "rest":{"protein":180,"carbs":150,"fat":80},"notes":"Adaptar al atleta","meals":[]}
             """;
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;

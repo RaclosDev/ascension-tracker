@@ -20,10 +20,10 @@ export default function CoachSettingsPage() {
         <CheckinTemplateEditor />
         <div className="flex flex-col gap-5">
           <section className="card">
-            <h2>Avisos de check-in</h2>
+            <h2>Avisos de seguimiento</h2>
             <PushToggle
-              text="Recibe un aviso en este dispositivo cuando un alumno envíe su check-in."
-              unsupportedText="Este navegador no admite avisos. Puedes consultar los nuevos check-ins en Revisiones."
+              text="Recibe un aviso en este dispositivo cuando un atleta envíe su seguimiento."
+              unsupportedText="Este navegador no admite avisos. Puedes consultar los nuevos seguimientos en Seguimientos."
             />
           </section>
           <section className="card">

@@ -73,7 +73,7 @@ class ContactRequestIntegrationTest {
         users.ensureUserExists(ADMIN, "Boss", null);
         String user = user();
         mvc.perform(as(post("/api/contact-requests"), user).contentType("application/json")
-                        .content("{\"topic\":\"CUSTOM\",\"message\":\"  Tengo un gimnasio con 80 alumnos \",\"desiredClients\":80}"))
+                        .content("{\"topic\":\"CUSTOM\",\"message\":\"  Tengo un gimnasio con 80 atletas \",\"desiredClients\":80}"))
                 .andExpect(status().isCreated());
 
         mvc.perform(as(get("/api/admin/contact-requests"), user)).andExpect(status().isForbidden());
@@ -82,7 +82,7 @@ class ContactRequestIntegrationTest {
                 """, String.class, user);
         mvc.perform(as(get("/api/admin/contact-requests"), ADMIN))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.id == '" + id + "')].message").value("Tengo un gimnasio con 80 alumnos"))
+                .andExpect(jsonPath("$[?(@.id == '" + id + "')].message").value("Tengo un gimnasio con 80 atletas"))
                 .andExpect(jsonPath("$[?(@.id == '" + id + "')].desiredClients").value(80));
 
         mvc.perform(as(put("/api/admin/contact-requests/{id}/handled", id), ADMIN)

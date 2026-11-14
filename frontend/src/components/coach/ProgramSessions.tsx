@@ -286,7 +286,7 @@ export function CommentBox({
         </details>
       )}
       <label className="flex flex-col gap-1 text-sm">
-        <span style={{ color: 'var(--text-secondary)' }}>Comentario para tu alumno</span>
+        <span style={{ color: 'var(--text-secondary)' }}>Comentario para tu atleta</span>
         <textarea
           className="rounded-lg px-3 py-2 bg-black/20 border min-w-0"
           style={{ borderColor: 'var(--border-subtle)' }}

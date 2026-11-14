@@ -40,7 +40,7 @@ export function PowerliftingToggle({ linkId, canEdit }: { linkId: string; canEdi
         </label>
       )}
       <p className="coach-description">
-        Activa marcas, referencias de entrenamiento y competiciones para este alumno. Al ocultarlas
+        Activa marcas, referencias de entrenamiento y competiciones para este atleta. Al ocultarlas
         se conserva el historial.
       </p>
     </section>

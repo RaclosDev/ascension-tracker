@@ -7,7 +7,7 @@ export default function CoachPlanningPage() {
     <CoachWorkspace>
       <CoachPageHeader
         title="Biblioteca"
-        description="Prepara recursos reutilizables y adapta el trabajo desde la ficha de cada alumno."
+        description="Prepara recursos reutilizables y adapta el trabajo desde la ficha de cada atleta."
       />
       <div className="coach-resource-grid">
         <section className="card">
@@ -15,7 +15,7 @@ export default function CoachPlanningPage() {
           <h2>Pautas de nutrición</h2>
           <p>
             Prepara objetivos y comidas para entreno y descanso. Copia cada pauta y adáptala al
-            alumno antes de publicarla.
+            atleta antes de publicarla.
           </p>
           <Link className="btn btn-secondary" to="/entrenador/pautas">
             Abrir pautas <ArrowUpRight size={16} aria-hidden />
@@ -25,7 +25,7 @@ export default function CoachPlanningPage() {
           <ClipboardList size={24} aria-hidden />
           <h2>Sesiones, semanas y programas</h2>
           <p>
-            Guarda sesiones cortas, bloques y semanas completas. Insértalos en la semana del alumno
+            Guarda sesiones cortas, bloques y semanas completas. Insértalos en la semana del atleta
             y ajusta su copia.
           </p>
           <Link className="btn btn-primary" to="/entrenador/programas">
@@ -44,13 +44,13 @@ export default function CoachPlanningPage() {
         </section>
       </div>
       <section className="coach-note">
-        <h2>La planificación de cada alumno, en su ficha</h2>
+        <h2>La planificación de cada atleta, en su ficha</h2>
         <p>
           En Semana puedes revisar el feedback, copiar la semana anterior e insertar sesiones
           guardadas. En Nutrición puedes ajustar su pauta si te ha dado permiso.
         </p>
-        <Link to="/entrenador/alumnos">
-          Elegir alumno <ArrowUpRight size={14} aria-hidden />
+        <Link to="/entrenador/atletas">
+          Elegir atleta <ArrowUpRight size={14} aria-hidden />
         </Link>
       </section>
     </CoachWorkspace>

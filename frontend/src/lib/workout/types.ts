@@ -112,6 +112,8 @@ export interface ActiveWorkout {
   programDayId?: string;
   programOrigin?: ProgramOrigin;
   programPlan?: ProgramPlanItem[];
+  coachSetTargets?: Record<string, string>;
+  coachExerciseNotes?: Record<string, string>;
 }
 
 export interface CompletedWorkout {

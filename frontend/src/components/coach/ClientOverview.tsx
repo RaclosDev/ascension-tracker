@@ -5,98 +5,130 @@ import { formatCoachDate, type CoachClient } from '../../lib/coach/api';
 import { signalText, useClientStatus } from '../../lib/coach/clientStatus';
 import { useClientAssignments } from '../../lib/coach/coachPrograms';
 import { activityText, followupSignals } from '../../lib/coach/workspace';
+import { weekDate } from '../../lib/coach/weeks';
 import { QueryErrorNotice } from '../QueryErrorNotice';
 import { ClientSetupSummary } from './ClientSetup';
+import { RegisterWeek } from './RegisterWeek';
 import { signalSection } from '../../lib/coach/tasks';
 import { nextReviewLabel, scheduleLabel } from '../../lib/coach/coachSchedule';
 
+const kg = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1, signDisplay: 'exceptZero' });
+
+/** The athlete at a glance: where they stand, what needs attention and what they logged this week. */
 export function ClientOverview({
   link,
   sectionHref,
+  recordHref,
 }: {
   link: CoachClient;
   sectionHref: (section: string) => string;
+  recordHref: (path: string) => string;
 }) {
   const query = useClientStatus(true, link.linkId);
   const status = query.isError ? undefined : query.data?.find((s) => s.linkId === link.linkId);
   const signals = followupSignals(status);
+  const followup = link.followup;
+  const services = link.setup?.services;
+  const logs =
+    (link.permissions.training && services?.training !== false) ||
+    (link.permissions.nutrition && services?.nutrition !== false) ||
+    (link.permissions.body && services?.progress !== false);
+  const registerHref = recordHref('registro');
+  const search = registerHref.includes('?') ? registerHref.slice(registerHref.indexOf('?')) : '';
   return (
     <>
-      <ClientSetupSummary link={link} href={sectionHref('gestion')} />
       {query.isError && (
         <QueryErrorNotice retry={() => void query.refetch()} pending={query.isFetching} />
       )}
-      <div className="coach-client-summary">
-        <section className="card">
-          <h2>Seguimiento</h2>
-          {link.followup && (
-            <p className="coach-description">
-              {link.followup.schedule.paused
-                ? 'Seguimiento en pausa'
-                : scheduleLabel(link.followup.schedule)}
-              {!link.followup.schedule.paused && <> · Próxima: {nextReviewLabel(link.followup)}</>}
-              {' · '}
+      <section aria-label="Estado del atleta">
+        <dl className="athlete-stats">
+          <div>
+            <dt>Última actividad</dt>
+            <dd>{query.isPending ? '…' : status ? activityText(status.lastActivity) : '—'}</dd>
+          </div>
+          {link.permissions.body && (
+            <div>
+              <dt>Cambio de peso · 4 semanas</dt>
+              <dd>
+                {query.isPending
+                  ? '…'
+                  : !status
+                    ? '—'
+                    : status.weightChange == null
+                      ? 'Sin datos suficientes'
+                      : `${kg.format(status.weightChange)} kg`}
+              </dd>
+            </div>
+          )}
+          <div>
+            <dt>Seguimientos por responder</dt>
+            <dd>
+              {query.isPending ? '…' : status ? status.pendingReplies : '—'}{' '}
+              <Link to={sectionHref('revisiones')}>Abrir seguimientos</Link>
+            </dd>
+          </div>
+          <div>
+            <dt>Próxima revisión</dt>
+            <dd>
+              {!followup
+                ? 'Sin agenda'
+                : followup.schedule.paused
+                  ? 'En pausa'
+                  : nextReviewLabel(followup)}{' '}
               <Link to={sectionHref('gestion')}>Cambiar agenda</Link>
-            </p>
-          )}
-          {query.isPending ? (
-            <p role="status">Cargando seguimiento…</p>
-          ) : !status ? (
-            <p>Seguimiento no disponible.</p>
-          ) : (
-            <>
-              <dl className="coach-facts">
-                <div>
-                  <dt>Última actividad</dt>
-                  <dd>{activityText(status.lastActivity)}</dd>
-                </div>
-                {link.permissions.body && (
-                  <div>
-                    <dt>Cambio de peso · 4 semanas</dt>
-                    <dd>
-                      {status.weightChange == null
-                        ? 'Sin datos suficientes'
-                        : `${new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1, signDisplay: 'exceptZero' }).format(status.weightChange)} kg`}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-              {signals.length > 0 ? (
-                <ul className="coach-signal-list">
-                  {signals.map((s) => (
-                    <li key={s.reason}>
-                      <Link to={sectionHref(signalSection(s))}>{signalText(s)}</Link>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="coach-description">
-                  {link.followup?.schedule.paused
-                    ? 'Las alertas de seguimiento están pausadas.'
-                    : link.setup
-                      ? 'Sin señales de seguimiento pendientes.'
-                      : 'Configura el servicio para activar las señales de seguimiento.'}
-                </p>
-              )}
-            </>
-          )}
-        </section>
-        <section className="card">
-          <h2>Revisiones</h2>
-          <p className="coach-summary-number">{status ? status.pendingReplies : '—'}</p>
-          <p className="coach-description">
-            {status
-              ? status.pendingReplies === 1
-                ? 'check-in por responder'
-                : 'check-ins por responder'
-              : 'Estado no disponible'}
+            </dd>
+            {followup && !followup.schedule.paused && (
+              <dd className="athlete-stat-note">{scheduleLabel(followup.schedule)}</dd>
+            )}
+          </div>
+        </dl>
+        {query.isPending ? (
+          <p role="status" className="coach-description mt-3">
+            Cargando seguimiento…
           </p>
-          <Link className="btn btn-secondary mt-4" to={sectionHref('revisiones')}>
-            Abrir revisiones <ArrowUpRight size={16} aria-hidden />
-          </Link>
+        ) : !status ? (
+          <p className="coach-description mt-3">Seguimiento no disponible.</p>
+        ) : signals.length > 0 ? (
+          <div className="athlete-attention">
+            <h2>Requiere atención</h2>
+            <ul>
+              {signals.map((s) => (
+                <li key={s.reason}>
+                  <Link to={sectionHref(signalSection(s))}>{signalText(s)}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="coach-description mt-3">
+            {followup?.schedule.paused
+              ? 'Las alertas de seguimiento están pausadas.'
+              : link.setup
+                ? 'Sin señales de seguimiento pendientes.'
+                : 'Configura el servicio para activar las señales de seguimiento.'}
+          </p>
+        )}
+      </section>
+      {logs && (
+        <section className="coach-register-page athlete-week">
+          <div className="athlete-section-title">
+            <h2>Esta semana</h2>
+            <Link className="btn btn-secondary" to={registerHref}>
+              Abrir resumen diario <ArrowUpRight size={16} aria-hidden />
+            </Link>
+          </div>
+          <div className="coach-weekly-workouts-list">
+            <RegisterWeek client={link} week={weekDate()} search={search} />
+          </div>
         </section>
+      )}
+      <div className="coach-client-summary athlete-plan-cards">
         {link.permissions.training && (
-          <ProgramOverview link={link} href={sectionHref('entrenamiento')} />
+          <ProgramOverview
+            link={link}
+            href={sectionHref('entrenamiento')}
+            weekHref={sectionHref('semana')}
+          />
         )}
         {link.permissions.nutrition && link.setup?.services.nutrition && (
           <section className="card">
@@ -111,12 +143,21 @@ export function ClientOverview({
             </Link>
           </section>
         )}
+        <ClientSetupSummary link={link} href={sectionHref('gestion')} />
       </div>
     </>
   );
 }
 
-function ProgramOverview({ link, href }: { link: CoachClient; href: string }) {
+function ProgramOverview({
+  link,
+  href,
+  weekHref,
+}: {
+  link: CoachClient;
+  href: string;
+  weekHref: string;
+}) {
   const assignments = useClientAssignments(link.linkId);
   const active = assignments.data?.find((a) => a.status === 'ACTIVE');
   return (
@@ -148,12 +189,17 @@ function ProgramOverview({ link, href }: { link: CoachClient; href: string }) {
           Sin programa activo.{' '}
           {link.permissions.editTraining
             ? 'Puedes asignar uno desde su entrenamiento.'
-            : 'El alumno debe permitirte pautar entrenamiento para asignar un programa.'}
+            : 'El atleta debe permitirte pautar entrenamiento para asignar un programa.'}
         </p>
       )}
-      <Link className="btn btn-secondary mt-4" to={href}>
-        Abrir entrenamiento <ArrowUpRight size={16} aria-hidden />
-      </Link>
+      <div className="flex flex-wrap gap-2 mt-4">
+        <Link className="btn btn-secondary" to={weekHref}>
+          Planificar semana
+        </Link>
+        <Link className="btn btn-secondary" to={href}>
+          Abrir entrenamiento <ArrowUpRight size={16} aria-hidden />
+        </Link>
+      </div>
     </section>
   );
 }

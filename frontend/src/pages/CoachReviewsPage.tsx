@@ -30,12 +30,12 @@ function Reviews() {
   const count = pending.reduce((n, row) => n + (row.status?.pendingReplies ?? 0), 0);
   return (
     <>
-      <CoachPageHeader title="Revisiones">
+      <CoachPageHeader title="Seguimiento semanal">
         <Link className="btn btn-secondary" to="/entrenador/ajustes">
-          Configurar check-in
+          Configurar seguimiento
         </Link>
       </CoachPageHeader>
-      <div className="coach-chips coach-review-tabs" role="group" aria-label="Filtrar revisiones">
+      <div className="coach-chips coach-review-tabs" role="group" aria-label="Filtrar seguimientos">
         <button
           type="button"
           className="coach-chip"
@@ -50,7 +50,7 @@ function Reviews() {
           aria-pressed={waiting}
           onClick={() => update('vista', 'esperando')}
         >
-          Pendiente del alumno{' '}
+          Pendiente del atleta{' '}
           <span className="coach-chip-count">{ready ? missing.length : '—'}</span>
         </button>
         <button
@@ -69,7 +69,7 @@ function Reviews() {
       ) : !ready ? (
         <p role="status">
           {clients.isPending || status.isPending
-            ? 'Cargando revisiones…'
+            ? 'Cargando seguimientos…'
             : 'Falta información de seguimiento. Vuelve a cargar los datos.'}
         </p>
       ) : (
@@ -77,16 +77,16 @@ function Reviews() {
           {!agenda && (
             <p className="coach-description">
               {waiting
-                ? 'Alumnos que han superado la fecha acordada sin enviar su check-in. Consulta su situación antes de hacer seguimiento.'
-                : `${count} ${count === 1 ? 'check-in' : 'check-ins'} por responder de ${pending.length} ${pending.length === 1 ? 'alumno' : 'alumnos'}.`}
+                ? 'Atletas que han superado la fecha acordada sin enviar su seguimiento. Consulta su situación antes de hacer seguimiento.'
+                : `${count} ${count === 1 ? 'seguimiento' : 'seguimientos'} por responder de ${pending.length} ${pending.length === 1 ? 'atleta' : 'atletas'}.`}
             </p>
           )}
           <label className="coach-search">
             <Search size={18} aria-hidden />
-            <span className="sr-only">Buscar revisión por alumno</span>
+            <span className="sr-only">Buscar seguimiento por atleta</span>
             <input
               type="search"
-              placeholder="Buscar alumno"
+              placeholder="Buscar atleta"
               value={search}
               onChange={(e) => update('q', e.target.value)}
             />
@@ -96,7 +96,7 @@ function Reviews() {
           ) : (
             <section
               className="card coach-worklist"
-              aria-label={waiting ? 'Pendiente del alumno' : 'Check-ins por responder'}
+              aria-label={waiting ? 'Pendiente del atleta' : 'Seguimientos por responder'}
             >
               {visible.length === 0 ? (
                 <div className="coach-empty-inline">
@@ -105,14 +105,14 @@ function Reviews() {
                       ? 'No hay coincidencias'
                       : waiting
                         ? 'Sin semanas pendientes'
-                        : 'No hay check-ins por responder'}
+                        : 'No hay seguimientos por responder'}
                   </h2>
                   <p>
                     {search
                       ? 'Prueba con otro nombre.'
-                      : 'Puedes consultar el historial desde la ficha de cada alumno.'}
+                      : 'Puedes consultar el historial desde la ficha de cada atleta.'}
                   </p>
-                  <Link to="/entrenador/alumnos">Ver alumnos</Link>
+                  <Link to="/entrenador/atletas">Ver atletas</Link>
                 </div>
               ) : (
                 <ul className="coach-action-list">

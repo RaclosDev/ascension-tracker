@@ -127,6 +127,7 @@ export const ExerciseCard = React.memo(function ExerciseCard({
 
   const settings = useWorkoutStore((s) => s.settings);
   const prescribed = useWorkoutStore((state) => !!state.active?.programDayId);
+  const coachNotes = useWorkoutStore((state) => state.active?.coachExerciseNotes?.[row?.id ?? '']);
   const showRpe =
     (settings?.showRpe ?? false) || prescribed || !!row?.sets.some((set) => set.rir || set.rpe);
   const isCardio = meta?.muscle === 'cardio';
@@ -348,6 +349,11 @@ export const ExerciseCard = React.memo(function ExerciseCard({
 
           {/* Sets */}
           <TechniqueVideoEditor exercise={row} />
+          {coachNotes && (
+            <p className="workout-coach-target">
+              <strong>Pauta del entrenador</strong> · {coachNotes}
+            </p>
+          )}
           <div style={{ padding: '0.25rem 0.5rem 0.75rem' }}>
             <div className="set-grid-header" style={{ gridTemplateColumns: cols }}>
               <span>#</span>

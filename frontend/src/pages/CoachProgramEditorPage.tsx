@@ -60,7 +60,7 @@ export default function CoachProgramEditorPage() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="fade-in max-w-6xl mx-auto px-4 pt-2 sm:pt-4">
+    <div className="fade-in">
       <Link to="/entrenador/programas" className="btn btn-secondary mb-4">
         <ArrowLeft size={16} aria-hidden /> Programas
       </Link>
@@ -147,12 +147,12 @@ export function ProgramEditor({
   const currentWeek = Math.min(week, program.weeks);
 
   return (
-    <div className="fade-in max-w-6xl mx-auto px-4 pt-2 sm:pt-4 pb-16">
+    <div className="fade-in pb-16">
       <header className="mb-4 pb-2 border-b border-white/5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link
             to={publication?.returnTo ?? '/entrenador/programas'}
-            aria-label={publication ? 'Volver al alumno' : 'Volver a programas'}
+            aria-label={publication ? 'Volver al atleta' : 'Volver a programas'}
             className="btn btn-secondary"
             onClick={async (e) => {
               if (!dirty) return;
@@ -220,7 +220,7 @@ export function ProgramEditor({
           {initial.status === 'READY'
             ? 'Versión guardada: lista para asignar.'
             : 'Borrador de biblioteca.'}{' '}
-          Guardar aquí no cambia los programas que ya tienen tus alumnos. La asignación se publica
+          Guardar aquí no cambia los programas que ya tienen tus atletas. La asignación se publica
           desde cada ficha.
         </p>
       )}
@@ -320,7 +320,7 @@ export function ProgramEditor({
             </label>
             <label className="flex flex-col gap-1 sm:col-span-2">
               <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Notas para el alumno
+                Notas para el atleta
               </span>
               <textarea
                 className={inputClass}

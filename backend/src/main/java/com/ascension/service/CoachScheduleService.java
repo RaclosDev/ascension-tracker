@@ -41,7 +41,7 @@ public class CoachScheduleService {
                 """, schedule.day(), schedule.time().toString(), schedule.timeZone(), schedule.paused(),
                 schedule.day(), schedule.time().toString(), schedule.timeZone(), schedule.paused(),
                 linkId, Emails.normalizeRequired(coachEmail));
-        if (updated == 0) throw new EntityNotFoundException("Alumno no encontrado");
+        if (updated == 0) throw new EntityNotFoundException("Atleta no encontrado");
         return jdbc.queryForObject("SELECT " + COLUMNS + " FROM coach_clients cc WHERE cc.id = ?",
                 (rs, n) -> read(rs, Instant.now()), linkId);
     }

@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { TechniqueVideoLink } from './TechniqueVideo';
+import { WorkoutExerciseDetail } from './WorkoutExerciseDetail';
 import { buildWorkoutRecords, beatsWorkoutRecord, workoutVariantKey } from '@/utils/workoutRecords';
-import { Repeat2, Trash2, Dumbbell } from 'lucide-react';
+import { Repeat2, Trash2 } from 'lucide-react';
 import { Dialog, DialogContentFullScreen } from '@/components/ui/dialog';
 import {
   completedSets,
@@ -145,83 +146,12 @@ export function WorkoutHistoryDetail({
                 const best = records.get(workoutVariantKey(ex.exerciseId, ex.variant)) ?? 0;
                 let normalCount = 0;
                 return (
-                  <div
+                  <WorkoutExerciseDetail
                     key={ex.id}
-                    style={{
-                      background: 'var(--bg-secondary)',
-                      borderRadius: '12px',
-                      padding: '1rem',
-                      border: '1px solid var(--border-subtle)',
-                    }}
+                    name={meta?.name ?? 'Ejercicio'}
+                    imageUrl={meta?.gifUrl}
+                    superset={Boolean(ex.supersetId)}
                   >
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        marginBottom: '1rem',
-                      }}
-                    >
-                      {meta?.gifUrl ? (
-                        <img
-                          src={meta.gifUrl}
-                          alt=""
-                          style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '8px',
-                            objectFit: 'cover',
-                            background: 'var(--bg-primary)',
-                          }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '8px',
-                            background: 'var(--bg-primary)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                          }}
-                        >
-                          <Dumbbell size={18} style={{ color: 'var(--text-secondary)' }} />
-                        </div>
-                      )}
-                      <div>
-                        {ex.supersetId && (
-                          <span
-                            style={{
-                              fontSize: '0.65rem',
-                              fontWeight: 700,
-                              padding: '0.1rem 0.3rem',
-                              borderRadius: '4px',
-                              background: 'rgba(168, 85, 247, 0.15)',
-                              color: '#c084fc',
-                              marginRight: '0.4rem',
-                              display: 'inline-block',
-                              marginBottom: '0.2rem',
-                            }}
-                          >
-                            Superserie
-                          </span>
-                        )}
-                        <h3
-                          style={{
-                            color: 'var(--text-primary)',
-                            margin: 0,
-                            fontSize: '1rem',
-                            fontWeight: 600,
-                            lineHeight: 1.2,
-                          }}
-                        >
-                          {meta?.name ?? 'Ejercicio'}
-                        </h3>
-                      </div>
-                    </div>
-
                     {ex.notes && (
                       <p
                         style={{
@@ -302,7 +232,7 @@ export function WorkoutHistoryDetail({
                         })}
                       </tbody>
                     </table>
-                  </div>
+                  </WorkoutExerciseDetail>
                 );
               })}
             </div>
