@@ -16,6 +16,7 @@ import {
   mergeWeeksData,
 } from '../utils/trackingHelpers';
 import { TrackingMetricToggle } from '../components/tracking/TrackingMetricToggle';
+import { TrackingNavigation } from '../components/tracking/TrackingNavigation';
 import { TrackingDayCell } from '../components/tracking/TrackingDayCell';
 import { TrackingWeeklyStats } from '../components/tracking/TrackingWeeklyStats';
 import { TrackingEntryModal } from '../components/tracking/TrackingEntryModal';
@@ -206,6 +207,7 @@ export default function TrackingPage() {
     return (
       <div className="fade-in">
         <h1 className="page-title-desktop">Tracking semanal</h1>
+        <TrackingNavigation />
         <div
           style={{
             display: 'flex',
@@ -246,6 +248,7 @@ export default function TrackingPage() {
     <div className="fade-in">
       {isError && <QueryErrorNotice retry={fetchData} pending={isFetching} />}
       <h1 className="page-title-desktop">Tracking semanal</h1>
+      <TrackingNavigation />
       <TrackingMetricToggle
         showWeight={showWeight}
         showSteps={showSteps}

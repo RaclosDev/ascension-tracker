@@ -31,7 +31,10 @@ function Row({
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="m-0 text-sm font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
+        <p
+          className="m-0 text-sm font-semibold leading-snug"
+          style={{ color: 'var(--text-primary)' }}
+        >
           {title}
         </p>
         {detail && (
@@ -66,7 +69,9 @@ function WorkoutRow() {
       <Row
         icon={<Dumbbell size={18} />}
         title={active.day.name}
-        detail={active.coachName ? `${active.programName} · ${active.coachName}` : active.programName}
+        detail={
+          active.coachName ? `${active.programName} · ${active.coachName}` : active.programName
+        }
         to="/workout"
         action="Empezar"
       />
@@ -122,7 +127,7 @@ function CoachRow({ link }: { link: MyCoach }) {
     return (
       <Row
         icon={<MessageSquare size={18} />}
-        title="Check-in semanal pendiente"
+        title="Seguimiento semanal pendiente"
         detail={`Para ${coach}`}
         to={to}
         action="Rellenar"
@@ -143,7 +148,7 @@ function CoachRow({ link }: { link: MyCoach }) {
   return null;
 }
 
-/** What is planned for today: the session, the food and, only with a coach, the check-in. */
+/** What is planned for today: the session, the food and, only with a coach, the seguimiento. */
 export function TodayCard({ showNutrition }: Props) {
   const { data: coaches = [] } = useMyCoaches();
   return (

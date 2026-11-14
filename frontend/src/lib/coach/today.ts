@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
 import type { ProgramExercise } from './coachPrograms';
 import type { PrescribedDay } from '../workout/store';
-import { loadText, resolvedWeight, setText } from './prescription';
+import { loadText, prescribedSet, setText } from './prescription';
 
 /** Mirrors the backend ProgramDtos.TodayDay: the prescribed day, with its id for linking the workout. */
 export interface TodayDay {
@@ -83,7 +83,6 @@ export function prescriptionText(e: ProgramExercise): string {
   return parts.join(' · ');
 }
 
-/** What the workout store needs to start the day: targets go to each exercise's notes. */
 export function toPrescribedDay(day: TodayDay): PrescribedDay {
   return {
     id: day.id,
@@ -97,14 +96,17 @@ export function toPrescribedDay(day: TodayDay): PrescribedDay {
       sets: e.sets,
       reps: e.repsMin ?? e.repsMax,
       targets: Array.from({ length: e.sets }, (_, i) => {
-        const target = e.prescription?.sets?.[i];
+        const target = prescribedSet(e, i);
         return {
-          weight: resolvedWeight(target?.load ?? e.prescription?.load),
-          reps: target?.reps ?? e.repsMin ?? e.repsMax,
-          type: target?.kind === 'WARMUP' ? ('warmup' as const) : ('normal' as const),
+          weight: target.weight,
+          reps: target.min,
+          type: target.warmup ? ('warmup' as const) : ('normal' as const),
+          label: target.text,
         };
       }),
-      notes: prescriptionText(e),
+      notes: [e.restSeconds != null && `Descanso ${restLabel(e.restSeconds)}`, e.notes]
+        .filter(Boolean)
+        .join(' · '),
     })),
   };
 }

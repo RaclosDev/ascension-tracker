@@ -67,7 +67,7 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
       <fieldset className="flex flex-col gap-3" disabled={save.isPending}>
         <legend className="font-semibold mb-2">Lo que ve tu atleta</legend>
         <p className="coach-description">
-          Esta identidad aparece en tus invitaciones, planes y revisiones. Se guarda separada del
+          Esta identidad aparece en tus invitaciones, planes y seguimientos. Se guarda separada del
           nombre de tu cuenta.
         </p>
         <label className="flex flex-col gap-1">
@@ -135,7 +135,7 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
         </label>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
-            <label htmlFor="default-review-day">Día de revisión inicial</label>
+            <label htmlFor="default-review-day">Día del seguimiento inicial</label>
             <select
               id="default-review-day"
               className="form-input min-h-11"
@@ -150,7 +150,7 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
             </select>
           </div>
           <label className="flex flex-col gap-1">
-            Hora de revisión inicial
+            Hora del seguimiento inicial
             <input
               type="time"
               className="form-input min-h-11"
@@ -161,7 +161,7 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
           </label>
         </div>
         <label className="flex flex-col gap-1">
-          Zona horaria de las revisiones
+          Zona horaria de los seguimientos
           <input
             className="form-input min-h-11"
             list="professional-timezones"

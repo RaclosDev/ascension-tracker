@@ -48,7 +48,7 @@ export function CheckinUpdateForm({ linkId, checkin }: { linkId: string; checkin
       }}
     >
       <label className="flex flex-col gap-1 min-w-0">
-        Añadir información a esta revisión
+        Añadir información a este seguimiento
         <textarea
           className="w-full form-input min-h-11"
           rows={3}
@@ -66,7 +66,7 @@ export function CheckinUpdateForm({ linkId, checkin }: { linkId: string; checkin
             checked={finalReview}
             onChange={(event) => setFinalReview(event.target.checked)}
           />{' '}
-          Esta actualización completa mi revisión semanal
+          Esta actualización completa mi seguimiento semanal
         </label>
       )}
       {stale && (

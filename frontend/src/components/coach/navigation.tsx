@@ -25,8 +25,8 @@ export const coachNavItems = [
   {
     path: '/entrenador/revisiones',
     icon: <MessageSquareText className="w-5 h-5" />,
-    label: 'Revisiones',
-    shortLabel: 'Revisiones',
+    label: 'Seguimiento semanal',
+    shortLabel: 'Seguimiento',
   },
   {
     path: '/entrenador/planificacion',

@@ -428,14 +428,16 @@ describe('CoachClientPage', () => {
     expect((await screen.findByTestId('activity-heatmap')).dataset.workouts).toBe('1');
     expect((await screen.findByTestId('body-heatmap')).dataset.custom).toBe('1');
     expect(mockedApi.get.mock.calls.some(([url]) => url.includes('/weights'))).toBe(false);
-    fireEvent.click(screen.getByRole('link', { name: 'Progreso' }));
+    expect(mockedApi.get.mock.calls.some(([url]) => url.includes('/nutrition/'))).toBe(false);
+    fireEvent.click(screen.getByRole('link', { name: 'Nutrición' }));
+    expect((await screen.findByTestId('macro-pie')).dataset.slices).toBe('3');
+    // Evolución lives with the athlete's records, a different group of the navigation.
+    cleanup();
+    renderAt('/entrenador/atletas/link-9?seccion=progreso', routes);
     const weightChart = await screen.findByTestId('weight-charts');
     expect(weightChart.dataset.points).toBe('2');
     expect(weightChart.dataset.deltas).toBe('1');
     expect(weightChart.dataset.goal).toBe('none');
-    expect(mockedApi.get.mock.calls.some(([url]) => url.includes('/nutrition/'))).toBe(false);
-    fireEvent.click(screen.getByRole('link', { name: 'Nutrición' }));
-    expect((await screen.findByTestId('macro-pie')).dataset.slices).toBe('3');
   }, 15000);
 
   it('only asks for the areas the client shares', async () => {
@@ -461,7 +463,11 @@ describe('CoachClientPage', () => {
 
     expect(await screen.findByText('Sección no disponible')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Entrenamiento' })).not.toBeInTheDocument();
-    expect(mockedApi.get.mock.calls.map(([url]) => url)).toEqual(['/coach/clients/link-9']);
+    // The header asks only for the pending follow-up count, never for the unshared area.
+    expect(mockedApi.get.mock.calls.map(([url]) => url)).toEqual([
+      '/coach/clients/link-9',
+      '/coach/clients/link-9/status',
+    ]);
   });
 
   it('lists assigned programs but only assigns with the edit permission', async () => {

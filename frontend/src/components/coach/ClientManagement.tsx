@@ -30,7 +30,7 @@ export function ClientManagement({ link }: { link: CoachClient }) {
         link={link}
       />
       <details>
-        <summary className="cursor-pointer">Preguntas de revisión de este atleta</summary>
+        <summary className="cursor-pointer">Preguntas del seguimiento de este atleta</summary>
         <CheckinTemplateEditor linkId={link.linkId} />
       </details>
       <section className="card">

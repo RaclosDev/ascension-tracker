@@ -125,7 +125,7 @@ describe('Check-ins del atleta', () => {
     mockedApi.put.mockResolvedValue({ data: checkin() });
     wrap(<CoachCheckinPage />, '/checkin/l1');
 
-    const send = await screen.findByRole('button', { name: 'Enviar check-in' });
+    const send = await screen.findByRole('button', { name: 'Enviar seguimiento' });
     expect(send).toBeDisabled();
     for (const group of ['energy', 'sleep', 'trainingAdherence', 'dietAdherence']) {
       const radio = document.querySelector<HTMLInputElement>(`input[name="${group}"][value="4"]`);
@@ -264,7 +264,7 @@ describe('Check-ins en la ficha del entrenador', () => {
     cleanup();
     wrap(<CoachCheckinPage />, '/checkin/l1');
     expect(await screen.findByLabelText('¿Hambre?')).toHaveValue('Mejor');
-    fireEvent.click(screen.getByRole('button', { name: 'Enviar check-in' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar seguimiento' }));
     await waitFor(() =>
       expect(mockedApi.put).toHaveBeenCalledWith('/coaching/coaches/l1/checkin', {
         energy: 4,

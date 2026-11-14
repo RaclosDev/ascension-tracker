@@ -22,7 +22,7 @@ import { isAxiosError } from 'axios';
 
 const muted = { color: 'var(--text-secondary)' };
 
-/** The client's weekly check-in for one coach, plus what was sent before. */
+/** The client's weekly seguimiento for one coach, plus what was sent before. */
 export default function CoachCheckinPage() {
   const { linkId = '' } = useParams();
   const current = useMyCheckin(linkId);
@@ -35,7 +35,7 @@ export default function CoachCheckinPage() {
         <ArrowLeft size={16} aria-hidden /> Ajustes
       </Link>
       <header className="mb-6 pb-2 border-b border-white/5">
-        <h1 className="text-2xl font-black text-white tracking-tight">Check-in semanal</h1>
+        <h1 className="text-2xl font-black text-white tracking-tight">Seguimiento semanal</h1>
         {current.data && (
           <p className="text-sm" style={muted}>
             Para {personName(current.data.coach)} · semana del{' '}
@@ -57,14 +57,14 @@ export default function CoachCheckinPage() {
           <>
             {current.data.followup && (
               <section className="card">
-                <h2>Tu horario de revisión</h2>
+                <h2>Tu horario de seguimiento</h2>
                 <p>{scheduleLabel(current.data.followup.schedule)}</p>
                 <p className="coach-description">
                   {current.data.followup.schedule.paused
-                    ? 'El seguimiento está en pausa. Puedes enviar un check-in, pero no recibirás recordatorios.'
+                    ? 'El seguimiento está en pausa. Puedes enviar un seguimiento, pero no recibirás recordatorios.'
                     : current.data.followup.nextDueAt
                       ? `Próxima fecha: ${nextReviewLabel(current.data.followup)}. Puedes enviarlo antes.`
-                      : 'Tu entrenador está preparando el seguimiento. Aún no hay una fecha de revisión confirmada.'}
+                      : 'Tu entrenador está preparando el seguimiento. Aún no hay una fecha de seguimiento confirmada.'}
                 </p>
               </section>
             )}
@@ -177,21 +177,23 @@ function CheckinForm({ linkId, data }: { linkId: string; data: ClientCheckin }) 
           {
             onSuccess: () => {
               draft.clear();
-              toast.success('Check-in enviado');
+              toast.success('Seguimiento enviado');
             },
-            onError: (err) => toast.error(apiErrorMessage(err, 'No se pudo enviar el check-in')),
+            onError: (err) => toast.error(apiErrorMessage(err, 'No se pudo enviar el seguimiento')),
           },
         );
       }}
     >
-      <h2 className="card-title">{sent ? 'Tu check-in de esta semana' : '¿Qué tal la semana?'}</h2>
+      <h2 className="card-title">
+        {sent ? 'Tu seguimiento de esta semana' : '¿Qué tal la semana?'}
+      </h2>
       <label>
         Tipo de envío
         <select
           value={submissionStatus}
           onChange={(event) => setSubmissionStatus(event.target.value as 'PARTIAL' | 'FINAL')}
         >
-          <option value="FINAL">Revisión final de la semana</option>
+          <option value="FINAL">Seguimiento final de la semana</option>
           <option value="PARTIAL">Avance parcial; quedan sesiones o datos</option>
         </select>
       </label>
@@ -285,7 +287,7 @@ function CheckinForm({ linkId, data }: { linkId: string; data: ClientCheckin }) 
         className="btn btn-primary self-start"
         disabled={!complete || send.isPending}
       >
-        {sent ? 'Guardar cambios' : 'Enviar check-in'}
+        {sent ? 'Guardar cambios' : 'Enviar seguimiento'}
       </button>
     </form>
   );

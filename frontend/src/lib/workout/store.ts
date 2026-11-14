@@ -43,7 +43,12 @@ export interface PrescribedDay {
     variant?: { grip?: string; machine?: string };
     sets: number;
     reps?: number | null;
-    targets?: { weight: number | null; reps: number | null; type: 'normal' | 'warmup' }[];
+    targets?: {
+      weight: number | null;
+      reps: number | null;
+      type: 'normal' | 'warmup';
+      label?: string;
+    }[];
     notes: string;
   }[];
 }
@@ -104,7 +109,7 @@ interface WorkoutState {
 
   startEmpty: (name?: string) => void;
   startFromTemplate: (tpl: Template, history: CompletedWorkout[]) => void;
-  startFromProgramDay: (day: PrescribedDay, history: CompletedWorkout[]) => void;
+  startFromProgramDay: (day: PrescribedDay) => void;
   startFromHistory: (w: CompletedWorkout) => void;
   editWorkout: (w: CompletedWorkout) => void;
 
@@ -212,7 +217,30 @@ export const useWorkoutStore = create<WorkoutState>()(
         });
       },
 
-      startFromProgramDay: (day, history) => {
+      startFromProgramDay: (day) => {
+        const coachSetTargets: Record<string, string> = {};
+        const coachExerciseNotes: Record<string, string> = {};
+        const exercises = day.exercises.map((exercise) => {
+          const id = uid();
+          if (exercise.notes) coachExerciseNotes[id] = exercise.notes;
+          const sets = Array.from({ length: exercise.sets }, (_, index) => {
+            const target = exercise.targets?.[index];
+            const reps = target?.reps ?? exercise.reps;
+            const set = blankSet({
+              weight: target?.weight != null ? String(target.weight) : '',
+              reps: reps != null ? String(reps) : '',
+            });
+            if (target?.label) coachSetTargets[set.id] = target.label;
+            return { ...set, type: target?.type ?? 'normal' };
+          });
+          return {
+            id,
+            exerciseId: exercise.exerciseId,
+            variant: exercise.variant,
+            notes: '',
+            sets,
+          };
+        });
         set({
           active: {
             name: day.name,
@@ -220,26 +248,9 @@ export const useWorkoutStore = create<WorkoutState>()(
             notes: '',
             programDayId: day.id,
             programPlan: day.exercises.map((e) => ({ exerciseId: e.exerciseId, sets: e.sets })),
-            exercises: day.exercises.map((e) => ({
-              id: uid(),
-              exerciseId: e.exerciseId,
-              variant: e.variant,
-              notes: e.notes,
-              sets: Array.from({ length: e.sets }, (_, i) => {
-                const fill = previousFill(e.exerciseId, e.variant, i, history);
-                const target = e.targets?.[i];
-                return {
-                  ...blankSet({
-                    weight: target?.weight != null ? String(target.weight) : (fill?.weight ?? ''),
-                    reps:
-                      target?.reps != null
-                        ? String(target.reps)
-                        : fill?.reps || (e.reps ? String(e.reps) : ''),
-                  }),
-                  type: target?.type ?? 'normal',
-                };
-              }),
-            })),
+            exercises,
+            coachSetTargets,
+            coachExerciseNotes,
           },
           restUntil: null,
           tab: 'train',

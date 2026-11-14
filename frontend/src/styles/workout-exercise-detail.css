@@ -1,0 +1,75 @@
+.workout-exercise-detail {
+  min-width: 0;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+}
+
+.workout-exercise-detail-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.workout-exercise-detail-heading :is(h2, h3) {
+  margin: 0;
+  color: var(--text-primary);
+  font: 600 1rem/1.2 var(--font-main);
+  text-transform: none;
+  overflow-wrap: anywhere;
+}
+
+.workout-exercise-detail-media {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+}
+
+.workout-exercise-detail-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.workout-exercise-detail-variant {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+}
+
+.workout-exercise-detail-variant div {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+
+.workout-exercise-detail-variant dt {
+  color: var(--text-secondary);
+}
+
+.workout-exercise-detail-variant dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.workout-exercise-detail-superset {
+  display: inline-block;
+  margin: 0 0.4rem 0.2rem 0;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  font-size: 0.65rem;
+  font-weight: 700;
+}

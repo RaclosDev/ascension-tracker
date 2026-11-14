@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { ComponentProps } from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import type { TrackingEntryModal } from '../components/tracking/TrackingEntryModal';
 import type { TrackingDayCell } from '../components/tracking/TrackingDayCell';
 import TrackingPage from '../pages/TrackingPage';
@@ -61,7 +62,7 @@ afterEach(() => {
 });
 
 it('rejects invalid steps before saving an otherwise valid weight', async () => {
-  render(<TrackingPage />);
+  render(<TrackingPage />, { wrapper: MemoryRouter });
   fireEvent.click(screen.getByText('Open day'));
   fireEvent.change(screen.getByLabelText('Weight'), { target: { value: '81' } });
   fireEvent.change(screen.getByLabelText('Steps'), { target: { value: '12.5' } });
@@ -78,7 +79,7 @@ it.each(['Save day', 'Delete day'])(
       .mockResolvedValueOnce({})
       .mockRejectedValueOnce(new Error('offline'))
       .mockResolvedValue({});
-    render(<TrackingPage />);
+    render(<TrackingPage />, { wrapper: MemoryRouter });
     fireEvent.click(screen.getByText('Open day'));
     fireEvent.change(screen.getByLabelText('Weight'), { target: { value: '81' } });
     fireEvent.change(screen.getByLabelText('Steps'), { target: { value: '200' } });

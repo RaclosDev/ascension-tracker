@@ -21,6 +21,44 @@ export function setText(set: SetTarget, exercise: ProgramExercise): string {
     .filter(Boolean)
     .join(' · ');
 }
-export function resolvedWeight(load?: PrescribedLoad | null): number | null {
+function resolvedWeight(load?: PrescribedLoad | null): number | null {
   return load?.mode === 'KG' ? load.amount : (load?.resolvedKg ?? null);
+}
+
+export function prescribedSet(exercise: ProgramExercise, index: number) {
+  const set = exercise.prescription?.sets?.[index];
+  const load = set?.load ?? exercise.prescription?.load;
+  const min = set?.reps ?? exercise.repsMin ?? exercise.repsMax;
+  const max = set?.reps ?? exercise.repsMax ?? exercise.repsMin;
+  const rpe = set ? set.rpe : exercise.targetRpe;
+  const rir = set ? set.rir : exercise.targetRir;
+  const effort =
+    rpe != null ? { kind: 'RPE', value: rpe } : rir != null ? { kind: 'RIR', value: rir } : null;
+  const weight = resolvedWeight(load);
+  const loadLabel =
+    load?.mode === 'KG' && load.unit === 'TOTAL'
+      ? `${load.amount} kg`
+      : loadText(load) || exercise.loadHint || 'Carga libre';
+  const repsLabel = min != null ? (min === max ? String(min) : `${min}–${max}`) : null;
+  const kindLabel = set && set.kind !== 'WORK' ? KINDS[set.kind] : null;
+  return {
+    weight,
+    min,
+    max,
+    effort,
+    loadLabel,
+    repsLabel,
+    kindLabel,
+    notes: set?.notes,
+    warmup: set?.kind === 'WARMUP',
+    text: [
+      kindLabel,
+      loadLabel,
+      repsLabel && `${repsLabel} reps`,
+      effort && `${effort.kind} ${effort.value}`,
+      set?.notes,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+  };
 }

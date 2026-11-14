@@ -1,3 +1,4 @@
+const CoachClientRegisterPage = lazyWithRetry(() => import('./pages/CoachClientRegisterPage'));
 import React, { Component, useEffect, useState, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ConfirmationDialog } from './components/ui/ConfirmationDialog';
@@ -15,6 +16,7 @@ import { lazyWithRetry, isChunkLoadError } from './utils/lazyWithRetry';
 
 const DashboardPage = lazyWithRetry(() => import('./pages/DashboardPage'));
 const TrackingPage = lazyWithRetry(() => import('./pages/TrackingPage'));
+const TrackingMetricPage = lazyWithRetry(() => import('./pages/TrackingMetricPage'));
 const NutritionPage = lazyWithRetry(() => import('./pages/NutritionPage'));
 const SettingsPage = lazyWithRetry(() => import('./pages/SettingsPage'));
 const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage'));
@@ -27,6 +29,12 @@ const CoachReviewsPage = lazyWithRetry(() => import('./pages/CoachReviewsPage'))
 const CoachPlanningPage = lazyWithRetry(() => import('./pages/CoachPlanningPage'));
 const CoachSettingsPage = lazyWithRetry(() => import('./pages/CoachSettingsPage'));
 const CoachClientPage = lazyWithRetry(() => import('./pages/CoachClientPage'));
+const CoachClientWeeklyWorkoutsPage = lazyWithRetry(
+  () => import('./pages/CoachClientWeeklyWorkoutsPage'),
+);
+const CoachClientWeeklyRecordsPage = lazyWithRetry(
+  () => import('./pages/CoachClientWeeklyRecordsPage'),
+);
 const CoachProgramsPage = lazyWithRetry(() => import('./pages/CoachProgramsPage'));
 const CoachProgramEditorPage = lazyWithRetry(() => import('./pages/CoachProgramEditorPage'));
 const CoachProgramAdaptPage = lazyWithRetry(() => import('./pages/CoachProgramAdaptPage'));
@@ -170,6 +178,14 @@ function AppContent() {
               <Route index element={<HomeRedirect />} />
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="tracking" element={<TrackingPage />} />
+              <Route
+                path="tracking/pasos"
+                element={<TrackingMetricPage key="steps" metric="steps" />}
+              />
+              <Route
+                path="tracking/peso"
+                element={<TrackingMetricPage key="weight" metric="weight" />}
+              />
               <Route path="nutrition" element={<NutritionPage />} />
               <Route path="workout" element={<WorkoutPage />} />
               <Route path="utilities" element={<UtilitiesPage />} />
@@ -182,6 +198,26 @@ function AppContent() {
               <Route path="entrenador/planificacion" element={<CoachPlanningPage />} />
               <Route path="entrenador/ajustes" element={<CoachSettingsPage />} />
               <Route path="entrenador/atletas/:linkId" element={<CoachClientPage />} />
+              <Route
+                path="entrenador/atletas/:linkId/registro"
+                element={<CoachClientRegisterPage />}
+              />
+              <Route
+                path="entrenador/atletas/:linkId/entrenos/:workoutId?"
+                element={<CoachClientWeeklyWorkoutsPage />}
+              />
+              <Route
+                path="entrenador/atletas/:linkId/comidas/:date?"
+                element={<CoachClientWeeklyRecordsPage metric="meals" />}
+              />
+              <Route
+                path="entrenador/atletas/:linkId/pasos"
+                element={<CoachClientWeeklyRecordsPage metric="steps" />}
+              />
+              <Route
+                path="entrenador/atletas/:linkId/peso"
+                element={<CoachClientWeeklyRecordsPage metric="weight" />}
+              />
               <Route
                 path="entrenador/atletas/:linkId/programas/:assignmentId/adaptar"
                 element={<CoachProgramAdaptPage />}

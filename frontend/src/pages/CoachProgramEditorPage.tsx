@@ -60,7 +60,7 @@ export default function CoachProgramEditorPage() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="fade-in max-w-6xl mx-auto px-4 pt-2 sm:pt-4">
+    <div className="fade-in">
       <Link to="/entrenador/programas" className="btn btn-secondary mb-4">
         <ArrowLeft size={16} aria-hidden /> Programas
       </Link>
@@ -147,7 +147,7 @@ export function ProgramEditor({
   const currentWeek = Math.min(week, program.weeks);
 
   return (
-    <div className="fade-in max-w-6xl mx-auto px-4 pt-2 sm:pt-4 pb-16">
+    <div className="fade-in pb-16">
       <header className="mb-4 pb-2 border-b border-white/5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link
