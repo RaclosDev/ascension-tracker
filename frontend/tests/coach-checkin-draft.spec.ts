@@ -70,7 +70,7 @@ for (const width of [1440, 390]) {
       fullPage: true,
       animations: 'disabled',
     });
-    await page.getByRole('button', { name: 'Enviar check-in' }).click();
+    await page.getByRole('button', { name: 'Enviar seguimiento' }).click();
     await expect(page.getByRole('button', { name: 'Guardar cambios' })).toBeVisible();
     await expect(page.getByText(/Borrador guardado/)).toHaveCount(0);
   });

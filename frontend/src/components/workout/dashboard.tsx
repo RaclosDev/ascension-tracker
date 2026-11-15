@@ -143,7 +143,7 @@ function Dashboard() {
       )}
       {!active && (
         <Suspense fallback={null}>
-          <TodayProgramCard history={history} exerciseName={(id) => catalog.get(id)?.name ?? id} />
+          <TodayProgramCard exerciseName={(id) => catalog.get(id)?.name ?? id} />
         </Suspense>
       )}
 

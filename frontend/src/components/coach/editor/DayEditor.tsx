@@ -15,6 +15,7 @@ import { ExerciseSearch } from './ExerciseSearch';
 import toast from 'react-hot-toast';
 import { useSaveProgram } from '@/lib/coach/coachPrograms';
 import { apiErrorMessage } from '@/lib/coach/api';
+import '@/styles/coach-student.css';
 export function DayEditor({
   label,
   compact = false,

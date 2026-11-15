@@ -1,5 +1,7 @@
+import { useState } from 'react';
+import { SegmentedControl } from '../ui/segmented-control';
 import toast from 'react-hot-toast';
-import { apiErrorMessage } from '../../lib/coach/api';
+import { apiErrorMessage, formatCoachDate } from '../../lib/coach/api';
 import {
   useClientCheckins,
   useReplyCheckin,
@@ -11,33 +13,99 @@ import { QueryErrorNotice } from '../QueryErrorNotice';
 import { useSessionDraft } from '../../hooks/useSessionDraft';
 import { useQueryClient } from '@tanstack/react-query';
 
-/** Unanswered check-ins first, then newest week within each group. */
+const matches = (filter: string, item: Checkin) =>
+  filter === 'all' || (filter === 'pending' ? needsReply(item) : !needsReply(item));
+
+/** Unanswered seguimientos first, then newest week within each group. */
 export function CheckinsSection({ linkId }: { linkId: string }) {
   const checkins = useClientCheckins(linkId);
-
-  if (checkins.isLoading) return <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>;
-  if (checkins.isError)
-    return <QueryErrorNotice retry={() => void checkins.refetch()} pending={checkins.isFetching} />;
-  if (!checkins.data?.length) {
-    return (
-      <p style={{ color: 'var(--text-secondary)' }}>Tu atleta aún no ha enviado ningún check-in.</p>
+  const [chosen, setFilter] = useState<string | null>(null);
+  const all = checkins.data ?? [];
+  const pending = all.filter(needsReply).length;
+  // Until the coach picks a view, open on what still needs an answer.
+  const filter = chosen ?? (pending > 0 ? 'pending' : 'all');
+  const visible = all
+    .filter((item) => matches(filter, item))
+    .sort(
+      (a, b) =>
+        Number(needsReply(b)) - Number(needsReply(a)) || b.weekStart.localeCompare(a.weekStart),
     );
-  }
+
   return (
-    <div className="flex flex-col gap-3">
-      {[...checkins.data]
-        .sort(
-          (a, b) =>
-            Number(needsReply(b)) - Number(needsReply(a)) || b.weekStart.localeCompare(a.weekStart),
-        )
-        .map((c) => (
-          <CheckinCard
-            key={c.id}
-            checkin={c}
-            footer={needsReply(c) ? <ReplyForm linkId={linkId} checkin={c} /> : null}
+    <section className="athlete-checkins flex flex-col gap-4">
+      <div className="athlete-section-title">
+        <div>
+          <h2>Seguimientos semanales</h2>
+          {all.length > 0 && (
+            <p className="coach-description">
+              {pending === 0
+                ? 'Todo respondido.'
+                : pending === 1
+                  ? '1 seguimiento espera tu respuesta.'
+                  : `${pending} seguimientos esperan tu respuesta.`}
+            </p>
+          )}
+        </div>
+        {all.length > 0 && (
+          <SegmentedControl
+            value={filter}
+            onChange={setFilter}
+            options={[
+              { value: 'pending', label: `Pendientes (${pending})` },
+              { value: 'replied', label: `Respondidos (${all.length - pending})` },
+              { value: 'all', label: `Todos (${all.length})` },
+            ]}
           />
-        ))}
-    </div>
+        )}
+      </div>
+      {checkins.isLoading ? (
+        <p role="status" className="coach-description">
+          Cargando…
+        </p>
+      ) : checkins.isError ? (
+        <QueryErrorNotice retry={() => void checkins.refetch()} pending={checkins.isFetching} />
+      ) : !all.length ? (
+        <p className="card coach-description">Tu atleta aún no ha enviado ningún seguimiento.</p>
+      ) : (
+        <>
+          {visible.length === 0 && (
+            <p role="status" className="card coach-description">
+              No hay seguimientos en esta vista.
+            </p>
+          )}
+          {visible.map((c, index) => {
+            const open = needsReply(c);
+            const card = (
+              <CheckinCard
+                checkin={c}
+                status={
+                  <span className={`checkin-status${open ? ' checkin-status-pending' : ''}`}>
+                    {!open
+                      ? 'Respondido'
+                      : c.coachReply
+                        ? 'Actualizado por el atleta'
+                        : 'Por responder'}
+                  </span>
+                }
+                footer={open ? <ReplyForm linkId={linkId} checkin={c} /> : null}
+              />
+            );
+            // With several weeks on screen, answered ones fold so the open ones stand out.
+            return open || visible.length === 1 ? (
+              <div key={c.id}>{card}</div>
+            ) : (
+              <details key={c.id} className="checkin-folded" open={index === 0}>
+                <summary>
+                  <strong>Semana del {formatCoachDate(c.weekStart)}</strong>
+                  <span className="checkin-status">Respondido</span>
+                </summary>
+                {card}
+              </details>
+            );
+          })}
+        </>
+      )}
+    </section>
   );
 }
 
@@ -87,18 +155,13 @@ function ReplyForm({ linkId, checkin }: { linkId: string; checkin: Checkin }) {
         );
       }}
     >
-      <label
-        className="text-sm"
-        style={{ color: 'var(--text-secondary)' }}
-        htmlFor={`reply-${checkin.id}`}
-      >
+      <label className="text-sm font-semibold" htmlFor={`reply-${checkin.id}`}>
         Tu respuesta
       </label>
       <textarea
         id={`reply-${checkin.id}`}
-        className="rounded-lg px-3 py-2 bg-black/20 border min-w-0"
-        style={{ borderColor: 'var(--border-subtle)' }}
-        rows={3}
+        className="form-input min-w-0"
+        rows={6}
         maxLength={2000}
         disabled={reply.isPending}
         value={text}
@@ -112,7 +175,7 @@ function ReplyForm({ linkId, checkin }: { linkId: string; checkin: Checkin }) {
       {changed && (
         <div role="alert">
           <p>
-            El atleta ha cambiado el check-in desde que empezaste la respuesta. Revisa los datos
+            El atleta ha cambiado el seguimiento desde que empezaste la respuesta. Revisa los datos
             actualizados.
           </p>
           <button
@@ -126,27 +189,32 @@ function ReplyForm({ linkId, checkin }: { linkId: string; checkin: Checkin }) {
       )}
       {reply.isError && (
         <p role="alert">
-          No se ha enviado la respuesta. El borrador se conserva; revisa el check-in antes de volver
-          a enviarlo.
+          No se ha enviado la respuesta. El borrador se conserva; revisa el seguimiento antes de
+          volver a enviarlo.
         </p>
       )}
-      {draft.dirty && (
+      <div className="flex flex-wrap items-center gap-2">
         <button
-          type="button"
-          className="btn btn-secondary self-start"
-          disabled={reply.isPending}
-          onClick={draft.clear}
+          type="submit"
+          className="btn btn-primary"
+          disabled={reply.isPending || !text.trim() || changed}
         >
-          Descartar borrador
+          Responder
         </button>
-      )}
-      <button
-        type="submit"
-        className="btn btn-primary self-start"
-        disabled={reply.isPending || !text.trim() || changed}
-      >
-        Responder
-      </button>
+        {draft.dirty && (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={reply.isPending}
+            onClick={draft.clear}
+          >
+            Descartar borrador
+          </button>
+        )}
+        <span className="text-xs ml-auto" style={{ color: 'var(--text-secondary)' }}>
+          {text.length}/2000
+        </span>
+      </div>
     </form>
   );
 }

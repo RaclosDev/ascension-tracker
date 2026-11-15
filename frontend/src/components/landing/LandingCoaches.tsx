@@ -17,7 +17,7 @@ const features = [
   },
   {
     icon: MessageSquare,
-    title: 'Check-in semanal',
+    title: 'Seguimiento semanal',
     text: 'Tus preguntas cada semana, fotos de progreso y avisos en el móvil cuando te responden.',
   },
 ];

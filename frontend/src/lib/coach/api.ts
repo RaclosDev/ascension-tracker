@@ -143,12 +143,6 @@ const dateFmt = new Intl.DateTimeFormat('es-ES', {
 export const formatCoachDate = (iso: string) =>
   dateFmt.format(new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T12:00:00` : iso));
 
-export const sharedScopes = (permissions: CoachPermissions) =>
-  (Object.keys(PERMISSION_LABELS) as (keyof CoachPermissions)[])
-    .filter((scope) => permissions[scope])
-    .map((scope) => PERMISSION_LABELS[scope].title)
-    .join(' · ');
-
 /** Pautar needs seeing the data: dropping a scope drops its edit permission too. */
 export const withScope = (
   permissions: CoachPermissions,

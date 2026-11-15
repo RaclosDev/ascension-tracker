@@ -1,6 +1,7 @@
 import type { CompletedWorkout } from '@/lib/workout/types';
 import type { ProgramExercise } from '@/lib/coach/coachPrograms';
 import { TechniqueVideoLink } from '../workout/TechniqueVideo';
+import { WorkoutExerciseVariant } from '../workout/WorkoutExerciseDetail';
 
 export function WorkoutReview({
   workout,
@@ -44,6 +45,7 @@ export function WorkoutReview({
             <h5 className="font-bold">
               {index + 1}. {target?.exerciseName ?? exerciseName(exercise.exerciseId)}
             </h5>
+            <WorkoutExerciseVariant variant={exercise.variant} />
             <TechniqueVideoLink exercise={exercise} />
             {exercise.notes && (
               <p className="text-sm whitespace-pre-wrap my-2">

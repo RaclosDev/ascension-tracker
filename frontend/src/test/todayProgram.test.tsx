@@ -64,7 +64,7 @@ function renderCard() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <TodayProgramCard history={[]} exerciseName={(id) => id} />
+      <TodayProgramCard exerciseName={(id) => id} />
     </QueryClientProvider>,
   );
 }
@@ -102,7 +102,8 @@ describe('Hoy: programa pautado', () => {
     expect(active.exercises).toHaveLength(1);
     expect(active.exercises[0].sets).toHaveLength(2);
     expect(active.exercises[0].sets[0].reps).toBe('6');
-    expect(active.exercises[0].notes).toBe('6–8 reps · RPE 8 · descanso 2:00');
+    expect(active.exercises[0].notes).toBe('');
+    expect(active.coachExerciseNotes?.[active.exercises[0].id]).toBe('Descanso 2:00');
   });
 
   it('shows a done day, a rest day and an upcoming program without a start button', async () => {
@@ -169,7 +170,7 @@ describe('Hoy: programa pautado', () => {
   });
 
   it('marks the workout as modified when the client changes the prescription', () => {
-    useWorkoutStore.getState().startFromProgramDay(toPrescribedDay(plan().day!), []);
+    useWorkoutStore.getState().startFromProgramDay(toPrescribedDay(plan().day!));
     const store = useWorkoutStore.getState();
     const ex = store.active!.exercises[0];
     store.toggleSet(ex.id, ex.sets[0].id);

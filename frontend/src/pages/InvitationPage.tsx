@@ -108,7 +108,7 @@ export default function InvitationPage() {
             <p className="whitespace-pre-wrap break-words mb-4">{preview.data.coachPresentation}</p>
           )}
           {preview.data.review && (
-            <p className="mb-4">Revisión semanal: {scheduleLabel(preview.data.review)}</p>
+            <p className="mb-4">Seguimiento semanal: {scheduleLabel(preview.data.review)}</p>
           )}
           {preview.data.setup && (
             <div className="mb-4">

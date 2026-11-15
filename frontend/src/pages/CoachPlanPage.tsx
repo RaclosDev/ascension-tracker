@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
+import { CoachPageHeader } from '../components/coach/CoachWorkspace';
 import { apiErrorMessage, useCoachProfile } from '../lib/coach/api';
 import {
   planName,
@@ -38,13 +39,11 @@ export default function CoachPlanPage() {
   const billing = useCoachBilling(isCoach);
 
   return (
-    <div className="fade-in max-w-5xl mx-auto px-4 pt-2 sm:pt-4">
-      <header className="mb-6 pb-2 border-b border-white/5 flex items-center gap-3">
-        <Link to="/entrenador" aria-label="Volver al modo entrenador" className="btn btn-secondary">
-          <ArrowLeft size={16} aria-hidden />
-        </Link>
-        <h1 className="text-2xl font-black text-white tracking-tight">Plan y facturación</h1>
-      </header>
+    <div className="fade-in coach-page coach-workspace">
+      <CoachPageHeader
+        title="Plan y facturación"
+        description="Tu plan, los precios y cómo contratar o cambiar."
+      />
       <div className="flex flex-col gap-6">
         {(profile.isLoading || subscription.isLoading || billing.isLoading) && (
           <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>

@@ -29,7 +29,7 @@ export function CoachTaskBoard({ rows }: { rows: CoachRow[] }) {
                     ? 'No tienes tareas pendientes'
                     : 'Sin acciones pendientes del atleta'}
                 </h3>
-                <p>El seguimiento se actualiza al guardar cambios y recibir nuevas revisiones.</p>
+                <p>El seguimiento se actualiza al guardar cambios y recibir nuevos seguimientos.</p>
               </div>
             ) : (
               <ul className="coach-action-list">

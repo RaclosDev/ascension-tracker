@@ -30,15 +30,12 @@ function Reviews() {
   const count = pending.reduce((n, row) => n + (row.status?.pendingReplies ?? 0), 0);
   return (
     <>
-      <CoachPageHeader
-        title="Revisiones"
-        description="Responde a los check-ins y consulta quién tiene semanas pendientes."
-      >
+      <CoachPageHeader title="Seguimiento semanal">
         <Link className="btn btn-secondary" to="/entrenador/ajustes">
-          Configurar check-in
+          Configurar seguimiento
         </Link>
       </CoachPageHeader>
-      <div className="coach-chips coach-review-tabs" role="group" aria-label="Filtrar revisiones">
+      <div className="coach-chips coach-review-tabs" role="group" aria-label="Filtrar seguimientos">
         <button
           type="button"
           className="coach-chip"
@@ -72,7 +69,7 @@ function Reviews() {
       ) : !ready ? (
         <p role="status">
           {clients.isPending || status.isPending
-            ? 'Cargando revisiones…'
+            ? 'Cargando seguimientos…'
             : 'Falta información de seguimiento. Vuelve a cargar los datos.'}
         </p>
       ) : (
@@ -80,13 +77,13 @@ function Reviews() {
           {!agenda && (
             <p className="coach-description">
               {waiting
-                ? 'Atletas que han superado la fecha acordada sin enviar su check-in. Consulta su situación antes de hacer seguimiento.'
-                : `${count} ${count === 1 ? 'check-in' : 'check-ins'} por responder de ${pending.length} ${pending.length === 1 ? 'atleta' : 'atletas'}.`}
+                ? 'Atletas que han superado la fecha acordada sin enviar su seguimiento. Consulta su situación antes de hacer seguimiento.'
+                : `${count} ${count === 1 ? 'seguimiento' : 'seguimientos'} por responder de ${pending.length} ${pending.length === 1 ? 'atleta' : 'atletas'}.`}
             </p>
           )}
           <label className="coach-search">
             <Search size={18} aria-hidden />
-            <span className="sr-only">Buscar revisión por atleta</span>
+            <span className="sr-only">Buscar seguimiento por atleta</span>
             <input
               type="search"
               placeholder="Buscar atleta"
@@ -99,7 +96,7 @@ function Reviews() {
           ) : (
             <section
               className="card coach-worklist"
-              aria-label={waiting ? 'Pendiente del atleta' : 'Check-ins por responder'}
+              aria-label={waiting ? 'Pendiente del atleta' : 'Seguimientos por responder'}
             >
               {visible.length === 0 ? (
                 <div className="coach-empty-inline">
@@ -108,7 +105,7 @@ function Reviews() {
                       ? 'No hay coincidencias'
                       : waiting
                         ? 'Sin semanas pendientes'
-                        : 'No hay check-ins por responder'}
+                        : 'No hay seguimientos por responder'}
                   </h2>
                   <p>
                     {search
