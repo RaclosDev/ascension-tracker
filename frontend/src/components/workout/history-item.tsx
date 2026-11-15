@@ -2,15 +2,7 @@ import React from 'react';
 import { Repeat2, Trash2, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { BodyHeatmap } from './body-heatmap';
-import {
-  completedSets,
-  formatDay,
-  formatDuration,
-  formatKg,
-  sessionVolume,
-  formatVariant,
-} from '@/lib/workout/format';
-import { capitalizeFirst } from '@/utils/dateHelper';
+import { WorkoutSessionSummary } from './WorkoutSessionSummary';
 
 export const HistoryItem = React.memo(function HistoryItem({
   w,
@@ -31,12 +23,6 @@ export const HistoryItem = React.memo(function HistoryItem({
   deleteHistory: (id: string) => void;
   active: import('@/lib/workout/types').ActiveWorkout | null;
 }) {
-  const names = w.exercises.map((e: import('@/lib/workout/types').WorkoutExercise) => {
-    const base = catalog.get(e.exerciseId)?.name ?? 'Ejercicio';
-    const v = formatVariant(e.variant);
-    return v ? `${base} ${v}` : base;
-  });
-
   const handleSetDetail = React.useCallback(() => setDetailId(w.id), [setDetailId, w.id]);
   const handleEdit = React.useCallback(() => {
     if (active) {
@@ -65,92 +51,7 @@ export const HistoryItem = React.memo(function HistoryItem({
             color: 'inherit',
           }}
         >
-          <h2
-            style={{
-              fontSize: '1.15rem',
-              fontWeight: 600,
-              color: 'var(--text-primary)',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {w.name}
-          </h2>
-          <p
-            style={{
-              marginTop: '0.15rem',
-              fontSize: '0.8rem',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            {capitalizeFirst(formatDay(w.finishedAt))}
-          </p>
-
-          <div
-            style={{
-              marginTop: '0.75rem',
-              display: 'flex',
-              gap: '1rem',
-              background: 'rgba(255,255,255,0.02)',
-              padding: '0.5rem',
-              borderRadius: '8px',
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  color: 'var(--text-secondary)',
-                }}
-              >
-                Volumen
-              </span>
-              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>
-                {formatKg(sessionVolume(w.exercises))}
-              </span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  color: 'var(--text-secondary)',
-                }}
-              >
-                Series
-              </span>
-              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>
-                {completedSets(w.exercises)}
-              </span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  color: 'var(--text-secondary)',
-                }}
-              >
-                Tiempo
-              </span>
-              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>
-                {formatDuration(w.finishedAt - w.startedAt)}
-              </span>
-            </div>
-          </div>
-
-          <p
-            style={{
-              marginTop: '0.75rem',
-              fontSize: '0.8rem',
-              color: 'var(--text-secondary)',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
-            {names.join(' · ')}
-          </p>
+          <WorkoutSessionSummary workout={w} catalog={catalog} />
         </button>
 
         <div

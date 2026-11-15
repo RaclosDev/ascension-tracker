@@ -728,7 +728,8 @@ body,
     background: var(--bg-glass-strong);
   }
 }
-.segmented-option[aria-pressed='true'] {
+.segmented-option[aria-pressed='true'],
+.segmented-option[aria-current='page'] {
   background: var(--wall-active-bg);
   color: var(--wall-active-ink);
 }

@@ -32,20 +32,14 @@ export interface ClientStatus {
 
 export const LEVEL_ORDER: Record<StatusLevel, number> = { RED: 0, AMBER: 1, GREEN: 2 };
 
-export const LEVEL_COLORS: Record<StatusLevel, string> = {
-  RED: 'var(--color-danger)',
-  AMBER: 'var(--color-warning)',
-  GREEN: 'var(--color-success)',
-};
-
 export function signalText({ reason, value }: StatusSignal): string {
   switch (reason) {
     case 'INACTIVE':
       return `${value} días sin registrar nada`;
     case 'CHECKIN_MISSING':
       return value === 1
-        ? 'Falta un check-in tras la fecha acordada'
-        : `${value} semanas sin check-in`;
+        ? 'Falta un seguimiento tras la fecha acordada'
+        : `${value} semanas sin seguimiento`;
     case 'FEW_FOOD_LOGS':
       return `Comida registrada ${value} de 7 días`;
     case 'WEIGHT_STALLED':

@@ -154,12 +154,14 @@ for (const width of [1440, 390]) {
       animations: 'disabled',
     });
 
-    await page.getByRole('link', { name: /Check-ins por responder.*1/ }).click();
-    await expect(page.getByRole('heading', { name: 'Revisiones', exact: true })).toBeVisible();
+    await page.getByRole('link', { name: /Seguimientos por responder.*1/ }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Seguimiento semanal', exact: true }),
+    ).toBeVisible();
     await page.getByRole('link', { name: /Ana García.*por responder/ }).click();
-    await expect(page.getByRole('heading', { name: 'Revisiones semanales' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Seguimientos semanales' })).toBeVisible();
     await page.getByLabel('Tu respuesta').fill('Buen trabajo. Mantenemos el programa esta semana.');
-    await page.getByRole('link', { name: 'Volver a revisiones' }).click();
+    await page.getByRole('link', { name: 'Volver a seguimientos' }).click();
     await page.getByRole('link', { name: /Ana García.*por responder/ }).click();
     await expect(page.getByLabel('Tu respuesta')).toHaveValue(
       'Buen trabajo. Mantenemos el programa esta semana.',
@@ -177,11 +179,12 @@ for (const width of [1440, 390]) {
       fullPage: true,
       animations: 'disabled',
     });
-    await page.getByRole('link', { name: 'Volver a revisiones' }).click();
+    await page.getByRole('link', { name: 'Volver a seguimientos' }).click();
     await expect(
-      page.getByRole('heading', { name: 'No hay check-ins por responder' }),
+      page.getByRole('heading', { name: 'No hay seguimientos por responder' }),
     ).toBeVisible();
     await page.getByRole('link', { name: 'Ver atletas' }).click();
+    await page.getByText('Opciones', { exact: true }).click();
     await page.getByRole('combobox', { name: 'Servicio', exact: true }).selectOption('nutrition');
     await expect(page.getByText('1 de 3 atletas')).toBeVisible();
     await expect(
@@ -196,7 +199,7 @@ for (const width of [1440, 390]) {
       .getByRole('link', { name: /^Ana García/ })
       .filter({ visible: true })
       .click();
-    await expect(page.getByLabel('Semana que preparas')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Ana García', level: 1 })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Terminar relación' })).toHaveCount(0);
     await noHorizontalOverflow(page);
     await page.screenshot({
@@ -206,6 +209,7 @@ for (const width of [1440, 390]) {
     });
     await page.getByRole('link', { name: 'Volver a atletas' }).click();
     await expect(page.getByRole('searchbox', { name: 'Buscar atleta' })).toHaveValue('garcia');
+    await page.getByText('Opciones', { exact: true }).click();
     await expect(page.getByRole('combobox', { name: 'Ordenar' })).toHaveValue('name');
     await expect(page.getByRole('combobox', { name: 'Servicio', exact: true })).toHaveValue(
       'training',
@@ -272,8 +276,8 @@ for (const width of [1440, 390]) {
     await page.goto('/entrenador/revisiones?vista=agenda');
     await expect(page.getByRole('heading', { name: 'Lunes' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Miércoles' })).toBeVisible();
-    await page.getByLabel('Buscar revisión por atleta').fill('garcia');
-    await expect(page.getByRole('link', { name: /Ana García.*Abrir revisión/ })).toBeVisible();
+    await page.getByLabel('Buscar seguimiento por atleta').fill('garcia');
+    await expect(page.getByRole('link', { name: /Ana García.*Abrir seguimiento/ })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Miércoles' })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
@@ -283,9 +287,9 @@ for (const width of [1440, 390]) {
       fullPage: true,
       animations: 'disabled',
     });
-    await page.getByRole('link', { name: /Ana García.*Abrir revisión/ }).click();
+    await page.getByRole('link', { name: /Ana García.*Abrir seguimiento/ }).click();
     await expect(page).toHaveURL(/seccion=revisiones/);
-    await page.getByRole('link', { name: 'Volver a revisiones' }).click();
+    await page.getByRole('link', { name: 'Volver a seguimientos' }).click();
     await expect(page.getByRole('button', { name: 'Agenda semanal' })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -299,5 +303,5 @@ test('old athlete links open the renamed route with the selected section and fra
   await setupCoach(page);
   await page.goto('/entrenador/alumnos/l0?seccion=revisiones#seguimiento');
   await expect(page).toHaveURL(/\/entrenador\/atletas\/l0\?seccion=revisiones#seguimiento$/);
-  await expect(page.getByRole('heading', { name: 'Revisiones semanales' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Seguimientos semanales' })).toBeVisible();
 });

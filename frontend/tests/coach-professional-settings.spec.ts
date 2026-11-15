@@ -66,9 +66,9 @@ for (const width of [390, 1440]) {
     await page.getByLabel('Mostrar mi foto de cuenta a mis atletas').uncheck();
     await page.getByLabel('Entrenamiento', { exact: true }).uncheck();
     await page.getByLabel('Nutrición', { exact: true }).check();
-    await page.getByLabel('Día de revisión inicial').selectOption('3');
-    await page.getByLabel('Hora de revisión inicial').fill('17:30');
-    await page.getByLabel('Zona horaria de las revisiones').fill('Atlantic/Canary');
+    await page.getByLabel('Día del seguimiento inicial').selectOption('3');
+    await page.getByLabel('Hora del seguimiento inicial').fill('17:30');
+    await page.getByLabel('Zona horaria de los seguimientos').fill('Atlantic/Canary');
     await page.reload();
     await expect(page.getByLabel('Nombre profesional', { exact: true })).toHaveValue(
       'Ana · Entrenamiento de fuerza',

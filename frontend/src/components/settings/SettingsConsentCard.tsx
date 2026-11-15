@@ -9,7 +9,7 @@ const OPTIONS: { kind: ConsentKind; title: string; detail: string }[] = [
     kind: 'HEALTH_DATA',
     title: 'Datos de salud',
     detail:
-      'Guardar peso, fotos de progreso, alimentación y check-ins. Si lo retiras, no se guardan datos nuevos; lo ya guardado sigue visible y puedes borrarlo o borrar tu cuenta.',
+      'Guardar peso, fotos de progreso, alimentación y seguimientos. Si lo retiras, no se guardan datos nuevos; lo ya guardado sigue visible y puedes borrarlo o borrar tu cuenta.',
   },
   {
     kind: 'AI_HEALTH',

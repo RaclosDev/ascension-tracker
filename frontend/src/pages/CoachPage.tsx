@@ -31,7 +31,7 @@ function Dashboard() {
     <>
       <CoachPageHeader
         title="Inicio"
-        description="Organiza las revisiones y el seguimiento de tus atletas."
+        description="Organiza los seguimientos semanales de tus atletas."
       >
         <div className="coach-inline-actions">
           <Link className="btn btn-secondary" to="/entrenador/guia">
@@ -70,7 +70,7 @@ function Dashboard() {
               className="coach-overview-item coach-overview-primary"
             >
               <MessageSquareText size={20} aria-hidden />
-              <span>Check-ins por responder</span>
+              <span>Seguimientos por responder</span>
               <strong>{ready ? pending : '—'}</strong>
               <small>
                 {ready

@@ -2695,6 +2695,13 @@ button, a, input, select, textarea, [role=button], [onclick] {
 }
 
 /* Set grid improvements */
+.workout-coach-target {
+  margin: 0;
+  padding: 0.35rem 0.65rem;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
 .set-grid-header {
   display: grid;
   gap: 0.5rem;

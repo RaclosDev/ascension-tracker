@@ -1,0 +1,516 @@
+/* Athlete workspace: shared header, navigation and section layouts. */
+/* Every athlete view shares one frame, so the header and tabs stay put between sections. */
+.coach-page.athlete-page {
+  animation: none;
+}
+.main-content:has(.athlete-page) {
+  scrollbar-gutter: stable;
+}
+@media (min-width: 1024px) {
+  .main-content-inner:has(.athlete-page) {
+    max-width: 1600px;
+  }
+}
+.athlete-header {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(280px, 1.5fr) auto;
+  gap: 16px 28px;
+  align-items: center;
+}
+.athlete-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.athlete-identity .coach-client-avatar {
+  flex-basis: 52px;
+  width: 52px;
+  height: 52px;
+  font-size: 1rem;
+}
+.coach-workspace .athlete-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  font-weight: 400;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.athlete-meta {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.athlete-context {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  border: 1px solid var(--border-medium);
+  border-radius: 6px;
+}
+.athlete-context > div {
+  padding: 10px 14px;
+  min-width: 0;
+}
+.athlete-context > div + div {
+  border-left: 1px solid var(--border-medium);
+}
+.athlete-context dt {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.athlete-context dd {
+  margin: 3px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.athlete-context dd a {
+  color: var(--text-secondary);
+  text-decoration: underline;
+}
+.athlete-followup {
+  white-space: nowrap;
+  min-width: 13.5rem;
+  justify-content: center;
+}
+
+.coach-client-nav.athlete-nav {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  overflow: visible;
+  border-bottom: 0;
+}
+.athlete-tabs,
+.athlete-subtabs {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.athlete-tabs {
+  gap: 4px 22px;
+  padding: 3px 3px 0;
+  border-bottom: 1px solid var(--border-medium);
+}
+.athlete-nav .athlete-tabs a {
+  gap: 8px;
+  min-height: 46px;
+  white-space: nowrap;
+}
+.athlete-nav .athlete-tabs a[aria-current] {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-primary);
+}
+.athlete-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.athlete-subtabs {
+  gap: 6px;
+  padding: 10px 3px 3px;
+}
+.athlete-nav .athlete-subtabs a {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border-medium);
+  border-radius: 18px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.athlete-nav .athlete-subtabs a:hover {
+  color: var(--text-primary);
+}
+.athlete-nav .athlete-subtabs a[aria-current='page'] {
+  border-color: var(--text-primary);
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+
+.athlete-section-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.coach-workspace .athlete-section-title h2 {
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .athlete-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .athlete-context {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+@media (max-width: 640px) {
+  .athlete-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .athlete-context {
+    grid-row: auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .athlete-context > div + div {
+    border-left: 0;
+    border-top: 1px solid var(--border-medium);
+  }
+  .athlete-followup {
+    justify-self: start;
+  }
+}
+
+/* Seguimientos: what the athlete sent on one side, the reply on the other. */
+.checkin-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.checkin-message {
+  background: var(--bg-secondary);
+}
+.checkin-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--border-medium);
+  border-radius: 11px;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.checkin-status-pending {
+  border-color: var(--text-primary);
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+.athlete-checkins .checkin-card {
+  padding: 1rem;
+  background: var(--bg-card);
+}
+.athlete-checkins .checkin-card-footer {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+}
+.athlete-checkins .checkin-card-footer textarea {
+  width: 100%;
+  resize: vertical;
+}
+.checkin-folded {
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+.coach-student .checkin-folded > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 48px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.checkin-folded .checkin-card {
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+  border-radius: 0 0 8px 8px;
+}
+.checkin-folded .checkin-card h3 {
+  display: none;
+}
+@media (min-width: 1000px) {
+  .athlete-checkins .checkin-card-reply {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+    gap: 1.5rem;
+    align-items: start;
+  }
+  .athlete-checkins .checkin-card-reply .checkin-card-footer {
+    position: sticky;
+    top: 16px;
+    padding: 0 0 0 1.5rem;
+    border-top: 0;
+    border-left: 1px solid var(--border-subtle);
+  }
+}
+.athlete-disclosure > :not(summary) {
+  margin-top: 1rem;
+}
+
+/* Resumen: the numbers first, then this week's log, then what is planned. */
+.athlete-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  margin: 0;
+  border: 1px solid var(--border-medium);
+  border-radius: 6px;
+  background: var(--bg-card);
+}
+.athlete-stats > div {
+  padding: 12px 16px;
+  min-width: 0;
+  border-right: 1px solid var(--border-subtle);
+}
+.athlete-stats > div:last-child {
+  border-right: 0;
+}
+.athlete-stats dt {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.athlete-stats dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin: 4px 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.athlete-stats dd a,
+.athlete-stats .athlete-stat-note {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+.athlete-stats dd a {
+  text-decoration: underline;
+}
+.athlete-attention {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--border-medium);
+  border-left: 3px solid var(--accent-primary);
+  border-radius: 6px;
+}
+.coach-workspace .athlete-attention h2 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.athlete-attention ul {
+  margin: 6px 0 0;
+  padding-left: 1.1rem;
+  list-style: disc;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+.athlete-plan-cards {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.athlete-plan-cards > .card {
+  margin: 0;
+  height: 100%;
+}
+@media (max-width: 640px) {
+  .athlete-stats > div {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .athlete-stats > div:last-child {
+    border-bottom: 0;
+  }
+}
+
+/* Planificar semana: one toolbar picks the mode and the week; the editor follows. */
+.week-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 20px;
+}
+.week-toolbar-picker {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+.week-toolbar-picker label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.week-toolbar-picker .btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding-inline: 0;
+  justify-content: center;
+}
+.week-toolbar-link {
+  margin-left: auto;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-decoration: underline;
+}
+.week-editor-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+.week-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.week-editor-actions [role='alert'] {
+  flex-basis: 100%;
+}
+.week-tools {
+  display: grid;
+}
+.coach-student .week-tools > .card {
+  margin: 0;
+  border-radius: 0;
+}
+.coach-student .week-tools > .card + .card {
+  border-top: 0;
+}
+.coach-student .week-tools > .card:first-child {
+  border-radius: 8px 8px 0 0;
+}
+.coach-student .week-tools > .card:last-child {
+  border-radius: 0 0 8px 8px;
+}
+.coach-student .week-tools > .card:only-child {
+  border-radius: 8px;
+}
+/* The days are the work area; status, actions and tools sit beside them on wide screens. */
+.week-editor {
+  display: grid;
+  gap: 12px;
+}
+.week-editor-side,
+.week-editor-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.week-days {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  padding-block: 8px;
+  background: var(--bg-primary);
+}
+.week-day-chip {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  min-height: 64px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-medium);
+  border-top: 3px solid var(--accent-primary);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.week-day-chip:hover {
+  border-color: var(--text-primary);
+  border-top-color: var(--accent-primary);
+}
+.week-day-chip[data-rest] {
+  border-top-color: var(--border-medium);
+  background: transparent;
+  color: var(--text-secondary);
+}
+.week-day-chip span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.week-day-chip strong {
+  overflow: hidden;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.week-day-chip small {
+  overflow: hidden;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.week-day-anchor {
+  scroll-margin-top: 96px;
+}
+@media (min-width: 1280px) {
+  .week-editor {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    align-items: start;
+    gap: 20px;
+  }
+  .week-editor-main {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .week-editor-side {
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    top: 12px;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  .week-editor-side .week-editor-head {
+    flex-direction: column;
+  }
+  .week-editor-side .week-editor-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+@media (max-width: 760px) {
+  .week-days {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .week-day-chip {
+    flex: 0 0 116px;
+  }
+}
+@media (max-width: 640px) {
+  .week-toolbar-link {
+    margin-left: 0;
+  }
+}

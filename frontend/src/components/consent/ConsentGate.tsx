@@ -96,7 +96,7 @@ function ConsentScreen({ updated }: { updated: boolean }) {
           <input type="checkbox" checked={health} onChange={(e) => setHealth(e.target.checked)} />
           <span>
             Doy mi consentimiento explícito para que se guarden mis datos de salud (peso, fotos de
-            progreso, alimentación y check-ins) y, si lo decido, se compartan con mi entrenador.
+            progreso, alimentación y seguimientos) y, si lo decido, se compartan con mi entrenador.
             <span className="block text-sm" style={{ color: 'var(--text-secondary)' }}>
               Sin este permiso puedes registrar entrenamientos y pasos, pero no esos datos.
             </span>

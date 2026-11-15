@@ -111,7 +111,7 @@ describe('Espacio del entrenador', () => {
     mockData();
     renderAt();
     await screen.findByRole('heading', { name: 'Pendiente de ti' });
-    expect(screen.getByRole('link', { name: /Check-ins por responder/ })).toHaveTextContent(
+    expect(screen.getByRole('link', { name: /Seguimientos por responder/ })).toHaveTextContent(
       '2De 1 atleta',
     );
     expect(screen.getByRole('link', { name: /Atletas por revisar/ })).toHaveTextContent('1');
@@ -120,17 +120,19 @@ describe('Espacio del entrenador', () => {
       'href',
       '/entrenador/atletas/l0?seccion=gestion',
     );
-    fireEvent.click(screen.getByRole('link', { name: /Check-ins por responder/ }));
-    expect(await screen.findByText('2 check-ins por responder de 1 atleta.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: /Seguimientos por responder/ }));
+    expect(
+      await screen.findByText('2 seguimientos por responder de 1 atleta.'),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Pendiente del atleta/ }));
-    expect(await screen.findByText('2 semanas sin check-in')).toBeInTheDocument();
+    expect(await screen.findByText('2 semanas sin seguimiento')).toBeInTheDocument();
   });
 
   it('shows unknown counts on failure and recovers with retry', async () => {
     mockData(new Error('offline'));
     renderAt();
     await screen.findByRole('alert');
-    expect(screen.getByRole('link', { name: /Check-ins por responder/ })).toHaveTextContent('—');
+    expect(screen.getByRole('link', { name: /Seguimientos por responder/ })).toHaveTextContent('—');
     expect(screen.queryByText('No tienes respuestas pendientes')).not.toBeInTheDocument();
     mockData();
     fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
@@ -160,9 +162,10 @@ describe('Espacio del entrenador', () => {
     });
     const table = await screen.findByRole('table');
     fireEvent.click(within(table).getByRole('link', { name: 'Ángela' }));
+    fireEvent.click(await screen.findByRole('link', { name: 'Planificación' }));
     await screen.findByLabelText('Semana que preparas', {}, { timeout: 10000 });
     const urls = mockedApi.get.mock.calls.map(([url]) => url);
-    expect(urls.some((url) => /\/weights|\/nutrition/.test(url))).toBe(false);
+    expect(urls.some((url) => /\/nutrition/.test(url))).toBe(false);
     expect(screen.queryByRole('button', { name: 'Terminar relación' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('link', { name: 'Volver a atletas' }));
     expect(await screen.findByRole('searchbox', { name: 'Buscar atleta' })).toHaveValue('angela');

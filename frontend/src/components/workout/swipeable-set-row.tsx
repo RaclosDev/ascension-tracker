@@ -59,6 +59,7 @@ export const SwipeableSetRow = React.memo(
         ?.sets.find((set) => set.id === effectiveSetId),
     );
     const s = storeSet ?? propSet;
+    const coachTarget = useWorkoutStore((state) => state.active?.coachSetTargets?.[effectiveSetId]);
 
     const updateSet = useWorkoutStore((s) => s.updateSet);
     const cycleSetType = useWorkoutStore((s) => s.cycleSetType);
@@ -77,7 +78,7 @@ export const SwipeableSetRow = React.memo(
 
     if (!s) return null;
 
-    const prev = previousSetLabel(exerciseId, variant, i, recentWorkouts);
+    const prev = coachTarget ? '' : previousSetLabel(exerciseId, variant, i, recentWorkouts);
     const pr = s.completed && isPrSet(exerciseId, variant, s.weight, recentWorkouts);
     const typeLabel = SET_TYPE_LABEL[s.type] || String(workingIndex + 1);
 
@@ -123,6 +124,11 @@ export const SwipeableSetRow = React.memo(
 
     return (
       <div className="set-row-wrapper" style={{ position: 'relative' }}>
+        {coachTarget && (
+          <p className="workout-coach-target">
+            <strong>Pautado</strong> · {coachTarget}
+          </p>
+        )}
         {/* Swipeable row; the trash button stays within the row height */}
         <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px' }}>
           <div
@@ -192,7 +198,7 @@ export const SwipeableSetRow = React.memo(
             <input
               inputMode="decimal"
               value={isCardio ? s.distance || '' : s.weight || ''}
-              placeholder={prev === '' ? '0' : prev.split('×')[0]?.trim()}
+              placeholder={coachTarget ? undefined : prev === '' ? '0' : prev.split('×')[0]?.trim()}
               onFocus={(e) => {
                 if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
                 if (!s.completed) {
@@ -240,7 +246,11 @@ export const SwipeableSetRow = React.memo(
               pattern="[0-9]*"
               value={isCardio ? s.duration || '' : s.reps || ''}
               placeholder={
-                prev === '' ? '0' : prev.split('×')[1]?.replace(/[^\d]/g, '')?.trim() || '0'
+                coachTarget
+                  ? undefined
+                  : prev === ''
+                    ? '0'
+                    : prev.split('×')[1]?.replace(/[^\d]/g, '')?.trim() || '0'
               }
               onFocus={(e) => {
                 if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
