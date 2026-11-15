@@ -11,8 +11,18 @@ import { WeekReview } from './WeekReview';
 import { WeekEditor } from './WeekEditor';
 
 export default function ClientWeek({ link }: { link: CoachClient }) {
-  const [view, setView] = useState('prepare');
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
+  const view = params.get('vista') === 'revision' ? 'review' : 'prepare';
+  const setView = (next: string) =>
+    setParams(
+      (current) => {
+        const updated = new URLSearchParams(current);
+        if (next === 'review') updated.set('vista', 'revision');
+        else updated.delete('vista');
+        return updated;
+      },
+      { replace: true },
+    );
   const { recordHref } = useAthleteLinks(link.linkId);
   const requested = params.get('semana');
   const selected =

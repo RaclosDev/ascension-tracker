@@ -62,7 +62,7 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     chapter: 'Planificar una semana',
     title: 'Lee el feedback antes de planificar',
     body: 'A la izquierda tienes la semana que revisas: sueño, energía, respuestas y entrenamientos pautados y registrados. Desde aquí puedes abrir el seguimiento o consultar el historial.',
-    path: '/entrenador/atletas/tour-lucia?seccion=semana',
+    path: '/entrenador/atletas/tour-lucia?seccion=semana&vista=revision',
     target: '[data-tour="week-review"]',
   },
   {
