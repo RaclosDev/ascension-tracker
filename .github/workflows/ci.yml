@@ -64,8 +64,9 @@ jobs:
             echo "images=$(has '^(backend/(Dockerfile|pom\.xml|\.dockerignore)|frontend/(Dockerfile|package(-lock)?\.json|nginx\.conf|security-headers\.conf|\.dockerignore)|docker-compose\.yml)$')" >> "$GITHUB_OUTPUT"
           fi
 
-  backend:
-    name: Backend CI
+  # Los jobs de cada parte corren en paralelo; "Backend CI" y "Frontend CI" los resumen.
+  backend-test:
+    name: Backend tests
     needs: changes
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
@@ -81,7 +82,18 @@ jobs:
 
       - name: Test and Package Backend (Maven)
         working-directory: backend
-        run: ./mvnw -B verify
+        run: |
+          # La descarga del wrapper de Maven falla a veces: se reintenta antes de compilar.
+          for attempt in 1 2 3; do ./mvnw -B -v > /dev/null && break; sleep 15; done
+          ./mvnw -B verify
+
+  backend-scan:
+    name: Backend dependency scan
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Scan Maven Dependencies (Trivy fs)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
@@ -94,13 +106,19 @@ jobs:
           exit-code: '1'
           trivyignores: '.trivyignore'
 
+  backend-image:
+    name: Backend image
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' && needs.changes.outputs.images == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
       - name: Build Backend Docker Image
-        if: needs.changes.outputs.images == 'true'
         working-directory: backend
         run: docker build -t ascension-api:latest .
 
       - name: Scan Backend Docker Image (Trivy)
-        if: needs.changes.outputs.images == 'true'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: 'ascension-api:latest'
@@ -110,8 +128,26 @@ jobs:
           exit-code: '1'
           trivyignores: '.trivyignore'
 
-  frontend:
-    name: Frontend CI
+  # Check obligatorio en la proteccion de rama: resume los jobs en paralelo de arriba.
+  backend:
+    name: Backend CI
+    if: always()
+    needs: [changes, backend-test, backend-scan, backend-image]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require successful applicable jobs
+        env:
+          CHANGES: ${{ needs.changes.result }}
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "$RESULTS"
+          test "$CHANGES" = success
+          for r in $RESULTS; do
+            if [ "$r" != success ] && [ "$r" != skipped ]; then exit 1; fi
+          done
+
+  frontend-checks:
+    name: Frontend checks
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
@@ -144,6 +180,38 @@ jobs:
           npm run build
           node scripts/check-build-budgets.mjs
 
+  # Los E2E se reparten en tres runners; el cuarto compila y prueba la build de produccion.
+  frontend-e2e:
+    name: Frontend E2E (${{ matrix.name }})
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: 1/3
+            run: npx playwright test --shard=1/3
+          - name: 2/3
+            run: npx playwright test --shard=2/3
+          - name: 3/3
+            run: npx playwright test --shard=3/3
+          - name: production build
+            run: npm run build && npx playwright test --config playwright.production.config.ts
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
       - name: Cache Playwright Browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: playwright-cache
@@ -158,17 +226,21 @@ jobs:
 
       - name: Run E2E Tests
         working-directory: frontend
-        run: |
-          npx playwright test
-          npx playwright test --config playwright.production.config.ts
+        run: ${{ matrix.run }}
+
+  frontend-image:
+    name: Frontend image
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' && needs.changes.outputs.images == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Build Frontend Docker Image
-        if: needs.changes.outputs.images == 'true'
         working-directory: frontend
         run: docker build --build-arg VITE_API_URL= --build-arg VITE_GOOGLE_CLIENT_ID=ci-mock-id -t ascension-frontend:latest .
 
       - name: Scan Frontend Docker Image (Trivy)
-        if: needs.changes.outputs.images == 'true'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: 'ascension-frontend:latest'
@@ -178,20 +250,34 @@ jobs:
           exit-code: '1'
           trivyignores: '.trivyignore'
 
+  # Check obligatorio en la proteccion de rama: resume los jobs en paralelo de arriba.
+  frontend:
+    name: Frontend CI
+    if: always()
+    needs: [changes, frontend-checks, frontend-e2e, frontend-image]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require successful applicable jobs
+        env:
+          CHANGES: ${{ needs.changes.result }}
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "$RESULTS"
+          test "$CHANGES" = success
+          for r in $RESULTS; do
+            if [ "$r" != success ] && [ "$r" != skipped ]; then exit 1; fi
+          done
+
   quality-gate:
     name: Quality gate
     if: always()
-    needs: [changes, backend, frontend]
+    needs: [backend, frontend]
     runs-on: ubuntu-latest
     steps:
-      - name: Require successful applicable checks
+      - name: Require successful checks
         env:
-          CHANGES: ${{ needs.changes.result }}
           BACKEND: ${{ needs.backend.result }}
           FRONTEND: ${{ needs.frontend.result }}
-          EXPECT_BACKEND: ${{ needs.changes.outputs.backend }}
-          EXPECT_FRONTEND: ${{ needs.changes.outputs.frontend }}
         run: |
-          test "$CHANGES" = success
-          if [ "$EXPECT_BACKEND" = true ]; then test "$BACKEND" = success; else test "$BACKEND" = skipped; fi
-          if [ "$EXPECT_FRONTEND" = true ]; then test "$FRONTEND" = success; else test "$FRONTEND" = skipped; fi
+          test "$BACKEND" = success
+          test "$FRONTEND" = success
