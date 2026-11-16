@@ -20,7 +20,7 @@ Aplicación full-stack con Java y React: desde el registro de una serie en el gi
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
 ![License](https://img.shields.io/badge/licencia-MIT-lightgrey?style=flat-square)
 
-[Qué hace](#qué-hace) · [Decisiones técnicas](#decisiones-técnicas) · [Arquitectura](docs/architecture.md) · [Desarrollo y pruebas](docs/development.md)
+[Qué hace](#qué-hace) · [Decisiones técnicas](#decisiones-técnicas) · [Arquitectura](docs/arquitectura.md) · [Desarrollo y pruebas](docs/desarrollo.md)
 
 </div>
 
@@ -104,7 +104,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Abre [localhost:3000](http://localhost:3000). La [guía de desarrollo](docs/development.md) explica la configuración base, la recarga en caliente y las verificaciones. Las integraciones de IA, alimentos, fotos, correo y notificaciones dependen de sus credenciales; no son necesarias para [reproducir las capturas](docs/screenshots/README.md).
+Abre [localhost:3000](http://localhost:3000). La [guía de desarrollo](docs/desarrollo.md) explica la configuración base, la recarga en caliente y las verificaciones. Las integraciones de IA, alimentos, fotos, correo y notificaciones dependen de sus credenciales; no son necesarias para [reproducir las capturas](docs/screenshots/README.md).
 
 ## Autor
 
