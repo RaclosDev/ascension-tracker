@@ -73,7 +73,7 @@ describe('Pauta de nutrición', () => {
     mockedApi.post.mockResolvedValue({ data: plan });
     wrap(<NutritionPlanSection linkId="l1" canEdit />);
 
-    expect(await screen.findByText('Sin pauta: tu alumno usa sus propios objetivos.')).toBeTruthy();
+    expect(await screen.findByText('Sin pauta: tu atleta usa sus propios objetivos.')).toBeTruthy();
     const save = screen.getByRole('button', { name: 'Publicar pauta' }) as HTMLButtonElement;
     expect(save.disabled).toBe(true);
 
@@ -84,7 +84,7 @@ describe('Pauta de nutrición', () => {
     fill('Proteína día de descanso', '180');
     fill('Carbohidratos día de descanso', '150');
     fill('Grasa día de descanso', '80');
-    fill('Notas para tu alumno', '  Bebe agua ');
+    fill('Notas para tu atleta', '  Bebe agua ');
     fireEvent.click(save);
 
     await vi.waitFor(() =>
@@ -152,7 +152,7 @@ describe('Pauta de nutrición', () => {
     await vi.waitFor(() =>
       expect(mockedApi.post).toHaveBeenCalledWith('/coach/clients/l1/nutrition-plan/p1/end'),
     );
-    expect(await screen.findByText('Sin pauta: tu alumno usa sus propios objetivos.')).toBeTruthy();
+    expect(await screen.findByText('Sin pauta: tu atleta usa sus propios objetivos.')).toBeTruthy();
   });
 
   it('opens archived snapshots without replacing the current editor or reading the recipe library', async () => {
@@ -200,7 +200,7 @@ describe('Pauta de nutrición', () => {
     wrap(<NutritionPlanSection linkId="l1" canEdit={false} />);
     fireEvent.click(await screen.findByRole('button', { name: 'Reintentar pauta' }));
     expect(await screen.findByText('2550 kcal')).toBeTruthy();
-    expect(screen.queryByText('Sin pauta: tu alumno usa sus propios objetivos.')).toBeNull();
+    expect(screen.queryByText('Sin pauta: tu atleta usa sus propios objetivos.')).toBeNull();
   });
 
   it('locks the client macro editor while a plan is in force', async () => {

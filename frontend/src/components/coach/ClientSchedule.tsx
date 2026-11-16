@@ -29,16 +29,16 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
       }}
     >
       <div>
-        <h2>Agenda de revisiones</h2>
+        <h2>Agenda de seguimientos</h2>
         <p className="coach-description">
-          Acuerda con el alumno cuándo debe enviar su check-in semanal. Recibirá un recordatorio si
-          aún no lo ha enviado y tiene los avisos activados.
+          Acuerda con el atleta cuándo debe enviar su seguimiento semanal. Recibirá un recordatorio
+          si aún no lo ha enviado y tiene los avisos activados.
         </p>
       </div>
       <fieldset disabled={save.isPending} className="grid gap-4 sm:grid-cols-2">
-        <legend className="sr-only">Horario de revisión</legend>
+        <legend className="sr-only">Horario del seguimiento</legend>
         <label className="coach-schedule-field flex flex-col gap-2 min-w-0">
-          <span>Día de revisión</span>
+          <span>Día del seguimiento</span>
           <select
             value={schedule.day}
             onChange={(e) => setSchedule({ ...schedule, day: Number(e.target.value) })}
@@ -51,7 +51,7 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
           </select>
         </label>
         <label className="coach-schedule-field flex flex-col gap-2 min-w-0">
-          <span>Hora de revisión</span>
+          <span>Hora del seguimiento</span>
           <input
             type="time"
             required
@@ -95,8 +95,8 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
       </fieldset>
       <p className="coach-description">
         La pausa detiene recordatorios y alertas de seguimiento. Conserva el historial y los
-        permisos; el alumno sigue ocupando una plaza. Al reanudar o cambiar el horario, dispone de
-        al menos siete días para la siguiente revisión.
+        permisos; el atleta sigue ocupando una plaza. Al reanudar o cambiar el horario, dispone de
+        al menos siete días para la siguiente seguimiento.
       </p>
       {link.followup && (
         <p className="text-sm">
@@ -107,7 +107,7 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
       )}
       {!link.setup?.reviewed && (
         <p className="text-sm">
-          Las revisiones automáticas empezarán cuando confirmes la incorporación.
+          Los seguimientos automáticos empezarán cuando confirmes la incorporación.
         </p>
       )}
       <button

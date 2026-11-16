@@ -37,7 +37,7 @@ export default function OnboardingScreen({
 }) {
   const { logout } = useAuth();
   const [step, setStep] = useState(0);
-  // Quien llega con un enlace de invitación es alumno: no le preguntamos si es entrenador.
+  // Quien llega con un enlace de invitación es atleta: no le preguntamos si es entrenador.
   // También si ya tenía sesión y abrió el enlace directamente (no se guarda el token pendiente).
   const [invited] = useState(
     () => peekPendingInvitation() !== null || window.location.pathname.startsWith('/invitacion/'),
@@ -47,14 +47,14 @@ export default function OnboardingScreen({
       peekPendingInvitation() ??
       decodeURIComponent(window.location.pathname.match(/^\/invitacion\/([^/]+)/)?.[1] ?? ''),
   );
-  // Si el entrenador ya rellenó sus datos al invitarle, el alumno solo tiene que confirmar.
+  // Si el entrenador ya rellenó sus datos al invitarle, el atleta solo tiene que confirmar.
   const invitation = useInvitationPreview(invitationToken, invited);
   const prefill = invitation.data?.profile ?? null;
   const [appliedPrefill, setAppliedPrefill] = useState<InvitationProfile | null>(null);
   const [reviewing, setReviewing] = useState(false);
   const [role, setRole] = useState<'user' | 'coach'>('user');
   const [modules, setModules] = useState<AppModules>('FULL');
-  // El entrenador no rellena «Sobre ti» ni el plan: entra directo a gestionar alumnos.
+  // El entrenador no rellena «Sobre ti» ni el plan: entra directo a gestionar atletas.
   const isCoach = !invited && role === 'coach';
   const withNutrition = !isCoach && hasNutrition(modules);
   const [form, setForm] = useState<OnboardingForm>({
@@ -124,7 +124,7 @@ export default function OnboardingScreen({
     await save(false);
   };
 
-  // Atajo del alumno invitado con datos ya rellenados: calorías de mantenimiento y comidas por
+  // Atajo del atleta invitado con datos ya rellenados: calorías de mantenimiento y comidas por
   // defecto; su entrenador le fija los objetivos después.
   const handleQuickStart = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,7 +172,7 @@ export default function OnboardingScreen({
       if (isCoach) {
         try {
           await api.post('/coach/profile');
-          toast.success('¡Listo! Ya puedes invitar a tus alumnos.');
+          toast.success('¡Listo! Ya puedes invitar a tus atletas.');
           onComplete('/entrenador');
           return;
         } catch {
@@ -306,7 +306,7 @@ export default function OnboardingScreen({
                       marginTop: '0.5rem',
                     }}
                   >
-                    Activaremos el modo entrenador para que invites a tus alumnos. Si también
+                    Activaremos el modo entrenador para que invites a tus atletas. Si también
                     quieres llevar tu propio entreno o tu nutrición, actívalo luego en Ajustes.
                   </p>
                 )}

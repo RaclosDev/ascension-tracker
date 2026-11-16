@@ -5,19 +5,12 @@ import { apiErrorMessage, formatCoachDate } from '@/lib/coach/api';
 import { WEEKDAY_LABELS } from '@/lib/coach/weekdays';
 import { toPrescribedDay, useLeaveProgram, useTodayPlans, type TodayPlan } from '@/lib/coach/today';
 import { useWorkoutStore } from '@/lib/workout/store';
-import type { CompletedWorkout } from '@/lib/workout/types';
 import { PrescriptionSummary } from '../coach/PrescriptionSummary';
 
 const PHASE_ORDER = { ACTIVE: 0, UPCOMING: 1, FINISHED: 2 };
 const PHASE_LABEL = { ACTIVE: 'Hoy', UPCOMING: 'Próximamente', FINISHED: 'Completado' };
 
-export function TodayProgramCard({
-  history,
-  exerciseName,
-}: {
-  history: CompletedWorkout[];
-  exerciseName: (id: string) => string;
-}) {
+export function TodayProgramCard({ exerciseName }: { exerciseName: (id: string) => string }) {
   const plans = useTodayPlans();
   if (!plans.data?.length) return null;
   return (
@@ -25,12 +18,7 @@ export function TodayProgramCard({
       {[...plans.data]
         .sort((a, b) => PHASE_ORDER[a.phase] - PHASE_ORDER[b.phase])
         .map((plan) => (
-          <PlanCard
-            key={plan.assignmentId}
-            plan={plan}
-            history={history}
-            exerciseName={exerciseName}
-          />
+          <PlanCard key={plan.assignmentId} plan={plan} exerciseName={exerciseName} />
         ))}
     </section>
   );
@@ -38,11 +26,9 @@ export function TodayProgramCard({
 
 function PlanCard({
   plan,
-  history,
   exerciseName,
 }: {
   plan: TodayPlan;
-  history: CompletedWorkout[];
   exerciseName: (id: string) => string;
 }) {
   const startFromProgramDay = useWorkoutStore((s) => s.startFromProgramDay);
@@ -148,7 +134,7 @@ function PlanCard({
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => startFromProgramDay(toPrescribedDay(plan.day!), history)}
+              onClick={() => startFromProgramDay(toPrescribedDay(plan.day!))}
             >
               <Play size={16} aria-hidden /> Empezar entreno pautado
             </button>
@@ -170,7 +156,7 @@ function PlanCard({
                     type="button"
                     className="btn btn-secondary w-full justify-start"
                     aria-label={`Empezar ${label}`}
-                    onClick={() => startFromProgramDay(toPrescribedDay(day), history)}
+                    onClick={() => startFromProgramDay(toPrescribedDay(day))}
                   >
                     <Play size={16} aria-hidden /> {label}
                   </button>

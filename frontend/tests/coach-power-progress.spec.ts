@@ -94,7 +94,7 @@ for (const width of [390, 1440]) {
       }
       return route.fulfill({ json: [] });
     });
-    await page.goto('/entrenador/alumnos/l1?seccion=powerlifting&vista=seguimiento');
+    await page.goto('/entrenador/atletas/l1?seccion=powerlifting&vista=seguimiento');
     await expect(page.getByRole('button', { name: 'Reintentar', exact: true })).toBeVisible();
     await expect(page.getByText('Sin series válidas en este periodo.')).toHaveCount(0);
     failHistory = false;

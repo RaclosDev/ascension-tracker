@@ -118,8 +118,8 @@ public class CoachService {
         int maxClients = subscriptionService.maxClients(coachId);
         if (activeClientCount(coachId) >= maxClients) {
             throw new InvalidInputException("Tu plan admite " + maxClients
-                    + (maxClients == 1 ? " alumno activo" : " alumnos activos")
-                    + ". Cambia de plan o termina la relación con algún alumno para invitar a otro.");
+                    + (maxClients == 1 ? " atleta activo" : " atletas activos")
+                    + ". Cambia de plan o termina la relación con algún atleta para invitar a otro.");
         }
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
@@ -187,7 +187,7 @@ public class CoachService {
 
     public CoachClient client(String coachEmail, UUID linkId) {
         return findClients(coachEmail, linkId).stream().findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("Alumno no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Atleta no encontrado"));
     }
 
     private List<CoachClient> findClients(String coachEmail, UUID linkId) {
@@ -214,7 +214,7 @@ public class CoachService {
                   AND coach_user_id = (SELECT id FROM users WHERE email = ?)
                 """, linkId, Emails.normalizeRequired(coachEmail));
         if (updated == 0) {
-            throw new EntityNotFoundException("Alumno no encontrado");
+            throw new EntityNotFoundException("Atleta no encontrado");
         }
     }
 
@@ -266,7 +266,7 @@ public class CoachService {
             throw new InvalidInputException("Ya estás vinculado con este entrenador.");
         }
         if (activeClientCount(invitation.coachUserId()) >= subscriptionService.maxClients(invitation.coachUserId())) {
-            throw new InvalidInputException("Este entrenador no admite más alumnos ahora mismo.");
+            throw new InvalidInputException("Este entrenador no admite más atletas ahora mismo.");
         }
         UUID linkId;
         try {

@@ -119,7 +119,7 @@ export function installCoachTourPreview() {
   const adapter: AxiosAdapter = async (config) => {
     if ((config.method ?? 'get').toLowerCase() !== 'get') {
       throw new AxiosError(
-        'El tour enseña dónde guardar; sal del recorrido para trabajar con tus alumnos.',
+        'El tour enseña dónde guardar; sal del recorrido para trabajar con tus atletas.',
         'ERR_TOUR_READ_ONLY',
         config,
       );

@@ -64,7 +64,7 @@ describe('Planes de entrenadores (administración)', () => {
     renderPage();
 
     expect(await screen.findByText('Ana Coach')).toBeTruthy();
-    expect(screen.getByText(/3\/25 alumnos/)).toBeTruthy();
+    expect(screen.getByText(/3\/25 atletas/)).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText('Plan de ana@coach.test'), { target: { value: 'PRO' } });
     fireEvent.change(screen.getByLabelText('Pagado hasta para ana@coach.test'), {
@@ -111,7 +111,7 @@ describe('Planes de entrenadores (administración)', () => {
               name: 'Luis',
               email: 'luis@gym.test',
               topic: 'CUSTOM',
-              message: 'Tengo 80 alumnos',
+              message: 'Tengo 80 atletas',
               desiredClients: 80,
               createdAt: '2026-11-05T10:00:00Z',
               handledAt: null,
@@ -123,8 +123,8 @@ describe('Planes de entrenadores (administración)', () => {
     mockedApi.put.mockResolvedValue({ data: undefined });
     renderPage();
 
-    expect(await screen.findByText('Tengo 80 alumnos')).toBeTruthy();
-    expect(screen.getByText(/Plan a medida · .* · 80 alumnos/)).toBeTruthy();
+    expect(await screen.findByText('Tengo 80 atletas')).toBeTruthy();
+    expect(screen.getByText(/Plan a medida · .* · 80 atletas/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Marcar como atendida' }));
     await vi.waitFor(() =>
       expect(mockedApi.put).toHaveBeenCalledWith('/admin/contact-requests/r1/handled', {

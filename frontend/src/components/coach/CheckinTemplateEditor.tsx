@@ -11,23 +11,23 @@ import { QueryErrorNotice } from '../QueryErrorNotice';
 
 const MAX_QUESTIONS = 10;
 
-/** The questions every client of this coach answers in the weekly check-in. */
+/** The questions every client of this coach answers in the weekly seguimiento. */
 export function CheckinTemplateEditor({ linkId }: { linkId?: string }) {
   const template = useCheckinTemplate(true, linkId);
   const reset = useResetClientCheckinTemplate(linkId ?? '');
   return (
     <section data-tour="checkin-template" className="card">
       <h2 className="card-title flex items-center gap-2">
-        <MessageSquareText size={18} aria-hidden /> Check-in semanal
+        <MessageSquareText size={18} aria-hidden /> Seguimiento semanal
       </h2>
       <p className="mb-3" style={{ color: 'var(--text-secondary)' }}>
         {linkId ? (
-          'Personaliza las preguntas para este alumno. Las revisiones ya enviadas conservan sus preguntas originales.'
+          'Personaliza las preguntas para este atleta. Los seguimientos ya enviados conservan sus preguntas originales.'
         ) : (
           <>
-            Sin personalizar, se añaden preguntas según el servicio de cada alumno. Si guardas estas
+            Sin personalizar, se añaden preguntas según el servicio de cada atleta. Si guardas estas
             preguntas, serán comunes a todos. Las valoraciones de cumplimiento se piden solo para
-            los servicios acordados; los check-ins anteriores conservan sus preguntas.
+            los servicios acordados; los seguimientos anteriores conservan sus preguntas.
           </>
         )}
       </p>

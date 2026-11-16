@@ -5,9 +5,9 @@ export function ActivateCoach() {
   const activate = useActivateCoach();
   return (
     <section className="card">
-      <h2 className="card-title">Lleva a tus alumnos desde Ascension</h2>
+      <h2 className="card-title">Lleva a tus atletas desde Ascension</h2>
       <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
-        Invita a tus alumnos con un enlace. Cada alumno elige qué te comparte (cuerpo, entrenamiento
+        Invita a tus atletas con un enlace. Cada atleta elige qué te comparte (cuerpo, entrenamiento
         o nutrición) y puede cambiarlo o terminar la relación cuando quiera. Esta cuenta pasa a ser
         solo de entrenador: para llevar tu propio seguimiento usa otra cuenta.
       </p>

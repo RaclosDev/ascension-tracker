@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
+import { CoachPageHeader } from '../components/coach/CoachWorkspace';
 import { apiErrorMessage, useCoachProfile } from '../lib/coach/api';
 import {
   planName,
@@ -38,13 +39,11 @@ export default function CoachPlanPage() {
   const billing = useCoachBilling(isCoach);
 
   return (
-    <div className="fade-in max-w-5xl mx-auto px-4 pt-2 sm:pt-4">
-      <header className="mb-6 pb-2 border-b border-white/5 flex items-center gap-3">
-        <Link to="/entrenador" aria-label="Volver al modo entrenador" className="btn btn-secondary">
-          <ArrowLeft size={16} aria-hidden />
-        </Link>
-        <h1 className="text-2xl font-black text-white tracking-tight">Plan y facturación</h1>
-      </header>
+    <div className="fade-in coach-page coach-workspace">
+      <CoachPageHeader
+        title="Plan y facturación"
+        description="Tu plan, los precios y cómo contratar o cambiar."
+      />
       <div className="flex flex-col gap-6">
         {(profile.isLoading || subscription.isLoading || billing.isLoading) && (
           <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>
@@ -80,14 +79,14 @@ function CurrentPlan({ subscription }: { subscription: CoachSubscription }) {
   } else if (status === 'ACTIVE' && currentPeriodEnd && effectivePlan !== 'FREE') {
     detail = `Pagado hasta el ${formatDate(new Date(new Date(currentPeriodEnd).getTime() - 1).toISOString())}.`;
   } else if (effectivePlan === 'FREE' && status !== 'FREE') {
-    detail = 'Tu periodo terminó y ahora estás en el plan gratis. Tus alumnos siguen ahí.';
+    detail = 'Tu periodo terminó y ahora estás en el plan gratis. Tus atletas siguen ahí.';
   }
   return (
     <section className="card">
       <h2 className="card-title">Tu plan: {planName(effectivePlan)}</h2>
       <p style={{ color: 'var(--text-secondary)' }}>
         {STATUS_TEXT[status] ?? status} · {subscription.activeClients} de {subscription.maxClients}{' '}
-        alumnos · {subscription.aiDailyLimit} consultas de IA al día
+        atletas · {subscription.aiDailyLimit} consultas de IA al día
       </p>
       {detail && <p className="mt-2 text-sm">{detail}</p>}
     </section>
@@ -120,14 +119,14 @@ function Plans({ billing, current }: { billing: CoachBilling; current?: CoachSub
               </p>
             )}
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              Hasta {plan.maxClients} {plan.maxClients === 1 ? 'alumno' : 'alumnos'} ·{' '}
+              Hasta {plan.maxClients} {plan.maxClients === 1 ? 'atleta' : 'atletas'} ·{' '}
               {plan.aiDailyLimit} IA/día
             </p>
           </li>
         ))}
       </ul>
       <p className="mt-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
-        ¿{top > 0 ? `Más de ${top} alumnos, un` : 'Un'} equipo de entrenadores o algo a medida?
+        ¿{top > 0 ? `Más de ${top} atletas, un` : 'Un'} equipo de entrenadores o algo a medida?
         Escríbenos con el formulario de abajo y te preparamos un plan.
       </p>
     </section>
@@ -234,7 +233,7 @@ function ContactForm() {
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span style={{ color: 'var(--text-secondary)' }}>
-              ¿Cuántos alumnos llevas? (opcional)
+              ¿Cuántos atletas llevas? (opcional)
             </span>
             <input
               type="number"

@@ -114,7 +114,7 @@ function LoadFields({
                 />
               </label>
               <p className="text-xs basis-full">
-                Al publicar se usa el TM del alumno y se guarda la referencia utilizada.
+                Al publicar se usa el TM del atleta y se guarda la referencia utilizada.
               </p>
             </>
           )}

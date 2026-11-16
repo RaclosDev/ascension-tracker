@@ -34,7 +34,7 @@ export function NutritionTemplatePicker({
         <div className="card flex flex-col gap-3">
           <p>
             Copiar solo cambia este borrador. Revisa las recetas actuales y publica cuando esté
-            adaptado al alumno.
+            adaptado al atleta.
           </p>
           {list.isPending ? (
             <p role="status">Cargando biblioteca…</p>

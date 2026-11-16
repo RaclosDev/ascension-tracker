@@ -39,7 +39,7 @@ export default function NutritionSection({
       <h3 className="font-semibold text-foreground mt-6 mb-2">Adherencia a la pauta</h3>
       <NutritionAdherenceSection linkId={linkId} />
       <details className="mt-6">
-        <summary className="cursor-pointer font-semibold">Objetivos personales del alumno</summary>
+        <summary className="cursor-pointer font-semibold">Objetivos personales del atleta</summary>
         <p className="text-sm my-2">
           Estos valores proceden de sus ajustes personales. La pauta del entrenador los sustituye
           mientras esté activa; la adherencia anterior se calcula contra la pauta vigente en cada

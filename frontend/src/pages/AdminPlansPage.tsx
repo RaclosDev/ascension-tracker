@@ -55,7 +55,7 @@ export default function AdminPlansPage() {
         <h1 className="text-2xl font-black text-white tracking-tight">Planes de entrenadores</h1>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           Cuando llegue la transferencia, elige el plan y hasta qué día está pagado. Al pasar esa
-          fecha, el entrenador vuelve al plan gratis sin perder alumnos.
+          fecha, el entrenador vuelve al plan gratis sin perder atletas.
         </p>
       </header>
 
@@ -125,7 +125,7 @@ function ContactRow({ request }: { request: AdminContactRequest }) {
     <li className="card flex flex-col gap-2" style={handled ? { opacity: 0.6 } : undefined}>
       <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
         {TOPIC_NAMES[request.topic] ?? request.topic} · {formatDate(request.createdAt)}
-        {request.desiredClients !== null && ` · ${request.desiredClients} alumnos`}
+        {request.desiredClients !== null && ` · ${request.desiredClients} atletas`}
       </p>
       <p className="font-bold text-white truncate">
         {request.name ? `${request.name} · ` : ''}
@@ -192,7 +192,7 @@ function CoachRow({ coach, plans }: { coach: AdminCoach; plans: PlanInfo[] }) {
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           {planName(coach.plan)} · {STATUS_NAMES[coach.status] ?? coach.status}
           {until && ` hasta el ${formatDate(until)}`} · Aplica: {planName(coach.effectivePlan)} ·{' '}
-          {coach.activeClients}/{coach.maxClients} alumnos
+          {coach.activeClients}/{coach.maxClients} atletas
         </p>
       </div>
       <div className="flex flex-wrap items-end gap-3">
@@ -207,7 +207,7 @@ function CoachRow({ coach, plans }: { coach: AdminCoach; plans: PlanInfo[] }) {
           >
             {plans.map((p) => (
               <option key={p.id} value={p.id}>
-                {planName(p.id)} ({p.maxClients} alumnos)
+                {planName(p.id)} ({p.maxClients} atletas)
               </option>
             ))}
           </select>

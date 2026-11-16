@@ -99,7 +99,7 @@ for (const width of [390, 1440]) {
       'Grasa día de descanso': '80',
     }))
       await page.getByLabel(label, { exact: true }).fill(value);
-    await page.getByLabel('Notas para tu alumno').fill('Adaptar al horario del alumno');
+    await page.getByLabel('Notas para tu atleta').fill('Adaptar al horario del atleta');
     await page.reload();
     await expect(page.getByLabel('Nombre de la pauta')).toHaveValue('Base de entrenamiento');
     await expect(page.getByLabel('Proteína día de entreno', { exact: true })).toHaveValue('180');
@@ -116,14 +116,14 @@ for (const width of [390, 1440]) {
     await expect(page).toHaveURL(/\/entrenador\/pautas\/t1$/);
     await expect(page.getByRole('button', { name: 'Guardar en biblioteca' })).toBeDisabled();
     expect(publications).toBe(0);
-    await page.goto('/entrenador/alumnos/l1?seccion=nutricion');
+    await page.goto('/entrenador/atletas/l1?seccion=nutricion');
     await page.getByRole('button', { name: 'Usar pauta de biblioteca' }).click();
     await page.getByLabel('Pauta de biblioteca', { exact: true }).selectOption('t1');
     await page.getByRole('button', { name: 'Copiar al borrador' }).click();
     await expect(page.getByLabel('Proteína día de entreno', { exact: true })).toHaveValue('180');
     expect(publications).toBe(0);
     await page.getByLabel('Proteína día de entreno', { exact: true }).fill('200');
-    await page.getByLabel('Notas para tu alumno').fill('Adaptación para Ana');
+    await page.getByLabel('Notas para tu atleta').fill('Adaptación para Ana');
     await page
       .getByLabel('Proteína día de entreno', { exact: true })
       .evaluate((element) => element.scrollIntoView({ block: 'center' }));
@@ -140,8 +140,8 @@ for (const width of [390, 1440]) {
     expect(publications).toBe(1);
     await page.goto('/entrenador/pautas/t1');
     await expect(page.getByLabel('Proteína día de entreno', { exact: true })).toHaveValue('180');
-    await expect(page.getByLabel('Notas para tu alumno')).toHaveValue(
-      'Adaptar al horario del alumno',
+    await expect(page.getByLabel('Notas para tu atleta')).toHaveValue(
+      'Adaptar al horario del atleta',
     );
     expect(errors).toEqual([]);
   });

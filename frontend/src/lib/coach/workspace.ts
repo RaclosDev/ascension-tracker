@@ -9,7 +9,7 @@ export interface CoachRow {
 
 export const followupSignals = (status: ClientStatus | undefined) => status?.signals ?? [];
 
-export const followupLevel = (status: ClientStatus | undefined) =>
+const followupLevel = (status: ClientStatus | undefined) =>
   followupSignals(status).reduce<'GREEN' | 'AMBER' | 'RED'>(
     (level, signal) => (LEVEL_ORDER[signal.level] < LEVEL_ORDER[level] ? signal.level : level),
     'GREEN',
@@ -45,7 +45,7 @@ export function activityText(iso: string | null | undefined) {
 }
 
 export const clientHref = (linkId: string, section = 'resumen') =>
-  `/entrenador/alumnos/${encodeURIComponent(linkId)}?seccion=${section}`;
+  `/entrenador/atletas/${encodeURIComponent(linkId)}?seccion=${section}`;
 
 export const searchName = (text: string) =>
   text

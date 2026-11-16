@@ -14,10 +14,10 @@ export function CoachTaskBoard({ rows }: { rows: CoachRow[] }) {
           <section
             key={owner}
             className="card coach-worklist"
-            aria-label={owner === 'coach' ? 'Pendiente de ti' : 'Pendiente del alumno'}
+            aria-label={owner === 'coach' ? 'Pendiente de ti' : 'Pendiente del atleta'}
           >
             <div className="coach-section-heading">
-              <h2>{owner === 'coach' ? 'Pendiente de ti' : 'Pendiente del alumno'}</h2>
+              <h2>{owner === 'coach' ? 'Pendiente de ti' : 'Pendiente del atleta'}</h2>
               <span>
                 {visible.length} {visible.length === 1 ? 'tarea' : 'tareas'}
               </span>
@@ -27,9 +27,9 @@ export function CoachTaskBoard({ rows }: { rows: CoachRow[] }) {
                 <h3>
                   {owner === 'coach'
                     ? 'No tienes tareas pendientes'
-                    : 'Sin acciones pendientes del alumno'}
+                    : 'Sin acciones pendientes del atleta'}
                 </h3>
-                <p>El seguimiento se actualiza al guardar cambios y recibir nuevas revisiones.</p>
+                <p>El seguimiento se actualiza al guardar cambios y recibir nuevos seguimientos.</p>
               </div>
             ) : (
               <ul className="coach-action-list">
@@ -49,8 +49,8 @@ export function CoachTaskBoard({ rows }: { rows: CoachRow[] }) {
             )}
             {visible.length > 8 && (
               <p className="mt-4">
-                <Link to={`/entrenador/alumnos?filtro=${owner === 'coach' ? 'tasks' : 'waiting'}`}>
-                  Ver las {visible.length} tareas en alumnos
+                <Link to={`/entrenador/atletas?filtro=${owner === 'coach' ? 'tasks' : 'waiting'}`}>
+                  Ver las {visible.length} tareas en atletas
                 </Link>
               </p>
             )}

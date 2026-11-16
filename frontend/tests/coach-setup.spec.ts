@@ -86,26 +86,26 @@ for (const width of [1440, 390]) {
       }
       return route.fulfill({ json: [] });
     });
-    await page.goto('/entrenador/alumnos/l1');
+    await page.goto('/entrenador/atletas/l1');
     await page.getByRole('link', { name: 'Configurar servicio' }).click();
     await page
       .getByLabel('Objetivo del servicio (opcional)')
       .fill('Preparar la primera competición');
     await page.getByLabel('Días disponibles por semana (opcional)').fill('4');
     await page.getByLabel('Material disponible (opcional)').fill('Rack, barra y discos');
-    await page.getByLabel(/He revisado con el alumno/).check();
+    await page.getByLabel(/He revisado con el atleta/).check();
     await page.getByRole('button', { name: 'Guardar servicio' }).click();
     await expect(page.getByText('Servicio guardado', { exact: true })).toBeVisible();
-    await page.getByLabel('Día de revisión').selectOption('3');
-    await page.getByLabel('Hora de revisión').fill('17:30');
+    await page.getByLabel('Día del seguimiento').selectOption('3');
+    await page.getByLabel('Hora del seguimiento').fill('17:30');
     await page.getByLabel('Zona horaria').fill('Atlantic/Canary');
     await page.getByLabel('Pausar seguimiento').check();
     await page.getByRole('button', { name: 'Guardar agenda' }).click();
     await expect(page.getByRole('button', { name: 'Guardar agenda' })).toBeDisabled();
     await page.reload();
     await expect(page.getByLabel('Pausar seguimiento')).toBeChecked();
-    await expect(page.getByLabel('Día de revisión')).toHaveValue('3');
-    await expect(page.getByLabel('Hora de revisión')).toHaveValue('17:30');
+    await expect(page.getByLabel('Día del seguimiento')).toHaveValue('3');
+    await expect(page.getByLabel('Hora del seguimiento')).toHaveValue('17:30');
     await expect(page.getByLabel('Zona horaria')).toHaveValue('Atlantic/Canary');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
@@ -118,14 +118,8 @@ for (const width of [1440, 390]) {
     await page.getByRole('button', { name: 'Guardar agenda' }).click();
     await expect(page.getByRole('button', { name: 'Guardar agenda' })).toBeDisabled();
     await page.getByRole('link', { name: 'Resumen', exact: true }).click();
-    await expect(
-      page.getByText('4 días de entrenamiento por semana', { exact: true }),
-    ).toBeVisible();
-    const context = page.locator('.coach-client-context');
-    await expect(
-      context.getByText('Preparar la primera competición', { exact: true }),
-    ).toBeHidden();
-    await context.locator('summary').click();
+    await expect(page.getByText(/^4 días de entrenamiento por semana/)).toBeVisible();
+    const context = page.locator('.athlete-context');
     await expect(
       context.getByText('Preparar la primera competición', { exact: true }),
     ).toBeVisible();
@@ -135,12 +129,12 @@ for (const width of [1440, 390]) {
       true,
     );
     await page.screenshot({ path: testInfo.outputPath('service-summary.png'), fullPage: true });
-    await page.getByRole('link', { name: 'Volver a alumnos' }).click();
+    await page.getByRole('link', { name: 'Volver a atletas' }).click();
     await page
-      .getByRole('button', { name: /Invitar alumno/ })
+      .getByRole('button', { name: /Invitar atleta/ })
       .first()
       .click();
-    await page.getByLabel('Nombre del alumno (opcional)').fill('Bruno');
+    await page.getByLabel('Nombre del atleta (opcional)').fill('Bruno');
     await page.getByRole('button', { name: 'Crear enlace de invitación' }).click();
     await expect(page.getByLabel('Enlace de invitación')).toHaveValue(/a{43}/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(

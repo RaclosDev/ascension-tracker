@@ -1,6 +1,7 @@
 import type { CompletedWorkout } from '@/lib/workout/types';
 import type { ProgramExercise } from '@/lib/coach/coachPrograms';
 import { TechniqueVideoLink } from '../workout/TechniqueVideo';
+import { WorkoutExerciseVariant } from '../workout/WorkoutExerciseDetail';
 
 export function WorkoutReview({
   workout,
@@ -22,13 +23,13 @@ export function WorkoutReview({
       </p>
       {workout.notes && (
         <blockquote className="border-l-2 pl-3 whitespace-pre-wrap">
-          <strong>Comentario del alumno</strong>
+          <strong>Comentario del atleta</strong>
           <p>{workout.notes}</p>
         </blockquote>
       )}
       {done.length < sets.length && (
         <p className="text-sm">
-          Hay series sin completar. Consulta las notas del alumno antes de ajustar la carga.
+          Hay series sin completar. Consulta las notas del atleta antes de ajustar la carga.
         </p>
       )}
       {workout.exercises.map((exercise, index) => {
@@ -44,6 +45,7 @@ export function WorkoutReview({
             <h5 className="font-bold">
               {index + 1}. {target?.exerciseName ?? exerciseName(exercise.exerciseId)}
             </h5>
+            <WorkoutExerciseVariant variant={exercise.variant} />
             <TechniqueVideoLink exercise={exercise} />
             {exercise.notes && (
               <p className="text-sm whitespace-pre-wrap my-2">

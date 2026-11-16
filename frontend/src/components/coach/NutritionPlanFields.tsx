@@ -67,7 +67,7 @@ export function NutritionPlanFields({
         })}
       </div>
       <label className="flex flex-col gap-1 text-sm">
-        Notas para tu alumno
+        Notas para tu atleta
         <textarea
           className="rounded-lg px-3 py-2 border min-w-0"
           rows={3}

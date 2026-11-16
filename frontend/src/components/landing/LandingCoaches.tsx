@@ -7,7 +7,7 @@ import { usePublicInfo } from '../../lib/publicInfo';
 const features = [
   {
     icon: Users,
-    title: 'Tus alumnos, en un panel',
+    title: 'Tus atletas, en un panel',
     text: 'Invítalos con un enlace. Cada uno elige qué te comparte y un semáforo te dice a quién atender primero.',
   },
   {
@@ -17,7 +17,7 @@ const features = [
   },
   {
     icon: MessageSquare,
-    title: 'Check-in semanal',
+    title: 'Seguimiento semanal',
     text: 'Tus preguntas cada semana, fotos de progreso y avisos en el móvil cuando te responden.',
   },
 ];
@@ -42,10 +42,10 @@ export default function LandingCoaches() {
         id="coaches-title"
         className="landing-display mt-3 max-w-[18ch] text-[clamp(2.2rem,6vw,4rem)] font-bold text-white"
       >
-        Lleva a tus alumnos desde la misma app
+        Lleva a tus atletas desde la misma app
       </h2>
       <p className="mt-4 max-w-[52ch] text-[var(--landing-muted)]">
-        Tus alumnos registran entreno, comida y peso en Ascension, y tú lo ves todo en un panel.
+        Tus atletas registran entreno, comida y peso en Ascension, y tú lo ves todo en un panel.
         Prueba el plan Pro 14 días gratis, sin tarjeta.
       </p>
 
@@ -82,7 +82,7 @@ export default function LandingCoaches() {
                 )}
               </p>
               <p className="mt-1 text-[0.9rem] text-[var(--landing-muted)]">
-                Hasta {p.maxClients} {p.maxClients === 1 ? 'alumno' : 'alumnos'}
+                Hasta {p.maxClients} {p.maxClients === 1 ? 'atleta' : 'atletas'}
               </p>
             </li>
           ))}
@@ -99,7 +99,7 @@ export default function LandingCoaches() {
         <div>
           <h3 className="landing-display text-[1.4rem] font-semibold text-white">
             {top > 0
-              ? `¿Más de ${top} alumnos o un plan a medida?`
+              ? `¿Más de ${top} atletas o un plan a medida?`
               : '¿Necesitas un plan a medida?'}
           </h3>
           <p className="mt-2 max-w-[56ch] text-[0.95rem] text-[var(--landing-muted)]">
@@ -113,9 +113,7 @@ export default function LandingCoaches() {
                 o, con tu cuenta, desde Modo entrenador › Plan y facturación.
               </>
             ) : (
-              <>
-                entra con tu cuenta y escríbenos desde Modo entrenador › Plan y facturación.
-              </>
+              <>entra con tu cuenta y escríbenos desde Modo entrenador › Plan y facturación.</>
             )}{' '}
             Te respondemos por email.
           </p>

@@ -30,7 +30,7 @@ export function clientTasks({ link, status }: CoachRow): CoachTask[] {
   if ((status?.pendingReplies ?? 0) > 0)
     tasks.push({
       id: 'reply',
-      title: 'Responder revisiones',
+      title: 'Responder seguimiento',
       detail: `${status?.pendingReplies} por responder`,
       section: 'revisiones',
       owner: 'coach',
@@ -64,8 +64,8 @@ export function clientTasks({ link, status }: CoachRow): CoachTask[] {
   if (missing.length)
     tasks.push({
       id: 'consent',
-      title: 'Confirmar permisos con el alumno',
-      detail: `Falta acceso a ${missing.join(' y ')}. Solo el alumno puede autorizarlo.`,
+      title: 'Confirmar permisos con el atleta',
+      detail: `Falta acceso a ${missing.join(' y ')}. Solo el atleta puede autorizarlo.`,
       section: 'gestion',
       owner: 'client',
     });
@@ -83,7 +83,7 @@ export function clientTasks({ link, status }: CoachRow): CoachTask[] {
           : signal.reason === 'NO_NUTRITION_PLAN'
             ? 'Preparar pauta nutricional'
             : signal.reason === 'CHECKIN_MISSING'
-              ? 'Consultar revisión pendiente'
+              ? 'Consultar seguimiento pendiente'
               : 'Revisar seguimiento',
       detail: signalText(signal),
       section: signalSection(signal),

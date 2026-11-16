@@ -5,6 +5,7 @@ import com.ascension.dto.CoachDtos.Person;
 import com.ascension.dto.CoachDtos.WorkoutComment;
 import com.ascension.dto.ProgramDtos.Exercise;
 import com.ascension.dto.ProgramDtos.Session;
+import com.ascension.dto.ProgramDtos.TodayDay;
 import com.ascension.exception.EntityNotFoundException;
 import com.ascension.service.CoachAccessPolicy.ClientAccess;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -40,6 +42,26 @@ public class CoachSessionService {
 
     private record Done(String id, String name, Long finishedAt, String origin, String comment,
                         int completedSets, int recordedSets) {
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<TodayDay> workoutPrescription(ClientAccess access, String workoutId) {
+        requireClientWorkout(access, workoutId);
+        return jdbcTemplate.query("""
+                SELECT d.id, d.week, d.day_index, d.name, d.notes
+                FROM workouts w
+                JOIN program_days d ON d.id = w.program_day_id
+                JOIN programs p ON p.id = d.program_id
+                WHERE w.id = ? AND w.user_email = ? AND p.owner_user_id = ?
+                  AND EXISTS (SELECT 1 FROM program_assignments a
+                              WHERE a.program_id = p.id AND a.coach_link_id = ?)
+                """, (rs, n) -> new DayRow(rs.getObject("id", UUID.class), rs.getInt("week"),
+                rs.getInt("day_index"), rs.getString("name"), rs.getString("notes")),
+                workoutId, access.clientEmail(), access.clientUserId(), access.linkId()).stream().findFirst()
+                .map(day -> new TodayDay(day.id(), day.week(), day.dayIndex(), day.name(), day.notes(),
+                        jdbcTemplate.query("""
+                                SELECT * FROM program_exercises WHERE program_day_id = ? ORDER BY order_index
+                                """, (rs, n) -> ProgramService.exercise(rs), day.id())));
     }
 
     @Transactional(readOnly = true)

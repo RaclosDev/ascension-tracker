@@ -9,6 +9,7 @@ import { SegmentedControl } from '../components/ui/segmented-control';
 import { Skeleton } from '../components/ui/skeleton';
 import MacroSummaryHeader from '../components/nutrition/MacroSummaryHeader';
 import { NutritionDateBar } from '../components/nutrition/NutritionDateBar';
+import { NutritionCalendar } from '../components/nutrition/NutritionCalendar';
 import { MealFoodGroup } from '../components/nutrition/MealFoodGroup';
 import { useNutritionDiary } from '../hooks/nutrition/useNutritionDiary';
 import { useAnyInView } from '../hooks/use-any-in-view';
@@ -70,11 +71,26 @@ export default function NutritionPage() {
     `${activeTab}-${loading}-${meals.length}`,
   );
 
-  if (loading) {
+  const tabs = (
+    <SegmentedControl
+      options={[
+        { label: 'Diario', value: 'diary' },
+        { label: 'Calendario', value: 'calendar' },
+        { label: 'Mis alimentos', value: 'foods' },
+      ]}
+      value={activeTab}
+      onChange={(value) => {
+        if (value === 'diary' || value === 'calendar' || value === 'foods') setActiveTab(value);
+      }}
+      className="mb-6"
+    />
+  );
+
+  if (activeTab === 'diary' && loading) {
     return (
       <div className="fade-in">
         <h1 className="page-title-desktop">Nutrición</h1>
-        <Skeleton className="h-10 w-full max-w-sm mx-auto mb-6" />
+        {tabs}
         <div
           style={{
             display: 'flex',
@@ -123,23 +139,13 @@ export default function NutritionPage() {
     );
   }
 
-  if (!macros || !settings) {
-    return <QueryErrorNotice retry={fetchData} pending={isFetching} />;
-  }
-
   return (
     <div className="fade-in">
-      {isError && <QueryErrorNotice retry={fetchData} pending={isFetching} />}
       <h1 className="page-title-desktop">Nutrición</h1>
-      <SegmentedControl
-        options={[
-          { label: 'Diario', value: 'diary' },
-          { label: 'Mis Alimentos', value: 'foods' },
-        ]}
-        value={activeTab}
-        onChange={(val) => setActiveTab(val as 'diary' | 'foods')}
-        className="mb-6"
-      />
+      {tabs}
+      {activeTab === 'diary' && isError && (
+        <QueryErrorNotice retry={fetchData} pending={isFetching} />
+      )}
 
       {activeTab === 'foods' ? (
         <Suspense
@@ -147,7 +153,16 @@ export default function NutritionPage() {
         >
           <MyFoodsPage />
         </Suspense>
-      ) : (
+      ) : activeTab === 'calendar' ? (
+        <NutritionCalendar
+          selectedDate={selectedDate}
+          onSelect={(date) => {
+            setSelectedDate(date);
+            setActiveTab('diary');
+            window.scrollTo({ top: 0, behavior: 'instant' });
+          }}
+        />
+      ) : macros && settings ? (
         <>
           <NutritionDateBar selectedDate={selectedDate} onDateChange={setSelectedDate} />
 
@@ -292,7 +307,7 @@ export default function NutritionPage() {
             )}
           </Suspense>
         </>
-      )}
+      ) : null}
     </div>
   );
 }

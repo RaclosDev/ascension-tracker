@@ -31,7 +31,7 @@ function Dashboard() {
     <>
       <CoachPageHeader
         title="Inicio"
-        description="Organiza las revisiones y el seguimiento de tus alumnos."
+        description="Organiza los seguimientos semanales de tus atletas."
       >
         <div className="coach-inline-actions">
           <Link className="btn btn-secondary" to="/entrenador/guia">
@@ -44,15 +44,15 @@ function Dashboard() {
         <CoachTourWelcome />
       </Suspense>
       {clients.isPending ? (
-        <p role="status">Cargando alumnos…</p>
+        <p role="status">Cargando atletas…</p>
       ) : clients.isError ? (
         <QueryErrorNotice retry={() => void clients.refetch()} pending={clients.isFetching} />
       ) : rows.length === 0 ? (
         <section className="card coach-welcome">
-          <p className="coach-eyebrow">Tu primer alumno</p>
+          <p className="coach-eyebrow">Tu primer atleta</p>
           <h2>Empieza por una invitación</h2>
           <p>
-            Tu alumno acepta el enlace y elige qué datos compartir contigo. Después podrás revisar
+            Tu atleta acepta el enlace y elige qué datos compartir contigo. Después podrás revisar
             su evolución y asignarle un programa.
           </p>
           <div className="coach-inline-actions">
@@ -64,31 +64,31 @@ function Dashboard() {
         </section>
       ) : (
         <>
-          <div className="coach-overview" aria-label="Resumen de alumnos">
+          <div className="coach-overview" aria-label="Resumen de atletas">
             <Link
               to="/entrenador/revisiones"
               className="coach-overview-item coach-overview-primary"
             >
               <MessageSquareText size={20} aria-hidden />
-              <span>Check-ins por responder</span>
+              <span>Seguimientos por responder</span>
               <strong>{ready ? pending : '—'}</strong>
               <small>
                 {ready
-                  ? `De ${replies.length} ${replies.length === 1 ? 'alumno' : 'alumnos'}`
+                  ? `De ${replies.length} ${replies.length === 1 ? 'atleta' : 'atletas'}`
                   : 'Estado no disponible'}
               </small>
               <ArrowUpRight size={16} aria-hidden />
             </Link>
-            <Link to="/entrenador/alumnos?filtro=attention" className="coach-overview-item">
+            <Link to="/entrenador/atletas?filtro=attention" className="coach-overview-item">
               <ClipboardList size={20} aria-hidden />
-              <span>Alumnos por revisar</span>
+              <span>Atletas por revisar</span>
               <strong>{ready ? followups.length : '—'}</strong>
               <small>Señales de seguimiento</small>
               <ArrowUpRight size={16} aria-hidden />
             </Link>
-            <Link to="/entrenador/alumnos" className="coach-overview-item">
+            <Link to="/entrenador/atletas" className="coach-overview-item">
               <Users size={20} aria-hidden />
-              <span>Alumnos activos</span>
+              <span>Atletas activos</span>
               <strong>{rows.length}</strong>
               <small>Ver tu lista completa</small>
               <ArrowUpRight size={16} aria-hidden />
@@ -101,7 +101,7 @@ function Dashboard() {
             <p role="status" className="coach-description">
               {status.isPending
                 ? 'Actualizando el seguimiento…'
-                : 'Falta información de seguimiento de algún alumno.'}
+                : 'Falta información de seguimiento de algún atleta.'}
             </p>
           )}
           {ready && (

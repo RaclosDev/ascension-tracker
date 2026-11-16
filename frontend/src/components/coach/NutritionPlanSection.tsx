@@ -59,7 +59,7 @@ export function NutritionPlanSection({ linkId, canEdit }: { linkId: string; canE
         <NutritionPlanSummary plan={plan.data} />
       ) : (
         <p className="text-sm">
-          Sin pauta de nutrición. Tu alumno no te ha dado permiso para pautarla.
+          Sin pauta de nutrición. Tu atleta no te ha dado permiso para pautarla.
         </p>
       )}
       <NutritionPlanHistory key={linkId} linkId={linkId} />
@@ -101,7 +101,7 @@ function PlanForm({
       !(await confirmAction({
         title: 'Publicar pauta nutricional',
         description:
-          '¿Publicar esta pauta solo para este alumno? Se aplicará ahora y sustituirá la anterior, que se conservará en el historial.',
+          '¿Publicar esta pauta solo para este atleta? Se aplicará ahora y sustituirá la anterior, que se conservará en el historial.',
         confirmLabel: 'Publicar pauta',
         destructive: false,
       }))
@@ -138,7 +138,7 @@ function PlanForm({
       !(await confirmAction({
         title: 'Retirar pauta nutricional',
         description:
-          '¿Retirar la pauta activa? El alumno volverá a usar sus propios objetivos. Se conserva el historial y se descarta el borrador local.',
+          '¿Retirar la pauta activa? El atleta volverá a usar sus propios objetivos. Se conserva el historial y se descarta el borrador local.',
         confirmLabel: 'Retirar pauta',
         destructive: true,
       }))
@@ -158,8 +158,8 @@ function PlanForm({
     <div className="flex flex-col gap-3">
       <p className="text-sm">
         {plan
-          ? `Pauta activa desde ${formatCoachDate(plan.createdAt)}. Sustituye los objetivos de tu alumno.`
-          : 'Sin pauta: tu alumno usa sus propios objetivos.'}
+          ? `Pauta activa desde ${formatCoachDate(plan.createdAt)}. Sustituye los objetivos de tu atleta.`
+          : 'Sin pauta: tu atleta usa sus propios objetivos.'}
       </p>
       <p className="text-sm">
         Los cambios son un borrador hasta publicarlos. Las comidas se copian de tus recetas

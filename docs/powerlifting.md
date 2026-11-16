@@ -1,6 +1,6 @@
 # Powerlifting para entrenadores
 
-En **Alumnos → ficha → Powerlifting**, el entrenador dispone de tres áreas. El alumno debe compartir entrenamiento para consultarlas y permitir su edición para cambiar perfiles, marcas o competiciones. La preparación pertenece al vínculo con ese entrenador.
+En **Atletas → ficha → Powerlifting**, el entrenador dispone de tres áreas. El atleta debe compartir entrenamiento para consultarlas y permitir su edición para cambiar perfiles, marcas o competiciones. La preparación pertenece al vínculo con ese entrenador.
 
 - **Perfil y marcas:** especialidad activa, equipamiento, federación, máximos de trabajo y marcas fechadas. Las marcas son anotaciones del entrenador, con contexto de entrenamiento o competición y referencia opcional.
 - **Competiciones:** calendario, categoría, objetivo de total y bloques de preparación. Cada básico tiene tres intentos con carga prevista, carga realizada y resultado. Archivar conserva los resultados.
@@ -22,13 +22,13 @@ Los formularios conservan un borrador por cuenta y ficha en la pestaña actual. 
 
 `/api/coach/clients/{linkId}/powerlifting` gestiona el perfil y `/meets` sus competiciones. Las migraciones V22 y V23 añaden tablas con RLS y borrado en cascada desde el vínculo. El backend comprueba los permisos en cada petición y serializa las escrituras de una ficha antes de comparar versiones.
 
-La exportación de datos incluye perfiles y competiciones para entrenador y alumno. Son secciones de consulta del archivo exportado: la restauración de datos personales no vuelve a crear vínculos ni concede permisos a entrenadores.
+La exportación de datos incluye perfiles y competiciones para entrenador y atleta. Son secciones de consulta del archivo exportado: la restauración de datos personales no vuelve a crear vínculos ni concede permisos a entrenadores.
 
 Las pruebas de integración cubren permisos, vínculos ajenos o finalizados, versiones, validación y borrado. Las pruebas de navegador cubren móvil/escritorio, borradores, resultados, archivo, errores y solo lectura. Los cálculos de seguimiento y totales tienen pruebas independientes.
 
 
 ## Clasificación y semana de competición
 
-Desde Ficha y gestión se activa la especialidad de cada alumno. Ocultarla conserva sus perfiles y resultados. El perfil permite clasificar ejercicios personalizados y combinaciones de agarre/máquina como competición, variante o excluidos. El seguimiento respeta estas asignaciones y permite incluir variantes expresamente.
+Desde Ficha y gestión se activa la especialidad de cada atleta. Ocultarla conserva sus perfiles y resultados. El perfil permite clasificar ejercicios personalizados y combinaciones de agarre/máquina como competición, variante o excluidos. El seguimiento respeta estas asignaciones y permite incluir variantes expresamente.
 
 La competición separa **Preparación** y **Día de competición**. Los nueve intentos se registran en una tabla con previsto, realizado y resultado. Los bloques enlazan con sus semanas de planificación, sin modificar automáticamente las sesiones. Los porcentajes prescritos guardan el TM de publicación; los indicadores retrospectivos de seguimiento mantienen su referencia al TM actual.

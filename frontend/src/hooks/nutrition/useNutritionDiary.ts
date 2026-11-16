@@ -20,7 +20,7 @@ export function useNutritionDiary() {
 
   const [collapsedMeals, setCollapsedMeals] = useState<Record<number, boolean>>({});
   const [dragOverMealIndex, setDragOverMealIndex] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'diary' | 'foods'>('diary');
+  const [activeTab, setActiveTab] = useState<'diary' | 'calendar' | 'foods'>('diary');
   const [showChart, setShowChart] = useState(false);
 
   useEffect(() => {

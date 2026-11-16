@@ -46,7 +46,7 @@ export function PowerExerciseMappings({
         </p>
       )}
       {!query.isPending && !query.isError && !rows.length && (
-        <p>Las variantes aparecerán cuando el alumno registre entrenamientos.</p>
+        <p>Las variantes aparecerán cuando el atleta registre entrenamientos.</p>
       )}
       <div className="flex flex-col gap-2 mt-3">
         {rows.map((row) => {

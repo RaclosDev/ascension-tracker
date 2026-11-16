@@ -1,0 +1,146 @@
+.coach-workout-comparison {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.coach-workout-comparison-legend {
+  justify-self: end;
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.coach-workout-comparison-table {
+  overflow-x: auto;
+}
+
+.coach-workout-comparison .workout-exercise-detail.card {
+  --exercise-inset: clamp(12px, 2vw, 20px);
+  padding: 0;
+}
+
+.coach-workout-comparison .workout-exercise-detail-heading {
+  margin: 0;
+  padding: 12px var(--exercise-inset);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.coach-workout-comparison .workout-exercise-detail > p {
+  margin-inline: var(--exercise-inset);
+}
+
+.coach-workout-comparison-table .coach-table {
+  min-width: 19rem;
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+}
+
+.coach-workout-comparison-table .coach-table :is(th, td) {
+  padding: 8px 4px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.coach-workout-comparison-series {
+  width: 4rem;
+}
+
+.coach-workout-comparison-table .coach-table thead tr:first-child th[scope='colgroup'] {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.coach-workout-comparison-table .coach-table tbody :is(th, td) {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.coach-workout-recorded-start {
+  border-inline-start: 1px solid var(--border-subtle);
+}
+
+.coach-workout-series-number {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.coach-workout-comparison-table small {
+  display: block;
+  margin: 4px auto 0;
+  width: fit-content;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.coach-workout-difference {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+.coach-workout-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.coach-workout-notes div {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.coach-workout-notes dt {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.coach-workout-notes dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.coach-workout-comparison-table .coach-table .coach-workout-set-notes td {
+  padding: 8px var(--exercise-inset);
+  text-align: start;
+}
+
+.coach-workout-exercise-notes {
+  padding: 12px var(--exercise-inset);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.coach-workout-session-notes {
+  padding-block: 4px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 540px) {
+  .coach-workout-comparison-series {
+    width: 3rem;
+  }
+
+  .coach-workout-comparison-table .coach-table :is(th, td) {
+    padding-inline: 2px;
+    font-size: 0.75rem;
+  }
+
+  .coach-workout-comparison-table .coach-table td {
+    overflow-wrap: anywhere;
+  }
+
+  .coach-workout-difference {
+    padding-inline: 2px;
+  }
+}

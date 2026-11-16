@@ -131,7 +131,7 @@ function CoachLink({ link }: { link: MyCoach }) {
       </fieldset>
       <div className="flex flex-wrap gap-2">
         <Link to={`/checkin/${encodeURIComponent(link.linkId)}`} className="btn btn-primary">
-          Check-in semanal
+          Seguimiento semanal
         </Link>
         <button
           type="button"

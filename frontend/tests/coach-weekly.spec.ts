@@ -72,9 +72,10 @@ for (const width of [390, 1920]) {
         return route.fulfill({
           json: {
             linkId: 'l1',
-            client: { name: 'Alumno de prueba', email: 'athlete@example.test' },
+            client: { name: 'Atleta de prueba', email: 'athlete@example.test' },
             since: '2026-10-01',
             setup: {
+              services: { training: true, nutrition: false, progress: false },
               trainingDays: 4,
               goal: 'Recuperar rendimiento y mejorar la técnica durante la descarga.',
               equipment: 'Gimnasio completo y discos fraccionados.',
@@ -156,13 +157,13 @@ for (const width of [390, 1920]) {
       }
       return route.fulfill({ json: [] });
     });
-    await page.goto('/entrenador/alumnos/l1');
-    await expect(page.getByText('4 días de entrenamiento por semana')).toBeVisible();
-    const goal = page.getByText('Recuperar rendimiento y mejorar la técnica durante la descarga.');
-    await expect(goal).toBeHidden();
-    await page.getByText('Objetivo y material', { exact: true }).click();
-    await expect(goal).toBeVisible();
-    await page.getByText('Objetivo y material', { exact: true }).click();
+    await page.goto('/entrenador/atletas/l1?seccion=semana&vista=revision');
+    await expect(page.getByText(/^4 días de entrenamiento por semana/)).toBeVisible();
+    await expect(
+      page
+        .locator('.athlete-context')
+        .getByText('Recuperar rendimiento y mejorar la técnica durante la descarga.'),
+    ).toBeVisible();
     await expect(
       page.getByText('He dormido peor por los turnos. Necesito ajustar la próxima semana.'),
     ).toBeVisible();
@@ -181,6 +182,7 @@ for (const width of [390, 1920]) {
     await previousPrograms.click();
     await expect(previousHeading).toBeVisible();
     await previousPrograms.click();
+    await page.getByRole('button', { name: 'Preparar semana', exact: true }).click();
     await page.getByRole('button', { name: 'Copiar semana anterior' }).click();
     const session = page.locator('.coach-day').filter({ hasText: 'Torso' });
     await expect(page.getByLabel('Nombre del día (Lunes 16/11)')).toBeHidden();
@@ -189,9 +191,15 @@ for (const width of [390, 1920]) {
     await session.locator(':scope > summary').click();
     await expect(page.getByLabel('Nombre del día (Lunes 16/11)')).toHaveValue('Torso');
     await expect(page.getByPlaceholder('Añadir ejercicio: nombre o etiqueta')).toBeHidden();
-    await page.getByText('Objetivo y notas de la semana', { exact: true }).click();
+    // Wide screens open the week notes by default.
+    const openNotes = async () => {
+      const notes = page.locator('.coach-week-notes');
+      if (!(await notes.evaluate((el) => (el as HTMLDetailsElement).open)))
+        await notes.locator(':scope > summary').click();
+    };
+    await openNotes();
     await page
-      .getByLabel('Comentario para el alumno')
+      .getByLabel('Comentario para el atleta')
       .fill('Descarga: mantén la técnica y reduce la fatiga.');
     await page.getByText('Notas privadas del entrenador', { exact: true }).click();
     await page
@@ -205,13 +213,13 @@ for (const width of [390, 1920]) {
     await page.reload();
     await page.locator('.coach-day > summary').filter({ hasText: 'Torso' }).click();
     await page.getByText('Editar pauta', { exact: true }).click();
-    await page.getByText('Objetivo y notas de la semana', { exact: true }).click();
+    await openNotes();
     await expect(page.getByLabel('Carga (kg)', { exact: true })).toHaveValue('45');
     await page.getByText('Notas privadas del entrenador', { exact: true }).click();
     await expect(page.getByLabel('Notas privadas del entrenador')).toHaveValue(
       'Revisar disponibilidad del miércoles.',
     );
-    await page.getByRole('button', { name: 'Vista del alumno' }).click();
+    await page.getByRole('button', { name: 'Vista del atleta' }).click();
     const preview = page.getByRole('region', { name: 'Vista previa del programa' });
     await expect(preview).toContainText('45 kg');
     await expect(preview).not.toContainText('Revisar disponibilidad del miércoles.');

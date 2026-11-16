@@ -2,6 +2,7 @@ import { confirmAction } from '../lib/confirmation';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { ArrowLeft } from 'lucide-react';
 import { CoachPageHeader, CoachWorkspace } from '../components/coach/CoachWorkspace';
 import { NutritionPlanFields } from '../components/coach/NutritionPlanFields';
 import { NutritionPlanSummary } from '../components/coach/NutritionPlanSummary';
@@ -46,13 +47,13 @@ export default function CoachNutritionTemplateEditorPage() {
   const template = useNutritionTemplate(existing ? templateId : null);
   return (
     <CoachWorkspace>
+      <Link to="/entrenador/pautas" className="coach-back-link">
+        <ArrowLeft size={16} aria-hidden /> Volver a pautas
+      </Link>
       <CoachPageHeader
         title={existing ? 'Editar pauta de biblioteca' : 'Nueva pauta de biblioteca'}
-        description="Los cambios se quedan en tu biblioteca. Desde la ficha podrás copiarlos, adaptarlos y publicarlos para un alumno."
+        description="Los cambios se quedan en tu biblioteca. Desde la ficha podrás copiarlos, adaptarlos y publicarlos para un atleta."
       />
-      <Link className="btn btn-secondary self-start" to="/entrenador/pautas">
-        Volver a la biblioteca
-      </Link>
       {existing && template.isPending ? (
         <p role="status">Cargando pauta…</p>
       ) : existing && template.isError ? (

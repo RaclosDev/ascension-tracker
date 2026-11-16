@@ -51,7 +51,7 @@ export function PowerBlocksEditor({
                   <Link
                     key={week}
                     className="btn btn-secondary text-sm"
-                    to={`/entrenador/alumnos/${linkId}?seccion=semana&semana=${week}`}
+                    to={`/entrenador/atletas/${linkId}?seccion=semana&semana=${week}`}
                   >
                     Semana {week}
                   </Link>

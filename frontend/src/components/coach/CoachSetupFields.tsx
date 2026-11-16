@@ -24,7 +24,7 @@ export function CoachSetupFields({
           </label>
         ))}
         <p className="coach-description">
-          Define vuestro trabajo. El alumno autoriza por separado el acceso a sus datos.
+          Define vuestro trabajo. El atleta autoriza por separado el acceso a sus datos.
         </p>
       </fieldset>
       <label className="flex flex-col gap-1">
@@ -39,7 +39,7 @@ export function CoachSetupFields({
             })
           }
         >
-          <option value="">Según ajustes actuales del alumno</option>
+          <option value="">Según ajustes actuales del atleta</option>
           <option value="GENERAL">Salud y condición física general</option>
           <option value="PERFORMANCE">Rendimiento y fuerza</option>
           <option value="MAINTAIN">Mantenimiento de peso</option>

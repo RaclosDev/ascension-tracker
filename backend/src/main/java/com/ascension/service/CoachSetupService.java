@@ -38,7 +38,7 @@ public class CoachSetupService {
                 WHERE id = ? AND status = 'ACTIVE'
                   AND coach_user_id = (SELECT id FROM users WHERE email = ?)
                 """, encode(setup), setup.reviewed(), linkId, Emails.normalizeRequired(coachEmail));
-        if (updated == 0) throw new EntityNotFoundException("Alumno no encontrado");
+        if (updated == 0) throw new EntityNotFoundException("Atleta no encontrado");
         return setup;
     }
 }

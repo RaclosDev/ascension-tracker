@@ -13,6 +13,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -109,7 +110,9 @@ class ClientProgramIntegrationTest {
                 .andExpect(jsonPath("$[0].phase").value("FINISHED"));
 
         String rest = user();
-        String restCopy = assign(coach, accept(rest, invite(coach)), otherWeekday, today);
+        // Start on Monday so the other day is never before the start, even on Sundays.
+        String restCopy = assign(coach, accept(rest, invite(coach)), otherWeekday,
+                today.with(DayOfWeek.MONDAY));
         String movableDay = dayOf(restCopy);
         mvc.perform(as(get("/api/coaching/today").param("date", today.toString()), rest))
                 .andExpect(jsonPath("$[0].phase").value("ACTIVE"))

@@ -94,7 +94,7 @@ export function PushToggle({ text, unsupportedText }: { text: string; unsupporte
         )}
       </div>
       <p className="coach-description">
-        Esta opción afecta a los avisos de revisiones y descansos en este navegador. Los demás
+        Esta opción afecta a los avisos de seguimientos y descansos en este navegador. Los demás
         dispositivos conservan sus avisos.
       </p>
       {disableError && (

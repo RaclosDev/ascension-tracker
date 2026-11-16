@@ -17,16 +17,16 @@ export const coachNavItems = [
     shortLabel: 'Inicio',
   },
   {
-    path: '/entrenador/alumnos',
+    path: '/entrenador/atletas',
     icon: <Users className="w-5 h-5" />,
-    label: 'Alumnos',
-    shortLabel: 'Alumnos',
+    label: 'Atletas',
+    shortLabel: 'Atletas',
   },
   {
     path: '/entrenador/revisiones',
     icon: <MessageSquareText className="w-5 h-5" />,
-    label: 'Revisiones',
-    shortLabel: 'Revisiones',
+    label: 'Seguimiento semanal',
+    shortLabel: 'Seguimiento',
   },
   {
     path: '/entrenador/planificacion',
@@ -60,7 +60,7 @@ export const coachNavItems = [
   },
 ];
 
-export const coachBottomPaths = ['/entrenador', '/entrenador/alumnos', '/entrenador/revisiones'];
+export const coachBottomPaths = ['/entrenador', '/entrenador/atletas', '/entrenador/revisiones'];
 
 export function isItemActive(itemPath: string, pathname: string) {
   if (itemPath === '/entrenador') return pathname === '/entrenador';

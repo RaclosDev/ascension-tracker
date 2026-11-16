@@ -35,7 +35,7 @@ export function ClientSetupForm({ link }: { link: CoachClient }) {
             checked={value.reviewed}
             onChange={(e) => setValue({ ...value, reviewed: e.target.checked })}
           />
-          He revisado con el alumno su objetivo, disponibilidad y datos iniciales.
+          He revisado con el atleta su objetivo, disponibilidad y datos iniciales.
         </label>
         {!Object.values(value.services).some(Boolean) && (
           <p role="alert">Elige al menos un servicio.</p>
@@ -73,11 +73,11 @@ export function ClientSetupSummary({ link, href }: { link: CoachClient; href: st
           <p className="coach-description mt-2">
             {setup.reviewed
               ? 'Datos iniciales revisados.'
-              : 'Incorporación pendiente: revisa los datos iniciales con el alumno.'}
+              : 'Incorporación pendiente: revisa los datos iniciales con el atleta.'}
           </p>
           {missing.length > 0 && (
             <p className="coach-description mt-2">
-              Falta autorización para {missing.join(' y ')}. El alumno puede concederla desde sus
+              Falta autorización para {missing.join(' y ')}. El atleta puede concederla desde sus
               ajustes.
             </p>
           )}
