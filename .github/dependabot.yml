@@ -40,6 +40,11 @@ updates:
       # typescript-eslint 8 does not support TypeScript 7 yet; lift once it does.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # eslint-plugin-react does not accept ESLint 10 yet; lift once it does.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "maven"
     directory: "/backend"
