@@ -20,7 +20,7 @@ Aplicación full-stack con Java y React: desde el registro de una serie en el gi
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
 ![License](https://img.shields.io/badge/licencia-MIT-lightgrey?style=flat-square)
 
-[Qué hace](#qué-hace) · [Decisiones técnicas](#decisiones-técnicas) · [Arquitectura](docs/arquitectura.md) · [Desarrollo y pruebas](docs/desarrollo.md)
+[Qué hace](#qué-hace) · [Decisiones técnicas](#decisiones-técnicas) · [Arquitectura](docs/arquitectura.md) · [Modo entrenador](docs/modo-entrenador.md) · [Desarrollo y pruebas](docs/desarrollo.md)
 
 </div>
 

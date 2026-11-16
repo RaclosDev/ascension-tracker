@@ -2,6 +2,7 @@ package com.ascension.controller;
 
 import com.ascension.service.FoodExternalService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,19 +20,19 @@ public class FoodExternalController {
         this.foodExternalService = foodExternalService;
     }
 
-    @GetMapping("/search")
+    @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> search(@RequestParam String q) {
         String result = foodExternalService.searchOpenFoodFacts(q);
         return ResponseEntity.ok()
-                .header("Content-Type", "application/json")
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(result);
     }
 
-    @GetMapping("/barcode")
+    @GetMapping(value = "/barcode", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> searchBarcode(@RequestParam String code) {
         String result = foodExternalService.searchBarcode(code);
         return ResponseEntity.ok()
-                .header("Content-Type", "application/json")
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(result);
     }
 }
