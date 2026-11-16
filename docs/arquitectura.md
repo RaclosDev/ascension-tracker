@@ -53,6 +53,6 @@ No se introduce trabajo JPA en paralelo dentro de una transacción. La concurren
 
 Las consultas paginadas se comprueban contando SQL para detectar N+1. Los resúmenes semanales materializan como máximo 520 semanas, conservando el historial exportable. El índice de récords evita recorrer todo el historial por cada ejercicio, y el reloj del entrenamiento no fuerza renderizados del layout completo.
 
-[CONSTRAINTS.md](../CONSTRAINTS.md) fija los presupuestos de JS, CSS y precache, además de límites de tamaño de componentes y cobertura. Las mediciones locales de operaciones, consultas o renders no se presentan como Core Web Vitals de producción.
+[limites-de-calidad.md](limites-de-calidad.md) fija los presupuestos de JS, CSS y precache, además de límites de tamaño de componentes y cobertura. Las mediciones locales de operaciones, consultas o renders no se presentan como Core Web Vitals de producción.
 
 Pruebas representativas: [idempotencia](../backend/src/test/java/com/ascension/service/IdempotencyIntegrationTest.java), [fusión transaccional](../backend/src/test/java/com/ascension/service/ExerciseMergeIntegrationTest.java), [aislamiento de cuentas](../frontend/src/test/workoutAccountIsolation.test.ts) y [logout entre pestañas](../frontend/tests/durable-logout.spec.ts).
