@@ -1,6 +1,6 @@
 # Capturas móviles
 
-Las capturas del README muestran la interfaz React real con datos ficticios: ocho semanas de peso, seis de entrenos con una rutina torso/pierna, un día de comidas y un entrenador con tres atletas. La API se simula en el navegador; no se accede a cuentas ni bases de datos reales.
+Las capturas del README muestran la interfaz React real con la sesión iniciada y datos ficticios: ocho semanas de peso, seis de entrenos con una rutina torso/pierna, un día de comidas y un entrenador con tres atletas. La API se simula en el navegador; no se accede a cuentas ni bases de datos reales. Las fotos de perfil son avatares ilustrados ([DiceBear Lorelei](https://www.dicebear.com/styles/lorelei/), CC0) guardados en `avatars.json`.
 
 - [landing.png](landing.png): portada pública, sin sesión.
 - [dashboard.png](dashboard.png): peso, entreno y comidas del día.
@@ -8,12 +8,12 @@ Las capturas del README muestran la interfaz React real con datos ficticios: och
 - [nutrition.png](nutrition.png): diario con calorías y macronutrientes.
 - [training.png](training.png): resumen de entreno con recuperación muscular y actividad.
 - [workout.png](workout.png): entreno en curso con series completadas.
-- [coach.png](coach.png): espacio del entrenador con revisiones pendientes y señales de seguimiento.
+- [coach.png](coach.png): inicio del entrenador con seguimientos por responder, atletas por revisar y tareas pendientes.
 - [coach-clients.png](coach-clients.png): lista de atletas con búsqueda y acceso a su ficha.
-- [coach-review.png](coach-review.png): check-in semanal de una atleta con energía, sueño, adherencia y respuesta.
+- [coach-review.png](coach-review.png): ficha de una atleta en la pestaña de seguimientos, con el seguimiento semanal por responder.
 - [hero.jpg](hero.jpg): composición de la cabecera a partir de `workout`, `coach` y `nutrition`.
 
-Todas usan una ventana móvil de 390 × 844 píxeles CSS, densidad 2× y una hora fija de media tarde. La app usa modo oscuro; la portada pública tiene su propio diseño claro de papel. El script espera a las fuentes reales Inter y Anton, comprueba que no hay desbordamiento horizontal del documento y falla ante errores de página o llamadas a la API sin simular.
+Todas usan una ventana móvil de 430 × 932 píxeles CSS y una hora fija de media tarde. El script captura a densidad 3× (1290 × 2796); las imágenes del repositorio están reducidas a 860 × 1864. La app usa modo oscuro; la portada pública tiene su propio diseño claro de papel. El script espera a las fuentes reales Inter y Anton, comprueba que no hay desbordamiento horizontal del documento y falla ante errores de página o llamadas a la API sin simular.
 
 ## Reproducirlas
 
