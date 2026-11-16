@@ -22,4 +22,4 @@ Los endpoints de usuario obtienen la identidad del JWT. Hay validación de entra
 
 Las cabeceras CSP se generan desde [scripts/csp-policy.json](scripts/csp-policy.json). El pipeline incluye análisis de código y dependencias. Estas medidas y las pruebas automatizadas no constituyen una certificación de seguridad ni garantizan ausencia de vulnerabilidades.
 
-Consulta [la arquitectura](docs/architecture.md) y [la guía de despliegue y diagnóstico](docs/development.md#despliegue-y-diagnóstico) para conocer los límites operativos.
+Consulta [la arquitectura](docs/arquitectura.md) y [la guía de despliegue y diagnóstico](docs/desarrollo.md#despliegue-y-diagnóstico) para conocer los límites operativos.
