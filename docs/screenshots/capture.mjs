@@ -11,6 +11,10 @@ const { chromium, expect } = require('@playwright/test');
 const ts = require('typescript');
 const origin = process.argv[2] ?? 'http://localhost:5173';
 const output = fileURLToPath(new URL('./', import.meta.url));
+// Avatares ilustrados (DiceBear Lorelei, CC0) para el entrenador y sus atletas.
+const avatars = JSON.parse(await readFile(new URL('./avatars.json', import.meta.url), 'utf8'));
+const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+const SESSION_JWT = b64({ alg: 'none' }) + '.' + b64({ sub: 'showcase', email: 'carlos@example.invalid', name: 'Carlos Sanz', picture: avatars[0], exp: 4102444800 }) + '.fixture';
 
 // Reutiliza las fixtures de navegador del repositorio para la sesión y los ajustes.
 const asModule = (source) =>
@@ -138,6 +142,7 @@ const dashboard = {
 async function mockDemoApi(page) {
   const json = (data) => (route) => route.fulfill({ json: data });
   await setupAuthMocks(page);
+  await page.route('**/api/auth/refresh**', (route) => route.fulfill({ json: { token: SESSION_JWT } }));
   await page.route('**/api/passkeys', json([{ id: 'demo-passkey', name: 'Este dispositivo', createdAt: '2026-11-01T12:00:00Z' }]));
   await page.route('**/api/coach/profile', json({ coach: false }));
   // Las rutas registradas después tienen prioridad sobre las fixtures base.
@@ -161,7 +166,7 @@ async function mockCoachApi(page) {
   const json = (data) => (route) => route.fulfill({ json: data });
   const clients = ['Ana García', 'Bruno Martín', 'Carla López'].map((name, i) => ({
     linkId: `showcase-${i}`,
-    client: { name, email: `atleta${i}@example.invalid`, picture: null },
+    client: { name, email: `atleta${i}@example.invalid`, picture: avatars[i + 1] },
     permissions: { training: true, nutrition: true, body: true, editTraining: true, editNutrition: true },
     since: '2026-11-01T10:00:00Z',
   }));
@@ -176,6 +181,9 @@ async function mockCoachApi(page) {
     weightChange: i === 0 ? -0.4 : null,
     signals: i === 1 ? [{ reason: 'CHECKIN_MISSING', level: 'RED', value: 2 }] : [],
   }))));
+  await page.route('**/api/coach/clients/showcase-0', json(clients[0]));
+  await page.route('**/api/coach/clients/showcase-0/status', json({ linkId: 'showcase-0', level: 'GREEN', lastActivity: iso(daysAgo(1)), pendingReplies: 1, weightChange: -0.4, signals: [] }));
+  await page.route('**/api/coach/clients/showcase-0/powerlifting', (route) => route.fulfill({ status: 404, json: {} }));
   await page.route('**/api/coach/clients/showcase-0/checkins', json([{
     id: 'showcase-checkin',
     linkId: 'showcase-0',
@@ -201,8 +209,8 @@ const allowedOrigins = [origin, 'https://fonts.googleapis.com', 'https://fonts.g
 // Hora fija de media tarde para que la fecha y el cronómetro del entreno sean verosímiles.
 const at = (h, m) => new Date(today.getTime() + (h * 60 + m) * 60_000);
 const contextOptions = {
-  viewport: { width: 390, height: 844 },
-  deviceScaleFactor: 2,
+  viewport: { width: 430, height: 932 },
+  deviceScaleFactor: 3,
   isMobile: true,
   hasTouch: true,
   locale: 'es-ES',
@@ -286,6 +294,7 @@ try {
   const coach = await open(true);
   await mockCoachApi(coach);
   await coach.goto(origin + '/entrenador');
+  await coach.getByRole('button', { name: 'Ahora no' }).click({ timeout: 8000 }).catch(() => {});
   await expect(coach.getByRole('heading', { name: 'Pendiente de ti' })).toBeVisible();
   await capture(coach, 'coach');
 
@@ -294,7 +303,7 @@ try {
   await capture(coach, 'coach-clients');
 
   await coach.goto(origin + '/entrenador/atletas/showcase-0?seccion=revisiones');
-  await expect(coach.getByRole('heading', { name: 'Revisiones semanales' })).toBeVisible();
+  await expect(coach.getByRole('heading', { name: 'Seguimientos semanales' })).toBeVisible();
   await capture(coach, 'coach-review');
 
   if (failures.length) throw new Error('Llamadas sin simular o errores: ' + [...new Set(failures)].join(', '));
