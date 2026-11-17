@@ -185,12 +185,11 @@ for (const width of [390, 1920]) {
     await page.getByRole('button', { name: 'Preparar semana', exact: true }).click();
     await page.getByRole('button', { name: 'Copiar semana anterior' }).click();
     const session = page.locator('.coach-day').filter({ hasText: 'Torso' });
-    await expect(page.getByLabel('Nombre del día (Lunes 16/11)')).toBeHidden();
-    await expect(session.locator(':scope > summary')).toContainText('1 ejercicio · 3 series');
-    await page.screenshot({ path: info.outputPath('weekly-compact.png'), fullPage: true });
-    await session.locator(':scope > summary').click();
+    // The copied Monday is the day on screen: the board sums it up and its editor is open.
+    await expect(page.locator('.week-day').first()).toContainText('1 ejercicio · 3 series');
     await expect(page.getByLabel('Nombre del día (Lunes 16/11)')).toHaveValue('Torso');
-    await expect(session.getByPlaceholder('Añadir ejercicio: nombre o etiqueta')).toBeHidden();
+    await page.screenshot({ path: info.outputPath('weekly-compact.png'), fullPage: true });
+    await expect(session.getByPlaceholder('Añadir ejercicio: nombre o etiqueta')).toHaveCount(0);
     // The week notes live in their own tab of the side panel.
     const openNotes = () => page.getByRole('button', { name: 'Notas', exact: true }).click();
     await openNotes();
@@ -207,7 +206,6 @@ for (const width of [390, 1920]) {
     await page.getByLabel('Carga (kg)', { exact: true }).fill('45');
     await page.screenshot({ path: info.outputPath('weekly-editing.png'), fullPage: true });
     await page.reload();
-    await page.locator('.coach-day > summary').filter({ hasText: 'Torso' }).click();
     await page.getByText('Editar pauta', { exact: true }).click();
     await openNotes();
     await expect(page.getByLabel('Carga (kg)', { exact: true })).toHaveValue('45');
