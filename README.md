@@ -9,6 +9,8 @@
 Aplicación full-stack con Java y React: desde el registro de una serie en el gimnasio hasta el seguimiento semanal de un atleta.
 
 [![Abrir la app](https://img.shields.io/badge/Abrir_la_app-ascension.raclos.es-f2c94c?style=for-the-badge&logo=googlechrome&logoColor=black)](https://ascension.raclos.es)
+
+**Demo sin registro:** [ascension.raclos.es/demo](https://ascension.raclos.es/demo) (atleta) y [/demo/entrenador](https://ascension.raclos.es/demo/entrenador) (panel de entrenador), con datos ficticios.
 [![CI](https://img.shields.io/github/actions/workflow/status/RaclosDev/ascension-tracker/ci.yml?branch=main&style=for-the-badge&label=CI&logo=githubactions&logoColor=white)](https://github.com/RaclosDev/ascension-tracker/actions/workflows/ci.yml)
 
 ![Java](https://img.shields.io/badge/Java_21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)

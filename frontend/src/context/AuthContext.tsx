@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
+import { DEMO } from '../demo/mode';
 import { useQueryClient } from '@tanstack/react-query';
 import api, {
   setMemoryToken,
@@ -413,6 +414,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    if (DEMO) {
+      // Salir de la demo lleva a la portada real; no hay sesión que cerrar.
+      window.location.assign('/');
+      return;
+    }
     activationRevision.current++;
     setIsReady(false);
     markSessionLogoutPending();

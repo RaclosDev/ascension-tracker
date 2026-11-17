@@ -80,6 +80,12 @@ export default function LandingHero() {
             />
           }
         />
+        <a
+          href="/demo"
+          className="landing-display mt-4 flex min-h-11 w-full items-center justify-center border border-white/30 text-[0.9rem] tracking-[0.08em] text-white hover:bg-white/10"
+        >
+          Probar la demo sin registrarte
+        </a>
       </div>
     </section>
   );

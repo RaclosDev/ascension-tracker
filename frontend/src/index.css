@@ -3409,3 +3409,18 @@ input[type="range"]:active::-moz-range-thumb {
     color: #ffffff;
   }
 }
+
+/* Aviso fijo del modo demo (/demo). */
+.demo-banner {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  background: #facc15;
+  color: #111;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+.demo-banner a {
+  color: inherit;
+  text-decoration: underline;
+}

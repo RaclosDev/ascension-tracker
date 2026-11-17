@@ -1,3 +1,4 @@
+import './demo/mode';
 import React, { StrictMode } from 'react';
 import ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
