@@ -7,6 +7,7 @@ import { AthleteShell, useAthleteLinks, useAthleteViews } from '../components/co
 import { ClientOverview } from '../components/coach/ClientOverview';
 import { ClientManagement } from '../components/coach/ClientManagement';
 import { CheckinsSection } from '../components/coach/CheckinsSection';
+import { SectionSkeleton } from '../components/coach/SectionSkeleton';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import '../styles/coach-workspace.css';
@@ -66,7 +67,7 @@ function AthleteSections({ link }: { link: CoachClient }) {
   return (
     <AthleteShell link={link} active={section}>
       <div className="coach-client-content" key={`${linkId}:${section}`}>
-        <Suspense fallback={<p role="status">Cargando sección…</p>}>
+        <Suspense fallback={<SectionSkeleton />}>
           {open('resumen') && (
             <ClientOverview link={link} sectionHref={sectionHref} recordHref={recordHref} />
           )}

@@ -108,6 +108,10 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
         until: '[data-tour="exercise-prescription"], [aria-label="Vista previa del programa"]',
       },
       {
+        click: '[data-week-panel="library"][aria-pressed="false"]',
+        until: '[data-week-panel="library"][aria-pressed="true"]',
+      },
+      {
         click: '[data-tour="library-insert"] > summary',
         until: '[data-tour="library-insert"][open]',
       },
@@ -120,6 +124,12 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     body: 'Marca progresión, mantenimiento, descarga, test o competición para explicar el propósito de los ajustes.',
     path: '/entrenador/atletas/tour-lucia?seccion=semana',
     target: '[data-tour="week-intent"]',
+    prepare: [
+      {
+        click: '[data-week-panel="notes"][aria-pressed="false"]',
+        until: '[data-week-panel="notes"][aria-pressed="true"]',
+      },
+    ],
   },
   {
     id: 'comment',
@@ -128,6 +138,12 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     body: 'Escribe las indicaciones públicas: por ejemplo, qué priorizar en una descarga. Este comentario forma parte de la pauta del atleta.',
     path: '/entrenador/atletas/tour-lucia?seccion=semana',
     target: '[data-tour="week-comment"]',
+    prepare: [
+      {
+        click: '[data-week-panel="notes"][aria-pressed="false"]',
+        until: '[data-week-panel="notes"][aria-pressed="true"]',
+      },
+    ],
   },
   {
     id: 'private',
@@ -137,6 +153,10 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     path: '/entrenador/atletas/tour-lucia?seccion=semana',
     target: '[data-tour="week-private"]',
     prepare: [
+      {
+        click: '[data-week-panel="notes"][aria-pressed="false"]',
+        until: '[data-week-panel="notes"][aria-pressed="true"]',
+      },
       {
         click: '[data-tour="week-private"] > summary',
         until: '[data-tour="week-private"][open]',

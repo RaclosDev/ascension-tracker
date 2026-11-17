@@ -7,6 +7,7 @@ import { type CoachClient } from '@/lib/coach/api';
 import { useClientAssignments } from '@/lib/coach/coachPrograms';
 import { overlapsWeek, shiftWeek, useCoachWeek, weekDate } from '@/lib/coach/weeks';
 import { useAthleteLinks } from './AthleteShell';
+import { SectionSkeleton } from './SectionSkeleton';
 import { WeekReview } from './WeekReview';
 import { WeekEditor } from './WeekEditor';
 
@@ -106,7 +107,7 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
         </Link>
       </div>
       {assignments.isPending || draft.isPending ? (
-        <p role="status">Cargando semana…</p>
+        <SectionSkeleton label="Cargando semana…" />
       ) : assignments.isError || draft.isError ? (
         <p role="alert">
           No se pudo cargar la planificación.{' '}

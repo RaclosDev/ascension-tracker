@@ -5,6 +5,7 @@ import { personName, type CoachClient } from '../../lib/coach/api';
 import { useClientStatus } from '../../lib/coach/clientStatus';
 import { nextReviewLabel, REVIEW_DAYS } from '../../lib/coach/coachSchedule';
 import { usePowerProfile } from '../../lib/coach/powerlifting';
+import { AthleteWarmup } from './AthleteWarmup';
 import { ClientAvatar } from './ClientAvatar';
 import '../../styles/coach-workspace.css';
 import '../../styles/coach-student.css';
@@ -122,7 +123,7 @@ export function AthleteShell({
   const followup = link.followup;
   const meta = [
     setup?.trainingDays
-      ? `${setup.trainingDays} ${setup.trainingDays === 1 ? 'día' : 'días'} de entrenamiento por semana`
+      ? `${setup.trainingDays} ${setup.trainingDays === 1 ? 'día' : 'días'} por semana`
       : 'Sin disponibilidad definida',
     followup &&
       (followup.schedule.paused
@@ -142,12 +143,16 @@ export function AthleteShell({
 
   return (
     <>
-      <Link to={goBack.to} className="coach-back-link">
-        <ArrowLeft size={16} aria-hidden />
-        {goBack.label}
-      </Link>
       <header className="athlete-header">
         <div className="athlete-identity">
+          <Link
+            to={goBack.to}
+            className="athlete-back"
+            aria-label={goBack.label}
+            title={goBack.label}
+          >
+            <ArrowLeft size={18} aria-hidden />
+          </Link>
           <ClientAvatar client={link.client} />
           <div className="min-w-0">
             <h1 className="athlete-name">{personName(link.client)}</h1>
@@ -218,6 +223,7 @@ export function AthleteShell({
         )}
       </nav>
       {children}
+      <AthleteWarmup link={link} />
     </>
   );
 }

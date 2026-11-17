@@ -1,3 +1,4 @@
+import { Trash2 } from 'lucide-react';
 import { POWER_LABELS, POWER_LIFTS, type PowerMark } from '../../lib/coach/powerlifting';
 
 export function PowerMarksEditor({
@@ -23,7 +24,7 @@ export function PowerMarksEditor({
       {marks.map((mark, index) => (
         <fieldset
           key={mark.id}
-          className="rounded-xl border border-[var(--border-color)] p-4 grid gap-3 sm:grid-cols-2"
+          className="power-mark rounded-xl border border-[var(--border-color)] p-4 grid gap-3 sm:grid-cols-2"
         >
           <legend className="px-1 font-semibold">Marca {index + 1}</legend>
           <label className="flex flex-col gap-1">
@@ -89,9 +90,10 @@ export function PowerMarksEditor({
             <button
               type="button"
               className="btn btn-secondary justify-self-start"
+              aria-label={`Quitar marca ${index + 1}`}
               onClick={() => onChange(marks.filter((m) => m.id !== mark.id))}
             >
-              Quitar marca {index + 1}
+              <Trash2 size={16} aria-hidden /> <span>Quitar</span>
             </button>
           )}
         </fieldset>
