@@ -4,6 +4,7 @@ import { isSessionLogoutPending, markSessionLogoutPending } from '../auth/sessio
 import { gzipJson } from './gzip';
 import { clearIdempotencyIntents, prepareIdempotency, settleIdempotency } from './idempotency';
 import { getWorkoutAccountRevision } from '../lib/workout/accountIdentity';
+import { DEMO } from '../demo/mode';
 
 const baseUrl = import.meta.env.VITE_API_URL || '';
 
@@ -13,6 +14,11 @@ const api = axios.create({
   withCredentials: true,
   timeout: 10000,
 });
+
+if (DEMO) {
+  // La demo nunca llama al servidor: todas las peticiones las atiende un backend en memoria.
+  api.defaults.adapter = async (config) => (await import('../demo/backend')).demoAdapter(config);
+}
 
 export let memoryToken: string | null = null;
 let sessionRevision = 0;
@@ -76,7 +82,8 @@ export const isTokenValid = (token: string | null): boolean => {
 };
 
 export const authBroadcast =
-  typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('ascension_auth') : null;
+  // La demo no comparte su sesión ficticia con otras pestañas de la app real.
+  typeof BroadcastChannel !== 'undefined' && !DEMO ? new BroadcastChannel('ascension_auth') : null;
 
 if (authBroadcast) {
   authBroadcast.onmessage = (event: MessageEvent) => {

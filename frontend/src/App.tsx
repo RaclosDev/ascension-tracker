@@ -51,6 +51,7 @@ const AdminPlansPage = lazyWithRetry(() => import('./pages/AdminPlansPage'));
 const CoachCheckinPage = lazyWithRetry(() => import('./pages/CoachCheckinPage'));
 const InvitationPage = lazyWithRetry(() => import('./pages/InvitationPage'));
 import LandingPage from './pages/LandingPage';
+import { DEMO } from './demo/mode';
 import { HomeRedirect, RememberInvitation } from './components/coach/InvitationRedirects';
 
 import { PageLoader } from './components/PageLoader';
@@ -334,7 +335,7 @@ export default function App() {
   }, []);
 
   const [googleClientId, setGoogleClientId] = useState(
-    import.meta.env.VITE_GOOGLE_CLIENT_ID || null,
+    DEMO ? 'demo' : import.meta.env.VITE_GOOGLE_CLIENT_ID || null,
   );
   const [authError, setAuthError] = useState(false);
   useEffect(() => {
@@ -407,7 +408,7 @@ export default function App() {
 
   return (
     <GlobalErrorBoundary>
-      <BrowserRouter>
+      <BrowserRouter basename={DEMO ? '/demo' : undefined}>
         <GoogleOAuthProvider clientId={googleClientId}>
           <AuthProvider>
             <Toaster

@@ -9,6 +9,7 @@ import {
   CSSProperties,
 } from 'react';
 import { UserSettings } from '../types/api';
+import { DEMO, DEMO_COACH } from '../demo/mode';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import BottomSheet from './BottomSheet';
@@ -279,6 +280,16 @@ export default function Layout() {
         </aside>
 
         <main className="main-content">
+          {DEMO && (
+            <p className="demo-banner" role="note">
+              Modo demo. Datos ficticios: los cambios se pierden al recargar.{' '}
+              <a href={DEMO_COACH ? '/demo' : '/demo/entrenador'}>
+                {DEMO_COACH ? 'Ver la demo de atleta' : 'Ver la demo de entrenador'}
+              </a>
+              {' · '}
+              <a href="/">Salir y crear una cuenta</a>
+            </p>
+          )}
           {/* Cabecera móvil: marca a la izquierda y sesión a la derecha; se desplaza con el contenido */}
           <header className="mobile-top-bar">
             <span className="app-wordmark">
