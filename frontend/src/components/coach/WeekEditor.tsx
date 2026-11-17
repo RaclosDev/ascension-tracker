@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState, type DragEvent } from 'react';
 import toast from 'react-hot-toast';
+import { Plus } from 'lucide-react';
 import { addDays, format, parseISO } from 'date-fns';
 import { useSessionDraft } from '@/hooks/useSessionDraft';
 import { apiErrorMessage, formatCoachDate } from '@/lib/coach/api';
@@ -8,6 +9,8 @@ import {
   addDay,
   copyDay,
   findDay,
+  MAX_EXERCISES_PER_DAY,
+  newExercise,
   publishProblems,
   removeDay,
   updateDay,
@@ -28,10 +31,21 @@ import {
   type WeekContent,
 } from '@/lib/coach/weeks';
 import { DayEditor } from './editor/DayEditor';
+import { ExerciseSearch } from './editor/ExerciseSearch';
+import { LastWeek } from './editor/LastWeek';
 import { LibraryInsert } from './editor/LibraryInsert';
 import { ProgramPreview } from './ProgramPreview';
 import { downloadWeekBackup } from '@/lib/coach/weekBackup';
 import { BulkPrescription } from './editor/BulkPrescription';
+
+const DRAG_TYPE = 'application/x-ascension-week-item';
+const PANELS = [
+  { id: 'previous', label: 'Última semana' },
+  { id: 'exercises', label: 'Ejercicios' },
+  { id: 'library', label: 'Plantillas' },
+  { id: 'notes', label: 'Notas' },
+] as const;
+type Panel = (typeof PANELS)[number]['id'];
 
 export function WeekEditor({
   saved,
@@ -50,8 +64,9 @@ export function WeekEditor({
     isSavedWeek,
   );
   const [preview, setPreview] = useState(false);
-  // Beside the days there is room to keep the week's goal in view; stacked, it starts folded.
-  const [notesOpen] = useState(() => !!window.matchMedia?.('(min-width: 1280px)').matches);
+  const [panel, setPanel] = useState<Panel>(source ? 'previous' : 'exercises');
+  const [targetDay, setTargetDay] = useState(1);
+  const [dropDay, setDropDay] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
   const save = useSaveWeek(saved.linkId, saved.weekStart);
@@ -104,6 +119,62 @@ export function WeekEditor({
       ].sort((a, b) => a.dayIndex - b.dayIndex),
     });
   };
+  const lastWeek = useMemo(
+    () =>
+      previous.data && source
+        ? weekFrom(previous.data, source, shiftWeek(saved.weekStart, -1))
+        : null,
+    [previous.data, source, saved.weekStart],
+  );
+  const dayName = (dayIndex: number) => WEEKDAY_LABELS[dayIndex - 1].toLocaleLowerCase('es');
+  const openDay = (dayIndex: number) =>
+    window.setTimeout(() => {
+      const session = document.getElementById(`week-day-${dayIndex}`)?.querySelector('details');
+      if (session) session.open = true;
+    });
+  const addExercise = (dayIndex: number, exercise: { id: string; name: string }) => {
+    const base = addDay(program, 1, dayIndex);
+    if ((findDay(base, 1, dayIndex)?.exercises.length ?? 0) >= MAX_EXERCISES_PER_DAY) {
+      setError(`El ${dayName(dayIndex)} ya tiene el máximo de ejercicios.`);
+      return;
+    }
+    editProgram(
+      updateDay(base, 1, dayIndex, (day) => ({
+        ...day,
+        exercises: [...day.exercises, newExercise(exercise.id, exercise.name)],
+      })),
+    );
+    openDay(dayIndex);
+    toast.success(`${exercise.name}: añadido al ${dayName(dayIndex)}`);
+  };
+  const copyLastDay = (dayIndex: number, to: number) => {
+    const day = lastWeek?.days.find((d) => d.dayIndex === dayIndex);
+    if (day) void insert([{ ...structuredClone(day), week: 1, dayIndex: to }]);
+  };
+  // Days accept exercises and last week's sessions dragged from the side panel.
+  const dropTarget = (dayIndex: number) => ({
+    'data-drop': dropDay === dayIndex ? '' : undefined,
+    onDragOver: (e: DragEvent) => {
+      if (locked || !e.dataTransfer.types.includes(DRAG_TYPE)) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      setDropDay(dayIndex);
+    },
+    onDragLeave: (e: DragEvent) => {
+      if (!e.currentTarget.contains(e.relatedTarget as Node | null))
+        setDropDay((current) => (current === dayIndex ? null : current));
+    },
+    onDrop: (e: DragEvent) => {
+      const data = e.dataTransfer.getData(DRAG_TYPE);
+      setDropDay(null);
+      if (locked || !data) return;
+      e.preventDefault();
+      const item = JSON.parse(data) as
+        { kind: 'exercise'; id: string; name: string } | { kind: 'day'; dayIndex: number };
+      if (item.kind === 'exercise') addExercise(dayIndex, item);
+      else copyLastDay(item.dayIndex, dayIndex);
+    },
+  });
   return (
     <section className="week-editor min-w-0" aria-label="Preparar semana">
       <div className="week-editor-side">
@@ -177,26 +248,27 @@ export function WeekEditor({
             >
               Copiar semana anterior
             </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              disabled={locked}
-              onClick={async () => {
-                if (
-                  !program.days.length ||
-                  (await confirmAction({
-                    title: 'Empezar de cero',
-                    description:
-                      'Se quitarán los días del borrador. Los registros del atleta se conservan.',
-                    confirmLabel: 'Vaciar días',
-                    destructive: true,
-                  }))
-                )
-                  editProgram({ ...program, days: [] });
-              }}
-            >
-              Empezar de cero
-            </button>
+            {program.days.length > 0 && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={locked}
+                onClick={async () => {
+                  if (
+                    await confirmAction({
+                      title: 'Empezar de cero',
+                      description:
+                        'Se quitarán los días del borrador. Los registros del atleta se conservan.',
+                      confirmLabel: 'Vaciar días',
+                      destructive: true,
+                    })
+                  )
+                    editProgram({ ...program, days: [] });
+                }}
+              >
+                Empezar de cero
+              </button>
+            )}
             <button
               type="button"
               className="btn btn-secondary"
@@ -218,10 +290,92 @@ export function WeekEditor({
           </div>
         </header>
         <fieldset disabled={locked} className="min-w-0">
-          <div className="week-tools">
-            <details className="card coach-week-notes" open={notesOpen}>
-              <summary>Objetivo y notas de la semana</summary>
-              <div className="grid gap-4 pt-4">
+          <div className="card week-panel">
+            <div className="week-panel-tabs" role="group" aria-label="Herramientas de la semana">
+              {PANELS.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  data-week-panel={option.id}
+                  aria-pressed={panel === option.id}
+                  onClick={() => setPanel(option.id)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <div hidden={panel !== 'previous'} className="week-panel-body">
+              {lastWeek?.days.length ? (
+                <>
+                  <p className="week-panel-hint">
+                    {source?.programName}. Copia una sesión a su mismo día o arrástrala a otro.
+                  </p>
+                  <LastWeek
+                    week={lastWeek}
+                    dragType={DRAG_TYPE}
+                    disabled={locked}
+                    onCopy={(day) => copyLastDay(day.dayIndex, day.dayIndex)}
+                  />
+                </>
+              ) : source && previous.isPending ? (
+                <p role="status">Cargando la semana anterior…</p>
+              ) : (
+                <>
+                  <p className="week-panel-hint">
+                    No hay sesiones publicadas la semana anterior. Parte de una plantilla o añade
+                    ejercicios a cada día.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setPanel('library')}
+                    >
+                      Ver plantillas
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setPanel('exercises')}
+                    >
+                      Buscar ejercicios
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+            <div hidden={panel !== 'exercises'} className="week-panel-body">
+              <label className="flex flex-col gap-1 min-w-0">
+                Añadir al día
+                <select
+                  className="form-input min-h-11"
+                  value={targetDay}
+                  onChange={(e) => setTargetDay(Number(e.target.value))}
+                >
+                  {WEEKDAY_LABELS.map((label, i) => {
+                    const day = findDay(program, 1, i + 1);
+                    return (
+                      <option key={label} value={i + 1}>
+                        {label} · {day ? day.name || 'Sesión sin nombre' : 'sesión nueva'}
+                      </option>
+                    );
+                  })}
+                </select>
+              </label>
+              <p className="week-panel-hint">
+                Pulsa un ejercicio para añadirlo al día elegido, o arrástralo a cualquier día.
+              </p>
+              <ExerciseSearch
+                limit={12}
+                dragType={DRAG_TYPE}
+                onPick={(exercise) => addExercise(targetDay, exercise)}
+              />
+            </div>
+            <div hidden={panel !== 'library' || preview} className="week-panel-body">
+              <LibraryInsert onInsert={(days) => void insert(days)} />
+            </div>
+            <div hidden={panel !== 'notes'} className="week-panel-body">
+              <div className="grid gap-4">
                 <label className="flex flex-col gap-1 min-w-0">
                   Nombre
                   <input
@@ -283,13 +437,8 @@ export function WeekEditor({
                   </p>
                 </details>
               </div>
-            </details>
-            {!preview && (
-              <>
-                <LibraryInsert onInsert={(days) => void insert(days)} />
-                <BulkPrescription program={program} onChange={editProgram} />
-              </>
-            )}
+              {!preview && <BulkPrescription program={program} onChange={editProgram} />}
+            </div>
           </div>
         </fieldset>
       </div>
@@ -372,7 +521,10 @@ export function WeekEditor({
                   type="button"
                   className="week-day-chip"
                   data-rest={day ? undefined : ''}
+                  aria-current={panel === 'exercises' && targetDay === i + 1 ? 'true' : undefined}
+                  {...dropTarget(i + 1)}
                   onClick={() => {
+                    setTargetDay(i + 1);
                     const target = document.getElementById(`week-day-${i + 1}`);
                     const session = target?.querySelector('details');
                     if (session) session.open = true;
@@ -402,7 +554,12 @@ export function WeekEditor({
                 const dayIndex = i + 1;
                 const day = findDay(program, 1, dayIndex);
                 return day ? (
-                  <div key={dayIndex} id={`week-day-${dayIndex}`} className="week-day-anchor">
+                  <div
+                    key={dayIndex}
+                    id={`week-day-${dayIndex}`}
+                    className="week-day-anchor"
+                    {...dropTarget(dayIndex)}
+                  >
                     <DayEditor
                       compact
                       label={`${label} ${format(addDays(parseISO(saved.weekStart), i), 'dd/MM')}`}
@@ -438,15 +595,25 @@ export function WeekEditor({
                   <div
                     key={dayIndex}
                     id={`week-day-${dayIndex}`}
-                    className="week-day-anchor coach-rest-day flex justify-between gap-2 items-center"
+                    className="week-day-anchor coach-rest-day"
+                    {...dropTarget(dayIndex)}
                   >
-                    <span>{label} · descanso</span>
+                    <span>
+                      <strong>
+                        {label} {format(addDays(parseISO(saved.weekStart), i), 'd')}
+                      </strong>{' '}
+                      · descanso
+                    </span>
                     <button
                       className="btn btn-secondary"
                       type="button"
-                      onClick={() => editProgram(addDay(program, 1, dayIndex))}
+                      aria-label={`Añadir sesión el ${dayName(dayIndex)}`}
+                      onClick={() => {
+                        editProgram(addDay(program, 1, dayIndex));
+                        setTargetDay(dayIndex);
+                      }}
                     >
-                      Añadir sesión
+                      <Plus size={16} aria-hidden /> Añadir sesión
                     </button>
                   </div>
                 );

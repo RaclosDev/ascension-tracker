@@ -10,7 +10,16 @@ import { defaultItem, useLibraryItems, useSaveLibraryItem } from '@/lib/coach/li
 import { apiErrorMessage } from '@/lib/coach/api';
 import { inputClass, inputStyle } from './fields';
 
-export function ExerciseSearch({ onPick }: { onPick: (exercise: Exercise) => void }) {
+export function ExerciseSearch({
+  onPick,
+  limit = 8,
+  dragType,
+}: {
+  onPick: (exercise: Exercise) => void;
+  limit?: number;
+  /** When set, results can also be dragged; the drop target reads this data type. */
+  dragType?: string;
+}) {
   const { data: catalog = [] } = useExerciseCatalog();
   const { data: custom = [] } = useCustomExercises();
   const items = useLibraryItems();
@@ -42,7 +51,7 @@ export function ExerciseSearch({ onPick }: { onPick: (exercise: Exercise) => voi
         Number(!!itemFor(b.id)?.favorite) - Number(!!itemFor(a.id)?.favorite) ||
         (itemFor(b.id)?.lastUsed ?? '').localeCompare(itemFor(a.id)?.lastUsed ?? ''),
     )
-    .slice(0, 8);
+    .slice(0, limit);
   return (
     <div className="flex flex-col gap-2">
       <input
@@ -77,7 +86,19 @@ export function ExerciseSearch({ onPick }: { onPick: (exercise: Exercise) => voi
       <ul className="flex flex-col gap-1" aria-label="Resultados">
         {!results.length && <li>Nada coincide con esos filtros.</li>}
         {results.map((ex) => (
-          <li key={ex.id} className="flex gap-1">
+          <li
+            key={ex.id}
+            className="flex gap-1"
+            draggable={!!dragType}
+            onDragStart={(e) => {
+              if (!dragType) return;
+              e.dataTransfer.setData(
+                dragType,
+                JSON.stringify({ kind: 'exercise', id: ex.id, name: ex.name }),
+              );
+              e.dataTransfer.effectAllowed = 'copy';
+            }}
+          >
             <button
               type="button"
               className="btn btn-secondary flex-1 justify-start"

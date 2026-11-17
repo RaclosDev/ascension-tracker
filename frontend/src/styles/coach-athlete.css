@@ -11,37 +11,56 @@
     max-width: 1600px;
   }
 }
+/* The header stays one compact row so the week and the records start high on the screen. */
+.coach-workspace.athlete-page {
+  gap: 0.75rem;
+}
 .athlete-header {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(280px, 1.5fr) auto;
-  gap: 16px 28px;
+  grid-template-columns: minmax(300px, 1fr) minmax(280px, 1.2fr) auto;
+  gap: 10px 24px;
   align-items: center;
 }
 .athlete-identity {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   min-width: 0;
 }
-.athlete-identity .coach-client-avatar {
-  flex-basis: 52px;
-  width: 52px;
-  height: 52px;
-  font-size: 1rem;
+.athlete-back {
+  display: inline-flex;
+  flex: 0 0 44px;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-left: -10px;
+  border-radius: 50%;
+  color: var(--text-secondary);
 }
-.coach-workspace .athlete-name {
+.athlete-back:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+.athlete-identity .coach-client-avatar {
+  flex-basis: 44px;
+  width: 44px;
+  height: 44px;
+  font-size: 0.95rem;
+}
+.coach-page.athlete-page h1.athlete-name {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  font-size: 1.625rem;
   font-weight: 400;
-  line-height: 1.1;
+  line-height: 1.15;
   overflow-wrap: anywhere;
 }
 .athlete-meta {
-  margin: 6px 0 0;
+  margin: 2px 0 0;
   color: var(--text-secondary);
-  font-size: 0.82rem;
-  line-height: 1.45;
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 .athlete-context {
   display: grid;
@@ -52,7 +71,7 @@
   border-radius: 6px;
 }
 .athlete-context > div {
-  padding: 10px 14px;
+  padding: 6px 12px;
   min-width: 0;
 }
 .athlete-context > div + div {
@@ -66,11 +85,15 @@
   color: var(--text-secondary);
 }
 .athlete-context dd {
-  margin: 3px 0 0;
-  font-size: 0.88rem;
-  line-height: 1.45;
+  display: -webkit-box;
+  margin: 1px 0 0;
+  overflow: hidden;
+  font-size: 0.85rem;
+  line-height: 1.4;
   overflow-wrap: anywhere;
-  white-space: pre-wrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 .athlete-context dd a {
   color: var(--text-secondary);
@@ -102,7 +125,7 @@
 }
 .athlete-nav .athlete-tabs a {
   gap: 8px;
-  min-height: 46px;
+  min-height: 44px;
   white-space: nowrap;
 }
 .athlete-nav .athlete-tabs a[aria-current] {
@@ -153,6 +176,54 @@
 }
 .coach-workspace .athlete-section-title h2 {
   margin: 0;
+}
+
+.athlete-checkins .athlete-section-title .segmented {
+  flex: 0 1 30rem;
+}
+
+/* Settings the coach edits on the left; facts about the relationship beside them. */
+.athlete-manage,
+.athlete-manage-main,
+.athlete-manage-side {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  align-content: start;
+}
+.coach-student .athlete-manage .card {
+  margin: 0;
+  padding: 20px;
+}
+.athlete-manage-main > details > summary {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  font-weight: 600;
+}
+.athlete-manage-main > details[open] > summary {
+  margin-bottom: 12px;
+}
+.athlete-manage .coach-facts dd {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--text-secondary);
+}
+.athlete-manage .coach-facts dd[data-granted] {
+  color: var(--text-primary);
+}
+.athlete-manage .coach-facts dd[data-granted] svg {
+  color: var(--success, var(--accent-primary));
+}
+@media (min-width: 1180px) {
+  .athlete-manage {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    align-items: start;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -383,24 +454,164 @@
 .week-editor-actions [role='alert'] {
   flex-basis: 100%;
 }
-.week-tools {
-  display: grid;
-}
-.coach-student .week-tools > .card {
+/* One tool at a time beside the days: last week, exercises, templates or the week's notes. */
+.coach-student .week-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   margin: 0;
-  border-radius: 0;
+  padding: 12px;
 }
-.coach-student .week-tools > .card + .card {
-  border-top: 0;
-}
-.coach-student .week-tools > .card:first-child {
-  border-radius: 8px 8px 0 0;
-}
-.coach-student .week-tools > .card:last-child {
-  border-radius: 0 0 8px 8px;
-}
-.coach-student .week-tools > .card:only-child {
+.week-panel-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
   border-radius: 8px;
+  background: var(--bg-secondary);
+}
+.week-panel-tabs button {
+  flex: 1 1 auto;
+  min-height: 40px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.week-panel-tabs button:hover {
+  color: var(--text-primary);
+}
+.week-panel-tabs button[aria-pressed='true'] {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 1px var(--border-medium);
+}
+.week-panel-tabs button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
+}
+.week-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.week-panel-body[hidden] {
+  display: none;
+}
+.week-panel-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+/* Tools that were cards of their own sit flat inside the panel. */
+.coach-student .week-panel-body > .card,
+.coach-student .week-panel-body > details {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.coach-student .week-panel-body > details + details,
+.coach-student .week-panel-body > div + .card {
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+.week-panel [draggable='true'] {
+  cursor: grab;
+}
+.week-last {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.week-last > li {
+  padding: 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+.week-last-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  color: var(--text-secondary);
+}
+.week-last-head strong {
+  display: block;
+  overflow: hidden;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.week-last-head small {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.week-last-head .btn {
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 0.8rem;
+}
+.week-last ol {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--border-subtle);
+  list-style: none;
+}
+.week-last ol li {
+  display: grid;
+  gap: 1px;
+  font-size: 0.8rem;
+}
+.week-last ol span {
+  overflow-wrap: anywhere;
+}
+.week-last-dose {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.week-last-dose * {
+  margin: 0;
+  font-size: inherit;
+}
+/* Where a dragged exercise or session will land. */
+.week-day-chip[data-drop],
+.week-day-anchor[data-drop] {
+  outline: 2px dashed var(--accent-primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.week-day-chip[aria-current='true'] {
+  border-color: var(--accent-primary);
+}
+.week-editor-main .coach-rest-day {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 56px;
+  padding: 6px 12px;
+  border: 1px dashed var(--border-medium);
+  border-radius: 8px;
+}
+.week-editor-main .coach-rest-day strong {
+  color: var(--text-primary);
 }
 /* The days are the work area; status, actions and tools sit beside them on wide screens. */
 .week-editor {
@@ -491,11 +702,29 @@
     overflow-y: auto;
     scrollbar-width: thin;
   }
-  .week-editor-side .week-editor-head {
+  .coach-student .week-editor-side .week-editor-head {
     flex-direction: column;
+    gap: 10px;
+    padding: 12px;
   }
-  .week-editor-side .week-editor-actions .btn {
-    flex: 1 1 auto;
+  .coach-student .week-editor-side .week-editor-head h2 {
+    font-size: 1rem;
+  }
+  .coach-student .week-editor-side .week-editor-head p {
+    margin: 2px 0 0;
+    font-size: 0.8rem;
+  }
+  .coach-student .week-editor-side .week-editor-actions {
+    width: 100%;
+  }
+  .coach-student .week-editor-side .week-editor-actions .btn {
+    min-height: 40px;
+    padding-inline: 10px;
+    font-size: 0.8rem;
+  }
+  .coach-student .week-editor-side .week-editor-actions .btn {
+    flex: 1 1 110px;
+    white-space: nowrap;
     justify-content: center;
   }
 }
@@ -512,5 +741,27 @@
 @media (max-width: 640px) {
   .week-toolbar-link {
     margin-left: 0;
+  }
+}
+
+/* A recorded lift reads as one row once there is room for it. */
+@media (min-width: 1100px) {
+  .power-mark {
+    grid-template-columns: 1.1fr 0.7fr 0.9fr 1fr 1.8fr auto;
+    align-items: end;
+    padding-block: 8px 12px;
+  }
+  .power-mark > label {
+    grid-column: auto;
+    min-width: 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+  .power-mark > .btn span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 }
