@@ -93,7 +93,7 @@ describe('Hoy: programa pautado', () => {
     });
     expect(screen.getByText(/de Laura/)).toBeTruthy();
     expect(screen.getByText('Semana 1 de 4, jueves')).toBeTruthy();
-    expect(screen.getByText('2 × 6–8 reps · RPE 8 · descanso 2:00')).toBeTruthy();
+    expect(screen.getByText('2 × 6–8 · RPE 8 · descanso 2:00')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /Empezar entreno pautado/ }));
     const active = useWorkoutStore.getState().active!;

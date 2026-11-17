@@ -102,15 +102,12 @@ export function DayEditor({
                   >
                     {(drag) => (
                       <ExerciseRow
-                        compact={compact}
                         drag={drag}
                         index={i}
-                        count={day.exercises.length}
                         exercise={exercise}
                         onChange={(next) =>
                           setExercises((list) => list.map((e, j) => (j === i ? next : e)))
                         }
-                        onMove={(to) => setExercises((list) => moveItem(list, i, to))}
                         onRemove={() => setExercises((list) => list.filter((_, j) => j !== i))}
                       />
                     )}

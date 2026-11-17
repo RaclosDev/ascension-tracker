@@ -170,7 +170,7 @@ describe('CoachProgramEditorPage', () => {
     });
     expect(screen.getByText('Press en polea propio')).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: /^Press banca$/ }));
-    fireEvent.change(screen.getByLabelText('RPE'), { target: { value: '8' } });
+    fireEvent.change(screen.getByLabelText('RIR de la serie 1'), { target: { value: '2' } });
     expect(screen.getByLabelText('Arrastrar Press banca')).toBeDefined();
 
     fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
@@ -184,7 +184,12 @@ describe('CoachProgramEditorPage', () => {
     expect(body.days[0].exercises[0]).toMatchObject({
       exerciseId: 'bench-press',
       exerciseName: 'Press banca',
-      targetRpe: 8,
+      targetRir: 2,
+      sets: 3,
+      prescription: {
+        load: null,
+        sets: Array(3).fill(expect.objectContaining({ reps: 8, repsMax: 12, rir: 2 })),
+      },
     });
   });
 
@@ -350,13 +355,15 @@ describe('individual program adaptation', () => {
     await screen.findByDisplayValue('Fuerza original');
     expect(screen.queryByRole('button', { name: 'Guardar borrador' })).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Fuerza para Ana' } });
-    fireEvent.change(screen.getByLabelText('Series'), { target: { value: '5' } });
+    fireEvent.change(screen.getByLabelText('Repeticiones de la serie 1'), {
+      target: { value: '5' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Publicar adaptación' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Esta asignación ya ha terminado');
     first.unmount();
     renderAt(path);
     await screen.findByDisplayValue('Fuerza para Ana');
-    expect(screen.getByLabelText('Series')).toHaveValue(5);
+    expect(screen.getByLabelText('Repeticiones de la serie 1')).toHaveValue('5');
     mockedApi.post.mockResolvedValueOnce({ data: { id: 'a2' } });
     fireEvent.click(screen.getByRole('button', { name: 'Publicar adaptación' }));
     await screen.findByText('Ficha del atleta');

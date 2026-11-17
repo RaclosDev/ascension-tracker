@@ -21,6 +21,7 @@ public final class PrescriptionDtos {
                             @DecimalMin("1") @DecimalMax("10") BigDecimal rpe,
                             @Min(0) @Max(10) Integer rir,
                             @Valid Load load,
-                            @Size(max = 500) String notes) { }
+                            @Size(max = 500) String notes,
+                            @Min(1) @Max(100) Integer repsMax) { }
     public record Prescription(@Valid Load load, @Size(max = 20) List<@Valid @NotNull SetTarget> sets) { }
 }

@@ -37,7 +37,7 @@ public class CoachSettingsService {
                 rs.getBoolean("default_nutrition"), rs.getBoolean("default_progress")),
                 rs.getBoolean("default_prefill"), new Schedule(rs.getInt("default_review_day"),
                 rs.getObject("default_review_time", LocalTime.class), rs.getString("default_review_zone"), false),
-                rs.getInt("settings_version")), Emails.normalizeRequired(email));
+                rs.getInt("settings_version"), rs.getString("effort_method"), rs.getString("dumbbell_load")), Emails.normalizeRequired(email));
         return rows.isEmpty() ? null : rows.getFirst();
     }
 
@@ -48,12 +48,13 @@ public class CoachSettingsService {
                 UPDATE coach_profiles SET professional_name = ?, presentation = ?, show_account_photo = ?,
                     default_training = ?, default_nutrition = ?, default_progress = ?, default_prefill = ?,
                     default_review_day = ?, default_review_time = ?, default_review_zone = ?,
+                    effort_method = COALESCE(?, effort_method), dumbbell_load = COALESCE(?, dumbbell_load),
                     settings_version = settings_version + 1
                 WHERE user_id = ? AND settings_version = ?
                 """, request.displayName().strip(), request.presentation().strip(), request.showAccountPhoto(),
                 request.services().training(), request.services().nutrition(), request.services().progress(),
                 request.prefill(), request.review().day(), request.review().time(), request.review().timeZone(),
-                owner, request.version());
+                request.effortMethod(), request.dumbbellLoad(), owner, request.version());
         if (updated == 0) {
             throw new OptimisticLockingFailureException("Los ajustes han cambiado en otra sesión. Recarga la versión guardada antes de continuar.");
         }

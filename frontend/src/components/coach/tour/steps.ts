@@ -77,7 +77,7 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     id: 'prescription',
     chapter: 'Planificar una semana',
     title: 'Edita la prescripción aquí',
-    body: 'Este es el editor real: series, repeticiones, carga, RPE o RIR y objetivos por serie. Debajo encuentras descansos, superseries y notas. Cada atleta recibe su propia adaptación.',
+    body: 'Este es el editor real: una fila por serie con repeticiones, esfuerzo y carga. Intro añade otra serie igual. La nota va debajo, y descanso y superserie tras los tres puntos. Cada atleta recibe su propia adaptación.',
     path: '/entrenador/atletas/tour-lucia?seccion=semana',
     target: '[data-tour="exercise-prescription"]',
     prepare: [

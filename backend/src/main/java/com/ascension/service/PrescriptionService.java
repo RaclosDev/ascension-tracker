@@ -28,7 +28,7 @@ public class PrescriptionService {
                     Prescription p = e.prescription();
                     if (p == null) return e;
                     Prescription resolved = new Prescription(resolve(p.load(), maxes), p.sets() == null ? null : p.sets().stream()
-                            .map(s -> new SetTarget(s.kind(), s.reps(), s.rpe(), s.rir(), resolve(s.load(), maxes), s.notes())).toList());
+                            .map(s -> new SetTarget(s.kind(), s.reps(), s.rpe(), s.rir(), resolve(s.load(), maxes), s.notes(), s.repsMax())).toList());
                     return new Exercise(e.exerciseId(), e.exerciseName(), e.variantGrip(), e.variantMachine(), e.sets(),
                             e.repsMin(), e.repsMax(), e.targetRpe(), e.targetRir(), e.restSeconds(), e.loadHint(),
                             e.supersetGroup(), e.notes(), resolved);
@@ -57,6 +57,8 @@ public class PrescriptionService {
         if (p.sets().size() != e.sets()) throw new InvalidInputException("La pauta individual debe tener una fila por serie.");
         for (SetTarget set : p.sets()) {
             if (set.rpe() != null && set.rir() != null) throw new InvalidInputException("Elige RPE o RIR para cada serie.");
+            if (set.repsMax() != null && (set.reps() == null || set.repsMax() < set.reps()))
+                throw new InvalidInputException("El máximo de repeticiones de una serie no puede ser menor que el mínimo.");
             validateLoad(set.load());
         }
     }

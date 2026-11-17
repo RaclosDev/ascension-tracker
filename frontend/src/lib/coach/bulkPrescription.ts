@@ -30,6 +30,7 @@ export function adjustProgram(program: Program, delta: DoseAdjustment): Program 
   const target = (value: SetTarget): SetTarget => ({
     ...value,
     reps: bounded(value.reps, delta.reps, 1, 100),
+    repsMax: bounded(value.repsMax ?? null, delta.reps, 1, 100),
     rpe: bounded(value.rpe, delta.rpe, 1, 10),
     rir: bounded(value.rir, delta.rir, 0, 10),
     load: load(value.load) ?? null,

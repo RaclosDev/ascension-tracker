@@ -107,7 +107,7 @@ describe('Pautado frente a hecho', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /Torso/ }));
     expect(screen.getByText('Hecho con cambios')).toBeTruthy();
-    expect(screen.getByText('3 × 6–8 reps')).toBeTruthy();
+    expect(screen.getByText('3 × 6–8')).toBeTruthy();
     expect((await screen.findAllByText('60 kg')).length).toBe(2);
     expect(screen.getByText('8')).toBeTruthy();
     expect(mockedApi.get).toHaveBeenCalledWith('/coach/clients/l1/workouts/w1');

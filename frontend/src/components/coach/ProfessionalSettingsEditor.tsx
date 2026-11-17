@@ -189,6 +189,44 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
         </p>
       </fieldset>
 
+      <fieldset className="flex flex-col gap-3 lg:col-span-2" disabled={save.isPending}>
+        <legend className="font-semibold mb-2">Forma de pautar</legend>
+        <p className="coach-description">
+          Se aplica a todos los ejercicios que pautes, para no elegirlo en cada uno. Un atleta
+          concreto puede tener otro método de esfuerzo desde su ficha.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="flex flex-col gap-1">
+            Objetivo de esfuerzo
+            <select
+              className="form-input min-h-11"
+              value={value.effortMethod ?? 'RIR'}
+              onChange={(e) =>
+                set({ effortMethod: e.target.value as ProfessionalSettings['effortMethod'] })
+              }
+            >
+              <option value="RIR">RIR (repeticiones en reserva)</option>
+              <option value="RPE">RPE (esfuerzo percibido)</option>
+              <option value="NONE">No pauto esfuerzo</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1">
+            Carga con mancuernas
+            <select
+              className="form-input min-h-11"
+              value={value.dumbbellLoad ?? 'EACH'}
+              onChange={(e) =>
+                set({ dumbbellLoad: e.target.value as ProfessionalSettings['dumbbellLoad'] })
+              }
+            >
+              <option value="EACH">Peso de cada mancuerna</option>
+              <option value="TOTAL">Suma de las dos</option>
+            </select>
+          </label>
+        </div>
+        <p className="coach-description">En barra, máquina y polea la carga es siempre el total.</p>
+      </fieldset>
+
       {draft.notice && (
         <p role="status" className="coach-description lg:col-span-2">
           {draft.notice}

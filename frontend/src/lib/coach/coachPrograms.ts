@@ -38,6 +38,8 @@ export interface SetTarget {
   rir: number | null;
   load: PrescribedLoad | null;
   notes?: string | null;
+  /** Top of the rep range when the target is "12-15"; `reps` is the bottom. */
+  repsMax?: number | null;
 }
 interface ExercisePrescription {
   load?: PrescribedLoad | null;
