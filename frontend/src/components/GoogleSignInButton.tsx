@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { Button } from './ui/button';
+import { setRedirectSignInStarted } from '../auth/sessionBoundary';
 import './GoogleSignInButton.css';
 
 const SIGN_IN_EVENT = 'ascension:google-sign-in';
@@ -85,8 +86,9 @@ export default function GoogleSignInButton({
   // click: it goes silent for hours after a dismissal, needs FedCM or third-party cookies,
   // and with FedCM it does not report when it is not shown, so the click did nothing.
   const start = useCallback(() => {
+    if (standalone) setRedirectSignInStarted(true);
     if (!dialog.current?.open) dialog.current?.showModal();
-  }, []);
+  }, [standalone]);
 
   useEffect(() => {
     window.addEventListener(SIGN_IN_EVENT, start);
@@ -114,7 +116,10 @@ export default function GoogleSignInButton({
         ref={dialog}
         className="google-sign-in-dialog"
         aria-labelledby={titleId}
-        onClose={() => setError('')}
+        onClose={() => {
+          setRedirectSignInStarted(false);
+          setError('');
+        }}
       >
         <h2 id={titleId}>Iniciar sesión con Google</h2>
         <p>Elige tu cuenta para continuar.</p>

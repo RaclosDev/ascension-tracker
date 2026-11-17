@@ -58,6 +58,11 @@ test('the installed PWA redirects in the same window and restores its session th
 }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'standalone', { value: true });
+    // A previous logout on this device must not block the redirect sign-in.
+    if (!sessionStorage.getItem('seeded-logout')) {
+      sessionStorage.setItem('seeded-logout', '1');
+      localStorage.setItem('ascension_logout_pending', '1');
+    }
   });
   await setupAuthMocks(page);
   await page.route('**/api/auth/refresh**', (route) => {
@@ -74,7 +79,7 @@ test('the installed PWA redirects in the same window and restores its session th
     return route.fulfill({
       status: 303,
       headers: {
-        location: '/',
+        location: '/?signedIn=google',
         'set-cookie': 'refreshToken=pwa-fixture-session; HttpOnly; Path=/api/auth; SameSite=Lax',
       },
     });
