@@ -158,7 +158,7 @@ for (const width of [390, 1920]) {
       return route.fulfill({ json: [] });
     });
     await page.goto('/entrenador/atletas/l1?seccion=semana&vista=revision');
-    await expect(page.getByText(/^4 días de entrenamiento por semana/)).toBeVisible();
+    await expect(page.getByText(/^4 días por semana/)).toBeVisible();
     await expect(
       page
         .locator('.athlete-context')
@@ -190,13 +190,9 @@ for (const width of [390, 1920]) {
     await page.screenshot({ path: info.outputPath('weekly-compact.png'), fullPage: true });
     await session.locator(':scope > summary').click();
     await expect(page.getByLabel('Nombre del día (Lunes 16/11)')).toHaveValue('Torso');
-    await expect(page.getByPlaceholder('Añadir ejercicio: nombre o etiqueta')).toBeHidden();
-    // Wide screens open the week notes by default.
-    const openNotes = async () => {
-      const notes = page.locator('.coach-week-notes');
-      if (!(await notes.evaluate((el) => (el as HTMLDetailsElement).open)))
-        await notes.locator(':scope > summary').click();
-    };
+    await expect(session.getByPlaceholder('Añadir ejercicio: nombre o etiqueta')).toBeHidden();
+    // The week notes live in their own tab of the side panel.
+    const openNotes = () => page.getByRole('button', { name: 'Notas', exact: true }).click();
     await openNotes();
     await page
       .getByLabel('Comentario para el atleta')
