@@ -2,7 +2,7 @@
 
 ## Comunicar una vulnerabilidad
 
-Envía el informe a [raclosdev@gmail.com](mailto:raclosdev@gmail.com), sin publicar credenciales ni datos personales en un issue. Incluye la revisión afectada, los pasos para reproducirlo y el impacto observado.
+Usa el [aviso privado de GitHub](https://github.com/RaclosDev/ascension-tracker/security/advisories/new) o envía el informe a [raclosdev@gmail.com](mailto:raclosdev@gmail.com), sin publicar credenciales ni datos personales en un issue. Incluye la revisión afectada, los pasos para reproducirlo y el impacto observado.
 
 El mantenimiento de seguridad se realiza sobre `main`. Este es un proyecto personal; no se ofrece un plazo de respuesta garantizado.
 
