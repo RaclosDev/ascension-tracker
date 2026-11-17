@@ -178,7 +178,8 @@ public class AuthController {
             return redirectLoginError();
         }
         return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header(HttpHeaders.LOCATION, "/")
+                // The marker tells the app this navigation is a completed sign-in, not a reload.
+                .header(HttpHeaders.LOCATION, "/?signedIn=google")
                 .header(HttpHeaders.CACHE_CONTROL, "no-store")
                 .header(HttpHeaders.SET_COOKIE, result.getHeaders().getOrEmpty(HttpHeaders.SET_COOKIE).toArray(String[]::new))
                 .build();

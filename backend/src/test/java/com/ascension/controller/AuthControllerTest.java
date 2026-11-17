@@ -108,7 +108,7 @@ class AuthControllerTest {
                 .param("credential", "test-google-credential")
                 .param("g_csrf_token", "test-csrf"))
                 .andExpect(status().isSeeOther())
-                .andExpect(header().string("Location", "/"))
+                .andExpect(header().string("Location", "/?signedIn=google"))
                 .andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(cookie().httpOnly("refreshToken", true))
                 .andExpect(cookie().secure("refreshToken", true))

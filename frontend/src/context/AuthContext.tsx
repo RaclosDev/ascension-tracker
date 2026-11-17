@@ -21,6 +21,7 @@ import api, {
 import { switchWorkoutAccount, getWorkoutAccount } from '@/lib/workout/account';
 import { registerLegacyWorkoutOwner } from '@/lib/workout/storage';
 import {
+  acceptRedirectSignIn,
   clearSessionLogoutPending,
   isSessionLogoutPending,
   markSessionLogoutPending,
@@ -128,6 +129,9 @@ const setCachedUser = (user: User | null) => {
     // ignore storage write errors
   }
 };
+
+// Before the router and the provider read the URL or the pending logout.
+acceptRedirectSignIn();
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
