@@ -90,7 +90,7 @@ export default function ProgramsSection({
               {showHistory ? 'Ocultar programas anteriores' : 'Ver programas anteriores'}
             </button>
           )}
-          <ul className="flex flex-col gap-2 mb-4">
+          <ul className="athlete-programs">
             {assignments.data
               .filter((a) => showHistory || a.status !== 'ENDED')
               .map((a) => (
@@ -99,9 +99,15 @@ export default function ProgramsSection({
                     <div className="min-w-0">
                       <div className="font-bold text-foreground truncate">{a.programName}</div>
                       <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        <span className="athlete-program-status" data-status={a.status}>
+                          {a.status === 'SCHEDULED'
+                            ? 'Programado'
+                            : a.status === 'ENDED'
+                              ? 'Terminado'
+                              : 'En curso'}
+                        </span>{' '}
                         {a.weeks} {a.weeks === 1 ? 'semana' : 'semanas'} · empieza el{' '}
                         {formatCoachDate(a.startDate)}
-                        {a.status === 'SCHEDULED' && ' · Programado'}
                         {a.status === 'ENDED' &&
                           a.endedAt &&
                           ` · terminado el ${formatCoachDate(a.endedAt)}`}
@@ -188,11 +194,16 @@ export default function ProgramsSection({
         </p>
       )}
       {canAssign && ready.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="flex flex-col gap-1 text-sm">
+        <div className="athlete-assign">
+          <h3>Asignar un programa de tu biblioteca</h3>
+          <div className="athlete-assign-form">
+            <label className="flex flex-col gap-1 text-sm min-w-0">
               Programa
-              <select value={programId} onChange={(e) => setProgramId(e.target.value)}>
+              <select
+                className="form-input min-h-11"
+                value={programId}
+                onChange={(e) => setProgramId(e.target.value)}
+              >
                 <option value="">Elige un programa</option>
                 {ready.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -203,7 +214,12 @@ export default function ProgramsSection({
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Empieza el
-              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <input
+                type="date"
+                className="form-input min-h-11"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
             </label>
             <button
               type="button"
