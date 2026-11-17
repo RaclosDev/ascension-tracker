@@ -48,11 +48,12 @@ export default function TrainingSection({ linkId }: { linkId: string }) {
   return (
     <Section title="Entrenamiento" icon={<Dumbbell size={18} aria-hidden />}>
       <h3 className="text-sm font-bold text-foreground mb-2">Historial de entrenamientos</h3>
-      <div data-tour="training-history" className="flex flex-wrap gap-3 mb-3">
-        <label>
+      <div data-tour="training-history" className="flex flex-wrap items-end gap-3 mb-3">
+        <label className="flex flex-col gap-1 text-sm min-w-0 flex-1 max-w-sm">
           Buscar por nombre
           <input
             type="search"
+            className="form-input min-h-11"
             maxLength={120}
             value={search}
             onChange={(e) => {
@@ -61,9 +62,10 @@ export default function TrainingSection({ linkId }: { linkId: string }) {
             }}
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 text-sm">
           Origen
           <select
+            className="form-input min-h-11"
             value={origin}
             onChange={(e) => {
               setOrigin(e.target.value);
