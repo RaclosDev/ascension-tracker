@@ -533,6 +533,12 @@ export function WeekEditor({
         </p>
       )}
       {error && <p role="alert">{error}</p>}
+      {saved.linkedFrom && !draft.dirty && (
+        <p className="week-linked">
+          Esta semana repite la del {formatCoachDate(saved.linkedFrom)} y cambia con ella. Si editas
+          sus sesiones aquí, deja de seguirla.
+        </p>
+      )}
       {previous.isError && (
         <p role="alert">
           No se pudo cargar la semana anterior.{' '}

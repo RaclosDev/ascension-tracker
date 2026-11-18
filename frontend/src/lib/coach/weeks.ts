@@ -28,6 +28,8 @@ export interface SavedWeek {
   assignmentId: string | null;
   publishedVersion: number | null;
   updatedAt: string | null;
+  /** The week whose sessions this one repeats, until its own are edited by hand. */
+  linkedFrom?: string | null;
 }
 export function isSavedWeek(value: unknown): value is SavedWeek {
   if (!value || typeof value !== 'object') return false;

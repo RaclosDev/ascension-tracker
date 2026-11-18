@@ -11,18 +11,21 @@ import { useAthleteLinks } from './AthleteShell';
 import { SectionSkeleton } from './SectionSkeleton';
 import { WeekReview } from './WeekReview';
 import { WeekEditor } from './WeekEditor';
+import { BlockView } from './BlockView';
 import { AthleteAvoided, AthleteEffort } from './editor/prescribing';
 
 const NONE: AvoidedExercise[] = [];
 
 export default function ClientWeek({ link }: { link: CoachClient }) {
   const [params, setParams] = useSearchParams();
-  const view = params.get('vista') === 'revision' ? 'review' : 'prepare';
+  const vista = params.get('vista');
+  const view = vista === 'revision' ? 'review' : vista === 'bloque' ? 'block' : 'prepare';
   const setView = (next: string) =>
     setParams(
       (current) => {
         const updated = new URLSearchParams(current);
         if (next === 'review') updated.set('vista', 'revision');
+        else if (next === 'block') updated.set('vista', 'bloque');
         else updated.delete('vista');
         return updated;
       },
@@ -50,6 +53,15 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
   const setWeek = preparing ? setPlanningWeek : setReviewWeek;
   const min = preparing ? weekDate() : undefined;
   const max = preparing ? shiftWeek(weekDate(), 52) : undefined;
+  const openWeek = (target: string) => {
+    if (target < weekDate()) {
+      setReviewWeek(target);
+      setView('review');
+    } else {
+      setPlanningWeek(target);
+      setView('prepare');
+    }
+  };
   const ready =
     preparing &&
     !assignments.isPending &&
@@ -63,10 +75,11 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
         onChange={setView}
         options={[
           { value: 'prepare', label: 'Preparar semana' },
+          { value: 'block', label: 'Bloque' },
           { value: 'review', label: 'Revisar semana anterior' },
         ]}
       />
-      <div className="week-toolbar-picker">
+      <div className="week-toolbar-picker" hidden={view === 'block'}>
         <button
           type="button"
           className="btn btn-secondary"
@@ -110,13 +123,21 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
           <ArrowRight size={16} aria-hidden />
         </button>
       </div>
-      {!preparing && (
+      {view === 'review' && (
         <Link className="week-toolbar-link" to={recordHref('registro')}>
           Ver lo que registró el atleta →
         </Link>
       )}
     </div>
   );
+  if (view === 'block')
+    return (
+      <div className="coach-planning-workspace flex flex-col gap-4">
+        <AthleteEffort.Provider value={link.setup?.effortMethod ?? null}>
+          <BlockView link={link} lead={toolbar} onOpenWeek={openWeek} />
+        </AthleteEffort.Provider>
+      </div>
+    );
   return (
     <div className="coach-planning-workspace flex flex-col gap-4">
       {!ready && toolbar}
