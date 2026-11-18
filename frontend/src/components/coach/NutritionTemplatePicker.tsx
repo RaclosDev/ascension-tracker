@@ -119,7 +119,7 @@ export function NutritionTemplatePicker({
                 </button>
               </>
             ))}
-          <Link to="/entrenador/pautas">Abrir biblioteca de pautas</Link>
+          <Link to="/entrenador/planificacion?pestana=nutricion">Abrir biblioteca de pautas</Link>
         </div>
       )}
     </section>

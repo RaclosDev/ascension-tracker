@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import api from '../api/client';
 import CoachProgramEditorPage from '../pages/CoachProgramEditorPage';
-import CoachProgramsPage from '../pages/CoachProgramsPage';
 import CoachProgramAdaptPage from '../pages/CoachProgramAdaptPage';
 import { clearSessionDrafts } from '../lib/sessionDrafts';
 import {
@@ -64,7 +63,6 @@ function renderAt(path: string) {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[path]}>
         <Routes>
-          <Route path="/entrenador/programas" element={<CoachProgramsPage />} />
           <Route path="/entrenador/programas/:programId" element={<CoachProgramEditorPage />} />
           <Route
             path="/entrenador/atletas/:linkId/programas/:assignmentId/adaptar"
@@ -133,25 +131,6 @@ describe('program editor helpers', () => {
     }));
     expect(programProblems({ ...bad, name: '' })).toHaveLength(5);
     expect(programProblems(withDay())).toEqual([]);
-  });
-});
-
-describe('CoachProgramsPage', () => {
-  it('lists the library and duplicates a program', async () => {
-    mockedApi.get.mockResolvedValue({
-      data: [
-        { id: 'p-1', name: 'Fuerza', weeks: 4, dayCount: 3, updatedAt: '2026-11-04T10:00:00Z' },
-      ],
-    });
-    mockedApi.post.mockResolvedValue({ data: { id: 'p-2' } });
-    renderAt('/entrenador/programas');
-
-    expect(await screen.findByText('Fuerza')).toBeDefined();
-    expect(screen.getByText(/4 semanas · 3 días/)).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: 'Duplicar Fuerza' }));
-    await waitFor(() =>
-      expect(mockedApi.post).toHaveBeenCalledWith('/coach/programs/p-1/duplicate'),
-    );
   });
 });
 

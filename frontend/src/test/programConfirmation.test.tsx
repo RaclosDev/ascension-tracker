@@ -45,7 +45,7 @@ function editor() {
       <MemoryRouter initialEntries={['/editar']}>
         <Routes>
           <Route path="/editar" element={<ProgramEditor initial={program} />} />
-          <Route path="/entrenador/programas" element={<p>Biblioteca de programas</p>} />
+          <Route path="/entrenador/planificacion" element={<p>Biblioteca de programas</p>} />
         </Routes>
         <ConfirmationDialog />
       </MemoryRouter>
@@ -75,11 +75,11 @@ it('copies over an occupied week only after confirming inside the app', async ()
 it('waits before navigating away from an unsaved program', async () => {
   editor();
   fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Cambio local' } });
-  fireEvent.click(screen.getByRole('link', { name: 'Volver a programas' }));
+  fireEvent.click(screen.getByRole('link', { name: 'Volver a la biblioteca' }));
   expect(screen.queryByText('Biblioteca de programas')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
   expect(screen.getByLabelText('Nombre')).toHaveValue('Cambio local');
-  fireEvent.click(screen.getByRole('link', { name: 'Volver a programas' }));
+  fireEvent.click(screen.getByRole('link', { name: 'Volver a la biblioteca' }));
   fireEvent.click(screen.getByRole('button', { name: 'Salir del editor' }));
   expect(await screen.findByText('Biblioteca de programas')).toBeInTheDocument();
 });

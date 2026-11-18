@@ -9,6 +9,7 @@ vi.mock('../api/client', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() },
 }));
 const mockedApi = vi.mocked(api);
+vi.mock('../lib/confirmation', () => ({ confirmAction: vi.fn().mockResolvedValue(true) }));
 vi.mock('../components/coach/tour/CoachTourWelcome', () => ({ default: () => null }));
 vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ user: { email: 'coach@test' } }) }));
 
@@ -29,6 +30,8 @@ const client = (linkId: string, name: string, editTraining: boolean, editNutriti
 
 function mockData() {
   mockedApi.post.mockResolvedValue({ data: {} });
+  mockedApi.put.mockImplementation(async (_url, body) => ({ data: [body] }));
+  mockedApi.delete.mockResolvedValue({ data: '' });
   mockedApi.get.mockImplementation(async (url) => {
     if (url === '/coach/profile') return { data: { coach: true } };
     if (url === '/coach/programs')
@@ -42,7 +45,19 @@ function mockData() {
       };
     if (url === '/coach/library-items')
       return {
-        data: [{ type: 'PROGRAM', id: 'w1', category: 'BLOCK', favorite: false, tags: [] }],
+        data: [
+          { type: 'PROGRAM', id: 'w1', category: 'BLOCK', favorite: false, tags: [] },
+          {
+            type: 'PROGRAM',
+            id: 's1',
+            category: 'SESSION',
+            favorite: true,
+            tags: ['casa'],
+            equipment: 'Mancuernas',
+            minutes: 45,
+            lastUsed: null,
+          },
+        ],
       };
     if (url === '/coach/nutrition-templates')
       return {
@@ -116,7 +131,59 @@ describe('Biblioteca del entrenador', () => {
     expect(screen.getByRole('tab', { name: /Recetas/ })).toHaveAttribute('aria-selected', 'true');
     expect(await screen.findByText(/420 kcal/)).toBeVisible();
     expect(screen.queryByRole('button', { name: /Aplicar/ })).toBeNull();
-    expect(screen.getByRole('link', { name: /Gestionar recetas/ })).toBeVisible();
+    expect(screen.getByRole('link', { name: /Avena/ })).toHaveAttribute(
+      'href',
+      '/entrenador/recetas?editar=r1',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Borrar Avena' }));
+    await waitFor(() => expect(mockedApi.delete).toHaveBeenCalledWith('/coach/recipes/r1'));
+  });
+
+  it('files, stars and deletes training resources from their row', async () => {
+    mockData();
+    renderAt();
+    expect(await screen.findByText(/45 min · Mancuernas · #casa/)).toBeVisible();
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'mancuernas' } });
+    expect(screen.queryByRole('link', { name: /Pierna en borrador/ })).toBeNull();
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: '' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Favoritos' }));
+    expect(screen.queryByRole('link', { name: /Pierna en borrador/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Favorito: Torso rápido' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Favoritos' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Favorito: Pierna en borrador' }));
+    await waitFor(() =>
+      expect(mockedApi.put).toHaveBeenCalledWith(
+        '/coach/library-items',
+        expect.objectContaining({ id: 's2', category: 'SESSION', favorite: true }),
+      ),
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clasificar Torso rápido' }));
+    fireEvent.change(screen.getByLabelText('Tipo'), { target: { value: 'WEEK' } });
+    fireEvent.change(screen.getByLabelText(/Etiquetas/), { target: { value: 'casa, rápido ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() =>
+      expect(mockedApi.put).toHaveBeenCalledWith(
+        '/coach/library-items',
+        expect.objectContaining({ id: 's1', category: 'WEEK', tags: ['casa', 'rápido'] }),
+      ),
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Borrar Pierna en borrador' }));
+    await waitFor(() => expect(mockedApi.delete).toHaveBeenCalledWith('/coach/programs/s2'));
+  });
+
+  it('deletes a nutrition template', async () => {
+    mockData();
+    renderAt('/entrenador/planificacion?pestana=nutricion');
+    fireEvent.click(await screen.findByRole('button', { name: 'Borrar Volumen' }));
+    await waitFor(() => expect(mockedApi.delete).toHaveBeenCalled());
+    expect(String(mockedApi.delete.mock.calls[0][0])).toContain('/coach/nutrition-templates/n1');
   });
 
   it('applies a program only to athletes who allow training edits', async () => {

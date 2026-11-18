@@ -271,8 +271,20 @@
 .coach-home-trend[data-trend='up'] {
   color: var(--accent-primary);
 }
-.coach-dashboard-grid,
-.coach-settings-grid {
+.coach-settings-form {
+  display: grid;
+  gap: 1.25rem;
+}
+.coach-settings-form fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.coach-settings-form fieldset[hidden] {
+  display: none;
+}
+.coach-dashboard-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
   gap: 1.5rem;
@@ -359,7 +371,6 @@
 }
 .coach-empty-inline p,
 .coach-welcome > p:not(.coach-eyebrow),
-.coach-resource-grid p,
 .coach-note p {
   color: var(--text-secondary);
   line-height: 1.6;
@@ -475,8 +486,7 @@
   gap: 1.5rem;
   min-width: 0;
 }
-.coach-client-summary,
-.coach-resource-grid {
+.coach-client-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 1.5rem;
@@ -518,12 +528,6 @@
 .coach-end-section {
   border-left: 3px solid var(--color-danger);
 }
-.coach-resource-grid h2 {
-  margin-top: 1rem;
-}
-.coach-resource-grid .btn {
-  margin-top: 1.25rem;
-}
 .coach-note {
   border-left: 2px solid var(--border-medium);
   padding: 0.5rem 1.25rem;
@@ -542,6 +546,26 @@
   flex-wrap: wrap;
   overflow: visible;
 }
+.coach-review-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.coach-review-bar .coach-search {
+  flex: 1 1 240px;
+  max-width: 320px;
+}
+.coach-review-bar ~ .coach-worklist,
+.coach-review-bar ~ .coach-description {
+  max-width: 860px;
+}
+@media (max-width: 640px) {
+  .coach-review-bar .coach-search {
+    max-width: none;
+  }
+}
 .coach-table-wrap {
   overflow-x: auto;
 }
@@ -558,8 +582,7 @@
   }
 }
 @media (max-width: 1100px) {
-  .coach-dashboard-grid,
-  .coach-settings-grid {
+  .coach-dashboard-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -573,8 +596,7 @@
   .coach-workspace {
     gap: 1.25rem;
   }
-  .coach-client-summary,
-  .coach-resource-grid {
+  .coach-client-summary {
     grid-template-columns: minmax(0, 1fr);
   }
   .coach-sort {
@@ -716,4 +738,7 @@
   .coach-week-quick-content {
     padding-inline: 16px;
   }
+}
+.coach-utilities {
+  max-width: 860px;
 }

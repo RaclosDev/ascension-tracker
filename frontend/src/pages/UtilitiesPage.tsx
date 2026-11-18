@@ -5,6 +5,8 @@ import api from '../api/client';
 import CalculatorCard from '../components/calculators/CalculatorCard';
 import NutritionCalculators from '../components/calculators/NutritionCalculators';
 import AiNutritionChef from '../components/utilities/AiNutritionChef';
+import { useCoachProfile } from '../lib/coach/api';
+import { CoachPageHeader } from '../components/coach/CoachWorkspace';
 import { calculateWeyandSteps, calculateWeyandMetabolic } from '../utils/fitnessCalculators';
 
 interface DashboardData {
@@ -14,6 +16,14 @@ interface DashboardData {
 interface SettingsData {
   heightCm?: number;
 }
+
+const GROUP_TITLE = {
+  fontSize: '0.8rem',
+  fontWeight: 700,
+  color: 'var(--text-muted)',
+  marginBottom: '0.65rem',
+  paddingLeft: '0.25rem',
+} as const;
 
 export default function UtilitiesPage() {
   const [weight1, setWeight1] = useState('');
@@ -25,12 +35,16 @@ export default function UtilitiesPage() {
   const [minutes, setMinutes] = useState('');
   const [seconds, setSeconds] = useState('');
 
+  // A coach works out figures for an athlete, so nothing is filled in from the coach's own data.
+  const coach = useCoachProfile().data?.coach === true;
   const { data: dashboardData } = useQuery<DashboardData>({
+    enabled: !coach,
     queryKey: ['dashboard'],
     queryFn: () => api.get('/weights/dashboard').then((res) => res.data),
   });
 
   const { data: settingsData } = useQuery<SettingsData>({
+    enabled: !coach,
     queryKey: ['settings'],
     queryFn: () => api.get('/settings').then((res) => res.data),
   });
@@ -70,50 +84,47 @@ export default function UtilitiesPage() {
 
   return (
     <div
-      className="fade-in max-w-2xl mx-auto px-4 pt-2 sm:pt-4"
-      style={{ paddingBottom: 'calc(110px + env(safe-area-inset-bottom, 24px))' }}
+      className={
+        coach
+          ? 'fade-in coach-page coach-workspace coach-utilities'
+          : 'fade-in max-w-2xl mx-auto px-4 pt-2 sm:pt-4'
+      }
+      style={
+        coach ? undefined : { paddingBottom: 'calc(110px + env(safe-area-inset-bottom, 24px))' }
+      }
     >
-      {/* HEADER */}
-      <header className="mb-6 pb-2 border-b border-white/5">
-        <h1 className="text-2xl font-black text-white tracking-tight">Utilidades y Calculadoras</h1>
-        <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
-          Herramientas biomecánicas, gasto calórico y nutrición deportiva.
-        </p>
-      </header>
+      {coach ? (
+        <CoachPageHeader
+          title="Utilidades"
+          description="Calculadoras de gasto y de nutrición para preparar las pautas de tus atletas."
+        />
+      ) : (
+        <header className="mb-6 pb-2 border-b border-white/5">
+          <h1 className="text-2xl font-black text-white tracking-tight">
+            Utilidades y Calculadoras
+          </h1>
+          <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
+            Herramientas biomecánicas, gasto calórico y nutrición deportiva.
+          </p>
+        </header>
+      )}
 
-      <section style={{ marginBottom: '1.75rem', marginTop: '1.25rem' }}>
-        <h2
-          style={{
-            fontSize: '0.8rem',
-            fontWeight: 700,
-            color: 'var(--text-muted)',
-            marginBottom: '0.65rem',
-            paddingLeft: '0.25rem',
-          }}
-        >
-          Chef nutricional
-        </h2>
-        <CalculatorCard
-          title="Estratega Nutricional IA"
-          subtitle="Chef culinario y recetas según tus macros de hoy"
-          icon={<ChefHat size={18} />}
-          defaultOpen={false}
-        >
-          <AiNutritionChef />
-        </CalculatorCard>
-      </section>
+      {!coach && (
+        <section style={{ marginBottom: '1.75rem', marginTop: '1.25rem' }}>
+          <h2 style={GROUP_TITLE}>Chef nutricional</h2>
+          <CalculatorCard
+            title="Estratega Nutricional IA"
+            subtitle="Chef culinario y recetas según tus macros de hoy"
+            icon={<ChefHat size={18} />}
+            defaultOpen={false}
+          >
+            <AiNutritionChef />
+          </CalculatorCard>
+        </section>
+      )}
+
       <section style={{ marginBottom: '1.75rem' }}>
-        <h2
-          style={{
-            fontSize: '0.8rem',
-            fontWeight: 700,
-            color: 'var(--text-muted)',
-            marginBottom: '0.65rem',
-            paddingLeft: '0.25rem',
-          }}
-        >
-          Calculadoras biomecánicas
-        </h2>
+        <h2 style={GROUP_TITLE}>{coach ? 'Gasto calórico' : 'Calculadoras biomecánicas'}</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           {/* Calculator 1: Steps */}
           <CalculatorCard
@@ -191,7 +202,7 @@ export default function UtilitiesPage() {
           >
             <p className="text-xs text-[var(--text-secondary)] mb-3">
               Calcula el VO2 y gasto calórico avanzado de una sesión de carrera/caminata
-              considerando tu biometría.
+              considerando {coach ? 'la biometría del atleta' : 'tu biometría'}.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -307,17 +318,7 @@ export default function UtilitiesPage() {
         </div>
       </section>
       <section style={{ marginBottom: '1.75rem' }}>
-        <h2
-          style={{
-            fontSize: '0.8rem',
-            fontWeight: 700,
-            color: 'var(--text-muted)',
-            marginBottom: '0.65rem',
-            paddingLeft: '0.25rem',
-          }}
-        >
-          Calculadoras de nutrición
-        </h2>
+        <h2 style={GROUP_TITLE}>{coach ? 'Nutrición' : 'Calculadoras de nutrición'}</h2>
         <NutritionCalculators />
       </section>
       {/* DISCLAIMER */}

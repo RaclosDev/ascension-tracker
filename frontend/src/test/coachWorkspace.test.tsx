@@ -128,9 +128,7 @@ describe('Espacio del entrenador', () => {
       '/entrenador/atletas/l0?seccion=gestion',
     );
     fireEvent.click(screen.getByRole('link', { name: 'Ver todos los seguimientos' }));
-    expect(
-      await screen.findByText('2 seguimientos por responder de 1 atleta.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('2 por responder')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Pendiente del atleta/ }));
     expect(await screen.findByText('2 semanas sin seguimiento')).toBeInTheDocument();
   });

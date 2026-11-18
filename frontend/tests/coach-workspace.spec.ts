@@ -235,6 +235,7 @@ for (const width of [1440, 390]) {
         .click();
     }
     await expect(page.getByRole('heading', { name: 'Ajustes del entrenador' })).toBeVisible();
+    await page.getByRole('link', { name: 'Preguntas del seguimiento' }).click();
     await page.getByRole('textbox', { name: 'Pregunta 1' }).fill('¿Qué te gustaría revisar?');
     await page.getByRole('button', { name: 'Guardar preguntas' }).click();
     await expect(page.getByText('Preguntas guardadas')).toBeVisible();

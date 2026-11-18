@@ -107,4 +107,6 @@
     padding: 0.75rem;
   }
 }
-.coach-planning-workspace [hidden] { display: none !important; }
+.coach-planning-workspace [hidden] {
+  display: none !important;
+}

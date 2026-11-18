@@ -64,19 +64,19 @@ for (const width of [390, 1440]) {
       .getByLabel('Presentación para tus atletas')
       .fill('Revisamos tu progreso cada semana.');
     await page.getByLabel('Mostrar mi foto de cuenta a mis atletas').uncheck();
+    await page.getByRole('link', { name: 'Incorporaciones' }).click();
     await page.getByLabel('Entrenamiento', { exact: true }).uncheck();
     await page.getByLabel('Nutrición', { exact: true }).check();
     await page.getByLabel('Día del seguimiento inicial').selectOption('3');
     await page.getByLabel('Hora del seguimiento inicial').fill('17:30');
     await page.getByLabel('Zona horaria de los seguimientos').fill('Atlantic/Canary');
     await page.reload();
+    await page.getByRole('link', { name: 'Perfil', exact: true }).click();
     await expect(page.getByLabel('Nombre profesional', { exact: true })).toHaveValue(
       'Ana · Entrenamiento de fuerza',
     );
-    await page.getByRole('button', { name: 'Guardar ajustes profesionales' }).click();
-    await expect(
-      page.getByRole('button', { name: 'Guardar ajustes profesionales' }),
-    ).toBeDisabled();
+    await page.getByRole('button', { name: 'Guardar cambios' }).click();
+    await expect(page.getByRole('button', { name: 'Guardar cambios' })).toBeDisabled();
     expect(settings.review.day).toBe(3);
     await page.getByLabel('Nombre profesional', { exact: true }).scrollIntoViewIfNeeded();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -89,7 +89,7 @@ for (const width of [390, 1440]) {
 
     conflict = true;
     await page.getByLabel('Presentación para tus atletas').fill('Mi borrador se conserva');
-    await page.getByRole('button', { name: 'Guardar ajustes profesionales' }).click();
+    await page.getByRole('button', { name: 'Guardar cambios' }).click();
     await expect(page.getByRole('alert')).toContainText('otra sesión');
     await expect(page.getByLabel('Presentación para tus atletas')).toHaveValue(
       'Mi borrador se conserva',

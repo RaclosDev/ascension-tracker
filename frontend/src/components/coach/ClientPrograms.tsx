@@ -208,7 +208,7 @@ export default function ProgramsSection({
       {canAssign && library.data && ready.length === 0 && (
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           Prepara un programa y márcalo como listo en tu{' '}
-          <Link to="/entrenador/programas">biblioteca</Link> para asignarlo.
+          <Link to="/entrenador/planificacion?pestana=programas">biblioteca</Link> para asignarlo.
         </p>
       )}
       {canAssign && ready.length > 0 && (

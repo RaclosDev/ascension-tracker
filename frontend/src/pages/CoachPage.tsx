@@ -50,7 +50,7 @@ function Dashboard() {
           </p>
           <div className="coach-inline-actions">
             <InviteClientButton />
-            <Link className="btn btn-secondary" to="/entrenador/programas">
+            <Link className="btn btn-secondary" to="/entrenador/planificacion?pestana=programas">
               Preparar un programa
             </Link>
           </div>

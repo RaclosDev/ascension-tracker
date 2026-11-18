@@ -57,7 +57,7 @@ for (const width of [390, 1440]) {
       removals++;
       return route.fulfill({ status: 200, json: {} });
     });
-    await page.goto('/entrenador/ajustes');
+    await page.goto('/entrenador/ajustes?apartado=avisos');
     await expect(page.getByRole('button', { name: 'Reintentar activación' })).toBeVisible();
     await expect(page.getByText('Avisos activados en este dispositivo.')).toHaveCount(0);
     fail = false;

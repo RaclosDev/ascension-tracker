@@ -1,9 +1,7 @@
-import { confirmAction } from '../lib/confirmation';
-vi.mock('../lib/confirmation', () => ({ confirmAction: vi.fn().mockResolvedValue(true) }));
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 vi.mock('../api/client', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() },
@@ -27,12 +25,15 @@ const bowl: CoachRecipe = {
   updatedAt: '2026-11-05T10:00:00Z',
 };
 
-function renderPage() {
+function renderPage(path: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <CoachRecipesPage />
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route path="/entrenador/recetas" element={<CoachRecipesPage />} />
+          <Route path="/entrenador/planificacion" element={<p>Biblioteca</p>} />
+        </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -41,22 +42,25 @@ function renderPage() {
 const fill = (label: string, value: string) =>
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
 
-describe('Biblioteca de recetas del entrenador', () => {
+describe('Editor de recetas del entrenador', () => {
   beforeEach(() => {
     mockedApi.get.mockReset();
     mockedApi.post.mockReset();
     mockedApi.put.mockReset();
-    mockedApi.delete.mockReset();
   });
   afterEach(cleanup);
+
+  it('sends the coach back to the library when no recipe is named', async () => {
+    mockedApi.get.mockResolvedValue({ data: [] });
+    renderPage('/entrenador/recetas');
+    expect(await screen.findByText('Biblioteca')).toBeTruthy();
+  });
 
   it('creates a recipe with live kcal per serving', async () => {
     mockedApi.get.mockResolvedValue({ data: [] });
     mockedApi.post.mockResolvedValue({ data: bowl });
-    renderPage();
+    renderPage('/entrenador/recetas?nueva=1');
 
-    expect(await screen.findByText(/Aún no tienes recetas/)).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: /Nueva receta/ }));
     const save = screen.getByRole('button', { name: 'Guardar receta' }) as HTMLButtonElement;
     expect(save.disabled).toBe(true);
 
@@ -77,21 +81,17 @@ describe('Biblioteca de recetas del entrenador', () => {
         fat: 12.5,
       }),
     );
-    await vi.waitFor(() =>
-      expect(screen.queryByRole('button', { name: 'Guardar receta' })).toBeNull(),
-    );
+    expect(await screen.findByText('Biblioteca')).toBeTruthy();
   });
 
-  it('edits and deletes an existing recipe', async () => {
+  it('edits an existing recipe', async () => {
     mockedApi.get.mockResolvedValue({ data: [bowl] });
     mockedApi.put.mockResolvedValue({ data: bowl });
-    mockedApi.delete.mockResolvedValue({ data: '' });
-    vi.mocked(confirmAction).mockResolvedValue(true);
-    renderPage();
+    renderPage('/entrenador/recetas?editar=r1');
 
-    expect(await screen.findByText(/533 kcal · P 45 g/)).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Editar Bowl de pollo' }));
-    expect((screen.getByLabelText('Grasa por ración') as HTMLInputElement).value).toBe('12.5');
+    expect(((await screen.findByLabelText('Grasa por ración')) as HTMLInputElement).value).toBe(
+      '12.5',
+    );
     fill('Grasa por ración', '10');
     fireEvent.click(screen.getByRole('button', { name: 'Guardar receta' }));
     await vi.waitFor(() =>
@@ -103,8 +103,5 @@ describe('Biblioteca de recetas del entrenador', () => {
         fat: 10,
       }),
     );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Borrar Bowl de pollo' }));
-    await vi.waitFor(() => expect(mockedApi.delete).toHaveBeenCalledWith('/coach/recipes/r1'));
   });
 });

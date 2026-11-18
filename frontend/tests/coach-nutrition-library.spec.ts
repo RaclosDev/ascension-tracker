@@ -87,9 +87,7 @@ for (const width of [390, 1440]) {
     });
     await page.goto('/entrenador/planificacion');
     await page.getByRole('tab', { name: /Nutrición/ }).click();
-    await page.getByRole('link', { name: 'Gestionar pautas' }).click();
-    await expect(page.getByRole('heading', { name: 'Biblioteca de pautas' })).toBeVisible();
-    await page.getByRole('link', { name: 'Crear pauta' }).click();
+    await page.getByRole('link', { name: 'Nueva pauta' }).click();
     await page.getByLabel('Nombre de la pauta').fill('Base de entrenamiento');
     for (const [label, value] of Object.entries({
       'Proteína día de entreno': '180',

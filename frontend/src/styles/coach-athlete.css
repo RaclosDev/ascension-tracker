@@ -294,6 +294,9 @@
   margin: 0;
   padding: 20px;
 }
+.coach-workspace .athlete-manage .card {
+  margin: 0;
+}
 .athlete-manage-tabs {
   display: flex;
   gap: 4px;
