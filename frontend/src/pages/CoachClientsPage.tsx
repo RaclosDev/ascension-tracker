@@ -216,7 +216,7 @@ function Clients() {
                       <th scope="col">Atleta</th>
                       <th scope="col">Semana siguiente</th>
                       <th scope="col">Último registro</th>
-                      <th scope="col">Seguimiento</th>
+                      <th scope="col">Último seguimiento</th>
                       <th scope="col">Siguiente paso</th>
                     </tr>
                   </thead>
@@ -244,9 +244,7 @@ function Clients() {
                           </Link>
                         </td>
                         <td>
-                          <span className="coach-muted">
-                            {activityText(row.status?.lastCheckin)}
-                          </span>
+                          <span className="coach-muted">{checkinText(row)}</span>
                         </td>
                         <td>
                           <NextStep row={row} href={href} />
@@ -302,13 +300,15 @@ function NextStep({
       <Link
         className="coach-roster-action coach-roster-action-primary"
         to={href(row.link.linkId, task.section)}
-        title={task.detail}
       >
-        <span>{task.title}</span>
+        <span className="coach-roster-action-text">
+          {task.title}
+          {task.id !== 'reply' && <small>{task.detail}</small>}
+        </span>
         {task.id === 'reply' && (
           <span
             className="coach-roster-reply-count"
-            aria-label={`${row.status?.pendingReplies} pendientes`}
+            aria-label={`${row.status?.pendingReplies} por responder`}
           >
             {row.status?.pendingReplies}
           </span>
@@ -330,12 +330,11 @@ function NextStep({
     );
   if (tasks[0])
     return (
-      <Link
-        className="coach-roster-action"
-        to={href(row.link.linkId, tasks[0].section)}
-        title={tasks[0].detail}
-      >
-        <span>{tasks[0].title}</span>
+      <Link className="coach-roster-action" to={href(row.link.linkId, tasks[0].section)}>
+        <span className="coach-roster-action-text">
+          {tasks[0].title}
+          <small>{tasks[0].detail}</small>
+        </span>
         <ArrowRight size={15} aria-hidden />
       </Link>
     );
@@ -354,6 +353,17 @@ function NextStep({
       )}
     </span>
   );
+}
+
+/** When the last seguimiento came in and whose turn it is now. */
+function checkinText({ status }: CoachRow) {
+  if (!status) return 'No disponible';
+  const late = status.signals.find((signal) => signal.reason === 'CHECKIN_MISSING')?.value;
+  if (status.pendingReplies > 0) return `${activityText(status.lastCheckin)} · por responder`;
+  if (late) return late === 1 ? 'Atrasado 1 semana' : `Atrasado ${late} semanas`;
+  return status.lastCheckin
+    ? `${activityText(status.lastCheckin)} · respondido`
+    : 'Sin seguimientos';
 }
 
 const weekText = (state: NonNullable<NonNullable<CoachRow['status']>['nextWeekStatus']>) =>

@@ -228,3 +228,18 @@
     margin-left: -0.75rem;
   }
 }
+
+/* Five tabs on a phone: tighter, and without the counts, so none hides off the edge. */
+@media (max-width: 480px) {
+  .coach-library-tabs {
+    gap: 0;
+    justify-content: space-between;
+  }
+  .coach-library-tabs button {
+    padding: 0 0.4rem;
+    font-size: 0.82rem;
+  }
+  .coach-library-tabs button span {
+    display: none;
+  }
+}

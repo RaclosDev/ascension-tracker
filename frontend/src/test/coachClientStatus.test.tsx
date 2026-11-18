@@ -77,7 +77,7 @@ describe('Semáforo de atletas', () => {
       'Atleta',
       'Semana siguiente',
       'Último registro',
-      'Seguimiento',
+      'Último seguimiento',
       'Siguiente paso',
     ]);
     const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);

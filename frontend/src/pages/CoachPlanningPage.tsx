@@ -9,7 +9,7 @@ import {
   useDuplicateProgram,
   type ProgramSummary,
 } from '../lib/coach/coachPrograms';
-import { programCategory, useLibraryItems } from '../lib/coach/library';
+import { programCategory, useLibraryItems, useSaveLibraryItem } from '../lib/coach/library';
 import { useNutritionTemplates } from '../lib/coach/nutritionTemplates';
 import { useCoachRecipes } from '../lib/coach/coachRecipes';
 import { clientHref } from '../lib/coach/workspace';
@@ -165,6 +165,7 @@ export default function CoachPlanningPage() {
   const templates = useNutritionTemplates();
   const recipes = useCoachRecipes();
   const duplicate = useDuplicateProgram();
+  const saveItem = useSaveLibraryItem();
 
   const tabOf = (program: ProgramSummary): TabId => {
     const saved = items.data?.find((i) => i.type === 'PROGRAM' && i.id === program.id)?.category;
@@ -207,6 +208,7 @@ export default function CoachPlanningPage() {
 
   const select = (id: TabId) => {
     const next = new URLSearchParams(params);
+    setSearch('');
     if (id === 'sesiones') next.delete('pestana');
     else next.set('pestana', id);
     setParams(next, { replace: true });
@@ -296,7 +298,24 @@ export default function CoachPlanningPage() {
                     disabled={duplicate.isPending}
                     onClick={() =>
                       duplicate.mutate(row.id, {
-                        onSuccess: () => toast.success('Copia creada'),
+                        onSuccess: (copy) => {
+                          // The copy stays where its original is filed, not where its size would put it.
+                          const source = items.data?.find(
+                            (i) => i.type === 'PROGRAM' && i.id === row.id,
+                          );
+                          if (source && copy.id)
+                            saveItem.mutate({
+                              type: 'PROGRAM',
+                              id: copy.id,
+                              favorite: false,
+                              category: source.category,
+                              tags: source.tags,
+                              minutes: source.minutes,
+                              equipment: source.equipment,
+                              lastUsed: null,
+                            });
+                          toast.success(`Copia creada como borrador: «${copy.name}»`);
+                        },
                         onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo duplicar')),
                       })
                     }
