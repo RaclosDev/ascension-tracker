@@ -18,5 +18,6 @@ export function usePrescribing() {
   return {
     effort: athlete ?? settings?.effortMethod ?? ('RIR' as EffortMethod),
     unitOf: (exerciseId: string) => unitFor(exercises.get(exerciseId)?.equipment, dumbbell),
+    muscleOf: (exerciseId: string) => exercises.get(exerciseId)?.muscle,
   };
 }

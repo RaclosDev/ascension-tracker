@@ -184,9 +184,9 @@ for (const width of [390, 1920]) {
     await previousPrograms.click();
     await page.getByRole('button', { name: 'Preparar semana', exact: true }).click();
     await page.getByRole('button', { name: 'Copiar semana anterior' }).click();
-    const session = page.locator('.coach-day').filter({ hasText: 'Torso' });
-    // The copied Monday is the day on screen: the board sums it up and its editor is open.
-    await expect(page.locator('.week-day').first()).toContainText('1 ejercicio · 3 series');
+    const session = page.locator('.week-col').first();
+    // The copied Monday is editable in its own column, which sums it up in its head.
+    await expect(session).toContainText('1 ejercicio · 3 series');
     await expect(page.getByLabel('Nombre del día (Lunes 16/11)')).toHaveValue('Torso');
     await page.screenshot({ path: info.outputPath('weekly-compact.png'), fullPage: true });
     await expect(session.getByPlaceholder('Añadir ejercicio: nombre o etiqueta')).toHaveCount(0);
@@ -223,7 +223,7 @@ for (const width of [390, 1920]) {
       45,
     );
     expect(previous.days[0].exercises[0].prescription?.load?.amount).toBe(50);
-    expect(saved.publishedVersion).toBe(1);
+    expect(saved.publishedVersion).toBe(saved.version);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
