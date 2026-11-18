@@ -114,6 +114,7 @@ export function CoachHomeBoard({ rows }: { rows: CoachRow[] }) {
                     ? 'Sin enviar · 1 semana tarde'
                     : `Sin enviar · ${weeksLate} semanas tarde`
                 }
+                action="Ver"
                 warn
               />
             );

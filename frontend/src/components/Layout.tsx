@@ -29,7 +29,7 @@ import {
   Dumbbell,
   Wrench,
   Settings,
-  Plus,
+  Ellipsis,
   LogOut,
   ChevronDown,
   GraduationCap,
@@ -460,7 +460,7 @@ export default function Layout() {
           title="Más opciones"
         >
           <span className="mobile-bottom-icon" aria-hidden="true">
-            <Plus className="w-5 h-5" />
+            <Ellipsis className="w-5 h-5" />
           </span>
         </button>
       </nav>

@@ -18,6 +18,7 @@ import {
 import { CheckinCard } from './CheckinCard';
 import { QueryErrorNotice } from '../QueryErrorNotice';
 import { useSessionDraft } from '../../hooks/useSessionDraft';
+import { useClientStatus } from '../../lib/coach/clientStatus';
 import { useQueryClient } from '@tanstack/react-query';
 
 const matches = (filter: string, item: Checkin) =>
@@ -27,6 +28,10 @@ const matches = (filter: string, item: Checkin) =>
 export function CheckinsSection({ link }: { link: CoachClient }) {
   const linkId = link.linkId;
   const checkins = useClientCheckins(linkId);
+  // The athlete header already asks for this; here it is only read.
+  const missing = useClientStatus(false, linkId).data?.[0]?.signals.find(
+    (signal) => signal.reason === 'CHECKIN_MISSING',
+  );
   const [chosen, setFilter] = useState<string | null>(null);
   const all = checkins.data ?? [];
   const pending = all.filter(needsReply).length;
@@ -44,7 +49,15 @@ export function CheckinsSection({ link }: { link: CoachClient }) {
       <div className="athlete-section-title">
         <div>
           <h2>Seguimientos semanales</h2>
-          {all.length > 0 && (
+          {missing && (
+            <p className="coach-description">
+              {missing.value === 1
+                ? 'El atleta aún no ha enviado el seguimiento de esta semana.'
+                : `El atleta lleva ${missing.value} semanas sin enviar su seguimiento.`}{' '}
+              No hay nada que responder hasta que lo envíe.
+            </p>
+          )}
+          {all.length > 0 && !(missing && pending === 0) && (
             <p className="coach-description">
               {pending === 0
                 ? 'Todo respondido.'
