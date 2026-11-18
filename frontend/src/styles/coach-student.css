@@ -62,18 +62,6 @@
   font-weight: 400;
   color: var(--text-secondary);
 }
-.coach-student .coach-exercise {
-  background: var(--bg-card);
-}
-.coach-student .coach-exercise label:not(:has(input[type='checkbox'])) {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  min-width: 0;
-  font-size: 0.875rem;
-}
-.coach-student .coach-exercise input:not([type='checkbox']),
-.coach-student .coach-exercise select,
 .coach-student .coach-add-exercise select {
   min-height: 44px;
   max-width: 100%;

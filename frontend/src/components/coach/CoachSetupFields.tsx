@@ -57,6 +57,29 @@ export function CoachSetupFields({
         />
       </label>
       {value.services.training && (
+        <label className="flex flex-col gap-1">
+          <span className="form-label">Esfuerzo en sus pautas</span>
+          <select
+            className="form-input"
+            value={value.effortMethod ?? ''}
+            onChange={(event) =>
+              onChange({
+                ...value,
+                effortMethod: (event.target.value as CoachSetup['effortMethod']) || null,
+              })
+            }
+          >
+            <option value="">Como en mis ajustes profesionales</option>
+            <option value="RIR">RIR (repeticiones en reserva)</option>
+            <option value="RPE">RPE (esfuerzo percibido)</option>
+            <option value="NONE">Sin objetivo de esfuerzo</option>
+          </select>
+          <span className="coach-description">
+            Cámbialo solo si este atleta trabaja distinto al resto.
+          </span>
+        </label>
+      )}
+      {value.services.training && (
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1">
             <span className="form-label">Experiencia entrenando (opcional)</span>

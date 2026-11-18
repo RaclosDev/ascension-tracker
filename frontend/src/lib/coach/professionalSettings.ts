@@ -11,6 +11,10 @@ export interface ProfessionalSettings {
   prefill: boolean;
   review: ReviewSchedule;
   version: number;
+  /** How the coach writes effort; an athlete can have their own in their setup. */
+  effortMethod?: 'RIR' | 'RPE' | 'NONE';
+  /** Dumbbell loads: per dumbbell or both added up. */
+  dumbbellLoad?: 'EACH' | 'TOTAL';
 }
 
 export function isProfessionalSettings(value: unknown): value is ProfessionalSettings {

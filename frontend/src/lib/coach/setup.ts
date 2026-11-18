@@ -9,6 +9,8 @@ export interface CoachSetup {
   trainingDays: number | null;
   equipment: string | null;
   reviewed: boolean;
+  /** Set only when this athlete works with a different effort method than the coach's usual one. */
+  effortMethod?: 'RIR' | 'RPE' | 'NONE' | null;
 }
 
 export const SERVICE_LABELS = {

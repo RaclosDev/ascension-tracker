@@ -107,13 +107,15 @@ for (const width of [390, 1440]) {
       'Ana García',
     );
     await page.getByLabel('Nombre', { exact: true }).fill('Fuerza · adaptación Ana');
-    await page.getByLabel('Series', { exact: true }).fill('5');
+    const addSet = page.getByRole('button', { name: 'Serie', exact: true });
+    await addSet.click();
+    await addSet.click();
     await page.reload();
     await expect(page.getByLabel('Nombre', { exact: true })).toHaveValue('Fuerza · adaptación Ana');
-    await expect(page.getByLabel('Series', { exact: true })).toHaveValue('5');
+    await expect(page.getByLabel('Repeticiones de la serie 5')).toHaveValue('6-8');
     await page.getByRole('button', { name: 'Vista previa', exact: true }).click();
     await expect(page.getByRole('region', { name: 'Vista previa del programa' })).toContainText(
-      '5 × 6–8 reps',
+      '5 × 6–8',
     );
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
@@ -125,7 +127,7 @@ for (const width of [390, 1440]) {
     });
     const lastExercise = page
       .getByRole('region', { name: 'Vista previa del programa' })
-      .getByText('5 × 6–8 reps', { exact: false });
+      .getByText('5 × 6–8', { exact: false });
     await lastExercise.evaluate((element) => element.scrollIntoView({ block: 'center' }));
     await expect(lastExercise).toBeInViewport();
     await page.screenshot({

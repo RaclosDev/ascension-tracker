@@ -1,21 +1,25 @@
 import type { ProgramExercise } from '@/lib/coach/coachPrograms';
-import { prescriptionText } from '@/lib/coach/today';
-import { setText } from '@/lib/coach/prescription';
+import { restLabel } from '@/lib/coach/today';
+import { protocolText } from '@/lib/coach/prescription';
 
+/** The dose as the athlete reads it, plus the notes the coach left on individual sets. */
 export function PrescriptionSummary({ exercise }: { exercise: ProgramExercise }) {
-  if (exercise.prescription?.sets?.length)
-    return (
-      <ol className="text-sm flex flex-col gap-1">
-        {exercise.prescription.sets.map((set, i) => (
-          <li key={i}>
-            {i + 1}. {setText(set, exercise)}
-          </li>
-        ))}
-      </ol>
-    );
+  const notes = (exercise.prescription?.sets ?? [])
+    .map((set, i) => ({ set: i + 1, text: set.notes }))
+    .filter((note) => note.text);
   return (
     <span>
-      {exercise.sets} × {prescriptionText({ ...exercise, notes: null }) || 'series'}
+      {[
+        protocolText(exercise),
+        exercise.restSeconds != null && `descanso ${restLabel(exercise.restSeconds)}`,
+      ]
+        .filter(Boolean)
+        .join(' · ')}
+      {notes.map((note) => (
+        <span key={note.set} className="block text-sm">
+          Serie {note.set}: {note.text}
+        </span>
+      ))}
     </span>
   );
 }

@@ -881,62 +881,222 @@
 .coach-day-add {
   align-self: flex-start;
 }
-/* In the one-day editor an exercise is a short row: name and order, then its dose beside the
-   control that opens the full prescription. */
-.coach-student .coach-day-flat .coach-exercise {
+/* One exercise: a row per set with three cells, the note, and the line the athlete will read. */
+.set-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-card);
+}
+.set-card-head {
+  display: flex;
   align-items: center;
-  gap: 2px 12px;
-  padding: 8px 8px 8px 12px;
+  gap: 4px;
+  min-width: 0;
 }
-.coach-day-flat .coach-exercise > div:first-child {
-  grid-column: 1 / -1;
-  gap: 2px;
+.set-card-grip {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 32px;
+  margin-left: -6px;
+  color: var(--text-secondary);
+  cursor: grab;
+  touch-action: none;
 }
-.coach-day-flat .coach-exercise > div:first-child > span:first-child {
-  margin-right: 6px;
+.set-card-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
 }
-.coach-day-flat .coach-exercise > div:first-child .btn {
-  min-width: 34px;
-  min-height: 34px;
-  padding: 0;
-  justify-content: center;
-  border-color: transparent;
-  background: transparent;
+.set-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 6px;
   color: var(--text-secondary);
 }
-.coach-day-flat .coach-exercise > div:first-child .btn:hover:not(:disabled) {
+.set-icon:hover:not(:disabled),
+.set-icon[aria-expanded='true'] {
   color: var(--text-primary);
   background: var(--bg-secondary);
 }
-.coach-day-flat .coach-prescription-summary {
-  padding-left: 30px;
-  font-size: 0.85rem;
+.set-icon:disabled {
+  opacity: 0.3;
+}
+.set-rows {
+  display: grid;
+  gap: 4px;
+}
+.set-grid {
+  display: grid;
+  grid-template-columns: 36px repeat(3, minmax(0, 1fr)) 32px;
+  gap: 4px;
+  align-items: center;
+}
+.set-grid-2 {
+  grid-template-columns: 36px repeat(2, minmax(0, 1fr)) 32px;
+}
+.set-grid-head {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   color: var(--text-secondary);
+  text-align: center;
+}
+.set-number {
+  height: 36px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  position: relative;
+}
+.set-number:hover,
+.set-number[aria-expanded='true'] {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+}
+.set-number:not([data-kind='WORK']) {
+  color: var(--accent-light, #31859a);
+  font-size: 0.7rem;
+}
+.set-number[data-note]::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-light, #31859a);
+}
+.set-cell {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 6px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: rgb(0 0 0 / 0.2);
+  color: var(--text-primary);
+  text-align: center;
   font-variant-numeric: tabular-nums;
 }
-.coach-day-flat .coach-exercise-fields > summary {
-  min-height: 34px;
+.set-cell:hover {
+  border-color: var(--border-medium);
+}
+.set-cell[aria-invalid='true'] {
+  border-color: #e0795f;
+}
+.set-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 4px;
+  padding: 0 36px 4px 40px;
+}
+.set-detail .form-input,
+.set-options .form-input {
+  min-height: 36px;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+}
+.set-note {
+  padding: 0 36px 2px 44px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.set-add {
   display: inline-flex;
   align-items: center;
-  padding-inline: 10px;
+  gap: 4px;
+  justify-self: start;
+  min-height: 32px;
+  margin-left: 36px;
+  padding: 0 10px;
   border-radius: 6px;
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-secondary);
-  cursor: pointer;
 }
-.coach-day-flat .coach-exercise-fields > summary:hover {
+.set-add:hover:not(:disabled) {
   color: var(--text-primary);
   background: var(--bg-secondary);
 }
-.coach-day-flat .coach-exercise-fields[open] {
-  grid-column: 1 / -1;
-  padding: 4px 0 8px 30px;
+.set-exercise-note {
+  width: 100%;
+  min-height: 36px;
+  padding: 4px 8px;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 6px;
+  background: transparent;
+  font-size: 0.85rem;
+  color: var(--text-primary);
 }
-.coach-day-flat .coach-exercise-fields[open] > summary {
-  padding-left: 0;
+.set-exercise-note::placeholder {
+  color: var(--text-secondary);
+}
+.set-protocol {
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.set-protocol > span {
+  margin-right: 4px;
+  color: var(--text-secondary);
+}
+.set-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border-radius: 6px;
+  background: var(--bg-secondary);
+}
+.set-options label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.set-problem {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #f0a48f;
+}
+.set-options-hint {
+  grid-column: 1 / -1;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+@media (pointer: coarse) {
+  .set-cell,
+  .set-number {
+    height: 44px;
+  }
+  .set-icon {
+    width: 40px;
+    height: 44px;
+  }
+  .set-grid {
+    grid-template-columns: 40px repeat(3, minmax(0, 1fr)) 40px;
+  }
+  .set-grid-2 {
+    grid-template-columns: 40px repeat(2, minmax(0, 1fr)) 40px;
+  }
+  .set-add,
+  .set-exercise-note {
+    min-height: 44px;
+  }
 }
 .week-rest {
   display: grid;

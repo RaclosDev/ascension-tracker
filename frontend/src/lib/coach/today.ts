@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
 import type { ProgramExercise } from './coachPrograms';
 import type { PrescribedDay } from '../workout/store';
-import { loadText, prescribedSet, setText } from './prescription';
+import { loadText, prescribedSet, protocolText } from './prescription';
 
 /** Mirrors the backend ProgramDtos.TodayDay: the prescribed day, with its id for linking the workout. */
 export interface TodayDay {
@@ -59,7 +59,7 @@ export function useLeaveProgram() {
   });
 }
 
-const restLabel = (seconds: number) =>
+export const restLabel = (seconds: number) =>
   seconds >= 60
     ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
     : `${seconds} s`;
@@ -67,7 +67,13 @@ const restLabel = (seconds: number) =>
 /** The coach's targets for one exercise, in one line: "6–8 reps · RPE 8 · descanso 2:00". */
 export function prescriptionText(e: ProgramExercise): string {
   if (e.prescription?.sets?.length)
-    return e.prescription.sets.map((s, i) => `${i + 1}: ${setText(s, e)}`).join(' / ');
+    return [
+      protocolText(e),
+      e.restSeconds != null && `descanso ${restLabel(e.restSeconds)}`,
+      e.notes,
+    ]
+      .filter(Boolean)
+      .join(' · ');
   const parts: string[] = [];
   if (e.repsMin != null && e.repsMax != null && e.repsMin !== e.repsMax) {
     parts.push(`${e.repsMin}–${e.repsMax} reps`);

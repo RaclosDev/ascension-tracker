@@ -10,6 +10,7 @@ import { useAthleteLinks } from './AthleteShell';
 import { SectionSkeleton } from './SectionSkeleton';
 import { WeekReview } from './WeekReview';
 import { WeekEditor } from './WeekEditor';
+import { AthleteEffort } from './editor/prescribing';
 
 export default function ClientWeek({ link }: { link: CoachClient }) {
   const [params, setParams] = useSearchParams();
@@ -128,13 +129,15 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
             <WeekReview linkId={link.linkId} week={reviewWeek} assignments={assignments.data} />
           </div>
           <div hidden={view !== 'prepare'}>
-            <WeekEditor
-              key={`${link.linkId}:${planningWeek}`}
-              saved={draft.data}
-              source={previous}
-              canEdit={link.permissions.editTraining}
-              reload={() => draft.refetch()}
-            />
+            <AthleteEffort.Provider value={link.setup?.effortMethod ?? null}>
+              <WeekEditor
+                key={`${link.linkId}:${planningWeek}`}
+                saved={draft.data}
+                source={previous}
+                canEdit={link.permissions.editTraining}
+                reload={() => draft.refetch()}
+              />
+            </AthleteEffort.Provider>
           </div>
         </div>
       )}

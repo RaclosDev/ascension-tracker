@@ -6,6 +6,7 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public final class CoachSettingsDtos {
@@ -15,7 +16,9 @@ public final class CoachSettingsDtos {
                            @NotNull @Size(max = 500) String presentation, boolean showAccountPhoto,
                            @Valid @NotNull CoachSetupDtos.Services services, boolean prefill,
                            @Valid @NotNull CoachScheduleDtos.Schedule review,
-                           @NotNull @Min(0) Integer version) {
+                           @NotNull @Min(0) Integer version,
+                           @Pattern(regexp = "RIR|RPE|NONE") String effortMethod,
+                           @Pattern(regexp = "EACH|TOTAL") String dumbbellLoad) {
         @JsonIgnore
         @AssertTrue(message = "Las nuevas incorporaciones empiezan con seguimiento activo")
         public boolean isReviewActive() {

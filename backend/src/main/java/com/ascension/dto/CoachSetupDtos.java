@@ -24,5 +24,6 @@ public final class CoachSetupDtos {
                         @Min(1) @Max(7) Integer trainingDays,
                         @Size(max = 400) String equipment,
                         boolean reviewed,
-                        @jakarta.validation.constraints.Pattern(regexp="GENERAL|PERFORMANCE|MAINTAIN|WEIGHT_CHANGE") String goalFocus) { }
+                        @jakarta.validation.constraints.Pattern(regexp="GENERAL|PERFORMANCE|MAINTAIN|WEIGHT_CHANGE") String goalFocus,
+                        @jakarta.validation.constraints.Pattern(regexp="RIR|RPE|NONE") String effortMethod) { }
 }
