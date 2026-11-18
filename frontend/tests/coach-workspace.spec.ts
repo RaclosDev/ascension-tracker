@@ -176,7 +176,7 @@ for (const width of [1440, 390]) {
       'Buen trabajo. Mantenemos el programa esta semana.',
     );
     await page.getByRole('button', { name: 'Responder', exact: true }).click();
-    await expect(page.getByText('Respuesta del entrenador', { exact: true })).toBeVisible();
+    await expect(page.getByText(/^Respuesta del entrenador/)).toBeVisible();
     await noHorizontalOverflow(page);
     await page.screenshot({
       path: testInfo.outputPath('client-reviews.png'),

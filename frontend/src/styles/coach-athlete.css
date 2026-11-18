@@ -279,34 +279,51 @@
   margin: 0;
 }
 
-.athlete-checkins .athlete-section-title .segmented {
-  flex: 0 1 30rem;
-}
-
-/* Settings the coach edits on the left; facts about the relationship beside them. */
+/* Athlete settings: one group at a time, picked from a short list beside it. */
 .athlete-manage,
-.athlete-manage-main,
-.athlete-manage-side {
+.athlete-manage-panel {
   display: grid;
   gap: 16px;
   min-width: 0;
   align-content: start;
 }
+.athlete-manage-panel {
+  max-width: 860px;
+}
 .coach-student .athlete-manage .card {
   margin: 0;
   padding: 20px;
 }
-.athlete-manage-main > details > summary {
+.athlete-manage-tabs {
   display: flex;
-  align-items: center;
-  min-height: 48px;
-  padding: 0 20px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  font-weight: 600;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border-subtle);
+  scrollbar-width: none;
 }
-.athlete-manage-main > details[open] > summary {
-  margin-bottom: 12px;
+.athlete-manage-tabs a {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-bottom: 2px solid transparent;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.athlete-manage-tabs a:hover {
+  color: var(--text-primary);
+}
+.athlete-manage-tabs a:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.athlete-manage-tabs a[aria-current='page'] {
+  border-bottom-color: var(--text-primary);
+  color: var(--text-primary);
 }
 .athlete-manage .coach-facts dd {
   display: inline-flex;
@@ -320,26 +337,32 @@
 .athlete-manage .coach-facts dd[data-granted] svg {
   color: var(--success, var(--accent-primary));
 }
-.athlete-manage-index {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 18px;
-  grid-column: 1 / -1;
-  font-size: 0.85rem;
-}
-.athlete-manage-index a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  color: var(--text-secondary);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.athlete-manage-index a:hover {
-  color: var(--text-primary);
-}
-.athlete-manage [id^='ajustes-'] {
-  scroll-margin-top: 16px;
+@media (min-width: 1000px) {
+  .athlete-manage {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+  }
+  .athlete-manage-tabs {
+    position: sticky;
+    top: 16px;
+    flex-direction: column;
+    gap: 2px;
+    overflow: visible;
+    border-bottom: 0;
+  }
+  .athlete-manage-tabs a {
+    min-height: 40px;
+    border-bottom: 0;
+    border-radius: 6px;
+    white-space: normal;
+  }
+  .athlete-manage-tabs a:hover {
+    background: var(--accent-light);
+  }
+  .athlete-manage-tabs a[aria-current='page'] {
+    background: var(--bg-secondary);
+  }
 }
 .avoided-list {
   display: grid;
@@ -373,23 +396,6 @@
 .avoided-add > :first-child {
   justify-self: stretch;
 }
-@media (min-width: 1180px) {
-  .athlete-manage {
-    grid-template-columns: minmax(0, 1fr) 360px;
-    align-items: start;
-  }
-}
-
-.checkin-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.checkin-brief {
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-  font-variant-numeric: tabular-nums;
-}
 .set-card-vetoed {
   display: flex;
   gap: 4px;
@@ -417,7 +423,6 @@
   }
 }
 
-/* Seguimientos: what the athlete sent on one side, the reply on the other. */
 .checkin-card {
   display: flex;
   flex-direction: column;
@@ -426,69 +431,446 @@
 .checkin-message {
   background: var(--bg-secondary);
 }
+
+/* Seguimientos: this week open and day by day; the weeks before it folded in a list. */
+.athlete-checkins {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.athlete-checkins .athlete-section-title p {
+  margin: 0;
+}
+.checkin-week {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-card);
+}
+.checkin-week-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+.checkin-week-head h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.checkin-week-head p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.checkin-week-head .checkin-status {
+  align-self: center;
+  margin-left: auto;
+}
+.checkin-week-empty {
+  margin: 0;
+  color: var(--text-secondary);
+}
+.checkin-week-body,
+.checkin-week-main,
+.checkin-week-side {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  align-content: start;
+}
+.checkin-scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.checkin-scores dt {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.checkin-scores dd {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.checkin-answers {
+  display: grid;
+  gap: 10px;
+  max-width: 75ch;
+  margin: 0;
+}
+.checkin-answers dt {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+.checkin-answers dd {
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.checkin-meta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.checkin-thread {
+  display: grid;
+  gap: 8px;
+  max-width: 75ch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.checkin-thread li {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+.checkin-thread p {
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.checkin-thread p:first-child {
+  margin-bottom: 2px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
 .checkin-status {
   display: inline-flex;
   align-items: center;
   min-height: 22px;
-  padding: 0 8px;
-  border: 1px solid var(--border-medium);
-  border-radius: 11px;
   color: var(--text-secondary);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 600;
   white-space: nowrap;
 }
 .checkin-status-pending {
-  border-color: var(--text-primary);
+  padding: 0 8px;
+  border-radius: 11px;
   background: var(--text-primary);
   color: var(--bg-primary);
 }
-.athlete-checkins .checkin-card {
-  padding: 1rem;
-  background: var(--bg-card);
+.checkin-brief {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
 }
-.athlete-checkins .checkin-card-footer {
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border-subtle);
+.checkin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
-.athlete-checkins .checkin-card-footer textarea {
+.checkin-reply {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.checkin-reply > label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.checkin-reply textarea {
   width: 100%;
   resize: vertical;
 }
-.checkin-folded {
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+
+/* Day by day: what was trained, eaten and weighed, with a note on the session of that day. */
+.checkin-days {
+  min-width: 0;
 }
-.coach-student .checkin-folded > summary {
+.checkin-days h4 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.checkin-days ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.checkin-days li,
+.checkin-days-head {
+  display: grid;
+  grid-template-columns: 3.75rem minmax(0, 1fr);
+  gap: 2px 12px;
+  align-items: center;
+}
+.checkin-days li {
+  min-height: 40px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.checkin-days li[data-future] {
+  color: var(--text-secondary);
+}
+.checkin-days-head {
+  display: none;
+  padding-bottom: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.checkin-day-name {
+  margin: 0;
+  color: var(--text-secondary);
+}
+.checkin-day-name b {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.checkin-days li[data-future] .checkin-day-name b {
+  color: inherit;
+}
+.checkin-day-name i {
+  display: block;
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.checkin-day-facts {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  min-height: 48px;
-  padding: 8px 14px;
-  cursor: pointer;
+  gap: 2px 14px;
+  min-width: 0;
+  margin: 0;
 }
-.checkin-folded .checkin-card {
-  border: 0;
-  border-top: 1px solid var(--border-subtle);
-  border-radius: 0 0 8px 8px;
+.checkin-day-facts dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin: 0;
 }
-.checkin-folded .checkin-card h3 {
+.checkin-day-facts [data-empty] {
   display: none;
 }
-@media (min-width: 1000px) {
-  .athlete-checkins .checkin-card-reply {
+.checkin-fact-workout {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.checkin-fact-workout a {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--border-medium);
+  text-underline-offset: 3px;
+}
+.checkin-fact-workout a:hover {
+  text-decoration-color: currentColor;
+}
+.checkin-fact-number {
+  color: var(--text-secondary);
+}
+.checkin-day-add,
+.checkin-day-comment,
+.checkin-day-form {
+  grid-column: 2;
+}
+.checkin-day-add {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-self: start;
+  min-height: 32px;
+  padding: 0 6px;
+  margin-left: -6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.checkin-day-add:hover {
+  background: var(--accent-light);
+  color: var(--text-primary);
+}
+.checkin-day-add:focus-visible,
+.checkin-past-toggle:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+.checkin-day-comment {
+  display: flex;
+  gap: 4px 12px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+.checkin-day-comment p {
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.checkin-day-comment .checkin-day-add {
+  margin: 0;
+}
+.checkin-day-form {
+  display: grid;
+  gap: 6px;
+  padding: 4px 0;
+}
+.checkin-day-form label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.checkin-day-form textarea {
+  width: 100%;
+  resize: vertical;
+}
+.checkin-day-form > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.checkin-past h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.checkin-past ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.checkin-past li {
+  border-top: 1px solid var(--border-subtle);
+}
+.checkin-past-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-auto-flow: dense;
+  gap: 2px 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.checkin-past-toggle:hover {
+  background: var(--accent-light);
+}
+.checkin-past-toggle b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.checkin-past-toggle .checkin-brief {
+  grid-column: 1;
+  grid-row: 2;
+}
+.checkin-past-toggle b {
+  grid-column: 1;
+  grid-row: 1;
+}
+.checkin-past-toggle .checkin-status {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+.checkin-past-toggle svg {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+}
+.checkin-past-toggle svg {
+  color: var(--text-secondary);
+  transition: transform 0.15s ease;
+}
+.checkin-past-toggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+.checkin-past-body {
+  padding: 8px 4px 24px;
+}
+@media (pointer: coarse) {
+  .checkin-day-add {
+    min-height: 44px;
+  }
+}
+@media (min-width: 640px) {
+  .checkin-days li,
+  .checkin-days-head {
+    grid-template-columns: 6.25rem minmax(0, 1fr) 9.5rem;
+  }
+  .checkin-days {
+    max-width: 760px;
+  }
+  .checkin-day-name i {
+    display: inline;
+    margin-left: 6px;
+  }
+  .checkin-days-head {
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
-    gap: 1.5rem;
+  }
+  .checkin-day-facts {
+    flex-wrap: nowrap;
+  }
+  .checkin-day-facts [data-empty] {
+    display: block;
+    color: var(--text-secondary);
+  }
+  .checkin-fact-workout {
+    flex: 1;
+  }
+  .checkin-fact-number {
+    flex: 0 0 5.5rem;
+    text-align: right;
+  }
+  .checkin-day-facts .checkin-fact-number dd {
+    justify-content: flex-end;
+  }
+  .checkin-day-add {
+    grid-column: 3;
+    justify-self: end;
+    margin: 0;
+  }
+  .checkin-day-comment,
+  .checkin-day-form {
+    grid-column: 2 / -1;
+  }
+  .checkin-past-toggle {
+    grid-template-columns: 9rem minmax(0, 1fr) auto auto;
+  }
+  .checkin-past-toggle b {
+    grid-column: 1;
+  }
+  .checkin-past-toggle .checkin-brief {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .checkin-past-toggle .checkin-status {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .checkin-past-toggle svg {
+    grid-column: 4;
+    grid-row: 1;
+  }
+}
+@media (min-width: 1100px) {
+  .checkin-week-split {
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+    gap: 32px;
     align-items: start;
   }
-  .athlete-checkins .checkin-card-reply .checkin-card-footer {
+  .checkin-week-split .checkin-week-side {
     position: sticky;
     top: 16px;
-    padding: 0 0 0 1.5rem;
-    border-top: 0;
-    border-left: 1px solid var(--border-subtle);
   }
 }
 .athlete-disclosure > :not(summary) {
@@ -576,6 +958,167 @@
   color: var(--text-secondary);
 }
 .plan-view,
+.plan-brief {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.plan-brief-days {
+  display: grid;
+  gap: 0 32px;
+}
+.plan-brief-day {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'label toggle'
+    'kcal kcal'
+    'macros macros'
+    'meals meals';
+  gap: 2px 16px;
+  align-items: center;
+  min-width: 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--border-medium);
+}
+.plan-brief-day h3 {
+  grid-area: label;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.plan-brief-kcal {
+  grid-area: kcal;
+  margin: 0;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.plan-brief-kcal b {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+.plan-brief-macros {
+  grid-area: macros;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.plan-brief-macros div {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+.plan-brief-macros dt {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.plan-brief-macros dd {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.plan-brief-toggle,
+.plan-brief-none {
+  grid-area: toggle;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.plan-brief-toggle {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.plan-brief-toggle:hover {
+  background: var(--accent-light);
+}
+.plan-brief-toggle:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+.plan-brief-toggle svg {
+  transition: transform 0.15s ease;
+}
+.plan-brief-toggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+.plan-brief-meals {
+  grid-area: meals;
+  display: grid;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.plan-brief-meals li {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.plan-brief-slot {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.plan-brief-dish {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+}
+.plan-brief-dish small {
+  font-size: 0.8rem;
+  font-weight: 400;
+  white-space: pre-wrap;
+  color: var(--text-secondary);
+}
+.plan-brief-meal-kcal {
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+.plan-brief-notes {
+  max-width: 90ch;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text-secondary);
+}
+.plan-brief-notes b {
+  margin-right: 6px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.plan-history {
+  margin-top: 4px;
+}
+.plan-history > .plan-brief-toggle {
+  margin-left: -4px;
+  color: var(--text-secondary);
+}
 .plan-summary {
   display: grid;
   gap: 16px;
@@ -584,7 +1127,7 @@
 .plan-view-head {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px 12px;
   align-items: center;
   justify-content: space-between;
 }
@@ -593,10 +1136,31 @@
   font-size: 0.875rem;
   color: var(--text-secondary);
 }
-.plan-view-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+@media (pointer: coarse) {
+  .plan-brief-toggle {
+    min-height: 44px;
+  }
+}
+@media (min-width: 560px) {
+  .plan-brief-day {
+    grid-template-columns: max-content minmax(0, 1fr) auto;
+    grid-template-areas:
+      'label label toggle'
+      'kcal macros macros'
+      'meals meals meals';
+    align-items: baseline;
+  }
+  .plan-brief-day h3,
+  .plan-brief-toggle,
+  .plan-brief-none {
+    align-self: center;
+  }
+}
+@media (min-width: 1000px) {
+  .plan-brief-days {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
 }
 .plan-summary-notes {
   max-width: 75ch;

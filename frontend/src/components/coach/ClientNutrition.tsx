@@ -5,7 +5,7 @@ import { NutritionDiary } from './NutritionDiary';
 import { NutritionPlanSection } from './NutritionPlanSection';
 import { Section, num } from './ClientSection';
 
-/** What the coach prescribes on top, and under it what the athlete actually ate, day by day. */
+/** The plan as a short strip of targets, and right under it what the athlete actually ate. */
 export default function NutritionSection({
   linkId,
   canEditPlan,

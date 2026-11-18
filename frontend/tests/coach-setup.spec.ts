@@ -96,6 +96,10 @@ for (const width of [1440, 390]) {
     await page.getByLabel(/He revisado con el atleta/).check();
     await page.getByRole('button', { name: 'Guardar servicio' }).click();
     await expect(page.getByText('Servicio guardado', { exact: true })).toBeVisible();
+    await page
+      .getByRole('navigation', { name: 'Apartados de los ajustes' })
+      .getByRole('link', { name: 'Seguimiento', exact: true })
+      .click();
     await page.getByLabel('Día del seguimiento').selectOption('3');
     await page.getByLabel('Hora del seguimiento').fill('17:30');
     await page.getByLabel('Zona horaria').fill('Atlantic/Canary');

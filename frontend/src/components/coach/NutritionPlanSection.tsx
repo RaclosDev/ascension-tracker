@@ -19,7 +19,7 @@ import {
 } from '@/lib/coach/nutritionPlan';
 import { NutritionPlanFields } from './NutritionPlanFields';
 import { NutritionPlanHistory } from './NutritionPlanHistory';
-import { NutritionPlanSummary } from './NutritionPlanSummary';
+import { NutritionPlanBrief, NutritionPlanSummary } from './NutritionPlanSummary';
 import { NutritionTemplatePicker } from './NutritionTemplatePicker';
 
 interface ClientDraft {
@@ -56,7 +56,7 @@ export function NutritionPlanSection({ linkId, canEdit }: { linkId: string; canE
           reload={() => void plan.refetch()}
         />
       ) : plan.data ? (
-        <NutritionPlanSummary plan={plan.data} />
+        <NutritionPlanBrief plan={plan.data} />
       ) : (
         <p className="text-sm">
           Sin pauta de nutrición. Tu atleta no te ha dado permiso para pautarla.
@@ -164,21 +164,13 @@ function PlanForm({
     return (
       <div className="plan-view">
         <div className="plan-view-head">
-          <p>
-            Activa desde el {formatCoachDate(plan.createdAt)}. Sustituye los objetivos propios de tu
-            atleta.
-          </p>
-          <div className="plan-view-actions">
-            <button type="button" className="btn btn-primary" onClick={() => setEditing(true)}>
-              Editar pauta
-            </button>
-            <button type="button" className="btn btn-secondary" disabled={busy} onClick={remove}>
-              Quitar pauta
-            </button>
-          </div>
+          <p>Activa desde el {formatCoachDate(plan.createdAt)}</p>
+          <button type="button" className="btn btn-secondary" onClick={() => setEditing(true)}>
+            Editar pauta
+          </button>
         </div>
         {error && <p role="alert">{error}</p>}
-        <NutritionPlanSummary plan={plan} />
+        <NutritionPlanBrief plan={plan} />
       </div>
     );
 

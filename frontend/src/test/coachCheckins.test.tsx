@@ -27,6 +27,7 @@ import { CheckinsSection } from '../components/coach/CheckinsSection';
 import { CheckinTemplateEditor } from '../components/coach/CheckinTemplateEditor';
 import type { CoachClient } from '../lib/coach/api';
 import type { Checkin, ClientCheckin } from '../lib/coach/checkins';
+import { weekDate } from '../lib/coach/weeks';
 
 const mockedApi = vi.mocked(api);
 const link = {
@@ -296,6 +297,8 @@ describe('Check-ins en la ficha del entrenador', () => {
   it('hides the reply form once answered and explains an empty list', async () => {
     mockedApi.get.mockResolvedValueOnce({ data: [checkin({ coachReply: 'Hecho' })] });
     wrap(<CheckinsSection link={link} />);
+    // An answered week of the past stays folded until the coach opens it.
+    fireEvent.click(await screen.findByRole('button', { name: /Respondido/ }));
     expect(await screen.findByText('Hecho')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Responder' })).toBeNull();
     cleanup();
@@ -303,6 +306,35 @@ describe('Check-ins en la ficha del entrenador', () => {
     mockedApi.get.mockResolvedValueOnce({ data: [] });
     wrap(<CheckinsSection link={link} />);
     expect(await screen.findByText(/aún no ha enviado/)).toBeInTheDocument();
+  });
+
+  it('shows the current week day by day and saves a comment on the session of a day', async () => {
+    const monday = new Date(`${weekDate()}T10:00:00`).getTime();
+    mockedApi.get.mockImplementation(async (url: string) => ({
+      data: url.includes('workouts/recent')
+        ? [{ id: 'w1', name: 'Torso A', startedAt: monday, finishedAt: monday + 3600000 }]
+        : url.includes('/comment')
+          ? { text: '' }
+          : [],
+    }));
+    mockedApi.put.mockResolvedValue({ data: null });
+    wrap(<CheckinsSection link={link} />);
+
+    expect(await screen.findByRole('heading', { name: 'Semana actual' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Torso A' })).toHaveAttribute(
+      'href',
+      '/entrenador/atletas/l1/entrenos/w1',
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Comentar el día' }));
+    fireEvent.change(screen.getByLabelText('Comentario del día'), {
+      target: { value: ' Buen ritmo ' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() =>
+      expect(mockedApi.put).toHaveBeenCalledWith(expect.stringContaining('/workouts/w1/comment'), {
+        text: 'Buen ritmo',
+      }),
+    );
   });
 
   it('edits the template questions and blocks blank ones', async () => {

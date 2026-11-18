@@ -1,30 +1,42 @@
 import { useState } from 'react';
-import { SegmentedControl } from '../ui/segmented-control';
+import { addDays, format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
-import { CalendarPlus, Pin } from 'lucide-react';
+import { CalendarPlus, ChevronDown, Pin } from 'lucide-react';
 import { apiErrorMessage, formatCoachDate, type CoachClient } from '../../lib/coach/api';
 import { confirmAction } from '../../lib/confirmation';
 import { useSaveCoachNotes } from '../../lib/coach/setup';
-import { shiftWeek } from '../../lib/coach/weeks';
+import { shiftWeek, weekDate } from '../../lib/coach/weeks';
 import { useAthleteLinks } from './AthleteShell';
 import { NOTE_MAX } from './AthleteNote';
 import {
   useClientCheckins,
   useReplyCheckin,
   needsReply,
+  SCORE_KEYS,
+  SCORE_LABELS,
   type Checkin,
 } from '../../lib/coach/checkins';
-import { CheckinCard } from './CheckinCard';
+import { CheckinWeekDays } from './CheckinWeekDays';
 import { QueryErrorNotice } from '../QueryErrorNotice';
 import { useSessionDraft } from '../../hooks/useSessionDraft';
 import { useClientStatus } from '../../lib/coach/clientStatus';
 import { useQueryClient } from '@tanstack/react-query';
 
-const matches = (filter: string, item: Checkin) =>
-  filter === 'all' || (filter === 'pending' ? needsReply(item) : !needsReply(item));
+const kg = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
+const stamp = (iso: string) => format(new Date(iso), 'EEE d MMM, HH:mm', { locale: es });
 
-/** Unanswered seguimientos first, then newest week within each group. */
+/** «9 – 15 nov»: the week as a coach says it, with the year only when it is not this one. */
+function weekRange(week: string) {
+  const start = parseISO(week);
+  const end = addDays(start, 6);
+  const year = end.getFullYear() === new Date().getFullYear() ? '' : ` ${end.getFullYear()}`;
+  const from = format(start, start.getMonth() === end.getMonth() ? 'd' : 'd MMM', { locale: es });
+  return `${from} – ${format(end, 'd MMM', { locale: es })}${year}`;
+}
+
+/** This week on top, day by day; the weeks before it folded below. */
 export function CheckinsSection({ link }: { link: CoachClient }) {
   const linkId = link.linkId;
   const checkins = useClientCheckins(linkId);
@@ -32,51 +44,20 @@ export function CheckinsSection({ link }: { link: CoachClient }) {
   const missing = useClientStatus(false, linkId).data?.[0]?.signals.find(
     (signal) => signal.reason === 'CHECKIN_MISSING',
   );
-  const [chosen, setFilter] = useState<string | null>(null);
-  const all = checkins.data ?? [];
+  const current = weekDate();
+  const all = [...(checkins.data ?? [])].sort((a, b) => b.weekStart.localeCompare(a.weekStart));
+  const now = all.find((item) => item.weekStart === current);
+  const past = all.filter((item) => item.weekStart !== current);
   const pending = all.filter(needsReply).length;
-  // Until the coach picks a view, open on what still needs an answer.
-  const filter = chosen ?? (pending > 0 ? 'pending' : 'all');
-  const visible = all
-    .filter((item) => matches(filter, item))
-    .sort(
-      (a, b) =>
-        Number(needsReply(b)) - Number(needsReply(a)) || b.weekStart.localeCompare(a.weekStart),
-    );
 
   return (
-    <section className="athlete-checkins flex flex-col gap-4">
+    <section className="athlete-checkins">
       <div className="athlete-section-title">
-        <div>
-          <h2>Seguimientos semanales</h2>
-          {missing && (
-            <p className="coach-description">
-              {missing.value === 1
-                ? 'El atleta aún no ha enviado el seguimiento de esta semana.'
-                : `El atleta lleva ${missing.value} semanas sin enviar su seguimiento.`}{' '}
-              No hay nada que responder hasta que lo envíe.
-            </p>
-          )}
-          {all.length > 0 && !(missing && pending === 0) && (
-            <p className="coach-description">
-              {pending === 0
-                ? 'Todo respondido.'
-                : pending === 1
-                  ? '1 seguimiento espera tu respuesta.'
-                  : `${pending} seguimientos esperan tu respuesta.`}
-            </p>
-          )}
-        </div>
+        <h2>Seguimientos semanales</h2>
         {all.length > 0 && (
-          <SegmentedControl
-            value={filter}
-            onChange={setFilter}
-            options={[
-              { value: 'pending', label: `Pendientes (${pending})` },
-              { value: 'replied', label: `Respondidos (${all.length - pending})` },
-              { value: 'all', label: `Todos (${all.length})` },
-            ]}
-          />
+          <p className="coach-description">
+            {pending === 0 ? 'Todo respondido' : `${pending} por responder`}
+          </p>
         )}
       </div>
       {checkins.isLoading ? (
@@ -85,69 +66,157 @@ export function CheckinsSection({ link }: { link: CoachClient }) {
         </p>
       ) : checkins.isError ? (
         <QueryErrorNotice retry={() => void checkins.refetch()} pending={checkins.isFetching} />
-      ) : !all.length ? (
-        <p className="card coach-description">Tu atleta aún no ha enviado ningún seguimiento.</p>
       ) : (
         <>
-          {visible.length === 0 && (
-            <p role="status" className="card coach-description">
-              No hay seguimientos en esta vista.
-            </p>
-          )}
-          {visible.map((c, index) => {
-            const open = needsReply(c);
-            const card = (
-              <CheckinCard
-                checkin={c}
-                status={
-                  <span className={`checkin-status${open ? ' checkin-status-pending' : ''}`}>
-                    {!open
-                      ? 'Respondido'
-                      : c.coachReply
-                        ? 'Actualizado por el atleta'
-                        : 'Por responder'}
-                  </span>
-                }
-                footer={
-                  <>
-                    {open && <ReplyForm linkId={linkId} checkin={c} />}
-                    <CheckinActions link={link} checkin={c} />
-                  </>
-                }
-              />
-            );
-            // With several weeks on screen, answered ones fold so the open ones stand out.
-            return open || visible.length === 1 ? (
-              <div key={c.id}>{card}</div>
+          <section className="checkin-week" data-tour="checkin-card" aria-labelledby="checkin-now">
+            <header className="checkin-week-head">
+              <h3 id="checkin-now">Semana actual</h3>
+              <p>{weekRange(current)}</p>
+              {now && <Status checkin={now} />}
+            </header>
+            {now ? (
+              <WeekBody link={link} checkin={now} />
             ) : (
-              <details key={c.id} className="checkin-folded" open={index === 0}>
-                <summary>
-                  <strong>Semana del {formatCoachDate(c.weekStart)}</strong>
-                  <span className="checkin-brief">{brief(c)}</span>
-                  <span className="checkin-status">Respondido</span>
-                </summary>
-                {card}
-              </details>
-            );
-          })}
+              <>
+                <p className="checkin-week-empty">
+                  Tu atleta aún no ha enviado el seguimiento de esta semana
+                  {missing && missing.value > 1 ? ` (lleva ${missing.value} sin enviarlo)` : ''}.
+                </p>
+                <CheckinWeekDays link={link} week={current} />
+              </>
+            )}
+          </section>
+          {past.length > 0 && (
+            <section className="checkin-past" aria-labelledby="checkin-past">
+              <h3 id="checkin-past">Semanas anteriores</h3>
+              <ul>
+                {past.map((item) => (
+                  <PastWeek key={item.id} link={link} checkin={item} />
+                ))}
+              </ul>
+            </section>
+          )}
         </>
       )}
     </section>
   );
 }
 
-const kg = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
+function Status({ checkin }: { checkin: Checkin }) {
+  const open = needsReply(checkin);
+  return (
+    <span className={`checkin-status${open ? ' checkin-status-pending' : ''}`}>
+      {!open ? 'Respondido' : checkin.coachReply ? 'Actualizado por el atleta' : 'Por responder'}
+    </span>
+  );
+}
 
-/** The week at a glance, for the folded row. */
-const brief = (c: Checkin) =>
-  [
-    `Energía ${c.energy}/5`,
-    `Sueño ${c.sleep}/5`,
-    `Entreno ${c.trainingAdherence}/5`,
-    c.weightAvg != null && `${kg.format(c.weightAvg)} kg`,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+/** A past week in one line; it opens on its own while it still waits for an answer. */
+function PastWeek({ link, checkin }: { link: CoachClient; checkin: Checkin }) {
+  const [open, setOpen] = useState(() => needsReply(checkin));
+  const id = `checkin-week-${checkin.id}`;
+  return (
+    <li>
+      <button
+        type="button"
+        className="checkin-past-toggle"
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen(!open)}
+      >
+        <b>{weekRange(checkin.weekStart)}</b>
+        <span className="checkin-brief">
+          {SCORE_KEYS.filter((key) => checkin[key] != null)
+            .map((key) => `${SCORE_LABELS[key]} ${checkin[key]}`)
+            .join(' · ')}
+        </span>
+        <Status checkin={checkin} />
+        <ChevronDown size={16} aria-hidden />
+      </button>
+      {open && (
+        <div id={id} className="checkin-past-body">
+          <WeekBody link={link} checkin={checkin} />
+        </div>
+      )}
+    </li>
+  );
+}
+
+/** What the athlete sent and how the week went on one side; the coach's answer on the other. */
+function WeekBody({ link, checkin }: { link: CoachClient; checkin: Checkin }) {
+  const open = needsReply(checkin);
+  const thread = [
+    ...(checkin.updates ?? []),
+    ...(checkin.coachReply
+      ? [
+          {
+            role: 'COACH',
+            body: checkin.coachReply,
+            createdAt: checkin.repliedAt ?? checkin.updatedAt,
+          },
+        ]
+      : []),
+  ].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  return (
+    <div className={`checkin-week-body${open ? ' checkin-week-split' : ''}`}>
+      <div className="checkin-week-main">
+        <dl className="checkin-scores">
+          {SCORE_KEYS.filter((key) => checkin[key] != null).map((key) => (
+            <div key={key}>
+              <dt>{SCORE_LABELS[key]}</dt>
+              <dd>{checkin[key]}/5</dd>
+            </div>
+          ))}
+          {checkin.weightAvg != null && (
+            <div>
+              <dt>Peso medio</dt>
+              <dd>{kg.format(checkin.weightAvg)} kg</dd>
+            </div>
+          )}
+        </dl>
+        {(checkin.answers.length > 0 || checkin.notes) && (
+          <dl className="checkin-answers">
+            {checkin.answers.map((item, index) => (
+              <div key={index}>
+                <dt>{item.question}</dt>
+                <dd>{item.answer || 'Sin respuesta'}</dd>
+              </div>
+            ))}
+            {checkin.notes && (
+              <div>
+                <dt>Notas</dt>
+                <dd>{checkin.notes}</dd>
+              </div>
+            )}
+          </dl>
+        )}
+        <p className="checkin-meta">
+          {checkin.submissionStatus === 'PARTIAL' ? 'Avance parcial, enviado' : 'Enviado'} el{' '}
+          {stamp(checkin.createdAt)}
+          {checkin.updatedAt !== checkin.createdAt && ` · editado el ${stamp(checkin.updatedAt)}`}
+        </p>
+        {thread.length > 0 && (
+          <ol className="checkin-thread">
+            {thread.map((message, index) => (
+              <li key={`${message.createdAt}:${index}`}>
+                <p>
+                  {message.role === 'CLIENT' ? 'Atleta' : 'Respuesta del entrenador'} ·{' '}
+                  <time dateTime={message.createdAt}>{stamp(message.createdAt)}</time>
+                </p>
+                <p>{message.body}</p>
+              </li>
+            ))}
+          </ol>
+        )}
+        <CheckinWeekDays link={link} week={checkin.weekStart} />
+      </div>
+      <div className="checkin-week-side">
+        {open && <ReplyForm linkId={link.linkId} checkin={checkin} />}
+        <CheckinActions link={link} checkin={checkin} />
+      </div>
+    </div>
+  );
+}
 
 /** What the coach does after reading a seguimiento: keep what matters and plan the next week. */
 function CheckinActions({ link, checkin }: { link: CoachClient; checkin: Checkin }) {
@@ -241,7 +310,7 @@ function ReplyForm({ linkId, checkin }: { linkId: string; checkin: Checkin }) {
   const changed = draft.dirty && draft.value.version !== checkin.updatedAt;
   return (
     <form
-      className="flex flex-col gap-2"
+      className="checkin-reply"
       onSubmit={(e) => {
         e.preventDefault();
         if (!text.trim() || changed || reply.isPending) return;
@@ -262,13 +331,11 @@ function ReplyForm({ linkId, checkin }: { linkId: string; checkin: Checkin }) {
         );
       }}
     >
-      <label className="text-sm font-semibold" htmlFor={`reply-${checkin.id}`}>
-        Tu respuesta
-      </label>
+      <label htmlFor={`reply-${checkin.id}`}>Tu respuesta</label>
       <textarea
         id={`reply-${checkin.id}`}
         className="form-input min-w-0"
-        rows={6}
+        rows={5}
         maxLength={2000}
         disabled={reply.isPending}
         value={text}

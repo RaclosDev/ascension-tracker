@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { formatCoachDate } from '@/lib/coach/api';
 import { useNutritionPlanHistory, useNutritionPlanVersion } from '@/lib/coach/nutritionPlan';
 import { NutritionPlanSummary } from './NutritionPlanSummary';
@@ -8,14 +9,15 @@ export function NutritionPlanHistory({ linkId }: { linkId: string }) {
   const [selected, setSelected] = useState<string | null>(null);
   const history = useNutritionPlanHistory(linkId, open);
   return (
-    <section className="mt-4 border-t pt-4">
+    <section className="plan-history">
       <button
         type="button"
-        className="btn btn-secondary"
+        className="plan-brief-toggle"
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
         Historial de pautas
+        <ChevronDown size={16} aria-hidden />
       </button>
       {open && (
         <div className="mt-3 flex flex-col gap-3">
