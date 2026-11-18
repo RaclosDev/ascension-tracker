@@ -729,11 +729,16 @@ export function WeekEditor({
         <AthleteCalendar
           weeks={calendar.weeks}
           focus={saved.weekStart}
-          selected={day}
+          selected={panel ? null : day}
           loading={calendar.isLoading}
           onSelect={(week, next) => {
             setPanel(null);
             onSelect(week, next);
+            // Stacked under the calendar, a picked day would open out of sight.
+            if (next && !window.matchMedia?.('(min-width: 1100px)').matches)
+              requestAnimationFrame(() =>
+                drawer.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' }),
+              );
           }}
           drop={dropTarget}
           dragType={DRAG_TYPE}

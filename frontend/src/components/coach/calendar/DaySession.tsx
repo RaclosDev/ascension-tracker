@@ -11,6 +11,7 @@ import {
 } from '@/lib/coach/coachPrograms';
 import type { Exercise } from '@/lib/workout/types';
 import { ExerciseRow } from '../editor/ExerciseRow';
+import { usePrescribing } from '../editor/prescribing';
 import { ExerciseSearch } from '../editor/ExerciseSearch';
 
 /** The training of one day: every exercise on a line, with the details one click away. */
@@ -58,6 +59,15 @@ export function DaySession({
   const list = useRef<HTMLOListElement | null>(null);
   const focusNew = useRef(false);
   const count = day?.exercises.length ?? 0;
+  const prefs = usePrescribing();
+  // The effort column is named after the method this day is prescribed with.
+  const effort = day?.exercises.some((e) => e.targetRir != null)
+    ? 'RIR'
+    : day?.exercises.some((e) => e.targetRpe != null)
+      ? 'RPE'
+      : prefs.effort === 'NONE'
+        ? null
+        : prefs.effort;
   // A picked exercise is ready to be prescribed: the cursor lands on its first cell.
   useEffect(() => {
     if (!focusNew.current) return;
@@ -223,6 +233,18 @@ export function DaySession({
             onReorder(source.index, destination.index);
         }}
       >
+        {count > 0 && (
+          <div className="day-cols" aria-hidden>
+            <span className="day-cols-quick">
+              <span>Series</span>
+              <b>×</b>
+              <span>Reps</span>
+              {effort && <span>{effort}</span>}
+              <span>Carga</span>
+            </span>
+            <span className="day-cols-pad" />
+          </div>
+        )}
         <Droppable droppableId="day">
           {(zone) => (
             <ol

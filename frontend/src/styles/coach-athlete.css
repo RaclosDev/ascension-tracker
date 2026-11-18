@@ -802,8 +802,15 @@
 .week-bar .week-toolbar-picker input {
   width: 150px;
 }
+.week-bar .segmented-option {
+  padding-inline: 0.75rem;
+  font-size: 0.85rem;
+}
+.week-bar .week-toolbar-picker .btn:not([aria-label]) {
+  padding-inline: 12px;
+}
 .week-bar .week-bar-info {
-  flex: 1 1 110px;
+  flex: 1 1 200px;
   min-width: 0;
 }
 .week-bar .week-bar-meta {
@@ -832,7 +839,7 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px 24px;
+  gap: 10px 16px;
   padding-block: 10px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-primary);
@@ -870,10 +877,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-}
-.week-bar-publish {
-  padding-left: 16px;
-  border-left: 1px solid var(--border-medium);
 }
 /* Load and the week's decision share one line; the muscle-group detail opens below it. */
 .week-context {
@@ -1184,10 +1187,6 @@
 @media (max-width: 900px) {
   .week-bar {
     position: static;
-  }
-  .week-bar-publish {
-    padding-left: 0;
-    border-left: 0;
   }
 }
 @media (max-width: 640px) {

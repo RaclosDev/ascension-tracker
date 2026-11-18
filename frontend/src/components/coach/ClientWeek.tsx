@@ -171,6 +171,11 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
         >
           <ArrowRight size={16} aria-hidden />
         </button>
+        {week !== weekDate() && (
+          <button type="button" className="btn btn-secondary" onClick={() => setWeek(weekDate())}>
+            Hoy
+          </button>
+        )}
       </div>
       {view === 'review' && (
         <Link className="week-toolbar-link" to={recordHref('registro')}>

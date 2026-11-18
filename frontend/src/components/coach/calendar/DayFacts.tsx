@@ -50,7 +50,7 @@ export function DayFacts({ day, link }: { day: CalendarDay; link: CoachClient })
           <h4>
             <Utensils size={15} aria-hidden /> Nutrición
           </h4>
-          {day.target ? (
+          {day.target && day.intake ? (
             <dl className="day-macros">
               {(
                 [
@@ -63,15 +63,18 @@ export function DayFacts({ day, link }: { day: CalendarDay; link: CoachClient })
                 <div key={key}>
                   <dt>{label}</dt>
                   <dd>
-                    {day.intake ? show(day.intake[key]) : upcoming ? '' : '–'}
-                    <small>
-                      {upcoming ? '' : '/ '}
-                      {show(day.target![key])}
-                    </small>
+                    {show(day.intake![key])}
+                    <small>/ {show(day.target![key])}</small>
                   </dd>
                 </div>
               ))}
             </dl>
+          ) : day.target ? (
+            <p>
+              {upcoming ? '' : 'Sin comidas registradas. '}Objetivo:{' '}
+              {number.format(Math.round(day.target.kcal))} kcal · {grams(day.target.protein)} P ·{' '}
+              {grams(day.target.carbs)} H · {grams(day.target.fat)} G
+            </p>
           ) : day.intake ? (
             <p>{number.format(Math.round(day.intake.kcal))} kcal registradas, sin pauta ese día.</p>
           ) : (

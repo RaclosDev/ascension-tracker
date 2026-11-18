@@ -91,10 +91,16 @@ export function AthleteCalendar({
               onClick={() => onSelect(week.weekStart, null)}
             >
               <strong>{weekRange(week.weekStart)}</strong>
-              {week.state && (
+              {week.state ? (
                 <span className="cal-state" data-state={week.state}>
                   {WEEK_STATE[week.state]}
                 </span>
+              ) : (
+                !week.days[6].past && (
+                  <span className="cal-state" data-state="empty">
+                    Sin preparar
+                  </span>
+                )
               )}
             </button>
             {week.days.map((day) => {
@@ -171,14 +177,20 @@ export function AthleteCalendar({
                           </span>
                         )
                       )}
-                      {(day.intake || day.target) && (
+                      {(day.intake || (day.target && day.past)) && (
                         <span
                           className="cal-fact"
                           data-ok={day.intake && day.onTarget ? '' : undefined}
                         >
                           <Utensils size={12} aria-hidden />
-                          {day.intake ? number.format(Math.round(day.intake.kcal)) : '–'}
-                          {day.target && <small>/ {number.format(day.target.kcal)}</small>}
+                          {day.intake ? (
+                            <>
+                              {number.format(Math.round(day.intake.kcal))}
+                              {day.target && <small>/ {number.format(day.target.kcal)}</small>}
+                            </>
+                          ) : (
+                            <small>sin comidas</small>
+                          )}
                         </span>
                       )}
                       {day.weight != null && (
