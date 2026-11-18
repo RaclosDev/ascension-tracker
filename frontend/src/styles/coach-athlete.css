@@ -1068,6 +1068,11 @@
   font-size: 0.78rem;
   color: var(--text-secondary);
 }
+.set-problem {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #f0a48f;
+}
 .set-options-hint {
   grid-column: 1 / -1;
   font-size: 0.78rem;

@@ -7,12 +7,6 @@ import { unitFor, type EffortMethod, type LoadUnit } from '@/lib/coach/prescript
 /** The athlete's own effort method, when it differs from how the coach usually prescribes. */
 export const AthleteEffort = createContext<EffortMethod | null>(null);
 
-export const EFFORT_LABELS: Record<EffortMethod, string> = {
-  RIR: 'RIR (repeticiones en reserva)',
-  RPE: 'RPE (esfuerzo percibido)',
-  NONE: 'Sin objetivo de esfuerzo',
-};
-
 /** How this coach prescribes: effort method and the unit each exercise's load is written in. */
 export function usePrescribing() {
   const athlete = useContext(AthleteEffort);

@@ -10,6 +10,7 @@ import {
   rowsOf,
   withRows,
 } from '@/lib/coach/prescription';
+import { restLabel } from '@/lib/coach/today';
 import { usePrescribing } from './prescribing';
 
 const MAX_SETS = 20;
@@ -30,6 +31,30 @@ const numberIn = (min: number, max: number, step: number) => (text: string) => {
   if (!Number.isFinite(number) || number < min || number > max) return undefined;
   return Math.abs(number / step - Math.round(number / step)) < 1e-9 ? number : undefined;
 };
+/** Rest typed as seconds ("90"), minutes and seconds ("2:00") or minutes ("2 min"). */
+const parseRest = (text: string) => {
+  const value = text.trim().toLowerCase().replace(',', '.');
+  if (!value) return null;
+  const clock = /^(\d{1,2}):([0-5]\d)$/.exec(value);
+  const minutes = /^(\d+(?:\.\d+)?)\s*(?:m|min|minutos?)$/.exec(value);
+  const seconds = /^(\d+)\s*(?:s|seg|segundos?)?$/.exec(value);
+  const total = clock
+    ? Number(clock[1]) * 60 + Number(clock[2])
+    : minutes
+      ? Math.round(Number(minutes[1]) * 60)
+      : seconds
+        ? Number(seconds[1])
+        : NaN;
+  return Number.isFinite(total) && total <= 900 ? total : undefined;
+};
+const HINTS = {
+  reps: 'Repeticiones: un número o un rango como 8-10, entre 1 y 100.',
+  RIR: 'RIR: un número entero de 0 a 10.',
+  RPE: 'RPE: de 1 a 10, con medios puntos (7,5).',
+  KG: 'Carga: solo el número, por ejemplo 62,5.',
+  PERCENT_TM: 'Porcentaje: solo el número, de 0 a 200.',
+  rest: 'Descanso: segundos (90) o minutos (2:00), hasta 15 minutos.',
+};
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
 function Cell<T>({
@@ -40,6 +65,10 @@ function Cell<T>({
   onKeyDown,
   numeric,
   cell,
+  hint,
+  onProblem,
+  className = 'set-cell',
+  placeholder = '–',
 }: {
   label: string;
   text: string;
@@ -47,13 +76,19 @@ function Cell<T>({
   onCommit: (value: T) => void;
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   numeric?: boolean;
-  cell: string;
+  cell?: string;
+  /** What a valid value looks like; shown while the typed text cannot be read. */
+  hint: string;
+  onProblem: (hint: string | null) => void;
+  className?: string;
+  placeholder?: string;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   return (
     <input
-      className="set-cell"
+      className={className}
       aria-label={label}
+      placeholder={placeholder}
       aria-invalid={draft != null && parse(draft) === undefined ? true : undefined}
       data-cell={cell}
       inputMode={numeric ? 'decimal' : 'text'}
@@ -63,9 +98,13 @@ function Cell<T>({
       onChange={(event) => {
         setDraft(event.target.value);
         const value = parse(event.target.value);
+        onProblem(value === undefined ? hint : null);
         if (value !== undefined) onCommit(value);
       }}
-      onBlur={() => setDraft(null)}
+      onBlur={() => {
+        setDraft(null);
+        onProblem(null);
+      }}
       onKeyDown={onKeyDown}
     />
   );
@@ -90,6 +129,7 @@ export function ExerciseRow({
   const optionsId = useId();
   const [options, setOptions] = useState(false);
   const [openSet, setOpenSet] = useState<number | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
   const [pending, setPending] = useState<Pick<PrescribedLoad, 'mode' | 'lift' | 'increment'>>();
 
   const rows = rowsOf(exercise);
@@ -111,7 +151,11 @@ export function ExerciseRow({
     const before = rows[i];
     commit(
       rows.map((row, j) =>
-        j === i || (fill && j > i && keys.every((key) => same(row[key], before[key])))
+        j === i ||
+        (fill &&
+          j > i &&
+          row.kind === before.kind &&
+          keys.every((key) => same(row[key], before[key])))
           ? { ...row, ...patch }
           : row,
       ),
@@ -144,31 +188,24 @@ export function ExerciseRow({
         ? { mode: 'KG' as const }
         : { mode: 'PERCENT_TM' as const, lift: value as Lift, increment };
     setPending(next);
-    if (shape)
-      commit(
-        rows.map((row) =>
-          row.load
-            ? {
-                ...row,
-                load:
-                  next.mode === 'KG'
-                    ? { mode: 'KG', amount: row.load.amount, unit }
-                    : {
-                        ...next,
-                        amount: Math.min(row.load.amount, 200),
-                        unit,
-                        resolvedKg: null,
-                        referenceKg: null,
-                      },
-              }
-            : row,
-        ),
-      );
+    if (!shape) return;
+    // Kilos and percentages are different numbers: 62,5 kg must not turn into 62,5 %.
+    const keep = next.mode !== 'KG' && shape.mode !== 'KG';
+    commit(
+      rows.map((row) =>
+        row.load
+          ? {
+              ...row,
+              load: keep ? { ...row.load, ...next, resolvedKg: null, referenceKg: null } : null,
+            }
+          : row,
+      ),
+    );
   };
 
   const loadHeader = mode === 'KG' ? (unit === 'EACH' ? 'kg/manc.' : 'kg') : `% ${LIFTS[lift]}`;
   const extras = [
-    exercise.restSeconds != null && `Descanso ${exercise.restSeconds} s`,
+    exercise.restSeconds != null && `Descanso ${restLabel(exercise.restSeconds)}`,
     exercise.supersetGroup != null && `Superserie ${exercise.supersetGroup}`,
   ].filter(Boolean);
   const columns = effort === 'NONE' ? 'set-grid set-grid-2' : 'set-grid';
@@ -216,21 +253,17 @@ export function ExerciseRow({
       {options && (
         <div id={optionsId} className="set-options">
           <label>
-            Descanso (s)
-            <input
+            Descanso
+            <Cell
               className="form-input"
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={900}
-              step={15}
-              value={exercise.restSeconds ?? ''}
-              onChange={(e) =>
-                onChange({
-                  ...exercise,
-                  restSeconds: e.target.value === '' ? null : Number(e.target.value),
-                })
-              }
+              label={`Descanso de ${name}`}
+              placeholder="90 o 2:00"
+              hint={HINTS.rest}
+              onProblem={setProblem}
+              text={exercise.restSeconds == null ? '' : restLabel(exercise.restSeconds)}
+              parse={parseRest}
+              onCommit={(restSeconds) => onChange({ ...exercise, restSeconds })}
+              onKeyDown={() => {}}
             />
           </label>
           <label>
@@ -242,12 +275,13 @@ export function ExerciseRow({
               min={1}
               max={20}
               value={exercise.supersetGroup ?? ''}
-              onChange={(e) =>
+              onChange={(e) => {
+                const group = Math.round(Number(e.target.value));
                 onChange({
                   ...exercise,
-                  supersetGroup: e.target.value === '' ? null : Number(e.target.value),
-                })
-              }
+                  supersetGroup: e.target.value === '' || group < 1 || group > 20 ? null : group,
+                });
+              }}
             />
           </label>
           <label>
@@ -278,7 +312,7 @@ export function ExerciseRow({
           <p className="set-options-hint">
             Dos ejercicios con el mismo número de superserie se hacen seguidos.
             {mode !== 'KG' &&
-              ' El porcentaje se convierte a kilos al publicar, con el máximo guardado en Powerlifting.'}
+              ' El porcentaje se convierte a kilos al publicar, con el máximo que el atleta tiene guardado en su sección Powerlifting. Al cambiar entre kilos y porcentaje las cargas se vacían.'}
           </p>
         </div>
       )}
@@ -312,6 +346,8 @@ export function ExerciseRow({
                   cell={`${i}:0`}
                   label={`Repeticiones de la serie ${i + 1}`}
                   text={repsText(row)}
+                  hint={HINTS.reps}
+                  onProblem={setProblem}
                   parse={parseReps}
                   onCommit={(value) => edit(i, value)}
                   onKeyDown={keys(i, 0)}
@@ -321,6 +357,8 @@ export function ExerciseRow({
                     cell={`${i}:1`}
                     numeric
                     label={`${effort} de la serie ${i + 1}`}
+                    hint={HINTS[effort]}
+                    onProblem={setProblem}
                     text={String((effort === 'RPE' ? row.rpe : row.rir) ?? '')}
                     parse={effort === 'RPE' ? numberIn(1, 10, 0.5) : numberIn(0, 10, 1)}
                     onCommit={(value) =>
@@ -336,6 +374,8 @@ export function ExerciseRow({
                   cell={`${i}:2`}
                   numeric
                   label={`Carga de la serie ${i + 1} (${loadHeader})`}
+                  hint={HINTS[mode]}
+                  onProblem={setProblem}
                   text={String(row.load?.amount ?? '')}
                   parse={numberIn(0, mode === 'KG' ? 2000 : 200, 0.25)}
                   onCommit={(value) => edit(i, { load: value == null ? null : loadOf(value) })}
@@ -386,6 +426,11 @@ export function ExerciseRow({
         })}
       </div>
 
+      {problem && (
+        <p className="set-problem" role="status">
+          {problem}
+        </p>
+      )}
       <button
         type="button"
         className="set-add"

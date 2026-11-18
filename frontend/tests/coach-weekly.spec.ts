@@ -201,14 +201,11 @@ for (const width of [390, 1920]) {
       .getByLabel('Notas privadas del entrenador')
       .fill('Revisar disponibilidad del miércoles.');
     await page.getByLabel('Objetivo de la semana').selectOption('DELOAD');
-    await expect(page.getByLabel('Carga (kg)', { exact: true })).toBeHidden();
-    await page.getByText('Editar pauta', { exact: true }).click();
-    await page.getByLabel('Carga (kg)', { exact: true }).fill('45');
+    await page.getByLabel('Carga de la serie 1 (kg)').fill('45');
     await page.screenshot({ path: info.outputPath('weekly-editing.png'), fullPage: true });
     await page.reload();
-    await page.getByText('Editar pauta', { exact: true }).click();
     await openNotes();
-    await expect(page.getByLabel('Carga (kg)', { exact: true })).toHaveValue('45');
+    await expect(page.getByLabel('Carga de la serie 1 (kg)')).toHaveValue('45');
     await page.getByText('Notas privadas del entrenador', { exact: true }).click();
     await expect(page.getByLabel('Notas privadas del entrenador')).toHaveValue(
       'Revisar disponibilidad del miércoles.',
@@ -222,7 +219,9 @@ for (const width of [390, 1920]) {
     await expect(confirmation).toContainText('3 series');
     await confirmation.getByRole('button', { name: 'Publicar semana', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Publicar semana', exact: true })).toBeDisabled();
-    expect(saved.content.program.days[0].exercises[0].prescription?.load?.amount).toBe(45);
+    expect(saved.content.program.days[0].exercises[0].prescription?.sets?.[0]?.load?.amount).toBe(
+      45,
+    );
     expect(previous.days[0].exercises[0].prescription?.load?.amount).toBe(50);
     expect(saved.publishedVersion).toBe(1);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(

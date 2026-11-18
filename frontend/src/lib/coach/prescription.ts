@@ -9,18 +9,6 @@ export function loadText(load?: PrescribedLoad | null): string {
   ];
   return `${load.amount}% TM ${lift}${load.resolvedKg != null ? ` = ${load.resolvedKg} kg${unit} (TM ${load.referenceKg} kg, ${load.referenceDate})` : ` · redondeo ${load.increment ?? 2.5} kg`}`;
 }
-export function setText(set: SetTarget, exercise: ProgramExercise): string {
-  return [
-    KINDS[set.kind],
-    set.reps != null ? `${repsText(set).replace('-', '–')} reps` : '',
-    set.rpe != null ? `RPE ${set.rpe}` : '',
-    set.rir != null ? `RIR ${set.rir}` : '',
-    loadText(set.load ?? exercise.prescription?.load) || exercise.loadHint,
-    set.notes,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-}
 function resolvedWeight(load?: PrescribedLoad | null): number | null {
   return load?.mode === 'KG' ? load.amount : (load?.resolvedKg ?? null);
 }
