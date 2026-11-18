@@ -117,6 +117,10 @@ async function setupCoach(page: Page, empty = false) {
       return route.fulfill({ json: checkin() });
     }
     if (path === 'clients/l0/checkins') return route.fulfill({ json: [checkin()] });
+    if (/clients\/l\d\/programs\/a1\/plan$/.test(path))
+      return route.fulfill({
+        json: { id: 'a1', name: 'Fuerza · bloque inicial', notes: null, weeks: 4, days: [] },
+      });
     if (/clients\/l\d\/programs$/.test(path))
       return route.fulfill({
         json: [
@@ -146,7 +150,7 @@ for (const width of [1440, 390]) {
     const pageErrors: string[] = [];
     page.on('pageerror', (error) => pageErrors.push(error.message));
     await page.goto('/entrenador');
-    await expect(page.getByRole('heading', { name: 'Pendiente de ti' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Semanas por entregar/ })).toBeVisible();
     await noHorizontalOverflow(page);
     await page.screenshot({
       path: testInfo.outputPath('dashboard.png'),
@@ -154,7 +158,7 @@ for (const width of [1440, 390]) {
       animations: 'disabled',
     });
 
-    await page.getByRole('link', { name: /Seguimientos por responder.*1/ }).click();
+    await page.getByRole('link', { name: 'Ver todos los seguimientos' }).click();
     await expect(
       page.getByRole('heading', { name: 'Seguimiento semanal', exact: true }),
     ).toBeVisible();
@@ -184,17 +188,16 @@ for (const width of [1440, 390]) {
       page.getByRole('heading', { name: 'No hay seguimientos por responder' }),
     ).toBeVisible();
     await page.getByRole('link', { name: 'Ver atletas' }).click();
-    await page.getByText('Opciones', { exact: true }).click();
-    await page.getByRole('combobox', { name: 'Servicio', exact: true }).selectOption('nutrition');
+    await page
+      .getByRole('combobox', { name: 'Filtrar atletas' })
+      .selectOption('servicio-nutrition');
     await expect(page.getByText('1 de 3 atletas')).toBeVisible();
     await expect(
       page.getByRole('link', { name: 'Preparar pauta nutricional' }).filter({ visible: true }),
     ).toBeVisible();
-    await page.getByRole('combobox', { name: 'Servicio', exact: true }).selectOption('training');
+    await page.getByRole('combobox', { name: 'Filtrar atletas' }).selectOption('servicio-training');
     await page.getByRole('searchbox', { name: 'Buscar atleta' }).fill('garcia');
     await page.getByRole('combobox', { name: 'Ordenar' }).selectOption('name');
-    await page.getByRole('checkbox', { name: 'Mostrar peso' }).click();
-    await expect(page.getByRole('checkbox', { name: 'Mostrar peso' })).toBeChecked();
     await page
       .getByRole('link', { name: /^Ana García/ })
       .filter({ visible: true })
@@ -209,12 +212,10 @@ for (const width of [1440, 390]) {
     });
     await page.getByRole('link', { name: 'Volver a atletas' }).click();
     await expect(page.getByRole('searchbox', { name: 'Buscar atleta' })).toHaveValue('garcia');
-    await page.getByText('Opciones', { exact: true }).click();
     await expect(page.getByRole('combobox', { name: 'Ordenar' })).toHaveValue('name');
-    await expect(page.getByRole('combobox', { name: 'Servicio', exact: true })).toHaveValue(
-      'training',
+    await expect(page.getByRole('combobox', { name: 'Filtrar atletas' })).toHaveValue(
+      'servicio-training',
     );
-    await expect(page.getByRole('checkbox', { name: 'Mostrar peso' })).toBeChecked();
     await noHorizontalOverflow(page);
     await page.screenshot({
       path: testInfo.outputPath('roster.png'),

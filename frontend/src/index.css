@@ -961,6 +961,49 @@ input[type=number]::-webkit-outer-spin-button {
   margin-right: 12px;
   font-size: 1.1rem;
 }
+.sidebar-account {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-color);
+}
+.sidebar-account-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar-account-toggle {
+  gap: 10px;
+}
+.sidebar-account-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-glow);
+  color: var(--accent-primary-light);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.sidebar-account-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+.sidebar-account-chevron {
+  flex: none;
+  transition: transform var(--transition-fast);
+}
+.sidebar-account-chevron.open {
+  transform: rotate(180deg);
+}
 .main-content {
   flex: 1;
   overflow-y: auto;

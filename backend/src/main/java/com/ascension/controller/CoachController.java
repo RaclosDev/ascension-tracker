@@ -30,6 +30,7 @@ public class CoachController {
     private final CoachService coachService;
     private final com.ascension.service.ConsentService consentService;
     private final ClientStatusService clientStatusService;
+    private final com.ascension.service.CoachHomeService homeService;
     private final com.ascension.service.CoachSetupService setupService;
     private final com.ascension.service.CoachScheduleService scheduleService;
 
@@ -108,6 +109,14 @@ public class CoachController {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.ok(clientStatusService.forCoach(email, Instant.now()));
+    }
+
+    /** Key lifts and upcoming meets for the coach's home. */
+    @GetMapping("/home")
+    public ResponseEntity<com.ascension.dto.CoachHomeDtos.Home> home(@AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(homeService.home(email, Instant.now()));
     }
 
     @PutMapping("/clients/{linkId}/setup")

@@ -14,8 +14,11 @@ export function NutritionTemplatePicker({
   dirty: boolean;
   disabled: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  const [id, setId] = useState('');
+  // Biblioteca › «Aplicar a…» llega con ?pauta=<id>; se lee de la URL porque esta sección
+  // también se monta fuera de un Router en las pruebas.
+  const [params] = useState(() => new URLSearchParams(window.location.search));
+  const [open, setOpen] = useState(() => !disabled && params.has('pauta'));
+  const [id, setId] = useState(() => params.get('pauta') ?? '');
   const selectId = useId();
   const list = useNutritionTemplates(open);
   const selected = useNutritionTemplate(open && id ? id : null);

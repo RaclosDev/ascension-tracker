@@ -110,17 +110,24 @@ describe('Espacio del entrenador', () => {
   it('counts replies separately from students and does not infer a service from permissions', async () => {
     mockData();
     renderAt();
-    await screen.findByRole('heading', { name: 'Pendiente de ti' });
-    expect(screen.getByRole('link', { name: /Seguimientos por responder/ })).toHaveTextContent(
-      '2De 1 atleta',
+    await screen.findByRole('heading', { name: /Semanas por entregar/ });
+    const followups = screen.getByRole('region', { name: 'Seguimientos' });
+    expect(within(followups).getByText('2 por responder')).toBeInTheDocument();
+    expect(within(followups).getByRole('link', { name: /Bruno.*Responder/ })).toHaveAttribute(
+      'href',
+      '/entrenador/atletas/l1?seccion=revisiones',
     );
-    expect(screen.getByRole('link', { name: /Atletas por revisar/ })).toHaveTextContent('1');
-    expect(screen.getByRole('link', { name: /Atletas activos/ })).toHaveTextContent('2');
+    expect(within(followups).queryByText(/semanas tarde/)).not.toBeInTheDocument();
+    const logs = screen.getByRole('region', { name: 'Registro al día' });
+    expect(within(logs).getAllByRole('link')[0]).toHaveAttribute(
+      'href',
+      '/entrenador/atletas/l0/registro',
+    );
     expect(screen.getByRole('link', { name: /Ángela.*Configurar servicio/ })).toHaveAttribute(
       'href',
       '/entrenador/atletas/l0?seccion=gestion',
     );
-    fireEvent.click(screen.getByRole('link', { name: /Seguimientos por responder/ }));
+    fireEvent.click(screen.getByRole('link', { name: 'Ver todos los seguimientos' }));
     expect(
       await screen.findByText('2 seguimientos por responder de 1 atleta.'),
     ).toBeInTheDocument();
@@ -132,11 +139,12 @@ describe('Espacio del entrenador', () => {
     mockData(new Error('offline'));
     renderAt();
     await screen.findByRole('alert');
-    expect(screen.getByRole('link', { name: /Seguimientos por responder/ })).toHaveTextContent('—');
-    expect(screen.queryByText('No tienes respuestas pendientes')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Seguimientos' })).not.toBeInTheDocument();
     mockData();
     fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
-    expect(await screen.findByRole('heading', { name: 'Pendiente de ti' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /Semanas por entregar/ }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
@@ -146,13 +154,12 @@ describe('Espacio del entrenador', () => {
     expect(
       await screen.findByText('Falta información de seguimiento de algún atleta.'),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Atletas por revisar/ })).toHaveTextContent('—');
-    expect(screen.queryByText('Sin señales pendientes')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Semanas por entregar/ })).not.toBeInTheDocument();
   });
 
   it('opens weekly planning and preserves the roster filters on return', async () => {
     mockData();
-    renderAt('/entrenador/atletas?orden=name&peso=si');
+    renderAt('/entrenador/atletas?orden=name&filtro=setup');
     const search = await screen.findByRole('searchbox', { name: 'Buscar atleta' });
     act(() => {
       fireEvent.change(search, { target: { value: 'angela' } });
@@ -170,7 +177,7 @@ describe('Espacio del entrenador', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Volver a atletas' }));
     expect(await screen.findByRole('searchbox', { name: 'Buscar atleta' })).toHaveValue('angela');
     expect(screen.getByRole('combobox', { name: 'Ordenar' })).toHaveValue('name');
-    expect(screen.getByRole('checkbox', { name: 'Mostrar peso' })).toBeChecked();
+    expect(screen.getByRole('combobox', { name: 'Filtrar atletas' })).toHaveValue('setup');
     expect(within(screen.getByRole('table')).queryByText('Bruno')).not.toBeInTheDocument();
   });
 
