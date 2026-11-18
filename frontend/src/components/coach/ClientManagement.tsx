@@ -2,6 +2,7 @@ import { confirmAction } from '../../lib/confirmation';
 import { useNavigate } from 'react-router-dom';
 import { Check, Minus, UserMinus } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { AvoidedExercises } from './AvoidedExercises';
 import { ClientSetupForm } from './ClientSetup';
 import { ClientSchedule } from './ClientSchedule';
 import { PowerliftingToggle } from './PowerliftingToggle';
@@ -16,23 +17,44 @@ import {
   type CoachPermissions,
 } from '../../lib/coach/api';
 
+const SECTIONS = [
+  ['ajustes-servicio', 'Servicio y objetivo'],
+  ['ajustes-vetados', 'Ejercicios vetados'],
+  ['ajustes-seguimiento', 'Seguimiento'],
+  ['ajustes-relacion', 'Permisos y relación'],
+] as const;
+
 export function ClientManagement({ link }: { link: CoachClient }) {
   const end = useEndClient();
   const navigate = useNavigate();
   return (
     <div className="athlete-manage">
+      <nav className="athlete-manage-index" aria-label="Apartados de los ajustes">
+        {SECTIONS.map(([id, label]) => (
+          <a key={id} href={`#${id}`}>
+            {label}
+          </a>
+        ))}
+      </nav>
       <div className="athlete-manage-main">
-        <ClientSetupForm key={link.linkId} link={link} />
-        <ClientSchedule
-          key={`${link.linkId}-${JSON.stringify(link.followup?.schedule)}`}
-          link={link}
-        />
-        <details>
-          <summary className="cursor-pointer">Preguntas del seguimiento de este atleta</summary>
-          <CheckinTemplateEditor linkId={link.linkId} />
-        </details>
+        <div id="ajustes-servicio">
+          <ClientSetupForm key={link.linkId} link={link} />
+        </div>
+        <div id="ajustes-vetados">
+          <AvoidedExercises link={link} />
+        </div>
+        <div id="ajustes-seguimiento" className="athlete-manage-main">
+          <ClientSchedule
+            key={`${link.linkId}-${JSON.stringify(link.followup?.schedule)}`}
+            link={link}
+          />
+          <details>
+            <summary className="cursor-pointer">Preguntas del seguimiento de este atleta</summary>
+            <CheckinTemplateEditor linkId={link.linkId} />
+          </details>
+        </div>
       </div>
-      <div className="athlete-manage-side">
+      <div className="athlete-manage-side" id="ajustes-relacion">
         <section className="card">
           <h2>Datos de la relación</h2>
           <dl className="coach-facts">

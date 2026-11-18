@@ -60,7 +60,7 @@ export function WeekColumn({
   const [menu, setMenu] = useState(false);
   const [searching, setSearching] = useState(false);
   const [sendTo, setSendTo] = useState(others[0].value);
-  const [clash, setClash] = useState<'replace' | 'merge'>('replace');
+  const [clash, setClash] = useState<'replace' | 'merge'>('merge');
   const saveTemplate = useSaveProgram();
   const list = useRef<HTMLOListElement | null>(null);
   const focusNew = useRef(false);
@@ -182,8 +182,8 @@ export function WeekColumn({
                 value={clash}
                 onChange={(e) => setClash(e.target.value as 'replace' | 'merge')}
               >
-                <option value="replace">Sustituirla</option>
                 <option value="merge">Añadir estos ejercicios al final</option>
+                <option value="replace">Sustituirla (se pierde la que hay)</option>
               </select>
             </label>
           )}

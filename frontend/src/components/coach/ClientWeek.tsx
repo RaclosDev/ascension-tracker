@@ -4,13 +4,16 @@ import { SegmentedControl } from '../ui/segmented-control';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { type CoachClient } from '@/lib/coach/api';
+import type { AvoidedExercise } from '@/lib/coach/setup';
 import { useClientAssignments } from '@/lib/coach/coachPrograms';
 import { overlapsWeek, shiftWeek, useCoachWeek, weekDate } from '@/lib/coach/weeks';
 import { useAthleteLinks } from './AthleteShell';
 import { SectionSkeleton } from './SectionSkeleton';
 import { WeekReview } from './WeekReview';
 import { WeekEditor } from './WeekEditor';
-import { AthleteEffort } from './editor/prescribing';
+import { AthleteAvoided, AthleteEffort } from './editor/prescribing';
+
+const NONE: AvoidedExercise[] = [];
 
 export default function ClientWeek({ link }: { link: CoachClient }) {
   const [params, setParams] = useSearchParams();
@@ -140,14 +143,16 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
           </div>
           <div hidden={view !== 'prepare'}>
             <AthleteEffort.Provider value={link.setup?.effortMethod ?? null}>
-              <WeekEditor
-                key={`${link.linkId}:${planningWeek}`}
-                saved={draft.data}
-                source={previous}
-                canEdit={link.permissions.editTraining}
-                reload={() => draft.refetch()}
-                lead={toolbar}
-              />
+              <AthleteAvoided.Provider value={link.notes?.avoidedExercises ?? NONE}>
+                <WeekEditor
+                  key={`${link.linkId}:${planningWeek}`}
+                  saved={draft.data}
+                  source={previous}
+                  canEdit={link.permissions.editTraining}
+                  reload={() => draft.refetch()}
+                  lead={toolbar}
+                />
+              </AthleteAvoided.Provider>
             </AthleteEffort.Provider>
           </div>
         </div>

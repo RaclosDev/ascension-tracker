@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { SegmentedControl } from '../ui/segmented-control';
 import toast from 'react-hot-toast';
-import { apiErrorMessage, formatCoachDate } from '../../lib/coach/api';
+import { Link } from 'react-router-dom';
+import { CalendarPlus, Pin } from 'lucide-react';
+import { apiErrorMessage, formatCoachDate, type CoachClient } from '../../lib/coach/api';
+import { confirmAction } from '../../lib/confirmation';
+import { useSaveCoachNotes } from '../../lib/coach/setup';
+import { shiftWeek } from '../../lib/coach/weeks';
+import { useAthleteLinks } from './AthleteShell';
+import { NOTE_MAX } from './AthleteNote';
 import {
   useClientCheckins,
   useReplyCheckin,
@@ -17,7 +24,8 @@ const matches = (filter: string, item: Checkin) =>
   filter === 'all' || (filter === 'pending' ? needsReply(item) : !needsReply(item));
 
 /** Unanswered seguimientos first, then newest week within each group. */
-export function CheckinsSection({ linkId }: { linkId: string }) {
+export function CheckinsSection({ link }: { link: CoachClient }) {
+  const linkId = link.linkId;
   const checkins = useClientCheckins(linkId);
   const [chosen, setFilter] = useState<string | null>(null);
   const all = checkins.data ?? [];
@@ -87,7 +95,12 @@ export function CheckinsSection({ linkId }: { linkId: string }) {
                         : 'Por responder'}
                   </span>
                 }
-                footer={open ? <ReplyForm linkId={linkId} checkin={c} /> : null}
+                footer={
+                  <>
+                    {open && <ReplyForm linkId={linkId} checkin={c} />}
+                    <CheckinActions link={link} checkin={c} />
+                  </>
+                }
               />
             );
             // With several weeks on screen, answered ones fold so the open ones stand out.
@@ -97,6 +110,7 @@ export function CheckinsSection({ linkId }: { linkId: string }) {
               <details key={c.id} className="checkin-folded" open={index === 0}>
                 <summary>
                   <strong>Semana del {formatCoachDate(c.weekStart)}</strong>
+                  <span className="checkin-brief">{brief(c)}</span>
                   <span className="checkin-status">Respondido</span>
                 </summary>
                 {card}
@@ -106,6 +120,72 @@ export function CheckinsSection({ linkId }: { linkId: string }) {
         </>
       )}
     </section>
+  );
+}
+
+const kg = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
+
+/** The week at a glance, for the folded row. */
+const brief = (c: Checkin) =>
+  [
+    `Energía ${c.energy}/5`,
+    `Sueño ${c.sleep}/5`,
+    `Entreno ${c.trainingAdherence}/5`,
+    c.weightAvg != null && `${kg.format(c.weightAvg)} kg`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+/** What the coach does after reading a seguimiento: keep what matters and plan the next week. */
+function CheckinActions({ link, checkin }: { link: CoachClient; checkin: Checkin }) {
+  const save = useSaveCoachNotes(link.linkId);
+  const { sectionHref } = useAthleteLinks(link.linkId);
+  const said = checkin.notes?.trim() || checkin.answers?.find((a) => a.answer?.trim())?.answer;
+  return (
+    <div className="checkin-actions">
+      {said && (
+        <button
+          type="button"
+          className="btn btn-secondary"
+          disabled={save.isPending}
+          onClick={async () => {
+            if (
+              link.notes?.pinnedNote &&
+              !(await confirmAction({
+                title: 'Sustituir la nota fijada',
+                description: `La nota actual («${link.notes.pinnedNote.slice(0, 120)}») se sustituirá por lo que el atleta contó esta semana.`,
+                confirmLabel: 'Sustituir nota',
+              }))
+            )
+              return;
+            save.mutate(
+              {
+                pinnedNote:
+                  `Seguimiento del ${formatCoachDate(checkin.weekStart)}: ${said.trim()}`.slice(
+                    0,
+                    NOTE_MAX,
+                  ),
+                avoidedExercises: link.notes?.avoidedExercises ?? [],
+              },
+              {
+                onSuccess: () => toast.success('Fijado como nota en la cabecera del atleta'),
+                onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo fijar la nota')),
+              },
+            );
+          }}
+        >
+          <Pin size={15} aria-hidden /> Fijar como nota
+        </button>
+      )}
+      {link.permissions.training && (
+        <Link
+          className="btn btn-secondary"
+          to={`${sectionHref('semana')}&semana=${shiftWeek(checkin.weekStart, 1)}`}
+        >
+          <CalendarPlus size={15} aria-hidden /> Preparar la semana siguiente
+        </Link>
+      )}
+    </div>
   );
 }
 

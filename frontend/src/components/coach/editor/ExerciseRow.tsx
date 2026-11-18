@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
-import { GripVertical, MoreHorizontal, Plus, X } from 'lucide-react';
+import { GripVertical, MoreHorizontal, Plus, TriangleAlert, X } from 'lucide-react';
 import type { DraggableProvided } from '@hello-pangea/dnd';
 import type { PrescribedLoad, ProgramExercise, SetTarget } from '@/lib/coach/coachPrograms';
 import {
@@ -128,6 +128,7 @@ export function ExerciseRow({
 }) {
   const name = exercise.exerciseName || exercise.exerciseId;
   const prefs = usePrescribing();
+  const vetoed = prefs.avoidedOf(exercise.exerciseId);
   const card = useRef<HTMLLIElement | null>(null);
   const optionsId = useId();
   const [options, setOptions] = useState(false);
@@ -231,6 +232,12 @@ export function ExerciseRow({
         </span>
         <span className="set-card-name">
           {index + 1}. {name}
+          {vetoed && (
+            <span className="set-card-vetoed" role="status">
+              <TriangleAlert size={13} aria-hidden /> Vetado para este atleta
+              {vetoed.reason ? `: ${vetoed.reason}` : ''}
+            </span>
+          )}
         </span>
         <button
           type="button"

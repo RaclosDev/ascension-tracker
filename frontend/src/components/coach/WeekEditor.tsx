@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import toast from 'react-hot-toast';
 import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
-import { ClipboardCopy, Copy, Eye, Pencil, X } from 'lucide-react';
+import { ClipboardCheck, ClipboardCopy, Copy, Eye, Pencil, X } from 'lucide-react';
 import { addDays, format, parseISO } from 'date-fns';
 import { useSessionDraft } from '@/hooks/useSessionDraft';
 import { apiErrorMessage, formatCoachDate } from '@/lib/coach/api';
@@ -32,6 +32,7 @@ import {
   type SavedWeek,
   type WeekContent,
 } from '@/lib/coach/weeks';
+import { fetchDone, withDone } from '@/lib/coach/doneWeek';
 import { sendDay, sendExercise, weekText } from '@/lib/coach/weekBoard';
 import { downloadWeekBackup } from '@/lib/coach/weekBackup';
 import { isCoachTourFrame } from './tour/frame';
@@ -78,6 +79,7 @@ export function WeekEditor({
   const [error, setError] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [copyingDone, setCopyingDone] = useState(false);
   const [failed, setFailed] = useState(false);
   const save = useSaveWeek(saved.linkId, saved.weekStart);
   const publish = usePublishWeek(saved.linkId, saved.weekStart);
@@ -420,6 +422,54 @@ export function WeekEditor({
           <button
             type="button"
             className="btn btn-secondary"
+            title="Copia la semana anterior con las cargas y repeticiones que el atleta registró"
+            disabled={locked || !source || !lastWeek?.days.length || copyingDone}
+            onClick={async () => {
+              if (!lastWeek || !source) return;
+              if (
+                program.days.length &&
+                !(await confirmAction({
+                  title: 'Copiar lo que hizo',
+                  description:
+                    'Se sustituirán los días del borrador por la semana anterior, con las cargas y repeticiones que el atleta registró. Las notas privadas y la decisión se conservan.',
+                  confirmLabel: 'Copiar lo que hizo',
+                  destructive: true,
+                }))
+              )
+                return;
+              setCopyingDone(true);
+              try {
+                const done = await fetchDone(
+                  saved.linkId,
+                  source.id,
+                  shiftWeek(saved.weekStart, -1),
+                );
+                const next = withDone(structuredClone(lastWeek), done);
+                if (!next.changed) {
+                  setError(
+                    'El atleta no registró ningún ejercicio de la semana anterior. Usa «Copiar semana anterior» para partir de lo pautado.',
+                  );
+                  return;
+                }
+                editProgram({ ...next.program, name: program.name });
+                toast.success(
+                  `Copiado lo que hizo en ${next.changed} ${next.changed === 1 ? 'ejercicio' : 'ejercicios'}; el resto queda como estaba pautado`,
+                );
+              } catch (e) {
+                setError(
+                  apiErrorMessage(e, 'No se pudieron cargar los entrenamientos registrados'),
+                );
+              } finally {
+                setCopyingDone(false);
+              }
+            }}
+          >
+            <ClipboardCheck size={15} aria-hidden />{' '}
+            {copyingDone ? 'Copiando…' : 'Copiar lo que hizo'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
             disabled={!program.days.length}
             onClick={() =>
               void navigator.clipboard
@@ -573,10 +623,41 @@ export function WeekEditor({
                     )
                       editProgram(removeDay(program, 1, dayIndex));
                   }}
-                  onSendDay={(to, move, clash) => {
+                  onSendDay={async (to, move, clash) => {
+                    const before = program;
+                    const lost = findDay(program, 1, to);
+                    if (
+                      clash === 'replace' &&
+                      lost?.exercises.length &&
+                      !(await confirmAction({
+                        title: `Sustituir la sesión del ${dayName(to)}`,
+                        description: `Se perderá «${lost.name || 'Sesión'}» con ${lost.exercises.length} ${lost.exercises.length === 1 ? 'ejercicio' : 'ejercicios'} y en su lugar quedará «${day?.name || 'Sesión'}».`,
+                        confirmLabel: 'Sustituir sesión',
+                        destructive: true,
+                      }))
+                    )
+                      return;
                     if (apply(sendDay(program, dayIndex, to, move, clash), to))
                       toast.success(
-                        `${day?.name || 'Sesión'}: ${move ? 'movida' : 'copiada'} al ${dayName(to)}`,
+                        (shown) => (
+                          <span className="week-undo">
+                            {day?.name || 'Sesión'}: {move ? 'movida' : 'copiada'} al {dayName(to)}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const now = latest.current.value;
+                                draft.setValue({
+                                  ...now,
+                                  content: { ...now.content, program: before },
+                                });
+                                toast.dismiss(shown.id);
+                              }}
+                            >
+                              Deshacer
+                            </button>
+                          </span>
+                        ),
+                        { duration: 6000 },
                       );
                   }}
                   onSendExercise={(index, to, move) => {

@@ -1,5 +1,6 @@
 import type { CompletedWorkout } from '@/lib/workout/types';
 import type { ProgramExercise } from '@/lib/coach/coachPrograms';
+import { rowsOf, setText } from '@/lib/coach/prescription';
 import { TechniqueVideoLink } from '../workout/TechniqueVideo';
 import { WorkoutExerciseVariant } from '../workout/WorkoutExerciseDetail';
 
@@ -40,6 +41,15 @@ export function WorkoutReview({
             (p.variantMachine ?? '') === (exercise.variant?.machine ?? ''),
         );
         const target = matches.length === 1 ? matches[0] : undefined;
+        // Each logged set faces its own target: warm-ups with warm-ups, work sets in order.
+        const rows = target ? rowsOf(target) : [];
+        const pools = {
+          warm: rows.filter((row) => row.kind === 'WARMUP'),
+          work: rows.filter((row) => row.kind !== 'WARMUP'),
+        };
+        const goals = exercise.sets.map((set) =>
+          (set.type === 'warmup' ? pools.warm : pools.work).shift(),
+        );
         return (
           <section key={exercise.id} className="min-w-0">
             <h5 className="font-bold">
@@ -58,8 +68,9 @@ export function WorkoutReview({
                 <thead>
                   <tr>
                     <th scope="col">Serie</th>
-                    <th scope="col">Carga</th>
-                    <th scope="col">Reps</th>
+                    {target && <th scope="col">Objetivo</th>}
+                    <th scope="col">{target ? 'Carga hecha' : 'Carga'}</th>
+                    <th scope="col">{target ? 'Reps hechas' : 'Reps'}</th>
                     <th scope="col">Esfuerzo</th>
                     <th scope="col">Estado</th>
                   </tr>
@@ -68,6 +79,16 @@ export function WorkoutReview({
                   {exercise.sets.map((set, i) => {
                     const rir = !!set.rir?.trim();
                     const actual = rir ? Number(set.rir) : set.rpe?.trim() ? Number(set.rpe) : NaN;
+                    const goal = goals[i];
+                    const short =
+                      set.completed &&
+                      !!goal &&
+                      ((goal.reps != null &&
+                        set.reps.trim() !== '' &&
+                        Number(set.reps) < goal.reps) ||
+                        (goal.load?.mode === 'KG' &&
+                          set.weight.trim() !== '' &&
+                          Number(set.weight.replace(',', '.')) < goal.load.amount));
                     const detailed = target?.prescription?.sets;
                     const targetSet =
                       detailed?.length === exercise.sets.length ? detailed[i] : undefined;
@@ -101,8 +122,20 @@ export function WorkoutReview({
                                 ? ' · fallo'
                                 : ''}
                         </th>
+                        {target && (
+                          <td style={{ color: 'var(--text-secondary)' }}>
+                            {(goal && setText(goal)) || '—'}
+                          </td>
+                        )}
                         <td>{set.weight ? `${set.weight} kg` : '—'}</td>
-                        <td>{set.reps || '—'}</td>
+                        <td>
+                          {set.reps || '—'}
+                          {short && (
+                            <span className="block" style={{ color: 'var(--color-warning)' }}>
+                              Por debajo del objetivo
+                            </span>
+                          )}
+                        </td>
                         <td>
                           {rir ? `RIR ${set.rir}` : set.rpe ? `RPE ${set.rpe}` : '—'}
                           {delta != null && delta !== 0 && (

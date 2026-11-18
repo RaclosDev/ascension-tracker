@@ -118,8 +118,8 @@ function Clients() {
       personName(a.link.client).localeCompare(personName(b.link.client), 'es'),
     );
   if (sort === 'recent') visible.sort((a, b) => b.link.since.localeCompare(a.link.since));
-  const href = (linkId: string, section = 'resumen') =>
-    `${clientHref(linkId, section)}&lista=${encodeURIComponent(params.toString())}`;
+  const href = (linkId: string, section?: string) =>
+    `${clientHref(linkId, section)}${section ? '&' : '?'}lista=${encodeURIComponent(params.toString())}`;
 
   return (
     <>

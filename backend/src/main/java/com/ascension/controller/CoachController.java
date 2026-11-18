@@ -119,6 +119,15 @@ public class CoachController {
         return ResponseEntity.ok(setupService.save(email, linkId, setup));
     }
 
+    @PutMapping("/clients/{linkId}/notes")
+    public ResponseEntity<com.ascension.dto.CoachSetupDtos.CoachNotes> notes(
+            @PathVariable UUID linkId, @Valid @RequestBody com.ascension.dto.CoachSetupDtos.CoachNotes notes,
+            @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(setupService.saveNotes(email, linkId, notes));
+    }
+
     @GetMapping("/clients/{linkId}/status")
     public ResponseEntity<ClientStatus> status(@PathVariable UUID linkId, @AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);

@@ -193,7 +193,7 @@ public class CoachService {
     private List<CoachClient> findClients(String coachEmail, UUID linkId) {
         UUID coachId = requireCoachId(coachEmail);
         return jdbcTemplate.query("""
-                SELECT %s, cc.id, cc.created_at, cc.coaching_setup, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
+                SELECT %s, cc.id, cc.created_at, cc.coaching_setup, cc.coach_notes, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
                        u.name, u.email, u.picture
                 FROM coach_clients cc JOIN users u ON u.id = cc.client_user_id
                 WHERE cc.coach_user_id = ? AND cc.status = 'ACTIVE'
@@ -202,7 +202,7 @@ public class CoachService {
                 """.formatted(CoachScheduleService.COLUMNS),
                 (rs, n) -> new CoachClient(rs.getObject("id", UUID.class), person(rs),
                         permissions(rs), instant(rs, "created_at"), setupService.decode(rs.getString("coaching_setup")),
-                        CoachScheduleService.read(rs, Instant.now())),
+                        CoachScheduleService.read(rs, Instant.now()), setupService.decodeNotes(rs.getString("coach_notes"))),
                 coachId, linkId, linkId);
     }
 
