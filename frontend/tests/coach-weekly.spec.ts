@@ -142,6 +142,8 @@ for (const width of [390, 1920]) {
           ],
         });
       if (path === 'clients/l1/programs/a1/plan') return route.fulfill({ json: previous });
+      if (path === 'clients/l1/block')
+        return route.fulfill({ json: { block: null, weeks: [saved] } });
       if (path === 'clients/l1/weeks/2026-11-16') {
         if (route.request().method() === 'PUT') {
           const request = route.request().postDataJSON();
@@ -182,11 +184,12 @@ for (const width of [390, 1920]) {
     await previousPrograms.click();
     await expect(previousHeading).toBeVisible();
     await previousPrograms.click();
-    await page.getByRole('button', { name: 'Preparar', exact: true }).click();
+    await page.getByRole('button', { name: 'Calendario', exact: true }).click();
     await page.locator('.week-menu > summary').click();
     await page.getByRole('button', { name: 'Copiar semana anterior' }).click();
-    const session = page.locator('.week-col').first();
-    // The copied Monday is editable in its own column, which sums it up in its head.
+    // The copied Monday shows on the calendar and opens beside it, summed up in its head.
+    await expect(page.locator('.cal-week[data-focus] .cal-cell').first()).toContainText('Torso');
+    const session = page.locator('.cal-panel');
     await expect(session).toContainText('1 ejercicio · 3 series');
     await expect(page.getByLabel('Nombre del día (Lunes 16/11)')).toHaveValue('Torso');
     await page.screenshot({ path: info.outputPath('weekly-compact.png'), fullPage: true });
@@ -203,11 +206,13 @@ for (const width of [390, 1920]) {
       .getByLabel('Notas privadas del entrenador')
       .fill('Revisar disponibilidad del miércoles.');
     await page.getByLabel('Objetivo de la semana').selectOption('DELOAD');
-    await page.getByLabel('Carga de la serie 1 (kg)').fill('45');
+    // Closing the settings brings back the day, where the load is one cell on the exercise's line.
+    await page.getByRole('button', { name: 'Cerrar panel' }).click();
+    await page.getByLabel('Carga de Press banca (kg)').fill('45');
     await page.screenshot({ path: info.outputPath('weekly-editing.png'), fullPage: true });
     await page.reload();
+    await expect(page.getByLabel('Carga de Press banca (kg)')).toHaveValue('45');
     await openNotes();
-    await expect(page.getByLabel('Carga de la serie 1 (kg)')).toHaveValue('45');
     await page.getByText('Notas privadas del entrenador', { exact: true }).click();
     await expect(page.getByLabel('Notas privadas del entrenador')).toHaveValue(
       'Revisar disponibilidad del miércoles.',

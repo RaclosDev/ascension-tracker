@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type DragEvent } from 'react';
-import { Draggable, Droppable } from '@hello-pangea/dnd';
+import { useEffect, useRef, useState } from 'react';
+import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { Copy, MoreHorizontal, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { apiErrorMessage } from '@/lib/coach/api';
@@ -10,25 +10,17 @@ import {
   type ProgramExercise,
 } from '@/lib/coach/coachPrograms';
 import type { Exercise } from '@/lib/workout/types';
-import { ExerciseRow } from './ExerciseRow';
-import { ExerciseSearch } from './ExerciseSearch';
+import { ExerciseRow } from '../editor/ExerciseRow';
+import { ExerciseSearch } from '../editor/ExerciseSearch';
 
-export interface DropProps {
-  'data-drop'?: string;
-  onDragOver: (event: DragEvent) => void;
-  onDragLeave: (event: DragEvent) => void;
-  onDrop: (event: DragEvent) => void;
-}
-
-/** One weekday of the week being prepared: a full session to edit, or a narrow rest column. */
-export function WeekColumn({
-  dayIndex,
+/** The training of one day: every exercise on a line, with the details one click away. */
+export function DaySession({
   label,
   weekday,
   day,
   lastDay,
   others,
-  drop,
+  readOnly,
   onChange,
   onAdd,
   onRemove,
@@ -37,8 +29,8 @@ export function WeekColumn({
   onSendExercise,
   onAddExercise,
   onRemoveExercise,
+  onReorder,
 }: {
-  dayIndex: number;
   /** "Lunes 16/11" */
   label: string;
   /** "lunes" */
@@ -47,7 +39,7 @@ export function WeekColumn({
   /** What the athlete had this same weekday the week before. */
   lastDay?: ProgramDay;
   others: { value: number; label: string; busy: boolean }[];
-  drop: DropProps;
+  readOnly: boolean;
   onChange: (change: (day: ProgramDay) => ProgramDay) => void;
   onAdd: () => void;
   onRemove: () => void;
@@ -56,6 +48,7 @@ export function WeekColumn({
   onSendExercise: (index: number, to: number, move: boolean) => void;
   onAddExercise: (exercise: Exercise) => void;
   onRemoveExercise: (index: number) => void;
+  onReorder: (from: number, to: number) => void;
 }) {
   const [menu, setMenu] = useState(false);
   const [searching, setSearching] = useState(false);
@@ -74,79 +67,68 @@ export function WeekColumn({
 
   if (!day)
     return (
-      <Droppable droppableId={`day-${dayIndex}`}>
-        {(zone) => (
-          <section
-            ref={zone.innerRef}
-            {...zone.droppableProps}
-            className="week-col week-col-rest"
-            aria-label={`${label}, descanso`}
-            {...drop}
-          >
-            <span className="week-col-date">{label}</span>
-            <span className="week-col-rest-text">Descanso</span>
+      <div className="day-empty">
+        <p>{readOnly ? 'No había sesión pautada este día.' : 'Día de descanso: sin sesión.'}</p>
+        {!readOnly && (
+          <div className="day-empty-actions">
             <button
               type="button"
-              className="week-col-icon"
+              className="btn btn-primary"
               aria-label={`Añadir sesión el ${weekday}`}
-              title={`Añadir sesión el ${weekday}`}
               onClick={() => {
                 onAdd();
                 setSearching(true);
               }}
             >
-              <Plus size={18} aria-hidden />
+              <Plus size={16} aria-hidden /> Añadir sesión
             </button>
             {lastDay && (
               <button
                 type="button"
-                className="week-col-icon"
+                className="btn btn-secondary"
                 aria-label={`Repetir «${lastDay.name || 'la sesión'}» de la semana pasada el ${weekday}`}
-                title={`Repetir «${lastDay.name || 'la sesión'}» de la semana pasada`}
                 onClick={onRepeat}
               >
-                <Copy size={16} aria-hidden />
+                <Copy size={15} aria-hidden /> Repetir «{lastDay.name || 'la sesión'}»
               </button>
             )}
-            <span hidden>{zone.placeholder}</span>
-          </section>
+          </div>
         )}
-      </Droppable>
+      </div>
     );
 
   const sets = day.exercises.reduce((total, exercise) => total + exercise.sets, 0);
   const target = others.find((other) => other.value === sendTo);
   const full = count >= MAX_EXERCISES_PER_DAY;
   return (
-    <section className="week-col" aria-label={label} {...drop}>
-      <header className="week-col-head">
-        <div className="min-w-0">
-          <span className="week-col-date">{label}</span>
-          <small>
-            {count} {count === 1 ? 'ejercicio' : 'ejercicios'} · {sets} series
-          </small>
-        </div>
+    <div className="day-session">
+      <div className="day-session-head">
+        <input
+          className="day-session-name"
+          aria-label={`Nombre del día (${label})`}
+          placeholder="Nombre de la sesión"
+          maxLength={120}
+          value={day.name}
+          onChange={(e) => onChange((current) => ({ ...current, name: e.target.value }))}
+        />
+        <small>
+          {count} {count === 1 ? 'ejercicio' : 'ejercicios'} · {sets} series
+        </small>
         <button
           type="button"
           className="set-icon"
           aria-label={`Opciones del ${weekday}`}
           aria-expanded={menu}
+          title="Notas, mover, copiar o quitar la sesión"
           onClick={() => setMenu(!menu)}
         >
           <MoreHorizontal size={18} aria-hidden />
         </button>
-      </header>
-      <input
-        className="week-col-name"
-        aria-label={`Nombre del día (${label})`}
-        placeholder="Nombre de la sesión"
-        maxLength={120}
-        value={day.name}
-        onChange={(e) => onChange((current) => ({ ...current, name: e.target.value }))}
-      />
+      </div>
+      {day.notes && !menu && <p className="day-session-notes">{day.notes}</p>}
       {menu && (
-        <div className="week-col-menu">
-          <label>
+        <div className="day-menu">
+          <label className="day-menu-wide">
             Notas del día
             <textarea
               className="form-input"
@@ -187,7 +169,7 @@ export function WeekColumn({
               </select>
             </label>
           )}
-          <div className="week-col-menu-actions">
+          <div className="day-menu-actions">
             <button
               type="button"
               className="btn btn-secondary"
@@ -205,8 +187,6 @@ export function WeekColumn({
             >
               Mover
             </button>
-          </div>
-          <div className="week-col-menu-actions">
             <button
               type="button"
               className="btn btn-secondary"
@@ -237,54 +217,65 @@ export function WeekColumn({
           </div>
         </div>
       )}
-      <Droppable droppableId={`day-${dayIndex}`}>
-        {(zone) => (
-          <ol
-            ref={(node) => {
-              zone.innerRef(node);
-              list.current = node;
-            }}
-            {...zone.droppableProps}
-            className="week-col-list"
-          >
-            {day.exercises.map((exercise: ProgramExercise, i) => (
-              <Draggable
-                key={`${i}-${exercise.exerciseId}`}
-                draggableId={`${dayIndex}:${i}:${exercise.exerciseId}`}
-                index={i}
-              >
-                {(drag) => (
-                  <ExerciseRow
-                    drag={drag}
-                    index={i}
-                    exercise={exercise}
-                    onChange={(next) =>
-                      onChange((current) => ({
-                        ...current,
-                        exercises: current.exercises.map((e, j) => (j === i ? next : e)),
-                      }))
-                    }
-                    onRemove={() => onRemoveExercise(i)}
-                    send={{
-                      days: others,
-                      onSend: (to, move) => onSendExercise(i, to, move),
-                    }}
-                  />
-                )}
-              </Draggable>
-            ))}
-            {zone.placeholder}
-          </ol>
-        )}
-      </Droppable>
+      <DragDropContext
+        onDragEnd={({ source, destination }) => {
+          if (destination && destination.index !== source.index)
+            onReorder(source.index, destination.index);
+        }}
+      >
+        <Droppable droppableId="day">
+          {(zone) => (
+            <ol
+              ref={(node) => {
+                zone.innerRef(node);
+                list.current = node;
+              }}
+              {...zone.droppableProps}
+              className="day-list"
+            >
+              {day.exercises.map((exercise: ProgramExercise, i) => (
+                <Draggable
+                  key={`${i}-${exercise.exerciseId}`}
+                  draggableId={`${i}:${exercise.exerciseId}`}
+                  index={i}
+                  isDragDisabled={readOnly}
+                >
+                  {(drag) => (
+                    <ExerciseRow
+                      compact
+                      drag={drag}
+                      index={i}
+                      exercise={exercise}
+                      onChange={(next) =>
+                        onChange((current) => ({
+                          ...current,
+                          exercises: current.exercises.map((e, j) => (j === i ? next : e)),
+                        }))
+                      }
+                      onRemove={() => onRemoveExercise(i)}
+                      send={{
+                        days: others,
+                        onSend: (to, move) => onSendExercise(i, to, move),
+                      }}
+                    />
+                  )}
+                </Draggable>
+              ))}
+              {zone.placeholder}
+            </ol>
+          )}
+        </Droppable>
+      </DragDropContext>
       {!count && !searching && (
-        <p className="week-col-empty">Sesión vacía. Añade el primer ejercicio.</p>
+        <p className="day-list-empty">Sesión vacía. Añade el primer ejercicio.</p>
       )}
       {searching && !full ? (
         <div
-          className="week-col-search"
+          className="day-search"
           onKeyDown={(e) => {
-            if (e.key === 'Escape') setSearching(false);
+            if (e.key !== 'Escape') return;
+            e.stopPropagation();
+            setSearching(false);
           }}
         >
           <ExerciseSearch
@@ -303,7 +294,7 @@ export function WeekColumn({
       ) : (
         <button
           type="button"
-          className="week-col-add"
+          className="day-add"
           aria-label={`Añadir ejercicio el ${weekday}`}
           disabled={full}
           onClick={() => setSearching(true)}
@@ -311,6 +302,6 @@ export function WeekColumn({
           <Plus size={16} aria-hidden /> Ejercicio
         </button>
       )}
-    </section>
+    </div>
   );
 }

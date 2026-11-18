@@ -61,7 +61,7 @@ export function useAthleteViews(link: CoachClient) {
       id: 'entrenamiento',
       label: 'Entrenamiento',
       views: [
-        { id: 'semana', label: 'Semana', visible: training },
+        { id: 'semana', label: 'Planificación', visible: training },
         { id: 'entrenamiento', label: 'Programas', visible: training },
         {
           id: 'powerlifting',
@@ -153,84 +153,86 @@ export function AthleteShell({
 
   return (
     <>
-      <header className="athlete-header">
-        <div className="athlete-identity">
-          <Link
-            to={goBack.to}
-            className="athlete-back"
-            aria-label={goBack.label}
-            title={goBack.label}
-          >
-            <ArrowLeft size={18} aria-hidden />
-          </Link>
-          <ClientAvatar client={link.client} />
-          <div className="min-w-0">
-            <h1 className="athlete-name">{personName(link.client)}</h1>
-            <p className="athlete-meta">{meta.join(' · ')}</p>
+      <div className="athlete-top">
+        <header className="athlete-header">
+          <div className="athlete-identity">
+            <Link
+              to={goBack.to}
+              className="athlete-back"
+              aria-label={goBack.label}
+              title={goBack.label}
+            >
+              <ArrowLeft size={18} aria-hidden />
+            </Link>
+            <ClientAvatar client={link.client} />
+            <div className="min-w-0">
+              <h1 className="athlete-name">{personName(link.client)}</h1>
+              <p className="athlete-meta">{meta.join(' · ')}</p>
+            </div>
           </div>
-        </div>
-        <dl className="athlete-context">
-          <div>
-            <dt>Objetivo</dt>
-            <dd title={setup?.goal || undefined}>
-              {setup?.goal || <Link to={links.sectionHref('gestion')}>Añadir objetivo</Link>}
-            </dd>
+          <dl className="athlete-context">
+            <div>
+              <dt>Objetivo</dt>
+              <dd title={setup?.goal || undefined}>
+                {setup?.goal || <Link to={links.sectionHref('gestion')}>Añadir objetivo</Link>}
+              </dd>
+            </div>
+            <div>
+              <dt>Material</dt>
+              <dd title={setup?.equipment || undefined}>
+                {setup?.equipment || <Link to={links.sectionHref('gestion')}>Añadir material</Link>}
+              </dd>
+            </div>
+          </dl>
+          {pending > 0 && active !== 'revisiones' && (
+            <Link to={links.sectionHref('revisiones')} className="btn btn-primary athlete-followup">
+              <MessageSquareText size={16} aria-hidden />
+              Responder {pending} {pending === 1 ? 'seguimiento' : 'seguimientos'}
+            </Link>
+          )}
+          <AthleteNote key={link.linkId} link={link} />
+        </header>
+        <nav className="coach-client-nav athlete-nav" aria-label="Secciones del atleta">
+          <div className="athlete-tabs">
+            {groups.map((group) => {
+              const current = group === activeGroup;
+              return (
+                <Link
+                  key={group.id}
+                  to={links.viewHref(group.views[0].id)}
+                  aria-current={current ? (group.views.length > 1 ? 'true' : 'page') : undefined}
+                  data-athlete-nav={
+                    current && group.views.length > 1
+                      ? undefined
+                      : group.views.map((view) => view.id).join(' ')
+                  }
+                >
+                  {group.label}
+                  {group.id === 'revisiones' && pending > 0 && (
+                    <span className="athlete-badge" aria-label={`${pending} por responder`}>
+                      {pending}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
           </div>
-          <div>
-            <dt>Material</dt>
-            <dd title={setup?.equipment || undefined}>
-              {setup?.equipment || <Link to={links.sectionHref('gestion')}>Añadir material</Link>}
-            </dd>
-          </div>
-        </dl>
-        {pending > 0 && active !== 'revisiones' && (
-          <Link to={links.sectionHref('revisiones')} className="btn btn-primary athlete-followup">
-            <MessageSquareText size={16} aria-hidden />
-            Responder {pending} {pending === 1 ? 'seguimiento' : 'seguimientos'}
-          </Link>
-        )}
-        <AthleteNote key={link.linkId} link={link} />
-      </header>
-      <nav className="coach-client-nav athlete-nav" aria-label="Secciones del atleta">
-        <div className="athlete-tabs">
-          {groups.map((group) => {
-            const current = group === activeGroup;
-            return (
-              <Link
-                key={group.id}
-                to={links.viewHref(group.views[0].id)}
-                aria-current={current ? (group.views.length > 1 ? 'true' : 'page') : undefined}
-                data-athlete-nav={
-                  current && group.views.length > 1
-                    ? undefined
-                    : group.views.map((view) => view.id).join(' ')
-                }
-              >
-                {group.label}
-                {group.id === 'revisiones' && pending > 0 && (
-                  <span className="athlete-badge" aria-label={`${pending} por responder`}>
-                    {pending}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-        {activeGroup && activeGroup.views.length > 1 && (
-          <div className="athlete-subtabs" role="group" aria-label={activeGroup.label}>
-            {activeGroup.views.map((view) => (
-              <Link
-                key={view.id}
-                to={links.viewHref(view.id)}
-                aria-current={view.id === active ? 'page' : undefined}
-                data-athlete-nav={view.id}
-              >
-                {view.label}
-              </Link>
-            ))}
-          </div>
-        )}
-      </nav>
+          {activeGroup && activeGroup.views.length > 1 && (
+            <div className="athlete-subtabs" role="group" aria-label={activeGroup.label}>
+              {activeGroup.views.map((view) => (
+                <Link
+                  key={view.id}
+                  to={links.viewHref(view.id)}
+                  aria-current={view.id === active ? 'page' : undefined}
+                  data-athlete-nav={view.id}
+                >
+                  {view.label}
+                </Link>
+              ))}
+            </div>
+          )}
+        </nav>
+      </div>
       {children}
       <AthleteWarmup link={link} />
     </>

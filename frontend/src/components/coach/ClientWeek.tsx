@@ -6,15 +6,51 @@ import { useSearchParams } from 'react-router-dom';
 import { type CoachClient } from '@/lib/coach/api';
 import type { AvoidedExercise } from '@/lib/coach/setup';
 import { useClientAssignments } from '@/lib/coach/coachPrograms';
-import { overlapsWeek, shiftWeek, useCoachWeek, weekDate } from '@/lib/coach/weeks';
+import { overlapsWeek, shiftWeek, useCoachWeek, weekDate, type SavedWeek } from '@/lib/coach/weeks';
 import { useAthleteLinks } from './AthleteShell';
-import { SectionSkeleton } from './SectionSkeleton';
+import { useAthleteCalendar } from '@/lib/coach/calendar';
+import { AthleteCalendar } from './calendar/AthleteCalendar';
 import { WeekReview } from './WeekReview';
 import { WeekEditor } from './WeekEditor';
 import { BlockView } from './BlockView';
 import { AthleteAvoided, AthleteEffort } from './editor/prescribing';
 
 const NONE: AvoidedExercise[] = [];
+
+/** The calendar keeps its place while the plan of the week that was just opened arrives. */
+function PendingCalendar({
+  link,
+  from,
+  focus,
+  onSelect,
+}: {
+  link: CoachClient;
+  from: string;
+  focus: string;
+  onSelect: (week: string, day: number | null) => void;
+}) {
+  const calendar = useAthleteCalendar(link, from, 4);
+  return (
+    <div className="cal-body">
+      <p role="status" className="sr-only">
+        Cargando semana…
+      </p>
+      <AthleteCalendar
+        weeks={calendar.weeks}
+        focus={focus}
+        selected={null}
+        loading
+        onSelect={onSelect}
+      />
+    </div>
+  );
+}
+
+/** Today when the week is the current one; otherwise its first session, or Monday. */
+function openingDay(week: SavedWeek) {
+  if (week.weekStart === weekDate()) return ((new Date().getDay() + 6) % 7) + 1;
+  return Math.min(8, ...week.content.program.days.map((d) => d.dayIndex)) % 8 || 1;
+}
 
 export default function ClientWeek({ link }: { link: CoachClient }) {
   const [params, setParams] = useSearchParams();
@@ -45,13 +81,28 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
       ? selected
       : shiftWeek(weekDate(), 1),
   );
+  // Four weeks on screen: the one before the open week, to see where the athlete comes from.
+  const [from, setFrom] = useState(() => shiftWeek(planningWeek, -1));
+  if (planningWeek < from) setFrom(planningWeek);
+  else if (planningWeek > shiftWeek(from, 3)) setFrom(shiftWeek(planningWeek, -3));
+  // Undefined until the coach picks or closes a day: the calendar opens on the most useful one.
+  const [day, setDay] = useState<number | null>();
+  const pick = (week: string, next: number | null) => {
+    if (week > shiftWeek(weekDate(), 52)) return;
+    setPlanningWeek(week);
+    setDay(week === planningWeek || next ? next : undefined);
+  };
   const assignments = useClientAssignments(link.linkId);
   const draft = useCoachWeek(link.linkId, planningWeek);
   const previous = assignments.data?.find((a) => overlapsWeek(a, shiftWeek(planningWeek, -1)));
   const preparing = view === 'prepare';
   const week = preparing ? planningWeek : reviewWeek;
-  const setWeek = preparing ? setPlanningWeek : setReviewWeek;
-  const min = preparing ? weekDate() : undefined;
+  const setWeek = preparing
+    ? (next: string) => {
+        setPlanningWeek(next);
+        setDay(undefined);
+      }
+    : setReviewWeek;
   const max = preparing ? shiftWeek(weekDate(), 52) : undefined;
   const openWeek = (target: string) => {
     if (target < weekDate()) {
@@ -74,7 +125,7 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
         value={view}
         onChange={setView}
         options={[
-          { value: 'prepare', label: 'Preparar' },
+          { value: 'prepare', label: 'Calendario' },
           { value: 'block', label: 'Bloque' },
           { value: 'review', label: 'Revisar lo hecho' },
         ]}
@@ -84,7 +135,6 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
           type="button"
           className="btn btn-secondary"
           aria-label="Semana anterior"
-          disabled={!!min && week <= min}
           onClick={() => setWeek(shiftWeek(week, -1))}
         >
           <ArrowLeft size={16} aria-hidden />
@@ -101,15 +151,14 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
           />
         </label>
         <label hidden={!preparing} className="flex flex-col gap-1 min-w-0">
-          Semana que preparas
+          Semana abierta
           <input
             className="form-input min-h-11"
             type="date"
             value={planningWeek}
-            min={weekDate()}
             max={shiftWeek(weekDate(), 52)}
             onChange={(e) => {
-              if (e.target.value) setPlanningWeek(weekDate(new Date(`${e.target.value}T12:00:00`)));
+              if (e.target.value) setWeek(weekDate(new Date(`${e.target.value}T12:00:00`)));
             }}
           />
         </label>
@@ -142,7 +191,7 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
     <div className="coach-planning-workspace flex flex-col gap-4">
       {!ready && toolbar}
       {assignments.isPending || draft.isPending ? (
-        <SectionSkeleton label="Cargando semana…" />
+        <PendingCalendar link={link} from={from} focus={planningWeek} onSelect={pick} />
       ) : assignments.isError || draft.isError ? (
         <p role="alert">
           No se pudo cargar la planificación.{' '}
@@ -169,9 +218,13 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
                   key={`${link.linkId}:${planningWeek}`}
                   saved={draft.data}
                   source={previous}
-                  canEdit={link.permissions.editTraining}
+                  canEdit={link.permissions.editTraining && planningWeek >= weekDate()}
                   reload={() => draft.refetch()}
                   lead={toolbar}
+                  link={link}
+                  from={from}
+                  day={day === undefined ? openingDay(draft.data) : day}
+                  onSelect={pick}
                 />
               </AthleteAvoided.Provider>
             </AthleteEffort.Provider>

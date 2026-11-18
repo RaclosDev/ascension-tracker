@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import toast from 'react-hot-toast';
-import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
-import { ChevronDown, Copy, Eye, Pencil, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, Pencil, X } from 'lucide-react';
 import { addDays, format, parseISO } from 'date-fns';
 import { useSessionDraft } from '@/hooks/useSessionDraft';
-import { apiErrorMessage, formatCoachDate } from '@/lib/coach/api';
+import { apiErrorMessage, formatCoachDate, type CoachClient } from '@/lib/coach/api';
+import { useAthleteCalendar } from '@/lib/coach/calendar';
 import { confirmAction } from '@/lib/confirmation';
 import {
   addDay,
@@ -28,6 +28,7 @@ import {
   shiftWeek,
   usePublishWeek,
   useSaveWeek,
+  weekDate,
   weekFrom,
   type SavedWeek,
   type WeekContent,
@@ -39,8 +40,10 @@ import { isCoachTourFrame } from './tour/frame';
 import { BulkPrescription } from './editor/BulkPrescription';
 import { LastWeek } from './editor/LastWeek';
 import { LibraryInsert } from './editor/LibraryInsert';
-import { WeekColumn } from './editor/WeekColumn';
 import { WeekVolume } from './editor/WeekVolume';
+import { AthleteCalendar, longDate } from './calendar/AthleteCalendar';
+import { DayFacts } from './calendar/DayFacts';
+import { DaySession } from './calendar/DaySession';
 import { ProgramPreview } from './ProgramPreview';
 
 const DRAG_TYPE = 'application/x-ascension-week-item';
@@ -58,6 +61,10 @@ export function WeekEditor({
   canEdit,
   reload,
   lead,
+  link,
+  from,
+  day,
+  onSelect,
 }: {
   saved: SavedWeek;
   source?: ProgramAssignment;
@@ -65,6 +72,12 @@ export function WeekEditor({
   reload: () => Promise<unknown>;
   /** The week picker: it shares the bar with the saving state and the publish button. */
   lead?: ReactNode;
+  link: CoachClient;
+  /** First week of the calendar around the one being edited. */
+  from: string;
+  /** Day of this week open beside the calendar. */
+  day: number | null;
+  onSelect: (week: string, day: number | null) => void;
 }) {
   const draft = useSessionDraft(
     `coach-week:${saved.linkId}:${saved.weekStart}`,
@@ -156,7 +169,6 @@ export function WeekEditor({
       }
     }
   };
-  const cols = useRef<HTMLFieldSetElement>(null);
   const copyMenu = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     const close = (e: Event) => {
@@ -172,7 +184,8 @@ export function WeekEditor({
       document.removeEventListener('keydown', close);
     };
   }, []);
-  const drawer = useRef<HTMLFieldSetElement>(null);
+  const drawer = useRef<HTMLElement>(null);
+  const view = panel ?? (day ? 'day' : null);
   // An opened panel may land above or below what is on screen: bring it into view and focus it.
   useEffect(() => {
     if (!panel) return;
@@ -182,6 +195,7 @@ export function WeekEditor({
     });
   }, [panel]);
   const closePanel = () => {
+    if (!panel) return onSelect(saved.weekStart, null);
     const opener =
       panel && document.querySelector<HTMLButtonElement>(`[data-week-panel="${panel}"]`);
     setPanel(null);
@@ -314,30 +328,86 @@ export function WeekEditor({
       e.preventDefault();
       const item = JSON.parse(data) as { kind: string; dayIndex?: number };
       if (item.kind === 'day' && item.dayIndex) copyLastDay(item.dayIndex, dayIndex);
+      if (item.kind === 'move' && item.dayIndex && item.dayIndex !== dayIndex)
+        void sendSession(item.dayIndex, dayIndex, true, 'replace');
     },
   });
-  // Exercises are dragged inside a day to reorder them and across days to move them.
-  const onDragEnd = ({ source: from, destination: to }: DropResult) => {
-    if (!to) return;
-    const fromDay = Number(from.droppableId.slice(4));
-    const toDay = Number(to.droppableId.slice(4));
-    if (fromDay === toDay && from.index === to.index) return;
-    apply(sendExercise(program, fromDay, from.index, toDay, true, to.index), toDay);
-  };
+  /** Copies or moves a whole session to another day, from its menu or by dragging it on the calendar. */
+  async function sendSession(
+    origin: number,
+    to: number,
+    move: boolean,
+    clash: 'replace' | 'merge',
+  ) {
+    const before = program;
+    const sent = findDay(program, 1, origin);
+    const lost = findDay(program, 1, to);
+    if (
+      clash === 'replace' &&
+      lost?.exercises.length &&
+      !(await confirmAction({
+        title: `Sustituir la sesión del ${dayName(to)}`,
+        description: `Se perderá «${lost.name || 'Sesión'}» con ${lost.exercises.length} ${lost.exercises.length === 1 ? 'ejercicio' : 'ejercicios'} y en su lugar quedará «${sent?.name || 'Sesión'}».`,
+        confirmLabel: 'Sustituir sesión',
+        destructive: true,
+      }))
+    )
+      return;
+    if (!apply(sendDay(program, origin, to, move, clash), to)) return;
+    toast.success(
+      (shown) => (
+        <span className="week-undo">
+          {sent?.name || 'Sesión'}: {move ? 'movida' : 'copiada'} al {dayName(to)}
+          <button
+            type="button"
+            onClick={() => {
+              const now = latest.current.value;
+              draft.setValue({ ...now, content: { ...now.content, program: before } });
+              toast.dismiss(shown.id);
+            }}
+          >
+            Deshacer
+          </button>
+        </span>
+      ),
+      { duration: 6000 },
+    );
+  }
+  const calendar = useAthleteCalendar(link, from, 4, { weekStart: saved.weekStart, program });
+  const session = day ? findDay(program, 1, day) : undefined;
+  const facts = day
+    ? calendar.weeks.find((week) => week.weekStart === saved.weekStart)?.days[day - 1]
+    : undefined;
+  const heading = day ? longDate(dateOf(day, 'yyyy-MM-dd')) : '';
+  const title =
+    view === 'day'
+      ? heading.charAt(0).toUpperCase() + heading.slice(1)
+      : (PANELS.find((option) => option.id === panel)?.label ?? '');
+  // Leaving the week before the autosave fires would show the old plan on the calendar.
+  const leave = useRef<() => void>(() => undefined);
+  useEffect(() => {
+    leave.current = () => {
+      if (waiting && !inflight.current && !isCoachTourFrame())
+        void save.mutateAsync(latest.current.value).catch(() => undefined);
+    };
+  });
+  useEffect(() => () => leave.current(), []);
   const sets = program.days.flatMap((day) => day.exercises).reduce((n, e) => n + e.sets, 0);
   const status = saving
     ? 'Guardando…'
-    : failed
-      ? 'No se pudo guardar'
-      : draft.dirty
-        ? 'Cambios sin guardar'
-        : published
-          ? 'Semana publicada'
-          : saved.publishedVersion != null
-            ? 'Cambios guardados · publica para que el atleta los vea'
-            : saved.version > 0
-              ? 'Borrador guardado · el atleta aún no lo ve'
-              : 'Semana sin preparar';
+    : saved.weekStart < weekDate()
+      ? 'Semana pasada · solo lectura'
+      : failed
+        ? 'No se pudo guardar'
+        : draft.dirty
+          ? 'Cambios sin guardar'
+          : published
+            ? 'Semana publicada'
+            : saved.publishedVersion != null
+              ? 'Cambios guardados · publica para que el atleta los vea'
+              : saved.version > 0
+                ? 'Borrador guardado · el atleta aún no lo ve'
+                : 'Semana sin preparar';
   return (
     <section className="week-editor min-w-0" aria-label="Preparar semana">
       <header className="week-bar">
@@ -408,163 +478,154 @@ export function WeekEditor({
             </button>
           </span>
         )}
-      </header>
-      <div className="week-tools">
-        <div className="week-tools-group" role="group" aria-label="Paneles de apoyo">
-          {PANELS.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              className="btn btn-secondary"
-              data-week-panel={option.id}
-              aria-pressed={!preview && panel === option.id}
-              disabled={preview}
-              onClick={() => setPanel(panel === option.id ? null : option.id)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-        <div className="week-tools-group">
-          <details className="week-menu" data-tour="copy-menu" ref={copyMenu}>
-            <summary className="btn btn-secondary">
-              <Copy size={15} aria-hidden /> Copiar
-              <ChevronDown size={14} aria-hidden />
-            </summary>
-            <div
-              className="week-menu-items"
-              onClick={(e) => {
-                if ((e.target as HTMLElement).closest('button')) copyMenu.current!.open = false;
-              }}
-            >
+        <div className="week-tools">
+          <div className="week-tools-group" role="group" aria-label="Paneles de apoyo">
+            {PANELS.map((option) => (
               <button
+                key={option.id}
                 type="button"
-                data-tour="copy-week"
-                disabled={locked || !previous.data || previous.isFetching}
-                title={
-                  !locked && !previous.data && !previous.isFetching
-                    ? 'No hay una semana anterior publicada de la que partir'
-                    : undefined
-                }
-                onClick={async () => {
-                  if (!lastWeek) return;
-                  if (!lastWeek.days.length) {
-                    setError('El programa anterior no contiene sesiones para esa semana.');
-                    return;
-                  }
-                  if (
-                    program.days.length &&
-                    !(await confirmAction({
-                      title: 'Copiar semana anterior',
-                      description:
-                        'Se sustituirán los días y notas públicas del borrador por la semana anterior. Las notas privadas y la decisión se conservan.',
-                      confirmLabel: 'Copiar semana',
-                      destructive: true,
-                    }))
-                  )
-                    return;
-                  editProgram({ ...structuredClone(lastWeek), name: program.name });
-                  setPanel((current) => (current === 'previous' ? null : current));
+                className="btn btn-secondary"
+                data-week-panel={option.id}
+                aria-pressed={!preview && panel === option.id}
+                disabled={preview}
+                onClick={() => setPanel(panel === option.id ? null : option.id)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <div className="week-tools-group">
+            <details className="week-menu" data-tour="copy-menu" ref={copyMenu}>
+              <summary className="btn btn-secondary">
+                <Copy size={15} aria-hidden /> Copiar
+                <ChevronDown size={14} aria-hidden />
+              </summary>
+              <div
+                className="week-menu-items"
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('button')) copyMenu.current!.open = false;
                 }}
               >
-                Copiar semana anterior
-                <small>Parte de lo que pautaste la semana pasada</small>
-              </button>
-              <button
-                type="button"
-                title={
-                  !locked && (!source || !lastWeek?.days.length)
-                    ? 'No hay una semana anterior publicada de la que partir'
-                    : 'Copia la semana anterior con las cargas y repeticiones que el atleta registró'
-                }
-                disabled={locked || !source || !lastWeek?.days.length || copyingDone}
-                onClick={async () => {
-                  if (!lastWeek || !source) return;
-                  if (
-                    program.days.length &&
-                    !(await confirmAction({
-                      title: 'Copiar lo registrado',
-                      description:
-                        'Se sustituirán los días del borrador por la semana anterior, con las cargas y repeticiones que el atleta registró. Las notas privadas y la decisión se conservan.',
-                      confirmLabel: 'Copiar lo registrado',
-                      destructive: true,
-                    }))
-                  )
-                    return;
-                  setCopyingDone(true);
-                  try {
-                    const done = await fetchDone(
-                      saved.linkId,
-                      source.id,
-                      shiftWeek(saved.weekStart, -1),
-                    );
-                    const next = withDone(structuredClone(lastWeek), done);
-                    if (!next.changed) {
-                      setError(
-                        'El atleta no registró ningún ejercicio de la semana anterior. Usa «Copiar semana anterior» para partir de lo pautado.',
-                      );
+                <button
+                  type="button"
+                  data-tour="copy-week"
+                  disabled={locked || !previous.data || previous.isFetching}
+                  title={
+                    !locked && !previous.data && !previous.isFetching
+                      ? 'No hay una semana anterior publicada de la que partir'
+                      : undefined
+                  }
+                  onClick={async () => {
+                    if (!lastWeek) return;
+                    if (!lastWeek.days.length) {
+                      setError('El programa anterior no contiene sesiones para esa semana.');
                       return;
                     }
-                    editProgram({ ...next.program, name: program.name });
-                    toast.success(
-                      `Copiado lo que hizo en ${next.changed} ${next.changed === 1 ? 'ejercicio' : 'ejercicios'}; el resto queda como estaba pautado`,
-                    );
-                  } catch (e) {
-                    setError(
-                      apiErrorMessage(e, 'No se pudieron cargar los entrenamientos registrados'),
-                    );
-                  } finally {
-                    setCopyingDone(false);
-                  }
-                }}
-              >
-                {copyingDone ? 'Copiando…' : 'Copiar lo registrado'}
-                <small>La semana pasada con los kilos y repeticiones que hizo</small>
-              </button>
-              <button
-                type="button"
-                disabled={!program.days.length}
-                title={
-                  program.days.length
-                    ? 'Copia la semana como texto para pegarla en un mensaje'
-                    : 'Añade alguna sesión para poder copiarla'
-                }
-                onClick={() =>
-                  void navigator.clipboard
-                    .writeText(weekText(program, saved.weekStart))
-                    .then(() => toast.success('Semana copiada como texto'))
-                    .catch(() =>
-                      toast.error('No se pudo copiar. Revisa los permisos del navegador.'),
+                    if (
+                      program.days.length &&
+                      !(await confirmAction({
+                        title: 'Copiar semana anterior',
+                        description:
+                          'Se sustituirán los días y notas públicas del borrador por la semana anterior. Las notas privadas y la decisión se conservan.',
+                        confirmLabel: 'Copiar semana',
+                        destructive: true,
+                      }))
                     )
-                }
-              >
-                Copiar como texto
-                <small>Para pegar esta semana en un mensaje</small>
-              </button>
-            </div>
-          </details>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            disabled={locked}
-            data-tour="student-preview"
-            aria-pressed={preview}
-            onClick={() => setPreview(!preview)}
-          >
-            {preview ? <Pencil size={15} aria-hidden /> : <Eye size={15} aria-hidden />}
-            {preview ? 'Editar' : 'Vista del atleta'}
-          </button>
+                      return;
+                    editProgram({ ...structuredClone(lastWeek), name: program.name });
+                    setPanel((current) => (current === 'previous' ? null : current));
+                  }}
+                >
+                  Copiar semana anterior
+                  <small>Parte de lo que pautaste la semana pasada</small>
+                </button>
+                <button
+                  type="button"
+                  title={
+                    !locked && (!source || !lastWeek?.days.length)
+                      ? 'No hay una semana anterior publicada de la que partir'
+                      : 'Copia la semana anterior con las cargas y repeticiones que el atleta registró'
+                  }
+                  disabled={locked || !source || !lastWeek?.days.length || copyingDone}
+                  onClick={async () => {
+                    if (!lastWeek || !source) return;
+                    if (
+                      program.days.length &&
+                      !(await confirmAction({
+                        title: 'Copiar lo registrado',
+                        description:
+                          'Se sustituirán los días del borrador por la semana anterior, con las cargas y repeticiones que el atleta registró. Las notas privadas y la decisión se conservan.',
+                        confirmLabel: 'Copiar lo registrado',
+                        destructive: true,
+                      }))
+                    )
+                      return;
+                    setCopyingDone(true);
+                    try {
+                      const done = await fetchDone(
+                        saved.linkId,
+                        source.id,
+                        shiftWeek(saved.weekStart, -1),
+                      );
+                      const next = withDone(structuredClone(lastWeek), done);
+                      if (!next.changed) {
+                        setError(
+                          'El atleta no registró ningún ejercicio de la semana anterior. Usa «Copiar semana anterior» para partir de lo pautado.',
+                        );
+                        return;
+                      }
+                      editProgram({ ...next.program, name: program.name });
+                      toast.success(
+                        `Copiado lo que hizo en ${next.changed} ${next.changed === 1 ? 'ejercicio' : 'ejercicios'}; el resto queda como estaba pautado`,
+                      );
+                    } catch (e) {
+                      setError(
+                        apiErrorMessage(e, 'No se pudieron cargar los entrenamientos registrados'),
+                      );
+                    } finally {
+                      setCopyingDone(false);
+                    }
+                  }}
+                >
+                  {copyingDone ? 'Copiando…' : 'Copiar lo registrado'}
+                  <small>La semana pasada con los kilos y repeticiones que hizo</small>
+                </button>
+                <button
+                  type="button"
+                  disabled={!program.days.length}
+                  title={
+                    program.days.length
+                      ? 'Copia la semana como texto para pegarla en un mensaje'
+                      : 'Añade alguna sesión para poder copiarla'
+                  }
+                  onClick={() =>
+                    void navigator.clipboard
+                      .writeText(weekText(program, saved.weekStart))
+                      .then(() => toast.success('Semana copiada como texto'))
+                      .catch(() =>
+                        toast.error('No se pudo copiar. Revisa los permisos del navegador.'),
+                      )
+                  }
+                >
+                  Copiar como texto
+                  <small>Para pegar esta semana en un mensaje</small>
+                </button>
+              </div>
+            </details>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={locked}
+              data-tour="student-preview"
+              aria-pressed={preview}
+              onClick={() => setPreview(!preview)}
+            >
+              {preview ? <Pencil size={15} aria-hidden /> : <Eye size={15} aria-hidden />}
+              {preview ? 'Editar' : 'Vista del atleta'}
+            </button>
+          </div>
         </div>
-      </div>
-      <div className="week-context">
-        <WeekVolume program={program} last={lastWeek} />
-        {value.content.decision && (
-          <p className="week-decision">
-            {published && !draft.dirty ? 'Decisión publicada' : 'Decisión sin publicar'}:{' '}
-            {value.content.decision}
-          </p>
-        )}
-      </div>
+      </header>
       {error && <p role="alert">{error}</p>}
       {saved.linkedFrom ? (
         <p className="week-linked">
@@ -664,124 +725,25 @@ export function WeekEditor({
         </div>
       )}
       {preview && <ProgramPreview program={program} />}
-      {!preview && (
-        <nav className="week-days-strip" aria-label="Ir a un día de la semana">
-          {WEEKDAY_LABELS.map((weekday, i) => {
-            const sessions = findDay(program, 1, i + 1)?.exercises.length;
-            return (
-              <button
-                key={weekday}
-                type="button"
-                data-busy={sessions != null ? '' : undefined}
-                aria-label={`${dayName(i + 1)}: ${sessions != null ? 'con sesión' : 'descanso'}`}
-                onClick={() => {
-                  const column = cols.current?.querySelectorAll('.week-col').item(i);
-                  column?.scrollIntoView?.({
-                    behavior: 'smooth',
-                    block: 'nearest',
-                    inline: 'start',
-                  });
-                }}
-              >
-                {weekday.slice(0, 1)}
-                <span>{dateOf(i + 1, 'd')}</span>
-              </button>
-            );
-          })}
-        </nav>
-      )}
-      <div className="week-body" data-drawer={panel ? '' : undefined} hidden={preview}>
-        <fieldset ref={cols} disabled={locked} className="week-cols" aria-label="Días de la semana">
-          <DragDropContext onDragEnd={onDragEnd}>
-            {WEEKDAY_LABELS.map((weekday, i) => {
-              const dayIndex = i + 1;
-              const day = findDay(program, 1, dayIndex);
-              const label = `${weekday} ${dateOf(dayIndex, 'dd/MM')}`;
-              return (
-                <WeekColumn
-                  key={weekday}
-                  dayIndex={dayIndex}
-                  label={label}
-                  weekday={dayName(dayIndex)}
-                  day={day}
-                  lastDay={lastWeek?.days.find((d) => d.dayIndex === dayIndex)}
-                  others={WEEKDAY_LABELS.flatMap((other, j) =>
-                    j === i
-                      ? []
-                      : [{ value: j + 1, label: other, busy: !!findDay(program, 1, j + 1) }],
-                  )}
-                  drop={dropTarget(dayIndex)}
-                  onChange={(change) => editProgram(updateDay(program, 1, dayIndex, change))}
-                  onAdd={() => editProgram(addDay(program, 1, dayIndex))}
-                  onRepeat={() => copyLastDay(dayIndex, dayIndex)}
-                  onRemove={async () => {
-                    if (
-                      !day?.exercises.length ||
-                      (await confirmAction({
-                        title: 'Quitar sesión',
-                        description: `¿Quitar «${day.name}» del borrador?`,
-                        confirmLabel: 'Quitar sesión',
-                        destructive: true,
-                      }))
-                    )
-                      editProgram(removeDay(program, 1, dayIndex));
-                  }}
-                  onSendDay={async (to, move, clash) => {
-                    const before = program;
-                    const lost = findDay(program, 1, to);
-                    if (
-                      clash === 'replace' &&
-                      lost?.exercises.length &&
-                      !(await confirmAction({
-                        title: `Sustituir la sesión del ${dayName(to)}`,
-                        description: `Se perderá «${lost.name || 'Sesión'}» con ${lost.exercises.length} ${lost.exercises.length === 1 ? 'ejercicio' : 'ejercicios'} y en su lugar quedará «${day?.name || 'Sesión'}».`,
-                        confirmLabel: 'Sustituir sesión',
-                        destructive: true,
-                      }))
-                    )
-                      return;
-                    if (apply(sendDay(program, dayIndex, to, move, clash), to))
-                      toast.success(
-                        (shown) => (
-                          <span className="week-undo">
-                            {day?.name || 'Sesión'}: {move ? 'movida' : 'copiada'} al {dayName(to)}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const now = latest.current.value;
-                                draft.setValue({
-                                  ...now,
-                                  content: { ...now.content, program: before },
-                                });
-                                toast.dismiss(shown.id);
-                              }}
-                            >
-                              Deshacer
-                            </button>
-                          </span>
-                        ),
-                        { duration: 6000 },
-                      );
-                  }}
-                  onSendExercise={(index, to, move) => {
-                    const name = day?.exercises[index]?.exerciseName ?? 'Ejercicio';
-                    if (apply(sendExercise(program, dayIndex, index, to, move), to))
-                      toast.success(`${name}: ${move ? 'movido' : 'copiado'} al ${dayName(to)}`);
-                  }}
-                  onAddExercise={(exercise) =>
-                    addExercises(dayIndex, [newExercise(exercise.id, exercise.name)])
-                  }
-                  onRemoveExercise={(index) => removeExercise(dayIndex, index)}
-                />
-              );
-            })}
-          </DragDropContext>
-        </fieldset>
-        <fieldset
+      <div className="cal-body" data-panel={view ? '' : undefined} hidden={preview}>
+        <AthleteCalendar
+          weeks={calendar.weeks}
+          focus={saved.weekStart}
+          selected={day}
+          loading={calendar.isLoading}
+          onSelect={(week, next) => {
+            setPanel(null);
+            onSelect(week, next);
+          }}
+          drop={dropTarget}
+          dragType={DRAG_TYPE}
+          editable={!locked}
+        />
+        <aside
           ref={drawer}
-          disabled={locked}
-          className="week-drawer"
-          hidden={!panel}
+          className="cal-panel"
+          hidden={!view}
+          aria-label={title}
           onKeyDown={(e) => {
             if (e.key !== 'Escape' || e.defaultPrevented) return;
             e.stopPropagation();
@@ -790,7 +752,35 @@ export function WeekEditor({
         >
           <div className="card week-panel">
             <header className="week-panel-head">
-              <h3>{PANELS.find((option) => option.id === panel)?.label}</h3>
+              <h3>{title}</h3>
+              {view === 'day' && day && (
+                <>
+                  <button
+                    type="button"
+                    className="set-icon"
+                    aria-label="Día anterior"
+                    onClick={() =>
+                      day > 1
+                        ? onSelect(saved.weekStart, day - 1)
+                        : onSelect(shiftWeek(saved.weekStart, -1), 7)
+                    }
+                  >
+                    <ChevronLeft size={18} aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    className="set-icon"
+                    aria-label="Día siguiente"
+                    onClick={() =>
+                      day < 7
+                        ? onSelect(saved.weekStart, day + 1)
+                        : onSelect(shiftWeek(saved.weekStart, 1), 1)
+                    }
+                  >
+                    <ChevronRight size={18} aria-hidden />
+                  </button>
+                </>
+              )}
               <button
                 type="button"
                 className="set-icon"
@@ -800,119 +790,181 @@ export function WeekEditor({
                 <X size={18} aria-hidden />
               </button>
             </header>
-            <div hidden={panel !== 'previous'} className="week-panel-body">
-              {lastWeek?.days.length ? (
-                <>
-                  <p className="week-panel-hint">
-                    {source?.programName}. Copia una sesión a su mismo día o arrástrala a otro.
-                  </p>
-                  <LastWeek
-                    week={lastWeek}
-                    dragType={DRAG_TYPE}
-                    disabled={locked}
-                    onCopy={(day) => copyLastDay(day.dayIndex, day.dayIndex)}
-                  />
-                </>
-              ) : source && previous.isPending ? (
-                <p role="status">Cargando la semana anterior…</p>
-              ) : (
-                <p className="week-panel-hint">
-                  No hay sesiones publicadas la semana anterior. Parte de una plantilla o añade
-                  ejercicios a cada día.
-                </p>
-              )}
-            </div>
-            <div hidden={panel !== 'library'} className="week-panel-body">
-              <LibraryInsert onInsert={(days) => void insert(days)} onAddExercises={addExercises} />
-            </div>
-            <div hidden={panel !== 'notes'} className="week-panel-body">
-              <div className="grid gap-4">
-                <label className="flex flex-col gap-1 min-w-0">
-                  Nombre
-                  <input
-                    className="form-input min-h-11"
-                    maxLength={120}
-                    value={program.name}
-                    onChange={(e) => editProgram({ ...program, name: e.target.value })}
-                  />
-                </label>
-                <label data-tour="week-intent" className="flex flex-col gap-1 min-w-0">
-                  Objetivo de la semana
-                  <select
-                    className="form-input min-h-11"
-                    value={value.content.intent}
-                    onChange={(e) =>
-                      edit({ ...value.content, intent: e.target.value as WeekContent['intent'] })
+            {view === 'day' && day && (
+              <div className="week-panel-body cal-day-body">
+                <fieldset disabled={locked} className="cal-fieldset">
+                  <DaySession
+                    key={day}
+                    label={`${WEEKDAY_LABELS[day - 1]} ${dateOf(day, 'dd/MM')}`}
+                    weekday={dayName(day)}
+                    day={session}
+                    lastDay={lastWeek?.days.find((d) => d.dayIndex === day)}
+                    others={WEEKDAY_LABELS.flatMap((other, j) =>
+                      j === day - 1
+                        ? []
+                        : [{ value: j + 1, label: other, busy: !!findDay(program, 1, j + 1) }],
+                    )}
+                    readOnly={!canEdit}
+                    onChange={(change) => editProgram(updateDay(program, 1, day, change))}
+                    onAdd={() => editProgram(addDay(program, 1, day))}
+                    onRepeat={() => copyLastDay(day, day)}
+                    onRemove={async () => {
+                      if (
+                        !session?.exercises.length ||
+                        (await confirmAction({
+                          title: 'Quitar sesión',
+                          description: `¿Quitar «${session.name}» del borrador?`,
+                          confirmLabel: 'Quitar sesión',
+                          destructive: true,
+                        }))
+                      )
+                        editProgram(removeDay(program, 1, day));
+                    }}
+                    onSendDay={(to, move, clash) => void sendSession(day, to, move, clash)}
+                    onSendExercise={(index, to, move) => {
+                      const name = session?.exercises[index]?.exerciseName ?? 'Ejercicio';
+                      if (apply(sendExercise(program, day, index, to, move), to))
+                        toast.success(`${name}: ${move ? 'movido' : 'copiado'} al ${dayName(to)}`);
+                    }}
+                    onAddExercise={(exercise) =>
+                      addExercises(day, [newExercise(exercise.id, exercise.name)])
                     }
-                  >
-                    {Object.entries(INTENTS).map(([id, label]) => (
-                      <option key={id} value={id}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label data-tour="week-comment" className="flex flex-col gap-1 min-w-0">
-                  Comentario para el atleta
-                  <textarea
-                    className="form-input min-h-11"
-                    maxLength={2000}
-                    rows={2}
-                    value={program.notes ?? ''}
-                    onChange={(e) => editProgram({ ...program, notes: e.target.value || null })}
-                    placeholder="Por ejemplo: semana de descarga; prioriza técnica y recuperación."
+                    onRemoveExercise={(index) => removeExercise(day, index)}
+                    onReorder={(from, to) =>
+                      apply(sendExercise(program, day, from, day, true, to), day)
+                    }
                   />
-                </label>
-                <label className="flex flex-col gap-1 min-w-0">
-                  Qué cambias esta semana y por qué
-                  <textarea
-                    className="form-input min-h-11"
-                    maxLength={2000}
-                    rows={2}
-                    value={value.content.decision}
-                    onChange={(e) => edit({ ...value.content, decision: e.target.value })}
-                  />
-                </label>
-                <details data-tour="week-private">
-                  <summary className="cursor-pointer">Notas privadas del entrenador</summary>
-                  <textarea
-                    aria-label="Notas privadas del entrenador"
-                    className="w-full mt-2 form-input min-h-11"
-                    rows={3}
-                    maxLength={4000}
-                    value={value.content.privateNotes}
-                    onChange={(e) => edit({ ...value.content, privateNotes: e.target.value })}
-                  />
-                  <p className="text-sm">
-                    Solo tú puedes ver estas notas. No forman parte de la pauta del atleta.
-                  </p>
-                </details>
+                </fieldset>
+                {facts && <DayFacts day={facts} link={link} />}
               </div>
-              <BulkPrescription program={program} onChange={editProgram} />
-              {program.days.length > 0 && (
-                <button
-                  type="button"
-                  className="btn btn-secondary week-reset"
-                  disabled={locked}
-                  onClick={async () => {
-                    if (
-                      await confirmAction({
-                        title: 'Empezar de cero',
-                        description:
-                          'Se quitarán los días del borrador. Los registros del atleta se conservan.',
-                        confirmLabel: 'Vaciar días',
-                        destructive: true,
-                      })
-                    )
-                      editProgram({ ...program, days: [] });
-                  }}
-                >
-                  Empezar de cero
-                </button>
-              )}
-            </div>
+            )}
+            <fieldset disabled={locked} className="cal-fieldset" hidden={!panel}>
+              <div hidden={panel !== 'previous'} className="week-panel-body">
+                {lastWeek?.days.length ? (
+                  <>
+                    <p className="week-panel-hint">
+                      {source?.programName}. Copia una sesión a su mismo día o arrástrala a otro.
+                    </p>
+                    <LastWeek
+                      week={lastWeek}
+                      dragType={DRAG_TYPE}
+                      disabled={locked}
+                      onCopy={(day) => copyLastDay(day.dayIndex, day.dayIndex)}
+                    />
+                  </>
+                ) : source && previous.isPending ? (
+                  <p role="status">Cargando la semana anterior…</p>
+                ) : (
+                  <p className="week-panel-hint">
+                    No hay sesiones publicadas la semana anterior. Parte de una plantilla o añade
+                    ejercicios a cada día.
+                  </p>
+                )}
+              </div>
+              <div hidden={panel !== 'library'} className="week-panel-body">
+                <LibraryInsert
+                  onInsert={(days) => void insert(days)}
+                  onAddExercises={addExercises}
+                />
+              </div>
+              <div hidden={panel !== 'notes'} className="week-panel-body">
+                <div className="grid gap-4">
+                  <label className="flex flex-col gap-1 min-w-0">
+                    Nombre
+                    <input
+                      className="form-input min-h-11"
+                      maxLength={120}
+                      value={program.name}
+                      onChange={(e) => editProgram({ ...program, name: e.target.value })}
+                    />
+                  </label>
+                  <label data-tour="week-intent" className="flex flex-col gap-1 min-w-0">
+                    Objetivo de la semana
+                    <select
+                      className="form-input min-h-11"
+                      value={value.content.intent}
+                      onChange={(e) =>
+                        edit({ ...value.content, intent: e.target.value as WeekContent['intent'] })
+                      }
+                    >
+                      {Object.entries(INTENTS).map(([id, label]) => (
+                        <option key={id} value={id}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label data-tour="week-comment" className="flex flex-col gap-1 min-w-0">
+                    Comentario para el atleta
+                    <textarea
+                      className="form-input min-h-11"
+                      maxLength={2000}
+                      rows={2}
+                      value={program.notes ?? ''}
+                      onChange={(e) => editProgram({ ...program, notes: e.target.value || null })}
+                      placeholder="Por ejemplo: semana de descarga; prioriza técnica y recuperación."
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 min-w-0">
+                    Qué cambias esta semana y por qué
+                    <textarea
+                      className="form-input min-h-11"
+                      maxLength={2000}
+                      rows={2}
+                      value={value.content.decision}
+                      onChange={(e) => edit({ ...value.content, decision: e.target.value })}
+                    />
+                  </label>
+                  <details data-tour="week-private">
+                    <summary className="cursor-pointer">Notas privadas del entrenador</summary>
+                    <textarea
+                      aria-label="Notas privadas del entrenador"
+                      className="w-full mt-2 form-input min-h-11"
+                      rows={3}
+                      maxLength={4000}
+                      value={value.content.privateNotes}
+                      onChange={(e) => edit({ ...value.content, privateNotes: e.target.value })}
+                    />
+                    <p className="text-sm">
+                      Solo tú puedes ver estas notas. No forman parte de la pauta del atleta.
+                    </p>
+                  </details>
+                </div>
+                <BulkPrescription program={program} onChange={editProgram} />
+                {program.days.length > 0 && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary week-reset"
+                    disabled={locked}
+                    onClick={async () => {
+                      if (
+                        await confirmAction({
+                          title: 'Empezar de cero',
+                          description:
+                            'Se quitarán los días del borrador. Los registros del atleta se conservan.',
+                          confirmLabel: 'Vaciar días',
+                          destructive: true,
+                        })
+                      )
+                        editProgram({ ...program, days: [] });
+                    }}
+                  >
+                    Empezar de cero
+                  </button>
+                )}
+              </div>
+            </fieldset>
           </div>
-        </fieldset>
+        </aside>
+      </div>
+      <div className="week-context">
+        <WeekVolume program={program} last={lastWeek} />
+        {value.content.decision && (
+          <p className="week-decision">
+            {published && !draft.dirty ? 'Decisión publicada' : 'Decisión sin publicar'}:{' '}
+            {value.content.decision}
+          </p>
+        )}
       </div>
     </section>
   );

@@ -81,7 +81,7 @@ export default function ProgramsSection({
                   : `/entrenador/atletas/${encodeURIComponent(linkId)}/programas/${encodeURIComponent(a.id)}/adaptar`
               }
             >
-              {single ? 'Abrir en Semana' : 'Adaptar'}
+              {single ? 'Abrir en el calendario' : 'Adaptar'}
             </Link>
           )}
           <button
@@ -176,10 +176,11 @@ export default function ProgramsSection({
           )}
           {weekly.length > 0 && (
             <>
-              <h3 className="athlete-programs-title">Semanas publicadas desde «Semana»</h3>
+              <h3 className="athlete-programs-title">Semanas publicadas desde el calendario</h3>
               <p className="athlete-programs-hint">
                 Cada semana que publicas le llega a tu atleta como un plan de una semana. Se
-                preparan y se corrigen en «Semana»; aquí puedes ver sus sesiones o retirarlas.
+                preparan y se corrigen en «Planificación»; aquí puedes ver sus sesiones o
+                retirarlas.
               </p>
               <ul className="athlete-programs">{weekly.map((a) => row(a, true))}</ul>
             </>

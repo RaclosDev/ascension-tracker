@@ -30,8 +30,9 @@ export interface AdherenceWeek {
   days: AdherenceDay[];
 }
 
-export const useNutritionAdherence = (linkId: string, weeks = 4) =>
+export const useNutritionAdherence = (linkId: string, weeks = 4, enabled = true) =>
   useQuery({
+    enabled,
     queryKey: ['coach', 'client', linkId, 'nutrition-adherence', weeks],
     retry: false,
     queryFn: async () =>

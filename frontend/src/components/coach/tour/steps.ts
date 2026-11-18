@@ -8,6 +8,10 @@ export interface CoachTourStep {
   prepare?: { click: string; until: string }[];
 }
 
+/** The week already has sessions: on the calendar, or in the athlete preview that replaces it. */
+const PLANNED =
+  '.cal-week[data-focus] .cal-session:not([data-state="free"]), [aria-label="Vista previa del programa"]';
+
 export const COACH_TOUR_STEPS: CoachTourStep[] = [
   {
     id: 'home',
@@ -53,9 +57,9 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     id: 'client-tabs',
     chapter: 'Planificar una semana',
     title: 'Las pestañas de cada atleta',
-    body: 'Semana reúne seguimiento y planificación. Las demás pestañas separan historial, especialidades, progreso, seguimientos y gestión. Dependen de los servicios y permisos.',
+    body: 'Entrenamiento abre el calendario del atleta: cada día con su sesión, lo que registró y su nutrición. Las demás pestañas separan nutrición, progreso, seguimientos y gestión. Dependen de los servicios y permisos.',
     path: '/entrenador/atletas/tour-lucia?seccion=semana',
-    target: '[aria-label="Secciones del atleta"]',
+    target: '.athlete-nav .athlete-tabs',
   },
   {
     id: 'review',
@@ -77,7 +81,7 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     id: 'prescription',
     chapter: 'Planificar una semana',
     title: 'Edita la prescripción aquí',
-    body: 'Este es el editor real: una fila por serie con repeticiones, esfuerzo y carga. Intro añade otra serie igual. La nota va debajo, y descanso y superserie tras los tres puntos. Cada atleta recibe su propia adaptación.',
+    body: 'Este es el editor real: al pulsar un día del calendario se abre su sesión, con cada ejercicio en una línea de series, repeticiones, esfuerzo y carga. La flecha despliega el serie a serie, la nota, el descanso y la superserie. Cada atleta recibe su propia adaptación.',
     path: '/entrenador/atletas/tour-lucia?seccion=semana',
     target: '[data-tour="exercise-prescription"]',
     prepare: [
@@ -87,7 +91,13 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
       },
       {
         click: '[data-tour="copy-week"]',
-        until: '[data-tour="exercise-prescription"], [aria-label="Vista previa del programa"]',
+        until: PLANNED,
+      },
+      {
+        // Coming back from the week settings, the day has to be opened again.
+        click:
+          '.cal-week[data-focus] .cal-cell:has(.cal-session:not([data-state="free"])) .cal-day',
+        until: '[data-tour="exercise-prescription"]',
       },
     ],
   },
@@ -102,10 +112,6 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
       {
         click: '[data-tour="student-preview"][aria-pressed="true"]',
         until: '[data-tour="student-preview"][aria-pressed="false"]',
-      },
-      {
-        click: '[data-tour="copy-week"]',
-        until: '[data-tour="exercise-prescription"], [aria-label="Vista previa del programa"]',
       },
       {
         click: '[data-week-panel="library"][aria-pressed="false"]',
@@ -177,7 +183,7 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
       },
       {
         click: '[data-tour="copy-week"]',
-        until: '[data-tour="exercise-prescription"], [aria-label="Vista previa del programa"]',
+        until: PLANNED,
       },
     ],
   },
@@ -191,7 +197,7 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     prepare: [
       {
         click: '[data-tour="copy-week"]',
-        until: '[data-tour="exercise-prescription"], [aria-label="Vista previa del programa"]',
+        until: PLANNED,
       },
       {
         click: '[data-tour="student-preview"]',
