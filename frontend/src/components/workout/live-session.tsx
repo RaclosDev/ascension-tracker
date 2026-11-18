@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Edit3, Calendar, Clock } from 'lucide-react';
 
@@ -13,6 +13,27 @@ import { haptics } from '@/lib/haptics';
 import type { WorkoutExercise } from '@/lib/workout/types';
 
 const EMPTY_EXERCISES: WorkoutExercise[] = [];
+
+/** Says «Guardado» for a moment after each change: the session is kept on the device as it goes. */
+function SavedMark() {
+  const active = useWorkoutStore((s) => s.active);
+  const first = useRef(true);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    setShown(true);
+    const timer = setTimeout(() => setShown(false), 2500);
+    return () => clearTimeout(timer);
+  }, [active]);
+  return (
+    <span className="workout-saved" role="status">
+      {shown ? 'Guardado' : ''}
+    </span>
+  );
+}
 
 function toLocalDatetimeString(timestamp: number): string {
   const d = new Date(timestamp);
@@ -37,6 +58,7 @@ export function LiveSession() {
   const setWorkoutName = useWorkoutStore((s) => s.setWorkoutName);
   const setWorkoutDate = useWorkoutStore((s) => s.setWorkoutDate);
   const isEditing = Boolean(activeWorkout?.editingId);
+  const prescribed = !!activeWorkout?.coachSetPlan && !isEditing;
   const workoutName = activeWorkout?.name?.trim() || 'Entrenamiento';
   const exercises = activeWorkout?.exercises ?? EMPTY_EXERCISES;
 
@@ -157,6 +179,7 @@ export function LiveSession() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {!isEditing && <SavedMark />}
           {totalSetsCount > 0 && (
             <span
               style={{
@@ -315,6 +338,12 @@ export function LiveSession() {
       )}
 
       {!isEditing && <RestBanner />}
+      {prescribed && exercises.length > 0 && (
+        <p className="workout-plan-hint">
+          Las series ya traen lo pautado. Si la haces igual, marca la casilla; si no, cambia solo lo
+          distinto.
+        </p>
+      )}
 
       {exercises.length === 0 ? (
         <EmptyCard

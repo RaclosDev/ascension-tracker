@@ -46,9 +46,11 @@ export interface PrescribedDay {
     targets?: {
       weight: number | null;
       reps: number | null;
+      repsMax?: number | null;
       type: 'normal' | 'warmup';
       label?: string;
     }[];
+    protocol?: string;
     notes: string;
   }[];
 }
@@ -220,9 +222,14 @@ export const useWorkoutStore = create<WorkoutState>()(
       startFromProgramDay: (day) => {
         const coachSetTargets: Record<string, string> = {};
         const coachExerciseNotes: Record<string, string> = {};
+        const coachExerciseProtocols: Record<string, string> = {};
+        const coachSetPlan: NonNullable<ActiveWorkout['coachSetPlan']> = {};
         const exercises = day.exercises.map((exercise) => {
           const id = uid();
           if (exercise.notes) coachExerciseNotes[id] = exercise.notes;
+          if (exercise.protocol) coachExerciseProtocols[id] = exercise.protocol;
+          const labels = (exercise.targets ?? []).slice(0, exercise.sets).map((t) => t.label);
+          const varies = labels.some((label) => label !== labels[0]);
           const sets = Array.from({ length: exercise.sets }, (_, index) => {
             const target = exercise.targets?.[index];
             const reps = target?.reps ?? exercise.reps;
@@ -230,7 +237,15 @@ export const useWorkoutStore = create<WorkoutState>()(
               weight: target?.weight != null ? String(target.weight) : '',
               reps: reps != null ? String(reps) : '',
             });
-            if (target?.label) coachSetTargets[set.id] = target.label;
+            if (target?.label) {
+              coachSetTargets[set.id] = target.label;
+              coachSetPlan[set.id] = {
+                weight: set.weight,
+                reps: set.reps,
+                repsMax: target.repsMax,
+                varies,
+              };
+            }
             return { ...set, type: target?.type ?? 'normal' };
           });
           return {
@@ -251,6 +266,8 @@ export const useWorkoutStore = create<WorkoutState>()(
             exercises,
             coachSetTargets,
             coachExerciseNotes,
+            coachExerciseProtocols,
+            coachSetPlan,
           },
           restUntil: null,
           tab: 'train',

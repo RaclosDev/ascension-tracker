@@ -60,6 +60,7 @@ export const SwipeableSetRow = React.memo(
     );
     const s = storeSet ?? propSet;
     const coachTarget = useWorkoutStore((state) => state.active?.coachSetTargets?.[effectiveSetId]);
+    const coachPlan = useWorkoutStore((state) => state.active?.coachSetPlan?.[effectiveSetId]);
 
     const updateSet = useWorkoutStore((s) => s.updateSet);
     const cycleSetType = useWorkoutStore((s) => s.cycleSetType);
@@ -122,9 +123,18 @@ export const SwipeableSetRow = React.memo(
       updateSet(rowId, s.id, { reps: nextVal.toString() });
     };
 
+    // Equal sets are already read in the exercise's protocol line; a set says its target only
+    // when the sets differ or when what was done is not what was prescribed.
+    const offPlan =
+      !!coachPlan &&
+      (Number(s.weight || 0) !== Number(coachPlan.weight || 0) ||
+        Number(s.reps || 0) < Number(coachPlan.reps || 0) ||
+        Number(s.reps || 0) > Math.max(Number(coachPlan.reps || 0), coachPlan.repsMax ?? 0));
+    const showTarget = !!coachTarget && (!coachPlan || (s.completed ? offPlan : coachPlan.varies));
+
     return (
       <div className="set-row-wrapper" style={{ position: 'relative' }}>
-        {coachTarget && (
+        {showTarget && (
           <p className="workout-coach-target">
             <strong>Pautado</strong> · {coachTarget}
           </p>

@@ -104,6 +104,13 @@ describe('Hoy: programa pautado', () => {
     expect(active.exercises[0].sets[0].reps).toBe('6');
     expect(active.exercises[0].notes).toBe('');
     expect(active.coachExerciseNotes?.[active.exercises[0].id]).toBe('Descanso 2:00');
+    expect(active.coachExerciseProtocols?.[active.exercises[0].id]).toBe('2 × 6–8 · RPE 8');
+    expect(active.coachSetPlan?.[active.exercises[0].sets[0].id]).toEqual({
+      weight: '',
+      reps: '6',
+      repsMax: 8,
+      varies: false,
+    });
   });
 
   it('shows a done day, a rest day and an upcoming program without a start button', async () => {

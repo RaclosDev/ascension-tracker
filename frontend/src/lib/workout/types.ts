@@ -114,6 +114,13 @@ export interface ActiveWorkout {
   programPlan?: ProgramPlanItem[];
   coachSetTargets?: Record<string, string>;
   coachExerciseNotes?: Record<string, string>;
+  /** The coach's protocol line per exercise, as the coach wrote it. */
+  coachExerciseProtocols?: Record<string, string>;
+  /** What each prescribed set was preloaded with; `varies` when the sets of its exercise differ. */
+  coachSetPlan?: Record<
+    string,
+    { weight: string; reps: string; repsMax?: number | null; varies: boolean }
+  >;
 }
 
 export interface CompletedWorkout {
