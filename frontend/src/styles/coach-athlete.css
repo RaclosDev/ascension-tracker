@@ -11,14 +11,18 @@
     max-width: 1600px;
   }
 }
-/* The header stays one compact row so the week and the records start high on the screen. */
+/* Who the athlete is, what they are after and the pending action share one row; tabs sit below. */
 .coach-workspace.athlete-page {
   gap: 0.75rem;
+}
+.athlete-top {
+  display: grid;
+  gap: 8px;
 }
 .athlete-header {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 20px;
+  gap: 8px 24px;
   align-items: center;
 }
 .athlete-identity {
@@ -44,17 +48,17 @@
   color: var(--text-primary);
 }
 .athlete-identity .coach-client-avatar {
-  flex-basis: 36px;
-  width: 36px;
-  height: 36px;
-  font-size: 0.85rem;
+  flex-basis: 44px;
+  width: 44px;
+  height: 44px;
+  font-size: 0.95rem;
 }
 .coach-page.athlete-page h1.athlete-name {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.6rem;
   font-weight: 400;
-  line-height: 1.15;
+  line-height: 1.1;
   overflow-wrap: anywhere;
 }
 .athlete-meta {
@@ -63,27 +67,31 @@
   font-size: 0.78rem;
   line-height: 1.35;
 }
-/* Goal and equipment read as one line each; the full text is in the tooltip and in Ajustes. */
+/* Goal and equipment in one framed panel; the full text is in the tooltip and in Ajustes. */
 .athlete-context {
   display: flex;
-  flex: 1 1 320px;
-  gap: 2px 20px;
+  flex: 1 1 420px;
   min-width: 0;
-  margin: 0;
+  max-width: 760px;
+  margin: 0 0 0 auto;
+  border: 1px solid var(--border-medium);
+  border-radius: 6px;
 }
 .athlete-context > div {
-  display: flex;
-  flex: 0 1 auto;
-  gap: 6px;
-  align-items: baseline;
+  display: grid;
+  flex: 1 1 0;
+  gap: 2px;
   min-width: 0;
+  padding: 6px 12px;
 }
-.athlete-context > div:first-child {
-  flex-shrink: 2;
+.athlete-context > div + div {
+  border-left: 1px solid var(--border-medium);
 }
 .athlete-context dt {
-  flex: none;
-  font-size: 0.78rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--text-secondary);
 }
 .athlete-context dd {
@@ -103,7 +111,7 @@
 }
 .athlete-followup {
   flex: none;
-  min-height: 36px;
+  min-height: 44px;
   white-space: nowrap;
 }
 /* Quiet until there is a note: it must not compete with the seguimiento action. */
@@ -411,11 +419,8 @@
 
 @media (max-width: 640px) {
   .athlete-context {
-    flex-direction: column;
     flex-basis: 100%;
-  }
-  .athlete-context > div {
-    max-width: 100%;
+    max-width: none;
   }
   .avoided-list li {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -2413,64 +2418,6 @@
   }
 }
 
-/* Wide screens: who the athlete is and where you are in their file share one row. */
-@media (min-width: 1200px) {
-  .athlete-top {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
-    align-items: center;
-    gap: 2px 28px;
-    border-bottom: 1px solid var(--border-medium);
-  }
-  .athlete-top > .athlete-header,
-  .athlete-top > .coach-client-nav.athlete-nav {
-    display: contents;
-  }
-  .athlete-top .athlete-identity {
-    grid-area: 1 / 1;
-  }
-  .athlete-top .athlete-tabs {
-    grid-area: 1 / 2;
-    align-self: end;
-    border-bottom: 0;
-  }
-  .athlete-top .athlete-followup {
-    grid-area: 1 / 3;
-  }
-  .athlete-top .athlete-pin {
-    grid-area: 1 / 4;
-  }
-  .athlete-top .athlete-note {
-    grid-column: 1 / -1;
-  }
-  .athlete-top .athlete-context {
-    grid-area: 2 / 1 / 3 / 5;
-    padding-bottom: 8px;
-  }
-  .athlete-top:has(.athlete-subtabs) .athlete-context {
-    max-width: calc(100% - 430px);
-  }
-  .athlete-top .athlete-subtabs {
-    grid-area: 2 / 1 / 3 / 5;
-    justify-self: end;
-    padding: 0 0 8px;
-  }
-  .athlete-top .athlete-nav .athlete-subtabs a {
-    min-height: 32px;
-  }
-}
-/* On one line with the tabs, the action keeps its verb and count so no tab is cut off. */
-@media (min-width: 1200px) and (max-width: 1599px) {
-  .athlete-top .athlete-followup span {
-    display: none;
-  }
-  .athlete-top .athlete-tabs {
-    column-gap: 16px;
-  }
-  .athlete-top .athlete-followup {
-    padding-inline: 12px;
-  }
-}
 /* The week's tools ride in its bar; they drop to a second line only when they do not fit. */
 .week-bar .week-tools {
   flex: 1 1 auto;
