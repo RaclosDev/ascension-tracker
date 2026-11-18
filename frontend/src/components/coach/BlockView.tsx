@@ -49,6 +49,8 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
   const [repeating, setRepeating] = useState<string | null>(null);
   const [targets, setTargets] = useState<string[]>([]);
   const [name, setName] = useState('');
+  const [start, setStart] = useState('');
+  const [length, setLength] = useState(4);
   const fallback = { from: today, count: 4 };
   const first = useCoachBlock(id, (range ?? fallback).from, (range ?? fallback).count);
   const defined = first.data?.block ?? null;
@@ -82,7 +84,24 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
   const blockEnd = defined ? shiftWeek(defined.startWeek, defined.weeks - 1) : null;
   const matchesBlock = defined?.startWeek === shown.from && defined.weeks === shown.count;
   const ready = publishable(weeks);
-  const incomplete = weeks.filter((week) => weekState(week) === 'incomplete').length;
+  const unfinished = weeks.filter((week) => weekState(week) === 'incomplete');
+  const incomplete = unfinished.length;
+  // Weeks are numbered from where the block starts, wherever the view starts.
+  const offset = defined
+    ? Math.round((parseISO(shown.from).getTime() - parseISO(defined.startWeek).getTime()) / 6048e5)
+    : 0;
+  const number = (index: number) => {
+    const n = index + offset + 1;
+    return !defined || (n >= 1 && n <= defined.weeks) ? n : null;
+  };
+  const title = (index: number) => (number(index) ? `Semana ${number(index)}` : 'Fuera del bloque');
+  const starts = [...new Set([defined?.startWeek, shown.from])].filter(
+    (week): week is string => !!week,
+  );
+  const end = format(
+    addDays(parseISO(shiftWeek(start || shown.from, length - 1)), 6),
+    'yyyy-MM-dd',
+  );
   const withSessions = weeks.filter((week) => week.content.program.days.length);
   const load = blockLoad(weeks, muscleOf);
   const lengths = [...new Set([...BLOCK_LENGTHS, shown.count])].sort((a, b) => a - b);
@@ -94,6 +113,8 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
   };
   const open = (next: typeof panel) => {
     setPanel(panel === next ? null : next);
+    setStart(defined?.startWeek ?? shown.from);
+    setLength(defined?.weeks ?? Math.min(12, Math.max(2, shown.count)));
     setName(
       next === 'block'
         ? (defined?.name ?? '')
@@ -106,7 +127,13 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
       title: `Publicar ${plural(ready.length, 'semana', 'semanas')}`,
       description: `${personName(link.client)} verá ${ready.length === 1 ? 'la semana' : 'las semanas'} del ${list(
         ready.map((week) => day(week.weekStart)),
-      )} en cuanto ${ready.length === 1 ? 'la' : 'las'} publiques.`,
+      )} en cuanto ${ready.length === 1 ? 'la' : 'las'} publiques.${
+        incomplete
+          ? ` No se ${incomplete === 1 ? 'publica la semana' : 'publican las semanas'} del ${list(
+              unfinished.map((week) => day(week.weekStart)),
+            )}: ${incomplete === 1 ? 'tiene' : 'tienen'} sesiones sin ejercicios.`
+          : ''
+      }`,
       confirmLabel: 'Publicar',
     });
     if (!accepted) return;
@@ -114,6 +141,22 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
       onSuccess: () =>
         toast.success(`${plural(ready.length, 'semana publicada', 'semanas publicadas')}`),
       onError: fail('No se pudieron publicar las semanas. No se ha publicado ninguna.'),
+    });
+  };
+
+  const removeBlock = async () => {
+    const accepted = await confirmAction({
+      title: 'Quitar el bloque',
+      description: `«${defined?.name}» deja de existir como bloque: se quitan su nombre y las preguntas de fin de bloque. Las semanas y sus sesiones siguen como están.`,
+      confirmLabel: 'Quitar bloque',
+    });
+    if (!accepted) return;
+    deleteBlock.mutate(undefined, {
+      onSuccess: () => {
+        toast.success('Bloque quitado. Las semanas siguen como estaban.');
+        setPanel(null);
+      },
+      onError: fail('No se pudo quitar el bloque.'),
     });
   };
 
@@ -143,6 +186,12 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
               </>
             )}
           </p>
+          {!defined && (
+            <p>
+              Planifica varias semanas de un vistazo. Con «Guardar como bloque» les pones nombre y
+              fin.
+            </p>
+          )}
         </div>
         <div className="block-range">
           <button
@@ -223,7 +272,7 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
           onSubmit={(event) => {
             event.preventDefault();
             saveBlock.mutate(
-              { name: name.trim(), startWeek: shown.from, weeks: shown.count },
+              { name: name.trim(), startWeek: start, weeks: length },
               {
                 onSuccess: () => {
                   toast.success('Bloque guardado');
@@ -245,42 +294,63 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
               onChange={(event) => setName(event.target.value)}
             />
           </label>
+          <div className="block-panel-span">
+            <label>
+              Empieza la semana del
+              <select
+                className="form-input min-h-11"
+                value={start}
+                disabled={starts.length < 2}
+                onChange={(event) => setStart(event.target.value)}
+              >
+                {starts.map((week) => (
+                  <option key={week} value={week}>
+                    {day(week, 'd MMM yyyy')}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Duración
+              <select
+                className="form-input min-h-11"
+                value={length}
+                onChange={(event) => setLength(Number(event.target.value))}
+              >
+                {Array.from({ length: 11 }, (_, index) => index + 2).map((count) => (
+                  <option key={count} value={count}>
+                    {count} semanas
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <p>
-            {shown.count < 2
-              ? 'Un bloque tiene al menos dos semanas.'
-              : `Abarca las ${shown.count} semanas que ves, del ${day(shown.from)} al ${day(
-                  format(addDays(parseISO(last), 6), 'yyyy-MM-dd'),
-                )}. En la última, el seguimiento de ${personName(link.client)} añade dos preguntas de fin de bloque.`}
+            Termina el {day(end, 'd MMM yyyy')}. En la última semana, el seguimiento de{' '}
+            {personName(link.client)} añade dos preguntas de fin de bloque.
+            {starts.length < 2 && ' Para que empiece otra semana, mueve la vista con las flechas.'}
           </p>
           <div className="block-panel-actions">
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={!name.trim() || shown.count < 2 || saveBlock.isPending}
+              disabled={!name.trim() || saveBlock.isPending}
             >
               {defined ? 'Guardar cambios' : 'Guardar bloque'}
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={() => setPanel(null)}>
+              Cancelar
             </button>
             {defined && (
               <button
                 type="button"
-                className="btn btn-secondary"
+                className="block-link block-remove"
                 disabled={deleteBlock.isPending}
-                onClick={() =>
-                  deleteBlock.mutate(undefined, {
-                    onSuccess: () => {
-                      toast.success('Bloque quitado. Las semanas siguen como estaban.');
-                      setPanel(null);
-                    },
-                    onError: fail('No se pudo quitar el bloque.'),
-                  })
-                }
+                onClick={() => void removeBlock()}
               >
                 Quitar bloque
               </button>
             )}
-            <button type="button" className="btn btn-secondary" onClick={() => setPanel(null)}>
-              Cancelar
-            </button>
           </div>
         </form>
       )}
@@ -337,6 +407,8 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
           const editable = canEdit && week.weekStart >= today;
           const followers = weeks.filter((other) => other.linkedFrom === week.weekStart).length;
           const sessions = week.content.program.days;
+          const hollow = sessions.filter((session) => !session.exercises.length);
+          const when = `la semana del ${day(week.weekStart)}`;
           const options = weeks.filter(
             (other) => other.weekStart >= today && other.weekStart !== week.weekStart,
           );
@@ -348,7 +420,7 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
                   className="block-week-open"
                   onClick={() => onOpenWeek(week.weekStart)}
                 >
-                  <strong>Semana {index + 1}</strong>
+                  <strong>{title(index)}</strong>
                   <span>{span(week.weekStart)}</span>
                 </button>
                 <p className="block-week-state">
@@ -358,7 +430,9 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
                 </p>
               </div>
               <label className="block-week-intent">
-                <span className="sr-only">Tipo de la semana {index + 1}</span>
+                <span>
+                  Tipo de semana<span className="sr-only"> · {when}</span>
+                </span>
                 <select
                   className="form-input min-h-11"
                   value={week.content.intent}
@@ -366,7 +440,10 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
                   onChange={(event) =>
                     setIntent.mutate(
                       { week, intent: event.target.value as keyof typeof INTENTS },
-                      { onError: fail('No se pudo cambiar el tipo de semana.') },
+                      {
+                        onSuccess: () => toast.success('Tipo de semana guardado'),
+                        onError: fail('No se pudo cambiar el tipo de semana.'),
+                      },
                     )
                   }
                 >
@@ -378,7 +455,7 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
                 </select>
               </label>
               {sessions.length ? (
-                <ul className="block-days" aria-label={`Sesiones de la semana ${index + 1}`}>
+                <ul className="block-days" aria-label={`Sesiones de ${when}`}>
                   {WEEKDAY_LABELS.map((label, weekday) => {
                     const session = sessions.find((item) => item.dayIndex === weekday + 1);
                     return (
@@ -404,6 +481,13 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
                 </p>
               )}
               <div className="block-week-foot">
+                {state === 'incomplete' && (
+                  <p>
+                    {hollow.length
+                      ? `Falta: ${list(hollow.map((session) => session.name || 'Sesión'))} sin ejercicios.`
+                      : 'Le falta algo para poder publicarla: ábrela para verlo.'}
+                  </p>
+                )}
                 {week.linkedFrom && (
                   <p>
                     Repite la semana del {day(week.linkedFrom)}: cambia con ella hasta que edites
@@ -423,6 +507,7 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
                   <button
                     type="button"
                     className="block-link"
+                    aria-label={`${week.weekStart < today ? 'Revisar' : sessions.length ? 'Abrir' : 'Preparar'} ${when}`}
                     onClick={() => onOpenWeek(week.weekStart)}
                   >
                     {week.weekStart < today ? 'Revisar' : sessions.length ? 'Abrir' : 'Preparar'}
@@ -442,6 +527,9 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
               {repeating === week.weekStart && (
                 <form
                   className="block-panel block-repeat"
+                  onKeyDown={(event) => {
+                    if (event.key === 'Escape') setRepeating(null);
+                  }}
                   onSubmit={(event) => {
                     event.preventDefault();
                     repeat.mutate(
@@ -459,7 +547,7 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
                   }}
                 >
                   <fieldset>
-                    <legend>Repetir las sesiones de la semana {index + 1} en</legend>
+                    <legend>Repetir las sesiones de {when} en</legend>
                     {options.map((other) => {
                       const count = other.content.program.days.length;
                       return (
@@ -476,9 +564,18 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
                             }
                           />
                           <span>
-                            Semana {weeks.indexOf(other) + 1} · {span(other.weekStart)}
+                            {title(weeks.indexOf(other))} · {span(other.weekStart)}
                             {count > 0 && (
                               <small> · sustituye sus {plural(count, 'sesión', 'sesiones')}</small>
+                            )}
+                            {other.publishedVersion != null && count > 0 && (
+                              <small>
+                                {' '}
+                                · ya publicada: el atleta no verá el cambio hasta que la publiques
+                              </small>
+                            )}
+                            {other.linkedFrom && (
+                              <small> · deja de repetir la del {day(other.linkedFrom)}</small>
                             )}
                           </span>
                         </label>
@@ -519,13 +616,13 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
           <h3 id="block-load-title">Series por grupo muscular y semana</h3>
           <p>Cuanto más marcada la celda, más series de ese grupo en esa semana.</p>
           <div className="block-load-scroll">
-            <table>
+            <table aria-labelledby="block-load-title">
               <thead>
                 <tr>
                   <th scope="col">Grupo</th>
                   {weeks.map((week, index) => (
                     <th scope="col" key={week.weekStart}>
-                      S{index + 1}
+                      {number(index) ? `S${number(index)}` : '·'}
                       <small>{day(week.weekStart, 'd/M')}</small>
                     </th>
                   ))}
@@ -554,7 +651,7 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
                   ))}
                 </tr>
                 <tr className="block-load-tonnage">
-                  <th scope="row">Tonelaje (kg)</th>
+                  <th scope="row">Tonelaje estimado (kg)</th>
                   {load.weeks.map((week, index) => (
                     <td key={weeks[index].weekStart}>
                       {week.tonnage

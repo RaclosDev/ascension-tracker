@@ -72,6 +72,10 @@ export function WeekEditor({
     isSavedWeek,
   );
   const [preview, setPreview] = useState(false);
+  // The week this one was repeating when it was opened, to say so when saving breaks the tie.
+  const [followed, setFollowed] = useState({ week: saved.weekStart, from: saved.linkedFrom });
+  if (followed.week !== saved.weekStart || (saved.linkedFrom && saved.linkedFrom !== followed.from))
+    setFollowed({ week: saved.weekStart, from: saved.linkedFrom });
   const [panel, setPanel] = useState<Panel | null>(
     source && !draft.value.content.program.days.length ? 'previous' : null,
   );
@@ -533,11 +537,19 @@ export function WeekEditor({
         </p>
       )}
       {error && <p role="alert">{error}</p>}
-      {saved.linkedFrom && !draft.dirty && (
+      {saved.linkedFrom ? (
         <p className="week-linked">
-          Esta semana repite la del {formatCoachDate(saved.linkedFrom)} y cambia con ella. Si editas
-          sus sesiones aquí, deja de seguirla.
+          {draft.dirty
+            ? `Si estos cambios tocan las sesiones, al guardarlos esta semana dejará de seguir a la del ${formatCoachDate(saved.linkedFrom)}. El tipo de semana y las notas no cuentan.`
+            : `Esta semana repite la del ${formatCoachDate(saved.linkedFrom)} y cambia con ella. Si editas sus sesiones aquí, deja de seguirla.`}
         </p>
+      ) : (
+        followed.from && (
+          <p className="week-linked" role="status">
+            Esta semana ya no sigue a la del {formatCoachDate(followed.from)}: ahora tiene sus
+            propias sesiones. Para enlazarla otra vez, repite aquella semana desde Bloque.
+          </p>
+        )
       )}
       {previous.isError && (
         <p role="alert">

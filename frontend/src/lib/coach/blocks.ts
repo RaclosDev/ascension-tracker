@@ -26,6 +26,8 @@ export const useCoachBlock = (id: string, from: string, weeks: number) =>
     queryKey: [...scope(id), 'block', from, weeks],
     queryFn: async () => (await api.get<Block>(path(id), { params: { from, weeks } })).data,
     placeholderData: (previous) => previous,
+    // The editor saves these same weeks through its own queries: never trust what was cached.
+    refetchOnMount: 'always',
   });
 
 /** Every change here touches weeks the editor also shows, so the athlete's planning is refetched whole. */

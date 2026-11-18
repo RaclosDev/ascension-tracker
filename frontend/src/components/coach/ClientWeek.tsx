@@ -20,7 +20,7 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
   const [params, setParams] = useSearchParams();
   const vista = params.get('vista');
   const view = vista === 'revision' ? 'review' : vista === 'bloque' ? 'block' : 'prepare';
-  const setView = (next: string) =>
+  const setView = (next: string, replace = true) =>
     setParams(
       (current) => {
         const updated = new URLSearchParams(current);
@@ -29,7 +29,7 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
         else updated.delete('vista');
         return updated;
       },
-      { replace: true },
+      { replace },
     );
   const { recordHref } = useAthleteLinks(link.linkId);
   const requested = params.get('semana');
@@ -56,10 +56,10 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
   const openWeek = (target: string) => {
     if (target < weekDate()) {
       setReviewWeek(target);
-      setView('review');
+      setView('review', false);
     } else {
       setPlanningWeek(target);
-      setView('prepare');
+      setView('prepare', false);
     }
   };
   const ready =

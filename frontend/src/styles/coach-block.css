@@ -360,3 +360,34 @@
     padding-inline: 8px;
   }
 }
+
+.block-panel-span {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.block-panel-span label {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 11rem;
+  max-width: 14rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.block-week-intent {
+  display: grid;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.block-week-actions .block-link {
+  min-width: 44px;
+  text-align: left;
+}
+.block-remove {
+  margin-left: auto;
+}
+.block-remove:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
