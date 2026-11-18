@@ -3,6 +3,7 @@ import { Pin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { apiErrorMessage, type CoachClient } from '../../lib/coach/api';
 import { useSaveCoachNotes } from '../../lib/coach/setup';
+import { undoToast } from './undoToast';
 
 export const NOTE_MAX = 600;
 
@@ -17,7 +18,8 @@ export function AthleteNote({ link }: { link: CoachClient }) {
       {
         onSuccess: () => {
           setDraft(null);
-          toast.success(text.trim() ? 'Nota fijada' : 'Nota quitada');
+          if (text.trim() || !note) toast.success('Nota fijada');
+          else undoToast('Nota quitada', () => store(note));
         },
         onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo guardar la nota')),
       },
@@ -40,6 +42,11 @@ export function AthleteNote({ link }: { link: CoachClient }) {
           maxLength={NOTE_MAX}
           autoFocus
           value={draft}
+          onKeyDown={(e) => {
+            if (e.key !== 'Escape') return;
+            e.stopPropagation();
+            setDraft(null);
+          }}
           placeholder="Lesiones, material, lo que no debes olvidar al pautar…"
           onChange={(e) => setDraft(e.target.value)}
         />

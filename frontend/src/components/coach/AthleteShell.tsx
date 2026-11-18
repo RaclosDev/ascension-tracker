@@ -125,7 +125,7 @@ export function AthleteShell({
     followup &&
       (followup.schedule.paused
         ? 'Seguimiento en pausa'
-        : `Seguimiento los ${REVIEW_DAYS[followup.schedule.day - 1].toLocaleLowerCase('es')} · próximo ${nextReviewLabel(followup)}`),
+        : `Seguimiento los ${REVIEW_DAYS[followup.schedule.day - 1].toLocaleLowerCase('es').replace(/o$/, 'os')} · próximo ${nextReviewLabel(followup)}`),
   ].filter(Boolean);
   const goBack = back ?? links.back;
 

@@ -3,6 +3,7 @@ import { Plus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { apiErrorMessage, type CoachClient } from '../../lib/coach/api';
 import { useSaveCoachNotes, type AvoidedExercise } from '../../lib/coach/setup';
+import { undoToast } from './undoToast';
 
 const ExerciseSearch = lazy(() =>
   import('./editor/ExerciseSearch').then((module) => ({ default: module.ExerciseSearch })),
@@ -15,11 +16,15 @@ export function AvoidedExercises({ link }: { link: CoachClient }) {
   const save = useSaveCoachNotes(link.linkId);
   const items = link.notes?.avoidedExercises ?? [];
   const [adding, setAdding] = useState(false);
-  const store = (next: AvoidedExercise[], done?: string) =>
+  const store = (next: AvoidedExercise[], done?: string, undo?: AvoidedExercise[]) =>
     save.mutate(
       { pinnedNote: link.notes?.pinnedNote ?? null, avoidedExercises: next },
       {
-        onSuccess: () => done && toast.success(done),
+        onSuccess: () => {
+          if (!done) return;
+          if (undo) undoToast(done, () => store(undo));
+          else toast.success(done);
+        },
         onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo guardar')),
       },
     );
@@ -62,6 +67,7 @@ export function AvoidedExercises({ link }: { link: CoachClient }) {
                     store(
                       items.filter((other) => other !== item),
                       `${name} ya no está vetado`,
+                      items,
                     )
                   }
                 >

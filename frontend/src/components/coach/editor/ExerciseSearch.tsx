@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useContext, useMemo, useRef, useState } from 'react';
 import { Plus, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useExerciseCatalog } from '@/lib/workout/catalog-query';
@@ -9,6 +9,7 @@ import type { Exercise } from '@/lib/workout/types';
 import { defaultItem, useLibraryItems, useSaveLibraryItem } from '@/lib/coach/library';
 import { apiErrorMessage } from '@/lib/coach/api';
 import { inputClass, inputStyle } from './fields';
+import { AthleteAvoided } from './prescribing';
 
 const EQUIPMENT_LABEL: Record<string, string> = { maquina: 'máquina' };
 const equipmentLabel = (value: string) => {
@@ -33,6 +34,7 @@ export function ExerciseSearch({
   purpose?: string;
 }) {
   const list = useRef<HTMLUListElement>(null);
+  const avoided = useContext(AthleteAvoided);
   const { data: catalog = [] } = useExerciseCatalog();
   const { data: custom = [] } = useCustomExercises();
   const items = useLibraryItems();
@@ -151,6 +153,9 @@ export function ExerciseSearch({
               <Plus size={14} aria-hidden />
               {ex.name}
               {ex.custom && <span className="text-xs ml-auto">propio</span>}
+              {avoided.some((item) => item.exerciseId === ex.id) && (
+                <span className="text-xs font-bold ml-auto">Vetado para este atleta</span>
+              )}
             </button>
             <button
               type="button"

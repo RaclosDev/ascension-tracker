@@ -96,7 +96,7 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
       <p className="coach-description">
         La pausa detiene recordatorios y alertas de seguimiento. Conserva el historial y los
         permisos; el atleta sigue ocupando una plaza. Al reanudar o cambiar el horario, dispone de
-        al menos siete días para la siguiente seguimiento.
+        al menos siete días para el siguiente seguimiento.
       </p>
       {link.followup && (
         <p className="text-sm">

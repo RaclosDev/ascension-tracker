@@ -454,10 +454,10 @@ export function WeekEditor({
               if (
                 program.days.length &&
                 !(await confirmAction({
-                  title: 'Copiar lo que hizo',
+                  title: 'Copiar lo registrado',
                   description:
                     'Se sustituirán los días del borrador por la semana anterior, con las cargas y repeticiones que el atleta registró. Las notas privadas y la decisión se conservan.',
-                  confirmLabel: 'Copiar lo que hizo',
+                  confirmLabel: 'Copiar lo registrado',
                   destructive: true,
                 }))
               )
@@ -490,7 +490,7 @@ export function WeekEditor({
             }}
           >
             <ClipboardCheck size={15} aria-hidden />{' '}
-            {copyingDone ? 'Copiando…' : 'Copiar lo que hizo'}
+            {copyingDone ? 'Copiando…' : 'Copiar lo registrado'}
           </button>
           <button
             type="button"

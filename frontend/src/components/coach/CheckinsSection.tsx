@@ -149,22 +149,36 @@ function CheckinActions({ link, checkin }: { link: CoachClient; checkin: Checkin
           className="btn btn-secondary"
           disabled={save.isPending}
           onClick={async () => {
+            const current = link.notes?.pinnedNote?.trim();
+            const added = `Seguimiento del ${formatCoachDate(checkin.weekStart)}: ${said.trim()}`;
+            const joined = current ? `${current}\n${added}` : added;
+            const fits = joined.length <= NOTE_MAX;
+            const pinnedNote = (fits ? joined : added).slice(0, NOTE_MAX);
             if (
-              link.notes?.pinnedNote &&
               !(await confirmAction({
-                title: 'Sustituir la nota fijada',
-                description: `La nota actual («${link.notes.pinnedNote.slice(0, 120)}») se sustituirá por lo que el atleta contó esta semana.`,
-                confirmLabel: 'Sustituir nota',
+                title: !current
+                  ? 'Fijar como nota'
+                  : fits
+                    ? 'Añadir a la nota fijada'
+                    : 'Sustituir la nota fijada',
+                description: `${
+                  !current
+                    ? 'Se fijará en la cabecera del atleta'
+                    : fits
+                      ? 'Se añadirá a tu nota actual'
+                      : `No cabe junto a tu nota actual («${current.slice(0, 80)}»), así que la sustituirá`
+                }: «${added.slice(0, 200)}${added.length > 200 ? '…' : ''}». Solo la ves tú y puedes editarla después.`,
+                confirmLabel: !current
+                  ? 'Fijar nota'
+                  : fits
+                    ? 'Añadir a la nota'
+                    : 'Sustituir nota',
               }))
             )
               return;
             save.mutate(
               {
-                pinnedNote:
-                  `Seguimiento del ${formatCoachDate(checkin.weekStart)}: ${said.trim()}`.slice(
-                    0,
-                    NOTE_MAX,
-                  ),
+                pinnedNote,
                 avoidedExercises: link.notes?.avoidedExercises ?? [],
               },
               {
@@ -182,7 +196,7 @@ function CheckinActions({ link, checkin }: { link: CoachClient; checkin: Checkin
           className="btn btn-secondary"
           to={`${sectionHref('semana')}&semana=${shiftWeek(checkin.weekStart, 1)}`}
         >
-          <CalendarPlus size={15} aria-hidden /> Preparar la semana siguiente
+          <CalendarPlus size={15} aria-hidden /> Ver la semana siguiente
         </Link>
       )}
     </div>
