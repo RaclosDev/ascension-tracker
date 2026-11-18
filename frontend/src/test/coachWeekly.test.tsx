@@ -135,9 +135,11 @@ describe('preparación semanal', () => {
     show();
     await screen.findByRole('heading', { name: /Preparación/ });
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Copiar semana anterior' })).toBeEnabled(),
+      expect(
+        screen.getByRole('button', { name: /^Copiar semana anterior/, hidden: true }),
+      ).toBeEnabled(),
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Copiar semana anterior' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Copiar semana anterior/, hidden: true }));
     expect(await screen.findByLabelText('Nombre del día (Lunes 16/11)')).toHaveValue('Torso');
     fireEvent.change(screen.getByLabelText('Notas privadas del entrenador'), {
       target: { value: 'Solo para mí' },

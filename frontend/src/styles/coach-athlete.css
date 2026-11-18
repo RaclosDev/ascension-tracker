@@ -254,26 +254,15 @@
   color: var(--bg-primary);
 }
 
-/* On a wide screen the views of the open tab sit on the same row as the tabs. */
-@media (min-width: 1100px) {
-  .coach-client-nav.athlete-nav {
-    display: flex;
-    gap: 24px;
-    align-items: center;
-    border-bottom: 1px solid var(--border-medium);
-  }
-  .athlete-tabs {
-    flex: none;
-    margin-bottom: -1px;
-    border-bottom: 0;
-  }
-  .athlete-subtabs {
-    margin-left: auto;
-    padding: 4px 3px;
-  }
-  .athlete-nav .athlete-subtabs a {
-    min-height: 32px;
-  }
+.athlete-locked {
+  display: grid;
+  gap: 8px;
+  max-width: 62ch;
+  justify-items: start;
+}
+.athlete-locked p {
+  margin: 0;
+  color: var(--text-secondary);
 }
 
 .athlete-section-title {
@@ -808,10 +797,11 @@
   gap: 0;
 }
 .week-bar .week-toolbar-picker input {
-  width: 168px;
+  width: 150px;
 }
 .week-bar .week-bar-info {
-  flex: 1 1 160px;
+  flex: 1 1 110px;
+  min-width: 0;
 }
 .week-bar .week-bar-meta {
   flex-direction: column;
@@ -938,6 +928,100 @@
   padding-inline: 12px;
   font-size: 0.85rem;
   white-space: nowrap;
+}
+.week-menu {
+  position: relative;
+}
+.week-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.week-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.week-menu[open] > summary {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+.week-menu-items {
+  position: absolute;
+  right: 0;
+  z-index: 20;
+  display: grid;
+  min-width: 300px;
+  max-width: calc(100vw - 32px);
+  margin-top: 6px;
+  padding: 6px;
+  border: 1px solid var(--border-medium);
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.45);
+}
+.week-menu-items button {
+  display: grid;
+  gap: 2px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.week-menu-items button small {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+.week-menu-items button:hover:not(:disabled),
+.week-menu-items button:focus-visible {
+  background: var(--surface-hover, rgb(255 255 255 / 0.06));
+}
+.week-menu-items button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.week-menu-items button:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+.week-volume > summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: center;
+  min-height: 36px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.week-volume > summary::-webkit-details-marker {
+  display: none;
+}
+.week-volume > summary {
+  list-style: none;
+}
+.week-volume > summary::after {
+  content: 'Por grupo muscular ▾';
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.week-volume[open] > summary::after {
+  content: 'Ocultar ▴';
+}
+.week-volume > summary:hover::after {
+  color: var(--text-primary);
+}
+.week-volume > summary strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.week-volume > summary .week-volume-jump {
+  color: var(--text-primary);
 }
 .week-tools .btn[aria-pressed='true'] {
   border-color: var(--accent-primary);

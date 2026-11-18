@@ -182,7 +182,8 @@ for (const width of [390, 1920]) {
     await previousPrograms.click();
     await expect(previousHeading).toBeVisible();
     await previousPrograms.click();
-    await page.getByRole('button', { name: 'Preparar semana', exact: true }).click();
+    await page.getByRole('button', { name: 'Preparar', exact: true }).click();
+    await page.locator('.week-menu > summary').click();
     await page.getByRole('button', { name: 'Copiar semana anterior' }).click();
     const session = page.locator('.week-col').first();
     // The copied Monday is editable in its own column, which sums it up in its head.

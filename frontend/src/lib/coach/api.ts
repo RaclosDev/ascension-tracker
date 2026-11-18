@@ -234,6 +234,8 @@ export const useCoachClient = (linkId: string) =>
   useQuery({
     queryKey: ['coach', 'clients', linkId] as const,
     enabled: !!linkId,
+    // The athlete grants permissions from their own device: pick them up without a reload.
+    refetchOnWindowFocus: true,
     queryFn: async () =>
       (await api.get<CoachClient>(`/coach/clients/${encodeURIComponent(linkId)}`)).data,
   });

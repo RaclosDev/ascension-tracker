@@ -169,7 +169,7 @@ describe('Espacio del entrenador', () => {
     });
     const table = await screen.findByRole('table');
     fireEvent.click(within(table).getByRole('link', { name: 'Ángela' }));
-    fireEvent.click(await screen.findByRole('link', { name: 'Planificación' }));
+    fireEvent.click(await screen.findByRole('link', { name: 'Entrenamiento' }));
     await screen.findByLabelText('Semana que preparas', {}, { timeout: 10000 });
     const urls = mockedApi.get.mock.calls.map(([url]) => url);
     expect(urls.some((url) => /\/nutrition/.test(url))).toBe(false);

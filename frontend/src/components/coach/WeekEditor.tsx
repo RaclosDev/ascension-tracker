@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import toast from 'react-hot-toast';
 import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
-import { ClipboardCheck, ClipboardCopy, Copy, Eye, Pencil, X } from 'lucide-react';
+import { ChevronDown, Copy, Eye, Pencil, X } from 'lucide-react';
 import { addDays, format, parseISO } from 'date-fns';
 import { useSessionDraft } from '@/hooks/useSessionDraft';
 import { apiErrorMessage, formatCoachDate } from '@/lib/coach/api';
@@ -157,6 +157,21 @@ export function WeekEditor({
     }
   };
   const cols = useRef<HTMLFieldSetElement>(null);
+  const copyMenu = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const close = (e: Event) => {
+      const menu = copyMenu.current;
+      if (!menu?.open) return;
+      if (e instanceof KeyboardEvent ? e.key === 'Escape' : !menu.contains(e.target as Node))
+        menu.open = false;
+    };
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', close);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', close);
+    };
+  }, []);
   const drawer = useRef<HTMLFieldSetElement>(null);
   // An opened panel may land above or below what is on screen: bring it into view and focus it.
   useEffect(() => {
@@ -411,109 +426,123 @@ export function WeekEditor({
           ))}
         </div>
         <div className="week-tools-group">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            data-tour="copy-week"
-            disabled={locked || !previous.data || previous.isFetching}
-            title={
-              !locked && !previous.data && !previous.isFetching
-                ? 'No hay una semana anterior publicada de la que partir'
-                : undefined
-            }
-            onClick={async () => {
-              if (!lastWeek) return;
-              if (!lastWeek.days.length) {
-                setError('El programa anterior no contiene sesiones para esa semana.');
-                return;
-              }
-              if (
-                program.days.length &&
-                !(await confirmAction({
-                  title: 'Copiar semana anterior',
-                  description:
-                    'Se sustituirán los días y notas públicas del borrador por la semana anterior. Las notas privadas y la decisión se conservan.',
-                  confirmLabel: 'Copiar semana',
-                  destructive: true,
-                }))
-              )
-                return;
-              editProgram({ ...structuredClone(lastWeek), name: program.name });
-              setPanel((current) => (current === 'previous' ? null : current));
-            }}
-          >
-            <Copy size={15} aria-hidden /> Copiar semana anterior
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            title={
-              !locked && (!source || !lastWeek?.days.length)
-                ? 'No hay una semana anterior publicada de la que partir'
-                : 'Copia la semana anterior con las cargas y repeticiones que el atleta registró'
-            }
-            disabled={locked || !source || !lastWeek?.days.length || copyingDone}
-            onClick={async () => {
-              if (!lastWeek || !source) return;
-              if (
-                program.days.length &&
-                !(await confirmAction({
-                  title: 'Copiar lo registrado',
-                  description:
-                    'Se sustituirán los días del borrador por la semana anterior, con las cargas y repeticiones que el atleta registró. Las notas privadas y la decisión se conservan.',
-                  confirmLabel: 'Copiar lo registrado',
-                  destructive: true,
-                }))
-              )
-                return;
-              setCopyingDone(true);
-              try {
-                const done = await fetchDone(
-                  saved.linkId,
-                  source.id,
-                  shiftWeek(saved.weekStart, -1),
-                );
-                const next = withDone(structuredClone(lastWeek), done);
-                if (!next.changed) {
-                  setError(
-                    'El atleta no registró ningún ejercicio de la semana anterior. Usa «Copiar semana anterior» para partir de lo pautado.',
-                  );
-                  return;
+          <details className="week-menu" data-tour="copy-menu" ref={copyMenu}>
+            <summary className="btn btn-secondary">
+              <Copy size={15} aria-hidden /> Copiar
+              <ChevronDown size={14} aria-hidden />
+            </summary>
+            <div
+              className="week-menu-items"
+              onClick={(e) => {
+                if ((e.target as HTMLElement).closest('button')) copyMenu.current!.open = false;
+              }}
+            >
+              <button
+                type="button"
+                data-tour="copy-week"
+                disabled={locked || !previous.data || previous.isFetching}
+                title={
+                  !locked && !previous.data && !previous.isFetching
+                    ? 'No hay una semana anterior publicada de la que partir'
+                    : undefined
                 }
-                editProgram({ ...next.program, name: program.name });
-                toast.success(
-                  `Copiado lo que hizo en ${next.changed} ${next.changed === 1 ? 'ejercicio' : 'ejercicios'}; el resto queda como estaba pautado`,
-                );
-              } catch (e) {
-                setError(
-                  apiErrorMessage(e, 'No se pudieron cargar los entrenamientos registrados'),
-                );
-              } finally {
-                setCopyingDone(false);
-              }
-            }}
-          >
-            <ClipboardCheck size={15} aria-hidden />{' '}
-            {copyingDone ? 'Copiando…' : 'Copiar lo registrado'}
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            disabled={!program.days.length}
-            title={
-              program.days.length
-                ? 'Copia la semana como texto para pegarla en un mensaje'
-                : 'Añade alguna sesión para poder copiarla'
-            }
-            onClick={() =>
-              void navigator.clipboard
-                .writeText(weekText(program, saved.weekStart))
-                .then(() => toast.success('Semana copiada como texto'))
-                .catch(() => toast.error('No se pudo copiar. Revisa los permisos del navegador.'))
-            }
-          >
-            <ClipboardCopy size={15} aria-hidden /> Copiar como texto
-          </button>
+                onClick={async () => {
+                  if (!lastWeek) return;
+                  if (!lastWeek.days.length) {
+                    setError('El programa anterior no contiene sesiones para esa semana.');
+                    return;
+                  }
+                  if (
+                    program.days.length &&
+                    !(await confirmAction({
+                      title: 'Copiar semana anterior',
+                      description:
+                        'Se sustituirán los días y notas públicas del borrador por la semana anterior. Las notas privadas y la decisión se conservan.',
+                      confirmLabel: 'Copiar semana',
+                      destructive: true,
+                    }))
+                  )
+                    return;
+                  editProgram({ ...structuredClone(lastWeek), name: program.name });
+                  setPanel((current) => (current === 'previous' ? null : current));
+                }}
+              >
+                Copiar semana anterior
+                <small>Parte de lo que pautaste la semana pasada</small>
+              </button>
+              <button
+                type="button"
+                title={
+                  !locked && (!source || !lastWeek?.days.length)
+                    ? 'No hay una semana anterior publicada de la que partir'
+                    : 'Copia la semana anterior con las cargas y repeticiones que el atleta registró'
+                }
+                disabled={locked || !source || !lastWeek?.days.length || copyingDone}
+                onClick={async () => {
+                  if (!lastWeek || !source) return;
+                  if (
+                    program.days.length &&
+                    !(await confirmAction({
+                      title: 'Copiar lo registrado',
+                      description:
+                        'Se sustituirán los días del borrador por la semana anterior, con las cargas y repeticiones que el atleta registró. Las notas privadas y la decisión se conservan.',
+                      confirmLabel: 'Copiar lo registrado',
+                      destructive: true,
+                    }))
+                  )
+                    return;
+                  setCopyingDone(true);
+                  try {
+                    const done = await fetchDone(
+                      saved.linkId,
+                      source.id,
+                      shiftWeek(saved.weekStart, -1),
+                    );
+                    const next = withDone(structuredClone(lastWeek), done);
+                    if (!next.changed) {
+                      setError(
+                        'El atleta no registró ningún ejercicio de la semana anterior. Usa «Copiar semana anterior» para partir de lo pautado.',
+                      );
+                      return;
+                    }
+                    editProgram({ ...next.program, name: program.name });
+                    toast.success(
+                      `Copiado lo que hizo en ${next.changed} ${next.changed === 1 ? 'ejercicio' : 'ejercicios'}; el resto queda como estaba pautado`,
+                    );
+                  } catch (e) {
+                    setError(
+                      apiErrorMessage(e, 'No se pudieron cargar los entrenamientos registrados'),
+                    );
+                  } finally {
+                    setCopyingDone(false);
+                  }
+                }}
+              >
+                {copyingDone ? 'Copiando…' : 'Copiar lo registrado'}
+                <small>La semana pasada con los kilos y repeticiones que hizo</small>
+              </button>
+              <button
+                type="button"
+                disabled={!program.days.length}
+                title={
+                  program.days.length
+                    ? 'Copia la semana como texto para pegarla en un mensaje'
+                    : 'Añade alguna sesión para poder copiarla'
+                }
+                onClick={() =>
+                  void navigator.clipboard
+                    .writeText(weekText(program, saved.weekStart))
+                    .then(() => toast.success('Semana copiada como texto'))
+                    .catch(() =>
+                      toast.error('No se pudo copiar. Revisa los permisos del navegador.'),
+                    )
+                }
+              >
+                Copiar como texto
+                <small>Para pegar esta semana en un mensaje</small>
+              </button>
+            </div>
+          </details>
           <button
             type="button"
             className="btn btn-secondary"

@@ -74,9 +74,9 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
         value={view}
         onChange={setView}
         options={[
-          { value: 'prepare', label: 'Preparar semana' },
+          { value: 'prepare', label: 'Preparar' },
           { value: 'block', label: 'Bloque' },
-          { value: 'review', label: 'Revisar semana anterior' },
+          { value: 'review', label: 'Revisar la anterior' },
         ]}
       />
       <div className="week-toolbar-picker" hidden={view === 'block'}>

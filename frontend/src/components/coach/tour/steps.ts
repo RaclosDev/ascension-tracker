@@ -69,9 +69,9 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     id: 'copy',
     chapter: 'Planificar una semana',
     title: 'Copia la semana anterior',
-    body: 'Este botón reutiliza la semana vigente del atleta. Después ajustas su copia. Al avanzar lo abriremos en la pantalla real para mostrarte el editor.',
+    body: 'En «Copiar» está «Copiar semana anterior», que reutiliza la semana vigente del atleta. Después ajustas su copia. Al avanzar lo haremos en la pantalla real para mostrarte el editor.',
     path: '/entrenador/atletas/tour-lucia?seccion=semana',
-    target: '[data-tour="copy-week"]',
+    target: '[data-tour="copy-menu"]',
   },
   {
     id: 'prescription',

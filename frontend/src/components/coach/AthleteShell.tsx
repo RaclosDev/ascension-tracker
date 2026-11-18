@@ -52,22 +52,32 @@ export function useAthleteViews(link: CoachClient) {
   const power = usePowerProfile(link.linkId, link.permissions.training);
   const training = link.permissions.training;
   const trainingLog = training && link.setup?.services.training !== false;
-  const nutrition = link.permissions.nutrition && link.setup?.services.nutrition !== false;
+  const nutritionService = link.setup?.services.nutrition !== false;
+  const nutrition = link.permissions.nutrition && nutritionService;
   const body = link.permissions.body;
   const bodyLog = body && link.setup?.services.progress !== false;
   const groups = [
     {
-      id: 'planificacion',
-      label: 'Planificación',
+      id: 'entrenamiento',
+      label: 'Entrenamiento',
       views: [
         { id: 'semana', label: 'Semana', visible: training },
         { id: 'entrenamiento', label: 'Programas', visible: training },
-        { id: 'nutricion', label: 'Nutrición', visible: nutrition },
         {
           id: 'powerlifting',
           label: 'Powerlifting',
           visible: training && !!power.data?.profile.enabled,
         },
+        { id: 'entrenos', label: 'Entrenos hechos', visible: trainingLog },
+      ],
+    },
+    {
+      id: 'nutricion',
+      label: 'Nutrición',
+      // Contracted but not shared yet: the tab stays and explains how the athlete grants it.
+      views: [
+        { id: 'nutricion', label: 'Pauta', visible: nutritionService },
+        { id: 'comidas', label: 'Comidas registradas', visible: nutrition },
       ],
     },
     {
@@ -76,10 +86,8 @@ export function useAthleteViews(link: CoachClient) {
       views: [
         { id: 'resumen', label: 'Resumen', visible: true },
         { id: 'registro', label: 'Registro diario', visible: true },
-        { id: 'entrenos', label: 'Entrenos', visible: trainingLog },
-        { id: 'comidas', label: 'Comidas', visible: nutrition },
-        { id: 'pasos', label: 'Pasos', visible: bodyLog },
         { id: 'peso', label: 'Peso', visible: bodyLog },
+        { id: 'pasos', label: 'Pasos', visible: bodyLog },
         { id: 'progreso', label: 'Evolución y fotos', visible: body },
       ],
     },
@@ -96,7 +104,12 @@ export function useAthleteViews(link: CoachClient) {
   ]
     .map((group) => ({ ...group, views: group.views.filter((view) => view.visible) }))
     .filter((group) => group.views.length > 0);
-  return { groups, has: (view: string) => groups.some((g) => g.views.some((v) => v.id === view)) };
+  return {
+    groups,
+    has: (view: string) => groups.some((g) => g.views.some((v) => v.id === view)),
+    /** Views the coach can see in the menu but the athlete has not shared yet. */
+    locked: (view: string) => view === 'nutricion' && nutritionService && !nutrition,
+  };
 }
 
 export function AthleteShell({
