@@ -76,7 +76,7 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
         options={[
           { value: 'prepare', label: 'Preparar' },
           { value: 'block', label: 'Bloque' },
-          { value: 'review', label: 'Revisar la anterior' },
+          { value: 'review', label: 'Revisar lo hecho' },
         ]}
       />
       <div className="week-toolbar-picker" hidden={view === 'block'}>

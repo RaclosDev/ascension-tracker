@@ -76,8 +76,14 @@ export function AthleteNote({ link }: { link: CoachClient }) {
 
   if (!note)
     return (
-      <button type="button" className="btn btn-secondary athlete-pin" onClick={() => setDraft('')}>
-        <Pin size={15} aria-hidden /> Fijar una nota
+      <button
+        type="button"
+        className="btn btn-secondary athlete-pin"
+        aria-label="Fijar una nota"
+        title="Fijar una nota sobre este atleta"
+        onClick={() => setDraft('')}
+      >
+        <Pin size={15} aria-hidden /> Nota
       </button>
     );
 

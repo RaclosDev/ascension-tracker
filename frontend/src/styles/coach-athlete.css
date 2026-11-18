@@ -87,12 +87,15 @@
   color: var(--text-secondary);
 }
 .athlete-context dd {
+  display: -webkit-box;
   margin: 0;
   overflow: hidden;
   font-size: 0.85rem;
-  line-height: 1.4;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow-wrap: anywhere;
 }
 .athlete-context dd a {
   color: var(--text-secondary);
@@ -872,10 +875,46 @@
   padding-left: 16px;
   border-left: 1px solid var(--border-medium);
 }
+/* Load and the week's decision share one line; the muscle-group detail opens below it. */
+.week-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 24px;
+}
+.week-context .week-volume[open] {
+  flex-basis: 100%;
+}
 .week-decision {
+  flex: 1 1 280px;
+  min-width: 0;
   margin: 0;
   font-size: 0.85rem;
+  line-height: 1.4;
   color: var(--text-secondary);
+}
+.power-areas {
+  display: flex;
+  margin-bottom: 20px;
+}
+.power-areas .segmented {
+  width: auto;
+}
+.power-areas .segmented-option {
+  flex: 0 0 auto;
+  padding-inline: 1rem;
+  white-space: nowrap;
+}
+.athlete-programs-title {
+  margin: 20px 0 4px;
+  font-size: 0.95rem;
+}
+.athlete-programs-hint {
+  max-width: 68ch;
+  margin: 0 0 4px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.45;
 }
 /* A conflict states the problem and the way out; the rest waits behind one disclosure. */
 .week-conflict {

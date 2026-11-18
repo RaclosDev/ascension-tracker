@@ -1,5 +1,5 @@
 import { confirmAction } from '../../lib/confirmation';
-import { useId, useState } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useNutritionTemplate, useNutritionTemplates } from '@/lib/coach/nutritionTemplates';
 import { nutritionDraft, type NutritionDraft } from '@/lib/coach/nutritionDraft';
@@ -9,10 +9,13 @@ export function NutritionTemplatePicker({
   onCopy,
   dirty,
   disabled,
+  children,
 }: {
   onCopy: (fields: NutritionDraft) => void;
   dirty: boolean;
   disabled: boolean;
+  /** Other actions on the draft, shown on the same row as the library button. */
+  children?: ReactNode;
 }) {
   // Biblioteca › «Aplicar a…» llega con ?pauta=<id>; se lee de la URL porque esta sección
   // también se monta fuera de un Router en las pruebas.
@@ -24,15 +27,18 @@ export function NutritionTemplatePicker({
   const selected = useNutritionTemplate(open && id ? id : null);
   return (
     <section className="flex flex-col gap-3">
-      <button
-        type="button"
-        className="btn btn-secondary self-start"
-        disabled={disabled}
-        aria-expanded={open}
-        onClick={() => setOpen(!open)}
-      >
-        Usar pauta de biblioteca
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          disabled={disabled}
+          aria-expanded={open}
+          onClick={() => setOpen(!open)}
+        >
+          Usar pauta de biblioteca
+        </button>
+        {children}
+      </div>
       {open && (
         <div className="card flex flex-col gap-3">
           <p>

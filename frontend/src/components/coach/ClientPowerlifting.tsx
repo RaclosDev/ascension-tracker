@@ -14,6 +14,7 @@ import {
   type SavedPowerProfile,
 } from '../../lib/coach/powerlifting';
 import { QueryErrorNotice } from '../QueryErrorNotice';
+import { SegmentedControl } from '../ui/segmented-control';
 import { PowerMarksEditor } from './PowerMarksEditor';
 import { PowerMeets } from './PowerMeets';
 import { PowerProgress } from './PowerProgress';
@@ -33,30 +34,22 @@ export default function ClientPowerlifting({
     requestedView === 'competiciones' || requestedView === 'seguimiento' ? requestedView : 'perfil';
   return (
     <section className="card">
-      <h2>Powerlifting</h2>
-      <p className="coach-description mb-5">
-        Referencias de fuerza y seguimiento de sentadilla, banca y peso muerto.
-      </p>
-      <nav aria-label="Áreas de powerlifting" className="flex flex-wrap gap-3 mb-5">
-        {[
-          ['perfil', 'Perfil y marcas'],
-          ['competiciones', 'Competiciones'],
-          ['seguimiento', 'Seguimiento S/B/D'],
-        ].map(([id, label]) => (
-          <button
-            key={id}
-            className={`btn ${view === id ? 'btn-primary' : 'btn-secondary'}`}
-            aria-current={view === id ? 'page' : undefined}
-            onClick={() => {
-              const next = new URLSearchParams(params);
-              next.set('vista', id);
-              next.delete('competicion');
-              setParams(next);
-            }}
-          >
-            {label}
-          </button>
-        ))}
+      <h2 className="sr-only">Powerlifting</h2>
+      <nav aria-label="Áreas de powerlifting" className="power-areas">
+        <SegmentedControl
+          value={view}
+          options={[
+            { value: 'perfil', label: 'Perfil y marcas' },
+            { value: 'competiciones', label: 'Competiciones' },
+            { value: 'seguimiento', label: 'Seguimiento S/B/D' },
+          ]}
+          onChange={(id) => {
+            const next = new URLSearchParams(params);
+            next.set('vista', id);
+            next.delete('competicion');
+            setParams(next);
+          }}
+        />
       </nav>
       {query.isPending ? (
         <p role="status">Cargando perfil de powerlifting…</p>

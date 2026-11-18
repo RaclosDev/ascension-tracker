@@ -46,7 +46,7 @@ import { ProgramPreview } from './ProgramPreview';
 const DRAG_TYPE = 'application/x-ascension-week-item';
 const AUTOSAVE_MS = 1500;
 const PANELS = [
-  { id: 'previous', label: 'Semana pasada' },
+  { id: 'previous', label: 'Plan anterior' },
   { id: 'library', label: 'Biblioteca' },
   { id: 'notes', label: 'Ajustes de la semana' },
 ] as const;
@@ -556,15 +556,15 @@ export function WeekEditor({
           </button>
         </div>
       </div>
-      <WeekVolume program={program} last={lastWeek} />
-      {value.content.decision && (
-        <p className="week-decision">
-          {published && !draft.dirty
-            ? 'Decisión aplicada en la publicación'
-            : 'Decisión pendiente de publicar'}
-          : {value.content.decision}
-        </p>
-      )}
+      <div className="week-context">
+        <WeekVolume program={program} last={lastWeek} />
+        {value.content.decision && (
+          <p className="week-decision">
+            {published && !draft.dirty ? 'Decisión publicada' : 'Decisión sin publicar'}:{' '}
+            {value.content.decision}
+          </p>
+        )}
+      </div>
       {error && <p role="alert">{error}</p>}
       {saved.linkedFrom ? (
         <p className="week-linked">

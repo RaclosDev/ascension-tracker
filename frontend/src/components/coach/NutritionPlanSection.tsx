@@ -161,10 +161,6 @@ function PlanForm({
           ? `Pauta activa desde ${formatCoachDate(plan.createdAt)}. Sustituye los objetivos de tu atleta.`
           : 'Sin pauta: tu atleta usa sus propios objetivos.'}
       </p>
-      <p className="text-sm">
-        Los cambios son un borrador hasta publicarlos. Las comidas se copian de tus recetas
-        actuales; las versiones anteriores conservan su contenido.
-      </p>
       {plan && (
         <details>
           <summary className="cursor-pointer py-2">Ver pauta publicada</summary>
@@ -179,7 +175,40 @@ function PlanForm({
           setPreview(false);
           setError(null);
         }}
-      />
+      >
+        <button
+          type="button"
+          className="btn btn-secondary"
+          disabled={!ready}
+          aria-pressed={preview}
+          onClick={() => setPreview(!preview)}
+        >
+          {preview ? 'Volver al editor' : 'Vista previa de la pauta'}
+        </button>
+        {draft.dirty && (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={busy}
+            onClick={async () => {
+              if (
+                await confirmAction({
+                  title: 'Descartar cambios',
+                  description: '¿Descartar los cambios locales y volver a la pauta publicada?',
+                  confirmLabel: 'Descartar cambios',
+                  destructive: true,
+                })
+              ) {
+                draft.clear();
+                setPreview(false);
+                setError(null);
+              }
+            }}
+          >
+            Descartar cambios locales
+          </button>
+        )}
+      </NutritionTemplatePicker>
       {draft.notice && (
         <p role="status" className="text-sm">
           {draft.notice}
@@ -226,40 +255,6 @@ function PlanForm({
           publicar.
         </p>
       )}
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          className="btn btn-secondary"
-          disabled={!ready}
-          aria-pressed={preview}
-          onClick={() => setPreview(!preview)}
-        >
-          {preview ? 'Volver al editor' : 'Vista previa de la pauta'}
-        </button>
-        {draft.dirty && (
-          <button
-            type="button"
-            className="btn btn-secondary"
-            disabled={busy}
-            onClick={async () => {
-              if (
-                await confirmAction({
-                  title: 'Descartar cambios',
-                  description: '¿Descartar los cambios locales y volver a la pauta publicada?',
-                  confirmLabel: 'Descartar cambios',
-                  destructive: true,
-                })
-              ) {
-                draft.clear();
-                setPreview(false);
-                setError(null);
-              }
-            }}
-          >
-            Descartar cambios locales
-          </button>
-        )}
-      </div>
       {preview && request && ready ? (
         <section aria-label="Vista previa de la pauta">
           <NutritionPlanSummary plan={previewNutrition(request, knownRecipes)} />
@@ -287,6 +282,10 @@ function PlanForm({
           </button>
         )}
       </div>
+      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+        Hasta que publiques, los cambios son un borrador que solo ves tú. Las comidas se copian de
+        tus recetas actuales.
+      </p>
     </div>
   );
 }
