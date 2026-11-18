@@ -109,9 +109,11 @@ export function toPrescribedDay(day: TodayDay): PrescribedDay {
           repsMax: target.max,
           type: target.warmup ? ('warmup' as const) : ('normal' as const),
           label: target.text,
+          effort: target.effort,
         };
       }),
       protocol: protocolText(e),
+      restSeconds: e.restSeconds,
       notes: [e.restSeconds != null && `Descanso ${restLabel(e.restSeconds)}`, e.notes]
         .filter(Boolean)
         .join(' · '),

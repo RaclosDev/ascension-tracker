@@ -119,8 +119,16 @@ export interface ActiveWorkout {
   /** What each prescribed set was preloaded with; `varies` when the sets of its exercise differ. */
   coachSetPlan?: Record<
     string,
-    { weight: string; reps: string; repsMax?: number | null; varies: boolean }
+    {
+      weight: string;
+      reps: string;
+      repsMax?: number | null;
+      varies: boolean;
+      effort?: { kind: string; value: number } | null;
+    }
   >;
+  /** Seconds of rest the coach prescribed, per exercise row. */
+  coachRest?: Record<string, number>;
 }
 
 export interface CompletedWorkout {

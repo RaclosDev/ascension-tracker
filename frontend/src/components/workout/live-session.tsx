@@ -14,23 +14,39 @@ import type { WorkoutExercise } from '@/lib/workout/types';
 
 const EMPTY_EXERCISES: WorkoutExercise[] = [];
 
-/** Says «Guardado» for a moment after each change: the session is kept on the device as it goes. */
+/**
+ * Says the session is kept on the device right after the athlete changes something. It is not
+ * sent to the coach until the session is finished, so it never claims more than that.
+ */
 function SavedMark() {
   const active = useWorkoutStore((s) => s.active);
   const first = useRef(true);
+  const touched = useRef(0);
   const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const mark = () => {
+      touched.current = Date.now();
+    };
+    document.addEventListener('pointerdown', mark, true);
+    document.addEventListener('keydown', mark, true);
+    return () => {
+      document.removeEventListener('pointerdown', mark, true);
+      document.removeEventListener('keydown', mark, true);
+    };
+  }, []);
   useEffect(() => {
     if (first.current) {
       first.current = false;
       return;
     }
+    if (Date.now() - touched.current > 1500) return;
     setShown(true);
     const timer = setTimeout(() => setShown(false), 2500);
     return () => clearTimeout(timer);
   }, [active]);
   return (
     <span className="workout-saved" role="status">
-      {shown ? 'Guardado' : ''}
+      {shown ? 'Guardado en este dispositivo' : ''}
     </span>
   );
 }
@@ -340,8 +356,8 @@ export function LiveSession() {
       {!isEditing && <RestBanner />}
       {prescribed && exercises.length > 0 && (
         <p className="workout-plan-hint">
-          Las series ya traen lo pautado. Si la haces igual, marca la casilla; si no, cambia solo lo
-          distinto.
+          Las series traen el peso y las repeticiones mínimas pautadas. Si haces más repeticiones u
+          otro peso, cámbialo antes de marcar la casilla.
         </p>
       )}
 
