@@ -82,8 +82,12 @@ function AthleteSections({ link }: { link: CoachClient }) {
               </details>
             </>
           )}
-          {open('nutricion') && (
-            <ClientNutrition linkId={linkId} canEditPlan={link.permissions.editNutrition} />
+          {(open('nutricion') || open('pauta')) && (
+            <ClientNutrition
+              linkId={linkId}
+              view={section === 'pauta' ? 'pauta' : 'diario'}
+              canEditPlan={link.permissions.editNutrition}
+            />
           )}
           {open('powerlifting') && (
             <ClientPowerlifting linkId={linkId} canEdit={link.permissions.editTraining} />

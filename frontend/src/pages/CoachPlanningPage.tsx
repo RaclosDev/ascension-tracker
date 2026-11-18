@@ -151,7 +151,7 @@ function ApplyDialog({ applying, onClose }: { applying: Applying; onClose: () =>
                   navigate(
                     training
                       ? `${clientHref(c.linkId, 'entrenamiento')}&programa=${encodeURIComponent(applying.row.id)}`
-                      : `${clientHref(c.linkId, 'nutricion')}&pauta=${encodeURIComponent(applying.row.id)}`,
+                      : `${clientHref(c.linkId, 'pauta')}&pauta=${encodeURIComponent(applying.row.id)}`,
                   )
                 }
               >

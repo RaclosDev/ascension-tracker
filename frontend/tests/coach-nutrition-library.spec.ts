@@ -115,7 +115,7 @@ for (const width of [390, 1440]) {
     await expect(page).toHaveURL(/\/entrenador\/pautas\/t1$/);
     await expect(page.getByRole('button', { name: 'Guardar en biblioteca' })).toBeDisabled();
     expect(publications).toBe(0);
-    await page.goto('/entrenador/atletas/l1?seccion=nutricion');
+    await page.goto('/entrenador/atletas/l1?seccion=pauta');
     await page.getByRole('button', { name: 'Usar pauta de biblioteca' }).click();
     await page.getByLabel('Pauta de biblioteca', { exact: true }).selectOption('t1');
     await page.getByRole('button', { name: 'Copiar al borrador' }).click();

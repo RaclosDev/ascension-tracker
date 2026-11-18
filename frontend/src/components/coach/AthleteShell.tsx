@@ -1,6 +1,13 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, MessageSquareText } from 'lucide-react';
+import {
+  ArrowLeft,
+  Dumbbell,
+  MessageSquareText,
+  Settings,
+  TrendingUp,
+  Utensils,
+} from 'lucide-react';
 import { personName, type CoachClient } from '../../lib/coach/api';
 import { useClientStatus } from '../../lib/coach/clientStatus';
 import { nextReviewLabel, REVIEW_DAYS } from '../../lib/coach/coachSchedule';
@@ -60,6 +67,7 @@ export function useAthleteViews(link: CoachClient) {
     {
       id: 'entrenamiento',
       label: 'Entrenamiento',
+      icon: Dumbbell,
       views: [
         { id: 'semana', label: 'Planificación', visible: training },
         { id: 'entrenamiento', label: 'Programas', visible: training },
@@ -74,12 +82,17 @@ export function useAthleteViews(link: CoachClient) {
     {
       id: 'nutricion',
       label: 'Nutrición',
+      icon: Utensils,
       // Contracted but not shared yet: the tab stays and explains how the athlete grants it.
-      views: [{ id: 'nutricion', label: 'Nutrición', visible: nutritionService }],
+      views: [
+        { id: 'nutricion', label: 'Diario de comidas', visible: nutritionService },
+        { id: 'pauta', label: 'Pauta de nutrición', visible: nutritionService },
+      ],
     },
     {
       id: 'progreso',
       label: 'Progreso',
+      icon: TrendingUp,
       views: [
         { id: 'resumen', label: 'Resumen', visible: true },
         { id: 'registro', label: 'Registro diario', visible: true },
@@ -91,11 +104,13 @@ export function useAthleteViews(link: CoachClient) {
     {
       id: 'revisiones',
       label: 'Seguimientos',
+      icon: MessageSquareText,
       views: [{ id: 'revisiones', label: 'Seguimientos', visible: true }],
     },
     {
       id: 'gestion',
       label: 'Ajustes del atleta',
+      icon: Settings,
       views: [{ id: 'gestion', label: 'Ajustes del atleta', visible: true }],
     },
   ]
@@ -105,7 +120,8 @@ export function useAthleteViews(link: CoachClient) {
     groups,
     has: (view: string) => groups.some((g) => g.views.some((v) => v.id === view)),
     /** Views the coach can see in the menu but the athlete has not shared yet. */
-    locked: (view: string) => view === 'nutricion' && nutritionService && !nutrition,
+    locked: (view: string) =>
+      (view === 'nutricion' || view === 'pauta') && nutritionService && !nutrition,
   };
 }
 
@@ -147,6 +163,15 @@ export function AthleteShell({
     void import('../../pages/CoachClientWeeklyWorkoutsPage');
     void import('../../pages/CoachClientWeeklyRecordsPage');
   }, []);
+
+  // On a phone the bar scrolls sideways: keep the tab you are on in sight.
+  const tabs = useRef<HTMLDivElement>(null);
+  const activeId = activeGroup?.id;
+  useEffect(() => {
+    tabs.current
+      ?.querySelector('[aria-current]')
+      ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }, [activeId]);
 
   return (
     <>
@@ -191,7 +216,7 @@ export function AthleteShell({
           <AthleteNote key={link.linkId} link={link} />
         </header>
         <nav className="coach-client-nav athlete-nav" aria-label="Secciones del atleta">
-          <div className="athlete-tabs">
+          <div className="athlete-tabs" ref={tabs}>
             {groups.map((group) => {
               const current = group === activeGroup;
               return (
@@ -205,6 +230,7 @@ export function AthleteShell({
                       : group.views.map((view) => view.id).join(' ')
                   }
                 >
+                  <group.icon size={16} aria-hidden />
                   {group.label}
                   {group.id === 'revisiones' && pending > 0 && (
                     <span className="athlete-badge" aria-label={`${pending} por responder`}>

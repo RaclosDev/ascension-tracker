@@ -36,6 +36,14 @@ function weekRange(week: string) {
   return `${from} – ${format(end, 'd MMM', { locale: es })}${year}`;
 }
 
+/** Short names for the one-line summary of a past week. */
+const BRIEF_LABELS: Record<(typeof SCORE_KEYS)[number], string> = {
+  energy: 'Energía',
+  sleep: 'Sueño',
+  trainingAdherence: 'Entreno',
+  dietAdherence: 'Dieta',
+};
+
 /** This week on top, day by day; the weeks before it folded below. */
 export function CheckinsSection({ link }: { link: CoachClient }) {
   const linkId = link.linkId;
@@ -126,9 +134,12 @@ function PastWeek({ link, checkin }: { link: CoachClient; checkin: Checkin }) {
       >
         <b>{weekRange(checkin.weekStart)}</b>
         <span className="checkin-brief">
-          {SCORE_KEYS.filter((key) => checkin[key] != null)
-            .map((key) => `${SCORE_LABELS[key]} ${checkin[key]}`)
-            .join(' · ')}
+          {[
+            ...SCORE_KEYS.filter((key) => checkin[key] != null).map(
+              (key) => `${BRIEF_LABELS[key]} ${checkin[key]}/5`,
+            ),
+            ...(checkin.weightAvg != null ? [`${kg.format(checkin.weightAvg)} kg`] : []),
+          ].join(' · ')}
         </span>
         <Status checkin={checkin} />
         <ChevronDown size={16} aria-hidden />
@@ -164,7 +175,10 @@ function WeekBody({ link, checkin }: { link: CoachClient; checkin: Checkin }) {
           {SCORE_KEYS.filter((key) => checkin[key] != null).map((key) => (
             <div key={key}>
               <dt>{SCORE_LABELS[key]}</dt>
-              <dd>{checkin[key]}/5</dd>
+              <dd>
+                {checkin[key]}
+                <small>/5</small>
+              </dd>
             </div>
           ))}
           {checkin.weightAvg != null && (

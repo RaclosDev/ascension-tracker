@@ -204,8 +204,10 @@ describe('Check-ins en la ficha del entrenador', () => {
     wrap(<CheckinsSection link={link} />);
 
     expect(await screen.findByText('Rodilla')).toBeInTheDocument();
-    expect(screen.getByText(/80,4 kg/)).toBeInTheDocument();
-    expect(screen.getByText('2/5')).toBeInTheDocument();
+    expect(screen.getAllByText(/80,4 kg/).length).toBeGreaterThan(0);
+    expect(
+      screen.getByText((_, el) => el?.tagName === 'DD' && el.textContent === '2/5'),
+    ).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Tu respuesta'), { target: { value: 'Ánimo' } });
     fireEvent.click(screen.getByRole('button', { name: 'Responder' }));
 

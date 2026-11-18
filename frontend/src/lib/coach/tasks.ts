@@ -14,6 +14,7 @@ export function signalSection(signal: StatusSignal): string {
     case 'NO_PROGRAM':
       return 'entrenamiento';
     case 'NO_NUTRITION_PLAN':
+      return 'pauta';
     case 'FEW_FOOD_LOGS':
       return 'nutricion';
     case 'WEIGHT_STALLED':

@@ -94,11 +94,11 @@ for (const width of [1440, 390]) {
     await page.getByLabel('Días disponibles por semana (opcional)').fill('4');
     await page.getByLabel('Material disponible (opcional)').fill('Rack, barra y discos');
     await page.getByLabel(/He revisado con el atleta/).check();
-    await page.getByRole('button', { name: 'Guardar servicio' }).click();
-    await expect(page.getByText('Servicio guardado', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Guardar objetivo' }).click();
+    await expect(page.getByText('Objetivo guardado', { exact: true })).toBeVisible();
     await page
       .getByRole('navigation', { name: 'Apartados de los ajustes' })
-      .getByRole('link', { name: 'Seguimiento', exact: true })
+      .getByRole('link', { name: 'Agenda del seguimiento', exact: true })
       .click();
     await page.getByLabel('Día del seguimiento').selectOption('3');
     await page.getByLabel('Hora del seguimiento').fill('17:30');

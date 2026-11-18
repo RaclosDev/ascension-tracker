@@ -273,8 +273,8 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     id: 'nutrition',
     chapter: 'Especialidades',
     title: 'Prepara la pauta nutricional',
-    body: 'Distingue objetivos de entreno y descanso, añade comidas y revisa la vista previa antes de publicar. Debajo está su diario de comidas, día a día.',
-    path: '/entrenador/atletas/tour-lucia?seccion=nutricion',
+    body: 'Distingue objetivos de entreno y descanso, añade comidas y revisa la vista previa antes de publicar. Su diario de comidas, día a día, está en la pestaña de al lado.',
+    path: '/entrenador/atletas/tour-lucia?seccion=pauta',
     target: '[data-tour="nutrition-plan"]',
   },
   {

@@ -120,7 +120,7 @@ for (const width of [390, 1440]) {
       if (path === 'clients/l1/nutrition-plan/adherence') adherenceReads++;
       return route.fulfill({ json: [] });
     });
-    await page.goto('/entrenador/atletas/l1?seccion=nutricion');
+    await page.goto('/entrenador/atletas/l1?seccion=pauta');
     await page.getByRole('button', { name: 'Editar pauta', exact: true }).click();
     await page.getByLabel('Proteína día de entreno', { exact: true }).fill('200');
     await page.getByLabel('Raciones de la comida 1 día de entreno').fill('1.5');
@@ -158,7 +158,10 @@ for (const width of [390, 1440]) {
     await confirmation.getByRole('button', { name: 'Publicar pauta', exact: true }).click();
     await expect(page.getByText('Pauta de nutrición publicada', { exact: true })).toBeVisible();
     await expect.poll(() => targetReads).toBeGreaterThan(targetReadsBefore);
+    // The diary lives in the tab beside the plan: it has to read the adherence again.
+    await page.getByRole('link', { name: 'Diario de comidas', exact: true }).click();
     await expect.poll(() => adherenceReads).toBeGreaterThan(adherenceReadsBefore);
+    await page.getByRole('link', { name: 'Pauta de nutrición', exact: true }).click();
     expect(submitted).toMatchObject({
       expectedPlanId: 'p1',
       plan: {

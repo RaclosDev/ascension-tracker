@@ -5,12 +5,34 @@ import { apiErrorMessage, type CoachClient } from '../../lib/coach/api';
 import { emptySetup, serviceNames, useSaveCoachSetup } from '../../lib/coach/setup';
 import { CoachSetupFields } from './CoachSetupFields';
 
-export function ClientSetupForm({ link }: { link: CoachClient }) {
+const PARTS = {
+  all: { title: 'Servicio e incorporación', save: 'Guardar servicio', saved: 'Servicio guardado' },
+  servicio: {
+    title: 'Servicios acordados',
+    save: 'Guardar servicios',
+    saved: 'Servicios guardados',
+  },
+  objetivo: {
+    title: 'Objetivo y disponibilidad',
+    save: 'Guardar objetivo',
+    saved: 'Objetivo guardado',
+  },
+};
+
+/** The agreement with the athlete; `part` shows one half of it, and saving always sends it whole. */
+export function ClientSetupForm({
+  link,
+  part,
+}: {
+  link: CoachClient;
+  part?: 'servicio' | 'objetivo';
+}) {
   const [value, setValue] = useState(() => link.setup ?? emptySetup());
   const save = useSaveCoachSetup(link.linkId);
+  const text = PARTS[part ?? 'all'];
   return (
     <section className="card">
-      <h2>Servicio e incorporación</h2>
+      <h2>{text.title}</h2>
       {!link.setup && (
         <p className="coach-description mb-4">
           Por configurar. Confirma qué habéis acordado antes de activar el seguimiento.
@@ -21,22 +43,24 @@ export function ClientSetupForm({ link }: { link: CoachClient }) {
         onSubmit={(e) => {
           e.preventDefault();
           save.mutate(value, {
-            onSuccess: () => toast.success('Servicio guardado'),
+            onSuccess: () => toast.success(text.saved),
             onError: (error) =>
               toast.error(apiErrorMessage(error, 'No se pudo guardar el servicio')),
           });
         }}
       >
-        <CoachSetupFields value={value} onChange={setValue} />
-        <label className="flex items-start gap-3 min-h-10 cursor-pointer">
-          <input
-            type="checkbox"
-            className="mt-1"
-            checked={value.reviewed}
-            onChange={(e) => setValue({ ...value, reviewed: e.target.checked })}
-          />
-          He revisado con el atleta su objetivo, disponibilidad y datos iniciales.
-        </label>
+        <CoachSetupFields value={value} onChange={setValue} part={part} />
+        {part !== 'servicio' && (
+          <label className="flex items-start gap-3 min-h-10 cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={value.reviewed}
+              onChange={(e) => setValue({ ...value, reviewed: e.target.checked })}
+            />
+            He revisado con el atleta su objetivo, disponibilidad y datos iniciales.
+          </label>
+        )}
         {!Object.values(value.services).some(Boolean) && (
           <p role="alert">Elige al menos un servicio.</p>
         )}
@@ -46,7 +70,7 @@ export function ClientSetupForm({ link }: { link: CoachClient }) {
             type="submit"
             disabled={save.isPending || !Object.values(value.services).some(Boolean)}
           >
-            {save.isPending ? 'Guardando…' : 'Guardar servicio'}
+            {save.isPending ? 'Guardando…' : text.save}
           </button>
         </div>
       </form>

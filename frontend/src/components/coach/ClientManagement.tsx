@@ -18,10 +18,13 @@ import {
 } from '../../lib/coach/api';
 
 const TABS = [
-  ['servicio', 'Servicio y objetivo'],
+  ['objetivo', 'Objetivo y disponibilidad'],
+  ['servicio', 'Servicios'],
   ['vetados', 'Ejercicios vetados'],
-  ['seguimiento', 'Seguimiento'],
-  ['relacion', 'Permisos y relación'],
+  ['agenda', 'Agenda del seguimiento'],
+  ['preguntas', 'Preguntas del seguimiento'],
+  ['permisos', 'Permisos'],
+  ['relacion', 'Relación'],
 ] as const;
 
 /** The athlete's settings, one group at a time. */
@@ -29,7 +32,7 @@ export function ClientManagement({ link }: { link: CoachClient }) {
   const end = useEndClient();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const tab = TABS.find(([id]) => id === params.get('ajuste'))?.[0] ?? 'servicio';
+  const tab = TABS.find(([id]) => id === params.get('ajuste'))?.[0] ?? 'objetivo';
   const href = (id: string) => {
     const next = new URLSearchParams(params);
     next.set('ajuste', id);
@@ -55,23 +58,46 @@ export function ClientManagement({ link }: { link: CoachClient }) {
         ))}
       </nav>
       <div className="athlete-manage-panel">
+        {tab === 'objetivo' && <ClientSetupForm key={link.linkId} link={link} part="objetivo" />}
         {tab === 'servicio' && (
           <>
-            <ClientSetupForm key={link.linkId} link={link} />
+            <ClientSetupForm key={link.linkId} link={link} part="servicio" />
             {link.permissions.training && (
               <PowerliftingToggle linkId={link.linkId} canEdit={link.permissions.editTraining} />
             )}
           </>
         )}
         {tab === 'vetados' && <AvoidedExercises link={link} />}
-        {tab === 'seguimiento' && (
-          <>
-            <ClientSchedule
-              key={`${link.linkId}-${JSON.stringify(link.followup?.schedule)}`}
-              link={link}
-            />
-            <CheckinTemplateEditor linkId={link.linkId} />
-          </>
+        {tab === 'agenda' && (
+          <ClientSchedule
+            key={`${link.linkId}-${JSON.stringify(link.followup?.schedule)}`}
+            link={link}
+          />
+        )}
+        {tab === 'preguntas' && <CheckinTemplateEditor linkId={link.linkId} />}
+        {tab === 'permisos' && (
+          <section className="card">
+            <h2>Permisos del atleta</h2>
+            <p className="coach-description">
+              El atleta controla estos permisos desde sus ajustes. Indican a qué puedes acceder; no
+              definen los servicios que habéis acordado.
+            </p>
+            <dl className="coach-facts">
+              {(Object.keys(PERMISSION_LABELS) as (keyof CoachPermissions)[]).map((scope) => (
+                <div key={scope}>
+                  <dt>{PERMISSION_LABELS[scope].title}</dt>
+                  <dd data-granted={link.permissions[scope] ? '' : undefined}>
+                    {link.permissions[scope] ? (
+                      <Check size={15} aria-hidden />
+                    ) : (
+                      <Minus size={15} aria-hidden />
+                    )}
+                    {link.permissions[scope] ? 'Permitido' : 'Sin permiso'}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
         )}
         {tab === 'relacion' && (
           <>
@@ -90,28 +116,6 @@ export function ClientManagement({ link }: { link: CoachClient }) {
                   <dt>Atleta desde</dt>
                   <dd>{formatCoachDate(link.since)}</dd>
                 </div>
-              </dl>
-            </section>
-            <section className="card">
-              <h2>Permisos del atleta</h2>
-              <p className="coach-description">
-                El atleta controla estos permisos desde sus ajustes. Indican a qué puedes acceder;
-                no definen los servicios que habéis acordado.
-              </p>
-              <dl className="coach-facts">
-                {(Object.keys(PERMISSION_LABELS) as (keyof CoachPermissions)[]).map((scope) => (
-                  <div key={scope}>
-                    <dt>{PERMISSION_LABELS[scope].title}</dt>
-                    <dd data-granted={link.permissions[scope] ? '' : undefined}>
-                      {link.permissions[scope] ? (
-                        <Check size={15} aria-hidden />
-                      ) : (
-                        <Minus size={15} aria-hidden />
-                      )}
-                      {link.permissions[scope] ? 'Permitido' : 'Sin permiso'}
-                    </dd>
-                  </div>
-                ))}
               </dl>
             </section>
             <section className="card coach-end-section">

@@ -216,19 +216,50 @@
   overflow-x: auto;
   scrollbar-width: thin;
 }
+/* The athlete's menu reads as a bar of buttons: framed, each entry with its icon and a filled
+   current one, so it is plain that this is where you move around the file. */
 .athlete-tabs {
-  gap: 4px 22px;
-  padding: 3px 3px 0;
-  border-bottom: 1px solid var(--border-medium);
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--border-medium);
+  border-radius: 10px;
+  background: var(--bg-secondary);
 }
 .athlete-nav .athlete-tabs a {
+  flex: none;
   gap: 8px;
-  min-height: 44px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 6px;
   white-space: nowrap;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+.athlete-nav .athlete-tabs a svg {
+  flex: none;
+}
+.athlete-nav .athlete-tabs a:hover {
+  background: var(--accent-light);
+  color: var(--text-primary);
+}
+.athlete-nav .athlete-tabs a:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
 }
 .athlete-nav .athlete-tabs a[aria-current] {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+.athlete-nav .athlete-tabs a[aria-current] .athlete-badge {
+  background: var(--bg-primary);
   color: var(--text-primary);
-  border-bottom-color: var(--accent-primary);
+}
+@media (prefers-reduced-motion: reduce) {
+  .athlete-nav .athlete-tabs a {
+    transition: none;
+  }
 }
 .athlete-badge {
   display: inline-flex;
@@ -507,6 +538,11 @@
   font-weight: 700;
   line-height: 1.25;
 }
+.checkin-scores dd small {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
 .checkin-answers {
   display: grid;
   gap: 10px;
@@ -574,6 +610,14 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+/* Beside the reply, what comes after it is a quieter second step. */
+.checkin-week-split .checkin-actions {
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+.checkin-week-split .checkin-actions .btn {
+  flex: 1 1 auto;
 }
 .checkin-reply {
   display: grid;
@@ -818,6 +862,9 @@
   .checkin-days {
     max-width: 760px;
   }
+  .checkin-days li {
+    min-height: 46px;
+  }
   .checkin-day-name i {
     display: inline;
     margin-left: 6px;
@@ -959,6 +1006,49 @@
 .coach-student .athlete-nutrition > .card {
   margin: 0;
   padding: 20px;
+}
+/* The published targets as one quiet line over the diary; the plan itself lives in its own view. */
+.athlete-nutrition-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+}
+.athlete-nutrition-targets dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+  margin: 0;
+  min-width: 0;
+}
+.athlete-nutrition-targets dt {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.athlete-nutrition-targets dd {
+  margin: 0;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.athlete-nutrition-targets dd b {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.athlete-nutrition-targets p {
+  margin: 0;
+}
+.athlete-nutrition-targets .btn {
+  flex: none;
+  min-height: 40px;
+}
+.athlete-nutrition-targets .athlete-nutrition-own {
+  margin-top: 2px;
 }
 .athlete-nutrition-own {
   margin: 12px 0 0;

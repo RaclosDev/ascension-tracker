@@ -208,7 +208,7 @@ describe('Biblioteca del entrenador', () => {
     const dialog = await screen.findByRole('dialog', { hidden: true });
     fireEvent.click(await within(dialog).findByRole('button', { name: 'Ángela', hidden: true }));
     expect(screen.getByTestId('where')).toHaveTextContent(
-      '/entrenador/atletas/l0?seccion=nutricion&pauta=n1',
+      '/entrenador/atletas/l0?seccion=pauta&pauta=n1',
     );
   });
 });
