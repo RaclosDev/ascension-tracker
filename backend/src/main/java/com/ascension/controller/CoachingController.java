@@ -39,6 +39,7 @@ public class CoachingController {
     private final CoachService coachService;
     private final ClientProgramService clientProgramService;
     private final CoachSessionService sessionService;
+    private final com.ascension.service.CoachDayCommentService dayCommentService;
     private final NutritionPlanService nutritionPlanService;
     private final CheckinService checkinService;
     private final CheckinNotifier checkinNotifier;
@@ -88,6 +89,20 @@ public class CoachingController {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.ok(sessionService.commentsFor(email, workoutId));
+    }
+
+    /** What this coach said about the client's days between two dates, both included. */
+    @GetMapping("/coaches/{linkId}/day-comments")
+    public ResponseEntity<List<com.ascension.dto.CoachDtos.DayComment>> dayComments(
+            @PathVariable UUID linkId,
+            @RequestParam @org.springframework.format.annotation.DateTimeFormat(
+                    iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @org.springframework.format.annotation.DateTimeFormat(
+                    iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate to,
+            @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(dayCommentService.forClient(email, linkId, from, to));
     }
 
     @GetMapping("/invitations/{token}")

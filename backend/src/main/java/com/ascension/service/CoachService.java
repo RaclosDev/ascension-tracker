@@ -59,17 +59,20 @@ public class CoachService {
     private final CoachSubscriptionService subscriptionService;
     private final UserIdLookup userIdLookup;
     private final CoachSetupService setupService;
+    private final CoachDayCommentService dayCommentService;
     private final SecureRandom random = new SecureRandom();
 
     public CoachService(JdbcTemplate jdbcTemplate, NutritionPlanService nutritionPlanService,
                         CheckinService checkinService, CoachSubscriptionService subscriptionService,
-                        UserIdLookup userIdLookup, CoachSetupService setupService) {
+                        UserIdLookup userIdLookup, CoachSetupService setupService,
+                        CoachDayCommentService dayCommentService) {
         this.jdbcTemplate = jdbcTemplate;
         this.nutritionPlanService = nutritionPlanService;
         this.checkinService = checkinService;
         this.subscriptionService = subscriptionService;
         this.userIdLookup = userIdLookup;
         this.setupService = setupService;
+        this.dayCommentService = dayCommentService;
     }
 
     // ---- Coach side ----
@@ -412,16 +415,17 @@ public class CoachService {
                         rs.getString("workout_id"), rs.getString("body"), instant(rs, "created_at"),
                         instant(rs, "updated_at")),
                 userId, userId, userId, userId);
+        var dayComments = dayCommentService.exportFor(userId);
         var nutritionPlans = nutritionPlanService.exportFor(userId);
         var checkins = checkinService.exportFor(userId);
         var subscription = subscriptionService.exportFor(userId);
         if (coachSince.isEmpty() && subscription == null && asClient.isEmpty() && asCoach.isEmpty() && invitations.isEmpty()
                 && accessesToMyData.isEmpty() && myAccessesAsCoach.isEmpty() && assignments.isEmpty()
-                && comments.isEmpty() && nutritionPlans.isEmpty() && checkins.isEmpty()) {
+                && comments.isEmpty() && dayComments.isEmpty() && nutritionPlans.isEmpty() && checkins.isEmpty()) {
             return null;
         }
         return new CoachingExport(coachSince.isEmpty() ? null : coachSince.get(0), subscription, asClient, asCoach,
-                invitations, accessesToMyData, myAccessesAsCoach, assignments, comments, nutritionPlans, checkins);
+                invitations, accessesToMyData, myAccessesAsCoach, assignments, comments, dayComments, nutritionPlans, checkins);
     }
 
     // Column names come from the two callers above, never from input.

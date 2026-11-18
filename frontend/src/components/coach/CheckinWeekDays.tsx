@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { MessageSquarePlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { apiErrorMessage, useClientData, type CoachClient } from '../../lib/coach/api';
-import { useSaveComment } from '../../lib/coach/sessions';
+import { useSaveComment, useSaveDayComment, type DayComment } from '../../lib/coach/sessions';
 import type { CompletedWorkout } from '../../lib/workout/types';
 import type { WeekSummary } from '../../types/api';
 
@@ -13,7 +13,10 @@ const COMMENT_MAX = 1000;
 const capital = (text: string) => text.charAt(0).toLocaleUpperCase('es') + text.slice(1);
 const kg = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
 
-/** The seven days of a week as the athlete lived them, each open to a comment on its session. */
+/**
+ * The seven days of a week as the athlete lived them, each open to a comment: on its session when
+ * there is one, on the day itself when there is none.
+ */
 export function CheckinWeekDays({ link, week }: { link: CoachClient; week: string }) {
   const linkId = link.linkId;
   const training = link.permissions.training && link.setup?.services.training !== false;
@@ -26,6 +29,11 @@ export function CheckinWeekDays({ link, week }: { link: CoachClient; week: strin
   );
   const kcal = useClientData<WeekSummary[]>(linkId, 'nutrition/calories/weekly', nutrition);
   const weights = useClientData<WeekSummary[]>(linkId, 'weights/weekly', body);
+  const notes = useClientData<DayComment[]>(
+    linkId,
+    `day-comments?from=${week}&to=${format(addDays(parseISO(week), 6), 'yyyy-MM-dd')}`,
+    true,
+  );
   if (!training && !nutrition && !body) return null;
   const today = format(new Date(), 'yyyy-MM-dd');
   const eaten = kcal.data?.find((row) => row.weekStart === week)?.days;
@@ -118,8 +126,15 @@ export function CheckinWeekDays({ link, week }: { link: CoachClient; week: strin
                 )}
               </dl>
               {done.map((workout) => (
-                <DayComment key={workout.id} linkId={linkId} workoutId={workout.id} />
+                <WorkoutComment key={workout.id} linkId={linkId} workoutId={workout.id} />
               ))}
+              {done.length === 0 && date <= today && notes.isSuccess && !workouts.isLoading && (
+                <DayNote
+                  linkId={linkId}
+                  date={date}
+                  saved={notes.data.find((note) => note.date === date)?.text ?? ''}
+                />
+              )}
             </li>
           );
         })}
@@ -129,28 +144,60 @@ export function CheckinWeekDays({ link, week }: { link: CoachClient; week: strin
 }
 
 /** The coach's comment on the session of one day; the athlete reads it with that workout. */
-function DayComment({ linkId, workoutId }: { linkId: string; workoutId: string }) {
+function WorkoutComment({ linkId, workoutId }: { linkId: string; workoutId: string }) {
   const comment = useClientData<{ text: string }>(
     linkId,
     `workouts/${encodeURIComponent(workoutId)}/comment`,
     true,
   );
   const save = useSaveComment(linkId, 'history');
-  const [draft, setDraft] = useState<string | null>(null);
-  const saved = comment.data?.text?.trim() ?? '';
   if (!comment.isSuccess) return null;
+  return (
+    <CommentBox
+      id={workoutId}
+      saved={comment.data.text?.trim() ?? ''}
+      pending={save.isPending}
+      send={(text, options) => save.mutate({ workoutId, text }, options)}
+    />
+  );
+}
+
+/** The coach's comment on a day without a session; the athlete reads it in their weekly check-in. */
+function DayNote({ linkId, date, saved }: { linkId: string; date: string; saved: string }) {
+  const save = useSaveDayComment(linkId);
+  return (
+    <CommentBox
+      id={date}
+      saved={saved}
+      pending={save.isPending}
+      send={(text, options) => save.mutate({ date, text }, options)}
+    />
+  );
+}
+
+type SendOptions = { onSuccess: () => void; onError: (error: unknown) => void };
+
+function CommentBox({
+  id,
+  saved,
+  pending,
+  send: mutate,
+}: {
+  id: string;
+  saved: string;
+  pending: boolean;
+  send: (text: string | null, options: SendOptions) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
 
   const send = (text: string | null) =>
-    save.mutate(
-      { workoutId, text },
-      {
-        onSuccess: () => {
-          setDraft(null);
-          toast.success(text == null ? 'Comentario quitado' : 'Comentario guardado');
-        },
-        onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo guardar el comentario')),
+    mutate(text, {
+      onSuccess: () => {
+        setDraft(null);
+        toast.success(text == null ? 'Comentario quitado' : 'Comentario guardado');
       },
-    );
+      onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo guardar el comentario')),
+    });
 
   if (draft === null)
     return saved ? (
@@ -171,17 +218,17 @@ function DayComment({ linkId, workoutId }: { linkId: string; workoutId: string }
       className="checkin-day-form"
       onSubmit={(event) => {
         event.preventDefault();
-        if (draft.trim() && !save.isPending) send(draft.trim());
+        if (draft.trim() && !pending) send(draft.trim());
       }}
     >
-      <label htmlFor={`day-comment-${workoutId}`}>Comentario del día</label>
+      <label htmlFor={`day-comment-${id}`}>Comentario del día</label>
       <textarea
-        id={`day-comment-${workoutId}`}
+        id={`day-comment-${id}`}
         className="form-input"
         rows={2}
         maxLength={COMMENT_MAX}
         autoFocus
-        disabled={save.isPending}
+        disabled={pending}
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
       />
@@ -189,14 +236,14 @@ function DayComment({ linkId, workoutId }: { linkId: string; workoutId: string }
         <button
           type="submit"
           className="btn btn-primary"
-          disabled={save.isPending || !draft.trim() || draft.trim() === saved}
+          disabled={pending || !draft.trim() || draft.trim() === saved}
         >
           Guardar
         </button>
         <button
           type="button"
           className="btn btn-secondary"
-          disabled={save.isPending}
+          disabled={pending}
           onClick={() => setDraft(null)}
         >
           Cancelar
@@ -205,7 +252,7 @@ function DayComment({ linkId, workoutId }: { linkId: string; workoutId: string }
           <button
             type="button"
             className="btn btn-secondary"
-            disabled={save.isPending}
+            disabled={pending}
             onClick={() => send(null)}
           >
             Quitar

@@ -7,6 +7,7 @@ import {
   renderHook,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -168,11 +169,17 @@ describe('Check-ins del atleta', () => {
             questions: ['¿Molestias?'],
             current: replied,
           }
-        : [replied],
+        : url.endsWith('/day-comments')
+          ? [{ date: '2026-11-04', text: 'Hoy tocaba descansar' }]
+          : [replied],
     }));
     wrap(<CoachCheckinPage />, '/checkin/l1');
 
     expect(await screen.findByText('Buen trabajo')).toBeInTheDocument();
+    expect(await screen.findByText('Hoy tocaba descansar')).toBeInTheDocument();
+    expect(mockedApi.get).toHaveBeenCalledWith('/coaching/coaches/l1/day-comments', {
+      params: { from: '2026-11-02', to: '2026-11-08' },
+    });
     expect(screen.getByRole('button', { name: 'Enviar actualización' })).toBeDisabled();
     expect(screen.queryByText('Semanas anteriores')).toBeNull();
   });
@@ -325,7 +332,8 @@ describe('Check-ins en la ficha del entrenador', () => {
       'href',
       '/entrenador/atletas/l1/entrenos/w1',
     );
-    fireEvent.click(await screen.findByRole('button', { name: 'Comentar el día' }));
+    const mondayRow = screen.getByRole('link', { name: 'Torso A' }).closest('li') as HTMLElement;
+    fireEvent.click(await within(mondayRow).findByRole('button', { name: 'Comentar el día' }));
     fireEvent.change(screen.getByLabelText('Comentario del día'), {
       target: { value: ' Buen ritmo ' },
     });
@@ -334,6 +342,35 @@ describe('Check-ins en la ficha del entrenador', () => {
       expect(mockedApi.put).toHaveBeenCalledWith(expect.stringContaining('/workouts/w1/comment'), {
         text: 'Buen ritmo',
       }),
+    );
+  });
+
+  it('comments and clears a day without a session', async () => {
+    mockedApi.get.mockImplementation(async (url: string) => ({
+      data: url.includes('day-comments') ? [{ date: weekDate(), text: 'Descansa bien' }] : [],
+    }));
+    mockedApi.put.mockResolvedValue({ data: null });
+    mockedApi.delete.mockResolvedValue({ data: null });
+    wrap(<CheckinsSection link={link} />);
+
+    expect(await screen.findByText('Descansa bien')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
+    fireEvent.change(screen.getByLabelText('Comentario del día'), {
+      target: { value: 'Camina media hora' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() =>
+      expect(mockedApi.put).toHaveBeenCalledWith(
+        expect.stringContaining(`/day-comments/${weekDate()}`),
+        { text: 'Camina media hora' },
+      ),
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar' }));
+    await waitFor(() =>
+      expect(mockedApi.delete).toHaveBeenCalledWith(
+        expect.stringContaining(`/day-comments/${weekDate()}`),
+      ),
     );
   });
 
