@@ -7,39 +7,43 @@ export function NutritionPlanSummary({
   plan: Pick<NutritionPlan, 'training' | 'rest' | 'notes' | 'meals'>;
 }) {
   return (
-    <div className="flex flex-col gap-3">
-      <div className="grid gap-4 sm:grid-cols-2">
+    <div className="plan-summary">
+      {plan.notes && (
+        <div className="plan-summary-notes">
+          <h3>Pautas generales</h3>
+          <p>{plan.notes}</p>
+        </div>
+      )}
+      <div className="plan-summary-days">
         {NUTRITION_DAYS.map((day) => (
-          <section key={day.key} className="min-w-0 rounded-lg border p-3">
-            <h3 className="font-semibold text-foreground">{day.label}</h3>
-            <p className="font-bold">{plan[day.key].kcal} kcal</p>
-            <p className="text-sm">
+          <section key={day.key} className="plan-summary-day">
+            <h3>{day.label}</h3>
+            <p className="plan-summary-kcal">{plan[day.key].kcal} kcal</p>
+            <p className="plan-summary-macros">
               P {plan[day.key].protein} g · C {plan[day.key].carbs} g · G {plan[day.key].fat} g
             </p>
-            <ul className="flex flex-col gap-3 mt-3">
+            <ul>
               {plan.meals
                 .filter((meal) => meal.dayType === day.type)
                 .map((meal, index) => (
                   <li key={index}>
-                    <p className="font-semibold text-sm break-words">
+                    <p className="plan-summary-meal">
                       {meal.slotName}: {meal.name}
                     </p>
-                    <p className="text-sm">
-                      {meal.servings} raciones · {meal.kcal} kcal
+                    <p>
+                      {meal.servings} {meal.servings === 1 ? 'ración' : 'raciones'} · {meal.kcal}{' '}
+                      kcal
                     </p>
-                    <p className="text-xs">
+                    <p>
                       P {meal.protein} g · C {meal.carbs} g · G {meal.fat} g
                     </p>
-                    {meal.description && (
-                      <p className="text-sm whitespace-pre-wrap break-words">{meal.description}</p>
-                    )}
+                    {meal.description && <p className="plan-summary-text">{meal.description}</p>}
                   </li>
                 ))}
             </ul>
           </section>
         ))}
       </div>
-      {plan.notes && <p className="text-sm whitespace-pre-wrap break-words">{plan.notes}</p>}
     </div>
   );
 }

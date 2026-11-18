@@ -75,10 +75,7 @@ export function useAthleteViews(link: CoachClient) {
       id: 'nutricion',
       label: 'Nutrición',
       // Contracted but not shared yet: the tab stays and explains how the athlete grants it.
-      views: [
-        { id: 'nutricion', label: 'Pauta', visible: nutritionService },
-        { id: 'comidas', label: 'Comidas registradas', visible: nutrition },
-      ],
+      views: [{ id: 'nutricion', label: 'Nutrición', visible: nutritionService }],
     },
     {
       id: 'progreso',
@@ -187,7 +184,8 @@ export function AthleteShell({
           {pending > 0 && active !== 'revisiones' && (
             <Link to={links.sectionHref('revisiones')} className="btn btn-primary athlete-followup">
               <MessageSquareText size={16} aria-hidden />
-              Responder {pending} {pending === 1 ? 'seguimiento' : 'seguimientos'}
+              Responder {pending}
+              <span>{pending === 1 ? ' seguimiento' : ' seguimientos'}</span>
             </Link>
           )}
           <AthleteNote key={link.linkId} link={link} />

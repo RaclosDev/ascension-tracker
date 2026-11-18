@@ -560,12 +560,396 @@
   }
 }
 
-/* Nutrición: the day picker of the intake log. */
-.athlete-nutrition-day {
+/* Nutrición: the plan as a summary on top, the food diary by days and meals under it. */
+.athlete-nutrition {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.coach-student .athlete-nutrition > .card {
+  margin: 0;
+  padding: 20px;
+}
+.athlete-nutrition-own {
+  margin: 12px 0 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+.plan-view,
+.plan-summary {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.plan-view-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+.plan-view-head > p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+.plan-view-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.plan-summary-notes {
+  max-width: 75ch;
+}
+.plan-summary h3 {
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.plan-summary p {
+  margin: 0;
+}
+.plan-summary-notes p,
+.plan-summary-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.plan-summary-days {
+  display: grid;
+  gap: 20px 32px;
+}
+.plan-summary-day {
+  min-width: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-medium);
+}
+.plan-summary-kcal {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.plan-summary-macros {
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.plan-summary-day ul {
+  display: grid;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.plan-summary-day li {
+  padding: 8px 0;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.plan-summary-meal {
+  font-size: 0.92rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+}
+@media (min-width: 720px) {
+  .plan-summary-days {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.diary {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.diary-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+.diary-nav {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.diary-nav .btn {
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+}
+.diary-week {
+  min-width: 9.5rem;
+  margin: 0;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.diary-summary {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+.diary-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.diary-days li + li {
+  border-left: 1px solid var(--border-subtle);
+}
+.diary-day {
   display: grid;
   gap: 4px;
-  margin: 16px 0 8px;
+  align-content: start;
+  width: 100%;
+  min-height: 92px;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.diary-day:hover {
+  background: var(--bg-secondary);
+}
+.diary-day:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: -2px;
+}
+.diary-day[aria-pressed='true'] {
+  background: var(--accent-light);
+  outline: 2px solid var(--text-primary);
+  outline-offset: -2px;
+  color: var(--text-primary);
+}
+.diary-day-name {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  font-size: 0.8rem;
+}
+.diary-day-name b {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+.diary-day-name i {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.diary-day-kcal {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.diary-day-kcal small {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+.diary-day[data-state='empty'] .diary-day-kcal,
+.diary-day[data-state='future'] .diary-day-kcal {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+.diary-day-state {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.75rem;
+}
+.diary-day-state::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+.diary-day[data-state='on'] .diary-day-state {
+  color: var(--text-primary);
+}
+.diary-day[data-state='on'] .diary-day-state::before {
+  border-color: var(--success, var(--accent-primary));
+  background: var(--success, var(--accent-primary));
+}
+.diary-day[data-state='off'] .diary-day-state::before,
+.diary-day[data-state='today'] .diary-day-state::before {
+  background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+}
+.diary-day[data-state='logged'] .diary-day-state::before {
+  background: currentColor;
+}
+.diary-day[data-state='empty'] .diary-day-state::before,
+.diary-day[data-state='future'] .diary-day-state::before {
+  border-style: dashed;
+}
+.diary-detail {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding-top: 6px;
+}
+.diary-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+.diary-detail-head h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.diary-detail-head p,
+.diary-empty {
+  margin: 0;
   font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+.diary-totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 24px;
+  margin: 0;
+}
+.diary-totals > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.diary-totals dt {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.diary-totals dd {
+  margin: 0;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.diary-totals dd b {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+.diary-meter {
+  display: block;
+  height: 4px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: var(--border-subtle);
+  overflow: hidden;
+}
+.diary-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--text-primary);
+}
+.diary-meals {
+  display: grid;
+  gap: 0 32px;
+}
+.diary-meal {
+  min-width: 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--border-medium);
+}
+.diary-meal header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.diary-meal h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.diary-meal header p {
+  margin: 0;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.diary-meal header b {
+  color: var(--text-primary);
+}
+.diary-meal ul {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+.diary-meal li {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+.diary-meal li > :first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.diary-meal li > :last-child {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.diary-meal small {
+  color: var(--text-secondary);
+}
+@media (min-width: 720px) {
+  .diary-totals {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .diary-meals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 719px) {
+  .diary-bar {
+    justify-content: flex-start;
+  }
+  .diary-day {
+    justify-items: center;
+    min-height: 76px;
+    padding: 8px 2px;
+    text-align: center;
+  }
+  .diary-day-name {
+    flex-direction: column;
+    gap: 0;
+    align-items: center;
+  }
+  .diary-day-name i,
+  .diary-day-kcal small {
+    display: none;
+  }
+  .diary-day-kcal {
+    font-size: 0.78rem;
+  }
+  .diary-day-state {
+    font-size: 0;
+    gap: 0;
+  }
 }
 
 /* Resumen: the numbers first, then this week's log, then what is planned. */
@@ -1508,6 +1892,18 @@
     min-height: 32px;
   }
 }
+/* On one line with the tabs, the action keeps its verb and count so no tab is cut off. */
+@media (min-width: 1200px) and (max-width: 1599px) {
+  .athlete-top .athlete-followup span {
+    display: none;
+  }
+  .athlete-top .athlete-tabs {
+    column-gap: 16px;
+  }
+  .athlete-top .athlete-followup {
+    padding-inline: 12px;
+  }
+}
 /* The week's tools ride in its bar; they drop to a second line only when they do not fit. */
 .week-bar .week-tools {
   flex: 1 1 auto;
@@ -1529,5 +1925,27 @@
   .week-bar .week-tools {
     flex: 1 1 100%;
     justify-content: flex-start;
+  }
+}
+
+/* Progreso: the two weight charts share a row on a desk, without a card inside the card. */
+.coach-student .charts-grid {
+  margin-bottom: 0;
+}
+.coach-student .charts-grid .chart-card {
+  min-width: 0;
+  padding: 16px 0 0;
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+@media (min-width: 1000px) {
+  .coach-student .charts-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+  .coach-student .charts-grid .chart-card.full-width {
+    grid-column: auto;
   }
 }

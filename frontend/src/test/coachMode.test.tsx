@@ -1,7 +1,7 @@
 import { confirmAction } from '../lib/confirmation';
 vi.mock('../lib/confirmation', () => ({ confirmAction: vi.fn().mockResolvedValue(true) }));
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { ReactNode } from 'react';
@@ -430,7 +430,9 @@ describe('CoachClientPage', () => {
     expect(mockedApi.get.mock.calls.some(([url]) => url.includes('/weights'))).toBe(false);
     expect(mockedApi.get.mock.calls.some(([url]) => url.includes('/nutrition/'))).toBe(false);
     fireEvent.click(screen.getByRole('link', { name: 'Nutrición' }));
-    expect((await screen.findByTestId('macro-pie')).dataset.slices).toBe('3');
+    expect(
+      await within(await screen.findByRole('region', { name: 'Día abierto' })).findByText('Arroz'),
+    ).toBeTruthy();
     // Evolución lives with the athlete's records, a different group of the navigation.
     cleanup();
     renderAt('/entrenador/atletas/link-9?seccion=progreso', routes);

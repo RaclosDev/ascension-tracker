@@ -40,6 +40,7 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
         <label className="coach-schedule-field flex flex-col gap-2 min-w-0">
           <span>Día del seguimiento</span>
           <select
+            className="form-input"
             value={schedule.day}
             onChange={(e) => setSchedule({ ...schedule, day: Number(e.target.value) })}
           >
@@ -54,6 +55,7 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
           <span>Hora del seguimiento</span>
           <input
             type="time"
+            className="form-input"
             required
             value={schedule.time.slice(0, 5)}
             onChange={(e) => setSchedule({ ...schedule, time: e.target.value })}
@@ -62,6 +64,7 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
         <label className="coach-schedule-field flex flex-col gap-2 min-w-0 sm:col-span-2">
           <span>Zona horaria</span>
           <input
+            className="form-input"
             required
             list="review-time-zones"
             maxLength={80}

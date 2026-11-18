@@ -1,15 +1,11 @@
-import { Suspense, useState } from 'react';
-import { format } from 'date-fns';
-import { ClipboardList, Target, Utensils } from 'lucide-react';
+import { NotebookPen, Utensils } from 'lucide-react';
 import { useClientData, type CoachTargets } from '../../lib/coach/api';
-import type { FoodLog, WeekSummary } from '../../types/api';
-import { NutritionAdherenceSection } from './NutritionAdherenceSection';
+import { useCoachNutritionPlan } from '../../lib/coach/nutritionPlan';
+import { NutritionDiary } from './NutritionDiary';
 import { NutritionPlanSection } from './NutritionPlanSection';
-import { Skeleton } from '../ui/skeleton';
-import { lazyWithRetry } from '../../utils/lazyWithRetry';
-import { Section, Stat, QueryState, WeeklyList, num } from './ClientSection';
-const NutritionPieChart = lazyWithRetry(() => import('../nutrition/NutritionPieChart'));
+import { Section, num } from './ClientSection';
 
+/** What the coach prescribes on top, and under it what the athlete actually ate, day by day. */
 export default function NutritionSection({
   linkId,
   canEditPlan,
@@ -17,106 +13,25 @@ export default function NutritionSection({
   linkId: string;
   canEditPlan: boolean;
 }) {
-  const [date, setDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
+  const plan = useCoachNutritionPlan(linkId);
   const targets = useClientData<CoachTargets>(linkId, 'targets', true);
-  const weekly = useClientData<WeekSummary[]>(linkId, 'nutrition/calories/weekly', true);
-  const logs = useClientData<FoodLog[]>(linkId, `nutrition/logs?date=${date}`, Boolean(date));
-  const t = targets.data;
-  const totals = (logs.data ?? []).reduce(
-    (acc, log) => ({
-      kcal: acc.kcal + (log.kcal || 0),
-      protein: acc.protein + (log.protein || 0),
-      carbs: acc.carbs + (log.carbs || 0),
-      fat: acc.fat + (log.fat || 0),
-    }),
-    { kcal: 0, protein: 0, carbs: 0, fat: 0 },
-  );
+  const own = targets.data;
 
   return (
-    <div className="athlete-manage athlete-nutrition">
-      <div className="athlete-manage-main">
-        <Section title="Pauta de nutrición" icon={<Utensils size={18} aria-hidden />}>
-          <NutritionPlanSection linkId={linkId} canEdit={canEditPlan} />
-        </Section>
-      </div>
-      <div className="athlete-manage-side">
-        <Section title="Adherencia a la pauta" icon={<Target size={18} aria-hidden />}>
-          <NutritionAdherenceSection linkId={linkId} />
-          <details className="mt-4">
-            <summary className="cursor-pointer font-semibold">
-              Objetivos personales del atleta
-            </summary>
-            <p className="text-sm my-2">
-              Estos valores proceden de sus ajustes personales. La pauta del entrenador los
-              sustituye mientras esté activa; la adherencia anterior se calcula contra la pauta
-              vigente en cada fecha.
-            </p>
-            {t && (
-              <div className="grid grid-cols-2 gap-4 mb-2">
-                <Stat label="Objetivo" value={num(t.kcal, ' kcal')} />
-                <Stat label="Proteína" value={num(t.customProteinGrams, ' g')} />
-                <Stat label="Carbohidratos" value={num(t.customCarbsGrams, ' g')} />
-                <Stat label="Grasa" value={num(t.customFatGrams, ' g')} />
-              </div>
-            )}
-          </details>
-        </Section>
-        <Section title="Registro de ingesta" icon={<ClipboardList size={18} aria-hidden />}>
-          {weekly.data && <WeeklyList weeks={weekly.data} unit=" kcal/día" />}
-
-          <label className="athlete-nutrition-day">
-            Detalle del día
-            <input
-              type="date"
-              value={date}
-              max={format(new Date(), 'yyyy-MM-dd')}
-              onChange={(e) => setDate(e.target.value)}
-              className="form-input min-h-11"
-            />
-          </label>
-          <QueryState isLoading={logs.isLoading} isError={logs.isError} />
-          {logs.data?.length === 0 && (
-            <p style={{ color: 'var(--text-secondary)' }}>
-              Nada registrado ese día. No equivale a haber consumido cero calorías.
-            </p>
-          )}
-          {logs.data && logs.data.length > 0 && (
-            <>
-              <ul className="flex flex-col gap-1 mb-2">
-                {logs.data.map((log, i) => (
-                  <li key={log.id ?? i} className="flex justify-between gap-2">
-                    <span className="truncate">
-                      {log.product}{' '}
-                      <span style={{ color: 'var(--text-secondary)' }}>
-                        · {num(log.quantity, ' g')}
-                      </span>
-                    </span>
-                    <span className="text-foreground">{num(log.kcal, ' kcal')}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mx-auto mb-2" style={{ width: '100%', maxWidth: 300, height: 250 }}>
-                <Suspense fallback={<Skeleton className="w-48 h-48 rounded-full mx-auto" />}>
-                  <NutritionPieChart pieData={macroPieData(totals)} />
-                </Suspense>
-              </div>
-              <p className="text-sm text-foreground">
-                Total {num(totals.kcal, ' kcal')} · P {num(totals.protein, ' g')} · C{' '}
-                {num(totals.carbs, ' g')} · G {num(totals.fat, ' g')}
-              </p>
-            </>
-          )}
-        </Section>
-      </div>
+    <div className="athlete-nutrition">
+      <Section title="Pauta de nutrición" icon={<Utensils size={18} aria-hidden />}>
+        <NutritionPlanSection linkId={linkId} canEdit={canEditPlan} />
+        {plan.isSuccess && !plan.data && own && (
+          <p className="athlete-nutrition-own">
+            Objetivos propios de tu atleta: {num(own.kcal, ' kcal')} · P{' '}
+            {num(own.customProteinGrams, ' g')} · C {num(own.customCarbsGrams, ' g')} · G{' '}
+            {num(own.customFatGrams, ' g')}
+          </p>
+        )}
+      </Section>
+      <Section title="Diario de comidas" icon={<NotebookPen size={18} aria-hidden />}>
+        <NutritionDiary linkId={linkId} />
+      </Section>
     </div>
   );
-}
-
-/** Same split as the client's own diary: kcal from each macro plus what is left of the target. */
-function macroPieData(totals: { kcal: number; protein: number; carbs: number; fat: number }) {
-  return [
-    { name: 'Proteínas', value: totals.protein * 4, color: 'var(--color-protein)' },
-    { name: 'Hidratos', value: totals.carbs * 4, color: 'var(--color-carbs)' },
-    { name: 'Grasas', value: totals.fat * 9, color: 'var(--color-fat)' },
-  ];
 }

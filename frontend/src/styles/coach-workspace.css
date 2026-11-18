@@ -412,8 +412,8 @@
   color: var(--text-secondary);
 }
 .coach-sort select,
-.coach-schedule-field input,
-.coach-schedule-field select {
+.coach-schedule-field input:not(.form-input),
+.coach-schedule-field select:not(.form-input) {
   min-height: 44px;
   color: var(--text-primary);
   background: var(--bg-input);

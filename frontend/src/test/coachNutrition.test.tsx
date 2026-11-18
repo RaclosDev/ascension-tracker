@@ -119,6 +119,7 @@ describe('Pauta de nutrición', () => {
       response: { data: { message: 'La pauta activa ha cambiado.' } },
     });
     const first = wrap(<NutritionPlanSection linkId="l1" canEdit />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar pauta' }));
     await screen.findByLabelText('Proteína día de entreno');
     fill('Proteína día de entreno', '190');
     fireEvent.click(screen.getByRole('button', { name: 'Publicar pauta' }));
@@ -140,6 +141,7 @@ describe('Pauta de nutrición', () => {
     }));
     mockedApi.post.mockResolvedValue({ data: '' });
     wrap(<NutritionPlanSection linkId="l1" canEdit />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar pauta' }));
     await screen.findByLabelText('Proteína día de entreno');
     fill('Proteína día de entreno', '190');
     vi.mocked(confirmAction).mockResolvedValue(false);
