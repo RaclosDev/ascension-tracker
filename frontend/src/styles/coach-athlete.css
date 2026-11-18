@@ -1271,7 +1271,47 @@
     border-left: 0;
   }
 }
+.week-days-strip {
+  display: none;
+}
 @media (max-width: 640px) {
+  /* Seven columns do not fit a phone: this strip says which day is which and jumps to it. */
+  .week-days-strip {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+    padding: 6px 0;
+    background: var(--bg-primary);
+  }
+  .week-days-strip button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+  .week-days-strip button span {
+    font-size: 0.75rem;
+    font-weight: 400;
+  }
+  .week-days-strip button[data-busy] {
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+  }
+  .week-days-strip button:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+  }
   .week-cols {
     scroll-snap-type: x proximity;
   }
@@ -1285,6 +1325,17 @@
   }
   .week-tools .btn {
     min-height: 44px;
+  }
+  /* One swipeable row instead of five wrapped rows, so the days start closer to the top. */
+  .week-tools {
+    flex-wrap: nowrap;
+    margin-inline: -8px;
+    padding: 2px 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .week-tools-group {
+    flex-wrap: nowrap;
   }
 }
 .coach-student .coach-day-flat {

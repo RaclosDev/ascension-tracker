@@ -191,7 +191,8 @@ for (const width of [390, 1920]) {
     await page.screenshot({ path: info.outputPath('weekly-compact.png'), fullPage: true });
     await expect(session.getByLabel('Buscar ejercicio para añadir')).toHaveCount(0);
     // The week notes live in their own tab of the side panel.
-    const openNotes = () => page.getByRole('button', { name: 'Notas', exact: true }).click();
+    const openNotes = () =>
+      page.getByRole('button', { name: 'Ajustes de la semana', exact: true }).click();
     await openNotes();
     await page
       .getByLabel('Comentario para el atleta')

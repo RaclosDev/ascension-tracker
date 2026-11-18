@@ -177,8 +177,10 @@ export function ExerciseRow({
   };
   const keys = (i: number, column: number) => (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
+      // Enter walks down the column like a spreadsheet; only the last row grows the exercise.
       event.preventDefault();
-      addAfter(i, column);
+      if (i < rows.length - 1) focus(i + 1, column);
+      else addAfter(i, column);
     } else if (event.key === 'ArrowDown' && i < rows.length - 1) {
       event.preventDefault();
       focus(i + 1, column);

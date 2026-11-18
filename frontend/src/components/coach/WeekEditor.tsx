@@ -48,7 +48,7 @@ const AUTOSAVE_MS = 1500;
 const PANELS = [
   { id: 'previous', label: 'Semana pasada' },
   { id: 'library', label: 'Biblioteca' },
-  { id: 'notes', label: 'Notas' },
+  { id: 'notes', label: 'Ajustes de la semana' },
 ] as const;
 type Panel = (typeof PANELS)[number]['id'];
 
@@ -151,6 +151,22 @@ export function WeekEditor({
         void reload();
       }
     }
+  };
+  const cols = useRef<HTMLFieldSetElement>(null);
+  const drawer = useRef<HTMLFieldSetElement>(null);
+  // An opened panel may land above or below what is on screen: bring it into view and focus it.
+  useEffect(() => {
+    if (!panel) return;
+    drawer.current?.scrollIntoView?.({ block: 'nearest' });
+    drawer.current?.querySelector<HTMLButtonElement>('[aria-label="Cerrar panel"]')?.focus({
+      preventScroll: true,
+    });
+  }, [panel]);
+  const closePanel = () => {
+    const opener =
+      panel && document.querySelector<HTMLButtonElement>(`[data-week-panel="${panel}"]`);
+    setPanel(null);
+    if (opener) opener.focus();
   };
   const autosave = useRef<() => void>(() => undefined);
   useEffect(() => {
@@ -299,9 +315,9 @@ export function WeekEditor({
         : published
           ? 'Semana publicada'
           : saved.publishedVersion != null
-            ? 'Cambios guardados sin publicar'
+            ? 'Cambios guardados · publica para que el atleta los vea'
             : saved.version > 0
-              ? 'Borrador guardado'
+              ? 'Borrador guardado · el atleta aún no lo ve'
               : 'Semana sin preparar';
   return (
     <section className="week-editor min-w-0" aria-label="Preparar semana">
@@ -355,7 +371,7 @@ export function WeekEditor({
                 if (
                   !(await confirmAction({
                     title: 'Publicar semana',
-                    description: `${sessions} sesiones y ${sets} series en la semana, con vigencia desde el ${formatCoachDate(start)}. El atleta verá las notas públicas. Su plan actual continúa hasta el inicio; se sustituirá cualquier plan previsto para esa fecha. Los días transcurridos no se asignan como pendientes.`,
+                    description: `El atleta verá ${sessions} ${sessions === 1 ? 'sesión' : 'sesiones'} (${sets} series) y tu comentario desde el ${formatCoachDate(start)}. Sustituye a lo que tuviera pautado a partir de ese día; los días ya pasados no se le marcan como pendientes.`,
                     confirmLabel: 'Publicar semana',
                   }))
                 )
@@ -396,6 +412,11 @@ export function WeekEditor({
             className="btn btn-secondary"
             data-tour="copy-week"
             disabled={locked || !previous.data || previous.isFetching}
+            title={
+              !locked && !previous.data && !previous.isFetching
+                ? 'No hay una semana anterior publicada de la que partir'
+                : undefined
+            }
             onClick={async () => {
               if (!lastWeek) return;
               if (!lastWeek.days.length) {
@@ -422,7 +443,11 @@ export function WeekEditor({
           <button
             type="button"
             className="btn btn-secondary"
-            title="Copia la semana anterior con las cargas y repeticiones que el atleta registró"
+            title={
+              !locked && (!source || !lastWeek?.days.length)
+                ? 'No hay una semana anterior publicada de la que partir'
+                : 'Copia la semana anterior con las cargas y repeticiones que el atleta registró'
+            }
             disabled={locked || !source || !lastWeek?.days.length || copyingDone}
             onClick={async () => {
               if (!lastWeek || !source) return;
@@ -471,6 +496,11 @@ export function WeekEditor({
             type="button"
             className="btn btn-secondary"
             disabled={!program.days.length}
+            title={
+              program.days.length
+                ? 'Copia la semana como texto para pegarla en un mensaje'
+                : 'Añade alguna sesión para poder copiarla'
+            }
             onClick={() =>
               void navigator.clipboard
                 .writeText(weekText(program, saved.weekStart))
@@ -587,8 +617,34 @@ export function WeekEditor({
         </div>
       )}
       {preview && <ProgramPreview program={program} />}
+      {!preview && (
+        <nav className="week-days-strip" aria-label="Ir a un día de la semana">
+          {WEEKDAY_LABELS.map((weekday, i) => {
+            const sessions = findDay(program, 1, i + 1)?.exercises.length;
+            return (
+              <button
+                key={weekday}
+                type="button"
+                data-busy={sessions != null ? '' : undefined}
+                aria-label={`${dayName(i + 1)}: ${sessions != null ? 'con sesión' : 'descanso'}`}
+                onClick={() => {
+                  const column = cols.current?.querySelectorAll('.week-col').item(i);
+                  column?.scrollIntoView?.({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'start',
+                  });
+                }}
+              >
+                {weekday.slice(0, 1)}
+                <span>{dateOf(i + 1, 'd')}</span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
       <div className="week-body" data-drawer={panel ? '' : undefined} hidden={preview}>
-        <fieldset disabled={locked} className="week-cols" aria-label="Días de la semana">
+        <fieldset ref={cols} disabled={locked} className="week-cols" aria-label="Días de la semana">
           <DragDropContext onDragEnd={onDragEnd}>
             {WEEKDAY_LABELS.map((weekday, i) => {
               const dayIndex = i + 1;
@@ -674,7 +730,17 @@ export function WeekEditor({
             })}
           </DragDropContext>
         </fieldset>
-        <fieldset disabled={locked} className="week-drawer" hidden={!panel}>
+        <fieldset
+          ref={drawer}
+          disabled={locked}
+          className="week-drawer"
+          hidden={!panel}
+          onKeyDown={(e) => {
+            if (e.key !== 'Escape' || e.defaultPrevented) return;
+            e.stopPropagation();
+            closePanel();
+          }}
+        >
           <div className="card week-panel">
             <header className="week-panel-head">
               <h3>{PANELS.find((option) => option.id === panel)?.label}</h3>
@@ -682,7 +748,7 @@ export function WeekEditor({
                 type="button"
                 className="set-icon"
                 aria-label="Cerrar panel"
-                onClick={() => setPanel(null)}
+                onClick={closePanel}
               >
                 <X size={18} aria-hidden />
               </button>
@@ -751,7 +817,7 @@ export function WeekEditor({
                   />
                 </label>
                 <label className="flex flex-col gap-1 min-w-0">
-                  Decisión que aplicar al publicar
+                  Qué cambias esta semana y por qué
                   <textarea
                     className="form-input min-h-11"
                     maxLength={2000}

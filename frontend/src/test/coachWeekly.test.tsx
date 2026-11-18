@@ -142,10 +142,10 @@ describe('preparación semanal', () => {
     fireEvent.change(screen.getByLabelText('Notas privadas del entrenador'), {
       target: { value: 'Solo para mí' },
     });
-    fireEvent.change(screen.getByLabelText('Decisión que aplicar al publicar'), {
+    fireEvent.change(screen.getByLabelText('Qué cambias esta semana y por qué'), {
       target: { value: 'Reducir fatiga' },
     });
-    await waitFor(() => expect(screen.getByText('Borrador guardado')).toBeInTheDocument(), {
+    await waitFor(() => expect(screen.getByText(/^Borrador guardado/)).toBeInTheDocument(), {
       timeout: 4000,
     });
     expect(mocked.put).toHaveBeenCalledTimes(1);
