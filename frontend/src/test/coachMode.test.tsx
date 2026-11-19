@@ -12,6 +12,7 @@ import { SettingsCoachSection } from '../components/settings/SettingsCoachSectio
 import { peekPendingInvitation, rememberPendingInvitation } from '../lib/coach/api';
 import CoachClientPage from '../pages/CoachClientPage';
 import type { CompletedWorkout, Exercise } from '../lib/workout/types';
+import { chooseOption } from './selectMenu';
 
 vi.mock('../api/client', () => ({
   default: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
@@ -487,8 +488,8 @@ describe('CoachClientPage', () => {
     renderAt('/entrenador/atletas/link-9?seccion=entrenamiento', routes);
 
     const select = await screen.findByLabelText('Programa');
-    await screen.findByRole('option', { name: 'Hipertrofia' });
-    fireEvent.change(select, { target: { value: 'p-2' } });
+    await screen.findByRole('menuitemradio', { name: 'Hipertrofia', hidden: true });
+    chooseOption(select, 'p-2');
     fireEvent.change(screen.getByLabelText('Empieza el'), { target: { value: '2026-11-09' } });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Asignar' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Asignar' }));

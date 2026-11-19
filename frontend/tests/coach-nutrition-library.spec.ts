@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 import type { NutritionTemplate } from '../src/lib/coach/nutritionTemplates';
 import type { NutritionPlan, NutritionPlanRequest } from '../src/lib/coach/nutritionPlan';
@@ -119,7 +120,7 @@ for (const width of [390, 1440]) {
     expect(publications).toBe(0);
     await page.goto('/entrenador/atletas/l1?seccion=nutricion');
     await page.getByRole('button', { name: 'Usar pauta de biblioteca' }).click();
-    await page.getByLabel('Pauta de biblioteca', { exact: true }).selectOption('t1');
+    await chooseOption(page.getByLabel('Pauta de biblioteca', { exact: true }), 't1');
     await page.getByRole('button', { name: 'Copiar al borrador' }).click();
     await expect(page.getByLabel('Proteína día de entreno', { exact: true })).toHaveValue('180');
     expect(publications).toBe(0);

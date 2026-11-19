@@ -4,7 +4,7 @@
 .coach-roster-toolbar .coach-search {
   flex-basis: 320px;
 }
-.coach-roster-toolbar .coach-sort select {
+.coach-roster-toolbar .coach-sort :is(select, .ui-select) {
   min-width: 0;
   max-width: 100%;
 }
@@ -148,7 +148,7 @@
   .coach-roster-toolbar .coach-sort {
     flex: 1 1 100%;
   }
-  .coach-roster-toolbar .coach-sort select {
+  .coach-roster-toolbar .coach-sort .ui-select {
     flex: 1;
   }
 }

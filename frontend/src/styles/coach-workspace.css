@@ -50,7 +50,7 @@
 .coach-workspace a:focus-visible,
 .coach-workspace button:focus-visible,
 .coach-workspace input:focus-visible,
-.coach-workspace select:focus-visible {
+.coach-workspace .ui-select:focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: 3px;
 }
@@ -411,9 +411,9 @@
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
-.coach-sort select,
+.coach-sort .ui-select,
 .coach-schedule-field input,
-.coach-schedule-field select {
+.coach-schedule-field .ui-select {
   min-height: 44px;
   color: var(--text-primary);
   background: var(--bg-input);

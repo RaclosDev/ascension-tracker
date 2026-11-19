@@ -19,6 +19,7 @@ import { nextReviewLabel, scheduleLabel } from '../lib/coach/coachSchedule';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
 import { useSessionDraft } from '../hooks/useSessionDraft';
 import { isAxiosError } from 'axios';
+import { Select } from '@/components/ui/select';
 
 const muted = { color: 'var(--text-secondary)' };
 
@@ -189,13 +190,13 @@ function CheckinForm({ linkId, data }: { linkId: string; data: ClientCheckin }) 
       </h2>
       <label>
         Tipo de envío
-        <select
+        <Select
           value={submissionStatus}
           onChange={(event) => setSubmissionStatus(event.target.value as 'PARTIAL' | 'FINAL')}
         >
           <option value="FINAL">Seguimiento final de la semana</option>
           <option value="PARTIAL">Avance parcial; quedan sesiones o datos</option>
-        </select>
+        </Select>
       </label>
       {sent && (
         <p className="text-sm" style={muted}>

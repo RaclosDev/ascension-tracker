@@ -12,6 +12,7 @@ import {
 } from '@/lib/coach/prescription';
 import { restLabel } from '@/lib/coach/today';
 import { usePrescribing } from './prescribing';
+import { Select } from '@/components/ui/select';
 
 const MAX_SETS = 20;
 const KINDS: { value: SetTarget['kind']; label: string; tag: string }[] = [
@@ -299,7 +300,7 @@ export function ExerciseRow({
           </label>
           <label>
             La carga se pauta en
-            <select
+            <Select
               className="form-input"
               value={mode === 'KG' ? 'KG' : lift}
               onChange={(e) => setLoadMode(e.target.value)}
@@ -308,7 +309,7 @@ export function ExerciseRow({
               <option value="squat">% del máximo de sentadilla</option>
               <option value="bench">% del máximo de banca</option>
               <option value="deadlift">% del máximo de peso muerto</option>
-            </select>
+            </Select>
           </label>
           {mode === 'KG' && !shape && (
             <label>
@@ -443,7 +444,7 @@ export function ExerciseRow({
               </div>
               {openSet === i ? (
                 <div className="set-detail">
-                  <select
+                  <Select
                     className="form-input"
                     aria-label={`Tipo de la serie ${i + 1}`}
                     value={row.kind}
@@ -454,7 +455,7 @@ export function ExerciseRow({
                         {item.label}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   <input
                     className="form-input"
                     aria-label={`Nota de la serie ${i + 1}`}

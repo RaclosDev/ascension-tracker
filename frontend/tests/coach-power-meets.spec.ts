@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 import type { MeetContent, PowerMeet } from '../src/lib/coach/powerMeets';
 
@@ -83,9 +84,9 @@ for (const width of [390, 1440]) {
     ]) {
       await page.getByLabel(`${lift} · Intento 1 · Previsto (kg)`).fill(planned);
       await page.getByLabel(`${lift} · Intento 1 · Realizado (kg)`).fill(actual);
-      await page.getByLabel(`${lift} · Intento 1 · Resultado`).selectOption('VALID');
+      await chooseOption(page.getByLabel(`${lift} · Intento 1 · Resultado`), 'VALID');
       for (const number of [2, 3]) {
-        await page.getByLabel(`${lift} · Intento ${number} · Resultado`).selectOption('WITHDRAWN');
+        await chooseOption(page.getByLabel(`${lift} · Intento ${number} · Resultado`), 'WITHDRAWN');
       }
     }
     await expect(page.getByText('510 kg', { exact: true })).toBeVisible();

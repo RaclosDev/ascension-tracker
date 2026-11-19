@@ -180,10 +180,15 @@ test.describe('Sesión de Entrenamiento en Vivo (Workout Live)', () => {
     await startWorkoutWithExercise(page);
 
     // Verificar selector de descanso en la tarjeta ('60s', '90s', etc.)
-    const restSelect = page.locator('.exercise-card-rest-select');
+    const restSelect = page.locator('.exercise-card-rest-select').first();
     await expect(restSelect).toBeVisible({ timeout: 5000 });
-    await expect(restSelect.locator('option', { hasText: '1m 30s' })).toBeAttached();
-    await expect(restSelect.locator('option', { hasText: /^1m$/ })).toBeAttached();
+    const restMenu = page.locator(`[id="${await restSelect.getAttribute('aria-controls')}"]`);
+    await expect(
+      restMenu.getByRole('menuitemradio', { name: '1m 30s', includeHidden: true }),
+    ).toBeAttached();
+    await expect(
+      restMenu.getByRole('menuitemradio', { name: /^1m$/, includeHidden: true }),
+    ).toBeAttached();
 
     // Al completar serie, se activa el RestBanner flotante
     const checkBtn = page

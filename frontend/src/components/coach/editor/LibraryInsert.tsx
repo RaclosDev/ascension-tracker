@@ -8,6 +8,7 @@ import {
   type ProgramExercise,
 } from '@/lib/coach/coachPrograms';
 import { WEEKDAY_LABELS } from '@/lib/coach/weekdays';
+import { Select } from '@/components/ui/select';
 
 export function LibraryInsert({
   onInsert,
@@ -87,7 +88,7 @@ export function LibraryInsert({
         </label>
         <label className="flex flex-col gap-1 min-w-0">
           Plantilla
-          <select
+          <Select
             className="form-input min-h-11"
             value={id}
             onChange={(e) => {
@@ -120,7 +121,7 @@ export function LibraryInsert({
                   {p.name} · {p.dayCount} sesiones
                 </option>
               ))}
-          </select>
+          </Select>
         </label>
         {library.isError && (
           <p role="alert">
@@ -140,7 +141,7 @@ export function LibraryInsert({
           <>
             <label className="flex flex-col gap-1 min-w-0">
               Contenido
-              <select
+              <Select
                 className="form-input min-h-11"
                 value={mode}
                 onChange={(e) => setMode(e.target.value)}
@@ -148,11 +149,11 @@ export function LibraryInsert({
                 <option value="session">Una sesión o bloque</option>
                 <option value="week">Una semana completa</option>
                 <option value="exercises">Ejercicios sueltos de una sesión</option>
-              </select>
+              </Select>
             </label>
             <label className="flex flex-col gap-1 min-w-0">
               {mode === 'week' ? 'Semana de origen (elige una sesión)' : 'Sesión de origen'}
-              <select
+              <Select
                 className="form-input min-h-11"
                 value={day}
                 onChange={(e) => {
@@ -165,12 +166,12 @@ export function LibraryInsert({
                     S{d.week} · {d.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             {mode !== 'week' && (
               <label className="flex flex-col gap-1 min-w-0">
                 Día de destino
-                <select
+                <Select
                   className="form-input min-h-11"
                   value={target}
                   onChange={(e) => setTarget(Number(e.target.value))}
@@ -180,7 +181,7 @@ export function LibraryInsert({
                       {label}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
             )}
             {selected && mode !== 'exercises' && (

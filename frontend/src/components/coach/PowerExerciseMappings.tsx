@@ -3,6 +3,7 @@ import { useClientData, useClientCustomExercises } from '@/lib/coach/api';
 import { POWER_LABELS, POWER_LIFTS, type PowerExerciseMapping } from '@/lib/coach/powerlifting';
 import { useExerciseCatalog, BASE_EXERCISES } from '@/lib/workout/exercises';
 import type { CompletedWorkout } from '@/lib/workout/types';
+import { Select } from '@/components/ui/select';
 
 export function PowerExerciseMappings({
   linkId,
@@ -66,7 +67,7 @@ export function PowerExerciseMappings({
                 {row.variant?.grip && ` · ${row.variant.grip}`}
                 {row.variant?.machine && ` · ${row.variant.machine}`}
               </span>
-              <select
+              <Select
                 className="form-input min-h-11"
                 value={mapping ? `${mapping.lift}:${mapping.kind}` : 'AUTO'}
                 onChange={(event) => {
@@ -97,7 +98,7 @@ export function PowerExerciseMappings({
                   )),
                 )}
                 <option value="SQUAT:EXCLUDE">Excluir de S/B/D</option>
-              </select>
+              </Select>
             </label>
           );
         })}

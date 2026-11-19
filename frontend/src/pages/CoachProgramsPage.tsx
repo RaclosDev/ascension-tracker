@@ -19,6 +19,7 @@ import {
   useDeleteProgram,
   useDuplicateProgram,
 } from '../lib/coach/coachPrograms';
+import { Select } from '@/components/ui/select';
 
 /** The coach's program library: the starting point for building and, later, assigning plans. */
 export default function CoachProgramsPage() {
@@ -91,7 +92,7 @@ export default function CoachProgramsPage() {
         </label>
         <label className="flex flex-col gap-1 min-w-0">
           <span>Estado</span>
-          <select
+          <Select
             className="form-input min-h-11"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
@@ -99,11 +100,11 @@ export default function CoachProgramsPage() {
             <option value="ALL">Todos</option>
             <option value="DRAFT">Borradores</option>
             <option value="READY">Listos para asignar</option>
-          </select>
+          </Select>
         </label>
         <label className="flex flex-col gap-1 min-w-0">
           Tipo
-          <select
+          <Select
             className="form-input min-h-11"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -116,7 +117,7 @@ export default function CoachProgramsPage() {
                   {label}
                 </option>
               ))}
-          </select>
+          </Select>
         </label>
         <label className="flex gap-2 items-center min-h-11">
           <input

@@ -20,6 +20,7 @@ import type { CoachRecipe } from '../lib/coach/coachRecipes';
 import type { NutritionPlan, PlannedMeal } from '../lib/coach/nutritionPlan';
 import type { Meal } from '../types/api';
 import { clearSessionDrafts } from '../lib/sessionDrafts';
+import { chooseOption } from './selectMenu';
 
 const mockedApi = vi.mocked(api);
 
@@ -113,9 +114,7 @@ describe('Comidas pautadas', () => {
     fireEvent.change(screen.getByLabelText('Nombre de la comida 1 día de entreno'), {
       target: { value: ' Comida ' },
     });
-    fireEvent.change(screen.getByLabelText('Receta de la comida 1 día de entreno'), {
-      target: { value: 'r1' },
-    });
+    chooseOption(screen.getByLabelText('Receta de la comida 1 día de entreno'), 'r1');
     fireEvent.change(screen.getByLabelText('Raciones de la comida 1 día de entreno'), {
       target: { value: '1.5' },
     });
