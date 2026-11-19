@@ -15,6 +15,7 @@ import {
   type SessionStatus,
 } from '@/lib/coach/sessions';
 import { type CompletedWorkout } from '@/lib/workout/types';
+import { Select } from '@/components/ui/select';
 
 const STATUS_COLORS: Record<SessionStatus, string> = {
   DONE: 'var(--success, #22c55e)',
@@ -257,7 +258,7 @@ export function CommentBox({
           <div className="flex flex-wrap gap-2 mt-2">
             <label className="text-xs">
               Ejercicio
-              <select
+              <Select
                 value={context}
                 onChange={(event) => {
                   setContext(event.target.value);
@@ -273,7 +274,7 @@ export function CommentBox({
                     {item.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             <label className="text-xs">
               Serie

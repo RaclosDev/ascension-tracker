@@ -1,5 +1,6 @@
 import React from 'react';
 import toast from 'react-hot-toast';
+import { Select } from '@/components/ui/select';
 
 const parseSafeFloat = (val: unknown, fallback = 0) => {
   const parsed = parseFloat(String(val));
@@ -69,7 +70,7 @@ export default function MacroConfigurator({
         <label htmlFor="macro-configurator-modo-de-calculo" className="form-label">
           Modo de Cálculo
         </label>
-        <select
+        <Select
           id="macro-configurator-modo-de-calculo"
           className="form-input"
           value={form.macroStrategy || 'CUSTOM_GRAMS'}
@@ -78,7 +79,7 @@ export default function MacroConfigurator({
           <option value="CUSTOM_GRAMS">Gramos Exactos (Recomendado )</option>
           <option value="CUSTOM_PCT">Porcentajes (%)</option>
           <option value="BALANCED">Balanceada Automática </option>
-        </select>
+        </Select>
       </div>
 
       {form.macroStrategy === 'CUSTOM_GRAMS' && (

@@ -17,6 +17,7 @@ import { useExerciseCatalog, getExerciseMap } from '../../lib/workout/exercises'
 import { ProgramSessions } from './ProgramSessions';
 import { Section, QueryState } from './ClientSection';
 import { ProgramPreview } from './ProgramPreview';
+import { Select } from '@/components/ui/select';
 
 export default function ProgramsSection({
   linkId,
@@ -161,16 +162,6 @@ export default function ProgramsSection({
       )}
       {assignments.data && assignments.data.length > 0 && (
         <>
-          {!!assignments.data.some((a) => a.status === 'ENDED') && (
-            <button
-              type="button"
-              className="btn btn-secondary mb-3"
-              aria-expanded={showHistory}
-              onClick={() => setShowHistory(!showHistory)}
-            >
-              {showHistory ? 'Ocultar programas anteriores' : 'Ver programas anteriores'}
-            </button>
-          )}
           {fromLibrary.length > 0 && (
             <ul className="athlete-programs">{fromLibrary.map((a) => row(a, false))}</ul>
           )}
@@ -184,6 +175,16 @@ export default function ProgramsSection({
               </p>
               <ul className="athlete-programs">{weekly.map((a) => row(a, true))}</ul>
             </>
+          )}
+          {!!assignments.data.some((a) => a.status === 'ENDED') && (
+            <button
+              type="button"
+              className="btn btn-secondary mt-3"
+              aria-expanded={showHistory}
+              onClick={() => setShowHistory(!showHistory)}
+            >
+              {showHistory ? 'Ocultar programas anteriores' : 'Ver programas anteriores'}
+            </button>
           )}
         </>
       )}
@@ -217,7 +218,7 @@ export default function ProgramsSection({
           <div className="athlete-assign-form">
             <label className="flex flex-col gap-1 text-sm min-w-0">
               Programa
-              <select
+              <Select
                 className="form-input min-h-11"
                 value={programId}
                 onChange={(e) => setProgramId(e.target.value)}
@@ -228,7 +229,7 @@ export default function ProgramsSection({
                     {p.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Empieza el

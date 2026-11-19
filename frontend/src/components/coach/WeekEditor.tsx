@@ -65,6 +65,7 @@ import { ExercisePanel } from './calendar/ExercisePanel';
 import { WeekStrip } from './calendar/WeekStrip';
 import { AthleteHistory } from './editor/prescribing';
 import { ProgramPreview } from './ProgramPreview';
+import { Select } from '@/components/ui/select';
 
 const DRAG_TYPE = 'application/x-ascension-week-item';
 const AUTOSAVE_MS = 1500;
@@ -985,7 +986,7 @@ export function WeekEditor({
                   </label>
                   <label data-tour="week-intent" className="flex flex-col gap-1 min-w-0">
                     Objetivo de la semana
-                    <select
+                    <Select
                       className="form-input min-h-11"
                       value={value.content.intent}
                       onChange={(e) =>
@@ -997,7 +998,7 @@ export function WeekEditor({
                           {label}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </label>
                   <label data-tour="week-comment" className="flex flex-col gap-1 min-w-0">
                     Comentario para el atleta

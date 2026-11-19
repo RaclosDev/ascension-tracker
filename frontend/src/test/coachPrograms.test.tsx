@@ -20,6 +20,7 @@ import {
   updateDay,
   type Program,
 } from '../lib/coach/coachPrograms';
+import { chooseOption } from './selectMenu';
 
 vi.mock('../api/client', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
@@ -281,7 +282,7 @@ describe('CoachProgramEditorPage', () => {
     renderAt('/entrenador/programas/p-1');
 
     expect(await screen.findByLabelText('Nombre del día (Lunes)')).toHaveValue('Torso');
-    fireEvent.change(screen.getByLabelText('Copiar la semana 1 a'), { target: { value: '2' } });
+    chooseOption(screen.getByLabelText('Copiar la semana 1 a'), '2');
     fireEvent.click(screen.getByRole('button', { name: 'Copiar semana 1' }));
     fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
 

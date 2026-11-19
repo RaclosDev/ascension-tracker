@@ -14,6 +14,7 @@ import { EQUIPMENT_OPTIONS, MUSCLE_OPTIONS } from '@/lib/workout/equipmentOption
 import { normalizeString } from '@/lib/workout/format';
 import { MUSCLE_LABEL, type Equipment, type Exercise, type MuscleGroup } from '@/lib/workout/types';
 import { calculateMergeMatchScore } from '@/utils/stringMetrics';
+import { Select } from '@/components/ui/select';
 
 export interface MergeExerciseModalProps {
   isOpen: boolean;
@@ -217,7 +218,7 @@ export function MergeExerciseModal({
                 <label htmlFor="merge-muscle-filter" className="sr-only">
                   Filtrar por grupo muscular
                 </label>
-                <select
+                <Select
                   id="merge-muscle-filter"
                   aria-label="Filtrar por grupo muscular"
                   className="form-input"
@@ -231,11 +232,11 @@ export function MergeExerciseModal({
                       {m.label}
                     </option>
                   ))}
-                </select>
+                </Select>
                 <label htmlFor="merge-equipment-filter" className="sr-only">
                   Filtrar por equipamiento
                 </label>
-                <select
+                <Select
                   id="merge-equipment-filter"
                   aria-label="Filtrar por equipamiento"
                   className="form-input"
@@ -249,7 +250,7 @@ export function MergeExerciseModal({
                       {eq.label}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
 

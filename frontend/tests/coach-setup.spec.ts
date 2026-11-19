@@ -1,5 +1,6 @@
 import { coachSettings } from './helpers/coachSettings';
 import { test, expect } from '@playwright/test';
+import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 import type { CoachSetup } from '../src/lib/coach/setup';
 import type { CoachFollowup } from '../src/lib/coach/coachSchedule';
@@ -100,7 +101,7 @@ for (const width of [1440, 390]) {
       .getByRole('navigation', { name: 'Apartados de los ajustes' })
       .getByRole('link', { name: 'Agenda del seguimiento', exact: true })
       .click();
-    await page.getByLabel('Día del seguimiento').selectOption('3');
+    await chooseOption(page.getByLabel('Día del seguimiento'), '3');
     await page.getByLabel('Hora del seguimiento').fill('17:30');
     await page.getByLabel('Zona horaria').fill('Atlantic/Canary');
     await page.getByLabel('Pausar seguimiento').check();
@@ -108,7 +109,7 @@ for (const width of [1440, 390]) {
     await expect(page.getByRole('button', { name: 'Guardar agenda' })).toBeDisabled();
     await page.reload();
     await expect(page.getByLabel('Pausar seguimiento')).toBeChecked();
-    await expect(page.getByLabel('Día del seguimiento')).toHaveValue('3');
+    await expect(page.getByLabel('Día del seguimiento')).toHaveAttribute('data-value', '3');
     await expect(page.getByLabel('Hora del seguimiento')).toHaveValue('17:30');
     await expect(page.getByLabel('Zona horaria')).toHaveValue('Atlantic/Canary');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(

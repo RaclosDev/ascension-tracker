@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 import type { Program } from '../src/lib/coach/coachPrograms';
 import type { SavedWeek } from '../src/lib/coach/weeks';
@@ -206,7 +207,7 @@ for (const width of [390, 1920]) {
     await page
       .getByLabel('Notas privadas del entrenador')
       .fill('Revisar disponibilidad del miércoles.');
-    await page.getByLabel('Objetivo de la semana').selectOption('DELOAD');
+    await chooseOption(page.getByLabel('Objetivo de la semana'), 'DELOAD');
     // Closing the settings brings back the day, where the load is one cell on the exercise's line.
     await page.getByRole('button', { name: 'Cerrar panel' }).click();
     await page.getByLabel('Carga de Press banca (kg)').fill('45');

@@ -15,6 +15,7 @@ import {
 import { restLabel } from '@/lib/coach/today';
 import { setText } from '@/lib/coach/exerciseHistory';
 import { AthleteHistory, usePrescribing } from './prescribing';
+import { Select } from '@/components/ui/select';
 
 const MAX_SETS = 20;
 const KINDS: { value: SetTarget['kind']; label: string; tag: string }[] = [
@@ -411,7 +412,7 @@ export function ExerciseRow({
           </label>
           <label>
             La carga se pauta en
-            <select
+            <Select
               className="form-input"
               value={mode === 'KG' ? 'KG' : lift}
               onChange={(e) => setLoadMode(e.target.value)}
@@ -420,7 +421,7 @@ export function ExerciseRow({
               <option value="squat">% del máximo de sentadilla</option>
               <option value="bench">% del máximo de banca</option>
               <option value="deadlift">% del máximo de peso muerto</option>
-            </select>
+            </Select>
           </label>
           {mode === 'KG' && !shape && (
             <label>
@@ -438,7 +439,7 @@ export function ExerciseRow({
             <div className="set-send">
               <label>
                 Enviar a otro día
-                <select
+                <Select
                   className="form-input"
                   aria-label={`Día al que enviar ${name}`}
                   value={sendTo}
@@ -449,7 +450,7 @@ export function ExerciseRow({
                       {day.label}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               <button
                 type="button"
@@ -616,7 +617,7 @@ export function ExerciseRow({
               </div>
               {openSet === i ? (
                 <div className="set-detail">
-                  <select
+                  <Select
                     className="form-input"
                     aria-label={`Tipo de la serie ${i + 1}`}
                     value={row.kind}
@@ -627,7 +628,7 @@ export function ExerciseRow({
                         {item.label}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   <input
                     className="form-input"
                     aria-label={`Nota de la serie ${i + 1}`}

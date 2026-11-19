@@ -1,5 +1,6 @@
 import { coachSettings } from './helpers/coachSettings';
 import { test, expect, type Page } from '@playwright/test';
+import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 
 async function setupCoach(page: Page, empty = false) {
@@ -197,7 +198,7 @@ for (const width of [1440, 390]) {
     ).toBeVisible();
     await page.getByRole('combobox', { name: 'Filtrar atletas' }).selectOption('servicio-training');
     await page.getByRole('searchbox', { name: 'Buscar atleta' }).fill('garcia');
-    await page.getByRole('combobox', { name: 'Ordenar' }).selectOption('name');
+    await chooseOption(page.getByRole('button', { name: 'Ordenar' }), 'name');
     await page
       .getByRole('link', { name: /^Ana García/ })
       .filter({ visible: true })
@@ -212,7 +213,10 @@ for (const width of [1440, 390]) {
     });
     await page.getByRole('link', { name: 'Volver a atletas' }).click();
     await expect(page.getByRole('searchbox', { name: 'Buscar atleta' })).toHaveValue('garcia');
-    await expect(page.getByRole('combobox', { name: 'Ordenar' })).toHaveValue('name');
+    await expect(page.getByRole('button', { name: 'Ordenar' })).toHaveAttribute(
+      'data-value',
+      'name',
+    );
     await expect(page.getByRole('combobox', { name: 'Filtrar atletas' })).toHaveValue(
       'servicio-training',
     );

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useNutritionTemplate, useNutritionTemplates } from '@/lib/coach/nutritionTemplates';
 import { nutritionDraft, type NutritionDraft } from '@/lib/coach/nutritionDraft';
 import { NutritionPlanSummary } from './NutritionPlanSummary';
+import { Select } from '@/components/ui/select';
 
 export function NutritionTemplatePicker({
   onCopy,
@@ -63,7 +64,7 @@ export function NutritionTemplatePicker({
           ) : (
             <div className="flex flex-col gap-1">
               <label htmlFor={selectId}>Pauta de biblioteca</label>
-              <select
+              <Select
                 id={selectId}
                 className="form-input min-h-11"
                 value={id}
@@ -76,7 +77,7 @@ export function NutritionTemplatePicker({
                     {item.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           )}
           {id &&

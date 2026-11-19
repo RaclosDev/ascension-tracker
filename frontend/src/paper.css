@@ -302,8 +302,13 @@ body,
   }
   input:not([type='checkbox'], [type='radio'], [type='color'], [type='range']),
   textarea,
-  select {
+  select,
+  .ui-select {
     color: var(--text-primary);
+    accent-color: var(--accent-primary);
+  }
+  input[type='checkbox'],
+  input[type='radio'] {
     accent-color: var(--accent-primary);
   }
   input::placeholder,
@@ -328,7 +333,8 @@ body,
     .bg-transparent
   ),
   textarea:not(.bg-transparent),
-  select:not(.bg-transparent)
+  select:not(.bg-transparent),
+  .ui-select:not(.bg-transparent)
 ) {
   border: 2px solid var(--text-primary);
   border-radius: 4px;
@@ -1651,4 +1657,180 @@ html:not([data-mode='light']) .marker-ink {
 }
 .coach-end {
   min-height: 44px;
+}
+
+/* ───────────── Desplegables propios (components/ui/select.tsx) ───────────── */
+
+/*
+ * El botón hereda el aspecto del campo que sustituye (form-input, chip, píldora…); aquí solo va lo
+ * que le falta a un <button> para leerse como un desplegable: texto a la izquierda y flecha al final.
+ */
+.ui-select {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  min-width: 0;
+  max-width: 100%;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+.ui-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.ui-select[hidden] {
+  display: none;
+}
+.ui-select-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ui-select-chevron {
+  flex-shrink: 0;
+  opacity: 0.75;
+  transition:
+    rotate 160ms ease-out,
+    opacity 160ms ease-out;
+}
+.ui-select:hover:not(:disabled) .ui-select-chevron,
+.ui-select[aria-expanded='true'] .ui-select-chevron {
+  opacity: 1;
+}
+.ui-select[aria-expanded='true'] .ui-select-chevron {
+  rotate: 180deg;
+}
+.ui-select:focus-visible,
+.ui-select[aria-expanded='true'] {
+  outline: 3px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+.ui-select.bg-transparent:focus-visible,
+.ui-select.bg-transparent[aria-expanded='true'] {
+  outline-width: 2px;
+  outline-offset: 1px;
+}
+
+/* El menú es una hoja suelta: canto de tinta, esquinas de 4px y la sombra dura de los menús. */
+.ui-select-menu[role='menu'] {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  max-width: calc(100vw - 16px);
+  padding: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background-color: var(--sheet);
+  background-image: var(--paper-lines);
+  color: var(--sheet-ink);
+  border: 2px solid var(--sheet-edge);
+  border-radius: 4px;
+  box-shadow: 3px 4px 0 var(--menu-shadow, rgba(17, 24, 39, 0.3));
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  text-transform: none;
+  letter-spacing: normal;
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity 140ms ease-out,
+    translate 140ms ease-out,
+    display 140ms allow-discrete,
+    overlay 140ms allow-discrete;
+}
+.ui-select-menu:popover-open {
+  display: flex;
+  flex-direction: column;
+}
+@starting-style {
+  .ui-select-menu:popover-open {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+.ui-select-menu:not(:popover-open) {
+  opacity: 0;
+}
+.ui-select-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  min-height: 40px;
+  padding: 0.45rem 0.85rem 0.45rem 0.45rem;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+@media (pointer: coarse) {
+  .ui-select-item {
+    min-height: 44px;
+  }
+}
+.ui-select-item:hover:not(:disabled),
+.ui-select-item:focus {
+  outline: none;
+  background: color-mix(in srgb, var(--sheet-ink) 9%, transparent);
+}
+.ui-select-item:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.ui-select-item[aria-checked='true'] {
+  font-weight: 700;
+}
+.ui-select-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.ui-select-check {
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+  width: 18px;
+  color: var(--accent-primary);
+}
+.ui-select-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ui-select-separator {
+  display: block;
+  flex-shrink: 0;
+  height: 0;
+  margin: 4px 6px;
+  border-top: 1px dashed color-mix(in srgb, var(--sheet-ink) 35%, transparent);
+}
+.ui-select-group {
+  display: block;
+  flex-shrink: 0;
+  padding: 0.6rem 0.85rem 0.25rem calc(0.45rem + 18px + 0.45rem);
+  color: color-mix(in srgb, var(--sheet-ink) 62%, transparent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ui-select-action {
+  color: var(--accent-primary);
+  font-weight: 700;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-select-chevron,
+  .ui-select-menu[role='menu'] {
+    transition: none;
+  }
 }

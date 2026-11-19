@@ -15,6 +15,7 @@ import {
   useSetContactHandled,
   type AdminContactRequest,
 } from '../lib/coach/plan';
+import { Select } from '@/components/ui/select';
 
 const PLAN_NAMES: Record<string, string> = {
   FREE: 'Gratis',
@@ -198,7 +199,7 @@ function CoachRow({ coach, plans }: { coach: AdminCoach; plans: PlanInfo[] }) {
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1 text-sm">
           <span style={{ color: 'var(--text-secondary)' }}>Plan</span>
-          <select
+          <Select
             className="rounded-lg px-3 py-2 bg-black/20 border"
             style={{ borderColor: 'var(--border-subtle)' }}
             aria-label={`Plan de ${coach.email}`}
@@ -210,7 +211,7 @@ function CoachRow({ coach, plans }: { coach: AdminCoach; plans: PlanInfo[] }) {
                 {planName(p.id)} ({p.maxClients} atletas)
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         {!free && (
           <label className="flex flex-col gap-1 text-sm">
@@ -251,7 +252,7 @@ function CoachRow({ coach, plans }: { coach: AdminCoach; plans: PlanInfo[] }) {
             </label>
             <label className="flex flex-col gap-1 text-sm">
               <span style={{ color: 'var(--text-secondary)' }}>Forma de pago</span>
-              <select
+              <Select
                 className="rounded-lg px-3 py-2 bg-black/20 border"
                 style={{ borderColor: 'var(--border-subtle)' }}
                 aria-label={`Forma de pago de ${coach.email}`}
@@ -262,7 +263,7 @@ function CoachRow({ coach, plans }: { coach: AdminCoach; plans: PlanInfo[] }) {
                 <option value="CARD">Tarjeta</option>
                 <option value="CASH">Efectivo</option>
                 <option value="OTHER">Otra</option>
-              </select>
+              </Select>
             </label>
             <label className="flex flex-col gap-1 text-sm">
               <span style={{ color: 'var(--text-secondary)' }}>Nº de factura</span>

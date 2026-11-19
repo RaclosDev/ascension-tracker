@@ -19,7 +19,7 @@ import '../../styles/coach-workspace.css';
 import '../../styles/coach-student.css';
 import '../../styles/coach-athlete.css';
 
-const RECORD_ROUTES = ['registro', 'entrenos', 'comidas', 'pasos', 'peso'];
+export const RECORD_ROUTES = ['registro', 'entrenos', 'comidas', 'pasos', 'peso'];
 
 /** Links between the athlete's views. Only the roster filters and the origin travel with them. */
 export function useAthleteLinks(linkId: string) {

@@ -10,6 +10,7 @@ import { defaultItem, useLibraryItems, useSaveLibraryItem } from '@/lib/coach/li
 import { apiErrorMessage } from '@/lib/coach/api';
 import { inputClass, inputStyle } from './fields';
 import { AthleteAvoided } from './prescribing';
+import { Select } from '@/components/ui/select';
 
 const EQUIPMENT_LABEL: Record<string, string> = { maquina: 'máquina' };
 const equipmentLabel = (value: string) => {
@@ -104,14 +105,14 @@ export function ExerciseSearch({
       <div className="flex flex-wrap gap-3 text-sm">
         <label>
           Material
-          <select value={equipment} onChange={(e) => setEquipment(e.target.value)}>
+          <Select value={equipment} onChange={(e) => setEquipment(e.target.value)}>
             <option value="">Todos</option>
             {[...new Set(all.map((ex) => ex.equipment))].sort().map((value) => (
               <option key={value} value={value}>
                 {equipmentLabel(value)}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="flex items-center gap-2">
           <input
