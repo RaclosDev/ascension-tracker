@@ -5,6 +5,7 @@ import type { PowerProfile } from '../../lib/coach/powerlifting';
 import { LIFT_LABELS, type Lift } from '../../lib/powerlifting';
 import type { CompletedWorkout } from '../../lib/workout/types';
 import { QueryErrorNotice } from '../QueryErrorNotice';
+import { Select } from '@/components/ui/select';
 
 const DAY = 24 * 60 * 60 * 1000;
 const number = (value: number) => value.toLocaleString('es-ES', { maximumFractionDigits: 1 });
@@ -53,7 +54,7 @@ export function PowerProgress({ linkId, profile }: { linkId: string; profile: Po
         </div>
         <label className="flex flex-col gap-1">
           Periodo de seguimiento
-          <select
+          <Select
             className="form-input min-h-11"
             value={weeks}
             onChange={(e) => setWeeks(Number(e.target.value))}
@@ -61,7 +62,7 @@ export function PowerProgress({ linkId, profile }: { linkId: string; profile: Po
             <option value={4}>Últimas 4 semanas</option>
             <option value={12}>Últimas 12 semanas</option>
             <option value={52}>Últimas 52 semanas</option>
-          </select>
+          </Select>
         </label>
       </div>
       <p className="coach-description">
@@ -148,7 +149,7 @@ export function PowerProgress({ linkId, profile }: { linkId: string; profile: Po
               <h4 className="font-semibold">Carga semanal</h4>
               <label className="flex flex-col gap-1">
                 Levantamiento
-                <select
+                <Select
                   className="form-input min-h-11"
                   value={lift}
                   onChange={(e) => setLift(e.target.value as Lift)}
@@ -158,7 +159,7 @@ export function PowerProgress({ linkId, profile }: { linkId: string; profile: Po
                       {label}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
             </div>
             <p className="coach-description">

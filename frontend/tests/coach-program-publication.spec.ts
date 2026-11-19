@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 import type { Program } from '../src/lib/coach/coachPrograms';
 
@@ -56,9 +57,9 @@ for (const width of [390, 1440]) {
       page.getByText('Versión guardada: lista para asignar.', { exact: false }),
     ).toBeVisible();
     await page.getByRole('link', { name: 'Volver a programas' }).click();
-    await page.getByRole('combobox', { name: 'Estado', exact: true }).selectOption('DRAFT');
+    await chooseOption(page.getByRole('button', { name: 'Estado', exact: true }), 'DRAFT');
     await expect(page.getByText('No hay programas con esos filtros.')).toBeVisible();
-    await page.getByRole('combobox', { name: 'Estado', exact: true }).selectOption('READY');
+    await chooseOption(page.getByRole('button', { name: 'Estado', exact: true }), 'READY');
     await expect(page.getByText('Fuerza · bloque inicial', { exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,

@@ -17,6 +17,7 @@ import OnboardingScreen from '../components/OnboardingScreen';
 import { rememberPendingInvitation } from '../lib/coach/api';
 import { emptySetup } from '../lib/coach/setup';
 import { defaultSchedule } from '../lib/coach/coachSchedule';
+import { chooseOption } from './selectMenu';
 
 const TOKEN = 'b'.repeat(43);
 const mockedApi = vi.mocked(api);
@@ -91,7 +92,7 @@ describe('Invitación con datos del entrenador', () => {
       target: { value: '  Ana López ' },
     });
     fireEvent.click(screen.getByRole('radio', { name: /Yo ahora/ }));
-    fireEvent.change(screen.getByLabelText('Sexo'), { target: { value: 'F' } });
+    chooseOption(screen.getByLabelText('Sexo'), 'F');
     fireEvent.change(screen.getByLabelText('Edad'), { target: { value: '31' } });
     fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '62.5' } });
     fireEvent.click(screen.getByRole('button', { name: 'Crear enlace de invitación' }));

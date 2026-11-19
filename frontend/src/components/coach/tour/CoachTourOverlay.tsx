@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { COACH_TOUR_STEPS } from './steps';
 import type { TourRect } from './useTourTarget';
+import { Select } from '@/components/ui/select';
 
 export function tourPopupPosition(
   rect: TourRect | null,
@@ -162,13 +163,13 @@ export default function CoachTourOverlay({ index, rect, error, go, close, retry 
         </div>
         <label className="coach-tour-jump">
           Ir a un paso
-          <select value={index} onChange={(event) => go(Number(event.target.value))}>
+          <Select value={index} onChange={(event) => go(Number(event.target.value))}>
             {COACH_TOUR_STEPS.map((item, position) => (
               <option key={item.id} value={position}>
                 {position + 1}. {item.title}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       </div>
     </div>

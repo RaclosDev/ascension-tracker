@@ -1,5 +1,6 @@
 import { Trash2 } from 'lucide-react';
 import { POWER_LABELS, POWER_LIFTS, type PowerMark } from '../../lib/coach/powerlifting';
+import { Select } from '@/components/ui/select';
 
 export function PowerMarksEditor({
   marks,
@@ -29,7 +30,7 @@ export function PowerMarksEditor({
           <legend className="px-1 font-semibold">Marca {index + 1}</legend>
           <label className="flex flex-col gap-1">
             Levantamiento
-            <select
+            <Select
               className="form-input min-h-11"
               value={mark.lift}
               onChange={(e) => update(mark.id, { lift: e.target.value as PowerMark['lift'] })}
@@ -39,7 +40,7 @@ export function PowerMarksEditor({
                   {POWER_LABELS[lift]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="flex flex-col gap-1">
             Peso (kg)
@@ -67,14 +68,14 @@ export function PowerMarksEditor({
           </label>
           <label className="flex flex-col gap-1">
             Contexto
-            <select
+            <Select
               className="form-input min-h-11"
               value={mark.context}
               onChange={(e) => update(mark.id, { context: e.target.value as PowerMark['context'] })}
             >
               <option value="TRAINING">Entrenamiento</option>
               <option value="COMPETITION">Competición</option>
-            </select>
+            </Select>
           </label>
           <label className="flex flex-col gap-1 sm:col-span-2">
             Referencia (opcional)

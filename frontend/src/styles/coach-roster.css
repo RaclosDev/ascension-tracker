@@ -84,7 +84,7 @@
 .coach-roster-filters .coach-more-filters {
   margin-left: auto;
 }
-.coach-more-filters select {
+.coach-more-filters .ui-select {
   min-height: 44px;
   padding: 8px 12px;
   border: 1px solid var(--border-medium);
@@ -283,7 +283,7 @@
   .coach-roster-toolbar .coach-sort {
     flex: 1;
   }
-  .coach-roster-toolbar .coach-sort select {
+  .coach-roster-toolbar .coach-sort .ui-select {
     flex: 1;
   }
   .coach-workspace .coach-roster-filters .coach-chip {
@@ -293,7 +293,7 @@
   .coach-roster-filters .coach-more-filters {
     margin-left: 0;
   }
-  .coach-more-filters select {
+  .coach-more-filters .ui-select {
     width: 100%;
   }
   .coach-roster-options-panel {

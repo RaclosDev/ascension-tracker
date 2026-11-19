@@ -18,6 +18,7 @@ import { PowerMarksEditor } from './PowerMarksEditor';
 import { PowerMeets } from './PowerMeets';
 import { PowerProgress } from './PowerProgress';
 import { PowerExerciseMappings } from './PowerExerciseMappings';
+import { Select } from '@/components/ui/select';
 
 export default function ClientPowerlifting({
   linkId,
@@ -140,7 +141,7 @@ function PowerForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1">
             Equipamiento
-            <select
+            <Select
               className="form-input min-h-11"
               value={profile.equipment}
               onChange={(e) => set({ equipment: e.target.value as PowerProfile['equipment'] })}
@@ -148,7 +149,7 @@ function PowerForm({
               <option value="CLASSIC">Clásico / raw</option>
               <option value="EQUIPPED">Equipado</option>
               <option value="OTHER">Otro</option>
-            </select>
+            </Select>
           </label>
           <label className="flex flex-col gap-1">
             Federación de referencia (opcional)

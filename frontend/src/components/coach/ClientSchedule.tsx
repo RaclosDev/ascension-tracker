@@ -7,6 +7,7 @@ import {
   REVIEW_DAYS,
   useSaveSchedule,
 } from '../../lib/coach/coachSchedule';
+import { Select } from '@/components/ui/select';
 
 export function ClientSchedule({ link }: { link: CoachClient }) {
   const save = useSaveSchedule(link.linkId);
@@ -39,7 +40,7 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
         <legend className="sr-only">Horario del seguimiento</legend>
         <label className="coach-schedule-field flex flex-col gap-2 min-w-0">
           <span>Día del seguimiento</span>
-          <select
+          <Select
             value={schedule.day}
             onChange={(e) => setSchedule({ ...schedule, day: Number(e.target.value) })}
           >
@@ -48,7 +49,7 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
                 {day}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="coach-schedule-field flex flex-col gap-2 min-w-0">
           <span>Hora del seguimiento</span>

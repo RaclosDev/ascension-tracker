@@ -11,6 +11,7 @@ import {
   type MealDraft,
   type NutritionDraft,
 } from '@/lib/coach/nutritionDraft';
+import { Select } from '@/components/ui/select';
 
 export function NutritionPlanFields({
   value,
@@ -148,7 +149,7 @@ function DayMeals({
                 </button>
               )}
             </div>
-            <select
+            <Select
               className={input}
               style={border}
               aria-label={`Receta de la comida ${i + 1} ${dayLabel}`}
@@ -168,7 +169,7 @@ function DayMeals({
               {meal.recipeId && !recipe && (
                 <option value={meal.recipeId}>Receta no disponible</option>
               )}
-            </select>
+            </Select>
             <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
               {meal.deletedName || (meal.recipeId && !recipe)
                 ? 'Receta no disponible: elige otra o quita la comida.'

@@ -13,6 +13,7 @@ import {
   type CoachSubscription,
   type ContactTopic,
 } from '../lib/coach/plan';
+import { Select } from '@/components/ui/select';
 
 const STATUS_TEXT: Record<string, string> = {
   TRIALING: 'Prueba gratis',
@@ -218,7 +219,7 @@ function ContactForm() {
         <form className="flex flex-col gap-3" onSubmit={submit}>
           <label className="flex flex-col gap-1 text-sm">
             <span style={{ color: 'var(--text-secondary)' }}>Tema</span>
-            <select
+            <Select
               className="rounded-lg px-3 py-2 bg-black/20 border"
               style={{ borderColor: 'var(--border-subtle)' }}
               value={topic}
@@ -229,7 +230,7 @@ function ContactForm() {
                   {t.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span style={{ color: 'var(--text-secondary)' }}>
