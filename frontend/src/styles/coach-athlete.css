@@ -214,12 +214,7 @@
 .athlete-subtabs {
   display: flex;
   overflow-x: auto;
-  /* On a phone the cut-off last entry already says there is more; the bar needs no scrollbar. */
-  scrollbar-width: none;
-}
-.athlete-tabs::-webkit-scrollbar,
-.athlete-subtabs::-webkit-scrollbar {
-  display: none;
+  scrollbar-width: thin;
 }
 /* The athlete's menu reads as a bar of buttons: framed, each entry with its icon and a filled
    current one, so it is plain that this is where you move around the file. */
@@ -931,31 +926,6 @@
   .checkin-week-split .checkin-week-side {
     position: sticky;
     top: 16px;
-  }
-}
-/* Disclosures: drawn chevron instead of the browser triangle. */
-.disclosure-summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  cursor: pointer;
-  list-style: none;
-}
-.disclosure-summary::-webkit-details-marker {
-  display: none;
-}
-.disclosure-chevron {
-  flex-shrink: 0;
-  color: var(--text-secondary);
-  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-details[open] > .disclosure-summary .disclosure-chevron {
-  transform: rotate(180deg);
-}
-@media (prefers-reduced-motion: reduce) {
-  .disclosure-chevron {
-    transition: none;
   }
 }
 .athlete-disclosure > :not(summary) {
@@ -2123,13 +2093,13 @@ details[open] > .disclosure-summary .disclosure-chevron {
   list-style: none;
 }
 .week-volume > summary::after {
-  content: 'Ver por grupo muscular';
+  content: 'Por grupo muscular ▾';
   color: var(--text-secondary);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 .week-volume[open] > summary::after {
-  content: 'Ocultar grupos musculares';
+  content: 'Ocultar ▴';
 }
 .week-volume > summary:hover::after {
   color: var(--text-primary);

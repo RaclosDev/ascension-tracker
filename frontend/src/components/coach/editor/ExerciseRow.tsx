@@ -439,7 +439,7 @@ export function ExerciseRow({
             <div className="set-send">
               <label>
                 Enviar a otro día
-                <Select
+                <select
                   className="form-input"
                   aria-label={`Día al que enviar ${name}`}
                   value={sendTo}
@@ -450,7 +450,7 @@ export function ExerciseRow({
                       {day.label}
                     </option>
                   ))}
-                </Select>
+                </select>
               </label>
               <button
                 type="button"

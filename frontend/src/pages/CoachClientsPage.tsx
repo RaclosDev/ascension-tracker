@@ -131,7 +131,7 @@ function Clients() {
             </label>
             <label className="coach-sort">
               <span>Mostrar</span>
-              <Select
+              <select
                 aria-label="Filtrar atletas"
                 value={filter.value}
                 onChange={(e) => update('filtro', e.target.value)}
@@ -156,7 +156,7 @@ function Clients() {
                     </option>
                   ))}
                 </optgroup>
-              </Select>
+              </select>
             </label>
             <label className="coach-sort">
               <span>Ordenar</span>

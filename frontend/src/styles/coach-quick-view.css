@@ -474,19 +474,6 @@ a.coach-workout-calendar-session:focus-visible {
   margin: 0;
   font-variant-numeric: tabular-nums;
 }
-.coach-food-summary-chevron {
-  display: inline-block;
-  vertical-align: -2px;
-  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.coach-food-summary-chevron[data-open] {
-  transform: rotate(180deg);
-}
-@media (prefers-reduced-motion: reduce) {
-  .coach-food-summary-chevron {
-    transition: none;
-  }
-}
 .coach-food-summary[open] {
   grid-column: 1 / -1;
 }
@@ -566,11 +553,9 @@ a.coach-workout-calendar-session:focus-visible {
   display: block;
   text-decoration: none;
   font-weight: 600;
-  line-height: 1.35;
-  border: 1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent);
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
-  padding: 5px 8px;
+  line-height: 1.45;
+  border-left: 3px solid var(--accent-primary);
+  padding-left: 9px;
 }
 .coach-register-page .coach-register-training a:hover {
   text-decoration: underline;

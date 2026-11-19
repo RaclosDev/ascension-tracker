@@ -11,7 +11,6 @@ import {
 } from '@/lib/coach/coachPrograms';
 import { ExerciseRow } from '../editor/ExerciseRow';
 import { usePrescribing } from '../editor/prescribing';
-import { Select } from '@/components/ui/select';
 
 /** The training of one day: every exercise on a line, with the details one click away. */
 export function DaySession({
@@ -158,7 +157,7 @@ export function DaySession({
           </label>
           <label>
             Enviar la sesión a
-            <Select
+            <select
               className="form-input"
               value={sendTo}
               onChange={(e) => setSendTo(Number(e.target.value))}
@@ -169,19 +168,19 @@ export function DaySession({
                   {other.busy ? ' (con sesión)' : ''}
                 </option>
               ))}
-            </Select>
+            </select>
           </label>
           {target?.busy && (
             <label>
               Ese día ya tiene sesión
-              <Select
+              <select
                 className="form-input"
                 value={clash}
                 onChange={(e) => setClash(e.target.value as 'replace' | 'merge')}
               >
                 <option value="merge">Añadir estos ejercicios al final</option>
                 <option value="replace">Sustituirla (se pierde la que hay)</option>
-              </Select>
+              </select>
             </label>
           )}
           <div className="day-menu-actions">
