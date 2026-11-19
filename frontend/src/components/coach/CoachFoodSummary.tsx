@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { useClientData } from '../../lib/coach/api';
 import type { FoodLog } from '../../types/api';
 import { getLocalDateString } from '../../utils/dateHelper';
@@ -39,7 +40,13 @@ export function CoachFoodSummary({ linkId, date }: { linkId: string; date: strin
     <details className="coach-food-summary" onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary>
         <strong>
-          Comidas <span aria-hidden="true">{open ? '▴' : '▾'}</span>
+          Comidas{' '}
+          <ChevronDown
+            size={14}
+            aria-hidden
+            className="coach-food-summary-chevron"
+            data-open={open || undefined}
+          />
         </strong>
         {intake ? (
           <dl>
@@ -47,7 +54,8 @@ export function CoachFoodSummary({ linkId, date }: { linkId: string; date: strin
               <div key={key}>
                 <dt>{labels[key]}</dt>
                 <dd>
-                  {Math.round(intake[key])} / {day?.target ? Math.round(day.target[key]) : '—'}
+                  {Math.round(intake[key])}
+                  {day?.target ? ` / ${Math.round(day.target[key])}` : ''}
                   {key === 'kcal' ? '' : ' g'}
                 </dd>
               </div>

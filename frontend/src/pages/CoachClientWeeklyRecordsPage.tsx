@@ -21,6 +21,7 @@ const records = {
 
 type Metric = keyof typeof records;
 const formatAmount = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2 });
+const formatSteps = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0 });
 
 export default function CoachClientWeeklyRecordsPage({ metric }: { metric: Metric }) {
   return (
@@ -125,7 +126,8 @@ function WeeklyRecordGrid({
         {metric !== 'meals' && summary?.average != null && (
           <>
             {' '}
-            · Media de la semana: {formatAmount.format(summary.average)} {unit}
+            · Media de la semana:{' '}
+            {(metric === 'steps' ? formatSteps : formatAmount).format(summary.average)} {unit}
           </>
         )}
       </p>

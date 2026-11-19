@@ -32,7 +32,7 @@ export interface SelectAction {
 export interface SelectProps {
   value: string | number;
   onChange: (event: SelectChangeEvent) => void;
-  /** Opciones como en un `<select>`: `<option>` (con `disabled`/`hidden`) y `<hr />` como separador. */
+  /** Opciones como en un `<select>`: `<option>` (con `disabled`/`hidden`), `<optgroup label>` y `<hr />` como separador. */
   children: ReactNode;
   /** Acción extra al final del menú (p. ej. «Nueva…»), separada de las opciones. */
   action?: SelectAction;
@@ -50,13 +50,15 @@ export interface SelectProps {
 
 type Entry =
   | { kind: 'option'; value: string; label: ReactNode; disabled: boolean; hidden: boolean }
-  | { kind: 'separator' };
+  | { kind: 'separator' }
+  | { kind: 'group'; label: string };
 
 type OptionProps = {
   value?: string | number;
   children?: ReactNode;
   disabled?: boolean;
   hidden?: boolean;
+  label?: string;
 };
 
 function textOf(node: ReactNode): string {
@@ -73,7 +75,10 @@ function collect(children: ReactNode, out: Entry[] = []): Entry[] {
     const el = child as ReactElement<OptionProps>;
     if (el.type === Fragment) collect(el.props.children, out);
     else if (el.type === 'hr') out.push({ kind: 'separator' });
-    else if (el.type === 'option') {
+    else if (el.type === 'optgroup') {
+      out.push({ kind: 'group', label: el.props.label ?? '' });
+      collect(el.props.children, out);
+    } else if (el.type === 'option') {
       const { value, children: label, disabled, hidden } = el.props;
       out.push({
         kind: 'option',
@@ -217,7 +222,7 @@ export function Select({
     if (!(e.target as HTMLElement).closest('[role^="menuitem"]')) e.preventDefault();
   };
 
-  const visible = entries.filter((e) => e.kind === 'separator' || !e.hidden);
+  const visible = entries.filter((e) => e.kind !== 'option' || !e.hidden);
 
   return (
     <>
@@ -273,6 +278,10 @@ export function Select({
           {visible.map((entry, index) =>
             entry.kind === 'separator' ? (
               <span key={`sep-${index}`} role="separator" className="ui-select-separator" />
+            ) : entry.kind === 'group' ? (
+              <span key={`group-${index}`} role="presentation" className="ui-select-group">
+                {entry.label}
+              </span>
             ) : (
               <button
                 key={entry.value}
