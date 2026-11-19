@@ -105,7 +105,7 @@ for (const width of [1440, 390]) {
     await expect(page.getByRole('button', { name: 'Guardar agenda' })).toBeDisabled();
     await page.reload();
     await expect(page.getByLabel('Pausar seguimiento')).toBeChecked();
-    await expect(page.getByLabel('Día del seguimiento')).toHaveValue('3');
+    await expect(page.getByLabel('Día del seguimiento')).toHaveAttribute('data-value', '3');
     await expect(page.getByLabel('Hora del seguimiento')).toHaveValue('17:30');
     await expect(page.getByLabel('Zona horaria')).toHaveValue('Atlantic/Canary');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(

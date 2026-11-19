@@ -85,7 +85,7 @@ test('exit, resume after refresh, jump backwards from preview and repeat from To
     timeout: 20000,
   });
   await page.reload();
-  await expect(page.getByLabel('Ir a un paso')).toHaveValue(String(preview));
+  await expect(page.getByLabel('Ir a un paso')).toHaveAttribute('data-value', String(preview));
   await expect(page.getByRole('button', { name: 'Siguiente', exact: true })).toBeEnabled({
     timeout: 20000,
   });
@@ -98,10 +98,10 @@ test('exit, resume after refresh, jump backwards from preview and repeat from To
     page.getByRole('heading', { name: 'Tour del entrenador', exact: true }),
   ).toBeVisible();
   await page.getByRole('button', { name: /Continuar tour/ }).click();
-  await expect(page.getByLabel('Ir a un paso')).toHaveValue(String(preview - 1));
+  await expect(page.getByLabel('Ir a un paso')).toHaveAttribute('data-value', String(preview - 1));
   await page.getByRole('button', { name: 'Cerrar tour' }).click();
   await page.getByRole('button', { name: 'Repetir tour desde el principio' }).click();
-  await expect(page.getByLabel('Ir a un paso')).toHaveValue('0');
+  await expect(page.getByLabel('Ir a un paso')).toHaveAttribute('data-value', '0');
   await page.keyboard.press('Tab');
   await expect(page.locator('.coach-tour-popover :focus')).toHaveCount(1);
 });
