@@ -4,12 +4,16 @@ import { useCustomExercises } from '@/lib/workout/api';
 import { getExerciseMap, useExerciseCatalog } from '@/lib/workout/exercises';
 import { unitFor, type EffortMethod, type LoadUnit } from '@/lib/coach/prescription';
 import type { AvoidedExercise } from '@/lib/coach/setup';
+import type { ExerciseUse } from '@/lib/coach/exerciseHistory';
 
 /** The athlete's own effort method, when it differs from how the coach usually prescribes. */
 export const AthleteEffort = createContext<EffortMethod | null>(null);
 
 /** Exercises the coach has ruled out for the athlete being planned. */
 export const AthleteAvoided = createContext<AvoidedExercise[]>([]);
+
+/** What the athlete being planned has logged of each exercise, most trained first. */
+export const AthleteHistory = createContext<ExerciseUse[]>([]);
 
 /** How this coach prescribes: effort method and the unit each exercise's load is written in. */
 export function usePrescribing() {

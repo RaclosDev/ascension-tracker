@@ -21,7 +21,7 @@ const sets = (day: CalendarDay) =>
   day.session?.exercises.reduce((total, exercise) => total + exercise.sets, 0) ?? 0;
 export const longDate = (date: string) =>
   format(parseISO(date), "EEEE d 'de' MMMM", { locale: es });
-const weekRange = (weekStart: string) => {
+export const weekRange = (weekStart: string) => {
   const start = parseISO(weekStart);
   const end = addDays(start, 6);
   return start.getMonth() === end.getMonth()
@@ -30,7 +30,7 @@ const weekRange = (weekStart: string) => {
 };
 
 /** What a screen reader hears for the day, since the cell itself is all abbreviations. */
-function summary(day: CalendarDay) {
+export function daySummary(day: CalendarDay) {
   const parts = [longDate(day.date)];
   if (day.session)
     parts.push(
@@ -132,7 +132,7 @@ export function AthleteCalendar({
                   <button
                     type="button"
                     className="cal-day"
-                    aria-label={summary(day)}
+                    aria-label={daySummary(day)}
                     aria-pressed={active}
                     onClick={() => onSelect(week.weekStart, day.dayIndex)}
                   >

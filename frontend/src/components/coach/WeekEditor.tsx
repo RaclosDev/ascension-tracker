@@ -1,9 +1,26 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import toast from 'react-hot-toast';
-import { ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, Pencil, X } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Eye,
+  Maximize2,
+  Pencil,
+  X,
+} from 'lucide-react';
 import { addDays, format, parseISO } from 'date-fns';
 import { useSessionDraft } from '@/hooks/useSessionDraft';
-import { apiErrorMessage, formatCoachDate, type CoachClient } from '@/lib/coach/api';
+import {
+  apiErrorMessage,
+  formatCoachDate,
+  personName,
+  useClientData,
+  type CoachClient,
+} from '@/lib/coach/api';
+import { exerciseUse } from '@/lib/coach/exerciseHistory';
+import type { CompletedWorkout } from '@/lib/workout/types';
 import { useAthleteCalendar } from '@/lib/coach/calendar';
 import { confirmAction } from '@/lib/confirmation';
 import {
@@ -44,10 +61,15 @@ import { WeekVolume } from './editor/WeekVolume';
 import { AthleteCalendar, longDate } from './calendar/AthleteCalendar';
 import { DayFacts } from './calendar/DayFacts';
 import { DaySession } from './calendar/DaySession';
+import { ExercisePanel } from './calendar/ExercisePanel';
+import { WeekStrip } from './calendar/WeekStrip';
+import { AthleteHistory } from './editor/prescribing';
 import { ProgramPreview } from './ProgramPreview';
 
 const DRAG_TYPE = 'application/x-ascension-week-item';
 const AUTOSAVE_MS = 1500;
+/** How far back the athlete's sessions are read to know what they train and what they last did. */
+const HISTORY_WEEKS = 12;
 const PANELS = [
   { id: 'previous', label: 'Plan anterior' },
   { id: 'library', label: 'Biblioteca' },
@@ -65,6 +87,8 @@ export function WeekEditor({
   from,
   day,
   onSelect,
+  wide,
+  onWide,
 }: {
   saved: SavedWeek;
   source?: ProgramAssignment;
@@ -78,6 +102,9 @@ export function WeekEditor({
   /** Day of this week open beside the calendar. */
   day: number | null;
   onSelect: (week: string, day: number | null) => void;
+  /** The open day takes the screen: the calendar folds to its week and the exercises sit beside. */
+  wide: boolean;
+  onWide: (wide: boolean) => void;
 }) {
   const draft = useSessionDraft(
     `coach-week:${saved.linkId}:${saved.weekStart}`,
@@ -186,6 +213,7 @@ export function WeekEditor({
   }, []);
   const drawer = useRef<HTMLElement>(null);
   const view = panel ?? (day ? 'day' : null);
+  const focused = wide && view === 'day';
   // An opened panel may land above or below what is on screen: bring it into view and focus it.
   useEffect(() => {
     if (!panel) return;
@@ -326,7 +354,14 @@ export function WeekEditor({
       setDropDay(null);
       if (locked || !data) return;
       e.preventDefault();
-      const item = JSON.parse(data) as { kind: string; dayIndex?: number };
+      const item = JSON.parse(data) as {
+        kind: string;
+        dayIndex?: number;
+        id?: string;
+        name?: string;
+      };
+      if (item.kind === 'exercise' && item.id)
+        addExercises(dayIndex, [newExercise(item.id, item.name ?? item.id)]);
       if (item.kind === 'day' && item.dayIndex) copyLastDay(item.dayIndex, dayIndex);
       if (item.kind === 'move' && item.dayIndex && item.dayIndex !== dayIndex)
         void sendSession(item.dayIndex, dayIndex, true, 'replace');
@@ -375,9 +410,30 @@ export function WeekEditor({
   }
   const calendar = useAthleteCalendar(link, from, 4, { weekStart: saved.weekStart, program });
   const session = day ? findDay(program, 1, day) : undefined;
-  const facts = day
-    ? calendar.weeks.find((week) => week.weekStart === saved.weekStart)?.days[day - 1]
-    : undefined;
+  const since = parseISO(shiftWeek(weekDate(), -HISTORY_WEEKS)).getTime();
+  const recent = useClientData<CompletedWorkout[]>(
+    link.linkId,
+    `workouts/recent?since=${since}`,
+    link.permissions.training,
+  );
+  const workouts = useMemo(
+    () => [...(recent.data ?? [])].sort((a, b) => b.startedAt - a.startedAt),
+    [recent.data],
+  );
+  const history = useMemo(() => exerciseUse(workouts), [workouts]);
+  const openWeek = calendar.weeks.find((week) => week.weekStart === saved.weekStart);
+  /** Opens the session wide with the cursor ready to look for an exercise. */
+  const search = () => {
+    onWide(true);
+    setTimeout(
+      () =>
+        drawer.current
+          ?.querySelector<HTMLInputElement>('.ex-panel input[aria-label^="Buscar ejercicio"]')
+          ?.focus(),
+      50,
+    );
+  };
+  const facts = day ? openWeek?.days[day - 1] : undefined;
   const heading = day ? longDate(dateOf(day, 'yyyy-MM-dd')) : '';
   const title =
     view === 'day'
@@ -725,25 +781,41 @@ export function WeekEditor({
         </div>
       )}
       {preview && <ProgramPreview program={program} />}
-      <div className="cal-body" data-panel={view ? '' : undefined} hidden={preview}>
-        <AthleteCalendar
-          weeks={calendar.weeks}
-          focus={saved.weekStart}
-          selected={panel ? null : day}
-          loading={calendar.isLoading}
-          onSelect={(week, next) => {
-            setPanel(null);
-            onSelect(week, next);
-            // Stacked under the calendar, a picked day would open out of sight.
-            if (next && !window.matchMedia?.('(min-width: 1100px)').matches)
-              requestAnimationFrame(() =>
-                drawer.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' }),
-              );
-          }}
-          drop={dropTarget}
-          dragType={DRAG_TYPE}
-          editable={!locked}
-        />
+      <div
+        className="cal-body"
+        data-panel={view ? (focused ? 'wide' : '') : undefined}
+        hidden={preview}
+      >
+        {focused && openWeek && day ? (
+          <WeekStrip
+            week={openWeek}
+            selected={day}
+            onSelect={(next) => onSelect(saved.weekStart, next)}
+            onClose={() => onWide(false)}
+            drop={dropTarget}
+            dragType={DRAG_TYPE}
+            editable={!locked}
+          />
+        ) : (
+          <AthleteCalendar
+            weeks={calendar.weeks}
+            focus={saved.weekStart}
+            selected={panel ? null : day}
+            loading={calendar.isLoading}
+            onSelect={(week, next) => {
+              setPanel(null);
+              onSelect(week, next);
+              // Stacked under the calendar, a picked day would open out of sight.
+              if (next && !window.matchMedia?.('(min-width: 1100px)').matches)
+                requestAnimationFrame(() =>
+                  drawer.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' }),
+                );
+            }}
+            drop={dropTarget}
+            dragType={DRAG_TYPE}
+            editable={!locked}
+          />
+        )}
         <aside
           ref={drawer}
           className="cal-panel"
@@ -786,6 +858,16 @@ export function WeekEditor({
                   </button>
                 </>
               )}
+              {view === 'day' && !focused && (
+                <button
+                  type="button"
+                  className="btn btn-secondary week-panel-wide"
+                  title="Pliega el calendario y abre la sesión a lo ancho, con los ejercicios al lado"
+                  onClick={() => onWide(true)}
+                >
+                  <Maximize2 size={14} aria-hidden /> Ampliar
+                </button>
+              )}
               <button
                 type="button"
                 className="set-icon"
@@ -796,52 +878,70 @@ export function WeekEditor({
               </button>
             </header>
             {view === 'day' && day && (
-              <div className="week-panel-body cal-day-body">
-                <fieldset disabled={locked} className="cal-fieldset">
-                  <DaySession
-                    key={day}
-                    label={`${WEEKDAY_LABELS[day - 1]} ${dateOf(day, 'dd/MM')}`}
-                    weekday={dayName(day)}
-                    day={session}
-                    lastDay={lastWeek?.days.find((d) => d.dayIndex === day)}
-                    others={WEEKDAY_LABELS.flatMap((other, j) =>
-                      j === day - 1
-                        ? []
-                        : [{ value: j + 1, label: other, busy: !!findDay(program, 1, j + 1) }],
-                    )}
-                    readOnly={!canEdit}
-                    onChange={(change) => editProgram(updateDay(program, 1, day, change))}
-                    onAdd={() => editProgram(addDay(program, 1, day))}
-                    onRepeat={() => copyLastDay(day, day)}
-                    onRemove={async () => {
-                      if (
-                        !session?.exercises.length ||
-                        (await confirmAction({
-                          title: 'Quitar sesión',
-                          description: `¿Quitar «${session.name}» del borrador?`,
-                          confirmLabel: 'Quitar sesión',
-                          destructive: true,
-                        }))
-                      )
-                        editProgram(removeDay(program, 1, day));
-                    }}
-                    onSendDay={(to, move, clash) => void sendSession(day, to, move, clash)}
-                    onSendExercise={(index, to, move) => {
-                      const name = session?.exercises[index]?.exerciseName ?? 'Ejercicio';
-                      if (apply(sendExercise(program, day, index, to, move), to))
-                        toast.success(`${name}: ${move ? 'movido' : 'copiado'} al ${dayName(to)}`);
-                    }}
-                    onAddExercise={(exercise) =>
-                      addExercises(day, [newExercise(exercise.id, exercise.name)])
-                    }
-                    onRemoveExercise={(index) => removeExercise(day, index)}
-                    onReorder={(from, to) =>
-                      apply(sendExercise(program, day, from, day, true, to), day)
-                    }
-                  />
-                </fieldset>
-                {facts && <DayFacts day={facts} link={link} />}
-              </div>
+              <AthleteHistory.Provider value={history}>
+                <div className="week-panel-body cal-day-body" data-wide={focused ? '' : undefined}>
+                  <div className="cal-day-main" {...(focused ? dropTarget(day) : {})}>
+                    <fieldset disabled={locked} className="cal-fieldset">
+                      <DaySession
+                        key={day}
+                        wide={focused}
+                        onSearch={search}
+                        label={`${WEEKDAY_LABELS[day - 1]} ${dateOf(day, 'dd/MM')}`}
+                        weekday={dayName(day)}
+                        day={session}
+                        lastDay={lastWeek?.days.find((d) => d.dayIndex === day)}
+                        others={WEEKDAY_LABELS.flatMap((other, j) =>
+                          j === day - 1
+                            ? []
+                            : [{ value: j + 1, label: other, busy: !!findDay(program, 1, j + 1) }],
+                        )}
+                        readOnly={!canEdit}
+                        onChange={(change) => editProgram(updateDay(program, 1, day, change))}
+                        onAdd={() => editProgram(addDay(program, 1, day))}
+                        onRepeat={() => copyLastDay(day, day)}
+                        onRemove={async () => {
+                          if (
+                            !session?.exercises.length ||
+                            (await confirmAction({
+                              title: 'Quitar sesión',
+                              description: `¿Quitar «${session.name}» del borrador?`,
+                              confirmLabel: 'Quitar sesión',
+                              destructive: true,
+                            }))
+                          )
+                            editProgram(removeDay(program, 1, day));
+                        }}
+                        onSendDay={(to, move, clash) => void sendSession(day, to, move, clash)}
+                        onSendExercise={(index, to, move) => {
+                          const name = session?.exercises[index]?.exerciseName ?? 'Ejercicio';
+                          if (apply(sendExercise(program, day, index, to, move), to))
+                            toast.success(
+                              `${name}: ${move ? 'movido' : 'copiado'} al ${dayName(to)}`,
+                            );
+                        }}
+                        onRemoveExercise={(index) => removeExercise(day, index)}
+                        onReorder={(from, to) =>
+                          apply(sendExercise(program, day, from, day, true, to), day)
+                        }
+                      />
+                    </fieldset>
+                    {facts && <DayFacts day={facts} link={link} />}
+                  </div>
+                  {focused && (
+                    <ExercisePanel
+                      linkId={link.linkId}
+                      athlete={personName(link.client).split(' ')[0]}
+                      workouts={workouts}
+                      current={session?.exercises.map((exercise) => exercise.exerciseId) ?? []}
+                      disabled={locked}
+                      dragType={DRAG_TYPE}
+                      onAdd={(exercise) =>
+                        addExercises(day, [newExercise(exercise.id, exercise.name)])
+                      }
+                    />
+                  )}
+                </div>
+              </AthleteHistory.Provider>
             )}
             <fieldset disabled={locked} className="cal-fieldset" hidden={!panel}>
               <div hidden={panel !== 'previous'} className="week-panel-body">

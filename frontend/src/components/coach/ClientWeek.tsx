@@ -87,8 +87,11 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
   else if (planningWeek > shiftWeek(from, 3)) setFrom(shiftWeek(planningWeek, -3));
   // Undefined until the coach picks or closes a day: the calendar opens on the most useful one.
   const [day, setDay] = useState<number | null>();
+  // The session takes the screen and the calendar folds; it survives changing day or week.
+  const [wide, setWide] = useState(false);
   const pick = (week: string, next: number | null) => {
     if (week > shiftWeek(weekDate(), 52)) return;
+    if (!next) setWide(false);
     setPlanningWeek(week);
     setDay(week === planningWeek || next ? next : undefined);
   };
@@ -230,6 +233,8 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
                   from={from}
                   day={day === undefined ? openingDay(draft.data) : day}
                   onSelect={pick}
+                  wide={wide}
+                  onWide={setWide}
                 />
               </AthleteAvoided.Provider>
             </AthleteEffort.Provider>

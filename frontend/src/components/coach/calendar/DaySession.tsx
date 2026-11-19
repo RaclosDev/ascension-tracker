@@ -9,10 +9,8 @@ import {
   type ProgramDay,
   type ProgramExercise,
 } from '@/lib/coach/coachPrograms';
-import type { Exercise } from '@/lib/workout/types';
 import { ExerciseRow } from '../editor/ExerciseRow';
 import { usePrescribing } from '../editor/prescribing';
-import { ExerciseSearch } from '../editor/ExerciseSearch';
 
 /** The training of one day: every exercise on a line, with the details one click away. */
 export function DaySession({
@@ -22,13 +20,14 @@ export function DaySession({
   lastDay,
   others,
   readOnly,
+  wide,
+  onSearch,
   onChange,
   onAdd,
   onRemove,
   onRepeat,
   onSendDay,
   onSendExercise,
-  onAddExercise,
   onRemoveExercise,
   onReorder,
 }: {
@@ -41,23 +40,25 @@ export function DaySession({
   lastDay?: ProgramDay;
   others: { value: number; label: string; busy: boolean }[];
   readOnly: boolean;
+  /** The session has the screen: exercises open set by set, beside what the athlete last did. */
+  wide: boolean;
+  /** Opens the session wide and takes the cursor to the exercise search. */
+  onSearch: () => void;
   onChange: (change: (day: ProgramDay) => ProgramDay) => void;
   onAdd: () => void;
   onRemove: () => void;
   onRepeat: () => void;
   onSendDay: (to: number, move: boolean, clash: 'replace' | 'merge') => void;
   onSendExercise: (index: number, to: number, move: boolean) => void;
-  onAddExercise: (exercise: Exercise) => void;
   onRemoveExercise: (index: number) => void;
   onReorder: (from: number, to: number) => void;
 }) {
   const [menu, setMenu] = useState(false);
-  const [searching, setSearching] = useState(false);
   const [sendTo, setSendTo] = useState(others[0].value);
   const [clash, setClash] = useState<'replace' | 'merge'>('merge');
   const saveTemplate = useSaveProgram();
   const list = useRef<HTMLOListElement | null>(null);
-  const focusNew = useRef(false);
+  const before = useRef(day?.exercises.length ?? 0);
   const count = day?.exercises.length ?? 0;
   const prefs = usePrescribing();
   // The effort column is named after the method this day is prescribed with.
@@ -70,10 +71,13 @@ export function DaySession({
         : prefs.effort;
   // A picked exercise is ready to be prescribed: the cursor lands on its first cell.
   useEffect(() => {
-    if (!focusNew.current) return;
-    focusNew.current = false;
-    list.current?.querySelector<HTMLElement>(':scope > li:last-of-type [data-cell="0:0"]')?.focus();
-  }, [count]);
+    const grew = count > before.current;
+    before.current = count;
+    if (grew && wide)
+      list.current
+        ?.querySelector<HTMLElement>(':scope > li:last-of-type [data-cell="0:0"]')
+        ?.focus();
+  }, [count, wide]);
 
   if (!day)
     return (
@@ -87,7 +91,7 @@ export function DaySession({
               aria-label={`Añadir sesión el ${weekday}`}
               onClick={() => {
                 onAdd();
-                setSearching(true);
+                onSearch();
               }}
             >
               <Plus size={16} aria-hidden /> Añadir sesión
@@ -233,7 +237,7 @@ export function DaySession({
             onReorder(source.index, destination.index);
         }}
       >
-        {count > 0 && (
+        {count > 0 && !wide && (
           <div className="day-cols" aria-hidden>
             <span className="day-cols-quick">
               <span>Series</span>
@@ -257,7 +261,7 @@ export function DaySession({
             >
               {day.exercises.map((exercise: ProgramExercise, i) => (
                 <Draggable
-                  key={`${i}-${exercise.exerciseId}`}
+                  key={`${wide}-${i}-${exercise.exerciseId}`}
                   draggableId={`${i}:${exercise.exerciseId}`}
                   index={i}
                   isDragDisabled={readOnly}
@@ -265,6 +269,7 @@ export function DaySession({
                   {(drag) => (
                     <ExerciseRow
                       compact
+                      detail={wide}
                       drag={drag}
                       index={i}
                       exercise={exercise}
@@ -288,42 +293,22 @@ export function DaySession({
           )}
         </Droppable>
       </DragDropContext>
-      {!count && !searching && (
-        <p className="day-list-empty">Sesión vacía. Añade el primer ejercicio.</p>
+      {!count && (
+        <p className="day-list-empty">
+          {wide
+            ? 'Sesión vacía. Busca un ejercicio o arrastra aquí los que ya entrena.'
+            : 'Sesión vacía. Añade el primer ejercicio.'}
+        </p>
       )}
-      {searching && !full ? (
-        <div
-          className="day-search"
-          onKeyDown={(e) => {
-            if (e.key !== 'Escape') return;
-            e.stopPropagation();
-            setSearching(false);
-          }}
-        >
-          <ExerciseSearch
-            autoFocus
-            limit={6}
-            onPick={(exercise) => {
-              focusNew.current = true;
-              setSearching(false);
-              onAddExercise(exercise);
-            }}
-          />
-          <button type="button" className="btn btn-secondary" onClick={() => setSearching(false)}>
-            Cerrar buscador
-          </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          className="day-add"
-          aria-label={`Añadir ejercicio el ${weekday}`}
-          disabled={full}
-          onClick={() => setSearching(true)}
-        >
-          <Plus size={16} aria-hidden /> Ejercicio
-        </button>
-      )}
+      <button
+        type="button"
+        className="day-add"
+        aria-label={`Añadir ejercicio el ${weekday}`}
+        disabled={full}
+        onClick={onSearch}
+      >
+        <Plus size={16} aria-hidden /> Ejercicio
+      </button>
     </div>
   );
 }
