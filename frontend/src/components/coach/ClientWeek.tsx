@@ -217,7 +217,7 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
       ) : (
         <div className="min-w-0">
           <div hidden={view !== 'review'}>
-            <WeekReview linkId={link.linkId} week={reviewWeek} assignments={assignments.data} />
+            <WeekReview link={link} week={reviewWeek} assignments={assignments.data} />
           </div>
           <div hidden={view !== 'prepare'}>
             <AthleteEffort.Provider value={link.setup?.effortMethod ?? null}>

@@ -1,4 +1,5 @@
 import { QueryErrorNotice } from './QueryErrorNotice';
+import { ThemeTrial } from './dev/ThemeTrial';
 import {
   useState,
   useCallback,
@@ -33,6 +34,8 @@ import {
   LogOut,
   ChevronDown,
   GraduationCap,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import { ActiveWorkoutBanner } from './workout/ActiveWorkoutBanner';
 import { haptics } from '@/lib/haptics';
@@ -93,12 +96,19 @@ const navItems = [
 
 const bottomNavPaths = ['/dashboard', '/tracking', '/nutrition', '/workout'];
 
+const RAIL_KEY = 'ascension_sidebar_rail';
 const personalPaths = ['/dashboard', '/tracking', '/nutrition', '/workout'];
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  // Desktop only: the menu folds to a rail of icons and stays that way between visits.
+  const [rail, setRail] = useState(() => localStorage.getItem(RAIL_KEY) === '1');
+  const toggleRail = () => {
+    localStorage.setItem(RAIL_KEY, rail ? '0' : '1');
+    setRail(!rail);
+  };
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const firstPathRef = useRef(true);
@@ -230,8 +240,22 @@ export default function Layout() {
 
       <div className="app-container">
         {/* Barra lateral / Cajón deslizable (desktop) */}
-        <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`} data-rail={rail || undefined}>
           <div className="sidebar-header">
+            <button
+              type="button"
+              className="sidebar-rail-toggle"
+              aria-pressed={rail}
+              aria-label="Plegar el menú a iconos"
+              title={rail ? 'Desplegar el menú' : 'Plegar el menú a iconos'}
+              onClick={toggleRail}
+            >
+              {rail ? (
+                <PanelLeftOpen size={18} aria-hidden />
+              ) : (
+                <PanelLeftClose size={18} aria-hidden />
+              )}
+            </button>
             <div className="sidebar-brand-container">
               <span className="app-wordmark">
                 Ascension<span className="app-wordmark-dot">.</span>
@@ -251,6 +275,7 @@ export default function Layout() {
                   type="button"
                   className={`nav-item ${isActive ? 'active' : ''}`}
                   aria-current={isActive ? 'page' : undefined}
+                  title={rail ? item.label : undefined}
                   onMouseEnter={() => preloadRoute(item.path)}
                   onTouchStart={() => preloadRoute(item.path)}
                   onClick={(e) => {
@@ -270,6 +295,7 @@ export default function Layout() {
                 </button>
               );
             })}
+            {import.meta.env.DEV && isCoach && <ThemeTrial />}
             <div className="sidebar-account">
               {isCoach && (
                 <button
@@ -278,6 +304,7 @@ export default function Layout() {
                   data-tour-nav="cuenta"
                   aria-expanded={accountShown}
                   aria-controls="sidebar-account-menu"
+                  title={rail ? 'Tu cuenta' : undefined}
                   onClick={() => setAccountOpen(!accountShown)}
                 >
                   <span className="sidebar-account-avatar" aria-hidden="true">
@@ -304,6 +331,7 @@ export default function Layout() {
                         type="button"
                         className={`nav-item ${isActive ? 'active' : ''}`}
                         aria-current={isActive ? 'page' : undefined}
+                        title={rail ? item.label : undefined}
                         onMouseEnter={() => preloadRoute(item.path)}
                         onClick={() => {
                           closeSidebar();
@@ -318,6 +346,7 @@ export default function Layout() {
                   <button
                     type="button"
                     className="nav-item"
+                    title={rail ? 'Cerrar sesión' : undefined}
                     onClick={() => {
                       closeSidebar();
                       void logout();

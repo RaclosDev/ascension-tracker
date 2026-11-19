@@ -1467,6 +1467,44 @@
   min-width: 0;
   padding-top: 6px;
 }
+/* On a wide screen the week folds to a column, like the calendar, and the open day takes the rest. */
+@media (min-width: 1100px) {
+  .diary {
+    grid-template-columns: 190px minmax(0, 1fr);
+    column-gap: 20px;
+    align-items: start;
+  }
+  .diary-bar {
+    grid-column: 1 / -1;
+  }
+  .diary-days {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+  }
+  .diary-days li + li {
+    border-left: 0;
+  }
+  .diary-day {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 2px 8px;
+    min-height: 0;
+    padding: 8px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    background: var(--bg-card);
+  }
+  .diary-day-state {
+    grid-column: 1 / -1;
+  }
+  .diary-detail {
+    padding: 0 0 0 20px;
+    border-left: 1px solid var(--border-subtle);
+  }
+}
 .diary-detail-head {
   display: flex;
   flex-wrap: wrap;
@@ -2551,5 +2589,124 @@
   }
   .coach-student .charts-grid .chart-card.full-width {
     grid-column: auto;
+  }
+}
+
+/* Desktop: the athlete's frame stays low so the week gets the screen. Who it is, what they are
+   after and the pending action share one line; the tabs and their views share the next. */
+@media (min-width: 1024px) {
+  .main-content:has(.athlete-page) {
+    padding-top: 14px;
+  }
+  .athlete-header {
+    gap: 6px 14px;
+  }
+  .athlete-back {
+    flex-basis: 36px;
+    width: 36px;
+    height: 36px;
+  }
+  .athlete-identity .coach-client-avatar {
+    flex-basis: 36px;
+    width: 36px;
+    height: 36px;
+    font-size: 0.82rem;
+  }
+  .coach-page.athlete-page h1.athlete-name {
+    font-size: 1.3rem;
+  }
+  .athlete-meta {
+    margin-top: 0;
+    font-size: 0.76rem;
+  }
+  .athlete-context {
+    flex: 1 1 220px;
+    max-width: none;
+    border: 0;
+    border-radius: 0;
+  }
+  .athlete-context > div {
+    flex: 0 1 auto;
+    gap: 0;
+    padding: 0 14px;
+    border-left: 1px solid var(--border-medium);
+  }
+  .athlete-context dd {
+    display: block;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.82rem;
+  }
+  .athlete-header .athlete-followup {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 0.85rem;
+  }
+  .athlete-note {
+    align-items: center;
+    padding: 3px 10px;
+    font-size: 0.8rem;
+  }
+  .athlete-note > svg {
+    margin-top: 0;
+  }
+  .athlete-note p {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+  .athlete-note-form {
+    align-items: stretch;
+    padding: 10px 12px;
+  }
+  .coach-client-nav.athlete-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+  }
+  .athlete-tabs {
+    padding: 3px;
+    border-radius: 8px;
+  }
+  .athlete-nav .athlete-tabs a {
+    min-height: 34px;
+    padding: 0 12px;
+  }
+  .athlete-subtabs {
+    padding: 3px;
+  }
+  .athlete-nav .athlete-subtabs a {
+    min-height: 32px;
+    padding: 0 12px;
+  }
+  /* The week bar keeps its two lines, each one lower. */
+  .week-editor {
+    gap: 10px;
+  }
+  .week-bar {
+    gap: 6px 14px;
+    padding-block: 6px;
+  }
+  .week-bar .segmented-option,
+  .week-bar .week-toolbar-picker .btn,
+  .week-bar .week-bar-publish .btn {
+    min-height: 36px;
+    padding-block: 0;
+  }
+  .week-bar .week-toolbar-picker input.form-input {
+    height: 36px;
+    min-height: 36px;
+  }
+  .week-bar .week-bar-meta {
+    font-size: 0.76rem;
+    line-height: 1.3;
+  }
+  .week-bar .week-tools {
+    flex: 1 0 100%;
+  }
+  .week-bar .week-tools .btn {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 0.8rem;
   }
 }

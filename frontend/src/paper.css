@@ -320,13 +320,13 @@ body,
  */
 :where(
   input:not(
-      [type='checkbox'],
-      [type='radio'],
-      [type='color'],
-      [type='range'],
-      [type='file'],
-      .bg-transparent
-    ),
+    [type='checkbox'],
+    [type='radio'],
+    [type='color'],
+    [type='range'],
+    [type='file'],
+    .bg-transparent
+  ),
   textarea:not(.bg-transparent),
   select:not(.bg-transparent)
 ) {
@@ -669,6 +669,92 @@ body,
   color: var(--wall-active-ink);
   border: 0;
   box-shadow: 3px 4px 0 var(--wall-shadow);
+}
+/* Desktop: the menu folds to a rail of icons to leave the width to the work. */
+.sidebar-rail-toggle {
+  display: none;
+}
+@media (min-width: 769px) {
+  :root:has(.sidebar[data-rail]) {
+    --sidebar-width: 64px;
+  }
+  .sidebar {
+    transition: width 0.18s ease;
+  }
+  .app-container {
+    transition: padding-left 0.18s ease;
+  }
+  .sidebar-header {
+    position: relative;
+  }
+  .sidebar-rail-toggle {
+    position: absolute;
+    top: 10px;
+    right: 8px;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+  }
+  .sidebar-rail-toggle:hover {
+    background: var(--bg-glass);
+    color: var(--text-primary);
+  }
+  .sidebar[data-rail] .sidebar-header {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 8px;
+    padding-inline: 0;
+  }
+  .sidebar[data-rail] .sidebar-rail-toggle {
+    position: static;
+  }
+  .sidebar[data-rail] .sidebar-brand-container {
+    align-items: center;
+  }
+  /* Folded, the name is its initial and the accent dot. */
+  .sidebar[data-rail] .app-wordmark {
+    font-size: 0;
+  }
+  .sidebar[data-rail] .app-wordmark::before {
+    content: 'A';
+  }
+  .sidebar[data-rail] .app-wordmark::before,
+  .sidebar[data-rail] .app-wordmark-dot {
+    font-size: 2rem;
+  }
+  .sidebar[data-rail] .logo-subtitle,
+  .sidebar[data-rail] .sidebar-account-chevron {
+    display: none;
+  }
+  .sidebar[data-rail] .sidebar-nav {
+    padding-inline: 8px;
+  }
+  .sidebar[data-rail] .nav-item {
+    justify-content: center;
+    padding-inline: 0;
+  }
+  .sidebar[data-rail] .nav-icon {
+    margin-right: 0;
+  }
+  /* The names stay for screen readers and show as tooltips. */
+  .sidebar[data-rail] .nav-item > span:not(.nav-icon, .sidebar-account-avatar) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .app-container {
+    transition: none;
+  }
 }
 .mobile-bottom-nav {
   background: var(--bg-card);

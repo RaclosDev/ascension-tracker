@@ -39,6 +39,28 @@ interface Props {
   onOpenWeek: (week: string) => void;
 }
 
+/** What the view is for, said once: it is the one screen of the athlete that spans more than a week. */
+const BLOCK_STEPS = (
+  <ol>
+    <li>
+      <strong>Qué es.</strong> Un tramo de 2 a 12 semanas seguidas con nombre y final, por ejemplo
+      «Fuerza base». Sin bloque guardado ves las próximas semanas sueltas.
+    </li>
+    <li>
+      <strong>Planifica.</strong> Cada fila es una semana: ábrela para escribir sus sesiones o
+      repítela en las siguientes para no empezar de cero.
+    </li>
+    <li>
+      <strong>Publica.</strong> El atleta solo ve las semanas publicadas; desde aquí publicas de una
+      vez todas las que estén completas.
+    </li>
+    <li>
+      <strong>Cierra.</strong> Abajo se suman las series por grupo muscular de cada semana, y en la
+      última el seguimiento del atleta añade dos preguntas de fin de bloque.
+    </li>
+  </ol>
+);
+
 /** Several weeks of one athlete at a glance: what each holds, how they relate and how the load moves. */
 export function BlockView({ link, lead, onOpenWeek }: Props) {
   const id = link.linkId;
@@ -186,12 +208,6 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
               </>
             )}
           </p>
-          {!defined && (
-            <p>
-              Planifica varias semanas de un vistazo. Con «Guardar como bloque» les pones nombre y
-              fin.
-            </p>
-          )}
         </div>
         <div className="block-range">
           <button
@@ -227,6 +243,18 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
           </button>
         </div>
       </header>
+
+      {defined ? (
+        <details className="block-explain">
+          <summary>Cómo funciona el bloque</summary>
+          {BLOCK_STEPS}
+        </details>
+      ) : (
+        <div className="block-explain">
+          <h4>Cómo funciona el bloque</h4>
+          {BLOCK_STEPS}
+        </div>
+      )}
 
       {canEdit && (
         <div className="block-actions">

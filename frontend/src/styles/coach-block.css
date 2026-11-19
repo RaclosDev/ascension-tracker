@@ -33,6 +33,46 @@
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
+/* The explanation reads as four short steps side by side, not as a paragraph to get through. */
+.block-explain {
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-card);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+details.block-explain:not([open]) {
+  padding-block: 0;
+}
+.block-explain h4,
+.block-explain summary {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.block-explain summary {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  cursor: pointer;
+}
+.block-explain ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 24px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.block-explain li {
+  line-height: 1.45;
+}
+.block-explain li strong {
+  color: var(--text-primary);
+}
 .block-range {
   display: flex;
   align-items: center;

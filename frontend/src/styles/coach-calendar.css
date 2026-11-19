@@ -212,7 +212,8 @@
 .cal-fact svg {
   flex: none;
 }
-.cal-fact[data-ok] {
+.cal-fact[data-ok],
+.cal-fact[data-note] {
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -614,7 +615,8 @@
   font-size: 0.75rem;
   color: var(--text-secondary);
 }
-.day-fact a {
+.day-fact a,
+.day-fact-links a {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -639,6 +641,33 @@
   font-size: 0.72rem;
   font-weight: 400;
   color: var(--text-secondary);
+}
+/* Something written about the day: the words quoted under who said them and where. */
+.day-note {
+  display: grid;
+  gap: 2px;
+  padding-left: 10px;
+  border-left: 2px solid var(--border-medium);
+  font-size: 0.85rem;
+}
+.day-note[data-coach] {
+  border-left-color: var(--accent-primary);
+}
+.day-note strong {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.day-note-scores {
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.day-note q {
+  quotes: none;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
 }
 .day-fact p.day-fact-links,
 .day-fact p.day-records {
@@ -692,6 +721,24 @@
   color: var(--text-primary);
   background: var(--bg-secondary);
 }
+.cal-strip-whole {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--text-primary);
+  background: var(--bg-card);
+}
+.cal-strip-whole:hover {
+  background: var(--bg-secondary);
+}
+.cal-strip-whole[aria-current] {
+  border-color: var(--accent-primary);
+  background: var(--bg-secondary);
+}
 .cal-strip ol {
   display: grid;
   grid-auto-flow: column;
@@ -730,6 +777,7 @@
   background: var(--bg-secondary);
 }
 .cal-strip-back:focus-visible,
+.cal-strip-whole:focus-visible,
 .cal-strip-day button:focus-visible,
 .ex-item:focus-visible {
   outline: 2px solid var(--accent-primary);
@@ -824,6 +872,74 @@
   }
 }
 
+/* A reviewed week reuses the wide session: the days as a column, the week or the day beside. */
+.coach-student .week-review-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.week-review-title::first-letter {
+  text-transform: uppercase;
+}
+.week-review-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.week-review-feedback {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+  font-size: 0.88rem;
+}
+.week-review-feedback .coach-review-scores {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+}
+.week-review-feedback .coach-review-scores dt {
+  font-size: 0.72rem;
+}
+.week-review-feedback .coach-review-scores dd {
+  font-size: 1.05rem;
+}
+.day-review {
+  display: grid;
+  gap: 4px;
+}
+/* Beside the day's facts there is room for one column: the plan first, what was done under it. */
+.day-review > .grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.day-review > .grid > * {
+  grid-column: 1 / -1;
+}
+.day-review table :is(th, td) {
+  padding: 6px 14px 6px 0;
+  text-align: left;
+  vertical-align: top;
+}
+.day-review-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.day-review-head strong {
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+.day-fact-links {
+  margin: 0;
+  font-size: 0.82rem;
+}
 .cal-day-main {
   display: flex;
   flex-direction: column;
@@ -842,7 +958,8 @@
 }
 @container daypanel (min-width: 780px) {
   .cal-day-body[data-wide] {
-    grid-template-columns: minmax(0, 1fr) 300px;
+    /* The exercise list is read; the set grid only needs room for three short numbers. */
+    grid-template-columns: minmax(0, 1.2fr) minmax(320px, 1fr);
     gap: 20px;
   }
   .ex-panel {

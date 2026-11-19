@@ -189,7 +189,8 @@ for (const width of [390, 1920]) {
     await page.getByRole('button', { name: 'Copiar semana anterior' }).click();
     // The copied Monday shows on the calendar and opens beside it, summed up in its head.
     await expect(page.locator('.cal-week[data-focus] .cal-cell').first()).toContainText('Torso');
-    const session = page.locator('.cal-panel');
+    // The review keeps its own panel mounted behind the calendar.
+    const session = page.locator('.cal-panel').filter({ visible: true });
     await expect(session).toContainText('1 ejercicio · 3 series');
     await expect(page.getByLabel('Nombre del día (Lunes 16/11)')).toHaveValue('Torso');
     await page.screenshot({ path: info.outputPath('weekly-compact.png'), fullPage: true });

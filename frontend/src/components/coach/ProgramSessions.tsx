@@ -30,11 +30,14 @@ export function ProgramSessions({
   assignmentId,
   exerciseName,
   weekStart,
+  date,
 }: {
   linkId: string;
   assignmentId: string;
   exerciseName: (id: string) => string;
   weekStart?: string;
+  /** Only that day, already open; or a line saying the program has no session then. */
+  date?: string;
 }) {
   const sessions = useProgramSessions(linkId, assignmentId);
   const [openDay, setOpenDay] = useState<string | null>(null);
@@ -46,6 +49,30 @@ export function ProgramSessions({
     sessions.data?.filter((s) => (!weekStart && allWeeks) || (s.date >= from && s.date < until)) ??
     [];
 
+  if (date) {
+    const session = sessions.data?.find((s) => s.date === date);
+    if (!session) return <p className="week-panel-hint">Sin sesión pautada este día.</p>;
+    const status = sessionStatus(session, today);
+    return (
+      <div className="day-review">
+        <p className="day-review-head">
+          <strong>{session.name}</strong>
+          <span style={{ color: STATUS_COLORS[status] }}>
+            {SESSION_STATUS_LABELS[status]}
+            {session.recordedSets != null
+              ? ` · ${session.completedSets}/${session.recordedSets} series`
+              : ''}
+          </span>
+        </p>
+        <SessionDetail
+          linkId={linkId}
+          assignmentId={assignmentId}
+          session={session}
+          exerciseName={exerciseName}
+        />
+      </div>
+    );
+  }
   if (sessions.isLoading) return <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>;
   if (sessions.isError) return <p role="alert">No se pudieron cargar las sesiones.</p>;
   if (!sessions.data?.length)
