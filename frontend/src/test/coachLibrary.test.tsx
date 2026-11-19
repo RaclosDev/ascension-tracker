@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import api from '../api/client';
 import CoachPlanningPage from '../pages/CoachPlanningPage';
+import { chooseOption } from './selectMenu';
 
 vi.mock('../api/client', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() },
@@ -164,7 +165,7 @@ describe('Biblioteca del entrenador', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Clasificar Torso rápido' }));
-    fireEvent.change(screen.getByLabelText('Tipo'), { target: { value: 'WEEK' } });
+    chooseOption(screen.getByLabelText('Tipo'), 'WEEK');
     fireEvent.change(screen.getByLabelText(/Etiquetas/), { target: { value: 'casa, rápido ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
     await waitFor(() =>

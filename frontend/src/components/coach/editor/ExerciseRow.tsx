@@ -15,7 +15,6 @@ import {
 import { restLabel } from '@/lib/coach/today';
 import { setText } from '@/lib/coach/exerciseHistory';
 import { AthleteHistory, usePrescribing } from './prescribing';
-import { usePrescribing } from './prescribing';
 import { Select } from '@/components/ui/select';
 
 const MAX_SETS = 20;
