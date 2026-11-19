@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 
 for (const width of [390, 1440]) {
@@ -102,12 +103,12 @@ for (const width of [390, 1440]) {
     const squat = page.getByRole('region', { name: 'Sentadilla', exact: true });
     await expect(squat.getByText('1110 kg', { exact: true })).toBeVisible();
     await expect(squat.getByText(/110 % del máximo de trabajo actual/)).toBeVisible();
-    await page.getByRole('combobox', { name: 'Periodo de seguimiento' }).selectOption('4');
+    await chooseOption(page.getByRole('button', { name: 'Periodo de seguimiento' }), '4');
     await expect(squat.getByText('610 kg', { exact: true })).toBeVisible();
     await expect(squat.getByText('8 / 10 · 1 de 2 series', { exact: true })).toBeVisible();
-    await page.getByRole('combobox', { name: 'Levantamiento', exact: true }).selectOption('bench');
+    await chooseOption(page.getByRole('button', { name: 'Levantamiento', exact: true }), 'bench');
     await expect(page.getByText('No hay carga registrada para este levantamiento.')).toBeVisible();
-    await page.getByRole('combobox', { name: 'Levantamiento', exact: true }).selectOption('squat');
+    await chooseOption(page.getByRole('button', { name: 'Levantamiento', exact: true }), 'squat');
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);

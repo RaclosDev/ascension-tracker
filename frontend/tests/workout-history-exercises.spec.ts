@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 
 interface CustomPayload {
@@ -292,7 +293,7 @@ test.describe('Workout History and Exercise Catalog', () => {
     // Filtrar por grupo muscular: 'pecho'
     const muscleSelect = page.locator('#filter-muscle-select');
     await expect(muscleSelect).toBeVisible({ timeout: 10000 });
-    await muscleSelect.selectOption('pecho');
+    await chooseOption(muscleSelect, 'pecho');
 
     // Verificar que solo se muestran ejercicios de pecho
     await expect(page.getByText('Press de Banca con Barra')).toBeVisible({ timeout: 10000 });
@@ -304,7 +305,7 @@ test.describe('Workout History and Exercise Catalog', () => {
     // Filtrar además por material/equipamiento: 'mancuernas'
     const equipSelect = page.locator('#filter-equipment-select');
     await expect(equipSelect).toBeVisible({ timeout: 10000 });
-    await equipSelect.selectOption('mancuernas');
+    await chooseOption(equipSelect, 'mancuernas');
 
     // Verificar que solo se muestra el de pecho con mancuernas
     await expect(page.getByText('Aperturas con Mancuernas')).toBeVisible({ timeout: 10000 });
@@ -312,13 +313,13 @@ test.describe('Workout History and Exercise Catalog', () => {
     await expect(page.getByText('Press de Pecho en Máquina')).toHaveCount(0);
 
     // Cambiar filtro de material a 'maquina'
-    await equipSelect.selectOption('maquina');
+    await chooseOption(equipSelect, 'maquina');
     await expect(page.getByText('Press de Pecho en Máquina')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Aperturas con Mancuernas')).toHaveCount(0);
 
     // Cambiar grupo muscular a 'espalda_alta' y material a 'barra'
-    await muscleSelect.selectOption('espalda_alta');
-    await equipSelect.selectOption('barra');
+    await chooseOption(muscleSelect, 'espalda_alta');
+    await chooseOption(equipSelect, 'barra');
     await expect(page.getByText('Remo con Barra')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Press de Pecho en Máquina')).toHaveCount(0);
   });
@@ -367,8 +368,8 @@ test.describe('Workout History and Exercise Catalog', () => {
 
     // Rellenar formulario
     await page.locator('#create-exercise-name').fill('Fondos Lastrados en Paralelas');
-    await page.locator('#create-exercise-muscle').selectOption('pecho');
-    await page.locator('#create-exercise-equipment').selectOption('mancuernas');
+    await chooseOption(page.locator('#create-exercise-muscle'), 'pecho');
+    await chooseOption(page.locator('#create-exercise-equipment'), 'mancuernas');
 
     // Enviar formulario
     const saveBtn = page.getByRole('button', { name: 'Guardar' });

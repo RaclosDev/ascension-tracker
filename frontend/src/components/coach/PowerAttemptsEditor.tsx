@@ -5,6 +5,7 @@ import {
   type MeetContent,
   type PowerAttempt,
 } from '../../lib/coach/powerMeets';
+import { Select } from '@/components/ui/select';
 
 export function PowerAttemptsEditor({
   attempts,
@@ -117,7 +118,7 @@ export function PowerAttemptsEditor({
                         />
                       </td>
                       <td className="p-1">
-                        <select
+                        <Select
                           className="form-input min-h-11"
                           aria-label={`${label} · Resultado`}
                           value={attempt.result}
@@ -129,7 +130,7 @@ export function PowerAttemptsEditor({
                           <option value="VALID">Válido</option>
                           <option value="INVALID">Nulo</option>
                           <option value="WITHDRAWN">No realizado</option>
-                        </select>
+                        </Select>
                       </td>
                       {rules === 'IPF_2026' && (
                         <td>

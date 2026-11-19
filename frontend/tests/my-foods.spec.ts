@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 
 const mockSavedFoods = [
@@ -284,9 +285,9 @@ test.describe('Mis Alimentos & Recetas (MyFoodsPage)', () => {
 
     // 1.4 Ordenación alfabética y visualización de calorías
     const sortSelect = page
-      .getByRole('combobox', { name: /ordenar alimentos/i })
+      .getByRole('button', { name: /ordenar alimentos/i })
       .or(page.getByLabel(/ordenar alimentos/i));
-    await sortSelect.selectOption('name_asc');
+    await chooseOption(sortSelect, 'name_asc');
 
     // Verificar orden alfabético A-Z
     const foodCards = page

@@ -34,6 +34,7 @@ import { PendingInvitations } from '../components/coach/CoachInvitations';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
 import { ClientAvatar } from '../components/coach/ClientAvatar';
 import '../styles/coach-roster.css';
+import { Select } from '@/components/ui/select';
 
 type Filter =
   | 'all'
@@ -150,11 +151,11 @@ function Clients() {
             </label>
             <label className="coach-sort">
               <span>Ordenar</span>
-              <select value={sort} onChange={(e) => update('orden', e.target.value)}>
+              <Select value={sort} onChange={(e) => update('orden', e.target.value)}>
                 <option value="priority">Prioridad</option>
                 <option value="name">Nombre</option>
                 <option value="recent">Altas recientes</option>
-              </select>
+              </Select>
             </label>
             <details className="coach-roster-options">
               <summary>
@@ -174,14 +175,14 @@ function Clients() {
                 </label>
                 <label className="coach-sort">
                   <span>Servicio</span>
-                  <select value={service} onChange={(e) => update('servicio', e.target.value)}>
+                  <Select value={service} onChange={(e) => update('servicio', e.target.value)}>
                     <option value="">Todos los servicios</option>
                     {Object.entries(SERVICE_LABELS).map(([key, label]) => (
                       <option key={key} value={key}>
                         {label}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
               </div>
             </details>
@@ -208,7 +209,7 @@ function Clients() {
             ))}
             <label className="coach-more-filters">
               <span className="sr-only">Más filtros</span>
-              <select
+              <Select
                 aria-label="Más filtros"
                 value={PRIMARY_FILTERS.includes(filter.value) ? '' : filter.value}
                 disabled={!ready}
@@ -220,7 +221,7 @@ function Clients() {
                     {f.label} ({rows.filter(f.matches).length})
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           </div>
           {status.isError && (

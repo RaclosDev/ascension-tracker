@@ -647,26 +647,10 @@ body {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
-select.form-input {
-  max-width: 100%;
-  box-sizing: border-box;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.65rem top 50%;
-  background-size: 0.65rem auto;
-  /* Hueco justo para la flecha: el texto de la opción no la pisa y cabe entero en media fila. */
+.ui-select.form-input {
+  /* La flecha la pinta el componente; el hueco a la derecha ya no hace falta. */
   padding-left: 0.75rem;
-  padding-right: 1.6rem;
-  text-overflow: ellipsis;
-  cursor: pointer;
-}
-select.form-input option {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  font-family: var(--font-main);
+  padding-right: 0.65rem;
 }
 .form-hint {
   font-size: 0.75rem;
@@ -2572,8 +2556,8 @@ button, a, input, select, textarea, [role=button], [onclick] {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 2px var(--accent-glow, color-mix(in srgb, var(--accent-primary) 25%, transparent));
 }
-/* The select is borderless inside the pill, so the pill carries its keyboard focus ring. */
-.exercise-card-rest-pill:has(.exercise-card-rest-select:focus-visible) {
+/* The trigger is borderless inside the pill, so the pill carries its keyboard focus ring. */
+.exercise-card-rest-pill:has(.exercise-card-rest-select:is(:focus-visible, [aria-expanded='true'])) {
   outline: 2px solid var(--accent-primary);
   outline-offset: 1px;
 }
@@ -2597,21 +2581,23 @@ button, a, input, select, textarea, [role=button], [onclick] {
   font-family: var(--font-main);
   line-height: 1.2;
 }
-.exercise-card-rest-select option {
-  background: var(--bg-card);
-  color: var(--ink);
-  padding: 0.5rem;
+.exercise-card-rest-select {
+  gap: 0.2rem;
 }
-.exercise-card-rest-chevron {
-  pointer-events: none;
-  flex-shrink: 0;
+.exercise-card-rest-select .ui-select-chevron {
+  width: 11px;
+  height: 11px;
   color: var(--text-muted);
   opacity: 0.7;
-  transition: transform 0.2s ease, color 0.2s ease;
 }
-.exercise-card-rest-pill:hover .exercise-card-rest-chevron {
+.exercise-card-rest-pill:hover .exercise-card-rest-select .ui-select-chevron {
   color: var(--text-primary);
   opacity: 1;
+}
+/* El anillo lo lleva la píldora. */
+.exercise-card-rest-select.ui-select:focus-visible,
+.exercise-card-rest-select.ui-select[aria-expanded='true'] {
+  outline: none;
 }
 .exercise-card-actions {
   display: flex;

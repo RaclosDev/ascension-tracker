@@ -21,6 +21,7 @@ import CoachNutritionTemplateEditorPage from '../pages/CoachNutritionTemplateEdi
 import { NutritionTemplatePicker } from '../components/coach/NutritionTemplatePicker';
 import { clearSessionDrafts } from '../lib/sessionDrafts';
 import type { NutritionTemplate } from '../lib/coach/nutritionTemplates';
+import { chooseOption } from './selectMenu';
 const mocked = vi.mocked(api);
 const original: NutritionTemplate = {
   id: 't1',
@@ -50,8 +51,11 @@ function editor() {
     </QueryClientProvider>,
   );
 }
-const fill = (label: string, value: string) =>
-  fireEvent.change(screen.getByLabelText(label), { target: { value } });
+const fill = (label: string, value: string) => {
+  const field = screen.getByLabelText(label);
+  if (field.getAttribute('aria-haspopup') === 'menu') chooseOption(field, value);
+  else fireEvent.change(field, { target: { value } });
+};
 describe('Biblioteca de pautas', () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -130,7 +134,9 @@ describe('Biblioteca de pautas', () => {
     expect(
       (screen.getByRole('button', { name: 'Guardar en biblioteca' }) as HTMLButtonElement).disabled,
     ).toBe(true);
-    expect(screen.getByRole('option', { name: 'Receta no disponible' })).toBeTruthy();
+    expect(
+      screen.getByRole('menuitemradio', { name: 'Receta no disponible', hidden: true }),
+    ).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Quitar la comida 1/ }));
     expect(
       (screen.getByRole('button', { name: 'Guardar en biblioteca' }) as HTMLButtonElement).disabled,

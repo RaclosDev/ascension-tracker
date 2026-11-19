@@ -32,7 +32,7 @@ describe('SettingsPersonalSection Component', () => {
 
     expect(screen.getByRole('heading', { name: 'Datos Personales' })).toBeDefined();
     expect(screen.getByText('Métricas Corporales y Biometría')).toBeDefined();
-    expect((screen.getByLabelText('Sexo') as HTMLSelectElement).value).toBe('M');
+    expect(screen.getByLabelText('Sexo')).toHaveAttribute('data-value', 'M');
   });
 
   it('triggers onSave when clicking save button', () => {

@@ -14,7 +14,7 @@ test.describe('Settings Page & User Preferences Flows', () => {
     await expect(nav.getByRole('link', { name: 'Entrenamiento' })).toBeVisible();
 
     // Personal data is the default section, shown without any extra click
-    await expect(page.locator('.form-group select').first()).toBeVisible();
+    await expect(page.locator('.form-group .ui-select').first()).toBeVisible();
     await expect(page.locator('.form-group input[type="number"]').first()).toBeVisible();
     await expect(page.getByRole('button', { name: /Guardar Cambios/i })).toBeVisible();
 
