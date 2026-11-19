@@ -23,6 +23,7 @@ import {
   useCreateInvitation,
   useRevokeInvitation,
 } from '../../lib/coach/api';
+import { Select } from '@/components/ui/select';
 
 export function InviteDialog({
   open,
@@ -331,11 +332,11 @@ function ProfileFields({
     <div className="grid grid-cols-2 gap-3">
       <label className="flex flex-col gap-1">
         <span className="form-label">Sexo</span>
-        <select className="form-input" value={value.sex} onChange={set('sex')}>
+        <Select className="form-input" value={value.sex} onChange={set('sex')}>
           <option value="">—</option>
           <option value="M">Hombre</option>
           <option value="F">Mujer</option>
-        </select>
+        </Select>
       </label>
       {NUMBER_FIELDS.map((f) => (
         <label key={f.key} className="flex flex-col gap-1">
@@ -354,7 +355,7 @@ function ProfileFields({
       ))}
       <label className="flex flex-col gap-1">
         <span className="form-label">Actividad</span>
-        <select
+        <Select
           className="form-input"
           value={value.activityFactor}
           onChange={set('activityFactor')}
@@ -365,17 +366,17 @@ function ProfileFields({
           <option value="1.55">Moderado</option>
           <option value="1.725">Alto</option>
           <option value="1.9">Muy alto</option>
-        </select>
+        </Select>
       </label>
       <label className="flex flex-col gap-1 col-span-2">
         <span className="form-label">Qué usará en la app</span>
-        <select className="form-input" value={value.appModules} onChange={set('appModules')}>
+        <Select className="form-input" value={value.appModules} onChange={set('appModules')}>
           {APP_MODULE_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
     </div>
   );

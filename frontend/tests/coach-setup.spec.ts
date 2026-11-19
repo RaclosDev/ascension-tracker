@@ -1,5 +1,6 @@
 import { coachSettings } from './helpers/coachSettings';
 import { test, expect } from '@playwright/test';
+import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 import type { CoachSetup } from '../src/lib/coach/setup';
 import type { CoachFollowup } from '../src/lib/coach/coachSchedule';
@@ -96,7 +97,7 @@ for (const width of [1440, 390]) {
     await page.getByLabel(/He revisado con el atleta/).check();
     await page.getByRole('button', { name: 'Guardar servicio' }).click();
     await expect(page.getByText('Servicio guardado', { exact: true })).toBeVisible();
-    await page.getByLabel('Día del seguimiento').selectOption('3');
+    await chooseOption(page.getByLabel('Día del seguimiento'), '3');
     await page.getByLabel('Hora del seguimiento').fill('17:30');
     await page.getByLabel('Zona horaria').fill('Atlantic/Canary');
     await page.getByLabel('Pausar seguimiento').check();

@@ -37,6 +37,7 @@ import { LibraryInsert } from './editor/LibraryInsert';
 import { ProgramPreview } from './ProgramPreview';
 import { downloadWeekBackup } from '@/lib/coach/weekBackup';
 import { BulkPrescription } from './editor/BulkPrescription';
+import { Select } from '@/components/ui/select';
 
 const DRAG_TYPE = 'application/x-ascension-week-item';
 const PANELS = [
@@ -574,7 +575,7 @@ export function WeekEditor({
                   </label>
                   <label data-tour="week-intent" className="flex flex-col gap-1 min-w-0">
                     Objetivo de la semana
-                    <select
+                    <Select
                       className="form-input min-h-11"
                       value={value.content.intent}
                       onChange={(e) =>
@@ -586,7 +587,7 @@ export function WeekEditor({
                           {label}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </label>
                   <label data-tour="week-comment" className="flex flex-col gap-1 min-w-0">
                     Comentario para el atleta

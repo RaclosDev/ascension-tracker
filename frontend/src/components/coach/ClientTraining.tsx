@@ -9,6 +9,7 @@ import { BodyHeatmap } from '../workout/body-heatmap';
 import { formatDay, formatKg } from '../../lib/workout/format';
 import type { CompletedWorkout } from '../../lib/workout/types';
 import { Section, Stat, QueryState, num } from './ClientSection';
+import { Select } from '@/components/ui/select';
 const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 
 interface WorkoutPage {
@@ -64,7 +65,7 @@ export default function TrainingSection({ linkId }: { linkId: string }) {
         </label>
         <label className="flex flex-col gap-1 text-sm">
           Origen
-          <select
+          <Select
             className="form-input min-h-11"
             value={origin}
             onChange={(e) => {
@@ -75,7 +76,7 @@ export default function TrainingSection({ linkId }: { linkId: string }) {
             <option value="ALL">Todos</option>
             <option value="PRESCRIBED">Pautados</option>
             <option value="FREE">Libres</option>
-          </select>
+          </Select>
         </label>
       </div>
       <QueryState isLoading={history.isLoading} isError={history.isError} />

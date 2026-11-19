@@ -21,6 +21,7 @@ import WeightLossPlan, { weightGoal } from './calculators/WeightLossPlan';
 import MacroConfigurator from './calculators/MacroConfigurator';
 
 import { MacroForm } from './calculators/MacroConfigurator';
+import { Select } from '@/components/ui/select';
 
 interface OnboardingForm extends MacroForm {
   sex: 'M' | 'F';
@@ -372,7 +373,7 @@ export default function OnboardingScreen({
                   >
                     <User size={14} /> Sexo
                   </label>
-                  <select
+                  <Select
                     id="onboarding-screen-sexo"
                     className="form-input"
                     value={form.sex}
@@ -380,7 +381,7 @@ export default function OnboardingScreen({
                   >
                     <option value="M">Hombre</option>
                     <option value="F">Mujer</option>
-                  </select>
+                  </Select>
                 </div>
                 <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
                   <label htmlFor="onboarding-screen-edad" className="form-label">
@@ -458,7 +459,7 @@ export default function OnboardingScreen({
                 >
                   <Activity size={14} /> Actividad
                 </label>
-                <select
+                <Select
                   id="onboarding-screen-actividad"
                   className="form-input"
                   value={form.activityFactor}
@@ -469,7 +470,7 @@ export default function OnboardingScreen({
                   <option value="1.55">Moderado</option>
                   <option value="1.725">Alto</option>
                   <option value="1.9">Muy Alto</option>
-                </select>
+                </Select>
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>

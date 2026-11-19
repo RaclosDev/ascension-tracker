@@ -2,6 +2,7 @@ import { Search } from 'lucide-react';
 import { EQUIPMENT_OPTIONS, MUSCLE_OPTIONS } from '@/lib/workout/equipmentOptions';
 import type { Equipment, MuscleGroup } from '@/lib/workout/types';
 import type { ExerciseTabFilter } from '@/hooks/workout/useExerciseFilters';
+import { Select } from '@/components/ui/select';
 
 export interface ExerciseFilterBarProps {
   query: string;
@@ -59,7 +60,7 @@ export function ExerciseFilterBar({
         <label htmlFor="filter-muscle-select" className="sr-only">
           Filtrar por grupo muscular
         </label>
-        <select
+        <Select
           id="filter-muscle-select"
           aria-label="Filtrar por grupo muscular"
           className="form-input flex-1 p-1.5 text-xs"
@@ -72,11 +73,11 @@ export function ExerciseFilterBar({
               {m.label}
             </option>
           ))}
-        </select>
+        </Select>
         <label htmlFor="filter-equipment-select" className="sr-only">
           Filtrar por equipamiento
         </label>
-        <select
+        <Select
           id="filter-equipment-select"
           aria-label="Filtrar por equipamiento"
           className="form-input flex-1 p-1.5 text-xs"
@@ -89,7 +90,7 @@ export function ExerciseFilterBar({
               {eq.label}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <div

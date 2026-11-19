@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 import { COACH_TOUR_STEPS } from '../src/components/coach/tour/steps';
 
@@ -79,7 +80,7 @@ test('exit, resume after refresh, jump backwards from preview and repeat from To
   await page.getByRole('button', { name: 'Tour', exact: true }).click();
   await page.getByRole('button', { name: 'Repetir tour desde el principio' }).click();
   const preview = COACH_TOUR_STEPS.findIndex((step) => step.id === 'preview');
-  await page.getByLabel('Ir a un paso').selectOption(String(preview));
+  await chooseOption(page.getByLabel('Ir a un paso'), String(preview));
   await expect(page.getByRole('button', { name: 'Siguiente', exact: true })).toBeEnabled({
     timeout: 20000,
   });

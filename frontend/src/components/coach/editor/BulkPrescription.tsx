@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Program } from '@/lib/coach/coachPrograms';
 import { adjustProgram, type DoseAdjustment } from '@/lib/coach/bulkPrescription';
 import { PrescriptionSummary } from '../PrescriptionSummary';
+import { Select } from '@/components/ui/select';
 
 const INITIAL: DoseAdjustment = {
   day: null,
@@ -49,7 +50,7 @@ export function BulkPrescription({
       <div className="flex flex-wrap gap-3 mt-3">
         <label className="flex flex-col gap-1 min-w-0">
           Sesión
-          <select
+          <Select
             className="form-input min-h-11"
             value={delta.day ?? ''}
             onChange={(e) => edit({ day: e.target.value ? Number(e.target.value) : null })}
@@ -60,11 +61,11 @@ export function BulkPrescription({
                 {d.name}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="flex flex-col gap-1 min-w-0">
           Ejercicio
-          <select
+          <Select
             className="form-input min-h-11"
             value={delta.exerciseId ?? ''}
             onChange={(e) => edit({ exerciseId: e.target.value || null })}
@@ -75,7 +76,7 @@ export function BulkPrescription({
                 {e.exerciseName}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         {(
           [

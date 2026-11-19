@@ -36,12 +36,17 @@ test('section links leave space above their targets', async ({ page }) => {
     ['Tus datos', 'datos'],
     ['Entrenadores', 'entrenadores'],
   ]) {
-    await page.getByRole('navigation', { name: 'Secciones' }).getByRole('link', { name: label }).click();
-    await expect.poll(async () => {
-      const target = await page.locator(`#${id}`).boundingBox();
-      const container = await landing.boundingBox();
-      return Math.abs(target!.y - container!.y - 48);
-    }).toBeLessThan(5);
+    await page
+      .getByRole('navigation', { name: 'Secciones' })
+      .getByRole('link', { name: label })
+      .click();
+    await expect
+      .poll(async () => {
+        const target = await page.locator(`#${id}`).boundingBox();
+        const container = await landing.boundingBox();
+        return Math.abs(target!.y - container!.y - 48);
+      })
+      .toBeLessThan(5);
   }
 
   await expect(page.locator('#datos').getByRole('heading', { name: 'Tus datos' })).toBeVisible();

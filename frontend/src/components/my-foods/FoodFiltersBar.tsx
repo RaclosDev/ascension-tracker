@@ -1,4 +1,5 @@
 import { X, LayoutGrid, Clock, Apple, ChefHat, List } from 'lucide-react';
+import { Select } from '@/components/ui/select';
 
 interface FoodFiltersBarProps {
   searchQuery: string;
@@ -217,7 +218,7 @@ export function FoodFiltersBar({
           )}
 
           {sortBy && setSortBy && (
-            <select
+            <Select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               className="form-input"
@@ -235,7 +236,7 @@ export function FoodFiltersBar({
             >
               <option value="recent">Más recientes</option>
               <option value="name_asc">Nombre (A-Z)</option>
-            </select>
+            </Select>
           )}
         </div>
       )}

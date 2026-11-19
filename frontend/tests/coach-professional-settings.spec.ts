@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 import { coachSettings } from './helpers/coachSettings';
 import type { ProfessionalSettings } from '../src/lib/coach/professionalSettings';
@@ -66,7 +67,7 @@ for (const width of [390, 1440]) {
     await page.getByLabel('Mostrar mi foto de cuenta a mis atletas').uncheck();
     await page.getByLabel('Entrenamiento', { exact: true }).uncheck();
     await page.getByLabel('Nutrición', { exact: true }).check();
-    await page.getByLabel('Día del seguimiento inicial').selectOption('3');
+    await chooseOption(page.getByLabel('Día del seguimiento inicial'), '3');
     await page.getByLabel('Hora del seguimiento inicial').fill('17:30');
     await page.getByLabel('Zona horaria de los seguimientos').fill('Atlantic/Canary');
     await page.reload();
