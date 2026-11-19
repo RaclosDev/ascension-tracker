@@ -162,6 +162,16 @@ export default function ProgramsSection({
       )}
       {assignments.data && assignments.data.length > 0 && (
         <>
+          {!!assignments.data.some((a) => a.status === 'ENDED') && (
+            <button
+              type="button"
+              className="btn btn-secondary mb-3"
+              aria-expanded={showHistory}
+              onClick={() => setShowHistory(!showHistory)}
+            >
+              {showHistory ? 'Ocultar programas anteriores' : 'Ver programas anteriores'}
+            </button>
+          )}
           {fromLibrary.length > 0 && (
             <ul className="athlete-programs">{fromLibrary.map((a) => row(a, false))}</ul>
           )}
@@ -175,16 +185,6 @@ export default function ProgramsSection({
               </p>
               <ul className="athlete-programs">{weekly.map((a) => row(a, true))}</ul>
             </>
-          )}
-          {!!assignments.data.some((a) => a.status === 'ENDED') && (
-            <button
-              type="button"
-              className="btn btn-secondary mt-3"
-              aria-expanded={showHistory}
-              onClick={() => setShowHistory(!showHistory)}
-            >
-              {showHistory ? 'Ocultar programas anteriores' : 'Ver programas anteriores'}
-            </button>
           )}
         </>
       )}

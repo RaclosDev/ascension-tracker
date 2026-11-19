@@ -1,4 +1,3 @@
-import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { useClientData, useClientCustomExercises } from '@/lib/coach/api';
 import { POWER_LABELS, POWER_LIFTS, type PowerExerciseMapping } from '@/lib/coach/powerlifting';
@@ -31,9 +30,8 @@ export function PowerExerciseMappings({
   ];
   return (
     <details>
-      <summary className="disclosure-summary font-semibold">
+      <summary className="cursor-pointer font-semibold">
         Clasificar ejercicios y variantes para S/B/D
-        <ChevronDown size={18} aria-hidden className="disclosure-chevron" />
       </summary>
       <p className="coach-description">
         Clasifica tus ejercicios personalizados y variantes registrados. Las variantes quedan fuera

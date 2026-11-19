@@ -24,7 +24,6 @@ import { INTENTS, shiftWeek, weekDate, type SavedWeek } from '@/lib/coach/weeks'
 import { confirmAction } from '@/lib/confirmation';
 import { SectionSkeleton } from './SectionSkeleton';
 import { usePrescribing } from './editor/prescribing';
-import { Select } from '@/components/ui/select';
 import '../../styles/coach-block.css';
 
 const day = (iso: string, pattern = 'd MMM') => format(parseISO(iso), pattern, { locale: es });
@@ -221,7 +220,7 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
           </button>
           <label>
             <span className="sr-only">Semanas a la vista</span>
-            <Select
+            <select
               className="form-input min-h-11"
               value={shown.count}
               onChange={(event) => move(shown.from, Number(event.target.value))}
@@ -231,7 +230,7 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
                   {length} semanas
                 </option>
               ))}
-            </Select>
+            </select>
           </label>
           <button
             type="button"
@@ -326,7 +325,7 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
           <div className="block-panel-span">
             <label>
               Empieza la semana del
-              <Select
+              <select
                 className="form-input min-h-11"
                 value={start}
                 disabled={starts.length < 2}
@@ -337,11 +336,11 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
                     {day(week, 'd MMM yyyy')}
                   </option>
                 ))}
-              </Select>
+              </select>
             </label>
             <label>
               Duración
-              <Select
+              <select
                 className="form-input min-h-11"
                 value={length}
                 onChange={(event) => setLength(Number(event.target.value))}
@@ -351,7 +350,7 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
                     {count} semanas
                   </option>
                 ))}
-              </Select>
+              </select>
             </label>
           </div>
           <p>
@@ -462,7 +461,7 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
                 <span>
                   Tipo de semana<span className="sr-only"> · {when}</span>
                 </span>
-                <Select
+                <select
                   className="form-input min-h-11"
                   value={week.content.intent}
                   disabled={!editable || setIntent.isPending}
@@ -481,7 +480,7 @@ export function BlockView({ link, lead, onOpenWeek }: Props) {
                       {label}
                     </option>
                   ))}
-                </Select>
+                </select>
               </label>
               {sessions.length ? (
                 <ul className="block-days" aria-label={`Sesiones de ${when}`}>

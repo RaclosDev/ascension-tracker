@@ -175,10 +175,7 @@ describe('Espacio del entrenador', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Volver a atletas' }));
     expect(await screen.findByRole('searchbox', { name: 'Buscar atleta' })).toHaveValue('angela');
     expect(screen.getByRole('button', { name: 'Ordenar' })).toHaveAttribute('data-value', 'name');
-    expect(screen.getByRole('button', { name: 'Filtrar atletas' })).toHaveAttribute(
-      'data-value',
-      'setup',
-    );
+    expect(screen.getByRole('combobox', { name: 'Filtrar atletas' })).toHaveValue('setup');
     expect(within(screen.getByRole('table')).queryByText('Bruno')).not.toBeInTheDocument();
   });
 

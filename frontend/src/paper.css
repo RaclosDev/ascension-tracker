@@ -307,10 +307,6 @@ body,
     color: var(--text-primary);
     accent-color: var(--accent-primary);
   }
-  input[type='checkbox'],
-  input[type='radio'] {
-    accent-color: var(--accent-primary);
-  }
   input::placeholder,
   textarea::placeholder {
     color: var(--text-muted);
@@ -325,13 +321,13 @@ body,
  */
 :where(
   input:not(
-    [type='checkbox'],
-    [type='radio'],
-    [type='color'],
-    [type='range'],
-    [type='file'],
-    .bg-transparent
-  ),
+      [type='checkbox'],
+      [type='radio'],
+      [type='color'],
+      [type='range'],
+      [type='file'],
+      .bg-transparent
+    ),
   textarea:not(.bg-transparent),
   select:not(.bg-transparent),
   .ui-select:not(.bg-transparent)
@@ -1694,9 +1690,7 @@ html:not([data-mode='light']) .marker-ink {
 .ui-select-chevron {
   flex-shrink: 0;
   opacity: 0.75;
-  transition:
-    rotate 160ms ease-out,
-    opacity 160ms ease-out;
+  transition: rotate 160ms ease-out, opacity 160ms ease-out;
 }
 .ui-select:hover:not(:disabled) .ui-select-chevron,
 .ui-select[aria-expanded='true'] .ui-select-chevron {
@@ -1813,16 +1807,6 @@ html:not([data-mode='light']) .marker-ink {
   height: 0;
   margin: 4px 6px;
   border-top: 1px dashed color-mix(in srgb, var(--sheet-ink) 35%, transparent);
-}
-.ui-select-group {
-  display: block;
-  flex-shrink: 0;
-  padding: 0.6rem 0.85rem 0.25rem calc(0.45rem + 18px + 0.45rem);
-  color: color-mix(in srgb, var(--sheet-ink) 62%, transparent);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 .ui-select-action {
   color: var(--accent-primary);
