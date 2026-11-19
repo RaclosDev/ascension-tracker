@@ -2,6 +2,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { CATEGORIES, useSaveLibraryItem, type LibraryItem } from '@/lib/coach/library';
 import { apiErrorMessage } from '@/lib/coach/api';
+import { Select } from '@/components/ui/select';
 
 /** How a library resource is filed: its type, tags, equipment and length. */
 export function LibraryItemFields({ item, onDone }: { item: LibraryItem; onDone: () => void }) {
@@ -27,7 +28,7 @@ export function LibraryItemFields({ item, onDone }: { item: LibraryItem; onDone:
     >
       <label>
         Tipo
-        <select
+        <Select
           className="form-input"
           value={value.category}
           onChange={(e) =>
@@ -41,7 +42,7 @@ export function LibraryItemFields({ item, onDone }: { item: LibraryItem; onDone:
                 {label}
               </option>
             ))}
-        </select>
+        </Select>
       </label>
       <label>
         Etiquetas (separadas por comas)

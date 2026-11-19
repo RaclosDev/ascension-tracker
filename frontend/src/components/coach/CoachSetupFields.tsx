@@ -1,4 +1,5 @@
 import { SERVICE_LABELS, type CoachSetup } from '../../lib/coach/setup';
+import { Select } from '@/components/ui/select';
 
 /** The whole agreement, or only one half of it where the athlete's settings split it in two. */
 export function CoachSetupFields({
@@ -39,7 +40,7 @@ export function CoachSetupFields({
       {goal && (
         <label className="flex flex-col gap-1">
           Prioridad del seguimiento
-          <select
+          <Select
             className="form-input"
             value={value.goalFocus ?? ''}
             onChange={(event) =>
@@ -54,7 +55,7 @@ export function CoachSetupFields({
             <option value="PERFORMANCE">Rendimiento y fuerza</option>
             <option value="MAINTAIN">Mantenimiento de peso</option>
             <option value="WEIGHT_CHANGE">Cambio de peso</option>
-          </select>
+          </Select>
         </label>
       )}
       {goal && (
@@ -72,7 +73,7 @@ export function CoachSetupFields({
       {goal && value.services.training && (
         <label className="flex flex-col gap-1">
           <span className="form-label">Esfuerzo en sus pautas</span>
-          <select
+          <Select
             className="form-input"
             value={value.effortMethod ?? ''}
             onChange={(event) =>
@@ -86,7 +87,7 @@ export function CoachSetupFields({
             <option value="RIR">RIR (repeticiones en reserva)</option>
             <option value="RPE">RPE (esfuerzo percibido)</option>
             <option value="NONE">Sin objetivo de esfuerzo</option>
-          </select>
+          </Select>
           <span className="coach-description">
             Cámbialo solo si este atleta trabaja distinto al resto.
           </span>

@@ -2,6 +2,7 @@ import React from 'react';
 import { User } from 'lucide-react';
 import { SettingsSectionHeader } from './SettingsSectionHeader';
 import { SettingsForm } from '../../pages/SettingsPage';
+import { Select } from '@/components/ui/select';
 
 interface SettingsPersonalSectionProps {
   form: SettingsForm;
@@ -31,7 +32,7 @@ export function SettingsPersonalSection({
             <label htmlFor="settings-personal-section-sexo" className="form-label">
               Sexo
             </label>
-            <select
+            <Select
               id="settings-personal-section-sexo"
               className="form-input"
               value={form.sex || 'M'}
@@ -40,7 +41,7 @@ export function SettingsPersonalSection({
             >
               <option value="M">Hombre</option>
               <option value="F">Mujer</option>
-            </select>
+            </Select>
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label htmlFor="settings-personal-section-edad" className="form-label">
@@ -72,7 +73,7 @@ export function SettingsPersonalSection({
             <label htmlFor="settings-personal-section-actividad" className="form-label">
               Actividad
             </label>
-            <select
+            <Select
               id="settings-personal-section-actividad"
               className="form-input"
               value={form.activityFactor || '1.2'}
@@ -84,7 +85,7 @@ export function SettingsPersonalSection({
               <option value="1.55">Moderado</option>
               <option value="1.725">Alto</option>
               <option value="1.9">Muy Alto</option>
-            </select>
+            </Select>
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label htmlFor="settings-personal-section-peso-inicial-kg" className="form-label">

@@ -62,7 +62,7 @@
   font-weight: 400;
   color: var(--text-secondary);
 }
-.coach-student .coach-add-exercise select {
+.coach-student .coach-add-exercise .ui-select {
   min-height: 44px;
   max-width: 100%;
   padding: 0.5rem 0.65rem;

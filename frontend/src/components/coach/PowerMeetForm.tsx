@@ -10,6 +10,7 @@ import {
 } from '../../lib/coach/powerMeets';
 import { PowerAttemptsEditor } from './PowerAttemptsEditor';
 import { PowerBlocksEditor } from './PowerBlocksEditor';
+import { Select } from '@/components/ui/select';
 
 export function PowerMeetForm({
   saved,
@@ -104,7 +105,7 @@ export function PowerMeetForm({
               </label>
               <label className="flex flex-col gap-1">
                 Equipamiento
-                <select
+                <Select
                   className="form-input min-h-11"
                   value={content.equipment}
                   onChange={(e) => set({ equipment: e.target.value as MeetContent['equipment'] })}
@@ -112,7 +113,7 @@ export function PowerMeetForm({
                   <option value="CLASSIC">Clásico / raw</option>
                   <option value="EQUIPPED">Equipado</option>
                   <option value="OTHER">Otro</option>
-                </select>
+                </Select>
               </label>
               <label className="flex flex-col gap-1">
                 Federación
@@ -148,14 +149,14 @@ export function PowerMeetForm({
               </label>
               <label className="flex flex-col gap-1">
                 Referencia de reglas
-                <select
+                <Select
                   className="form-input min-h-11"
                   value={content.rules}
                   onChange={(e) => set({ rules: e.target.value as MeetContent['rules'] })}
                 >
                   <option value="CUSTOM">Reglas de la organización</option>
                   <option value="IPF_2026">IPF · marzo de 2026</option>
-                </select>
+                </Select>
               </label>
             </div>
             {content.rules === 'IPF_2026' && (
