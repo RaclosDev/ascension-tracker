@@ -1,9 +1,14 @@
 import '../styles/coach-quick-view.css';
 import { Suspense } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, ChevronDown } from 'lucide-react';
 import { apiErrorMessage, personName, useCoachClient, type CoachClient } from '../lib/coach/api';
-import { AthleteShell, useAthleteLinks, useAthleteViews } from '../components/coach/AthleteShell';
+import {
+  AthleteShell,
+  RECORD_ROUTES,
+  useAthleteLinks,
+  useAthleteViews,
+} from '../components/coach/AthleteShell';
 import { ClientOverview } from '../components/coach/ClientOverview';
 import { ClientManagement } from '../components/coach/ClientManagement';
 import { CheckinsSection } from '../components/coach/CheckinsSection';
@@ -65,6 +70,9 @@ function AthleteSections({ link }: { link: CoachClient }) {
   const section = params.get('seccion') ?? (link.permissions.training ? 'semana' : 'resumen');
   const open = (id: string) => section === id && views.has(id) && !views.locked(id);
 
+  // Old links like ?seccion=entrenos point at views that live on their own path.
+  if (RECORD_ROUTES.includes(section)) return <Navigate to={recordHref(section)} replace />;
+
   return (
     <AthleteShell link={link} active={section}>
       <div className="coach-client-content" key={`${linkId}:${section}`}>
@@ -77,7 +85,10 @@ function AthleteSections({ link }: { link: CoachClient }) {
             <>
               <ClientPrograms linkId={linkId} canAssign={link.permissions.editTraining} />
               <details className="card athlete-disclosure">
-                <summary>Historial y estadísticas de entreno</summary>
+                <summary className="disclosure-summary">
+                  Historial y estadísticas de entreno
+                  <ChevronDown size={18} aria-hidden className="disclosure-chevron" />
+                </summary>
                 <ClientTraining linkId={linkId} />
               </details>
             </>
