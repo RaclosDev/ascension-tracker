@@ -2,6 +2,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { CATEGORIES, useSaveLibraryItem, type LibraryItem } from '@/lib/coach/library';
 import { apiErrorMessage } from '@/lib/coach/api';
+import { Select } from '@/components/ui/select';
 
 export function LibraryItemFields({ item }: { item: LibraryItem }) {
   const [value, setValue] = useState(item);
@@ -12,7 +13,7 @@ export function LibraryItemFields({ item }: { item: LibraryItem }) {
       <div className="flex flex-wrap gap-3 mt-3">
         <label className="flex flex-col gap-1 min-w-0">
           Tipo
-          <select
+          <Select
             className="form-input min-h-11"
             value={value.category}
             onChange={(e) =>
@@ -26,7 +27,7 @@ export function LibraryItemFields({ item }: { item: LibraryItem }) {
                   {label}
                 </option>
               ))}
-          </select>
+          </Select>
         </label>
         <label className="flex flex-col gap-1 min-w-0">
           Etiquetas (separadas por comas)

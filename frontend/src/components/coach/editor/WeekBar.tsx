@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Copy } from 'lucide-react';
 import { inputClass, inputStyle } from './fields';
+import { Select } from '@/components/ui/select';
 export function WeekBar({
   weeks,
   current,
@@ -31,7 +32,7 @@ export function WeekBar({
       </div>
       {weeks > 1 && (
         <div className="flex items-center gap-2 ml-auto">
-          <select
+          <Select
             aria-label={`Copiar la semana ${current} a`}
             className={inputClass}
             style={inputStyle}
@@ -46,7 +47,7 @@ export function WeekBar({
                   Semana {w}
                 </option>
               ))}
-          </select>
+          </Select>
           <button
             type="button"
             className="btn btn-secondary"

@@ -12,6 +12,7 @@ import {
   type CompletedWorkout,
 } from '@/lib/workout/types';
 import { useSwipe } from '@/hooks/use-swipe';
+import { Select } from '@/components/ui/select';
 
 export interface SwipeableSetRowProps {
   s?: WorkoutSet;
@@ -283,7 +284,7 @@ export const SwipeableSetRow = React.memo(
 
             {showRpe && (
               <div className="min-w-0">
-                <select
+                <Select
                   aria-label={`Método de esfuerzo de la serie ${i + 1}`}
                   className="w-full text-xs"
                   value={s.rir != null ? 'RIR' : 'RPE'}
@@ -299,7 +300,7 @@ export const SwipeableSetRow = React.memo(
                 >
                   <option>RPE</option>
                   <option>RIR</option>
-                </select>
+                </Select>
                 <input
                   inputMode="decimal"
                   aria-label={`${s.rir != null ? 'RIR' : 'RPE'} de la serie ${i + 1}`}

@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { EQUIPMENT_OPTIONS, MUSCLE_OPTIONS } from '@/lib/workout/equipmentOptions';
 import type { Equipment, Exercise, MuscleGroup } from '@/lib/workout/types';
+import { Select } from '@/components/ui/select';
 
 export interface CreateExerciseModalProps {
   isOpen: boolean;
@@ -181,7 +182,7 @@ export function CreateExerciseModal({
               >
                 Músculo
               </label>
-              <select
+              <Select
                 id="create-exercise-muscle"
                 aria-label="Grupo muscular objetivo"
                 className="form-input"
@@ -193,7 +194,7 @@ export function CreateExerciseModal({
                     {m.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -203,7 +204,7 @@ export function CreateExerciseModal({
               >
                 Equipamiento
               </label>
-              <select
+              <Select
                 id="create-exercise-equipment"
                 aria-label="Equipamiento necesario"
                 className="form-input"
@@ -215,7 +216,7 @@ export function CreateExerciseModal({
                     {eq.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
 

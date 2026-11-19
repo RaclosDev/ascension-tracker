@@ -25,6 +25,7 @@ import {
 import { MUSCLE_LABEL, type WorkoutExercise } from '@/lib/workout/types';
 
 import { SwipeableSetRow } from './swipeable-set-row';
+import { Select } from '@/components/ui/select';
 
 export interface ExerciseCardProps {
   rowId?: string;
@@ -205,10 +206,9 @@ export const ExerciseCard = React.memo(function ExerciseCard({
                 title="Tiempo de descanso"
               >
                 <Timer size={12} className="exercise-card-rest-icon" />
-                <select
+                <Select
                   value={restTimers[row.exerciseId] ?? restPreset}
                   onChange={(e) => {
-                    e.stopPropagation();
                     const val = Number(e.target.value);
                     setExerciseRestTimer(row.exerciseId, val);
                     setExerciseRestTimerPref(row.exerciseId, val);
@@ -221,8 +221,7 @@ export const ExerciseCard = React.memo(function ExerciseCard({
                       {formatRestFriendly(s)}
                     </option>
                   ))}
-                </select>
-                <ChevronDown size={11} className="exercise-card-rest-chevron" />
+                </Select>
               </div>
             </div>
           </div>

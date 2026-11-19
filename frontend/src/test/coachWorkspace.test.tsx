@@ -9,6 +9,7 @@ import CoachClientPage from '../pages/CoachClientPage';
 import CoachReviewsPage from '../pages/CoachReviewsPage';
 import { emptySetup } from '../lib/coach/setup';
 import type { ClientStatus } from '../lib/coach/clientStatus';
+import { chooseOption } from './selectMenu';
 
 vi.mock('../components/coach/tour/CoachTourWelcome', () => ({ default: () => null }));
 
@@ -163,9 +164,7 @@ describe('Espacio del entrenador', () => {
     const search = await screen.findByRole('searchbox', { name: 'Buscar atleta' });
     act(() => {
       fireEvent.change(search, { target: { value: 'angela' } });
-      fireEvent.change(screen.getByRole('combobox', { name: 'Ordenar' }), {
-        target: { value: 'name' },
-      });
+      chooseOption(screen.getByRole('button', { name: 'Ordenar' }), 'name');
     });
     const table = await screen.findByRole('table');
     fireEvent.click(within(table).getByRole('link', { name: 'Ángela' }));
@@ -176,7 +175,7 @@ describe('Espacio del entrenador', () => {
     expect(screen.queryByRole('button', { name: 'Terminar relación' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('link', { name: 'Volver a atletas' }));
     expect(await screen.findByRole('searchbox', { name: 'Buscar atleta' })).toHaveValue('angela');
-    expect(screen.getByRole('combobox', { name: 'Ordenar' })).toHaveValue('name');
+    expect(screen.getByRole('button', { name: 'Ordenar' })).toHaveAttribute('data-value', 'name');
     expect(screen.getByRole('combobox', { name: 'Filtrar atletas' })).toHaveValue('setup');
     expect(within(screen.getByRole('table')).queryByText('Bruno')).not.toBeInTheDocument();
   });

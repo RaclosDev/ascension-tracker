@@ -14,6 +14,7 @@ import {
   useSaveCustomExercise,
   useWorkoutPreferencesActions,
 } from '@/lib/workout/api';
+import { Select } from '@/components/ui/select';
 
 export function ExercisePicker() {
   const { data: catalogExercises } = useExerciseCatalog();
@@ -316,7 +317,7 @@ export function ExercisePicker() {
               marginTop: '0.5rem',
             }}
           >
-            <select
+            <Select
               value={filterMuscle}
               onChange={(e) =>
                 setFilterMuscle(e.target.value as import('@/lib/workout/types').MuscleGroup | 'ALL')
@@ -337,8 +338,8 @@ export function ExercisePicker() {
                   {m.label}
                 </option>
               ))}
-            </select>
-            <select
+            </Select>
+            <Select
               value={filterEquip}
               onChange={(e) =>
                 setFilterEquip(e.target.value as import('@/lib/workout/types').Equipment | 'ALL')
@@ -359,7 +360,7 @@ export function ExercisePicker() {
                   {eq.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         </div>
 
@@ -431,7 +432,7 @@ export function ExercisePicker() {
                 autoFocus
               />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                <select
+                <Select
                   value={newMuscle}
                   onChange={(e) => setNewMuscle(e.target.value as MuscleGroup)}
                   className="form-input"
@@ -442,8 +443,8 @@ export function ExercisePicker() {
                       {m.label}
                     </option>
                   ))}
-                </select>
-                <select
+                </Select>
+                <Select
                   value={newEquip}
                   onChange={(e) => setNewEquip(e.target.value as Equipment)}
                   className="form-input"
@@ -454,7 +455,7 @@ export function ExercisePicker() {
                       {eq.label}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button

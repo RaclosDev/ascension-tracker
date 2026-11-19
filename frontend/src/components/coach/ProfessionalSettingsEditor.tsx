@@ -12,6 +12,7 @@ import {
   type ProfessionalSettings,
 } from '../../lib/coach/professionalSettings';
 import { QueryErrorNotice } from '../QueryErrorNotice';
+import { Select } from '@/components/ui/select';
 
 export function ProfessionalSettingsEditor() {
   const settings = useProfessionalSettings();
@@ -136,7 +137,7 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
             <label htmlFor="default-review-day">Día del seguimiento inicial</label>
-            <select
+            <Select
               id="default-review-day"
               className="form-input min-h-11"
               value={value.review.day}
@@ -147,7 +148,7 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
                   {day}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <label className="flex flex-col gap-1">
             Hora del seguimiento inicial
@@ -198,7 +199,7 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1">
             Objetivo de esfuerzo
-            <select
+            <Select
               className="form-input min-h-11"
               value={value.effortMethod ?? 'RIR'}
               onChange={(e) =>
@@ -208,11 +209,11 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
               <option value="RIR">RIR (repeticiones en reserva)</option>
               <option value="RPE">RPE (esfuerzo percibido)</option>
               <option value="NONE">No pauto esfuerzo</option>
-            </select>
+            </Select>
           </label>
           <label className="flex flex-col gap-1">
             Carga con mancuernas
-            <select
+            <Select
               className="form-input min-h-11"
               value={value.dumbbellLoad ?? 'EACH'}
               onChange={(e) =>
@@ -221,7 +222,7 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
             >
               <option value="EACH">Peso de cada mancuerna</option>
               <option value="TOTAL">Suma de las dos</option>
-            </select>
+            </Select>
           </label>
         </div>
         <p className="coach-description">En barra, máquina y polea la carga es siempre el total.</p>

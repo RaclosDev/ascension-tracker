@@ -12,6 +12,7 @@ import {
   type Program,
 } from '../lib/coach/coachPrograms';
 import { clearSessionDrafts } from '../lib/sessionDrafts';
+import { chooseOption } from './selectMenu';
 
 vi.mock('../context/AuthContext', () => ({
   useAuth: () => ({ user: { email: 'coach@confirm.test' } }),
@@ -55,7 +56,7 @@ function editor() {
 
 it('copies over an occupied week only after confirming inside the app', async () => {
   editor();
-  fireEvent.change(screen.getByLabelText('Copiar la semana 1 a'), { target: { value: '2' } });
+  chooseOption(screen.getByLabelText('Copiar la semana 1 a'), '2');
   fireEvent.click(screen.getByRole('button', { name: 'Copiar semana 1' }));
   const dialog = screen.getByRole('dialog', { name: 'Sustituir la semana 2' });
   expect(dialog).toHaveTextContent('Todo el contenido de la semana de destino se sustituirá');
@@ -63,7 +64,7 @@ it('copies over an occupied week only after confirming inside the app', async ()
   fireEvent.click(screen.getByRole('tab', { name: 'S2' }));
   expect(screen.getByLabelText('Nombre del día (Lunes)')).toHaveValue('Destino');
   fireEvent.click(screen.getByRole('tab', { name: 'S1' }));
-  fireEvent.change(screen.getByLabelText('Copiar la semana 1 a'), { target: { value: '2' } });
+  chooseOption(screen.getByLabelText('Copiar la semana 1 a'), '2');
   fireEvent.click(screen.getByRole('button', { name: 'Copiar semana 1' }));
   fireEvent.click(screen.getByRole('button', { name: 'Sustituir semana' }));
   await waitFor(() =>

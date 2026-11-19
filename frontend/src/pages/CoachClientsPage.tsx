@@ -21,6 +21,7 @@ import { PendingInvitations } from '../components/coach/CoachInvitations';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
 import { ClientAvatar } from '../components/coach/ClientAvatar';
 import '../styles/coach-roster.css';
+import { Select } from '@/components/ui/select';
 
 interface Filter {
   value: string;
@@ -159,11 +160,11 @@ function Clients() {
             </label>
             <label className="coach-sort">
               <span>Ordenar</span>
-              <select value={sort} onChange={(e) => update('orden', e.target.value)}>
+              <Select value={sort} onChange={(e) => update('orden', e.target.value)}>
                 <option value="priority">Prioridad</option>
                 <option value="name">Nombre</option>
                 <option value="recent">Altas recientes</option>
-              </select>
+              </Select>
             </label>
           </div>
           {status.isError && (

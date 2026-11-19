@@ -13,6 +13,7 @@ import { useSpeechToText } from '../hooks/useSpeechToText';
 import { useExternalFoodSearch } from '../hooks/food/useExternalFoodSearch';
 import { AiFoodAssistantView } from './food/AiFoodAssistantView';
 import { useFoodSelection } from '../hooks/food/useFoodSelection';
+import { Select } from '@/components/ui/select';
 const BarcodeScanner = lazyWithRetry(() => import('./BarcodeScanner'));
 import ManualFoodForm from './food/ManualFoodForm';
 import { FoodPortionEditor } from './food/FoodPortionEditor';
@@ -381,7 +382,7 @@ export default function FoodSearchModal({
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div style={{ marginBottom: '1rem' }}>
-              <select
+              <Select
                 className="form-input"
                 aria-label="Comida del registro"
                 value={displayedMealIndex}
@@ -410,7 +411,7 @@ export default function FoodSearchModal({
                     <option value={3}>Snacks / Otros</option>
                   </>
                 )}
-              </select>
+              </Select>
             </div>
             <form onSubmit={handleSearch} style={{ position: 'relative', marginBottom: '1rem' }}>
               <input
