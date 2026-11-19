@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 import { useSaveProgram } from '@/lib/coach/coachPrograms';
 import { apiErrorMessage } from '@/lib/coach/api';
 import '@/styles/coach-student.css';
+import { Select } from '@/components/ui/select';
 export function DayEditor({
   label,
   compact = false,
@@ -176,7 +177,7 @@ export function DayEditor({
       </details>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span style={{ color: 'var(--text-secondary)' }}>Copiar este día a</span>
-        <select
+        <Select
           hidden={weeks === 1}
           aria-label="Semana de destino"
           className={inputClass}
@@ -189,8 +190,8 @@ export function DayEditor({
               Semana {w}
             </option>
           ))}
-        </select>
-        <select
+        </Select>
+        <Select
           aria-label="Día de destino"
           className={inputClass}
           style={inputStyle}
@@ -202,7 +203,7 @@ export function DayEditor({
               {name}
             </option>
           ))}
-        </select>
+        </Select>
         <button
           type="button"
           className="btn btn-secondary"

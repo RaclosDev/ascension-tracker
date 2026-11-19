@@ -111,7 +111,7 @@
   color: var(--text-secondary);
   margin-top: 16px;
 }
-.coach-tour-jump select {
+.coach-tour-jump .ui-select {
   width: 100%;
   min-height: 44px;
   border: 1px solid var(--border-subtle);
@@ -121,7 +121,7 @@
   color: var(--text-primary);
 }
 .coach-tour-popover button:focus-visible,
-.coach-tour-popover select:focus-visible,
+.coach-tour-popover .ui-select:focus-visible,
 .coach-tour-chapters button:focus-visible {
   outline: 2px solid var(--accent-primary, #d9f15c);
   outline-offset: 3px;

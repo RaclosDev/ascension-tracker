@@ -16,6 +16,7 @@ import { useExerciseCatalog, getExerciseMap } from '../../lib/workout/exercises'
 import { ProgramSessions } from './ProgramSessions';
 import { Section, QueryState } from './ClientSection';
 import { ProgramPreview } from './ProgramPreview';
+import { Select } from '@/components/ui/select';
 
 export default function ProgramsSection({
   linkId,
@@ -199,7 +200,7 @@ export default function ProgramsSection({
           <div className="athlete-assign-form">
             <label className="flex flex-col gap-1 text-sm min-w-0">
               Programa
-              <select
+              <Select
                 className="form-input min-h-11"
                 value={programId}
                 onChange={(e) => setProgramId(e.target.value)}
@@ -210,7 +211,7 @@ export default function ProgramsSection({
                     {p.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             <label className="flex flex-col gap-1 text-sm">
               Empieza el

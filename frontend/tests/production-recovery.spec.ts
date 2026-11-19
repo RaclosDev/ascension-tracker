@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 import deployment from '../vercel.json' with { type: 'json' };
 
@@ -23,7 +24,7 @@ test('coach tour opens real screens under the deployed framing policy', async ({
   await expect(page.getByRole('button', { name: 'Siguiente', exact: true })).toBeEnabled({
     timeout: 20000,
   });
-  await page.getByLabel('Ir a un paso').selectOption('8');
+  await chooseOption(page.getByLabel('Ir a un paso'), '8');
   await expect(page.getByRole('button', { name: 'Siguiente', exact: true })).toBeEnabled({
     timeout: 20000,
   });

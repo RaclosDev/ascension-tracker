@@ -1,5 +1,6 @@
 import { coachSettings } from './helpers/coachSettings';
 import { test, expect, type Page } from '@playwright/test';
+import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 
 async function setupCoach(page: Page, empty = false) {
@@ -185,14 +186,14 @@ for (const width of [1440, 390]) {
     ).toBeVisible();
     await page.getByRole('link', { name: 'Ver atletas' }).click();
     await page.getByText('Opciones', { exact: true }).click();
-    await page.getByRole('combobox', { name: 'Servicio', exact: true }).selectOption('nutrition');
+    await chooseOption(page.getByRole('button', { name: 'Servicio', exact: true }), 'nutrition');
     await expect(page.getByText('1 de 3 atletas')).toBeVisible();
     await expect(
       page.getByRole('link', { name: 'Preparar pauta nutricional' }).filter({ visible: true }),
     ).toBeVisible();
-    await page.getByRole('combobox', { name: 'Servicio', exact: true }).selectOption('training');
+    await chooseOption(page.getByRole('button', { name: 'Servicio', exact: true }), 'training');
     await page.getByRole('searchbox', { name: 'Buscar atleta' }).fill('garcia');
-    await page.getByRole('combobox', { name: 'Ordenar' }).selectOption('name');
+    await chooseOption(page.getByRole('button', { name: 'Ordenar' }), 'name');
     await page.getByRole('checkbox', { name: 'Mostrar peso' }).click();
     await expect(page.getByRole('checkbox', { name: 'Mostrar peso' })).toBeChecked();
     await page
@@ -210,8 +211,12 @@ for (const width of [1440, 390]) {
     await page.getByRole('link', { name: 'Volver a atletas' }).click();
     await expect(page.getByRole('searchbox', { name: 'Buscar atleta' })).toHaveValue('garcia');
     await page.getByText('Opciones', { exact: true }).click();
-    await expect(page.getByRole('combobox', { name: 'Ordenar' })).toHaveValue('name');
-    await expect(page.getByRole('combobox', { name: 'Servicio', exact: true })).toHaveValue(
+    await expect(page.getByRole('button', { name: 'Ordenar' })).toHaveAttribute(
+      'data-value',
+      'name',
+    );
+    await expect(page.getByRole('button', { name: 'Servicio', exact: true })).toHaveAttribute(
+      'data-value',
       'training',
     );
     await expect(page.getByRole('checkbox', { name: 'Mostrar peso' })).toBeChecked();
