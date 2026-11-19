@@ -39,7 +39,7 @@ export function CoachSetupFields({
       )}
       {goal && (
         <label className="flex flex-col gap-1">
-          <span className="form-label">Prioridad del seguimiento</span>
+          Prioridad del seguimiento
           <Select
             className="form-input"
             value={value.goalFocus ?? ''}

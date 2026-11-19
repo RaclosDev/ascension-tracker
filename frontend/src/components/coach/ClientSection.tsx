@@ -52,9 +52,7 @@ export function WeeklyList({ weeks, unit }: { weeks: WeekSummary[]; unit: string
           <span style={{ color: 'var(--text-secondary)' }}>
             Semana del {formatCoachDate(week.weekStart)}
           </span>
-          <span className="text-foreground">
-            {num(week.average == null ? null : Math.round(week.average), unit)}
-          </span>
+          <span className="text-foreground">{num(week.average, unit)}</span>
         </li>
       ))}
     </ul>

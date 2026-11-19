@@ -92,9 +92,9 @@ describe('Semáforo de atletas', () => {
     expect(rows[2]).toHaveTextContent('Al día');
     for (const row of rows) expect(within(row).getAllByRole('link').length).toBeLessThanOrEqual(3);
 
-    const filter = screen.getByRole('button', { name: 'Filtrar atletas' });
-    const menu = document.getElementById(filter.getAttribute('aria-controls') ?? '')!;
-    fireEvent.click(menu.querySelector<HTMLElement>('[data-value="checkin"]')!);
+    fireEvent.change(screen.getByRole('combobox', { name: 'Filtrar atletas' }), {
+      target: { value: 'checkin' },
+    });
     const filtered = within(screen.getByRole('table')).getAllByRole('row').slice(1);
     expect(filtered.map((tr) => within(tr).getAllByRole('link')[0].textContent)).toEqual(['Bruno']);
   });
