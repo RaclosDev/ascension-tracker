@@ -4,7 +4,6 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { apiErrorMessage, personName, useCoachClient, type CoachClient } from '../lib/coach/api';
 import { AthleteShell, useAthleteLinks, useAthleteViews } from '../components/coach/AthleteShell';
-import { ClientOverview } from '../components/coach/ClientOverview';
 import { ClientManagement } from '../components/coach/ClientManagement';
 import { CheckinsSection } from '../components/coach/CheckinsSection';
 import { SectionSkeleton } from '../components/coach/SectionSkeleton';
@@ -62,16 +61,15 @@ function AthleteSections({ link }: { link: CoachClient }) {
   const { sectionHref, recordHref } = useAthleteLinks(linkId);
   const views = useAthleteViews(link);
   // Planning is where a coach spends the time; the summary covers athletes without that permission.
-  const section = params.get('seccion') ?? (link.permissions.training ? 'semana' : 'resumen');
+  const asked = params.get('seccion') ?? (link.permissions.training ? 'semana' : 'progreso');
+  // The summary now opens inside Progreso; old links keep working.
+  const section = asked === 'resumen' ? 'progreso' : asked;
   const open = (id: string) => section === id && views.has(id) && !views.locked(id);
 
   return (
     <AthleteShell link={link} active={section}>
       <div className="coach-client-content" key={`${linkId}:${section}`}>
         <Suspense fallback={<SectionSkeleton />}>
-          {open('resumen') && (
-            <ClientOverview link={link} sectionHref={sectionHref} recordHref={recordHref} />
-          )}
           {open('semana') && <ClientWeek link={link} />}
           {open('entrenamiento') && (
             <>
@@ -92,7 +90,9 @@ function AthleteSections({ link }: { link: CoachClient }) {
           {open('powerlifting') && (
             <ClientPowerlifting linkId={linkId} canEdit={link.permissions.editTraining} />
           )}
-          {open('progreso') && <ClientProgress linkId={linkId} />}
+          {open('progreso') && (
+            <ClientProgress link={link} sectionHref={sectionHref} recordHref={recordHref} />
+          )}
           {open('revisiones') && <CheckinsSection link={link} />}
           {open('gestion') && <ClientManagement link={link} />}
           {views.locked(section) && (
@@ -112,8 +112,8 @@ function AthleteSections({ link }: { link: CoachClient }) {
             <section className="card">
               <h2>Sección no disponible</h2>
               <p>Esta sección no está disponible con los permisos actuales.</p>
-              <Link to={sectionHref('resumen')} className="btn btn-secondary mt-3">
-                Ir al resumen
+              <Link to={sectionHref('progreso')} className="btn btn-secondary mt-3">
+                Ir a progreso
               </Link>
             </section>
           )}

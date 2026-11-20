@@ -22,7 +22,7 @@ export function signalSection(signal: StatusSignal): string {
     case 'CHECKIN_MISSING':
       return 'revisiones';
     default:
-      return 'resumen';
+      return 'progreso';
   }
 }
 

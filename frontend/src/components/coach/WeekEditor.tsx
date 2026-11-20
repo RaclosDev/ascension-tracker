@@ -1017,7 +1017,6 @@ export function WeekEditor({
               <AthleteHistory.Provider value={history}>
                 <div className="week-panel-body cal-day-body" data-wide={focused ? '' : undefined}>
                   <div className="cal-day-main" {...(focused ? dropTarget(day) : {})}>
-                    {focused && facts && <DayFacts day={facts} link={link} />}
                     <fieldset disabled={locked} className="cal-fieldset">
                       <DaySession
                         key={day}
@@ -1062,7 +1061,7 @@ export function WeekEditor({
                         }
                       />
                     </fieldset>
-                    {!focused && facts && <DayFacts day={facts} link={link} />}
+                    {facts && <DayFacts day={facts} link={link} only="training" />}
                   </div>
                   {focused && (
                     <div className="week-support">

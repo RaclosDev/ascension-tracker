@@ -10,9 +10,20 @@ const number = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
 const grams = (value: number) => `${number.format(Math.round(value))} g`;
 
 /** What surrounds the session that day: what the athlete logged, the food target and the body records. */
-export function DayFacts({ day, link }: { day: CalendarDay; link: CoachClient }) {
+export function DayFacts({
+  day,
+  link,
+  only,
+}: {
+  day: CalendarDay;
+  link: CoachClient;
+  /** Inside Planificación the day speaks only of training: food and body live in Progreso. */
+  only?: 'training';
+}) {
   const { sectionHref, recordHref } = useAthleteLinks(link.linkId);
-  const { training, nutrition, body } = link.permissions;
+  const { training } = link.permissions;
+  const nutrition = link.permissions.nutrition && only !== 'training';
+  const body = link.permissions.body && only !== 'training';
   const upcoming = !day.past && !day.today;
   const noted = day.workouts.filter((workout) => workout.notes?.trim());
   const checkin = day.checkin;

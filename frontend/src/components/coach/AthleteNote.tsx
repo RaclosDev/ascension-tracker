@@ -8,7 +8,14 @@ import { undoToast } from './undoToast';
 export const NOTE_MAX = 600;
 
 /** The coach's pinned note about one athlete. It rides in the header of every view and is never shared. */
-export function AthleteNote({ link }: { link: CoachClient }) {
+export function AthleteNote({
+  link,
+  onShow,
+}: {
+  link: CoachClient;
+  /** Opens the full note beside the rail. */
+  onShow?: (trigger: HTMLElement) => void;
+}) {
   const save = useSaveCoachNotes(link.linkId);
   const note = link.notes?.pinnedNote ?? '';
   const [draft, setDraft] = useState<string | null>(null);
@@ -90,10 +97,23 @@ export function AthleteNote({ link }: { link: CoachClient }) {
   return (
     <div className="athlete-note">
       <Pin size={15} aria-hidden />
-      <p title={note}>
-        <span className="sr-only">Nota fijada: </span>
-        {note}
-      </p>
+      {onShow ? (
+        <button
+          type="button"
+          className="athlete-note-text"
+          aria-haspopup="dialog"
+          title="Leer la nota completa"
+          onClick={(e) => onShow(e.currentTarget)}
+        >
+          <span className="sr-only">Nota fijada: </span>
+          {note}
+        </button>
+      ) : (
+        <p title={note}>
+          <span className="sr-only">Nota fijada: </span>
+          {note}
+        </p>
+      )}
       <button type="button" className="athlete-note-edit" onClick={() => setDraft(note)}>
         Editar
       </button>

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { addDays, addWeeks, parseISO } from 'date-fns';
 import { ArrowUpRight } from 'lucide-react';
@@ -5,10 +6,8 @@ import { formatCoachDate, type CoachClient } from '../../lib/coach/api';
 import { signalText, useClientStatus } from '../../lib/coach/clientStatus';
 import { useClientAssignments } from '../../lib/coach/coachPrograms';
 import { activityText, followupSignals } from '../../lib/coach/workspace';
-import { weekDate } from '../../lib/coach/weeks';
 import { QueryErrorNotice } from '../QueryErrorNotice';
 import { ClientSetupSummary } from './ClientSetup';
-import { RegisterWeek } from './RegisterWeek';
 import { signalSection } from '../../lib/coach/tasks';
 import { nextReviewLabel, scheduleLabel } from '../../lib/coach/coachSchedule';
 
@@ -18,23 +17,17 @@ const kg = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1, signDispla
 export function ClientOverview({
   link,
   sectionHref,
-  recordHref,
+  children,
 }: {
   link: CoachClient;
   sectionHref: (section: string) => string;
-  recordHref: (path: string) => string;
+  /** The athlete's records, between the alerts and the plan. */
+  children?: ReactNode;
 }) {
   const query = useClientStatus(true, link.linkId);
   const status = query.isError ? undefined : query.data?.find((s) => s.linkId === link.linkId);
   const signals = followupSignals(status);
   const followup = link.followup;
-  const services = link.setup?.services;
-  const logs =
-    (link.permissions.training && services?.training !== false) ||
-    (link.permissions.nutrition && services?.nutrition !== false) ||
-    (link.permissions.body && services?.progress !== false);
-  const registerHref = recordHref('registro');
-  const search = registerHref.includes('?') ? registerHref.slice(registerHref.indexOf('?')) : '';
   return (
     <>
       {query.isError && (
@@ -109,19 +102,7 @@ export function ClientOverview({
           </p>
         )}
       </section>
-      {logs && (
-        <section className="coach-register-page athlete-week">
-          <div className="athlete-section-title">
-            <h2>Esta semana</h2>
-            <Link className="btn btn-secondary" to={registerHref}>
-              Abrir resumen diario <ArrowUpRight size={16} aria-hidden />
-            </Link>
-          </div>
-          <div className="coach-weekly-workouts-list">
-            <RegisterWeek client={link} week={weekDate()} search={search} />
-          </div>
-        </section>
-      )}
+      {children}
       <div className="coach-client-summary athlete-plan-cards">
         {link.permissions.training && (
           <ProgramOverview

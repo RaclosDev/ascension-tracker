@@ -2,6 +2,8 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
+  CalendarClock,
+  ChevronRight,
   Dumbbell,
   MessageSquareText,
   Settings,
@@ -10,8 +12,9 @@ import {
 } from 'lucide-react';
 import { personName, type CoachClient } from '../../lib/coach/api';
 import { useClientStatus } from '../../lib/coach/clientStatus';
-import { nextReviewLabel, REVIEW_DAYS } from '../../lib/coach/coachSchedule';
+import { nextReviewCountdown, nextReviewLabel, REVIEW_DAYS } from '../../lib/coach/coachSchedule';
 import { usePowerProfile } from '../../lib/coach/powerlifting';
+import { AthleteDetails, useAthleteDetails } from './AthleteDetails';
 import { AthleteNote } from './AthleteNote';
 import { AthleteWarmup } from './AthleteWarmup';
 import { ClientAvatar } from './ClientAvatar';
@@ -20,6 +23,8 @@ import '../../styles/coach-student.css';
 import '../../styles/coach-athlete.css';
 
 const RECORD_ROUTES = ['registro', 'entrenos', 'comidas', 'pasos', 'peso'];
+/** Pages reached from inside Progreso light up its entry. */
+const PROGRESS_VIEWS = ['resumen', 'registro', 'peso', 'pasos'];
 
 /** Links between the athlete's views. Only the roster filters and the origin travel with them. */
 export function useAthleteLinks(linkId: string) {
@@ -61,8 +66,6 @@ export function useAthleteViews(link: CoachClient) {
   const trainingLog = training && link.setup?.services.training !== false;
   const nutritionService = link.setup?.services.nutrition !== false;
   const nutrition = link.permissions.nutrition && nutritionService;
-  const body = link.permissions.body;
-  const bodyLog = body && link.setup?.services.progress !== false;
   const groups = [
     {
       id: 'entrenamiento',
@@ -93,13 +96,8 @@ export function useAthleteViews(link: CoachClient) {
       id: 'progreso',
       label: 'Progreso',
       icon: TrendingUp,
-      views: [
-        { id: 'resumen', label: 'Resumen', visible: true },
-        { id: 'registro', label: 'Registro diario', visible: true },
-        { id: 'peso', label: 'Peso', visible: bodyLog },
-        { id: 'pasos', label: 'Pasos', visible: bodyLog },
-        { id: 'progreso', label: 'Evolución y fotos', visible: body },
-      ],
+      // One view: the summary plus the records the coach chooses to see.
+      views: [{ id: 'progreso', label: 'Progreso', visible: true }],
     },
     {
       id: 'revisiones',
@@ -141,19 +139,25 @@ export function AthleteShell({
   const { groups } = useAthleteViews(link);
   const status = useClientStatus(true, link.linkId);
   const pending = status.data?.find((s) => s.linkId === link.linkId)?.pendingReplies ?? 0;
-  const activeGroup = groups.find((group) => group.views.some((view) => view.id === active));
+  const current = PROGRESS_VIEWS.includes(active) ? 'progreso' : active;
+  const activeGroup = groups.find((group) => group.views.some((view) => view.id === current));
   const setup = link.setup;
   const followup = link.followup;
-  const meta = [
-    setup?.trainingDays
-      ? `${setup.trainingDays} ${setup.trainingDays === 1 ? 'día' : 'días'} por semana`
-      : 'Sin disponibilidad definida',
-    followup &&
-      (followup.schedule.paused
-        ? 'Seguimiento en pausa'
-        : `Seguimiento los ${REVIEW_DAYS[followup.schedule.day - 1].toLocaleLowerCase('es').replace(/o$/, 'os')} · próximo ${nextReviewLabel(followup)}`),
-  ].filter(Boolean);
+  const days = setup?.trainingDays
+    ? `${setup.trainingDays} ${setup.trainingDays === 1 ? 'día' : 'días'} por semana`
+    : 'Sin disponibilidad definida';
+  // Short form: the weekday it repeats on and how long until the next one; the full date is in the tooltip.
+  const review = followup && {
+    text: followup.schedule.paused
+      ? 'Seguimiento en pausa'
+      : `${REVIEW_DAYS[followup.schedule.day - 1].replace(/o$/, 'os')} · ${nextReviewCountdown(followup)}`,
+    title: followup.schedule.paused
+      ? undefined
+      : `Próximo seguimiento: ${nextReviewLabel(followup)}`,
+  };
   const goBack = back ?? links.back;
+  const details = useAthleteDetails();
+  const hasContext = !!(setup?.goal || setup?.equipment);
 
   // Fetch the other athlete pages ahead of time so switching tabs never blanks the header.
   useEffect(() => {
@@ -186,23 +190,47 @@ export function AthleteShell({
             <ClientAvatar client={link.client} />
             <div className="min-w-0">
               <h1 className="athlete-name">{personName(link.client)}</h1>
-              <p className="athlete-meta">{meta.join(' · ')}</p>
+              <p className="athlete-meta">{days}</p>
+              {review && (
+                <p className="athlete-meta athlete-review" title={review.title}>
+                  <CalendarClock size={13} aria-label="Seguimiento" />
+                  {review.text}
+                </p>
+              )}
             </div>
           </div>
-          <dl className="athlete-context">
-            <div>
-              <dt>Objetivo</dt>
-              <dd title={setup?.goal || undefined}>
-                {setup?.goal || <Link to={links.sectionHref('gestion')}>Añadir objetivo</Link>}
-              </dd>
-            </div>
-            <div>
-              <dt>Material</dt>
-              <dd title={setup?.equipment || undefined}>
-                {setup?.equipment || <Link to={links.sectionHref('gestion')}>Añadir material</Link>}
-              </dd>
-            </div>
-          </dl>
+          <div className="athlete-context-wrap">
+            <dl className="athlete-context">
+              <div>
+                <dt>Objetivo</dt>
+                <dd title={setup?.goal || undefined}>
+                  {setup?.goal || <Link to={links.sectionHref('gestion')}>Añadir objetivo</Link>}
+                </dd>
+              </div>
+              <div>
+                <dt>Material</dt>
+                <dd title={setup?.equipment || undefined}>
+                  {setup?.equipment || (
+                    <Link to={links.sectionHref('gestion')}>Añadir material</Link>
+                  )}
+                </dd>
+              </div>
+            </dl>
+            {hasContext && (
+              <button
+                type="button"
+                className="athlete-context-toggle"
+                aria-haspopup="dialog"
+                aria-expanded={details.open}
+                aria-controls={details.open ? 'athlete-details' : undefined}
+                aria-label="Ver objetivo, material y nota completos"
+                title="Ver todo"
+                onClick={(e) => details.toggle(e.currentTarget)}
+              >
+                <ChevronRight size={14} aria-hidden />
+              </button>
+            )}
+          </div>
           {pending > 0 && active !== 'revisiones' && (
             <Link to={links.sectionHref('revisiones')} className="btn btn-primary athlete-followup">
               <MessageSquareText size={16} aria-hidden />
@@ -210,21 +238,26 @@ export function AthleteShell({
               <span>{pending === 1 ? ' seguimiento' : ' seguimientos'}</span>
             </Link>
           )}
-          <AthleteNote key={link.linkId} link={link} />
+          <AthleteNote key={link.linkId} link={link} onShow={details.toggle} />
+          {details.anchor && (
+            <AthleteDetails link={link} anchor={details.anchor} onClose={details.close} />
+          )}
         </header>
         <nav className="coach-client-nav athlete-nav" aria-label="Secciones del atleta">
           <div className="athlete-tabs" ref={tabs}>
             {groups.map((group) => {
-              const current = group === activeGroup;
+              const isCurrent = group === activeGroup;
               const single = group.views.length === 1;
               return (
-                <div key={group.id} className="athlete-group" data-current={current || undefined}>
+                <div key={group.id} className="athlete-group" data-current={isCurrent || undefined}>
                   <Link
                     to={links.viewHref(group.views[0].id)}
                     className="athlete-group-link"
-                    aria-current={current ? (single ? 'page' : 'true') : undefined}
+                    aria-current={isCurrent ? (single ? 'page' : 'true') : undefined}
                     data-athlete-nav={
-                      current && !single ? undefined : group.views.map((view) => view.id).join(' ')
+                      isCurrent && !single
+                        ? undefined
+                        : group.views.map((view) => view.id).join(' ')
                     }
                   >
                     <group.icon size={16} aria-hidden />

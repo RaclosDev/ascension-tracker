@@ -331,7 +331,8 @@
 .athlete-nav .athlete-group-link[aria-current] {
   color: var(--text-primary);
 }
-.athlete-nav a[aria-current='page'] {
+.athlete-nav a[aria-current='page'],
+.athlete-nav .athlete-group-link[aria-current='page'] {
   background: var(--text-primary);
   color: var(--bg-primary);
 }
@@ -2736,4 +2737,222 @@
     padding: 0 10px;
     font-size: 0.8rem;
   }
+}
+
+/* Rail header kept short so the athlete's menu fits: meta under the name, one line per fact. */
+@media (min-width: 1024px) {
+  .athlete-rail .athlete-header {
+    gap: 10px;
+  }
+  .athlete-rail .athlete-identity {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 6px 10px;
+  }
+  .athlete-rail .athlete-identity > div {
+    display: contents;
+  }
+  .athlete-rail .athlete-identity .coach-client-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+  }
+  .athlete-rail .athlete-meta {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+  .athlete-rail .athlete-context {
+    gap: 4px;
+  }
+  .athlete-rail .athlete-context > div {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 8px;
+    align-items: baseline;
+  }
+  .athlete-rail .athlete-context dt {
+    font-size: 0.62rem;
+  }
+  .athlete-rail .athlete-context dd {
+    display: block;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .athlete-rail .athlete-note {
+    padding: 6px 8px;
+    gap: 6px;
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+  .athlete-rail .athlete-note > svg {
+    margin-top: 1px;
+  }
+}
+
+.athlete-progress-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+.athlete-progress-bar h2 {
+  margin: 0;
+}
+.athlete-progress-bar .segmented {
+  overflow-x: auto;
+}
+.athlete-progress-bar .segmented-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.athlete-review {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Goal and equipment stay on one line each; the chevron unfolds the full text in place. */
+.athlete-context-wrap {
+  position: relative;
+  display: flex;
+  flex: 1 1 420px;
+  min-width: 0;
+  max-width: 760px;
+  margin-left: auto;
+}
+.athlete-context-wrap .athlete-context {
+  flex: 1 1 auto;
+  margin: 0;
+  max-width: none;
+}
+.athlete-context-toggle {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.athlete-context-toggle:hover {
+  background: var(--accent-light);
+  color: var(--text-primary);
+}
+.athlete-context-toggle:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+@media (min-width: 1024px) {
+  .athlete-rail .athlete-context-wrap {
+    max-width: none;
+    margin: 0;
+  }
+  .athlete-rail .athlete-context {
+    padding-right: 24px;
+  }
+  .athlete-rail .athlete-context-toggle {
+    top: -3px;
+    right: -4px;
+  }
+}
+.athlete-note .athlete-note-text,
+.athlete-note p {
+  display: -webkit-box;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.athlete-note-text {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.athlete-note-text:hover {
+  color: var(--text-primary);
+}
+.athlete-note-text:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+/* Floating card with everything the rail shortens. */
+.athlete-details {
+  position: fixed;
+  z-index: 60;
+  max-height: calc(100vh - 16px);
+  overflow: auto;
+  padding: 14px 36px 14px 16px;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.35);
+}
+.athlete-details dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+.athlete-details dt {
+  margin-bottom: 2px;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.athlete-details dd {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+.athlete-details-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.athlete-details-close:hover {
+  background: var(--accent-light);
+  color: var(--text-primary);
+}
+
+.progress-week-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.progress-week-nav h2 {
+  margin: 0;
+}
+.progress-week-nav .btn {
+  min-width: 36px;
+  padding-inline: 8px;
 }
