@@ -12,29 +12,87 @@
   gap: 16px;
   min-width: 0;
 }
-.pw-grid {
+/* Submenú a la izquierda como en Ajustes; el panel aprovecha el ancho para tablas y gráficos. */
+.athlete-manage-panel.pw-panel {
+  max-width: 1120px;
+}
+@media (min-width: 1000px) {
+  .pw.athlete-manage {
+    gap: 32px;
+  }
+}
+.pw-body {
   display: grid;
   gap: 16px;
-  align-items: start;
   min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
 }
-@media (min-width: 1100px) {
-  .pw-grid {
-    grid-template-columns: minmax(0, 1fr) 320px;
-  }
-  .pw-side {
-    position: sticky;
-    top: 16px;
-  }
+.pw-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
 }
-.pw-main,
-.pw-side {
+.pw-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent-primary-light, var(--accent-primary));
+  text-decoration: none;
+}
+.pw-link:hover {
+  text-decoration: underline;
+}
+
+/* Resumen: TM a todo el ancho; mejores marcas y próxima competición debajo, en dos columnas. */
+.pw-summary {
   display: grid;
   gap: 16px;
   min-width: 0;
+}
+@media (min-width: 1000px) {
+  .pw-summary {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  }
+  .pw-summary-tm {
+    grid-column: 1 / -1;
+  }
+}
+.pw-next {
+  display: grid;
+  gap: 4px;
+}
+.pw-next strong {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+.pw-next span {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Ajustes: especialización y notas lado a lado; clasificación de ejercicios a todo el ancho. */
+.pw-settings {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.pw-settings-fields {
+  display: grid;
+  gap: 12px;
+}
+@media (min-width: 1000px) {
+  .pw-settings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+  .pw-settings > .pw-mappings {
+    grid-column: 1 / -1;
+  }
 }
 .card.pw-card {
   display: grid;
@@ -160,52 +218,112 @@
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
+.pw-best .pw-best-meta {
+  margin: 2px 0 0;
+  line-height: 1.3;
+  font-family: var(--font-main);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.pw-best {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Marcas: filtro por levantamiento y una fila de tabla por marca. */
 .pw-marks {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
-  container: marks / inline-size;
 }
-.power-mark {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  min-width: 0;
-  margin: 0;
-  padding: 12px;
+.pw-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pw-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
   border: 1px solid var(--border-subtle);
-  border-radius: 10px;
+  border-radius: 999px;
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.pw-filter-chip span {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+.pw-filter-chip:hover {
+  color: var(--text-primary);
+}
+.pw-filter-chip[aria-pressed='true'] {
+  border-color: var(--text-primary);
   background: var(--bg-secondary);
+  color: var(--text-primary);
 }
-.power-mark > legend {
-  float: left;
-  grid-column: 1 / -1;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-}
-.power-mark > label {
-  display: grid;
-  gap: 4px;
+.pw-table-wrap {
   min-width: 0;
-  font-size: 0.75rem;
+  overflow-x: auto;
+}
+.pw-marks-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+}
+.pw-marks-table th {
+  padding: 0 8px 8px 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-align: left;
+  text-transform: uppercase;
   color: var(--text-secondary);
 }
-.power-mark-ref {
-  grid-column: 1 / -1;
+.pw-marks-table td {
+  padding: 6px 8px 6px 0;
+  border-top: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+.pw-marks-table td:last-child,
+.pw-marks-table th:last-child {
+  padding-right: 0;
+}
+.pw-marks-table .form-input {
+  width: 100%;
+  min-height: 40px;
+}
+.pw-marks-table td:nth-child(1) {
+  width: 9.75rem;
+}
+.pw-marks-table td:nth-child(2) {
+  width: 9rem;
+}
+.pw-marks-table td:nth-child(3) {
+  width: 6rem;
+}
+.pw-marks-table td:nth-child(4) {
+  width: 8.5rem;
+}
+.pw-kg {
+  font-variant-numeric: tabular-nums;
 }
 .power-mark-remove {
   display: inline-flex;
   align-items: center;
-  justify-self: start;
-  gap: 6px;
-  min-height: 44px;
-  padding: 0 10px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   border: 0;
   border-radius: 8px;
   background: none;
-  font-size: 0.85rem;
-  font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
 }
@@ -213,41 +331,13 @@
   background: color-mix(in srgb, var(--color-error, #ef4444) 12%, transparent);
   color: var(--color-error, #ef4444);
 }
-@container marks (min-width: 560px) {
-  .power-mark {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1fr) auto;
-    align-items: end;
-    padding: 8px 10px 10px;
-  }
-  .power-mark > legend {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-  .power-mark-ref {
-    grid-column: 1 / -2;
-    grid-row: 2;
-  }
-  .power-mark-remove {
-    grid-column: -2;
-    grid-row: 1;
-    justify-self: end;
-    width: 44px;
-    justify-content: center;
-    padding: 0;
-  }
-  .power-mark-remove span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-}
 .pw-add {
-  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pw-more {
+  justify-self: center;
 }
 
 /* Clasificación de ejercicios: plegada, en dos columnas cuando abre. */
@@ -489,57 +579,66 @@
   border-top: 1px solid var(--border-subtle);
 }
 
-/* Seguimiento S/B/D: una tarjeta por levantamiento con el 1RM estimado al frente. */
+/* Seguimiento S/B/D: se elige un levantamiento y se ven sus cifras y su volumen semanal. */
 .pw-progress {
   display: grid;
   gap: 16px;
   min-width: 0;
 }
-.pw-lifts {
+.pw-lift-picker {
   display: grid;
-  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
-@media (min-width: 1100px) {
-  .pw-lifts {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-.card.pw-card .pw-lift-name {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  letter-spacing: 0.02em;
-  color: var(--text-primary);
-}
-.pw-lift-hero {
+.card.pw-lift-pick {
   display: grid;
   gap: 2px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-subtle);
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
 }
-.pw-lift-hero > span {
-  font-size: 0.68rem;
+.card.pw-lift-pick:hover {
+  border-color: var(--text-secondary);
+}
+.card.pw-lift-pick[aria-pressed='true'] {
+  border-color: var(--accent-primary);
+  box-shadow: inset 0 0 0 1px var(--accent-primary);
+}
+.pw-lift-pick-name {
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text-secondary);
 }
-.pw-lift-hero strong {
+.pw-lift-pick strong {
   font-family: var(--font-display);
-  font-size: 2.2rem;
-  line-height: 1.05;
-  color: var(--accent-primary-light, var(--accent-primary));
+  font-size: 1.75rem;
+  line-height: 1.1;
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
-.pw-lift-hero small,
+.pw-lift-pick[aria-pressed='true'] strong {
+  color: var(--accent-primary-light, var(--accent-primary));
+}
+.pw-lift-pick small,
 .pw-lift-stats small {
+  display: block;
   font-size: 0.8rem;
   font-family: var(--font-main);
   color: var(--text-secondary);
 }
 .pw-lift-stats {
   display: grid;
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px 24px;
   margin: 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-subtle);
 }
 .pw-lift-stats dt {
   font-size: 0.68rem;
@@ -556,58 +655,60 @@
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
-.pw-weeks {
-  display: grid;
+.pw-chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+.pw-chart-head h4 {
+  margin: 0;
+}
+.pw-chart {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  height: 200px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.pw-weeks > li {
+.pw-chart > li {
   display: grid;
-  grid-template-columns: 11rem minmax(0, 1fr) 9.5rem;
-  align-items: center;
-  gap: 4px 16px;
-  padding: 10px 0;
-  border-top: 1px solid var(--border-subtle);
-  font-size: 0.875rem;
+  grid-template-rows: 1rem minmax(0, 1fr) 1rem;
+  flex: 1 1 0;
+  gap: 4px;
+  min-width: 0;
 }
-.pw-weeks > li:first-child {
-  border-top: 0;
-}
-.pw-weeks strong {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-.pw-weeks-bar {
-  height: 8px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--bg-secondary);
-}
-.pw-weeks-bar > span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--accent-primary);
-}
-.pw-weeks-volume {
-  font-family: var(--font-display);
-  text-align: right;
-  color: var(--text-primary);
+.pw-chart-value,
+.pw-chart-label {
+  overflow: visible;
+  font-size: 0.7rem;
+  line-height: 1rem;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
-.pw-weeks small {
-  grid-column: 2 / -1;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+.pw-chart-bar {
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.pw-chart-bar > span {
+  display: block;
+  width: 100%;
+  max-width: 48px;
+  margin: 0 auto;
+  border-radius: 4px 4px 0 0;
+  background: var(--accent-primary);
+}
+.pw-chart > li:hover .pw-chart-bar > span {
+  background: var(--accent-primary-light, var(--accent-primary));
 }
 @media (max-width: 640px) {
-  .pw-weeks > li {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .pw-weeks-bar,
-  .pw-weeks small {
-    grid-column: 1 / -1;
+  .pw-lift-picker {
+    grid-template-columns: 1fr;
   }
 }
 @media (min-width: 1100px) {

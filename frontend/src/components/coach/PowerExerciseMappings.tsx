@@ -29,7 +29,7 @@ export function PowerExerciseMappings({
     ).values(),
   ];
   return (
-    <details>
+    <details open>
       <summary>Clasificar ejercicios y variantes para S/B/D</summary>
       <p className="pw-hint">
         Clasifica tus ejercicios personalizados y variantes registrados. Las variantes quedan fuera
