@@ -202,8 +202,8 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
   {
     id: 'publish',
     chapter: 'Planificar una semana',
-    title: 'Guarda o publica desde aquí',
-    body: 'Guardar borrador conserva tu trabajo. Publicar semana abre una confirmación con fechas, sesiones y series antes de entregarla. Durante el tour no publicamos nada.',
+    title: 'Publica desde aquí',
+    body: 'El borrador se guarda solo mientras trabajas. Publicar semana abre una confirmación con fechas, sesiones y series antes de entregarla. Durante el tour no publicamos nada.',
     path: '/entrenador/atletas/tour-lucia?seccion=semana',
     target: '[data-tour="week-publish"]',
   },

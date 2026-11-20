@@ -15,11 +15,14 @@ export function ExerciseSearch({
   onPick,
   limit = 8,
   dragType,
+  autoFocus,
 }: {
   onPick: (exercise: Exercise) => void;
   limit?: number;
   /** When set, results can also be dragged; the drop target reads this data type. */
   dragType?: string;
+  /** Puts the cursor in the search box as soon as it appears. */
+  autoFocus?: boolean;
 }) {
   const { data: catalog = [] } = useExerciseCatalog();
   const { data: custom = [] } = useCustomExercises();
@@ -57,6 +60,7 @@ export function ExerciseSearch({
     <div className="flex flex-col gap-2">
       <input
         type="search"
+        autoFocus={autoFocus}
         aria-label="Buscar ejercicio para añadir"
         placeholder="Añadir ejercicio: nombre o etiqueta"
         className={inputClass}
