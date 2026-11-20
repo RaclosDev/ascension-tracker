@@ -1,5 +1,5 @@
 import { confirmAction } from '../lib/confirmation';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type DragEvent } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Plus, Save } from 'lucide-react';
@@ -14,6 +14,8 @@ import {
   copyWeek,
   emptyProgram,
   findDay,
+  MAX_EXERCISES_PER_DAY,
+  newExercise,
   programProblems,
   publishProblems,
   isProgramDraft,
@@ -27,6 +29,10 @@ import {
 import { WeekBar } from '../components/coach/editor/WeekBar';
 import { DayEditor } from '../components/coach/editor/DayEditor';
 import { inputClass, inputStyle } from '../components/coach/editor/fields';
+import {
+  PROGRAM_DRAG_TYPE,
+  ProgramExercisePanel,
+} from '../components/coach/editor/ProgramExercisePanel';
 
 const NEW_ID = 'nuevo';
 
@@ -145,6 +151,60 @@ export function ProgramEditor({
   };
 
   const currentWeek = Math.min(week, program.weeks);
+  const weekDays = program.days
+    .filter((d) => d.week === currentWeek)
+    .sort((a, b) => a.dayIndex - b.dayIndex);
+  const [chosenDay, setChosenDay] = useState<number | null>(null);
+  const [dropDay, setDropDay] = useState<number | null>(null);
+  // The panel adds to the day last touched; the week's first session until then.
+  const targetDay = weekDays.some((d) => d.dayIndex === chosenDay)
+    ? chosenDay
+    : (weekDays[0]?.dayIndex ?? null);
+
+  const addTo = (dayIndex: number, exercise: { id: string; name: string }) => {
+    const day = findDay(program, currentWeek, dayIndex);
+    if (day && day.exercises.length >= MAX_EXERCISES_PER_DAY) {
+      toast.error(`Un día admite como máximo ${MAX_EXERCISES_PER_DAY} ejercicios`);
+      return;
+    }
+    edit((p) => {
+      const withDay = findDay(p, currentWeek, dayIndex) ? p : addDay(p, currentWeek, dayIndex);
+      return updateDay(withDay, currentWeek, dayIndex, (d) => ({
+        ...d,
+        exercises: [...d.exercises, newExercise(exercise.id, exercise.name)],
+      }));
+    });
+    setChosenDay(dayIndex);
+    toast.success(`${exercise.name} añadido al ${WEEKDAY_LABELS[dayIndex - 1].toLowerCase()}`);
+  };
+  // Every day, with or without a session, takes exercises dragged from the panel.
+  const dropTarget = (dayIndex: number) => ({
+    'data-drop': dropDay === dayIndex ? '' : undefined,
+    onDragOver: (e: DragEvent) => {
+      if (pending || !e.dataTransfer.types.includes(PROGRAM_DRAG_TYPE)) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      setDropDay(dayIndex);
+    },
+    onDragLeave: (e: DragEvent) => {
+      if (!e.currentTarget.contains(e.relatedTarget as Node | null))
+        setDropDay((d) => (d === dayIndex ? null : d));
+    },
+    onDrop: (e: DragEvent) => {
+      const data = e.dataTransfer.getData(PROGRAM_DRAG_TYPE);
+      setDropDay(null);
+      if (pending || !data) return;
+      e.preventDefault();
+      const item = JSON.parse(data) as { id?: string; name?: string };
+      if (item.id) addTo(dayIndex, { id: item.id, name: item.name ?? item.id });
+    },
+  });
+  const focusSearch = (dayIndex: number) => {
+    setChosenDay(dayIndex);
+    document
+      .querySelector<HTMLInputElement>('.program-ex-panel input[aria-label^="Buscar ejercicio"]')
+      ?.focus();
+  };
   // Back to the library tab this resource is filed under by its size.
   const library = `/entrenador/planificacion${
     program.weeks > 1 ? '?pestana=programas' : program.days.length > 1 ? '?pestana=semanas' : ''
@@ -370,64 +430,92 @@ export function ProgramEditor({
             }}
           />
 
-          <div className="flex flex-col gap-3">
-            {WEEKDAY_LABELS.map((label, i) => {
-              const dayIndex = i + 1;
-              const day = findDay(program, currentWeek, dayIndex);
-              if (!day) {
-                return (
-                  <div key={dayIndex} className="card flex items-center justify-between gap-3 py-3">
-                    <span style={{ color: 'var(--text-secondary)' }}>{label} · descanso</span>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      aria-label={`Añadir entrenamiento el ${label.toLowerCase()}`}
-                      onClick={() => edit((p) => addDay(p, currentWeek, dayIndex))}
+          <div className="program-editor-body">
+            <div className="flex flex-col gap-3 min-w-0">
+              {WEEKDAY_LABELS.map((label, i) => {
+                const dayIndex = i + 1;
+                const day = findDay(program, currentWeek, dayIndex);
+                if (!day) {
+                  return (
+                    <div
+                      key={dayIndex}
+                      className="card program-day-drop flex items-center justify-between gap-3 py-3"
+                      {...dropTarget(dayIndex)}
                     >
-                      <Plus size={16} aria-hidden /> Añadir día
-                    </button>
+                      <span style={{ color: 'var(--text-secondary)' }}>{label} · descanso</span>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        aria-label={`Añadir entrenamiento el ${label.toLowerCase()}`}
+                        onClick={() => edit((p) => addDay(p, currentWeek, dayIndex))}
+                      >
+                        <Plus size={16} aria-hidden /> Añadir día
+                      </button>
+                    </div>
+                  );
+                }
+                return (
+                  <div
+                    key={dayIndex}
+                    className="program-day-drop"
+                    data-target={targetDay === dayIndex ? '' : undefined}
+                    onPointerDownCapture={() => setChosenDay(dayIndex)}
+                    onFocusCapture={() => setChosenDay(dayIndex)}
+                    {...dropTarget(dayIndex)}
+                  >
+                    <DayEditor
+                      label={label}
+                      onAddExercise={() => focusSearch(dayIndex)}
+                      day={day}
+                      weeks={program.weeks}
+                      onChange={(change) =>
+                        edit((p) => updateDay(p, currentWeek, dayIndex, change))
+                      }
+                      onRemove={async () => {
+                        if (
+                          day.exercises.length > 0 &&
+                          !(await confirmAction({
+                            title: 'Quitar día de entrenamiento',
+                            description: `¿Quitar «${day.name}» y sus ${day.exercises.length} ejercicios?`,
+                            confirmLabel: 'Quitar día',
+                            destructive: true,
+                          }))
+                        )
+                          return;
+                        edit((p) => removeDay(p, currentWeek, dayIndex));
+                      }}
+                      onCopy={async (to) => {
+                        if (
+                          findDay(program, to.week, to.dayIndex) &&
+                          !(await confirmAction({
+                            title: 'Sustituir entrenamiento',
+                            description: `Se copiará «${day.name}» al ${WEEKDAY_LABELS[to.dayIndex - 1].toLowerCase()} de la semana ${to.week}. Se sustituirán los ejercicios, cargas y notas de ese día. El entrenamiento de origen se conserva.`,
+                            confirmLabel: 'Sustituir entrenamiento',
+                            destructive: true,
+                          }))
+                        )
+                          return;
+                        edit((p) => copyDay(p, { week: currentWeek, dayIndex }, to));
+                        toast.success(
+                          `Copiado a semana ${to.week}, ${WEEKDAY_LABELS[to.dayIndex - 1]}`,
+                        );
+                      }}
+                    />
                   </div>
                 );
-              }
-              return (
-                <DayEditor
-                  key={dayIndex}
-                  label={label}
-                  day={day}
-                  weeks={program.weeks}
-                  onChange={(change) => edit((p) => updateDay(p, currentWeek, dayIndex, change))}
-                  onRemove={async () => {
-                    if (
-                      day.exercises.length > 0 &&
-                      !(await confirmAction({
-                        title: 'Quitar día de entrenamiento',
-                        description: `¿Quitar «${day.name}» y sus ${day.exercises.length} ejercicios?`,
-                        confirmLabel: 'Quitar día',
-                        destructive: true,
-                      }))
-                    )
-                      return;
-                    edit((p) => removeDay(p, currentWeek, dayIndex));
-                  }}
-                  onCopy={async (to) => {
-                    if (
-                      findDay(program, to.week, to.dayIndex) &&
-                      !(await confirmAction({
-                        title: 'Sustituir entrenamiento',
-                        description: `Se copiará «${day.name}» al ${WEEKDAY_LABELS[to.dayIndex - 1].toLowerCase()} de la semana ${to.week}. Se sustituirán los ejercicios, cargas y notas de ese día. El entrenamiento de origen se conserva.`,
-                        confirmLabel: 'Sustituir entrenamiento',
-                        destructive: true,
-                      }))
-                    )
-                      return;
-                    edit((p) => copyDay(p, { week: currentWeek, dayIndex }, to));
-                    toast.success(
-                      `Copiado a semana ${to.week}, ${WEEKDAY_LABELS[to.dayIndex - 1]}`,
-                    );
-                  }}
-                />
-              );
-            })}
+              })}
+            </div>
+            <ProgramExercisePanel
+              program={program}
+              disabled={!!pending}
+              target={{
+                days: weekDays,
+                labels: WEEKDAY_LABELS,
+                dayIndex: targetDay,
+                onTarget: setChosenDay,
+              }}
+              onAdd={(exercise) => targetDay != null && addTo(targetDay, exercise)}
+            />
           </div>
         </fieldset>
       )}
