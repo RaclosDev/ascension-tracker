@@ -25,8 +25,8 @@ export const coachNavItems = [
   {
     path: '/entrenador/revisiones',
     icon: <MessageSquareText className="w-5 h-5" />,
-    label: 'Seguimiento semanal',
-    shortLabel: 'Seguimiento',
+    label: 'Seguimientos',
+    shortLabel: 'Seguimientos',
   },
   {
     path: '/entrenador/planificacion',
@@ -40,6 +40,10 @@ export const coachNavItems = [
     label: 'Ajustes',
     shortLabel: 'Ajustes',
   },
+];
+
+// Lo que no es trabajo diario vive en el menú de la cuenta, al pie del lateral.
+export const coachAccountItems = [
   {
     path: '/entrenador/plan',
     icon: <CreditCard className="w-5 h-5" />,

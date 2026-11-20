@@ -84,7 +84,11 @@ export function clientTasks({ link, status }: CoachRow): CoachTask[] {
             ? 'Preparar pauta nutricional'
             : signal.reason === 'CHECKIN_MISSING'
               ? 'Consultar seguimiento pendiente'
-              : 'Revisar seguimiento',
+              : signal.reason === 'INACTIVE'
+                ? 'Contactar con el atleta'
+                : signal.reason === 'FEW_FOOD_LOGS'
+                  ? 'Revisar registro de comida'
+                  : 'Revisar evolución del peso',
       detail: signalText(signal),
       section: signalSection(signal),
       owner: signal.reason === 'CHECKIN_MISSING' ? 'client' : 'coach',

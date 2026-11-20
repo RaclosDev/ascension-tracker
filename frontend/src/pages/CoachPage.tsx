@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Suspense } from 'react';
-import { ArrowUpRight, ClipboardList, MessageSquareText, Users } from 'lucide-react';
-import { followupSignals, useCoachRoster } from '../lib/coach/workspace';
-import { CoachTaskBoard } from '../components/coach/CoachTaskBoard';
+import { useCoachRoster } from '../lib/coach/workspace';
+import { CoachHomeBoard } from '../components/coach/CoachHomeBoard';
 import {
   CoachPageHeader,
   CoachWorkspace,
@@ -23,16 +22,10 @@ export default function CoachPage() {
 
 function Dashboard() {
   const { clients, status, rows, ready } = useCoachRoster();
-  const replies = rows.filter((r) => (r.status?.pendingReplies ?? 0) > 0);
-  const pending = replies.reduce((sum, r) => sum + (r.status?.pendingReplies ?? 0), 0);
-  const followups = rows.filter((r) => followupSignals(r.status).length > 0);
 
   return (
     <>
-      <CoachPageHeader
-        title="Inicio"
-        description="Organiza los seguimientos semanales de tus atletas."
-      >
+      <CoachPageHeader title="Inicio" description="Qué vence esta semana y cómo van tus atletas.">
         <div className="coach-inline-actions">
           <Link className="btn btn-secondary" to="/entrenador/guia">
             Guía interactiva
@@ -64,36 +57,6 @@ function Dashboard() {
         </section>
       ) : (
         <>
-          <div className="coach-overview" aria-label="Resumen de atletas">
-            <Link
-              to="/entrenador/revisiones"
-              className="coach-overview-item coach-overview-primary"
-            >
-              <MessageSquareText size={20} aria-hidden />
-              <span>Seguimientos por responder</span>
-              <strong>{ready ? pending : '—'}</strong>
-              <small>
-                {ready
-                  ? `De ${replies.length} ${replies.length === 1 ? 'atleta' : 'atletas'}`
-                  : 'Estado no disponible'}
-              </small>
-              <ArrowUpRight size={16} aria-hidden />
-            </Link>
-            <Link to="/entrenador/atletas?filtro=attention" className="coach-overview-item">
-              <ClipboardList size={20} aria-hidden />
-              <span>Atletas por revisar</span>
-              <strong>{ready ? followups.length : '—'}</strong>
-              <small>Señales de seguimiento</small>
-              <ArrowUpRight size={16} aria-hidden />
-            </Link>
-            <Link to="/entrenador/atletas" className="coach-overview-item">
-              <Users size={20} aria-hidden />
-              <span>Atletas activos</span>
-              <strong>{rows.length}</strong>
-              <small>Ver tu lista completa</small>
-              <ArrowUpRight size={16} aria-hidden />
-            </Link>
-          </div>
           {status.isError && (
             <QueryErrorNotice retry={() => void status.refetch()} pending={status.isFetching} />
           )}
@@ -104,17 +67,7 @@ function Dashboard() {
                 : 'Falta información de seguimiento de algún atleta.'}
             </p>
           )}
-          {ready && (
-            <>
-              <Link
-                className="btn btn-secondary self-start"
-                to="/entrenador/revisiones?vista=agenda"
-              >
-                Ver agenda semanal
-              </Link>
-              <CoachTaskBoard rows={rows} />
-            </>
-          )}
+          {ready && <CoachHomeBoard rows={rows} />}
         </>
       )}
     </>

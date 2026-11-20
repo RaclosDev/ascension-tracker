@@ -25,9 +25,15 @@ import api from '../api/client';
 import CoachCheckinPage from '../pages/CoachCheckinPage';
 import { CheckinsSection } from '../components/coach/CheckinsSection';
 import { CheckinTemplateEditor } from '../components/coach/CheckinTemplateEditor';
+import type { CoachClient } from '../lib/coach/api';
 import type { Checkin, ClientCheckin } from '../lib/coach/checkins';
 
 const mockedApi = vi.mocked(api);
+const link = {
+  linkId: 'l1',
+  permissions: { training: true },
+  notes: null,
+} as unknown as CoachClient;
 const coach = { name: 'Laura', email: 'laura@test', picture: null };
 
 const checkin = (over: Partial<Checkin> = {}): Checkin => ({
@@ -179,7 +185,7 @@ describe('Check-ins en la ficha del entrenador', () => {
     queryClient.setQueryData(['coach', 'client', 'l1', 'checkins'], []);
     mockedApi.get.mockResolvedValue({ data: [checkin()] });
 
-    wrap(<CheckinsSection linkId="l1" />, '/', queryClient);
+    wrap(<CheckinsSection link={link} />, '/', queryClient);
 
     expect(await screen.findByText('Rodilla')).toBeInTheDocument();
   });
@@ -187,7 +193,7 @@ describe('Check-ins en la ficha del entrenador', () => {
   it('shows scores, weight and answers and lets the coach reply', async () => {
     mockedApi.get.mockResolvedValue({ data: [checkin()] });
     mockedApi.put.mockResolvedValue({ data: checkin({ coachReply: 'Ánimo' }) });
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
 
     expect(await screen.findByText('Rodilla')).toBeInTheDocument();
     expect(screen.getByText(/80,4 kg/)).toBeInTheDocument();
@@ -206,18 +212,18 @@ describe('Check-ins en la ficha del entrenador', () => {
   it('restores a reply draft, isolates accounts, and keeps it after a failed send', async () => {
     mockedApi.get.mockResolvedValue({ data: [checkin()] });
     mockedApi.put.mockRejectedValue(new Error('Sin conexión'));
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
     fireEvent.change(await screen.findByLabelText('Tu respuesta'), {
       target: { value: 'Conserva esta respuesta' },
     });
     expect(screen.getByText(/Borrador guardado/)).toBeInTheDocument();
     cleanup();
     auth.user = { email: 'other@test' };
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
     expect(await screen.findByLabelText('Tu respuesta')).toHaveValue('');
     cleanup();
     auth.user = { email: 'owner@test' };
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
     expect(await screen.findByLabelText('Tu respuesta')).toHaveValue('Conserva esta respuesta');
     fireEvent.click(screen.getByRole('button', { name: 'Responder' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('El borrador se conserva');
@@ -228,13 +234,13 @@ describe('Check-ins en la ficha del entrenador', () => {
 
   it('requires reviewing a changed check-in before sending a restored draft', async () => {
     mockedApi.get.mockResolvedValue({ data: [checkin()] });
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
     fireEvent.change(await screen.findByLabelText('Tu respuesta'), {
       target: { value: 'Sigue así' },
     });
     cleanup();
     mockedApi.get.mockResolvedValue({ data: [checkin({ updatedAt: '2026-11-04T10:00:00Z' })] });
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
     expect(await screen.findByRole('alert')).toHaveTextContent('El atleta ha cambiado');
     expect(screen.getByRole('button', { name: 'Responder' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'He revisado los cambios' }));
@@ -289,13 +295,13 @@ describe('Check-ins en la ficha del entrenador', () => {
 
   it('hides the reply form once answered and explains an empty list', async () => {
     mockedApi.get.mockResolvedValueOnce({ data: [checkin({ coachReply: 'Hecho' })] });
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
     expect(await screen.findByText('Hecho')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Responder' })).toBeNull();
     cleanup();
 
     mockedApi.get.mockResolvedValueOnce({ data: [] });
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
     expect(await screen.findByText(/aún no ha enviado/)).toBeInTheDocument();
   });
 

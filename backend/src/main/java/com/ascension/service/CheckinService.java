@@ -44,6 +44,11 @@ public class CheckinService {
             "¿Qué ha ido bien esta semana?",
             "¿Qué te ha costado más?",
             "¿Alguna molestia o lesión?");
+    /** Added to the check-in of the last week of the athlete's block. */
+    static final List<String> BLOCK_END_QUESTIONS = List.of(
+            "Fin de bloque: ¿qué ha ido mejor en estas semanas?",
+            "Fin de bloque: ¿qué cambiarías para el siguiente?");
+    private static final int MAX_QUESTIONS = 10;
     private static final int HISTORY_WEEKS = 26;
     private static final JsonMapper JSON = JsonMapper.builder().build();
     private static final TypeReference<List<String>> QUESTIONS = new TypeReference<>() {
@@ -141,7 +146,7 @@ public class CheckinService {
         LocalDate week = weekOf(now.atZone(java.time.ZoneId.of(link.followup().schedule().timeZone())).toLocalDate());
         Checkin sent = find(link, week);
         List<String> questions = sent == null
-                ? questionsFor(link)
+                ? questionsFor(link, week)
                 : sent.answers().stream().map(Answer::question).toList();
         return new ClientCheckin(linkId, link.coach(), week, questions, sent, link.followup(), scoreKeys(link, sent));
     }
@@ -155,7 +160,7 @@ public class CheckinService {
             throw new InvalidInputException("Tu entrenador ya ha respondido a este check-in.");
         }
         List<String> questions = sent == null
-                ? questionsFor(link)
+                ? questionsFor(link, week)
                 : sent.answers().stream().map(Answer::question).toList();
         List<String> given = request.answers() == null ? List.of() : request.answers();
         if (given.size() > questions.size()) {
@@ -290,6 +295,20 @@ public class CheckinService {
                 "SELECT questions::text AS questions FROM checkin_templates WHERE coach_user_id = ?",
                 (rs, n) -> rs.getString("questions"), coachId).stream().findFirst().orElse(null);
         return stored == null ? new Template(DEFAULT_QUESTIONS, false) : new Template(JSON.readValue(stored, QUESTIONS), true);
+    }
+
+    /** The usual questions, plus the closing ones when {@code week} is the last of the athlete's block. */
+    private List<String> questionsFor(Link link, LocalDate week) {
+        List<String> questions = questionsFor(link);
+        boolean closing = Boolean.TRUE.equals(jdbcTemplate.queryForObject("""
+                SELECT EXISTS(SELECT 1 FROM coach_blocks WHERE link_id = ? AND start_week + (weeks - 1) * 7 = ?)
+                """, Boolean.class, link.linkId(), week));
+        if (!closing) return questions;
+        List<String> all = new ArrayList<>(questions);
+        for (String question : BLOCK_END_QUESTIONS) {
+            if (all.size() < MAX_QUESTIONS && !all.contains(question)) all.add(question);
+        }
+        return all;
     }
 
     private List<String> questionsFor(Link link) {

@@ -59,9 +59,10 @@ export default function CoachClientPage() {
 function AthleteSections({ link }: { link: CoachClient }) {
   const { linkId } = link;
   const [params] = useSearchParams();
-  const section = params.get('seccion') ?? 'resumen';
   const { sectionHref, recordHref } = useAthleteLinks(linkId);
   const views = useAthleteViews(link);
+  // Planning is where a coach spends the time; the summary covers athletes without that permission.
+  const section = params.get('seccion') ?? (link.permissions.training ? 'semana' : 'resumen');
   const open = (id: string) => section === id && views.has(id);
 
   return (
@@ -88,7 +89,7 @@ function AthleteSections({ link }: { link: CoachClient }) {
             <ClientPowerlifting linkId={linkId} canEdit={link.permissions.editTraining} />
           )}
           {open('progreso') && <ClientProgress linkId={linkId} />}
-          {open('revisiones') && <CheckinsSection linkId={linkId} />}
+          {open('revisiones') && <CheckinsSection link={link} />}
           {open('gestion') && <ClientManagement link={link} />}
           {!views.has(section) && (
             <section className="card">

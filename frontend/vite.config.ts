@@ -26,6 +26,7 @@ export default defineConfig({
           '**/ClientTraining-*',
           '**/ClientWeek-*',
           '**/DayEditor-*',
+          '**/ExerciseSearch-*',
           '**/WorkoutReview-*',
           '**/ProgramSessions-*',
           '**/ClientPowerlifting-*',
