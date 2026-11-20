@@ -1217,42 +1217,42 @@
   font-size: 0.85rem;
 }
 @media (min-width: 1100px) {
-  :is(.week-editor, .progress-week) .cal-body[data-panel='wide'] {
+  .week-editor .cal-body[data-panel='wide'] {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
   }
-  :is(.week-editor, .progress-week) .cal-body[data-panel='wide'] .cal-strip {
+  .week-editor .cal-body[data-panel='wide'] .cal-strip {
     position: static;
     grid-template-columns: auto minmax(0, 1fr);
     align-items: stretch;
   }
-  :is(.week-editor, .progress-week) .cal-body[data-panel='wide'] .cal-strip-back {
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-back {
     flex-direction: column;
     padding: 0 12px;
   }
-  :is(.week-editor, .progress-week) .cal-body[data-panel='wide'] .cal-strip ol {
+  .week-editor .cal-body[data-panel='wide'] .cal-strip ol {
     grid-auto-flow: column;
     gap: 6px;
   }
-  :is(.week-editor, .progress-week) .cal-body[data-panel='wide'] .cal-strip-day button {
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-day button {
     flex-direction: column;
     align-items: stretch;
     gap: 4px;
     min-height: 64px;
     padding: 8px 10px;
   }
-  :is(.week-editor, .progress-week) .cal-body[data-panel='wide'] .cal-strip-date {
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-date {
     flex-direction: row;
     align-items: baseline;
     gap: 6px;
     width: auto;
   }
-  :is(.week-editor, .progress-week) .cal-body[data-panel='wide'] .cal-strip-done {
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-done {
     position: absolute;
     top: 8px;
     right: 8px;
   }
-  :is(.week-editor, .progress-week) .cal-body[data-panel='wide'] .cal-strip-day {
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-day {
     position: relative;
   }
   .week-editor .cal-body[data-panel='wide'] .cal-day-body[data-wide] .day-facts {

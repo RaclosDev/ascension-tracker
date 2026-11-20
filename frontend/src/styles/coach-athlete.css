@@ -2751,26 +2751,6 @@
   }
 }
 
-.athlete-progress-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  align-items: center;
-  justify-content: space-between;
-}
-.athlete-progress-bar h2 {
-  margin: 0;
-}
-.athlete-progress-bar .segmented {
-  overflow-x: auto;
-}
-.athlete-progress-bar .segmented-option {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-
 .athlete-review {
   display: flex;
   align-items: center;
@@ -2906,15 +2886,58 @@
   color: var(--text-primary);
 }
 
-.progress-week-nav {
+/* Progreso: the athlete's weekly tracking, read-only. */
+.coach-tracking .calendar-day {
+  cursor: default;
+  min-height: 100px;
+}
+.coach-tracking .calendar-week-title {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.coach-tracking .calendar-week-title:hover {
+  text-decoration: underline;
+}
+.coach-tracking-cells {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  width: 100%;
+}
+.coach-tracking-cell {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  min-height: 26px;
+  padding: 0.2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
-.progress-week-nav h2 {
-  margin: 0;
+.coach-tracking-cell small {
+  margin-left: 2px;
+  font-size: inherit;
+  font-weight: 400;
+  opacity: 0.7;
 }
-.progress-week-nav .btn {
-  min-width: 36px;
-  padding-inline: 8px;
+.coach-tracking-cell > span {
+  opacity: 0.3;
+}
+@media (max-width: 768px) {
+  .coach-tracking-cell small {
+    display: none;
+  }
+}
+.coach-tracking-toggle .segmented-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
 }

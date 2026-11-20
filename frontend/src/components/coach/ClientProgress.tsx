@@ -1,6 +1,6 @@
 import { Suspense, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Camera, CalendarDays, Footprints, Scale } from 'lucide-react';
+import { Apple, ArrowUpRight, Camera, Footprints, Scale } from 'lucide-react';
 import { useClientData, type CoachClient } from '../../lib/coach/api';
 import { PhotoGallery } from '../photos/PhotoGallery';
 import type { PhotoList } from '../../lib/progressPhotos';
@@ -9,16 +9,16 @@ import { lazyWithRetry } from '../../utils/lazyWithRetry';
 import { toWeeklyDeltaData, toWeightChartData } from '../../lib/weightCharts';
 import type { DashboardData, WeightEntry, WeekSummary } from '../../types/api';
 import { ClientOverview } from './ClientOverview';
-import { ProgressWeek } from './ProgressWeek';
-import { Section, Stat, QueryState, WeeklyList, num } from './ClientSection';
+import { CoachTracking } from './CoachTracking';
+import { Section, Stat, QueryState, num } from './ClientSection';
 const DashboardCharts = lazyWithRetry(() => import('../DashboardCharts'));
 
-type Metric = 'registro' | 'peso' | 'pasos' | 'fotos';
-const STORAGE_KEY = 'ascension.coach.progressMetrics';
+type Metric = 'peso' | 'pasos' | 'kcal' | 'fotos';
+const STORAGE_KEY = 'ascension.coach.trackingMetrics';
 const METRICS = [
-  { id: 'registro', label: 'Semana', icon: CalendarDays },
   { id: 'peso', label: 'Peso', icon: Scale },
   { id: 'pasos', label: 'Pasos', icon: Footprints },
+  { id: 'kcal', label: 'Kcal', icon: Apple },
   { id: 'fotos', label: 'Fotos', icon: Camera },
 ] as const;
 
@@ -31,7 +31,7 @@ function readHidden(): Metric[] {
   }
 }
 
-/** Everything about how the athlete is doing in one view; the coach picks which records to show. */
+/** How the athlete is doing, the way they see it: a card per week with weight, steps and calories. */
 export default function ClientProgress({
   link,
   sectionHref,
@@ -43,15 +43,10 @@ export default function ClientProgress({
 }) {
   const services = link.setup?.services;
   const body = link.permissions.body;
-  const bodyLog = body && services?.progress !== false;
-  const logs =
-    (link.permissions.training && services?.training !== false) ||
-    (link.permissions.nutrition && services?.nutrition !== false) ||
-    bodyLog;
   const available: Record<Metric, boolean> = {
-    registro: logs,
     peso: body,
-    pasos: bodyLog,
+    pasos: body && services?.progress !== false,
+    kcal: link.permissions.nutrition && services?.nutrition !== false,
     fotos: body,
   };
   const options = METRICS.filter((m) => available[m.id]);
@@ -67,30 +62,45 @@ export default function ClientProgress({
       // Private mode: the choice lasts until the page closes.
     }
   };
+  const weekHref = (week: string) => {
+    const [path, query = ''] = recordHref('registro').split('?');
+    const next = new URLSearchParams(query);
+    next.set('semana', week);
+    return `${path}?${next}`;
+  };
+  const tracking = shows('peso') || shows('pasos') || shows('kcal');
 
   return (
     <ClientOverview link={link} sectionHref={sectionHref}>
       {options.length > 0 && (
-        <div className="athlete-progress-bar">
-          <h2>Registros</h2>
-          <div className="segmented" role="toolbar" aria-label="Registros mostrados">
-            {options.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                type="button"
-                className="segmented-option"
-                aria-pressed={shows(id)}
-                onClick={() => toggle(id)}
-              >
-                <Icon size={16} aria-hidden /> {label}
-              </button>
-            ))}
-          </div>
+        <div
+          className="segmented coach-tracking-toggle"
+          role="toolbar"
+          aria-label="Registros mostrados"
+        >
+          {options.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              className="segmented-option"
+              aria-pressed={shows(id)}
+              onClick={() => toggle(id)}
+            >
+              <Icon size={16} aria-hidden /> {label}
+            </button>
+          ))}
         </div>
       )}
-      {shows('registro') && <ProgressWeek link={link} registerHref={recordHref('registro')} />}
+      {tracking && (
+        <CoachTracking
+          linkId={link.linkId}
+          weights={shows('peso')}
+          steps={shows('pasos')}
+          calories={shows('kcal')}
+          weekHref={weekHref}
+        />
+      )}
       {shows('peso') && <WeightPanel linkId={link.linkId} href={recordHref('peso')} />}
-      {shows('pasos') && <StepsPanel linkId={link.linkId} href={recordHref('pasos')} />}
       {shows('fotos') && <PhotosPanel linkId={link.linkId} />}
     </ClientOverview>
   );
@@ -112,7 +122,7 @@ function WeightPanel({ linkId, href }: { linkId: string; href: string }) {
   const weightChartData = useMemo(() => toWeightChartData(entries.data ?? []), [entries.data]);
   const deltaData = useMemo(() => toWeeklyDeltaData(weeks.data ?? []), [weeks.data]);
   return (
-    <Section title="Peso" icon={<Scale size={18} aria-hidden />}>
+    <Section title="Evolución del peso" icon={<Scale size={18} aria-hidden />}>
       <QueryState isLoading={dashboard.isLoading} isError={dashboard.isError} />
       {d && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
@@ -134,17 +144,6 @@ function WeightPanel({ linkId, href }: { linkId: string; href: string }) {
           <DashboardCharts weightChartData={weightChartData} deltaData={deltaData} />
         </Suspense>
       )}
-      <DaysLink href={href} />
-    </Section>
-  );
-}
-
-function StepsPanel({ linkId, href }: { linkId: string; href: string }) {
-  const steps = useClientData<WeekSummary[]>(linkId, 'steps/weekly', true);
-  return (
-    <Section title="Pasos" icon={<Footprints size={18} aria-hidden />}>
-      <QueryState isLoading={steps.isLoading} isError={steps.isError} />
-      {steps.data && <WeeklyList weeks={steps.data} unit=" pasos/día" />}
       <DaysLink href={href} />
     </Section>
   );
