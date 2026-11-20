@@ -321,13 +321,13 @@ body,
  */
 :where(
   input:not(
-      [type='checkbox'],
-      [type='radio'],
-      [type='color'],
-      [type='range'],
-      [type='file'],
-      .bg-transparent
-    ),
+    [type='checkbox'],
+    [type='radio'],
+    [type='color'],
+    [type='range'],
+    [type='file'],
+    .bg-transparent
+  ),
   textarea:not(.bg-transparent),
   select:not(.bg-transparent),
   .ui-select:not(.bg-transparent)
@@ -1673,6 +1673,23 @@ html:not([data-mode='light']) .marker-ink {
   color: inherit;
   cursor: pointer;
 }
+/* A select without a field class of its own still reads as a control of the app. Zero
+   specificity: any screen that styles its select keeps winning. */
+:where(.ui-select:not(.form-input, .bg-transparent)) {
+  min-height: 36px;
+  padding: 0 0.6rem 0 0.75rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+:where(.ui-select:not(.form-input, .bg-transparent)):hover:not(:disabled) {
+  border-color: var(--text-secondary);
+}
+:where(.ui-select) .ui-select-chevron {
+  color: var(--accent-primary);
+}
 .ui-select:disabled {
   cursor: not-allowed;
   opacity: 0.5;
@@ -1690,7 +1707,9 @@ html:not([data-mode='light']) .marker-ink {
 .ui-select-chevron {
   flex-shrink: 0;
   opacity: 0.75;
-  transition: rotate 160ms ease-out, opacity 160ms ease-out;
+  transition:
+    rotate 160ms ease-out,
+    opacity 160ms ease-out;
 }
 .ui-select:hover:not(:disabled) .ui-select-chevron,
 .ui-select[aria-expanded='true'] .ui-select-chevron {

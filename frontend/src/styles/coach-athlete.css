@@ -6,24 +6,91 @@
 .main-content:has(.athlete-page) {
   scrollbar-gutter: stable;
 }
-@media (min-width: 1024px) {
-  .main-content-inner:has(.athlete-page) {
-    max-width: 1600px;
-  }
-}
-/* Who the athlete is, what they are after and the pending action share one row; tabs sit below. */
+/* The athlete's file: a rail with who they are and every area; the work takes the rest. */
 .coach-workspace.athlete-page {
   gap: 0.75rem;
 }
-.athlete-top {
+.athlete-frame {
   display: grid;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+}
+.athlete-main {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+  min-width: 0;
+}
+.athlete-rail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
 }
 .athlete-header {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 24px;
   align-items: center;
+}
+@media (min-width: 1024px) {
+  .main-content-inner:has(.athlete-frame) {
+    max-width: none;
+  }
+  .athlete-frame {
+    grid-template-columns: 228px minmax(0, 1fr);
+    gap: 0 24px;
+    align-items: start;
+  }
+  .athlete-rail {
+    position: sticky;
+    top: 12px;
+    gap: 16px;
+    max-height: calc(100dvh - 24px);
+    padding: 4px 16px 16px 0;
+    overflow-y: auto;
+    border-right: 1px solid var(--border-medium);
+    scrollbar-width: thin;
+  }
+  .athlete-rail .athlete-header {
+    display: grid;
+    gap: 12px;
+  }
+  .athlete-rail .athlete-context {
+    display: grid;
+    margin: 0;
+    border: 0;
+    gap: 8px;
+  }
+  .athlete-rail .athlete-context > div {
+    padding: 0;
+  }
+  .athlete-rail .athlete-context > div + div {
+    border-left: 0;
+  }
+  .athlete-rail > *,
+  .athlete-rail .athlete-header > * {
+    min-width: 0;
+  }
+  .athlete-rail .athlete-header .athlete-pin {
+    justify-self: start;
+  }
+  .athlete-rail .athlete-header .athlete-followup {
+    width: 100%;
+    min-height: 40px;
+    padding-block: 8px;
+    padding-inline: 10px;
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+    white-space: normal;
+    line-height: 1.2;
+    text-align: center;
+  }
+  .athlete-rail .athlete-note {
+    flex-basis: auto;
+  }
 }
 .athlete-identity {
   display: flex;
@@ -34,18 +101,24 @@
 }
 .athlete-back {
   display: inline-flex;
-  flex: 0 0 44px;
   align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  margin-left: -10px;
-  border-radius: 50%;
+  justify-self: start;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 8px 0 4px;
+  margin-left: -4px;
+  border-radius: 6px;
   color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 .athlete-back:hover {
   background: var(--bg-secondary);
   color: var(--text-primary);
+}
+.athlete-back:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 .athlete-identity .coach-client-avatar {
   flex-basis: 44px;
@@ -204,61 +277,116 @@
 }
 
 .coach-client-nav.athlete-nav {
-  display: grid;
-  gap: 0;
+  display: block;
   padding: 0;
   overflow: visible;
   border-bottom: 0;
 }
-.athlete-tabs,
-.athlete-subtabs {
-  display: flex;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-/* The athlete's menu reads as a bar of buttons: framed, each entry with its icon and a filled
-   current one, so it is plain that this is where you move around the file. */
+/* On a phone the areas read as one bar that scrolls sideways, with the current area's views
+   right after it; on a desktop they stack in the rail, each area with its views below. */
 .athlete-tabs {
+  display: flex;
   gap: 2px;
   padding: 4px;
+  overflow-x: auto;
   border: 1px solid var(--border-medium);
   border-radius: 10px;
   background: var(--bg-secondary);
+  scrollbar-width: thin;
 }
-.athlete-nav .athlete-tabs a {
+.athlete-group {
+  display: contents;
+}
+.athlete-group:not([data-current]) .athlete-subtabs {
+  display: none;
+}
+.athlete-nav a {
+  display: inline-flex;
   flex: none;
+  align-items: center;
   gap: 8px;
   min-height: 40px;
-  padding: 0 14px;
-  border: 0;
+  padding: 0 12px;
   border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  font-weight: 600;
   white-space: nowrap;
+  text-decoration: none;
   transition:
     background-color 0.12s ease,
     color 0.12s ease;
 }
-.athlete-nav .athlete-tabs a svg {
+.athlete-nav a svg {
   flex: none;
 }
-.athlete-nav .athlete-tabs a:hover {
+.athlete-nav a:hover {
   background: var(--accent-light);
   color: var(--text-primary);
 }
-.athlete-nav .athlete-tabs a:focus-visible {
+.athlete-nav a:focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: -2px;
 }
-.athlete-nav .athlete-tabs a[aria-current] {
+.athlete-nav .athlete-group-link[aria-current] {
+  color: var(--text-primary);
+}
+.athlete-nav a[aria-current='page'] {
   background: var(--text-primary);
   color: var(--bg-primary);
 }
-.athlete-nav .athlete-tabs a[aria-current] .athlete-badge {
+.athlete-nav a[aria-current='page'] .athlete-badge {
   background: var(--bg-primary);
   color: var(--text-primary);
 }
+.athlete-subtabs {
+  display: flex;
+  gap: 2px;
+}
+.athlete-nav .athlete-subtabs a {
+  font-weight: 500;
+}
 @media (prefers-reduced-motion: reduce) {
-  .athlete-nav .athlete-tabs a {
+  .athlete-nav a {
     transition: none;
+  }
+}
+@media (min-width: 1024px) {
+  .athlete-tabs {
+    display: grid;
+    gap: 14px;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: none;
+  }
+  .athlete-group {
+    display: grid;
+    gap: 2px;
+  }
+  .athlete-group:not([data-current]) .athlete-subtabs {
+    display: grid;
+  }
+  .athlete-nav .athlete-group-link {
+    min-height: 32px;
+    padding: 0 8px;
+    color: var(--text-primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .athlete-nav .athlete-group-link svg {
+    color: var(--text-secondary);
+  }
+  .athlete-subtabs {
+    display: grid;
+    gap: 2px;
+  }
+  .athlete-nav .athlete-subtabs a {
+    min-height: 34px;
+    padding: 0 10px 0 32px;
+    font-size: 0.86rem;
   }
 }
 .athlete-badge {
@@ -269,31 +397,12 @@
   height: 20px;
   padding: 0 6px;
   border-radius: 10px;
-  background: var(--text-primary);
+  background: var(--accent-primary);
   color: var(--bg-primary);
   font-size: 0.72rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-}
-.athlete-subtabs {
-  gap: 6px;
-  padding: 10px 3px 3px;
-}
-.athlete-nav .athlete-subtabs a {
-  min-height: 36px;
-  padding: 0 14px;
-  border: 1px solid var(--border-medium);
-  border-radius: 18px;
-  font-size: 0.82rem;
-  white-space: nowrap;
-}
-.athlete-nav .athlete-subtabs a:hover {
-  color: var(--text-primary);
-}
-.athlete-nav .athlete-subtabs a[aria-current='page'] {
-  border-color: var(--text-primary);
-  background: var(--text-primary);
-  color: var(--bg-primary);
+  letter-spacing: 0;
 }
 
 .athlete-locked {
@@ -2592,92 +2701,10 @@
   }
 }
 
-/* Desktop: the athlete's frame stays low so the week gets the screen. Who it is, what they are
-   after and the pending action share one line; the tabs and their views share the next. */
+/* Desktop: the week gets the screen; lower bars. */
 @media (min-width: 1024px) {
   .main-content:has(.athlete-page) {
     padding-top: 14px;
-  }
-  .athlete-header {
-    gap: 6px 14px;
-  }
-  .athlete-back {
-    flex-basis: 36px;
-    width: 36px;
-    height: 36px;
-  }
-  .athlete-identity .coach-client-avatar {
-    flex-basis: 36px;
-    width: 36px;
-    height: 36px;
-    font-size: 0.82rem;
-  }
-  .coach-page.athlete-page h1.athlete-name {
-    font-size: 1.3rem;
-  }
-  .athlete-meta {
-    margin-top: 0;
-    font-size: 0.76rem;
-  }
-  .athlete-context {
-    flex: 1 1 220px;
-    max-width: none;
-    border: 0;
-    border-radius: 0;
-  }
-  .athlete-context > div {
-    flex: 0 1 auto;
-    gap: 0;
-    padding: 0 14px;
-    border-left: 1px solid var(--border-medium);
-  }
-  .athlete-context dd {
-    display: block;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    font-size: 0.82rem;
-  }
-  .athlete-header .athlete-followup {
-    min-height: 36px;
-    padding: 0 12px;
-    font-size: 0.85rem;
-  }
-  .athlete-note {
-    align-items: center;
-    padding: 3px 10px;
-    font-size: 0.8rem;
-  }
-  .athlete-note > svg {
-    margin-top: 0;
-  }
-  .athlete-note p {
-    -webkit-line-clamp: 1;
-    line-clamp: 1;
-  }
-  .athlete-note-form {
-    align-items: stretch;
-    padding: 10px 12px;
-  }
-  .coach-client-nav.athlete-nav {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 12px;
-  }
-  .athlete-tabs {
-    padding: 3px;
-    border-radius: 8px;
-  }
-  .athlete-nav .athlete-tabs a {
-    min-height: 34px;
-    padding: 0 12px;
-  }
-  .athlete-subtabs {
-    padding: 3px;
-  }
-  .athlete-nav .athlete-subtabs a {
-    min-height: 32px;
-    padding: 0 12px;
   }
   /* The week bar keeps its two lines, each one lower. */
   .week-editor {

@@ -164,28 +164,25 @@ export function AthleteShell({
     void import('../../pages/CoachClientWeeklyRecordsPage');
   }, []);
 
-  // On a phone the bar scrolls sideways: keep the tab you are on in sight.
+  // On a phone the menu scrolls sideways: keep the entry you are on in sight.
   const tabs = useRef<HTMLDivElement>(null);
   const activeId = activeGroup?.id;
   useEffect(() => {
     tabs.current
-      ?.querySelector('[aria-current]')
+      ?.querySelector('[aria-current="page"]')
       ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
   }, [activeId]);
 
+  // The athlete's file: a rail with who they are and every area, and the work beside it.
   return (
-    <>
-      <div className="athlete-top">
+    <div className="athlete-frame">
+      <aside className="athlete-rail" aria-label="Ficha del atleta">
+        <Link to={goBack.to} className="athlete-back">
+          <ArrowLeft size={16} aria-hidden />
+          {goBack.label}
+        </Link>
         <header className="athlete-header">
           <div className="athlete-identity">
-            <Link
-              to={goBack.to}
-              className="athlete-back"
-              aria-label={goBack.label}
-              title={goBack.label}
-            >
-              <ArrowLeft size={18} aria-hidden />
-            </Link>
             <ClientAvatar client={link.client} />
             <div className="min-w-0">
               <h1 className="athlete-name">{personName(link.client)}</h1>
@@ -219,46 +216,47 @@ export function AthleteShell({
           <div className="athlete-tabs" ref={tabs}>
             {groups.map((group) => {
               const current = group === activeGroup;
+              const single = group.views.length === 1;
               return (
-                <Link
-                  key={group.id}
-                  to={links.viewHref(group.views[0].id)}
-                  aria-current={current ? (group.views.length > 1 ? 'true' : 'page') : undefined}
-                  data-athlete-nav={
-                    current && group.views.length > 1
-                      ? undefined
-                      : group.views.map((view) => view.id).join(' ')
-                  }
-                >
-                  <group.icon size={16} aria-hidden />
-                  {group.label}
-                  {group.id === 'revisiones' && pending > 0 && (
-                    <span className="athlete-badge" aria-label={`${pending} por responder`}>
-                      {pending}
-                    </span>
+                <div key={group.id} className="athlete-group" data-current={current || undefined}>
+                  <Link
+                    to={links.viewHref(group.views[0].id)}
+                    className="athlete-group-link"
+                    aria-current={current ? (single ? 'page' : 'true') : undefined}
+                    data-athlete-nav={
+                      current && !single ? undefined : group.views.map((view) => view.id).join(' ')
+                    }
+                  >
+                    <group.icon size={16} aria-hidden />
+                    {group.label}
+                    {group.id === 'revisiones' && pending > 0 && (
+                      <span className="athlete-badge" aria-label={`${pending} por responder`}>
+                        {pending}
+                      </span>
+                    )}
+                  </Link>
+                  {!single && (
+                    <div className="athlete-subtabs" role="group" aria-label={group.label}>
+                      {group.views.map((view) => (
+                        <Link
+                          key={view.id}
+                          to={links.viewHref(view.id)}
+                          aria-current={view.id === active ? 'page' : undefined}
+                          data-athlete-nav={view.id}
+                        >
+                          {view.label}
+                        </Link>
+                      ))}
+                    </div>
                   )}
-                </Link>
+                </div>
               );
             })}
           </div>
-          {activeGroup && activeGroup.views.length > 1 && (
-            <div className="athlete-subtabs" role="group" aria-label={activeGroup.label}>
-              {activeGroup.views.map((view) => (
-                <Link
-                  key={view.id}
-                  to={links.viewHref(view.id)}
-                  aria-current={view.id === active ? 'page' : undefined}
-                  data-athlete-nav={view.id}
-                >
-                  {view.label}
-                </Link>
-              ))}
-            </div>
-          )}
         </nav>
-      </div>
-      {children}
+      </aside>
+      <div className="athlete-main">{children}</div>
       <AthleteWarmup link={link} />
-    </>
+    </div>
   );
 }

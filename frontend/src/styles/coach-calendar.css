@@ -1171,3 +1171,109 @@
     font-size: 0.76rem;
   }
 }
+
+/* Planning wide: the days as a ribbon on top, the session across and its support column beside. */
+.week-support {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+}
+.week-support-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--bg-secondary);
+}
+.week-support-tabs .btn.btn-secondary {
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 10px;
+  border-color: transparent;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+.week-support-tabs .btn.btn-secondary:hover {
+  color: var(--text-primary);
+}
+.week-support-tabs .btn.btn-secondary[aria-pressed='true'] {
+  border-color: var(--accent-primary);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: inset 0 0 0 1px var(--accent-primary);
+}
+.week-support .ex-panel {
+  position: static;
+  max-height: none;
+  overflow: visible;
+  padding-left: 0;
+  border-left: 0;
+}
+.week-support > .cal-fieldset {
+  font-size: 0.85rem;
+}
+@media (min-width: 1100px) {
+  .week-editor .cal-body[data-panel='wide'] {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-strip {
+    position: static;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: stretch;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-back {
+    flex-direction: column;
+    padding: 0 12px;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-strip ol {
+    grid-auto-flow: column;
+    gap: 6px;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-day button {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    min-height: 64px;
+    padding: 8px 10px;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-date {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+    width: auto;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-done {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-day {
+    position: relative;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-day-body[data-wide] .day-facts {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+}
+@container daypanel (min-width: 980px) {
+  .week-editor .cal-day-body[data-wide] {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+  }
+  .week-editor .week-support {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+    padding-left: 20px;
+    border-left: 1px solid var(--border-subtle);
+    scrollbar-width: thin;
+  }
+}

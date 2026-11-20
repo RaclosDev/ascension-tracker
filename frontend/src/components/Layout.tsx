@@ -104,15 +104,23 @@ export default function Layout() {
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   // Desktop only: the menu folds to a rail of icons and stays that way between visits.
-  const [rail, setRail] = useState(() => localStorage.getItem(RAIL_KEY) === '1');
-  const toggleRail = () => {
-    localStorage.setItem(RAIL_KEY, rail ? '0' : '1');
-    setRail(!rail);
-  };
+  const [savedRail, setSavedRail] = useState(() => localStorage.getItem(RAIL_KEY) === '1');
+  // An athlete's page needs the width: the menu folds there unless opened for this visit.
+  const [openOnAthlete, setOpenOnAthlete] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const firstPathRef = useRef(true);
   const location = useLocation();
+  const onAthlete = location.pathname.startsWith('/entrenador/atletas/');
+  const rail = onAthlete ? !openOnAthlete : savedRail;
+  const toggleRail = () => {
+    if (onAthlete) {
+      setOpenOnAthlete(!openOnAthlete);
+      return;
+    }
+    localStorage.setItem(RAIL_KEY, savedRail ? '0' : '1');
+    setSavedRail(!savedRail);
+  };
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const userInitial = (user?.name || user?.email || '?').trim().charAt(0).toUpperCase();
