@@ -1,7 +1,7 @@
 import { useContext, useMemo } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Check, Plus } from 'lucide-react';
+import { Check, Dumbbell, Plus } from 'lucide-react';
 import { useClientCustomExercises } from '@/lib/coach/api';
 import { bestSet, companions, setText, type ExerciseUse } from '@/lib/coach/exerciseHistory';
 import { useCustomExercises } from '@/lib/workout/api';
@@ -53,7 +53,8 @@ export function ExercisePanel({
         <h4>{title}</h4>
         <ul>
           {uses.map((use) => {
-            const name = names.get(use.exerciseId)?.name ?? use.exerciseId;
+            const info = names.get(use.exerciseId);
+            const name = info?.name ?? use.exerciseId;
             const added = current.includes(use.exerciseId);
             const best = bestSet(use.last.sets);
             return (
@@ -75,6 +76,13 @@ export function ExercisePanel({
                   }}
                   onClick={() => onAdd({ id: use.exerciseId, name })}
                 >
+                  <span className="exs-thumb" aria-hidden="true">
+                    {info?.gifUrl ? (
+                      <img src={info.gifUrl} alt="" loading="lazy" />
+                    ) : (
+                      <Dumbbell size={15} />
+                    )}
+                  </span>
                   <span className="ex-item-text">
                     <strong>{name}</strong>
                     <small>
@@ -93,7 +101,7 @@ export function ExercisePanel({
     );
   return (
     <aside className="ex-panel" aria-label="Ejercicios para la sesión">
-      <h3>Añadir ejercicios</h3>
+      <h3 className="sr-only">Añadir ejercicios</h3>
       <fieldset disabled={disabled} className="ex-search">
         <ExerciseSearch limit={5} dragType={dragType} onPick={onAdd} />
       </fieldset>

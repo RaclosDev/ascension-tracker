@@ -5,8 +5,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Copy,
+  Dumbbell,
   Eye,
+  History,
+  Library,
   Maximize2,
+  NotebookPen,
   Pencil,
   X,
 } from 'lucide-react';
@@ -72,9 +76,9 @@ const AUTOSAVE_MS = 1500;
 /** How far back the athlete's sessions are read to know what they train and what they last did. */
 const HISTORY_WEEKS = 12;
 const PANELS = [
-  { id: 'previous', label: 'Semana anterior' },
-  { id: 'library', label: 'Biblioteca' },
-  { id: 'notes', label: 'Notas de la semana' },
+  { id: 'previous', label: 'Semana anterior', short: 'Semana pasada', icon: History },
+  { id: 'library', label: 'Biblioteca', short: 'Biblioteca', icon: Library },
+  { id: 'notes', label: 'Notas de la semana', short: 'Notas', icon: NotebookPen },
 ] as const;
 type Panel = (typeof PANELS)[number]['id'];
 
@@ -467,37 +471,49 @@ export function WeekEditor({
               : saved.version > 0
                 ? 'Borrador guardado · el atleta aún no lo ve'
                 : 'Semana sin preparar';
-  const panelTabs = (
-    <div
-      className={focused ? 'week-support-tabs' : 'week-tools-group'}
-      role="group"
-      aria-label="Paneles de apoyo"
-    >
-      {focused && (
+  const panelTabs = focused ? (
+    <div className="week-support-tabs" role="group" aria-label="Paneles de apoyo">
+      <button
+        type="button"
+        data-week-panel="exercises"
+        aria-pressed={!panel}
+        onClick={() => setPanel(null)}
+      >
+        <Dumbbell size={16} aria-hidden />
+        Ejercicios
+      </button>
+      {PANELS.map(({ id, label, short, icon: Icon }) => (
         <button
+          key={id}
           type="button"
-          className="btn btn-secondary"
-          data-week-panel="exercises"
-          aria-pressed={!panel}
-          onClick={() => setPanel(null)}
+          data-week-panel={id}
+          aria-label={label}
+          aria-pressed={panel === id}
+          onClick={() => setPanel(panel === id ? null : id)}
         >
-          Ejercicios
-        </button>
-      )}
-      {PANELS.map((option) => (
-        <button
-          key={option.id}
-          type="button"
-          className="btn btn-secondary"
-          data-week-panel={option.id}
-          aria-pressed={!preview && panel === option.id}
-          disabled={preview}
-          onClick={() => setPanel(panel === option.id ? null : option.id)}
-        >
-          {option.label}
+          <Icon size={16} aria-hidden />
+          {short}
         </button>
       ))}
     </div>
+  ) : (
+    // Beside the athlete's view the panels have nothing to act on, so they step aside.
+    !preview && (
+      <div className="week-tools-group" role="group" aria-label="Paneles de apoyo">
+        {PANELS.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            className="btn btn-secondary"
+            data-week-panel={option.id}
+            aria-pressed={panel === option.id}
+            onClick={() => setPanel(panel === option.id ? null : option.id)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    )
   );
   const panelBodies = (
     <fieldset disabled={locked} className="cal-fieldset" hidden={!panel}>
