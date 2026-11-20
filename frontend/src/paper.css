@@ -821,6 +821,18 @@ body,
   background: var(--wall-active-bg);
   color: var(--wall-active-ink);
 }
+/* En PC las pestañas miden lo que su texto: una tira a todo el ancho parecía un botón gigante. */
+@media (min-width: 1025px) {
+  .segmented {
+    width: fit-content;
+    max-width: 100%;
+  }
+  .segmented-option {
+    flex: 0 0 auto;
+    min-width: 8.5rem;
+    padding-inline: 1.25rem;
+  }
+}
 /*
  * Ajustes por secciones. Móvil: /settings es un índice a pantalla completa y cada sección
  * se abre sola, con «‹ Ajustes» para volver. Desde 1024px: columna fija a la izquierda.
@@ -1361,6 +1373,37 @@ html:not([data-mode='light']) .marker-ink {
     align-self: start;
     position: sticky;
     top: var(--space-xl);
+  }
+}
+
+/* Inicio centrado en el entreno: lo de hoy primero en el móvil; en PC, a la derecha y fijo como en el otro inicio. */
+.dashboard-focus,
+.dashboard-focus-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.dashboard-focus-main {
+  min-width: 0;
+}
+.dashboard-focus-main > *,
+.dashboard-focus .today-card {
+  margin: 0;
+}
+@media (min-width: 1100px) {
+  .dashboard-focus {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    column-gap: 20px;
+    align-items: start;
+  }
+  .dashboard-focus .dashboard-today {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .dashboard-focus-main {
+    grid-column: 1;
+    grid-row: 1;
   }
 }
 

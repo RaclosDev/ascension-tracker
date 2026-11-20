@@ -161,55 +161,57 @@ export default function DashboardPage() {
         <p className="mb-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
           {todayLabel}
         </p>
-        <div className="flex flex-col gap-4">
-          <div className="dashboard-today">
+        <div className="dashboard-focus">
+          <aside className="dashboard-today" aria-label="Plan de hoy">
             <TodayCard showNutrition={showNutrition} />
-          </div>
-          {coaches.data
-            ?.filter((coach) => coach.setup?.goal)
-            .map((coach) => (
-              <section key={coach.linkId} className="card">
-                <h2>Objetivo acordado</h2>
-                <p>{coach.setup?.goal}</p>
-              </section>
-            ))}
-          {powerlifting && <PowerliftingCard />}
-          {hasBodyTracking(settings.appModules) && (
-            <>
-              <section className="card">
-                <h2>{performance ? 'Seguimiento del peso' : 'Mantenimiento del peso'}</h2>
-                <p>
-                  {dashboard?.currentWeeklyAverage
-                    ? `Media semanal: ${dashboard.currentWeeklyAverage.toFixed(1)} kg.`
-                    : 'Aún no hay registros suficientes para una media semanal.'}
-                </p>
-                <p className="text-sm">
-                  Referencia personal: {settings.goalWeight} kg.{' '}
-                  {performance
-                    ? 'El peso acompaña al seguimiento del rendimiento.'
-                    : 'Sin un objetivo semanal de ganancia o pérdida; no hay porcentaje de progreso ni fecha de llegada.'}
-                </p>
-              </section>
-              <details className="card">
-                <summary className="cursor-pointer">Registrar peso y consultar evolución</summary>
-                <QuickWeightCard
-                  todayLabel={todayLabel}
-                  todayDateStr={todayDateStr}
-                  todayWeight={todayEntry?.weight}
-                  recentWeight={recentWeight}
-                  yesterdayWeight={yesterdayWeight}
-                  hasTodayWeight={hasTodayWeight}
-                />
-                <Suspense fallback={<DashboardChartsSkeleton />}>
-                  <DashboardCharts
-                    weightChartData={weightChartData}
-                    deltaData={deltaData}
-                    goalWeight={settings.goalWeight}
+          </aside>
+          <div className="dashboard-focus-main">
+            {coaches.data
+              ?.filter((coach) => coach.setup?.goal)
+              .map((coach) => (
+                <section key={coach.linkId} className="card">
+                  <h2>Objetivo acordado</h2>
+                  <p>{coach.setup?.goal}</p>
+                </section>
+              ))}
+            {powerlifting && <PowerliftingCard />}
+            {hasBodyTracking(settings.appModules) && (
+              <>
+                <section className="card">
+                  <h2>{performance ? 'Seguimiento del peso' : 'Mantenimiento del peso'}</h2>
+                  <p>
+                    {dashboard?.currentWeeklyAverage
+                      ? `Media semanal: ${dashboard.currentWeeklyAverage.toFixed(1)} kg.`
+                      : 'Aún no hay registros suficientes para una media semanal.'}
+                  </p>
+                  <p className="text-sm">
+                    Referencia personal: {settings.goalWeight} kg.{' '}
+                    {performance
+                      ? 'El peso acompaña al seguimiento del rendimiento.'
+                      : 'Sin un objetivo semanal de ganancia o pérdida; no hay porcentaje de progreso ni fecha de llegada.'}
+                  </p>
+                </section>
+                <details className="card">
+                  <summary className="cursor-pointer">Registrar peso y consultar evolución</summary>
+                  <QuickWeightCard
+                    todayLabel={todayLabel}
+                    todayDateStr={todayDateStr}
+                    todayWeight={todayEntry?.weight}
+                    recentWeight={recentWeight}
+                    yesterdayWeight={yesterdayWeight}
+                    hasTodayWeight={hasTodayWeight}
                   />
-                </Suspense>
-              </details>
-            </>
-          )}
+                  <Suspense fallback={<DashboardChartsSkeleton />}>
+                    <DashboardCharts
+                      weightChartData={weightChartData}
+                      deltaData={deltaData}
+                      goalWeight={settings.goalWeight}
+                    />
+                  </Suspense>
+                </details>
+              </>
+            )}
+          </div>
         </div>
       </div>
     );

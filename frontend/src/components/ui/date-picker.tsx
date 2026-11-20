@@ -27,6 +27,8 @@ export interface DatePickerProps {
   marked?: readonly string[];
   /** Texto del botón sin fecha. */
   placeholder?: string;
+  /** Texto propio para la fecha elegida (p. ej. «Hoy»); por defecto, la fecha corta. */
+  display?: (iso: string) => string;
   id?: string;
   name?: string;
   className?: string;
@@ -106,6 +108,7 @@ export function DatePicker({
   max,
   marked,
   placeholder = 'Elegir fecha',
+  display,
   id,
   name,
   className,
@@ -267,7 +270,7 @@ export function DatePicker({
           id={`${triggerId}-value`}
           className={cn('ui-select-value', !valid && 'ui-date-placeholder')}
         >
-          {valid ? formatShortDate(valid) : placeholder}
+          {valid ? (display ?? formatShortDate)(valid) : placeholder}
         </span>
       </button>
       {required && (

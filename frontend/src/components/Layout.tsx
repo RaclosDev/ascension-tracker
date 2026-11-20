@@ -59,13 +59,13 @@ const navItems = [
   {
     path: '/tracking',
     icon: <LineChart className="w-5 h-5" />,
-    label: 'Tracking Semanal',
+    label: 'Tracking',
     shortLabel: 'Tracking',
   },
   {
     path: '/nutrition',
     icon: <Utensils className="w-5 h-5" />,
-    label: 'Nutrición & Macros',
+    label: 'Nutrición',
     shortLabel: 'Nutrición',
   },
   {

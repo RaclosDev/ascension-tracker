@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { addDaysToDateString, isTodayLocal } from '../../utils/dateHelper';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface NutritionDateBarProps {
   selectedDate: string;
@@ -44,7 +45,7 @@ export const NutritionDateBar: React.FC<NutritionDateBarProps> = ({
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: '1rem',
+        gap: '0.5rem',
         marginBottom: 'var(--space-lg)',
       }}
       onTouchStart={onTouchStart}
@@ -61,33 +62,15 @@ export const NutritionDateBar: React.FC<NutritionDateBarProps> = ({
         &larr;
       </button>
 
-      <div className="relative flex items-center min-h-11">
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(e) => onDateChange(e.target.value)}
-          aria-label="Seleccionar fecha del diario nutricional"
-          style={{
-            position: 'absolute',
-            opacity: 0,
-            width: '100%',
-            height: '100%',
-            cursor: 'pointer',
-          }}
-        />
-        <div
-          style={{
-            fontWeight: 600,
-            fontSize: '1.1rem',
-            minWidth: '140px',
-            textAlign: 'center',
-          }}
-        >
-          {isTodayLocal(selectedDate)
-            ? 'Hoy'
-            : format(parseISO(selectedDate), 'd MMM yyyy', { locale: es })}
-        </div>
-      </div>
+      <DatePicker
+        className="nutrition-date-trigger min-h-11"
+        value={selectedDate}
+        onChange={onDateChange}
+        aria-label="Seleccionar fecha del diario nutricional"
+        display={(iso) =>
+          isTodayLocal(iso) ? 'Hoy' : format(parseISO(iso), 'd MMM yyyy', { locale: es })
+        }
+      />
 
       <button
         type="button"

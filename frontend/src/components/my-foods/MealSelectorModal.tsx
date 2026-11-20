@@ -5,6 +5,7 @@ import { Utensils, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api/client';
 import { Meal, SavedFood } from '../../types/api';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface MealSelectorModalProps {
   isOpen: boolean;
@@ -106,12 +107,11 @@ export default function MealSelectorModal({
         >
           Fecha
         </label>
-        <input
+        <DatePicker
           id="meal-selector-modal-fecha"
-          type="date"
           className="form-input"
           value={mealSelectorDate}
-          onChange={(e) => setMealSelectorDate(e.target.value)}
+          onChange={setMealSelectorDate}
         />
       </div>
 

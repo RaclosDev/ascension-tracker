@@ -3,6 +3,7 @@ import { User } from 'lucide-react';
 import { SettingsSectionHeader } from './SettingsSectionHeader';
 import { SettingsForm } from '../../pages/SettingsPage';
 import { Select } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface SettingsPersonalSectionProps {
   form: SettingsForm;
@@ -148,12 +149,11 @@ export function SettingsPersonalSection({
             <label htmlFor="settings-personal-section-fecha-de-inicio" className="form-label">
               Fecha de Inicio
             </label>
-            <input
+            <DatePicker
               id="settings-personal-section-fecha-de-inicio"
-              type="date"
               className="form-input"
               value={form.startDate || ''}
-              onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+              onChange={(value) => setForm({ ...form, startDate: value })}
               aria-label="Fecha de inicio"
             />
           </div>
