@@ -15,20 +15,17 @@ export function PowerMarksEditor({
   const update = (id: string, patch: Partial<PowerMark>) =>
     onChange(marks.map((m) => (m.id === id ? { ...m, ...patch } : m)));
   return (
-    <section className="flex flex-col gap-3">
-      <h3 className="font-semibold">Marcas anotadas</h3>
-      <p className="coach-description">
+    <section className="pw-marks">
+      <h3>Marcas anotadas</h3>
+      <p className="pw-hint">
         Registra levantamientos de una repetición. Son anotaciones del entrenador, no resultados
         certificados. Las marcas de fechas distintas no forman un total de competición.
       </p>
-      {marks.length === 0 && <p>Todavía no hay marcas anotadas.</p>}
+      {marks.length === 0 && <p className="pw-empty">Todavía no hay marcas anotadas.</p>}
       {marks.map((mark, index) => (
-        <fieldset
-          key={mark.id}
-          className="power-mark rounded-xl border border-[var(--border-color)] p-4 grid gap-3 sm:grid-cols-2"
-        >
-          <legend className="px-1 font-semibold">Marca {index + 1}</legend>
-          <label className="flex flex-col gap-1">
+        <fieldset key={mark.id} className="power-mark">
+          <legend>Marca {index + 1}</legend>
+          <label>
             Levantamiento
             <Select
               className="form-input min-h-11"
@@ -42,7 +39,7 @@ export function PowerMarksEditor({
               ))}
             </Select>
           </label>
-          <label className="flex flex-col gap-1">
+          <label>
             Peso (kg)
             <input
               className="form-input min-h-11"
@@ -55,7 +52,7 @@ export function PowerMarksEditor({
               onChange={(e) => update(mark.id, { kg: Number(e.target.value) })}
             />
           </label>
-          <label className="flex flex-col gap-1">
+          <label>
             Fecha
             <input
               className="form-input min-h-11"
@@ -66,7 +63,7 @@ export function PowerMarksEditor({
               onChange={(e) => update(mark.id, { date: e.target.value })}
             />
           </label>
-          <label className="flex flex-col gap-1">
+          <label>
             Contexto
             <Select
               className="form-input min-h-11"
@@ -77,7 +74,7 @@ export function PowerMarksEditor({
               <option value="COMPETITION">Competición</option>
             </Select>
           </label>
-          <label className="flex flex-col gap-1 sm:col-span-2">
+          <label className="power-mark-ref">
             Referencia (opcional)
             <input
               className="form-input min-h-11"
@@ -90,7 +87,7 @@ export function PowerMarksEditor({
           {!readOnly && (
             <button
               type="button"
-              className="btn btn-secondary justify-self-start"
+              className="power-mark-remove"
               aria-label={`Quitar marca ${index + 1}`}
               onClick={() => onChange(marks.filter((m) => m.id !== mark.id))}
             >
@@ -102,7 +99,7 @@ export function PowerMarksEditor({
       {!readOnly && marks.length < 200 && (
         <button
           type="button"
-          className="btn btn-secondary self-start"
+          className="btn btn-secondary pw-add"
           onClick={() =>
             onChange([
               ...marks,

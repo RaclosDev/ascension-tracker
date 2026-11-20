@@ -20,6 +20,7 @@ import { PowerMeets } from './PowerMeets';
 import { PowerProgress } from './PowerProgress';
 import { PowerExerciseMappings } from './PowerExerciseMappings';
 import { Select } from '@/components/ui/select';
+import '../../styles/coach-powerlifting.css';
 
 export default function ClientPowerlifting({
   linkId,
@@ -34,8 +35,10 @@ export default function ClientPowerlifting({
   const view =
     requestedView === 'competiciones' || requestedView === 'seguimiento' ? requestedView : 'perfil';
   return (
-    <section className="card">
-      <h2 className="sr-only">Powerlifting</h2>
+    <section className="pw" aria-labelledby="pw-title">
+      <h2 id="pw-title" className="sr-only">
+        Powerlifting
+      </h2>
       <nav aria-label="Áreas de powerlifting" className="power-areas">
         <SegmentedControl
           value={view}
@@ -89,9 +92,14 @@ function PowerForm({
   const stale = value.version !== saved.version;
   const set = (patch: Partial<PowerProfile>) =>
     draft.setValue({ ...value, profile: { ...profile, ...patch } });
+  // The best recorded lift of each kind, so the marks open with what matters.
+  const best = POWER_LIFTS.map((lift) => ({
+    lift,
+    kg: Math.max(0, ...profile.marks.filter((m) => m.lift === lift).map((m) => m.kg || 0)),
+  }));
   return (
     <form
-      className="flex flex-col gap-5"
+      className="pw-form"
       onSubmit={(e) => {
         e.preventDefault();
         if (!canEdit || stale || save.isPending) return;
@@ -107,135 +115,169 @@ function PowerForm({
       }}
     >
       {!canEdit && (
-        <p role="status">
+        <p role="status" className="pw-hint">
           Solo lectura. El atleta debe permitirte editar su entrenamiento para guardar cambios.
         </p>
       )}
-      <fieldset disabled={!canEdit || save.isPending} className="flex flex-col gap-5 min-w-0">
-        <PowerExerciseMappings
-          linkId={saved.linkId}
-          value={profile.exerciseMappings ?? []}
-          onChange={(exerciseMappings) => set({ exerciseMappings })}
-        />
-        <label className="flex items-center gap-3 min-h-11">
-          <input
-            type="checkbox"
-            checked={profile.enabled}
-            onChange={(e) => set({ enabled: e.target.checked })}
-          />
-          Especialización en powerlifting activa
-        </label>
-        {!profile.enabled && (
-          <p className="coach-description">
-            Actívala cuando trabajéis esta especialidad. Desactivarla conserva el perfil y las
-            marcas.
-          </p>
-        )}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-1">
-            Equipamiento
-            <Select
-              className="form-input min-h-11"
-              value={profile.equipment}
-              onChange={(e) => set({ equipment: e.target.value as PowerProfile['equipment'] })}
-            >
-              <option value="CLASSIC">Clásico / raw</option>
-              <option value="EQUIPPED">Equipado</option>
-              <option value="OTHER">Otro</option>
-            </Select>
-          </label>
-          <label className="flex flex-col gap-1">
-            Federación de referencia (opcional)
-            <input
-              className="form-input min-h-11"
-              maxLength={100}
-              value={profile.federation}
-              onChange={(e) => set({ federation: e.target.value })}
+      <fieldset disabled={!canEdit || save.isPending} className="pw-grid">
+        <div className="pw-main">
+          <section className="card pw-card" aria-labelledby="pw-tm-title">
+            <h3 id="pw-tm-title">Máximos de entrenamiento (TM)</h3>
+            <div className="pw-tm">
+              {POWER_LIFTS.map((lift) => (
+                <label key={lift} className="pw-tm-field">
+                  <span>{POWER_LABELS[lift]} (kg)</span>
+                  <span className="pw-tm-input">
+                    <input
+                      type="number"
+                      min="0.01"
+                      max="1500"
+                      step="0.01"
+                      placeholder="—"
+                      value={profile.trainingMax[MAX_KEYS[lift]] ?? ''}
+                      onChange={(e) =>
+                        set({
+                          trainingMax: {
+                            ...profile.trainingMax,
+                            [MAX_KEYS[lift]]: e.target.value === '' ? null : Number(e.target.value),
+                          },
+                        })
+                      }
+                    />
+                    <span aria-hidden="true">kg</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="pw-hint">
+              Referencia en kg elegida por ti para programar cargas. Puede diferir del 1RM real y de
+              su estimación. Deja vacío lo que aún no tengas definido.
+            </p>
+          </section>
+          <section className="card pw-card" aria-label="Marcas">
+            {profile.marks.length > 0 && (
+              <dl className="pw-best">
+                {best.map(({ lift, kg }) => (
+                  <div key={lift}>
+                    <dt>Mejor {POWER_LABELS[lift].toLocaleLowerCase('es')}</dt>
+                    <dd>{kg ? `${kg.toLocaleString('es')} kg` : '—'}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            <PowerMarksEditor
+              marks={profile.marks}
+              readOnly={!canEdit}
+              onChange={(marks) => set({ marks })}
             />
-          </label>
+          </section>
+          <section className="card pw-card pw-mappings">
+            <PowerExerciseMappings
+              linkId={saved.linkId}
+              value={profile.exerciseMappings ?? []}
+              onChange={(exerciseMappings) => set({ exerciseMappings })}
+            />
+          </section>
         </div>
-        <section>
-          <h3 className="font-semibold">Máximos de entrenamiento (TM)</h3>
-          <p className="coach-description mb-3">
-            Referencia en kg elegida por ti para programar cargas. Puede diferir del 1RM real y de
-            su estimación. Deja vacío lo que aún no tengas definido.
-          </p>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {POWER_LIFTS.map((lift) => (
-              <label key={lift} className="flex flex-col gap-1">
-                {POWER_LABELS[lift]} (kg)
-                <input
-                  className="form-input min-h-11"
-                  type="number"
-                  min="0.01"
-                  max="1500"
-                  step="0.01"
-                  value={profile.trainingMax[MAX_KEYS[lift]] ?? ''}
-                  onChange={(e) =>
-                    set({
-                      trainingMax: {
-                        ...profile.trainingMax,
-                        [MAX_KEYS[lift]]: e.target.value === '' ? null : Number(e.target.value),
-                      },
-                    })
-                  }
-                />
-              </label>
-            ))}
-          </div>
-        </section>
-        <PowerMarksEditor
-          marks={profile.marks}
-          readOnly={!canEdit}
-          onChange={(marks) => set({ marks })}
-        />
-        <label className="flex flex-col gap-1">
-          Notas de entrenamiento
-          <textarea
-            className="form-input"
-            rows={3}
-            maxLength={2000}
-            value={profile.notes}
-            onChange={(e) => set({ notes: e.target.value })}
-          />
-        </label>
+        <aside className="pw-side">
+          <section className="card pw-card" aria-labelledby="pw-spec-title">
+            <h3 id="pw-spec-title">Especialización</h3>
+            <label className="pw-check">
+              <input
+                type="checkbox"
+                checked={profile.enabled}
+                onChange={(e) => set({ enabled: e.target.checked })}
+              />
+              Especialización en powerlifting activa
+            </label>
+            {!profile.enabled && (
+              <p className="pw-hint">
+                Actívala cuando trabajéis esta especialidad. Desactivarla conserva el perfil y las
+                marcas.
+              </p>
+            )}
+            <label className="pw-field">
+              Equipamiento
+              <Select
+                className="form-input min-h-11"
+                value={profile.equipment}
+                onChange={(e) => set({ equipment: e.target.value as PowerProfile['equipment'] })}
+              >
+                <option value="CLASSIC">Clásico / raw</option>
+                <option value="EQUIPPED">Equipado</option>
+                <option value="OTHER">Otro</option>
+              </Select>
+            </label>
+            <label className="pw-field">
+              Federación de referencia (opcional)
+              <input
+                className="form-input min-h-11"
+                maxLength={100}
+                value={profile.federation}
+                onChange={(e) => set({ federation: e.target.value })}
+              />
+            </label>
+          </section>
+          <section className="card pw-card">
+            <label className="pw-field">
+              Notas de entrenamiento
+              <textarea
+                className="form-input"
+                rows={5}
+                maxLength={2000}
+                value={profile.notes}
+                onChange={(e) => set({ notes: e.target.value })}
+              />
+            </label>
+          </section>
+        </aside>
       </fieldset>
-      {canEdit && draft.notice && (
-        <p role="status" className="coach-description">
-          {draft.notice}
-        </p>
-      )}
-      {stale && (
-        <p role="alert">
-          Existe una versión más reciente. Tu borrador sigue disponible; revisa tus cambios antes de
-          descartarlo y cargar la versión guardada.
-        </p>
-      )}
-      {error && (
-        <div role="alert">
-          <p>{error}</p>
-          <button type="button" className="btn btn-secondary mt-2" onClick={reload}>
-            Consultar versión guardada
-          </button>
-        </div>
-      )}
-      {canEdit && (
-        <div className="flex flex-wrap gap-3">
-          <button className="btn btn-primary" disabled={save.isPending || stale || !draft.dirty}>
-            {save.isPending ? 'Guardando…' : 'Guardar perfil de powerlifting'}
-          </button>
-          {draft.dirty && (
-            <button
-              type="button"
-              className="btn btn-secondary"
-              disabled={save.isPending}
-              onClick={() => {
-                draft.clear();
-                setError(null);
-              }}
-            >
-              Descartar borrador
-            </button>
+      {(canEdit || stale || error) && (
+        <div className="pw-save">
+          {canEdit && draft.notice && (
+            <p role="status" className="pw-hint">
+              {draft.notice}
+            </p>
+          )}
+          {stale && (
+            <p role="alert">
+              Existe una versión más reciente. Tu borrador sigue disponible; revisa tus cambios
+              antes de descartarlo y cargar la versión guardada.
+            </p>
+          )}
+          {error && (
+            <div role="alert">
+              <p>{error}</p>
+              <button type="button" className="btn btn-secondary mt-2" onClick={reload}>
+                Consultar versión guardada
+              </button>
+            </div>
+          )}
+          {canEdit && (
+            <div className="pw-save-actions">
+              <span className="pw-hint">
+                {draft.dirty ? 'Tienes cambios sin guardar.' : 'Sin cambios pendientes.'}
+              </span>
+              {draft.dirty && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  disabled={save.isPending}
+                  onClick={() => {
+                    draft.clear();
+                    setError(null);
+                  }}
+                >
+                  Descartar borrador
+                </button>
+              )}
+              <button
+                className="btn btn-primary"
+                disabled={save.isPending || stale || !draft.dirty}
+              >
+                {save.isPending ? 'Guardando…' : 'Guardar perfil de powerlifting'}
+              </button>
+            </div>
           )}
         </div>
       )}

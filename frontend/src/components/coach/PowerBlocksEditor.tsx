@@ -18,20 +18,17 @@ export function PowerBlocksEditor({
   const change = (id: string, patch: Partial<PowerBlock>) =>
     onChange(blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)));
   return (
-    <section className="flex flex-col gap-3">
-      <h3 className="font-semibold">Bloques de preparación</h3>
-      <p className="coach-description">
+    <section className="card pw-card">
+      <h4>Bloques de preparación</h4>
+      <p className="pw-hint">
         Define fechas y objetivos y abre cada semana para programar sus sesiones. Cambiar estas
         fechas no modifica las pautas ya publicadas.
       </p>
       {blocks.length === 0 && <p>No hay bloques definidos.</p>}
       {blocks.map((block, index) => (
-        <fieldset
-          key={block.id}
-          className="rounded-xl border border-[var(--border-color)] p-3 grid gap-3 sm:grid-cols-2"
-        >
-          <legend className="px-1 font-semibold">Bloque {index + 1}</legend>
-          <label className="flex flex-col gap-1 sm:col-span-2">
+        <fieldset key={block.id} className="pw-block">
+          <legend>Bloque {index + 1}</legend>
+          <label className="pw-field pw-span">
             Nombre del bloque
             <input
               className="form-input min-h-11"
@@ -42,7 +39,7 @@ export function PowerBlocksEditor({
             />
           </label>
           {block.start && block.end && block.start <= block.end && (
-            <div className="sm:col-span-2 flex flex-wrap gap-2">
+            <div className="pw-span pw-chips">
               {Array.from({ length: 53 }, (_, i) =>
                 shiftWeek(weekDate(new Date(`${block.start}T12:00:00`)), i),
               )
@@ -50,7 +47,7 @@ export function PowerBlocksEditor({
                 .map((week) => (
                   <Link
                     key={week}
-                    className="btn btn-secondary text-sm"
+                    className="pw-chip"
                     to={`/entrenador/atletas/${linkId}?seccion=semana&semana=${week}`}
                   >
                     Semana {week}
@@ -58,7 +55,7 @@ export function PowerBlocksEditor({
                 ))}
             </div>
           )}
-          <label className="flex flex-col gap-1">
+          <label className="pw-field">
             Inicio
             <input
               className="form-input min-h-11"
@@ -69,7 +66,7 @@ export function PowerBlocksEditor({
               onChange={(e) => change(block.id, { start: e.target.value })}
             />
           </label>
-          <label className="flex flex-col gap-1">
+          <label className="pw-field">
             Fin
             <input
               className="form-input min-h-11"
@@ -81,7 +78,7 @@ export function PowerBlocksEditor({
               onChange={(e) => change(block.id, { end: e.target.value })}
             />
           </label>
-          <label className="flex flex-col gap-1 sm:col-span-2">
+          <label className="pw-field pw-span">
             Objetivo del bloque
             <textarea
               className="form-input"
@@ -95,7 +92,7 @@ export function PowerBlocksEditor({
           {canEdit && (
             <button
               type="button"
-              className="btn btn-secondary justify-self-start"
+              className="power-mark-remove"
               onClick={() => onChange(blocks.filter((b) => b.id !== block.id))}
             >
               Quitar bloque {index + 1}
@@ -106,7 +103,7 @@ export function PowerBlocksEditor({
       {canEdit && blocks.length < 30 && (
         <button
           type="button"
-          className="btn btn-secondary self-start"
+          className="btn btn-secondary pw-add"
           onClick={() =>
             onChange([
               ...blocks,

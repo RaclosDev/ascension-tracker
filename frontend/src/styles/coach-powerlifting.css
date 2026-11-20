@@ -1,0 +1,628 @@
+/* Powerlifting del atleta: los números a la izquierda, la configuración del perfil a un lado. */
+.pw {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.pw .power-areas {
+  margin-bottom: 0;
+}
+.pw-form {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.pw-grid {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+@media (min-width: 1100px) {
+  .pw-grid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+  .pw-side {
+    position: sticky;
+    top: 16px;
+  }
+}
+.pw-main,
+.pw-side {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.card.pw-card {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px 20px 20px;
+}
+.card.pw-card h3,
+.card.pw-card .pw-marks > h3,
+.pw-mappings summary {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.pw-hint,
+.pw-empty {
+  max-width: 68ch;
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+.pw-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.pw-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.pw-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-primary);
+}
+
+/* TM: tres cifras grandes que se editan en el sitio. */
+.pw-tm {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.pw-tm-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.pw-tm-input {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  transition: border-color 0.15s ease;
+}
+.pw-tm-input:focus-within {
+  border-color: var(--accent-primary);
+}
+.pw-tm-input input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  line-height: 1.1;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+.pw-tm-input input::-webkit-inner-spin-button,
+.pw-tm-input input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.pw-tm-input > span {
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
+}
+
+/* Marcas: las mejores arriba; luego una fila por levantamiento anotado. */
+.pw-best {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 32px;
+  margin: 0 0 4px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.pw-best dt {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.pw-best dd {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1.1;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.pw-marks {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  container: marks / inline-size;
+}
+.power-mark {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--bg-secondary);
+}
+.power-mark > legend {
+  float: left;
+  grid-column: 1 / -1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.power-mark > label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.power-mark-ref {
+  grid-column: 1 / -1;
+}
+.power-mark-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.power-mark-remove:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-error, #ef4444) 12%, transparent);
+  color: var(--color-error, #ef4444);
+}
+@container marks (min-width: 560px) {
+  .power-mark {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-items: end;
+    padding: 8px 10px 10px;
+  }
+  .power-mark > legend {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .power-mark-ref {
+    grid-column: 1 / -2;
+    grid-row: 2;
+  }
+  .power-mark-remove {
+    grid-column: -2;
+    grid-row: 1;
+    justify-self: end;
+    width: 44px;
+    justify-content: center;
+    padding: 0;
+  }
+  .power-mark-remove span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+.pw-add {
+  justify-self: start;
+}
+
+/* Clasificación de ejercicios: plegada, en dos columnas cuando abre. */
+.pw-mappings details {
+  display: grid;
+  gap: 10px;
+}
+.pw-mappings summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  cursor: pointer;
+  list-style: none;
+}
+.pw-mappings summary::-webkit-details-marker {
+  display: none;
+}
+.pw-mappings summary::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+.pw-mappings details[open] summary::before {
+  transform: rotate(45deg);
+}
+.pw-map-list {
+  display: grid;
+  gap: 8px 24px;
+}
+@media (min-width: 1100px) {
+  .pw-map-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.pw-map-row {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+/* Guardar siempre a mano, al pie de la pantalla. */
+.pw-save {
+  position: sticky;
+  bottom: 12px;
+  z-index: 2;
+  display: grid;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
+}
+.pw-save-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.pw-save-actions > .pw-hint {
+  margin-right: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pw-tm-input,
+  .pw-mappings summary::before {
+    transition: none;
+  }
+}
+
+/* Barra de cabecera de cada vista: título, filtros y acción en una línea. */
+.pw-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 24px;
+}
+.pw-toolbar-text {
+  display: grid;
+  gap: 2px;
+  margin-right: auto;
+  min-width: 0;
+}
+.pw-toolbar h3,
+.card.pw-card h4 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.pw-toolbar > .pw-check {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+.pw-status {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.pw-status[data-status='ACTIVE'] {
+  background: color-mix(in srgb, var(--accent-primary) 20%, transparent);
+  color: var(--text-primary);
+}
+
+/* Competiciones: una tarjeta por fecha. */
+.pw-meets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.card.pw-meet {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  padding: 16px 18px;
+  text-align: left;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.card.pw-meet:hover {
+  border-color: color-mix(in srgb, var(--accent-primary) 60%, transparent);
+}
+.pw-meet-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pw-meet strong,
+.pw-meet-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+.pw-meet-title {
+  font-size: 1.6rem;
+}
+.pw-meet-views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pw-meet-body {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.pw-meet-fields {
+  display: grid;
+  gap: 12px;
+}
+@media (min-width: 900px) {
+  .pw-meet-fields {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.pw-block {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--bg-secondary);
+}
+.pw-block > legend {
+  float: left;
+  grid-column: 1 / -1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.pw-span {
+  grid-column: 1 / -1;
+}
+.pw-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pw-chip {
+  padding: 4px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.pw-chip:hover {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+.pw-attempts {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  text-align: left;
+}
+.pw-attempts th,
+.pw-attempts td {
+  padding: 6px;
+  vertical-align: top;
+}
+.pw-attempts thead th {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.pw-attempts tbody tr {
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Seguimiento S/B/D: una tarjeta por levantamiento con el 1RM estimado al frente. */
+.pw-progress {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.pw-lifts {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 1100px) {
+  .pw-lifts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.card.pw-card .pw-lift-name {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+.pw-lift-hero {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.pw-lift-hero > span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.pw-lift-hero strong {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  line-height: 1.05;
+  color: var(--accent-primary-light, var(--accent-primary));
+  font-variant-numeric: tabular-nums;
+}
+.pw-lift-hero small,
+.pw-lift-stats small {
+  font-size: 0.8rem;
+  font-family: var(--font-main);
+  color: var(--text-secondary);
+}
+.pw-lift-stats {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.pw-lift-stats dt {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.pw-lift-stats dd {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  line-height: 1.25;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.pw-weeks {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pw-weeks > li {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr) 9.5rem;
+  align-items: center;
+  gap: 4px 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.875rem;
+}
+.pw-weeks > li:first-child {
+  border-top: 0;
+}
+.pw-weeks strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.pw-weeks-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bg-secondary);
+}
+.pw-weeks-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-primary);
+}
+.pw-weeks-volume {
+  font-family: var(--font-display);
+  text-align: right;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.pw-weeks small {
+  grid-column: 2 / -1;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+@media (max-width: 640px) {
+  .pw-weeks > li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .pw-weeks-bar,
+  .pw-weeks small {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 1100px) {
+  /* Nombre, inicio y fin en una fila; enlaces de semana, objetivo y quitar debajo. */
+  .pw-block {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .pw-block > label.pw-span:first-of-type {
+    grid-column: auto;
+  }
+  .pw-block > .pw-chips,
+  .pw-block > label.pw-span:not(:first-of-type) {
+    order: 1;
+  }
+  .pw-block > .power-mark-remove {
+    order: 2;
+  }
+}

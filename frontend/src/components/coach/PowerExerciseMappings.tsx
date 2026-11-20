@@ -30,10 +30,8 @@ export function PowerExerciseMappings({
   ];
   return (
     <details>
-      <summary className="cursor-pointer font-semibold">
-        Clasificar ejercicios y variantes para S/B/D
-      </summary>
-      <p className="coach-description">
+      <summary>Clasificar ejercicios y variantes para S/B/D</summary>
+      <p className="pw-hint">
         Clasifica tus ejercicios personalizados y variantes registrados. Las variantes quedan fuera
         de las marcas de competición salvo que actives su filtro en Seguimiento.
       </p>
@@ -49,7 +47,7 @@ export function PowerExerciseMappings({
       {!query.isPending && !query.isError && !rows.length && (
         <p>Las variantes aparecerán cuando el atleta registre entrenamientos.</p>
       )}
-      <div className="flex flex-col gap-2 mt-3">
+      <div className="pw-map-list">
         {rows.map((row) => {
           const matches = (m: PowerExerciseMapping) =>
             m.exerciseId === row.exerciseId &&
@@ -61,7 +59,7 @@ export function PowerExerciseMappings({
               (e) => e.id === row.exerciseId,
             )?.name ?? row.exerciseId;
           return (
-            <label className="flex flex-wrap justify-between gap-2" key={row.id}>
+            <label className="pw-map-row" key={row.id}>
               <span>
                 {name}
                 {row.variant?.grip && ` · ${row.variant.grip}`}
