@@ -1577,44 +1577,6 @@
   min-width: 0;
   padding-top: 6px;
 }
-/* On a wide screen the week folds to a column, like the calendar, and the open day takes the rest. */
-@media (min-width: 1100px) {
-  .diary {
-    grid-template-columns: 190px minmax(0, 1fr);
-    column-gap: 20px;
-    align-items: start;
-  }
-  .diary-bar {
-    grid-column: 1 / -1;
-  }
-  .diary-days {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 6px;
-    border: 0;
-    border-radius: 0;
-    overflow: visible;
-  }
-  .diary-days li + li {
-    border-left: 0;
-  }
-  .diary-day {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: 2px 8px;
-    min-height: 0;
-    padding: 8px 12px;
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    background: var(--bg-card);
-  }
-  .diary-day-state {
-    grid-column: 1 / -1;
-  }
-  .diary-detail {
-    padding: 0 0 0 20px;
-    border-left: 1px solid var(--border-subtle);
-  }
-}
 .diary-detail-head {
   display: flex;
   flex-wrap: wrap;
