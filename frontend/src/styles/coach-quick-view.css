@@ -534,10 +534,10 @@ a.coach-workout-calendar-session:focus-visible {
   padding: 0;
 }
 .coach-register-page .coach-register-training {
-  padding: 14px 12px;
-  min-height: 132px;
+  padding: 12px;
+  min-height: 72px;
   align-content: start;
-  gap: 10px;
+  gap: 6px;
 }
 .coach-register-training > strong {
   font-size: 0.7rem;
@@ -566,7 +566,7 @@ a.coach-workout-calendar-session:focus-visible {
   justify-content: space-between;
   align-items: baseline;
   gap: 4px 8px;
-  padding: 12px;
+  padding: 8px 12px;
   border-top: 1px solid var(--border-subtle);
 }
 .coach-register-metric strong {

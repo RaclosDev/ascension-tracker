@@ -4,9 +4,11 @@ import type { WeekSummary } from '@/types/api';
 import type { CompletedWorkout } from '@/lib/workout/types';
 import { useClientData, type CoachClient } from './api';
 import { useCoachBlock, weekState, type WeekState } from './blocks';
+import { useClientCheckins, type Checkin } from './checkins';
 import { findDay, type Program, type ProgramDay } from './coachPrograms';
 import { useNutritionAdherence, type AdherenceDay } from './nutritionAdherence';
 import { useCoachNutritionPlan, type DayTargets } from './nutritionPlan';
+import type { DayComment } from './sessions';
 import { shiftWeek, weekDate, type SavedWeek } from './weeks';
 
 export interface CalendarDay {
@@ -26,6 +28,12 @@ export interface CalendarDay {
   onTarget: boolean;
   weight: number | null;
   steps: number | null;
+  /** The weekly follow-up the athlete sent that day. */
+  checkin: Checkin | null;
+  /** What the athlete added to a follow-up that day, after sending it. */
+  updates: string[];
+  /** What the coach said about a day without a session. */
+  comment: string | null;
 }
 
 export interface CalendarWeek {
@@ -62,6 +70,12 @@ export function useAthleteCalendar(
     nutrition && back >= 0,
   );
   const plan = useCoachNutritionPlan(id, nutrition);
+  const checkins = useClientCheckins(id);
+  const comments = useClientData<DayComment[]>(
+    id,
+    `day-comments?from=${from}&to=${format(addDays(parseISO(from), count * 7 - 1), 'yyyy-MM-dd')}`,
+    true,
+  );
 
   const weeks = useMemo<CalendarWeek[]>(() => {
     const today = format(new Date(), 'yyyy-MM-dd');
@@ -73,6 +87,22 @@ export function useAthleteCalendar(
       const date = format(new Date(workout.startedAt), 'yyyy-MM-dd');
       done.set(date, [...(done.get(date) ?? []), workout]);
     }
+    // A follow-up without a readable date belongs to no day rather than breaking the calendar.
+    const local = (instant: string) => {
+      const at = new Date(instant);
+      return Number.isNaN(at.getTime()) ? '' : format(at, 'yyyy-MM-dd');
+    };
+    const sent = new Map(
+      (checkins.data ?? []).map((checkin) => [local(checkin.createdAt), checkin]),
+    );
+    const added = new Map<string, string[]>();
+    for (const checkin of checkins.data ?? [])
+      for (const update of checkin.updates ?? [])
+        if (update.role === 'CLIENT') {
+          const date = local(update.createdAt);
+          added.set(date, [...(added.get(date) ?? []), update.body]);
+        }
+    const said = new Map((comments.data ?? []).map((comment) => [comment.date, comment.text]));
     const summary = (list: WeekSummary[] | undefined, week: string, i: number) =>
       list?.find((item) => item.weekStart === week)?.days[i] ?? null;
     return Array.from({ length: count }, (_, n) => {
@@ -103,6 +133,9 @@ export function useAthleteCalendar(
             onTarget: food?.onTarget ?? false,
             weight: summary(weights.data, weekStart, i),
             steps: summary(steps.data, weekStart, i),
+            checkin: sent.get(date) ?? null,
+            updates: added.get(date) ?? [],
+            comment: said.get(date) ?? null,
           };
         }),
       };
@@ -119,6 +152,8 @@ export function useAthleteCalendar(
     steps.data,
     adherence.data,
     plan.data,
+    checkins.data,
+    comments.data,
   ]);
   return { weeks, isLoading: block.isPending, isError: block.isError, refetch: block.refetch };
 }

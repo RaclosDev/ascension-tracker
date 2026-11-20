@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Dumbbell, Footprints, Scale, Utensils } from 'lucide-react';
+import { Dumbbell, Footprints, MessageSquareText, Scale, Utensils } from 'lucide-react';
 import type { CoachClient } from '@/lib/coach/api';
 import type { CalendarDay } from '@/lib/coach/calendar';
+import { SCORE_KEYS, SCORE_LABELS, needsReply } from '@/lib/coach/checkins';
 import { useAthleteLinks } from '../AthleteShell';
 
 const number = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
@@ -13,8 +14,54 @@ export function DayFacts({ day, link }: { day: CalendarDay; link: CoachClient })
   const { sectionHref, recordHref } = useAthleteLinks(link.linkId);
   const { training, nutrition, body } = link.permissions;
   const upcoming = !day.past && !day.today;
+  const noted = day.workouts.filter((workout) => workout.notes?.trim());
+  const checkin = day.checkin;
   return (
     <div className="day-facts">
+      {(checkin || day.updates.length > 0 || noted.length > 0 || day.comment) && (
+        <section className="day-fact">
+          <h4>
+            <MessageSquareText size={15} aria-hidden /> Seguimiento y notas
+          </h4>
+          {checkin && (
+            <div className="day-note">
+              <strong>
+                Envió el seguimiento de la semana
+                {needsReply(checkin) ? ' · por responder' : ''}
+              </strong>
+              <span className="day-note-scores">
+                {SCORE_KEYS.filter((key) => checkin[key] != null)
+                  .map((key) => `${SCORE_LABELS[key]} ${checkin[key]}/5`)
+                  .join(' · ')}
+              </span>
+              {checkin.notes && <q>{checkin.notes}</q>}
+            </div>
+          )}
+          {day.updates.map((update, i) => (
+            <div key={i} className="day-note">
+              <strong>Añadió a su seguimiento</strong>
+              <q>{update}</q>
+            </div>
+          ))}
+          {noted.map((workout) => (
+            <div key={workout.id} className="day-note">
+              <strong>Nota en «{workout.name || 'Entreno'}»</strong>
+              <q>{workout.notes}</q>
+            </div>
+          ))}
+          {day.comment && (
+            <div className="day-note" data-coach="">
+              <strong>Tu comentario del día</strong>
+              <q>{day.comment}</q>
+            </div>
+          )}
+          <p className="day-fact-links">
+            <Link to={sectionHref('revisiones')}>
+              {checkin && needsReply(checkin) ? 'Responder el seguimiento' : 'Abrir seguimientos'}
+            </Link>
+          </p>
+        </section>
+      )}
       {training && !upcoming && (
         <section className="day-fact">
           <h4>

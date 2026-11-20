@@ -1,7 +1,7 @@
 import type { DragEvent } from 'react';
 import { addDays, format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Check, Dumbbell, Footprints, Scale, Utensils } from 'lucide-react';
+import { Check, Dumbbell, Footprints, MessageSquareText, Scale, Utensils } from 'lucide-react';
 import { WEEK_STATE } from '@/lib/coach/blocks';
 import type { CalendarDay, CalendarWeek } from '@/lib/coach/calendar';
 import { WEEKDAY_LABELS } from '@/lib/coach/coachPrograms';
@@ -29,6 +29,12 @@ export const weekRange = (weekStart: string) => {
     : `${format(start, 'd MMM', { locale: es })} – ${format(end, 'd MMM', { locale: es })}`;
 };
 
+/** How many things were written about the day: by the athlete on a workout or a follow-up, or by the coach. */
+export const dayNotes = (day: CalendarDay) =>
+  day.workouts.filter((workout) => workout.notes?.trim()).length +
+  day.updates.length +
+  (day.comment ? 1 : 0);
+
 /** What a screen reader hears for the day, since the cell itself is all abbreviations. */
 export function daySummary(day: CalendarDay) {
   const parts = [longDate(day.date)];
@@ -39,6 +45,8 @@ export function daySummary(day: CalendarDay) {
   else parts.push('sin sesión');
   if (day.workouts.length) parts.push('entreno registrado');
   if (day.intake) parts.push(`${Math.round(day.intake.kcal)} kcal registradas`);
+  if (day.checkin) parts.push('seguimiento enviado');
+  else if (dayNotes(day)) parts.push('con notas');
   return parts.join(', ');
 }
 
@@ -203,6 +211,12 @@ export function AthleteCalendar({
                         <span className="cal-fact">
                           <Footprints size={12} aria-hidden />
                           {thousands(day.steps)}
+                        </span>
+                      )}
+                      {(day.checkin || dayNotes(day) > 0) && (
+                        <span className="cal-fact" data-note="">
+                          <MessageSquareText size={12} aria-hidden />
+                          {day.checkin ? 'Seguimiento' : dayNotes(day) === 1 ? 'Nota' : 'Notas'}
                         </span>
                       )}
                     </span>
