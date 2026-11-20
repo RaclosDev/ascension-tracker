@@ -1,6 +1,6 @@
 import '../styles/coach-quick-view.css';
 import { Suspense } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { apiErrorMessage, personName, useCoachClient, type CoachClient } from '../lib/coach/api';
 import { AthleteShell, useAthleteLinks, useAthleteViews } from '../components/coach/AthleteShell';
@@ -59,13 +59,16 @@ export default function CoachClientPage() {
 function AthleteSections({ link }: { link: CoachClient }) {
   const { linkId } = link;
   const [params] = useSearchParams();
-  const { sectionHref, recordHref } = useAthleteLinks(linkId);
+  const { sectionHref, recordHref, viewHref } = useAthleteLinks(linkId);
   const views = useAthleteViews(link);
   // Planning is where a coach spends the time; the summary covers athletes without that permission.
   const asked = params.get('seccion') ?? (link.permissions.training ? 'semana' : 'progreso');
   // The summary now opens inside Progreso; old links keep working.
   const section = asked === 'resumen' ? 'metricas' : asked;
   const open = (id: string) => section === id && views.has(id) && !views.locked(id);
+  // Entrenos hechos y los registros tienen ruta propia; un ?seccion= a ellos no debe quedar en blanco.
+  if (viewHref(section) !== sectionHref(section))
+    return <Navigate to={viewHref(section)} replace />;
 
   return (
     <AthleteShell link={link} active={section}>
