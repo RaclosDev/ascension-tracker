@@ -24,7 +24,7 @@ import '../../styles/coach-athlete.css';
 
 const RECORD_ROUTES = ['registro', 'entrenos', 'comidas', 'pasos', 'peso'];
 /** Pages reached from inside Progreso light up its entry. */
-const PROGRESS_VIEWS = ['resumen', 'registro', 'peso', 'pasos'];
+const PROGRESS_VIEWS = ['registro', 'peso', 'pasos'];
 
 /** Links between the athlete's views. Only the roster filters and the origin travel with them. */
 export function useAthleteLinks(linkId: string) {
@@ -96,8 +96,11 @@ export function useAthleteViews(link: CoachClient) {
       id: 'progreso',
       label: 'Progreso',
       icon: TrendingUp,
-      // One view: the summary plus the records the coach chooses to see.
-      views: [{ id: 'progreso', label: 'Progreso', visible: true }],
+      // The weekly tracking as the athlete sees it, and the numbers drawn from it.
+      views: [
+        { id: 'progreso', label: 'Tracking semanal', visible: true },
+        { id: 'metricas', label: 'Métricas', visible: true },
+      ],
     },
     {
       id: 'revisiones',
@@ -139,7 +142,8 @@ export function AthleteShell({
   const { groups } = useAthleteViews(link);
   const status = useClientStatus(true, link.linkId);
   const pending = status.data?.find((s) => s.linkId === link.linkId)?.pendingReplies ?? 0;
-  const current = PROGRESS_VIEWS.includes(active) ? 'progreso' : active;
+  const current =
+    active === 'resumen' ? 'metricas' : PROGRESS_VIEWS.includes(active) ? 'progreso' : active;
   const activeGroup = groups.find((group) => group.views.some((view) => view.id === current));
   const setup = link.setup;
   const followup = link.followup;
@@ -274,7 +278,7 @@ export function AthleteShell({
                         <Link
                           key={view.id}
                           to={links.viewHref(view.id)}
-                          aria-current={view.id === active ? 'page' : undefined}
+                          aria-current={view.id === current ? 'page' : undefined}
                           data-athlete-nav={view.id}
                         >
                           {view.label}

@@ -123,6 +123,7 @@ for (const width of [1440, 390]) {
     await page.getByRole('button', { name: 'Guardar agenda' }).click();
     await expect(page.getByRole('button', { name: 'Guardar agenda' })).toBeDisabled();
     await page.getByRole('link', { name: 'Progreso', exact: true }).click();
+    await page.getByRole('link', { name: 'Métricas', exact: true }).click();
     await expect(page.getByText(/^4 días por semana/)).toBeVisible();
     const context = page.locator('.athlete-context');
     await expect(

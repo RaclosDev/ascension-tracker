@@ -1,6 +1,8 @@
 import { Suspense, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Apple, ArrowUpRight, Camera, Footprints, Scale } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Apple, ArrowUpRight, Camera, Footprints, Scale, Target } from 'lucide-react';
 import { useClientData, type CoachClient } from '../../lib/coach/api';
 import { PhotoGallery } from '../photos/PhotoGallery';
 import type { PhotoList } from '../../lib/progressPhotos';
@@ -10,16 +12,15 @@ import { toWeeklyDeltaData, toWeightChartData } from '../../lib/weightCharts';
 import type { DashboardData, WeightEntry, WeekSummary } from '../../types/api';
 import { ClientOverview } from './ClientOverview';
 import { CoachTracking } from './CoachTracking';
-import { Section, Stat, QueryState, num } from './ClientSection';
+import { Section, Stat, QueryState, WeeklyList, num } from './ClientSection';
 const DashboardCharts = lazyWithRetry(() => import('../DashboardCharts'));
 
-type Metric = 'peso' | 'pasos' | 'kcal' | 'fotos';
+type Metric = 'peso' | 'pasos' | 'kcal';
 const STORAGE_KEY = 'ascension.coach.trackingMetrics';
 const METRICS = [
   { id: 'peso', label: 'Peso', icon: Scale },
   { id: 'pasos', label: 'Pasos', icon: Footprints },
   { id: 'kcal', label: 'Kcal', icon: Apple },
-  { id: 'fotos', label: 'Fotos', icon: Camera },
 ] as const;
 
 function readHidden(): Metric[] {
@@ -31,23 +32,21 @@ function readHidden(): Metric[] {
   }
 }
 
-/** How the athlete is doing, the way they see it: a card per week with weight, steps and calories. */
+const stepsShared = (link: CoachClient) =>
+  link.permissions.body && link.setup?.services?.progress !== false;
+
+/** Progreso: the athlete's weekly tracking as they see it, a card per week with weight, steps and calories. */
 export default function ClientProgress({
   link,
-  sectionHref,
   recordHref,
 }: {
   link: CoachClient;
-  sectionHref: (section: string) => string;
   recordHref: (path: string) => string;
 }) {
-  const services = link.setup?.services;
-  const body = link.permissions.body;
   const available: Record<Metric, boolean> = {
-    peso: body,
-    pasos: body && services?.progress !== false,
-    kcal: link.permissions.nutrition && services?.nutrition !== false,
-    fotos: body,
+    peso: link.permissions.body,
+    pasos: stepsShared(link),
+    kcal: link.permissions.nutrition && link.setup?.services?.nutrition !== false,
   };
   const options = METRICS.filter((m) => available[m.id]);
   // Coaches hide what they never read; everything starts visible.
@@ -68,30 +67,37 @@ export default function ClientProgress({
     next.set('semana', week);
     return `${path}?${next}`;
   };
-  const tracking = shows('peso') || shows('pasos') || shows('kcal');
+
+  if (options.length === 0)
+    return (
+      <section className="card">
+        <h2>Sin registros compartidos</h2>
+        <p className="coach-description">
+          Tu atleta no comparte peso, pasos ni nutrición. Lo demás está en Métricas.
+        </p>
+      </section>
+    );
 
   return (
-    <ClientOverview link={link} sectionHref={sectionHref}>
-      {options.length > 0 && (
-        <div
-          className="segmented coach-tracking-toggle"
-          role="toolbar"
-          aria-label="Registros mostrados"
-        >
-          {options.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              className="segmented-option"
-              aria-pressed={shows(id)}
-              onClick={() => toggle(id)}
-            >
-              <Icon size={16} aria-hidden /> {label}
-            </button>
-          ))}
-        </div>
-      )}
-      {tracking && (
+    <>
+      <div
+        className="segmented coach-tracking-toggle"
+        role="toolbar"
+        aria-label="Registros mostrados"
+      >
+        {options.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            className="segmented-option"
+            aria-pressed={shows(id)}
+            onClick={() => toggle(id)}
+          >
+            <Icon size={16} aria-hidden /> {label}
+          </button>
+        ))}
+      </div>
+      {(shows('peso') || shows('pasos') || shows('kcal')) && (
         <CoachTracking
           linkId={link.linkId}
           weights={shows('peso')}
@@ -100,8 +106,26 @@ export default function ClientProgress({
           weekHref={weekHref}
         />
       )}
-      {shows('peso') && <WeightPanel linkId={link.linkId} href={recordHref('peso')} />}
-      {shows('fotos') && <PhotosPanel linkId={link.linkId} />}
+    </>
+  );
+}
+
+/** Métricas: where the athlete stands, the weight goal, trends and photos. */
+export function ClientMetrics({
+  link,
+  sectionHref,
+  recordHref,
+}: {
+  link: CoachClient;
+  sectionHref: (section: string) => string;
+  recordHref: (path: string) => string;
+}) {
+  const body = link.permissions.body;
+  return (
+    <ClientOverview link={link} sectionHref={sectionHref}>
+      {body && <WeightPanel linkId={link.linkId} href={recordHref('peso')} />}
+      {stepsShared(link) && <StepsPanel linkId={link.linkId} href={recordHref('pasos')} />}
+      {body && <PhotosPanel linkId={link.linkId} />}
     </ClientOverview>
   );
 }
@@ -114,6 +138,12 @@ function DaysLink({ href }: { href: string }) {
   );
 }
 
+const longDay = (iso?: string) => {
+  if (!iso) return '—';
+  const date = parseISO(iso);
+  return Number.isNaN(date.getTime()) ? '—' : format(date, 'd MMM yyyy', { locale: es });
+};
+
 function WeightPanel({ linkId, href }: { linkId: string; href: string }) {
   const dashboard = useClientData<DashboardData>(linkId, 'weights/dashboard', true);
   const entries = useClientData<WeightEntry[]>(linkId, 'weights', true);
@@ -122,28 +152,55 @@ function WeightPanel({ linkId, href }: { linkId: string; href: string }) {
   const weightChartData = useMemo(() => toWeightChartData(entries.data ?? []), [entries.data]);
   const deltaData = useMemo(() => toWeeklyDeltaData(weeks.data ?? []), [weeks.data]);
   return (
-    <Section title="Evolución del peso" icon={<Scale size={18} aria-hidden />}>
-      <QueryState isLoading={dashboard.isLoading} isError={dashboard.isError} />
+    <>
+      <Section title="Peso" icon={<Scale size={18} aria-hidden />}>
+        <QueryState isLoading={dashboard.isLoading} isError={dashboard.isError} />
+        {d && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <Stat label="Actual" value={num(d.currentWeight, ' kg')} />
+            <Stat label="Media semanal" value={num(d.currentWeeklyAverage, ' kg')} />
+            <Stat label="Cambio total" value={num(d.totalLost, ' kg')} />
+            <Stat label="Cambio/semana" value={num(d.avgWeeklyChange, ' kg')} />
+            <Stat label="Mejor semana" value={num(d.bestWeekDelta, ' kg')} />
+            <Stat label="Semanas registrando" value={num(d.weeksActive)} />
+            <Stat label="Racha" value={num(d.streak, ' días')} />
+          </div>
+        )}
+      </Section>
       {d && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-          <Stat label="Actual" value={num(d.currentWeight, ' kg')} />
-          <Stat label="Media semanal" value={num(d.currentWeeklyAverage, ' kg')} />
-          <Stat label="Cambio total" value={num(d.totalLost, ' kg')} />
-          <Stat label="Cambio/semana" value={num(d.avgWeeklyChange, ' kg')} />
-        </div>
+        <Section title="Objetivo de peso" icon={<Target size={18} aria-hidden />}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <Stat label="Falta" value={num(d.remaining, ' kg')} />
+            <Stat label="Progreso" value={num(d.progress, ' %')} />
+            <Stat label="Fecha estimada" value={longDay(d.estimatedDate)} />
+          </div>
+        </Section>
       )}
-      <QueryState
-        isLoading={entries.isLoading || weeks.isLoading}
-        isError={entries.isError || weeks.isError}
-      />
-      {entries.data?.length === 0 && (
-        <p style={{ color: 'var(--text-secondary)' }}>Sin registros de peso.</p>
-      )}
-      {entries.data && entries.data.length > 0 && weeks.data && (
-        <Suspense fallback={<DashboardChartsSkeleton />}>
-          <DashboardCharts weightChartData={weightChartData} deltaData={deltaData} />
-        </Suspense>
-      )}
+      <Section title="Evolución del peso" icon={<Scale size={18} aria-hidden />}>
+        <QueryState
+          isLoading={entries.isLoading || weeks.isLoading}
+          isError={entries.isError || weeks.isError}
+        />
+        {entries.data?.length === 0 && (
+          <p style={{ color: 'var(--text-secondary)' }}>Sin registros de peso.</p>
+        )}
+        {entries.data && entries.data.length > 0 && weeks.data && (
+          <Suspense fallback={<DashboardChartsSkeleton />}>
+            <DashboardCharts weightChartData={weightChartData} deltaData={deltaData} />
+          </Suspense>
+        )}
+        <DaysLink href={href} />
+      </Section>
+    </>
+  );
+}
+
+function StepsPanel({ linkId, href }: { linkId: string; href: string }) {
+  const steps = useClientData<WeekSummary[]>(linkId, 'steps/weekly', true);
+  return (
+    <Section title="Pasos por semana" icon={<Footprints size={18} aria-hidden />}>
+      <QueryState isLoading={steps.isLoading} isError={steps.isError} />
+      {steps.data && <WeeklyList weeks={steps.data} unit=" pasos/día" />}
       <DaysLink href={href} />
     </Section>
   );

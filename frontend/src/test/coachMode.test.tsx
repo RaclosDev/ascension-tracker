@@ -434,9 +434,9 @@ describe('CoachClientPage', () => {
     expect(
       await within(await screen.findByRole('region', { name: 'Día abierto' })).findByText('Arroz'),
     ).toBeTruthy();
-    // Evolución lives with the athlete's records, a different group of the navigation.
+    // Evolución lives in Progreso → Métricas, a different group of the navigation.
     cleanup();
-    renderAt('/entrenador/atletas/link-9?seccion=progreso', routes);
+    renderAt('/entrenador/atletas/link-9?seccion=metricas', routes);
     const weightChart = await screen.findByTestId('weight-charts');
     expect(weightChart.dataset.points).toBe('2');
     expect(weightChart.dataset.deltas).toBe('1');
@@ -451,7 +451,7 @@ describe('CoachClientPage', () => {
       editTraining: false,
       editNutrition: false,
     });
-    renderAt('/entrenador/atletas/link-9?seccion=progreso', routes);
+    renderAt('/entrenador/atletas/link-9?seccion=metricas', routes);
 
     expect(await screen.findByTestId('weight-charts')).toBeDefined();
     const urls = mockedApi.get.mock.calls.map(([url]) => url as string);

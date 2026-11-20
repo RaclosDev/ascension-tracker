@@ -14,6 +14,9 @@ import '../styles/coach-student.css';
 
 const ClientTraining = lazyWithRetry(() => import('../components/coach/ClientTraining'));
 const ClientProgress = lazyWithRetry(() => import('../components/coach/ClientProgress'));
+const ClientMetrics = lazyWithRetry(() =>
+  import('../components/coach/ClientProgress').then((m) => ({ default: m.ClientMetrics })),
+);
 const ClientPrograms = lazyWithRetry(() => import('../components/coach/ClientPrograms'));
 const ClientNutrition = lazyWithRetry(() => import('../components/coach/ClientNutrition'));
 const ClientPowerlifting = lazyWithRetry(() => import('../components/coach/ClientPowerlifting'));
@@ -63,7 +66,7 @@ function AthleteSections({ link }: { link: CoachClient }) {
   // Planning is where a coach spends the time; the summary covers athletes without that permission.
   const asked = params.get('seccion') ?? (link.permissions.training ? 'semana' : 'progreso');
   // The summary now opens inside Progreso; old links keep working.
-  const section = asked === 'resumen' ? 'progreso' : asked;
+  const section = asked === 'resumen' ? 'metricas' : asked;
   const open = (id: string) => section === id && views.has(id) && !views.locked(id);
 
   return (
@@ -90,8 +93,9 @@ function AthleteSections({ link }: { link: CoachClient }) {
           {open('powerlifting') && (
             <ClientPowerlifting linkId={linkId} canEdit={link.permissions.editTraining} />
           )}
-          {open('progreso') && (
-            <ClientProgress link={link} sectionHref={sectionHref} recordHref={recordHref} />
+          {open('progreso') && <ClientProgress link={link} recordHref={recordHref} />}
+          {open('metricas') && (
+            <ClientMetrics link={link} sectionHref={sectionHref} recordHref={recordHref} />
           )}
           {open('revisiones') && <CheckinsSection link={link} />}
           {open('gestion') && <ClientManagement link={link} />}
