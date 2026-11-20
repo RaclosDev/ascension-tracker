@@ -1,13 +1,13 @@
-import { useMemo, useState, type DragEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import toast from 'react-hot-toast';
-import { Copy, Eye, Pencil, Plus } from 'lucide-react';
+import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
+import { ClipboardCheck, ClipboardCopy, Copy, Eye, Pencil, X } from 'lucide-react';
 import { addDays, format, parseISO } from 'date-fns';
 import { useSessionDraft } from '@/hooks/useSessionDraft';
 import { apiErrorMessage, formatCoachDate } from '@/lib/coach/api';
 import { confirmAction } from '@/lib/confirmation';
 import {
   addDay,
-  copyDay,
   findDay,
   MAX_EXERCISES_PER_DAY,
   newExercise,
@@ -17,8 +17,10 @@ import {
   useAssignedProgram,
   useSaveProgram,
   WEEKDAY_LABELS,
+  type Program,
   type ProgramAssignment,
   type ProgramDay,
+  type ProgramExercise,
 } from '@/lib/coach/coachPrograms';
 import {
   INTENTS,
@@ -30,20 +32,23 @@ import {
   type SavedWeek,
   type WeekContent,
 } from '@/lib/coach/weeks';
-import { DayEditor } from './editor/DayEditor';
-import { ExerciseSearch } from './editor/ExerciseSearch';
+import { fetchDone, withDone } from '@/lib/coach/doneWeek';
+import { sendDay, sendExercise, weekText } from '@/lib/coach/weekBoard';
+import { downloadWeekBackup } from '@/lib/coach/weekBackup';
+import { isCoachTourFrame } from './tour/frame';
+import { BulkPrescription } from './editor/BulkPrescription';
 import { LastWeek } from './editor/LastWeek';
 import { LibraryInsert } from './editor/LibraryInsert';
+import { WeekColumn } from './editor/WeekColumn';
+import { WeekVolume } from './editor/WeekVolume';
 import { ProgramPreview } from './ProgramPreview';
-import { downloadWeekBackup } from '@/lib/coach/weekBackup';
-import { BulkPrescription } from './editor/BulkPrescription';
 import { Select } from '@/components/ui/select';
 
 const DRAG_TYPE = 'application/x-ascension-week-item';
+const AUTOSAVE_MS = 1500;
 const PANELS = [
-  { id: 'exercises', label: 'Ejercicios' },
   { id: 'previous', label: 'Semana pasada' },
-  { id: 'library', label: 'Plantillas' },
+  { id: 'library', label: 'Biblioteca' },
   { id: 'notes', label: 'Notas' },
 ] as const;
 type Panel = (typeof PANELS)[number]['id'];
@@ -53,11 +58,14 @@ export function WeekEditor({
   source,
   canEdit,
   reload,
+  lead,
 }: {
   saved: SavedWeek;
   source?: ProgramAssignment;
   canEdit: boolean;
   reload: () => Promise<unknown>;
+  /** The week picker: it shares the bar with the saving state and the publish button. */
+  lead?: ReactNode;
 }) {
   const draft = useSessionDraft(
     `coach-week:${saved.linkId}:${saved.weekStart}`,
@@ -65,37 +73,78 @@ export function WeekEditor({
     isSavedWeek,
   );
   const [preview, setPreview] = useState(false);
-  const [panel, setPanel] = useState<Panel>(
-    source && !draft.value.content.program.days.length ? 'previous' : 'exercises',
-  );
-  const [targetDay, setTargetDay] = useState(
-    () => draft.value.content.program.days[0]?.dayIndex ?? 1,
+  const [panel, setPanel] = useState<Panel | null>(
+    source && !draft.value.content.program.days.length ? 'previous' : null,
   );
   const [dropDay, setDropDay] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [copyingDone, setCopyingDone] = useState(false);
+  const [failed, setFailed] = useState(false);
   const save = useSaveWeek(saved.linkId, saved.weekStart);
   const publish = usePublishWeek(saved.linkId, saved.weekStart);
   const library = useSaveProgram();
   const previous = useAssignedProgram(saved.linkId, source?.id ?? '');
   const value = draft.value;
   const program = value.content.program;
-  const pending = save.isPending || publish.isPending;
-  const stale = value.version !== saved.version || conflict;
+  // A save that reached the server but whose answer was lost (a reload in between) is not a conflict.
+  const adopted = useMemo(
+    () =>
+      draft.dirty &&
+      value.version !== saved.version &&
+      JSON.stringify(value.content) === JSON.stringify(saved.content),
+    [draft.dirty, value, saved],
+  );
+  const stale = conflict || (!saving && !adopted && value.version !== saved.version);
   const published = saved.publishedVersion === saved.version && saved.version > 0;
-  const locked = pending || !canEdit || stale;
+  const locked = publish.isPending || !canEdit || stale;
+
+  // What is on screen right now, for work that finishes after later edits.
+  const latest = useRef({ value, dirty: draft.dirty });
+  const inflight = useRef<Promise<SavedWeek> | null>(null);
+  useEffect(() => {
+    latest.current = { value, dirty: draft.dirty };
+  });
+  const clearDraft = draft.clear;
+  useEffect(() => {
+    if (adopted) clearDraft();
+  }, [adopted, clearDraft]);
+
   const edit = (content: WeekContent) => {
     draft.setValue({ ...value, content });
     setError(null);
+    setFailed(false);
   };
-  const editProgram = (next: typeof program) => edit({ ...value.content, program: next });
-  const persist = async () => {
-    const result = await save.mutateAsync(value);
-    draft.clear();
-    return result;
+  const editProgram = (next: Program) => edit({ ...value.content, program: next });
+  /** Saves what is on screen; edits made while the request travels stay as the next draft. */
+  const persist = async (): Promise<SavedWeek> => {
+    while (inflight.current) await inflight.current.catch(() => undefined);
+    const { value: sent, dirty } = latest.current;
+    if (!dirty && sent.version > 0) return sent;
+    setSaving(true);
+    const job = save.mutateAsync(sent);
+    inflight.current = job;
+    try {
+      const result = await job;
+      const now = latest.current.value;
+      if (now === sent) {
+        draft.clear();
+        latest.current = { value: result, dirty: false };
+      } else {
+        const next = { ...now, version: result.version };
+        draft.setValue(next);
+        latest.current = { value: next, dirty: true };
+      }
+      return result;
+    } finally {
+      inflight.current = null;
+      setSaving(false);
+    }
   };
   const fail = (cause: unknown) => {
     setError(apiErrorMessage(cause, 'No se pudo guardar. Conservamos tus cambios.'));
+    setFailed(true);
     if (cause && typeof cause === 'object' && 'response' in cause) {
       const response = cause.response as { status?: number };
       if (response?.status === 409) {
@@ -104,6 +153,17 @@ export function WeekEditor({
       }
     }
   };
+  const autosave = useRef<() => void>(() => undefined);
+  useEffect(() => {
+    autosave.current = () => void persist().catch(fail);
+  });
+  const waiting = draft.dirty && canEdit && !stale && !saving && !publish.isPending && !failed;
+  useEffect(() => {
+    if (!waiting || isCoachTourFrame()) return;
+    const timer = window.setTimeout(() => autosave.current(), AUTOSAVE_MS);
+    return () => window.clearTimeout(timer);
+  }, [waiting, value]);
+
   const insert = async (days: ProgramDay[]) => {
     if (
       days.some((d) => findDay(program, 1, d.dayIndex)) &&
@@ -132,28 +192,75 @@ export function WeekEditor({
     [previous.data, source, saved.weekStart],
   );
   const dayName = (dayIndex: number) => WEEKDAY_LABELS[dayIndex - 1].toLocaleLowerCase('es');
-  const addExercise = (dayIndex: number, exercise: { id: string; name: string }) => {
+  const dateOf = (dayIndex: number, pattern: string) =>
+    format(addDays(parseISO(saved.weekStart), dayIndex - 1), pattern);
+  const tooMany = (dayIndex: number) =>
+    setError(`El ${dayName(dayIndex)} ya tiene el máximo de ejercicios.`);
+  /** Null means the change did not fit in the target day. */
+  const apply = (next: Program | null, dayIndex: number) => {
+    if (next) editProgram(next);
+    else tooMany(dayIndex);
+    return !!next;
+  };
+  const addExercises = (dayIndex: number, exercises: ProgramExercise[]) => {
     const base = addDay(program, 1, dayIndex);
-    if ((findDay(base, 1, dayIndex)?.exercises.length ?? 0) >= MAX_EXERCISES_PER_DAY) {
-      setError(`El ${dayName(dayIndex)} ya tiene el máximo de ejercicios.`);
-      return;
-    }
+    const current = findDay(base, 1, dayIndex)?.exercises.length ?? 0;
+    if (current + exercises.length > MAX_EXERCISES_PER_DAY) return tooMany(dayIndex);
     editProgram(
       updateDay(base, 1, dayIndex, (day) => ({
         ...day,
-        exercises: [...day.exercises, newExercise(exercise.id, exercise.name)],
+        exercises: [...day.exercises, ...structuredClone(exercises)],
       })),
     );
-    setTargetDay(dayIndex);
-    toast.success(`${exercise.name}: añadido al ${dayName(dayIndex)}`);
+  };
+  const removeExercise = (dayIndex: number, index: number) => {
+    const removed = findDay(program, 1, dayIndex)?.exercises[index];
+    if (!removed) return;
+    editProgram(
+      updateDay(program, 1, dayIndex, (day) => ({
+        ...day,
+        exercises: day.exercises.filter((_, i) => i !== index),
+      })),
+    );
+    const name = removed.exerciseName ?? removed.exerciseId;
+    toast.success(
+      (shown) => (
+        <span className="week-undo">
+          {name}: quitado del {dayName(dayIndex)}
+          <button
+            type="button"
+            onClick={() => {
+              const now = latest.current.value;
+              const base = addDay(now.content.program, 1, dayIndex);
+              draft.setValue({
+                ...now,
+                content: {
+                  ...now.content,
+                  program: updateDay(base, 1, dayIndex, (day) => ({
+                    ...day,
+                    exercises: [
+                      ...day.exercises.slice(0, index),
+                      removed,
+                      ...day.exercises.slice(index),
+                    ].slice(0, MAX_EXERCISES_PER_DAY),
+                  })),
+                },
+              });
+              toast.dismiss(shown.id);
+            }}
+          >
+            Deshacer
+          </button>
+        </span>
+      ),
+      { duration: 6000 },
+    );
   };
   const copyLastDay = (dayIndex: number, to: number) => {
     const day = lastWeek?.days.find((d) => d.dayIndex === dayIndex);
-    if (!day) return;
-    setTargetDay(to);
-    void insert([{ ...structuredClone(day), week: 1, dayIndex: to }]);
+    if (day) void insert([{ ...structuredClone(day), week: 1, dayIndex: to }]);
   };
-  // Days accept exercises and last week's sessions dragged from the side panel.
+  // Days accept last week's sessions dragged from the side panel.
   const dropTarget = (dayIndex: number) => ({
     'data-drop': dropDay === dayIndex ? '' : undefined,
     onDragOver: (e: DragEvent) => {
@@ -171,49 +278,120 @@ export function WeekEditor({
       setDropDay(null);
       if (locked || !data) return;
       e.preventDefault();
-      const item = JSON.parse(data) as
-        { kind: 'exercise'; id: string; name: string } | { kind: 'day'; dayIndex: number };
-      if (item.kind === 'exercise') addExercise(dayIndex, item);
-      else copyLastDay(item.dayIndex, dayIndex);
+      const item = JSON.parse(data) as { kind: string; dayIndex?: number };
+      if (item.kind === 'day' && item.dayIndex) copyLastDay(item.dayIndex, dayIndex);
     },
   });
-  const sets = program.days.flatMap((day) => day.exercises).reduce((n, e) => n + e.sets, 0);
-  const selected = findDay(program, 1, targetDay);
-  const selectedLabel = WEEKDAY_LABELS[targetDay - 1];
-  const dateOf = (dayIndex: number, pattern: string) =>
-    format(addDays(parseISO(saved.weekStart), dayIndex - 1), pattern);
-  const lastSameDay = lastWeek?.days.find((d) => d.dayIndex === targetDay);
-  const showExercises = () => {
-    setPanel('exercises');
-    window.setTimeout(() =>
-      document.querySelector<HTMLInputElement>('.week-panel input[type="search"]')?.focus(),
-    );
+  // Exercises are dragged inside a day to reorder them and across days to move them.
+  const onDragEnd = ({ source: from, destination: to }: DropResult) => {
+    if (!to) return;
+    const fromDay = Number(from.droppableId.slice(4));
+    const toDay = Number(to.droppableId.slice(4));
+    if (fromDay === toDay && from.index === to.index) return;
+    apply(sendExercise(program, fromDay, from.index, toDay, true, to.index), toDay);
   };
+  const sets = program.days.flatMap((day) => day.exercises).reduce((n, e) => n + e.sets, 0);
+  const status = saving
+    ? 'Guardando…'
+    : failed
+      ? 'No se pudo guardar'
+      : draft.dirty
+        ? 'Cambios sin guardar'
+        : published
+          ? 'Semana publicada'
+          : saved.publishedVersion != null
+            ? 'Cambios guardados sin publicar'
+            : saved.version > 0
+              ? 'Borrador guardado'
+              : 'Semana sin preparar';
   return (
     <section className="week-editor min-w-0" aria-label="Preparar semana">
       <header className="week-bar">
+        {lead}
         <div className="week-bar-info">
-          <h2>
+          <h2 className="sr-only">
             Preparación · {formatCoachDate(saved.weekStart)} –{' '}
             {formatCoachDate(format(addDays(parseISO(saved.weekStart), 6), 'yyyy-MM-dd'))}
           </h2>
           <div className="week-bar-meta">
-            <p role="status" data-dirty={draft.dirty ? '' : undefined}>
-              {draft.dirty
-                ? 'Cambios locales pendientes de guardar'
-                : published
-                  ? 'Semana publicada'
-                  : saved.version > 0
-                    ? 'Borrador guardado'
-                    : 'Semana sin preparar'}
+            <p role="status" data-dirty={draft.dirty || saving ? '' : undefined}>
+              {status}
             </p>
+            {failed && !stale && (
+              <button
+                type="button"
+                className="week-bar-retry"
+                onClick={() => {
+                  setFailed(false);
+                  setError(null);
+                  void persist().catch(fail);
+                }}
+              >
+                Reintentar
+              </button>
+            )}
             <p className="coach-week-counts">
               {program.days.length} {program.days.length === 1 ? 'sesión' : 'sesiones'} · {sets}{' '}
               series · {INTENTS[value.content.intent]}
             </p>
           </div>
         </div>
-        <div className="week-bar-actions">
+        {canEdit && (
+          <span className="week-bar-publish" data-tour="week-publish">
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={publish.isPending || stale || (published && !draft.dirty && !saving)}
+              onClick={async () => {
+                const problems = publishProblems(program);
+                if (problems.length) {
+                  setError(problems[0]);
+                  return;
+                }
+                const sessions = program.days.length;
+                const start =
+                  saved.weekStart > format(new Date(), 'yyyy-MM-dd')
+                    ? saved.weekStart
+                    : format(new Date(), 'yyyy-MM-dd');
+                if (
+                  !(await confirmAction({
+                    title: 'Publicar semana',
+                    description: `${sessions} sesiones y ${sets} series en la semana, con vigencia desde el ${formatCoachDate(start)}. El atleta verá las notas públicas. Su plan actual continúa hasta el inicio; se sustituirá cualquier plan previsto para esa fecha. Los días transcurridos no se asignan como pendientes.`,
+                    confirmLabel: 'Publicar semana',
+                  }))
+                )
+                  return;
+                try {
+                  const current = await persist();
+                  await publish.mutateAsync(current.version);
+                  toast.success('Semana publicada');
+                } catch (cause) {
+                  fail(cause);
+                }
+              }}
+            >
+              {publish.isPending ? 'Publicando…' : 'Publicar semana'}
+            </button>
+          </span>
+        )}
+      </header>
+      <div className="week-tools">
+        <div className="week-tools-group" role="group" aria-label="Paneles de apoyo">
+          {PANELS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              className="btn btn-secondary"
+              data-week-panel={option.id}
+              aria-pressed={!preview && panel === option.id}
+              disabled={preview}
+              onClick={() => setPanel(panel === option.id ? null : option.id)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <div className="week-tools-group">
           <button
             type="button"
             className="btn btn-secondary"
@@ -237,10 +415,71 @@ export function WeekEditor({
               )
                 return;
               editProgram({ ...structuredClone(lastWeek), name: program.name });
-              setTargetDay(lastWeek.days[0].dayIndex);
+              setPanel((current) => (current === 'previous' ? null : current));
             }}
           >
             <Copy size={15} aria-hidden /> Copiar semana anterior
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            title="Copia la semana anterior con las cargas y repeticiones que el atleta registró"
+            disabled={locked || !source || !lastWeek?.days.length || copyingDone}
+            onClick={async () => {
+              if (!lastWeek || !source) return;
+              if (
+                program.days.length &&
+                !(await confirmAction({
+                  title: 'Copiar lo que hizo',
+                  description:
+                    'Se sustituirán los días del borrador por la semana anterior, con las cargas y repeticiones que el atleta registró. Las notas privadas y la decisión se conservan.',
+                  confirmLabel: 'Copiar lo que hizo',
+                  destructive: true,
+                }))
+              )
+                return;
+              setCopyingDone(true);
+              try {
+                const done = await fetchDone(
+                  saved.linkId,
+                  source.id,
+                  shiftWeek(saved.weekStart, -1),
+                );
+                const next = withDone(structuredClone(lastWeek), done);
+                if (!next.changed) {
+                  setError(
+                    'El atleta no registró ningún ejercicio de la semana anterior. Usa «Copiar semana anterior» para partir de lo pautado.',
+                  );
+                  return;
+                }
+                editProgram({ ...next.program, name: program.name });
+                toast.success(
+                  `Copiado lo que hizo en ${next.changed} ${next.changed === 1 ? 'ejercicio' : 'ejercicios'}; el resto queda como estaba pautado`,
+                );
+              } catch (e) {
+                setError(
+                  apiErrorMessage(e, 'No se pudieron cargar los entrenamientos registrados'),
+                );
+              } finally {
+                setCopyingDone(false);
+              }
+            }}
+          >
+            <ClipboardCheck size={15} aria-hidden />{' '}
+            {copyingDone ? 'Copiando…' : 'Copiar lo que hizo'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={!program.days.length}
+            onClick={() =>
+              void navigator.clipboard
+                .writeText(weekText(program, saved.weekStart))
+                .then(() => toast.success('Semana copiada como texto'))
+                .catch(() => toast.error('No se pudo copiar. Revisa los permisos del navegador.'))
+            }
+          >
+            <ClipboardCopy size={15} aria-hidden /> Copiar como texto
           </button>
           <button
             type="button"
@@ -253,61 +492,9 @@ export function WeekEditor({
             {preview ? <Pencil size={15} aria-hidden /> : <Eye size={15} aria-hidden />}
             {preview ? 'Editar' : 'Vista del atleta'}
           </button>
-          {canEdit && (
-            <span className="week-bar-publish" data-tour="week-publish">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                disabled={pending || stale || !draft.dirty}
-                onClick={() =>
-                  void persist()
-                    .then(() => toast.success('Borrador guardado'))
-                    .catch(fail)
-                }
-              >
-                Guardar borrador
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={pending || stale || (published && !draft.dirty)}
-                onClick={async () => {
-                  const problems = publishProblems(program);
-                  if (problems.length) {
-                    setError(problems[0]);
-                    return;
-                  }
-                  const sessions = program.days.length;
-                  const sets = program.days
-                    .flatMap((d) => d.exercises)
-                    .reduce((n, e) => n + e.sets, 0);
-                  const start =
-                    saved.weekStart > format(new Date(), 'yyyy-MM-dd')
-                      ? saved.weekStart
-                      : format(new Date(), 'yyyy-MM-dd');
-                  if (
-                    !(await confirmAction({
-                      title: 'Publicar semana',
-                      description: `${sessions} sesiones y ${sets} series en la semana, con vigencia desde el ${formatCoachDate(start)}. El atleta verá las notas públicas. Su plan actual continúa hasta el inicio; se sustituirá cualquier plan previsto para esa fecha. Los días transcurridos no se asignan como pendientes.`,
-                      confirmLabel: 'Publicar semana',
-                    }))
-                  )
-                    return;
-                  try {
-                    const current = draft.dirty || !saved.version ? await persist() : saved;
-                    await publish.mutateAsync(current.version);
-                    toast.success('Semana publicada');
-                  } catch (cause) {
-                    fail(cause);
-                  }
-                }}
-              >
-                {pending ? 'Guardando…' : 'Publicar semana'}
-              </button>
-            </span>
-          )}
         </div>
-      </header>
+      </div>
+      <WeekVolume program={program} last={lastWeek} />
       {value.content.decision && (
         <p className="week-decision">
           {published && !draft.dirty
@@ -347,6 +534,8 @@ export function WeekEditor({
                 ) {
                   draft.clear();
                   setConflict(false);
+                  setFailed(false);
+                  setError(null);
                 }
               }}
             >
@@ -399,258 +588,219 @@ export function WeekEditor({
         </div>
       )}
       {preview && <ProgramPreview program={program} />}
-      <div className="week-body" hidden={preview}>
-        <nav className="week-board" aria-label="Días de la semana">
-          {WEEKDAY_LABELS.map((label, i) => {
-            const day = findDay(program, 1, i + 1);
-            return (
-              <button
-                key={label}
-                type="button"
-                className="week-day"
-                data-rest={day ? undefined : ''}
-                aria-pressed={targetDay === i + 1}
-                {...dropTarget(i + 1)}
-                onClick={() => setTargetDay(i + 1)}
-              >
-                <span className="week-day-date">
-                  {label.slice(0, 3)} {dateOf(i + 1, 'd')}
-                </span>
-                <strong>{day ? day.name || 'Sin nombre' : 'Descanso'}</strong>
-                {day && (
-                  <>
-                    <small>
-                      {day.exercises.length}{' '}
-                      {day.exercises.length === 1 ? 'ejercicio' : 'ejercicios'} ·{' '}
-                      {day.exercises.reduce((n, e) => n + e.sets, 0)} series
-                    </small>
-                    <ol>
-                      {day.exercises.map((exercise, j) => (
-                        <li key={j}>
-                          <span>{exercise.exerciseName ?? exercise.exerciseId}</span>
-                          <em>
-                            {exercise.sets}×
-                            {exercise.repsMax && exercise.repsMax !== exercise.repsMin
-                              ? `${exercise.repsMin ?? ''}–${exercise.repsMax}`
-                              : (exercise.repsMin ?? '–')}
-                          </em>
-                        </li>
-                      ))}
-                    </ol>
-                  </>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-        <div className="week-work">
-          <fieldset disabled={locked} className="week-work-day min-w-0" {...dropTarget(targetDay)}>
-            {selected ? (
-              <DayEditor
-                key={targetDay}
-                flat
-                compact
-                label={`${selectedLabel} ${dateOf(targetDay, 'dd/MM')}`}
-                day={selected}
-                weeks={1}
-                onAddExercise={showExercises}
-                onChange={(change) => editProgram(updateDay(program, 1, targetDay, change))}
-                onRemove={async () => {
-                  if (
-                    await confirmAction({
-                      title: 'Quitar sesión',
-                      description: `¿Quitar «${selected.name}» del borrador?`,
-                      confirmLabel: 'Quitar sesión',
-                      destructive: true,
-                    })
-                  )
-                    editProgram(removeDay(program, 1, targetDay));
-                }}
-                onCopy={async (to) => {
-                  if (
-                    !findDay(program, 1, to.dayIndex) ||
-                    (await confirmAction({
-                      title: 'Sustituir sesión',
-                      description: 'El día de destino se sustituirá por esta sesión.',
-                      confirmLabel: 'Copiar sesión',
-                      destructive: true,
-                    }))
-                  )
-                    editProgram(copyDay(program, { week: 1, dayIndex: targetDay }, to));
-                }}
-              />
-            ) : (
-              <div className="week-rest">
-                <h3>
-                  {selectedLabel} {dateOf(targetDay, 'd')} · descanso
-                </h3>
-                <p>No hay sesión este día. El atleta lo verá como descanso.</p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    className="btn btn-primary"
-                    type="button"
-                    aria-label={`Añadir sesión el ${dayName(targetDay)}`}
-                    onClick={() => {
-                      editProgram(addDay(program, 1, targetDay));
-                      showExercises();
-                    }}
-                  >
-                    <Plus size={16} aria-hidden /> Añadir sesión
-                  </button>
-                  {lastSameDay && (
-                    <button
-                      className="btn btn-secondary"
-                      type="button"
-                      onClick={() => copyLastDay(targetDay, targetDay)}
-                    >
-                      <Copy size={15} aria-hidden /> Repetir «{lastSameDay.name || 'la sesión'}» de
-                      la semana pasada
-                    </button>
+      <div className="week-body" data-drawer={panel ? '' : undefined} hidden={preview}>
+        <fieldset disabled={locked} className="week-cols" aria-label="Días de la semana">
+          <DragDropContext onDragEnd={onDragEnd}>
+            {WEEKDAY_LABELS.map((weekday, i) => {
+              const dayIndex = i + 1;
+              const day = findDay(program, 1, dayIndex);
+              const label = `${weekday} ${dateOf(dayIndex, 'dd/MM')}`;
+              return (
+                <WeekColumn
+                  key={weekday}
+                  dayIndex={dayIndex}
+                  label={label}
+                  weekday={dayName(dayIndex)}
+                  day={day}
+                  lastDay={lastWeek?.days.find((d) => d.dayIndex === dayIndex)}
+                  others={WEEKDAY_LABELS.flatMap((other, j) =>
+                    j === i
+                      ? []
+                      : [{ value: j + 1, label: other, busy: !!findDay(program, 1, j + 1) }],
                   )}
-                </div>
-              </div>
-            )}
-          </fieldset>
-          <fieldset disabled={locked} className="min-w-0">
-            <div className="card week-panel">
-              <div className="week-panel-tabs" role="group" aria-label="Herramientas de la semana">
-                {PANELS.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    data-week-panel={option.id}
-                    aria-pressed={panel === option.id}
-                    onClick={() => setPanel(option.id)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-              <div hidden={panel !== 'exercises'} className="week-panel-body">
-                <p className="week-panel-hint">
-                  Se añaden al <strong>{dayName(targetDay)}</strong>. También puedes arrastrarlos a
-                  otro día.
-                </p>
-                <ExerciseSearch
-                  limit={10}
-                  dragType={DRAG_TYPE}
-                  onPick={(exercise) => addExercise(targetDay, exercise)}
+                  drop={dropTarget(dayIndex)}
+                  onChange={(change) => editProgram(updateDay(program, 1, dayIndex, change))}
+                  onAdd={() => editProgram(addDay(program, 1, dayIndex))}
+                  onRepeat={() => copyLastDay(dayIndex, dayIndex)}
+                  onRemove={async () => {
+                    if (
+                      !day?.exercises.length ||
+                      (await confirmAction({
+                        title: 'Quitar sesión',
+                        description: `¿Quitar «${day.name}» del borrador?`,
+                        confirmLabel: 'Quitar sesión',
+                        destructive: true,
+                      }))
+                    )
+                      editProgram(removeDay(program, 1, dayIndex));
+                  }}
+                  onSendDay={async (to, move, clash) => {
+                    const before = program;
+                    const lost = findDay(program, 1, to);
+                    if (
+                      clash === 'replace' &&
+                      lost?.exercises.length &&
+                      !(await confirmAction({
+                        title: `Sustituir la sesión del ${dayName(to)}`,
+                        description: `Se perderá «${lost.name || 'Sesión'}» con ${lost.exercises.length} ${lost.exercises.length === 1 ? 'ejercicio' : 'ejercicios'} y en su lugar quedará «${day?.name || 'Sesión'}».`,
+                        confirmLabel: 'Sustituir sesión',
+                        destructive: true,
+                      }))
+                    )
+                      return;
+                    if (apply(sendDay(program, dayIndex, to, move, clash), to))
+                      toast.success(
+                        (shown) => (
+                          <span className="week-undo">
+                            {day?.name || 'Sesión'}: {move ? 'movida' : 'copiada'} al {dayName(to)}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const now = latest.current.value;
+                                draft.setValue({
+                                  ...now,
+                                  content: { ...now.content, program: before },
+                                });
+                                toast.dismiss(shown.id);
+                              }}
+                            >
+                              Deshacer
+                            </button>
+                          </span>
+                        ),
+                        { duration: 6000 },
+                      );
+                  }}
+                  onSendExercise={(index, to, move) => {
+                    const name = day?.exercises[index]?.exerciseName ?? 'Ejercicio';
+                    if (apply(sendExercise(program, dayIndex, index, to, move), to))
+                      toast.success(`${name}: ${move ? 'movido' : 'copiado'} al ${dayName(to)}`);
+                  }}
+                  onAddExercise={(exercise) =>
+                    addExercises(dayIndex, [newExercise(exercise.id, exercise.name)])
+                  }
+                  onRemoveExercise={(index) => removeExercise(dayIndex, index)}
                 />
-              </div>
-              <div hidden={panel !== 'previous'} className="week-panel-body">
-                {lastWeek?.days.length ? (
-                  <>
-                    <p className="week-panel-hint">
-                      {source?.programName}. Copia una sesión a su mismo día o arrástrala a otro.
-                    </p>
-                    <LastWeek
-                      week={lastWeek}
-                      dragType={DRAG_TYPE}
-                      disabled={locked}
-                      onCopy={(day) => copyLastDay(day.dayIndex, day.dayIndex)}
-                    />
-                  </>
-                ) : source && previous.isPending ? (
-                  <p role="status">Cargando la semana anterior…</p>
-                ) : (
+              );
+            })}
+          </DragDropContext>
+        </fieldset>
+        <fieldset disabled={locked} className="week-drawer" hidden={!panel}>
+          <div className="card week-panel">
+            <header className="week-panel-head">
+              <h3>{PANELS.find((option) => option.id === panel)?.label}</h3>
+              <button
+                type="button"
+                className="set-icon"
+                aria-label="Cerrar panel"
+                onClick={() => setPanel(null)}
+              >
+                <X size={18} aria-hidden />
+              </button>
+            </header>
+            <div hidden={panel !== 'previous'} className="week-panel-body">
+              {lastWeek?.days.length ? (
+                <>
                   <p className="week-panel-hint">
-                    No hay sesiones publicadas la semana anterior. Parte de una plantilla o añade
-                    ejercicios a cada día.
+                    {source?.programName}. Copia una sesión a su mismo día o arrástrala a otro.
                   </p>
-                )}
-              </div>
-              <div hidden={panel !== 'library'} className="week-panel-body">
-                <LibraryInsert onInsert={(days) => void insert(days)} />
-              </div>
-              <div hidden={panel !== 'notes'} className="week-panel-body">
-                <div className="grid gap-4">
-                  <label className="flex flex-col gap-1 min-w-0">
-                    Nombre
-                    <input
-                      className="form-input min-h-11"
-                      maxLength={120}
-                      value={program.name}
-                      onChange={(e) => editProgram({ ...program, name: e.target.value })}
-                    />
-                  </label>
-                  <label data-tour="week-intent" className="flex flex-col gap-1 min-w-0">
-                    Objetivo de la semana
-                    <Select
-                      className="form-input min-h-11"
-                      value={value.content.intent}
-                      onChange={(e) =>
-                        edit({ ...value.content, intent: e.target.value as WeekContent['intent'] })
-                      }
-                    >
-                      {Object.entries(INTENTS).map(([id, label]) => (
-                        <option key={id} value={id}>
-                          {label}
-                        </option>
-                      ))}
-                    </Select>
-                  </label>
-                  <label data-tour="week-comment" className="flex flex-col gap-1 min-w-0">
-                    Comentario para el atleta
-                    <textarea
-                      className="form-input min-h-11"
-                      maxLength={2000}
-                      rows={2}
-                      value={program.notes ?? ''}
-                      onChange={(e) => editProgram({ ...program, notes: e.target.value || null })}
-                      placeholder="Por ejemplo: semana de descarga; prioriza técnica y recuperación."
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1 min-w-0">
-                    Decisión que aplicar al publicar
-                    <textarea
-                      className="form-input min-h-11"
-                      maxLength={2000}
-                      rows={2}
-                      value={value.content.decision}
-                      onChange={(e) => edit({ ...value.content, decision: e.target.value })}
-                    />
-                  </label>
-                  <details data-tour="week-private">
-                    <summary className="cursor-pointer">Notas privadas del entrenador</summary>
-                    <textarea
-                      aria-label="Notas privadas del entrenador"
-                      className="w-full mt-2 form-input min-h-11"
-                      rows={3}
-                      maxLength={4000}
-                      value={value.content.privateNotes}
-                      onChange={(e) => edit({ ...value.content, privateNotes: e.target.value })}
-                    />
-                    <p className="text-sm">
-                      Solo tú puedes ver estas notas. No forman parte de la pauta del atleta.
-                    </p>
-                  </details>
-                </div>
-                <BulkPrescription program={program} onChange={editProgram} />
-                {program.days.length > 0 && (
-                  <button
-                    type="button"
-                    className="btn btn-secondary week-reset"
+                  <LastWeek
+                    week={lastWeek}
+                    dragType={DRAG_TYPE}
                     disabled={locked}
-                    onClick={async () => {
-                      if (
-                        await confirmAction({
-                          title: 'Empezar de cero',
-                          description:
-                            'Se quitarán los días del borrador. Los registros del atleta se conservan.',
-                          confirmLabel: 'Vaciar días',
-                          destructive: true,
-                        })
-                      )
-                        editProgram({ ...program, days: [] });
-                    }}
-                  >
-                    Empezar de cero
-                  </button>
-                )}
-              </div>
+                    onCopy={(day) => copyLastDay(day.dayIndex, day.dayIndex)}
+                  />
+                </>
+              ) : source && previous.isPending ? (
+                <p role="status">Cargando la semana anterior…</p>
+              ) : (
+                <p className="week-panel-hint">
+                  No hay sesiones publicadas la semana anterior. Parte de una plantilla o añade
+                  ejercicios a cada día.
+                </p>
+              )}
             </div>
-          </fieldset>
-        </div>
+            <div hidden={panel !== 'library'} className="week-panel-body">
+              <LibraryInsert onInsert={(days) => void insert(days)} onAddExercises={addExercises} />
+            </div>
+            <div hidden={panel !== 'notes'} className="week-panel-body">
+              <div className="grid gap-4">
+                <label className="flex flex-col gap-1 min-w-0">
+                  Nombre
+                  <input
+                    className="form-input min-h-11"
+                    maxLength={120}
+                    value={program.name}
+                    onChange={(e) => editProgram({ ...program, name: e.target.value })}
+                  />
+                </label>
+                <label data-tour="week-intent" className="flex flex-col gap-1 min-w-0">
+                  Objetivo de la semana
+                  <Select
+                    className="form-input min-h-11"
+                    value={value.content.intent}
+                    onChange={(e) =>
+                      edit({ ...value.content, intent: e.target.value as WeekContent['intent'] })
+                    }
+                  >
+                    {Object.entries(INTENTS).map(([id, label]) => (
+                      <option key={id} value={id}>
+                        {label}
+                      </option>
+                    ))}
+                  </Select>
+                </label>
+                <label data-tour="week-comment" className="flex flex-col gap-1 min-w-0">
+                  Comentario para el atleta
+                  <textarea
+                    className="form-input min-h-11"
+                    maxLength={2000}
+                    rows={2}
+                    value={program.notes ?? ''}
+                    onChange={(e) => editProgram({ ...program, notes: e.target.value || null })}
+                    placeholder="Por ejemplo: semana de descarga; prioriza técnica y recuperación."
+                  />
+                </label>
+                <label className="flex flex-col gap-1 min-w-0">
+                  Decisión que aplicar al publicar
+                  <textarea
+                    className="form-input min-h-11"
+                    maxLength={2000}
+                    rows={2}
+                    value={value.content.decision}
+                    onChange={(e) => edit({ ...value.content, decision: e.target.value })}
+                  />
+                </label>
+                <details data-tour="week-private">
+                  <summary className="cursor-pointer">Notas privadas del entrenador</summary>
+                  <textarea
+                    aria-label="Notas privadas del entrenador"
+                    className="w-full mt-2 form-input min-h-11"
+                    rows={3}
+                    maxLength={4000}
+                    value={value.content.privateNotes}
+                    onChange={(e) => edit({ ...value.content, privateNotes: e.target.value })}
+                  />
+                  <p className="text-sm">
+                    Solo tú puedes ver estas notas. No forman parte de la pauta del atleta.
+                  </p>
+                </details>
+              </div>
+              <BulkPrescription program={program} onChange={editProgram} />
+              {program.days.length > 0 && (
+                <button
+                  type="button"
+                  className="btn btn-secondary week-reset"
+                  disabled={locked}
+                  onClick={async () => {
+                    if (
+                      await confirmAction({
+                        title: 'Empezar de cero',
+                        description:
+                          'Se quitarán los días del borrador. Los registros del atleta se conservan.',
+                        confirmLabel: 'Vaciar días',
+                        destructive: true,
+                      })
+                    )
+                      editProgram({ ...program, days: [] });
+                  }}
+                >
+                  Empezar de cero
+                </button>
+              )}
+            </div>
+          </div>
+        </fieldset>
       </div>
     </section>
   );

@@ -13,6 +13,18 @@ export interface CoachSetup {
   effortMethod?: 'RIR' | 'RPE' | 'NONE' | null;
 }
 
+export interface AvoidedExercise {
+  exerciseId: string;
+  name: string | null;
+  reason: string | null;
+}
+
+/** What the coach keeps to themselves about one athlete. The athlete never receives it. */
+export interface CoachNotes {
+  pinnedNote: string | null;
+  avoidedExercises: AvoidedExercise[];
+}
+
 export const SERVICE_LABELS = {
   training: 'Entrenamiento',
   nutrition: 'Nutrición',
@@ -39,6 +51,15 @@ export function useSaveCoachSetup(linkId: string) {
   return useMutation({
     mutationFn: async (setup: CoachSetup) =>
       (await api.put<CoachSetup>(`/coach/clients/${encodeURIComponent(linkId)}/setup`, setup)).data,
+    onSuccess: () => cache.invalidateQueries({ queryKey: ['coach', 'clients'] }),
+  });
+}
+
+export function useSaveCoachNotes(linkId: string) {
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: async (notes: CoachNotes) =>
+      (await api.put<CoachNotes>(`/coach/clients/${encodeURIComponent(linkId)}/notes`, notes)).data,
     onSuccess: () => cache.invalidateQueries({ queryKey: ['coach', 'clients'] }),
   });
 }

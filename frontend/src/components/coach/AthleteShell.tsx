@@ -5,6 +5,7 @@ import { personName, type CoachClient } from '../../lib/coach/api';
 import { useClientStatus } from '../../lib/coach/clientStatus';
 import { nextReviewLabel, REVIEW_DAYS } from '../../lib/coach/coachSchedule';
 import { usePowerProfile } from '../../lib/coach/powerlifting';
+import { AthleteNote } from './AthleteNote';
 import { AthleteWarmup } from './AthleteWarmup';
 import { ClientAvatar } from './ClientAvatar';
 import '../../styles/coach-workspace.css';
@@ -56,27 +57,10 @@ export function useAthleteViews(link: CoachClient) {
   const bodyLog = body && link.setup?.services.progress !== false;
   const groups = [
     {
-      id: 'resumen',
-      label: 'Resumen',
-      views: [{ id: 'resumen', label: 'Resumen', visible: true }],
-    },
-    {
-      id: 'registro',
-      label: 'Registro',
-      views: [
-        { id: 'registro', label: 'Resumen diario', visible: true },
-        { id: 'entrenos', label: 'Entrenos', visible: trainingLog },
-        { id: 'comidas', label: 'Comidas', visible: nutrition },
-        { id: 'pasos', label: 'Pasos', visible: bodyLog },
-        { id: 'peso', label: 'Peso', visible: bodyLog },
-        { id: 'progreso', label: 'Evolución y fotos', visible: body },
-      ],
-    },
-    {
       id: 'planificacion',
       label: 'Planificación',
       views: [
-        { id: 'semana', label: 'Planificar semana', visible: training },
+        { id: 'semana', label: 'Semana', visible: training },
         { id: 'entrenamiento', label: 'Programas', visible: training },
         { id: 'nutricion', label: 'Nutrición', visible: nutrition },
         {
@@ -87,14 +71,27 @@ export function useAthleteViews(link: CoachClient) {
       ],
     },
     {
+      id: 'progreso',
+      label: 'Progreso',
+      views: [
+        { id: 'resumen', label: 'Resumen', visible: true },
+        { id: 'registro', label: 'Registro diario', visible: true },
+        { id: 'entrenos', label: 'Entrenos', visible: trainingLog },
+        { id: 'comidas', label: 'Comidas', visible: nutrition },
+        { id: 'pasos', label: 'Pasos', visible: bodyLog },
+        { id: 'peso', label: 'Peso', visible: bodyLog },
+        { id: 'progreso', label: 'Evolución y fotos', visible: body },
+      ],
+    },
+    {
       id: 'revisiones',
       label: 'Seguimientos',
       views: [{ id: 'revisiones', label: 'Seguimientos', visible: true }],
     },
     {
       id: 'gestion',
-      label: 'Datos y permisos',
-      views: [{ id: 'gestion', label: 'Datos y permisos', visible: true }],
+      label: 'Ajustes del atleta',
+      views: [{ id: 'gestion', label: 'Ajustes del atleta', visible: true }],
     },
   ]
     .map((group) => ({ ...group, views: group.views.filter((view) => view.visible) }))
@@ -162,25 +159,24 @@ export function AthleteShell({
         <dl className="athlete-context">
           <div>
             <dt>Objetivo</dt>
-            <dd>{setup?.goal || <Link to={links.sectionHref('gestion')}>Añadir objetivo</Link>}</dd>
+            <dd title={setup?.goal || undefined}>
+              {setup?.goal || <Link to={links.sectionHref('gestion')}>Añadir objetivo</Link>}
+            </dd>
           </div>
           <div>
             <dt>Material</dt>
-            <dd>
+            <dd title={setup?.equipment || undefined}>
               {setup?.equipment || <Link to={links.sectionHref('gestion')}>Añadir material</Link>}
             </dd>
           </div>
         </dl>
-        <Link
-          to={links.sectionHref('revisiones')}
-          aria-current={active === 'revisiones' ? 'page' : undefined}
-          className={`btn ${pending > 0 ? 'btn-primary' : 'btn-secondary'} athlete-followup`}
-        >
-          <MessageSquareText size={16} aria-hidden />
-          {pending > 0
-            ? `Responder ${pending} ${pending === 1 ? 'seguimiento' : 'seguimientos'}`
-            : 'Ver seguimientos'}
-        </Link>
+        {pending > 0 && active !== 'revisiones' && (
+          <Link to={links.sectionHref('revisiones')} className="btn btn-primary athlete-followup">
+            <MessageSquareText size={16} aria-hidden />
+            Responder {pending} {pending === 1 ? 'seguimiento' : 'seguimientos'}
+          </Link>
+        )}
+        <AthleteNote key={link.linkId} link={link} />
       </header>
       <nav className="coach-client-nav athlete-nav" aria-label="Secciones del atleta">
         <div className="athlete-tabs">

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Plus, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useExerciseCatalog } from '@/lib/workout/catalog-query';
@@ -11,16 +11,29 @@ import { apiErrorMessage } from '@/lib/coach/api';
 import { inputClass, inputStyle } from './fields';
 import { Select } from '@/components/ui/select';
 
+const EQUIPMENT_LABEL: Record<string, string> = { maquina: 'máquina' };
+const equipmentLabel = (value: string) => {
+  const text = EQUIPMENT_LABEL[value] ?? value;
+  return text.charAt(0).toLocaleUpperCase('es') + text.slice(1);
+};
+
 export function ExerciseSearch({
   onPick,
   limit = 8,
   dragType,
+  autoFocus,
+  purpose = 'añadir',
 }: {
   onPick: (exercise: Exercise) => void;
   limit?: number;
   /** When set, results can also be dragged; the drop target reads this data type. */
   dragType?: string;
+  /** Puts the cursor in the search box as soon as it appears. */
+  autoFocus?: boolean;
+  /** What picking a result does, for the label of the search box. */
+  purpose?: string;
 }) {
+  const list = useRef<HTMLUListElement>(null);
   const { data: catalog = [] } = useExerciseCatalog();
   const { data: custom = [] } = useCustomExercises();
   const items = useLibraryItems();
@@ -38,39 +51,64 @@ export function ExerciseSearch({
   }, [custom, catalog]);
   const itemFor = (id: string) =>
     items.data?.find((item) => item.type === 'EXERCISE' && item.id === id);
+  // Every word typed has to appear, in any order: "curl bi" finds "Curl de Bíceps".
+  const words = normalizeString(query.trim()).split(/\s+/).filter(Boolean);
   const results = all
-    .filter(
-      (ex) =>
-        (!equipment || ex.equipment === equipment) &&
-        (!favorites || itemFor(ex.id)?.favorite) &&
-        normalizeString([ex.name, ...(ex.tags ?? [])].join(' ')).includes(
-          normalizeString(query.trim()),
-        ),
-    )
+    .filter((ex) => {
+      if (equipment && ex.equipment !== equipment) return false;
+      if (favorites && !itemFor(ex.id)?.favorite) return false;
+      const text = normalizeString([ex.name, ...(ex.tags ?? [])].join(' '));
+      return words.every((word) => text.includes(word));
+    })
     .sort(
       (a, b) =>
         Number(!!itemFor(b.id)?.favorite) - Number(!!itemFor(a.id)?.favorite) ||
         (itemFor(b.id)?.lastUsed ?? '').localeCompare(itemFor(a.id)?.lastUsed ?? ''),
     )
     .slice(0, limit);
+  const pick = (ex: Exercise) => {
+    onPick(ex);
+    setQuery('');
+    if (items.isSuccess)
+      mark.mutate({ ...defaultItem('EXERCISE', ex.id), ...itemFor(ex.id), used: true });
+  };
+  const focusResult = (index: number) =>
+    list.current?.querySelectorAll<HTMLButtonElement>('[data-result]')[index]?.focus();
   return (
     <div className="flex flex-col gap-2">
       <input
         type="search"
-        aria-label="Buscar ejercicio para añadir"
-        placeholder="Añadir ejercicio: nombre o etiqueta"
+        autoFocus={autoFocus}
+        aria-label={`Buscar ejercicio para ${purpose}`}
+        placeholder="Nombre o etiqueta del ejercicio"
         className={inputClass}
         style={inputStyle}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && query.trim() && results[0]) {
+            e.preventDefault();
+            pick(results[0]);
+          } else if (e.key === 'ArrowDown' && results.length) {
+            e.preventDefault();
+            focusResult(0);
+          }
+        }}
       />
+      {query.trim() && results[0] && (
+        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+          Intro elige «{results[0].name}». Flecha abajo para recorrer la lista.
+        </p>
+      )}
       <div className="flex flex-wrap gap-3 text-sm">
         <label>
           Material
           <Select value={equipment} onChange={(e) => setEquipment(e.target.value)}>
             <option value="">Todos</option>
             {[...new Set(all.map((ex) => ex.equipment))].sort().map((value) => (
-              <option key={value}>{value}</option>
+              <option key={value} value={value}>
+                {equipmentLabel(value)}
+              </option>
             ))}
           </Select>
         </label>
@@ -84,9 +122,9 @@ export function ExerciseSearch({
         </label>
         {!query && <p>Favoritos y recientes primero</p>}
       </div>
-      <ul className="flex flex-col gap-1" aria-label="Resultados">
+      <ul ref={list} className="flex flex-col gap-1" aria-label="Resultados">
         {!results.length && <li>Nada coincide con esos filtros.</li>}
-        {results.map((ex) => (
+        {results.map((ex, index) => (
           <li
             key={ex.id}
             className="flex gap-1"
@@ -102,12 +140,13 @@ export function ExerciseSearch({
           >
             <button
               type="button"
+              data-result
               className="btn btn-secondary flex-1 justify-start"
-              onClick={() => {
-                onPick(ex);
-                setQuery('');
-                if (items.isSuccess)
-                  mark.mutate({ ...defaultItem('EXERCISE', ex.id), ...itemFor(ex.id), used: true });
+              onClick={() => pick(ex)}
+              onKeyDown={(e) => {
+                if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+                e.preventDefault();
+                focusResult(index + (e.key === 'ArrowDown' ? 1 : -1));
               }}
             >
               <Plus size={14} aria-hidden />

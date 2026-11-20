@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
-import { GripVertical, MoreHorizontal, Plus, X } from 'lucide-react';
+import { GripVertical, MoreHorizontal, Plus, TriangleAlert, X } from 'lucide-react';
 import type { DraggableProvided } from '@hello-pangea/dnd';
 import type { PrescribedLoad, ProgramExercise, SetTarget } from '@/lib/coach/coachPrograms';
 import {
@@ -117,21 +117,26 @@ export function ExerciseRow({
   exercise,
   onChange,
   onRemove,
+  send,
 }: {
   drag: DraggableProvided;
   index: number;
   exercise: ProgramExercise;
   onChange: (next: ProgramExercise) => void;
   onRemove: () => void;
+  /** Week editor only: the other weekdays this exercise can be copied or moved to. */
+  send?: { days: { value: number; label: string }[]; onSend: (to: number, move: boolean) => void };
 }) {
   const name = exercise.exerciseName || exercise.exerciseId;
   const prefs = usePrescribing();
+  const vetoed = prefs.avoidedOf(exercise.exerciseId);
   const card = useRef<HTMLLIElement | null>(null);
   const optionsId = useId();
   const [options, setOptions] = useState(false);
   const [openSet, setOpenSet] = useState<number | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [pending, setPending] = useState<Pick<PrescribedLoad, 'mode' | 'lift' | 'increment'>>();
+  const [sendTo, setSendTo] = useState(send?.days[0]?.value ?? 1);
 
   const rows = rowsOf(exercise);
   const effort = effortOf(rows, prefs.effort);
@@ -228,6 +233,12 @@ export function ExerciseRow({
         </span>
         <span className="set-card-name">
           {index + 1}. {name}
+          {vetoed && (
+            <span className="set-card-vetoed" role="status">
+              <TriangleAlert size={13} aria-hidden /> Vetado para este atleta
+              {vetoed.reason ? `: ${vetoed.reason}` : ''}
+            </span>
+          )}
         </span>
         <button
           type="button"
@@ -309,6 +320,39 @@ export function ExerciseRow({
                 onChange={(e) => onChange({ ...exercise, loadHint: e.target.value || null })}
               />
             </label>
+          )}
+          {send && (
+            <div className="set-send">
+              <label>
+                Enviar a otro día
+                <select
+                  className="form-input"
+                  aria-label={`Día al que enviar ${name}`}
+                  value={sendTo}
+                  onChange={(e) => setSendTo(Number(e.target.value))}
+                >
+                  {send.days.map((day) => (
+                    <option key={day.value} value={day.value}>
+                      {day.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => send.onSend(sendTo, false)}
+              >
+                Copiar
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => send.onSend(sendTo, true)}
+              >
+                Mover
+              </button>
+            </div>
           )}
           <p className="set-options-hint">
             Dos ejercicios con el mismo número de superserie se hacen seguidos.

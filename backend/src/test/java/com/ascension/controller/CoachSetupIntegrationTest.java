@@ -189,6 +189,43 @@ class CoachSetupIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT coaching_setup::text FROM coach_invitations WHERE id = ?", String.class, UUID.fromString(id))).isNull();
     }
 
+    @Test
+    void coachNotesStayWithTheCoachOfAnActiveLink() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach, "{}"));
+        String notes = """
+                {"pinnedNote":"  Molestia en el hombro derecho  ",
+                 "avoidedExercises":[{"exerciseId":"press-militar","name":"Press militar","reason":"Hombro"}]}
+                """;
+        mvc.perform(as(get("/api/coach/clients/{id}", link), coach))
+                .andExpect(jsonPath("$.notes.pinnedNote").doesNotExist())
+                .andExpect(jsonPath("$.notes.avoidedExercises").isEmpty());
+        for (String stranger : new String[]{coach(), client}) {
+            mvc.perform(as(put("/api/coach/clients/{id}/notes", link), stranger)
+                    .contentType("application/json").content(notes)).andExpect(status().isNotFound());
+        }
+        for (String invalid : new String[]{"{\"pinnedNote\":\"" + "x".repeat(601) + "\"}",
+                "{\"avoidedExercises\":[{\"exerciseId\":\" \"}]}"}) {
+            mvc.perform(as(put("/api/coach/clients/{id}/notes", link), coach)
+                    .contentType("application/json").content(invalid)).andExpect(status().isBadRequest());
+        }
+        mvc.perform(as(put("/api/coach/clients/{id}/notes", link), coach).contentType("application/json").content(notes))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.pinnedNote").value("Molestia en el hombro derecho"));
+        mvc.perform(as(get("/api/coach/clients/{id}", link), coach))
+                .andExpect(jsonPath("$.notes.pinnedNote").value("Molestia en el hombro derecho"))
+                .andExpect(jsonPath("$.notes.avoidedExercises[0].exerciseId").value("press-militar"));
+        String mine = mvc.perform(as(get("/api/coaching/coaches"), client)).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(mine).doesNotContain("hombro").doesNotContain("press-militar");
+        assertThat(json.writeValueAsString(coaches.exportFor(client))).doesNotContain("hombro");
+        mvc.perform(as(put("/api/coach/clients/{id}/notes", link), coach).contentType("application/json").content("{\"pinnedNote\":\" \"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.pinnedNote").doesNotExist());
+        mvc.perform(as(post("/api/coach/clients/{id}/end", link), coach)).andExpect(status().isNoContent());
+        mvc.perform(as(put("/api/coach/clients/{id}/notes", link), coach)
+                .contentType("application/json").content(notes)).andExpect(status().isNotFound());
+    }
+
     private String invite(String coach, String body) throws Exception {
         return json.readTree(mvc.perform(as(post("/api/coach/invitations"), coach).contentType("application/json").content(body))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("token").asString();
