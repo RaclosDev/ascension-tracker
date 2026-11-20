@@ -13,7 +13,7 @@ import { peekPendingInvitation, rememberPendingInvitation } from '../lib/coach/a
 import CoachClientPage from '../pages/CoachClientPage';
 import CoachClientWeeklyWorkoutsPage from '../pages/CoachClientWeeklyWorkoutsPage';
 import type { CompletedWorkout, Exercise } from '../lib/workout/types';
-import { chooseOption } from './selectMenu';
+import { chooseDate, chooseOption } from './selectMenu';
 
 vi.mock('../api/client', () => ({
   default: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
@@ -498,7 +498,7 @@ describe('CoachClientPage', () => {
     const select = await screen.findByLabelText('Programa');
     await screen.findByRole('menuitemradio', { name: 'Hipertrofia', hidden: true });
     chooseOption(select, 'p-2');
-    fireEvent.change(screen.getByLabelText('Empieza el'), { target: { value: '2026-11-09' } });
+    chooseDate(screen.getByLabelText('Empieza el'), '2026-11-09');
     await waitFor(() => expect(screen.getByRole('button', { name: 'Asignar' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Asignar' }));
 

@@ -18,6 +18,7 @@ import { ProgramSessions } from './ProgramSessions';
 import { QueryState } from './ClientSection';
 import { ProgramPreview } from './ProgramPreview';
 import { Select } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 import { useAthleteLinks } from './AthleteShell';
 import '../../styles/coach-programs.css';
 
@@ -257,11 +258,12 @@ export default function ProgramsSection({
             </label>
             <label>
               Empieza el
-              <input
-                type="date"
+              <DatePicker
                 className="form-input min-h-11"
+                aria-label="Empieza el"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                required
+                onChange={setStartDate}
               />
             </label>
             <button
