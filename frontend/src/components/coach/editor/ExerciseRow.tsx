@@ -1,7 +1,15 @@
 import { useContext, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronDown, GripVertical, MoreHorizontal, Plus, TriangleAlert, X } from 'lucide-react';
+import {
+  ChevronDown,
+  Dumbbell,
+  GripVertical,
+  MoreHorizontal,
+  Plus,
+  TriangleAlert,
+  X,
+} from 'lucide-react';
 import type { DraggableProvided } from '@hello-pangea/dnd';
 import type { PrescribedLoad, ProgramExercise, SetTarget } from '@/lib/coach/coachPrograms';
 import {
@@ -18,6 +26,7 @@ import type { EffortMethod } from '@/lib/coach/prescription';
 import { AthleteHistory, usePrescribing } from './prescribing';
 import { Select } from '@/components/ui/select';
 import { GRIPS, MACHINES, VariantChip } from './VariantChip';
+import { BASE_EXERCISES, useExerciseCatalog } from '@/lib/workout/exercises';
 
 const MAX_SETS = 20;
 const KINDS: { value: SetTarget['kind']; label: string; tag: string }[] = [
@@ -178,6 +187,11 @@ export function ExerciseRow({
 }) {
   const name = exercise.exerciseName || exercise.exerciseId;
   const prefs = usePrescribing();
+  // The same GIF the exercise shows everywhere else: quicker to spot than the name.
+  const catalog = useExerciseCatalog().data;
+  const gif = [...BASE_EXERCISES, ...(catalog ?? [])].find(
+    (e) => e.id === exercise.exerciseId,
+  )?.gifUrl;
   const vetoed = prefs.avoidedOf(exercise.exerciseId);
   const card = useRef<HTMLLIElement | null>(null);
   const optionsId = useId();
@@ -302,6 +316,9 @@ export function ExerciseRow({
       <div className="set-card-head">
         <span {...drag.dragHandleProps} aria-label={`Arrastrar ${name}`} className="set-card-grip">
           <GripVertical size={16} aria-hidden />
+        </span>
+        <span className="set-card-media" aria-hidden="true">
+          {gif ? <img src={gif} alt="" loading="lazy" /> : <Dumbbell size={16} />}
         </span>
         <span className="set-card-name">
           {index + 1}. {name}

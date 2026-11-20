@@ -4,7 +4,7 @@ import type { Program, ProgramExercise, SetTarget } from '../../lib/coach/coachP
 import { WEEKDAY_LABELS } from '../../lib/coach/weekdays';
 import { effortOf, repsText, rowsOf } from '../../lib/coach/prescription';
 import { restLabel } from '../../lib/coach/today';
-import { useExerciseCatalog } from '../../lib/workout/catalog-query';
+import { getExerciseMap, useExerciseCatalog } from '../../lib/workout/exercises';
 import type { Exercise } from '../../lib/workout/types';
 import { WorkoutExerciseDetail } from '../workout/WorkoutExerciseDetail';
 import '../../styles/program-preview.css';
@@ -113,10 +113,7 @@ function PreviewExercise({
 
 export function ProgramPreview({ program }: { program: Program }) {
   const catalog = useExerciseCatalog();
-  const byId = useMemo(
-    () => new Map((catalog.data ?? []).map((exercise) => [exercise.id, exercise])),
-    [catalog.data],
-  );
+  const byId = useMemo(() => getExerciseMap([], catalog.data ?? []), [catalog.data]);
   const days = [...program.days].sort((a, b) => a.week - b.week || a.dayIndex - b.dayIndex);
   return (
     <section className="card min-w-0 program-preview" aria-label="Vista previa del programa">
