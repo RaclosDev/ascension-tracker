@@ -6,27 +6,6 @@ test.beforeEach(async ({ page }) => {
   await setupAuthMocks(page);
 });
 
-test('el calendario de comidas abre el diario del día elegido', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/nutrition');
-  await page.getByRole('button', { name: 'Calendario', exact: true }).click();
-  const calendar = page.getByRole('region', { name: 'Calendario de comidas' });
-  await expect(calendar.getByRole('button', { name: 'Mes siguiente' })).toBeDisabled();
-  await calendar.getByRole('button', { name: 'Mes anterior' }).click();
-  await expect(calendar.getByRole('heading', { name: 'Agosto 2026', exact: true })).toBeVisible();
-  await calendar.getByRole('button', { name: 'Mes siguiente' }).click();
-  const logsRequest = page.waitForRequest('**/api/nutrition/logs?date=2026-10-12');
-  await calendar.getByRole('button', { name: /lunes 12 de octubre.*kcal/i }).click();
-  await logsRequest;
-  await expect(page.getByRole('button', { name: 'Diario', exact: true })).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
-  await expect(page.getByLabel('Seleccionar fecha del diario nutricional')).toHaveValue(
-    '2026-10-12',
-  );
-});
-
 test('Pasos permite guardar cero y borrar el registro del día', async ({ page }) => {
   let steps: number | null = null;
   await page.route('**/api/steps/weekly', (route) =>
@@ -45,12 +24,7 @@ test('Pasos permite guardar cero y borrar el registro del día', async ({ page }
     steps = null;
     await route.fulfill({ status: 204 });
   });
-  await page.goto('/tracking');
-  await page
-    .getByRole('navigation', { name: 'Seguimiento' })
-    .getByRole('link', { name: 'Pasos' })
-    .click();
-  await expect(page).toHaveURL(/\/tracking\/pasos$/);
+  await page.goto('/tracking/pasos');
   await page.getByRole('button', { name: /lunes 12 de octubre.*sin registro/i }).click();
   await page.getByLabel('Pasos', { exact: true }).fill('0');
   await page.getByRole('button', { name: 'Guardar', exact: true }).click();

@@ -9,7 +9,6 @@ import { SegmentedControl } from '../components/ui/segmented-control';
 import { Skeleton } from '../components/ui/skeleton';
 import MacroSummaryHeader from '../components/nutrition/MacroSummaryHeader';
 import { NutritionDateBar } from '../components/nutrition/NutritionDateBar';
-import { NutritionCalendar } from '../components/nutrition/NutritionCalendar';
 import { MealFoodGroup } from '../components/nutrition/MealFoodGroup';
 import { useNutritionDiary } from '../hooks/nutrition/useNutritionDiary';
 import { useAnyInView } from '../hooks/use-any-in-view';
@@ -75,12 +74,11 @@ export default function NutritionPage() {
     <SegmentedControl
       options={[
         { label: 'Diario', value: 'diary' },
-        { label: 'Calendario', value: 'calendar' },
         { label: 'Mis alimentos', value: 'foods' },
       ]}
       value={activeTab}
       onChange={(value) => {
-        if (value === 'diary' || value === 'calendar' || value === 'foods') setActiveTab(value);
+        if (value === 'diary' || value === 'foods') setActiveTab(value);
       }}
       className="mb-6"
     />
@@ -153,15 +151,6 @@ export default function NutritionPage() {
         >
           <MyFoodsPage />
         </Suspense>
-      ) : activeTab === 'calendar' ? (
-        <NutritionCalendar
-          selectedDate={selectedDate}
-          onSelect={(date) => {
-            setSelectedDate(date);
-            setActiveTab('diary');
-            window.scrollTo({ top: 0, behavior: 'instant' });
-          }}
-        />
       ) : macros && settings ? (
         <>
           <NutritionDateBar selectedDate={selectedDate} onDateChange={setSelectedDate} />
