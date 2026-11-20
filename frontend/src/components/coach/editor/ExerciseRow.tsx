@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import type { DraggableProvided } from '@hello-pangea/dnd';
+import '../../../styles/coach-athlete.css';
 import type { PrescribedLoad, ProgramExercise, SetTarget } from '@/lib/coach/coachPrograms';
 import { effortOf, parseReps, repsText, rowsOf, withRows } from '@/lib/coach/prescription';
 import { restLabel } from '@/lib/coach/today';

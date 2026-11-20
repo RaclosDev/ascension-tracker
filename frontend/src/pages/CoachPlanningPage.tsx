@@ -389,7 +389,7 @@ export default function CoachPlanningPage() {
             </p>
           </div>
         ) : (
-          <ul className="coach-library-list">
+          <ul className="coach-library-list" data-tab={tab}>
             {rows.map((row) => (
               <li key={row.id}>
                 {row.program && (

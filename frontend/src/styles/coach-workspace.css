@@ -557,7 +557,6 @@
   flex: 1 1 240px;
   max-width: 320px;
 }
-.coach-review-bar ~ .coach-worklist,
 .coach-review-bar ~ .coach-description {
   max-width: 860px;
 }
