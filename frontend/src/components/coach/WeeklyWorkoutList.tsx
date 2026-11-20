@@ -11,7 +11,6 @@ import {
 import { useExerciseCatalog, getExerciseMap } from '../../lib/workout/exercises';
 import type { CompletedWorkout } from '../../lib/workout/types';
 import { WorkoutReview } from './WorkoutReview';
-import { WorkoutComparison } from './WorkoutComparison';
 import type { TodayDay } from '../../lib/coach/today';
 import { QueryErrorNotice } from '../QueryErrorNotice';
 import { WorkoutSessionStats } from '../workout/WorkoutSessionSummary';
@@ -149,23 +148,26 @@ export function WeeklyWorkoutDetail({
       <div className="coach-quick-workout-detail">
         {hasProgram && prescription.isPending ? (
           <p role="status">Cargando pauta del entrenador…</p>
-        ) : hasProgram && prescription.data ? (
-          <WorkoutComparison workout={query.data} plan={prescription.data} catalog={names} />
         ) : (
           <>
-            {hasProgram && prescription.isError ? (
+            {hasProgram && prescription.isError && (
               <QueryErrorNotice
                 retry={() => void prescription.refetch()}
                 pending={prescription.isFetching}
               />
-            ) : (
+            )}
+            {!prescription.data && (
               <p className="coach-muted">
                 {hasProgram ? 'Pauta original no disponible' : 'Entreno libre'}
               </p>
             )}
+            {prescription.data?.notes?.trim() && (
+              <p className="wr-note">{prescription.data.notes}</p>
+            )}
             <WorkoutReview
               workout={query.data}
               exerciseName={(id) => names.get(id)?.name ?? 'Ejercicio'}
+              prescribed={prescription.data?.exercises}
             />
           </>
         )}

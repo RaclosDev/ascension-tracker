@@ -1,11 +1,10 @@
 import { startOfWeek, format, parseISO, addDays } from 'date-fns';
-import { WorkoutReview } from './WorkoutReview';
+import { PlannedExercises, WorkoutReview } from './WorkoutReview';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { apiErrorMessage, formatCoachDate, useClientData } from '@/lib/coach/api';
 import { WEEKDAY_LABELS } from '@/lib/coach/weekdays';
 import { localIsoDate } from '@/lib/coach/today';
-import { PrescriptionSummary } from './PrescriptionSummary';
 import {
   SESSION_STATUS_LABELS,
   sessionStatus,
@@ -160,44 +159,24 @@ function SessionDetail({
   );
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 mt-3">
-      <div>
-        <h4 className="text-xs font-bold uppercase mb-1" style={{ color: 'var(--text-secondary)' }}>
-          Pautado
-        </h4>
-        {session.notes && <p className="text-sm text-white mb-1">{session.notes}</p>}
-        <ul className="flex flex-col gap-1">
-          {session.exercises.map((e, i) => {
-            return (
-              <li key={i} className="text-sm">
-                <span className="text-white">{e.exerciseName ?? exerciseName(e.exerciseId)}</span>{' '}
-                <div style={{ color: 'var(--text-secondary)' }}>
-                  <PrescriptionSummary exercise={e} />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-      <div>
-        <h4 className="text-xs font-bold uppercase mb-1" style={{ color: 'var(--text-secondary)' }}>
-          Hecho
-        </h4>
-        {!session.workoutId && (
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Sin entreno registrado para este día.
-          </p>
-        )}
-        {workout.isLoading && <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>}
-        {workout.isError && <p role="alert">No se pudo cargar el entreno.</p>}
-        {workout.data && (
-          <WorkoutReview
-            workout={workout.data}
-            exerciseName={exerciseName}
-            prescribed={session.exercises}
-          />
-        )}
-      </div>
+    <div className="session-review">
+      {session.notes && <p className="wr-note">{session.notes}</p>}
+      {!session.workoutId && (
+        <p className="week-panel-hint">Sin entreno registrado para este día.</p>
+      )}
+      {workout.isLoading && <p className="sr-only">Cargando el entreno…</p>}
+      {/* The plan shows at once; the logged sets take its place when they arrive. */}
+      {!workout.data && (
+        <PlannedExercises exercises={session.exercises} exerciseName={exerciseName} />
+      )}
+      {workout.isError && <p role="alert">No se pudo cargar el entreno.</p>}
+      {workout.data && (
+        <WorkoutReview
+          workout={workout.data}
+          exerciseName={exerciseName}
+          prescribed={session.exercises}
+        />
+      )}
       {session.workoutId && (
         <CommentBox
           key={session.workoutId}

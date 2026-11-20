@@ -53,7 +53,7 @@ export function WeekReview({
   // The day belongs to the week it was picked in: moving to another week opens that week whole.
   const day = picked?.week === week ? calendar.days[picked.day - 1] : null;
   return (
-    <section data-tour="week-review" className="cal-body" data-panel="wide">
+    <section data-tour="week-review" className="cal-body week-review" data-panel="wide">
       <WeekStrip
         week={calendar}
         selected={day?.dayIndex ?? null}
