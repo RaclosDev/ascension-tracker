@@ -1357,7 +1357,7 @@
   }
 }
 
-/* Exercise card, set by set: the head breathes, last time reads as plain figures, not as a second form. */
+/* Exercise card, set by set: the head breathes and, folded or open, a click on it toggles the card. */
 .set-card:is(:not([data-compact]), [data-open]) {
   gap: 10px;
   padding: 12px 14px 14px;
@@ -1380,32 +1380,6 @@
 .set-grid-sides > span:nth-child(2) {
   color: var(--text-primary);
 }
-.set-card .set-past {
-  background: transparent;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-.set-card .set-past[data-none] {
-  font-weight: 400;
-  opacity: 0.45;
-}
-.set-card .set-past[data-first]::before {
-  top: -6px;
-  bottom: -6px;
-}
-/* Removing a set is the rare move: it stays quiet until the row is in hand. */
-.set-rows .set-icon {
-  opacity: 0.4;
-  transition: opacity 0.15s ease-out;
-}
-.set-rows > .contents > div:hover .set-icon,
-.set-rows .set-icon:focus-visible {
-  opacity: 1;
-}
-.set-rows .set-icon:disabled {
-  opacity: 0.15;
-}
 .set-card .set-exercise-note {
   margin-top: 2px;
   border-style: solid;
@@ -1414,4 +1388,7 @@
 .set-card .set-exercise-note:placeholder-shown {
   border-style: dashed;
   background: transparent;
+}
+.set-card[data-compact] .set-card-head {
+  cursor: pointer;
 }

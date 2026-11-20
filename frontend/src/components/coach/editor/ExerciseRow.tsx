@@ -313,7 +313,20 @@ export function ExerciseRow({
       data-open={compact && open ? '' : undefined}
       style={drag.draggableProps.style}
     >
-      <div className="set-card-head">
+      {/* The chevron is the keyboard path; a click anywhere else on the head that is not a control does the same. */}
+      <div
+        className="set-card-head"
+        onClick={(e) => {
+          if (!compact) return;
+          if (
+            (e.target as HTMLElement).closest(
+              'button, input, select, a, .variant-chip, .set-quick, [data-rbd-drag-handle-draggable-id]',
+            )
+          )
+            return;
+          setOpen(!open);
+        }}
+      >
         <span {...drag.dragHandleProps} aria-label={`Arrastrar ${name}`} className="set-card-grip">
           <GripVertical size={16} aria-hidden />
         </span>
