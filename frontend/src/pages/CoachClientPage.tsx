@@ -14,9 +14,7 @@ import '../styles/coach-student.css';
 
 const ClientTraining = lazyWithRetry(() => import('../components/coach/ClientTraining'));
 const ClientProgress = lazyWithRetry(() => import('../components/coach/ClientProgress'));
-const ClientMetrics = lazyWithRetry(() =>
-  import('../components/coach/ClientProgress').then((m) => ({ default: m.ClientMetrics })),
-);
+const ClientMetrics = lazyWithRetry(() => import('../components/coach/ClientMetrics'));
 const ClientPrograms = lazyWithRetry(() => import('../components/coach/ClientPrograms'));
 const ClientNutrition = lazyWithRetry(() => import('../components/coach/ClientNutrition'));
 const ClientPowerlifting = lazyWithRetry(() => import('../components/coach/ClientPowerlifting'));

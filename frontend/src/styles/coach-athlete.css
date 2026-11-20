@@ -2535,16 +2535,6 @@
 .set-exercise-note::placeholder {
   color: var(--text-secondary);
 }
-.set-protocol {
-  font-size: 0.82rem;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
-}
-.set-protocol > span {
-  margin-right: 4px;
-  color: var(--text-secondary);
-}
 .set-options {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));

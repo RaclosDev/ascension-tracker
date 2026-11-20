@@ -1061,12 +1061,12 @@
   color: var(--text-secondary);
 }
 
-/* What the coach writes, beside what the athlete did the last time. */
+/* What the coach writes on the left, what the athlete did last time on the right, in the same cells. */
 .set-grid-versus {
-  grid-template-columns: 36px repeat(3, minmax(0, 1fr)) minmax(104px, 1.3fr) 32px;
+  grid-template-columns: 36px repeat(6, minmax(0, 1fr)) 32px;
 }
 .set-grid-2.set-grid-versus {
-  grid-template-columns: 36px repeat(2, minmax(0, 1fr)) minmax(104px, 1.3fr) 32px;
+  grid-template-columns: 36px repeat(4, minmax(0, 1fr)) 32px;
 }
 .set-grid-sides {
   font-size: 0.72rem;
@@ -1075,49 +1075,46 @@
   text-align: center;
   color: var(--text-primary);
 }
-.set-grid-sides span:nth-child(3) {
-  font-weight: 600;
+.set-grid-sides .set-past-side {
   color: var(--text-secondary);
 }
-.set-last {
+.set-grid-versus .set-past-side {
+  margin-left: 8px;
+}
+.set-past {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   min-width: 0;
   height: 36px;
   padding: 0 6px;
-  border-left: 2px solid var(--border-subtle);
-  font-size: 0.8rem;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.04);
+  font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
-  line-height: 1.15;
   white-space: nowrap;
-  color: var(--text-primary);
-}
-.set-last small {
-  font-size: 0.68rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--text-secondary);
 }
-.set-last[data-none] {
-  font-size: 0.74rem;
-  color: var(--text-secondary);
+.set-past[data-first] {
+  margin-left: 8px;
+  position: relative;
 }
-.set-variant {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+.set-past[data-first]::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: -2px;
+  bottom: -2px;
+  border-left: 1px solid var(--border-subtle);
 }
-.set-variant label {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+.set-past[data-none] {
+  background: transparent;
+  opacity: 0.6;
 }
-.set-variant .form-input {
-  height: 34px;
-  font-size: 0.85rem;
+.set-past[data-first] {
+  overflow: visible;
 }
 .set-card-variant {
   margin-left: 6px;
@@ -1125,14 +1122,99 @@
   font-weight: 400;
   color: var(--text-secondary);
 }
+.set-card-variants {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: auto;
+}
+.variant-chip {
+  position: relative;
+}
+.variant-chip-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 160px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px dashed var(--border-medium);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.variant-chip-trigger:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+.variant-chip-trigger[data-set] {
+  border-style: solid;
+  border-color: var(--border-medium);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+.variant-chip-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  right: 0;
+  display: grid;
+  gap: 2px;
+  width: 200px;
+  padding: 6px;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  background: var(--bg-card, var(--bg-secondary));
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.45);
+}
+.variant-chip-menu button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  font-size: 0.82rem;
+  text-align: left;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.variant-chip-menu button:hover,
+.variant-chip-menu button[aria-pressed='true'] {
+  background: var(--bg-secondary);
+}
+.variant-chip-menu button small {
+  margin-left: auto;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+.variant-chip-menu button svg {
+  margin-left: auto;
+}
+.variant-chip-menu .form-input {
+  height: 30px;
+  margin-top: 4px;
+  font-size: 0.82rem;
+}
+.variant-chip-menu .variant-chip-clear {
+  color: var(--text-secondary);
+}
 @media (max-width: 900px) {
   .set-grid-versus {
-    grid-template-columns: 40px repeat(3, minmax(0, 1fr)) minmax(92px, 1.2fr) 40px;
+    grid-template-columns: 40px repeat(6, minmax(0, 1fr)) 40px;
   }
   .set-grid-2.set-grid-versus {
-    grid-template-columns: 40px repeat(2, minmax(0, 1fr)) minmax(92px, 1.2fr) 40px;
+    grid-template-columns: 40px repeat(4, minmax(0, 1fr)) 40px;
   }
-  .set-last {
+  .set-past {
     height: 44px;
   }
 }
@@ -1154,21 +1236,18 @@
 }
 @container daypanel (max-width: 470px) {
   .set-grid-versus {
-    grid-template-columns: 30px repeat(3, minmax(0, 1fr)) 84px 30px;
+    grid-template-columns: 28px repeat(6, minmax(0, 1fr)) 28px;
   }
   .set-grid-2.set-grid-versus {
-    grid-template-columns: 30px repeat(2, minmax(0, 1fr)) 84px 30px;
+    grid-template-columns: 28px repeat(4, minmax(0, 1fr)) 28px;
   }
-  .set-grid-versus .set-cell {
+  .set-grid-versus .set-cell,
+  .set-past {
     padding: 0 2px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
   .set-grid-versus .set-icon {
-    width: 30px;
-  }
-  .set-last {
-    padding: 0 2px;
-    font-size: 0.76rem;
+    width: 28px;
   }
 }
 

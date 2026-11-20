@@ -13,9 +13,11 @@ import {
   withRows,
 } from '@/lib/coach/prescription';
 import { restLabel } from '@/lib/coach/today';
-import { setText } from '@/lib/coach/exerciseHistory';
+import type { WorkoutSet } from '@/lib/workout/types';
+import type { EffortMethod } from '@/lib/coach/prescription';
 import { AthleteHistory, usePrescribing } from './prescribing';
 import { Select } from '@/components/ui/select';
+import { GRIPS, MACHINES, VariantChip } from './VariantChip';
 
 const MAX_SETS = 20;
 const KINDS: { value: SetTarget['kind']; label: string; tag: string }[] = [
@@ -111,6 +113,44 @@ function Cell<T>({
       }}
       onKeyDown={onKeyDown}
     />
+  );
+}
+
+/** What the athlete did in one set, laid out in the same cells as the prescription beside it. */
+function PastSet({
+  set,
+  effort,
+  index,
+}: {
+  set?: WorkoutSet;
+  effort: EffortMethod;
+  index: number;
+}) {
+  const other = effort === 'RPE' ? set?.rir && `RIR ${set.rir}` : set?.rpe && `RPE ${set.rpe}`;
+  const effortValue = effort === 'RPE' ? set?.rpe || other : set?.rir || other;
+  const cells = [set?.reps, ...(effort === 'NONE' ? [] : [effortValue]), set?.weight];
+  return (
+    <span
+      className="contents"
+      role="group"
+      aria-label={
+        set
+          ? `Última vez, serie ${index + 1}: ${[set.weight && `${set.weight} kg`, set.reps && `${set.reps} reps`, set.rpe && `RPE ${set.rpe}`, set.rir && `RIR ${set.rir}`].filter(Boolean).join(', ')}`
+          : `Última vez, serie ${index + 1}: no la hizo`
+      }
+    >
+      {cells.map((value, j) => (
+        <span
+          key={j}
+          className="set-past"
+          data-first={j === 0 ? '' : undefined}
+          data-none={value ? undefined : ''}
+          aria-hidden
+        >
+          {value || '–'}
+        </span>
+      ))}
+    </span>
   );
 }
 
@@ -232,6 +272,7 @@ export function ExerciseRow({
     exercise.supersetGroup != null && `Superserie ${exercise.supersetGroup}`,
   ].filter(Boolean);
   const columns = `${effort === 'NONE' ? 'set-grid set-grid-2' : 'set-grid'}${versus ? ' set-grid-versus' : ''}`;
+  const sides = effort === 'NONE' ? 2 : 3;
   const variant = [exercise.variantMachine, exercise.variantGrip].filter(Boolean).join(' · ');
   // Sets that share everything are one line of numbers; anything else reads as its protocol.
   const uniform = rows.every(
@@ -272,6 +313,26 @@ export function ExerciseRow({
             </span>
           )}
         </span>
+        {detail && !folded && (
+          <span className="set-card-variants">
+            <VariantChip
+              label="Agarre"
+              what={`Agarre de ${name}`}
+              value={exercise.variantGrip}
+              options={GRIPS}
+              last={last?.variant?.grip}
+              onChange={(variantGrip) => onChange({ ...exercise, variantGrip })}
+            />
+            <VariantChip
+              label="Máquina o variante"
+              what={`Máquina o variante de ${name}`}
+              value={exercise.variantMachine}
+              options={MACHINES}
+              last={last?.variant?.machine}
+              onChange={(variantMachine) => onChange({ ...exercise, variantMachine })}
+            />
+          </span>
+        )}
         {folded &&
           (uniform ? (
             <span className="set-quick" data-effort={effort === 'NONE' ? undefined : ''}>
@@ -483,38 +544,14 @@ export function ExerciseRow({
             .join(' · ')}
         </p>
       )}
-      {detail && !folded && (
-        <div className="set-variant">
-          <label>
-            Agarre
-            <input
-              className="form-input"
-              aria-label={`Agarre de ${name}`}
-              placeholder={last?.variant?.grip || 'Sin indicar'}
-              maxLength={255}
-              value={exercise.variantGrip ?? ''}
-              onChange={(e) => onChange({ ...exercise, variantGrip: e.target.value || null })}
-            />
-          </label>
-          <label>
-            Máquina o variante
-            <input
-              className="form-input"
-              aria-label={`Máquina o variante de ${name}`}
-              placeholder={last?.variant?.machine || 'Sin indicar'}
-              maxLength={255}
-              value={exercise.variantMachine ?? ''}
-              onChange={(e) => onChange({ ...exercise, variantMachine: e.target.value || null })}
-            />
-          </label>
-        </div>
-      )}
       <div role="group" aria-label={`Series de ${name}`} className="set-rows" hidden={folded}>
         {versus && (
           <div className={`${columns} set-grid-sides`} aria-hidden>
             <span />
-            <span style={{ gridColumn: `span ${effort === 'NONE' ? 2 : 3}` }}>Tu pauta</span>
-            <span>Hizo el {format(last.date, 'd MMM', { locale: es })}</span>
+            <span style={{ gridColumn: `span ${sides}` }}>Pauta</span>
+            <span className="set-past-side" style={{ gridColumn: `span ${sides}` }}>
+              Hizo el {format(last.date, 'd MMM', { locale: es })}
+            </span>
             <span />
           </div>
         )}
@@ -523,7 +560,13 @@ export function ExerciseRow({
           <span>Reps</span>
           {effort !== 'NONE' && <span>{effort}</span>}
           <span>{loadHeader}</span>
-          {versus && <span />}
+          {versus && (
+            <>
+              <span className="set-past-side">Reps</span>
+              {effort !== 'NONE' && <span>{effort}</span>}
+              <span>kg</span>
+            </>
+          )}
           <span />
         </div>
         {rows.map((row, i) => {
@@ -582,25 +625,7 @@ export function ExerciseRow({
                   onCommit={(value) => edit(i, { load: value == null ? null : loadOf(value) })}
                   onKeyDown={keys(i, 2)}
                 />
-                {versus && (
-                  <span
-                    className="set-last"
-                    aria-label={`Última vez, serie ${i + 1}`}
-                    data-none={last.sets[i] ? undefined : ''}
-                  >
-                    {last.sets[i] ? (
-                      <>
-                        {setText(last.sets[i])}
-                        {last.sets[i].rir && <small>RIR {last.sets[i].rir}</small>}
-                        {!last.sets[i].rir && last.sets[i].rpe && (
-                          <small>RPE {last.sets[i].rpe}</small>
-                        )}
-                      </>
-                    ) : (
-                      'Sin serie'
-                    )}
-                  </span>
-                )}
+                {versus && <PastSet set={last.sets[i]} effort={effort} index={i} />}
                 <button
                   type="button"
                   className="set-icon"
@@ -670,11 +695,6 @@ export function ExerciseRow({
         value={exercise.notes ?? ''}
         onChange={(e) => onChange({ ...exercise, notes: e.target.value || null })}
       />
-
-      <p className="set-protocol" hidden={folded}>
-        <span>El atleta lee</span> {protocolText(exercise)}
-        {extras.length > 0 && ` · ${extras.join(' · ')}`}
-      </p>
     </li>
   );
 }
