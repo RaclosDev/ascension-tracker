@@ -813,7 +813,7 @@ export function WeekEditor({
               onClick={() => setPreview(!preview)}
             >
               {preview ? <Pencil size={15} aria-hidden /> : <Eye size={15} aria-hidden />}
-              {preview ? 'Editar' : 'Vista del atleta'}
+              {preview ? 'Volver al editor' : 'Vista del atleta'}
             </button>
           </div>
         </div>
