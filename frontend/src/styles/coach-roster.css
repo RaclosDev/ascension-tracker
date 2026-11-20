@@ -10,21 +10,37 @@
 }
 .coach-roster-wrap {
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: none;
 }
 .coach-roster-table {
   table-layout: fixed;
 }
 .coach-roster-table th:first-child {
-  width: 28%;
+  width: 24%;
 }
 .coach-roster-table th:nth-child(2) {
+  width: 15%;
+}
+.coach-roster-table th:nth-child(3) {
+  width: 14%;
+}
+.coach-roster-table th:nth-child(4) {
   width: 17%;
 }
-.coach-roster-table th:nth-child(3),
-.coach-roster-table th:nth-child(4) {
-  width: 14%;
+.roster-checkin {
+  display: grid;
+  gap: 1px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+.roster-checkin small {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.roster-checkin[data-due] small {
+  color: var(--text-primary);
+  font-weight: 600;
 }
 .coach-roster-table th {
   padding: 14px 20px;
@@ -45,91 +61,202 @@
   font-size: 0.95rem;
   font-weight: 600;
 }
-.coach-workspace .coach-roster-action {
+/* Siguiente paso: el mismo dibujo para todos; lo que te toca a ti, en color. */
+.coach-workspace .roster-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 6px 10px 6px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.roster-step svg {
+  flex-shrink: 0;
+}
+.roster-step-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  text-align: left;
+}
+.roster-step-text > span {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 44px;
-  padding: 10px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  line-height: 1.4;
-  font-weight: 500;
-  color: var(--text-primary);
-  text-decoration: none;
-  cursor: pointer;
 }
-.coach-roster-action-text {
-  display: grid;
-  gap: 2px;
-  text-align: left;
-}
-.coach-roster-action-text small {
+.roster-step-text small {
   font-size: 0.75rem;
   font-weight: 400;
   color: var(--text-secondary);
 }
-.coach-roster-action svg,
-.coach-roster-week svg {
-  flex-shrink: 0;
+.coach-workspace .roster-step[data-owner='coach'] {
+  border-left: 3px solid var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
 }
-.coach-workspace .coach-roster-action-primary {
-  border-color: var(--border-medium);
-  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
-  font-weight: 600;
+.coach-workspace .roster-step[data-owner='coach']:hover {
+  background: color-mix(in srgb, var(--accent-primary) 24%, transparent);
 }
-.coach-roster-reply-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 21px;
-  min-height: 21px;
-  border-radius: 4px;
-  background: var(--text-primary);
-  color: var(--bg-primary);
-  font-size: 0.75rem;
+.coach-workspace .roster-step[data-owner='client'] {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.coach-workspace .roster-step[data-owner='client']:hover {
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  color: var(--text-primary);
+}
+.roster-step[data-owner='client'] > svg:last-child,
+.roster-step[data-owner='coach'] > svg:last-child {
+  margin-left: auto;
+  opacity: 0.7;
+}
+.coach-workspace .roster-step[data-owner='none'] {
+  padding-left: 0;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.roster-step-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--accent-primary);
+  color: #fff;
+  font-size: 0.72rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.coach-roster-week,
-.coach-roster-quiet {
+.roster-step:focus-visible,
+.roster-register:focus-visible,
+.roster-tile:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 3px;
+}
+
+/* Semana siguiente: una pastilla; sin preparar es lo que más pesa. */
+.roster-week {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
+  gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
   color: var(--text-secondary);
 }
-.coach-roster-week[data-state='MISSING'],
-.coach-roster-week[data-state='DRAFT'] {
+.roster-week[data-state='DRAFT'] {
+  border-color: var(--border-medium);
   color: var(--text-primary);
-  font-weight: 600;
 }
-.coach-roster-register {
+.roster-week[data-state='MISSING'] {
+  border-color: color-mix(in srgb, var(--accent-primary) 60%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
+  color: var(--text-primary);
+}
+.coach-workspace .roster-register {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  color: var(--text-primary);
   font-size: 0.85rem;
-  text-decoration: underline;
-  text-decoration-color: var(--border-medium);
-  text-underline-offset: 4px;
+  color: var(--text-primary);
+  text-decoration: none;
 }
-.coach-roster-register:hover {
-  text-decoration-color: var(--text-primary);
+.coach-workspace .roster-register:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 .coach-roster-table .coach-muted {
   font-size: 0.85rem;
 }
-.coach-workspace .coach-roster-action:hover {
-  background: color-mix(in srgb, var(--text-primary) 9%, transparent);
+
+/* Resumen: cuatro preguntas, cada una filtra la lista. */
+.roster-glance {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+.roster-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.roster-tile:hover {
+  border-color: var(--border-medium);
+}
+.roster-tile[aria-pressed='true'] {
+  border-color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 14%, var(--bg-card));
+}
+.roster-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.roster-tile strong {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  line-height: 1.05;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.roster-tile[data-zero] strong {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+.roster-tile small {
+  font-size: 0.78rem;
+}
+
+/* El filtro sigue siendo un select nativo (tiene grupos), vestido como los demás. */
+.coach-roster-toolbar .coach-sort select {
+  appearance: none;
+  min-height: 44px;
+  padding: 0 34px 0 12px;
+  border: 1px solid var(--border-medium);
+  border-radius: 5px;
+  background: var(--bg-input)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    no-repeat right 12px center;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.coach-roster-toolbar .coach-sort select option,
+.coach-roster-toolbar .coach-sort select optgroup {
+  background: var(--bg-card);
   color: var(--text-primary);
 }
-.coach-roster-action:focus-visible,
-.coach-roster-register:focus-visible {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 3px;
-}
+
 .coach-roster-cards > li {
   border-left: 0;
   padding-bottom: 16px;
@@ -137,11 +264,23 @@
 .coach-roster-cards .coach-card-link {
   align-items: flex-start;
 }
-.coach-roster-cards > li > .coach-roster-action,
-.coach-roster-cards > li > .coach-roster-quiet {
+.coach-roster-cards > li > .roster-step {
   margin: 4px 16px 0;
 }
 @media (max-width: 640px) {
+  .roster-glance {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .roster-tile {
+    padding: 10px 12px 12px;
+  }
+  .roster-tile strong {
+    font-size: 1.8rem;
+  }
+  .roster-tile small {
+    display: none;
+  }
   .coach-roster-toolbar .coach-search {
     flex-basis: 100%;
   }

@@ -1,6 +1,16 @@
 import { Link } from 'react-router-dom';
 import { useCoachFilters } from '../lib/coach/useCoachFilters';
-import { ArrowRight, ArrowUpRight, Check, Clock3, Search } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  ArrowUpRight,
+  CalendarClock,
+  Check,
+  Clock3,
+  Hourglass,
+  MessageSquareReply,
+  Search,
+} from 'lucide-react';
 import { personName } from '../lib/coach/api';
 import { clientTasks } from '../lib/coach/tasks';
 import { SERVICE_LABELS } from '../lib/coach/setup';
@@ -71,6 +81,34 @@ const SERVICE_FILTERS: Filter[] = Object.entries(SERVICE_LABELS).map(([key, labe
 }));
 const FILTERS = [ALL, ...STATE_FILTERS, ...SERVICE_FILTERS];
 
+/** The four questions a coach opens this page with; each count filters the list. */
+const GLANCE = [
+  {
+    filter: 'checkin',
+    title: 'Por responder',
+    caption: 'seguimientos esperando tu respuesta',
+    icon: MessageSquareReply,
+  },
+  {
+    filter: 'nextWeek',
+    title: 'Semanas por preparar',
+    caption: 'sin publicar para la semana que viene',
+    icon: CalendarClock,
+  },
+  {
+    filter: 'attention',
+    title: 'Con alertas',
+    caption: 'algo se sale de lo normal',
+    icon: AlertTriangle,
+  },
+  {
+    filter: 'waiting',
+    title: 'Esperando al atleta',
+    caption: 'les toca a ellos mover ficha',
+    icon: Hourglass,
+  },
+];
+
 export default function CoachClientsPage() {
   return (
     <CoachWorkspace>
@@ -118,6 +156,32 @@ function Clients() {
         </section>
       ) : (
         <>
+          {ready && (
+            <ul className="roster-glance" aria-label="Resumen de atletas">
+              {GLANCE.map(({ filter: value, title, caption, icon: Icon }) => {
+                const f = FILTERS.find((x) => x.value === value) ?? ALL;
+                const n = rows.filter(f.matches).length;
+                const on = filter.value === value;
+                return (
+                  <li key={value}>
+                    <button
+                      type="button"
+                      className="roster-tile"
+                      aria-pressed={on}
+                      data-zero={n === 0 || undefined}
+                      onClick={() => update('filtro', on ? '' : value)}
+                    >
+                      <span className="roster-tile-head">
+                        <Icon size={15} aria-hidden /> {title}
+                      </span>
+                      <strong>{n}</strong>
+                      <small>{on ? 'Mostrando solo estos · quitar' : caption}</small>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
           <div className="coach-list-controls coach-roster-toolbar">
             <label className="coach-search">
               <Search size={18} aria-hidden />
@@ -237,7 +301,7 @@ function Clients() {
                         </td>
                         <td>
                           <Link
-                            className="coach-roster-register"
+                            className="roster-register"
                             to={registerHref(row.link.linkId)}
                             aria-label={`Registro de ${personName(row.link.client)}: ${activityText(row.status?.lastActivity)}`}
                           >
@@ -245,7 +309,7 @@ function Clients() {
                           </Link>
                         </td>
                         <td>
-                          <span className="coach-muted">{checkinText(row)}</span>
+                          <Checkin row={row} />
                         </td>
                         <td>
                           <NextStep row={row} href={href} />
@@ -298,49 +362,52 @@ function NextStep({
   const task = tasks.find((t) => t.owner === 'coach');
   if (task)
     return (
-      <Link
-        className="coach-roster-action coach-roster-action-primary"
-        to={href(row.link.linkId, task.section)}
-      >
-        <span className="coach-roster-action-text">
-          {task.title}
+      <Link className="roster-step" data-owner="coach" to={href(row.link.linkId, task.section)}>
+        <span className="roster-step-text">
+          <span>
+            {task.title}
+            {task.id === 'reply' && (
+              <span
+                className="roster-step-count"
+                aria-label={`${row.status?.pendingReplies} por responder`}
+              >
+                {row.status?.pendingReplies}
+              </span>
+            )}
+          </span>
           {task.id !== 'reply' && <small>{task.detail}</small>}
         </span>
-        {task.id === 'reply' && (
-          <span
-            className="coach-roster-reply-count"
-            aria-label={`${row.status?.pendingReplies} por responder`}
-          >
-            {row.status?.pendingReplies}
-          </span>
-        )}
         <ArrowRight size={15} aria-hidden />
       </Link>
     );
   if (weekPending(row))
     return (
-      <Link
-        className="coach-roster-action coach-roster-action-primary"
-        to={href(row.link.linkId, 'semana')}
-      >
-        <span>
-          {row.status?.nextWeekStatus === 'DRAFT' ? 'Terminar semana' : 'Preparar semana'}
+      <Link className="roster-step" data-owner="coach" to={href(row.link.linkId, 'semana')}>
+        <span className="roster-step-text">
+          <span>
+            {row.status?.nextWeekStatus === 'DRAFT' ? 'Terminar semana' : 'Preparar semana'}
+          </span>
         </span>
         <ArrowRight size={15} aria-hidden />
       </Link>
     );
   if (tasks[0])
     return (
-      <Link className="coach-roster-action" to={href(row.link.linkId, tasks[0].section)}>
-        <span className="coach-roster-action-text">
-          {tasks[0].title}
+      <Link
+        className="roster-step"
+        data-owner="client"
+        to={href(row.link.linkId, tasks[0].section)}
+      >
+        <Hourglass size={15} aria-hidden />
+        <span className="roster-step-text">
+          <span>{tasks[0].title}</span>
           <small>{tasks[0].detail}</small>
         </span>
         <ArrowRight size={15} aria-hidden />
       </Link>
     );
   return (
-    <span className="coach-roster-quiet">
+    <span className="roster-step" data-owner="none">
       {row.link.followup?.schedule.paused ? (
         <>
           <Clock3 size={15} aria-hidden /> En pausa
@@ -357,14 +424,23 @@ function NextStep({
 }
 
 /** When the last seguimiento came in and whose turn it is now. */
-function checkinText({ status }: CoachRow) {
-  if (!status) return 'No disponible';
+function Checkin({ row: { status } }: { row: CoachRow }) {
+  if (!status) return <span className="coach-muted">No disponible</span>;
   const late = status.signals.find((signal) => signal.reason === 'CHECKIN_MISSING')?.value;
-  if (status.pendingReplies > 0) return `${activityText(status.lastCheckin)} · por responder`;
-  if (late) return late === 1 ? 'Atrasado 1 semana' : `Atrasado ${late} semanas`;
-  return status.lastCheckin
-    ? `${activityText(status.lastCheckin)} · respondido`
-    : 'Sin seguimientos';
+  const [when, state] =
+    status.pendingReplies > 0
+      ? [activityText(status.lastCheckin), 'Por responder']
+      : late
+        ? [late === 1 ? 'Atrasado 1 semana' : `Atrasado ${late} semanas`, 'No ha llegado']
+        : status.lastCheckin
+          ? [activityText(status.lastCheckin), 'Respondido']
+          : ['Sin seguimientos', null];
+  return (
+    <span className="roster-checkin" data-due={status.pendingReplies > 0 || !!late || undefined}>
+      {when}
+      {state && <small>{state}</small>}
+    </span>
+  );
 }
 
 const weekText = (state: NonNullable<NonNullable<CoachRow['status']>['nextWeekStatus']>) =>
@@ -376,9 +452,9 @@ function WeekStatus({ row }: { row: CoachRow }) {
   const state = row.status.nextWeekStatus;
   if (!state) return <span className="coach-muted">—</span>;
   return (
-    <span className="coach-roster-week" data-state={state}>
-      {state === 'SCHEDULED' ? <Check size={15} aria-hidden /> : <Clock3 size={15} aria-hidden />}
-      <span>{weekText(state)}</span>
+    <span className="roster-week" data-state={state}>
+      {state === 'SCHEDULED' ? <Check size={14} aria-hidden /> : <Clock3 size={14} aria-hidden />}
+      {weekText(state)}
     </span>
   );
 }
