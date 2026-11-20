@@ -11,6 +11,7 @@ import {
 import { PowerAttemptsEditor } from './PowerAttemptsEditor';
 import { PowerBlocksEditor } from './PowerBlocksEditor';
 import { Select } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 
 export function PowerMeetForm({
   saved,
@@ -95,12 +96,11 @@ export function PowerMeetForm({
                 </label>
                 <label className="pw-field">
                   Fecha de competición
-                  <input
+                  <DatePicker
                     className="form-input min-h-11"
-                    type="date"
                     required
                     value={content.date}
-                    onChange={(e) => set({ date: e.target.value })}
+                    onChange={(date) => set({ date })}
                   />
                 </label>
                 <label className="pw-field">

@@ -20,7 +20,7 @@ import {
   updateDay,
   type Program,
 } from '../lib/coach/coachPrograms';
-import { chooseOption } from './selectMenu';
+import { chooseDate, chooseOption } from './selectMenu';
 
 vi.mock('../api/client', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
@@ -364,11 +364,10 @@ describe('individual program adaptation', () => {
       expect.objectContaining({ description: expect.stringContaining('continúa hasta esa fecha') }),
     );
     expect(mockedApi.post).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByLabelText('Empieza la nueva versión el'), {
-      target: { value: '2000-01-01' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Publicar adaptación' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('próximos 365 días');
+    // El selector no deja ir a meses pasados ni elegir una fecha anterior a hoy.
+    expect(() =>
+      chooseDate(screen.getByLabelText(/^Empieza la nueva versión el/), '2000-01-01'),
+    ).toThrow(/fuera del selector/);
     expect(mockedApi.post).not.toHaveBeenCalled();
   });
 

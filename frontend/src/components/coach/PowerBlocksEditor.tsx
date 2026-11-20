@@ -1,6 +1,7 @@
 import type { PowerBlock } from '../../lib/coach/powerMeets';
 import { Link } from 'react-router-dom';
 import { shiftWeek, weekDate } from '../../lib/coach/weeks';
+import { DatePicker } from '@/components/ui/date-picker';
 
 export function PowerBlocksEditor({
   blocks,
@@ -57,25 +58,23 @@ export function PowerBlocksEditor({
           )}
           <label className="pw-field">
             Inicio
-            <input
+            <DatePicker
               className="form-input min-h-11"
-              type="date"
               required
               max={block.end || date || undefined}
               value={block.start}
-              onChange={(e) => change(block.id, { start: e.target.value })}
+              onChange={(start) => change(block.id, { start })}
             />
           </label>
           <label className="pw-field">
             Fin
-            <input
+            <DatePicker
               className="form-input min-h-11"
-              type="date"
               required
               min={block.start || undefined}
               max={date || undefined}
               value={block.end}
-              onChange={(e) => change(block.id, { end: e.target.value })}
+              onChange={(end) => change(block.id, { end })}
             />
           </label>
           <label className="pw-field pw-span">

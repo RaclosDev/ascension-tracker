@@ -12,13 +12,32 @@
   gap: 16px;
   min-width: 0;
 }
-/* Submenú a la izquierda como en Ajustes; el panel aprovecha el ancho para tablas y gráficos. */
+/* Pestañas arriba, en horizontal; el panel aprovecha el ancho para tablas y gráficos. */
 .athlete-manage-panel.pw-panel {
   max-width: 1120px;
 }
 @media (min-width: 1000px) {
   .pw.athlete-manage {
-    gap: 32px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .pw .athlete-manage-tabs {
+    position: static;
+    flex-direction: row;
+    gap: 4px;
+  }
+  .pw .athlete-manage-tabs a {
+    min-height: 44px;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    white-space: nowrap;
+  }
+  .pw .athlete-manage-tabs a:hover {
+    background: none;
+  }
+  .pw .athlete-manage-tabs a[aria-current='page'] {
+    border-bottom-color: var(--text-primary);
+    background: none;
   }
 }
 .pw-body {
@@ -232,88 +251,392 @@
   padding-bottom: 0;
 }
 
-/* Marcas: filtro por levantamiento y una fila de tabla por marca. */
-.pw-marks {
+/* Marcas: un tablero por levantamiento con el récord arriba y el historial debajo. */
+.pw-marks-view {
   display: grid;
-  gap: 12px;
+  gap: 16px;
   min-width: 0;
 }
-.pw-filter {
+.pw-strip {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-}
-.pw-filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 0 12px;
+  align-items: baseline;
+  gap: 6px 24px;
+  padding: 14px 20px;
   border: 1px solid var(--border-subtle);
-  border-radius: 999px;
+  border-radius: 3px;
+  background: var(--bg-card);
+}
+.pw-strip-total {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.pw-strip-total span,
+.pw-strip p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.pw-strip strong {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.pw-strip strong small {
+  margin-left: 3px;
+  font-family: var(--font-main);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.pw-strip b {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.pw-board {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  align-items: start;
+}
+@media (min-width: 1000px) {
+  .pw-board {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.pw-board-hint {
+  grid-column: 1 / -1;
+}
+.pw-col {
+  display: grid;
+  min-width: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  background: var(--bg-card);
+}
+.pw-col-head {
+  display: grid;
+  gap: 6px;
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.pw .pw-col-head h3 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.pw-col-best {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.pw-col-best strong {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 400;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.pw-col-best strong small,
+.pw-mark-kg small {
+  margin-left: 3px;
+  font-family: var(--font-main);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.pw-col-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.pw-col-meta b {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.pw-col-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pw-col-list > li + li {
+  border-top: 1px solid var(--border-subtle);
+}
+.pw-mark {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 16px;
+  border: 0;
   background: none;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+.pw-mark:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+}
+.pw-mark:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.pw-mark:disabled {
+  cursor: default;
+}
+.pw-mark-kg {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.pw-mark-info {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.pw-mark-ref {
+  overflow: hidden;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+.pw-mark-delta {
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.pw-mark-delta[data-flat] {
+  color: var(--text-secondary);
+}
+.pw-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.pw-col-empty {
+  padding: 16px;
+}
+.pw-col-more {
+  min-height: 40px;
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+  background: none;
+  font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
 }
-.pw-filter-chip span {
-  font-variant-numeric: tabular-nums;
-  opacity: 0.75;
-}
-.pw-filter-chip:hover {
+.pw-col-more:hover {
   color: var(--text-primary);
 }
-.pw-filter-chip[aria-pressed='true'] {
-  border-color: var(--text-primary);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-}
-.pw-table-wrap {
-  min-width: 0;
-  overflow-x: auto;
-}
-.pw-marks-table {
-  width: 100%;
-  min-width: 640px;
-  border-collapse: collapse;
-}
-.pw-marks-table th {
-  padding: 0 8px 8px 0;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-align: left;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-.pw-marks-table td {
-  padding: 6px 8px 6px 0;
+.pw-col-add {
+  display: grid;
+  gap: 6px;
+  padding: 12px 16px 16px;
   border-top: 1px solid var(--border-subtle);
-  vertical-align: middle;
 }
-.pw-marks-table td:last-child,
-.pw-marks-table th:last-child {
-  padding-right: 0;
+.pw-col-add .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
 }
-.pw-marks-table .form-input {
+.pw-mark-form {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
+}
+.pw-col-list .pw-mark-form {
+  border-bottom: 0;
+}
+.pw-mark-form-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.pw-mark-form .form-input {
   width: 100%;
   min-height: 40px;
 }
-.pw-marks-table td:nth-child(1) {
-  width: 9.75rem;
+.pw-kg-input {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
 }
-.pw-marks-table td:nth-child(2) {
-  width: 9rem;
+.pw-kg-input:focus-within {
+  border-color: var(--text-primary);
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
 }
-.pw-marks-table td:nth-child(3) {
-  width: 6rem;
+/* El foco se pinta en el marco, que incluye la unidad. */
+.pw-kg-input input:focus,
+.pw-kg-input input:focus-visible {
+  outline: none;
 }
-.pw-marks-table td:nth-child(4) {
-  width: 8.5rem;
-}
-.pw-kg {
+.pw-kg-input input {
+  width: 100%;
+  min-width: 0;
+  padding: 0 4px 0 10px;
+  border: 0;
+  background: none;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
   font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  outline: none;
+}
+.pw-kg-input span {
+  padding-right: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.pw-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+}
+.pw-seg button {
+  min-height: 38px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.pw-seg button + button {
+  border-left: 1px solid var(--border-subtle);
+}
+.pw-seg button[aria-pressed='true'] {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+.pw-seg button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.pw-mark-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-error, #f87171);
+}
+.pw-mark-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+.pw-mark-form-actions .pw-mark-remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  margin-right: auto;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.pw-mark-form-actions .pw-mark-remove:hover {
+  color: var(--color-error, #f87171);
+}
+
+/* Pestañas de powerlifting en horizontal, con Ajustes aparte a la derecha. */
+.pw-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.pw-head .athlete-manage-tabs {
+  border-bottom: 0;
+}
+.pw-head-side {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding-bottom: 6px;
+}
+.pw-head-next {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.pw-head-next b {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.pw-settings-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.pw-settings-link:hover,
+.pw-settings-link[aria-current='page'] {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+.pw-settings-link:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 .power-mark-remove {
   display: inline-flex;

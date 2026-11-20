@@ -17,6 +17,8 @@ import {
 } from '../lib/coach/plan';
 import { Select } from '@/components/ui/select';
 
+import { DatePicker } from '@/components/ui/date-picker';
+
 const PLAN_NAMES: Record<string, string> = {
   FREE: 'Gratis',
   STARTER: 'Básico',
@@ -216,13 +218,11 @@ function CoachRow({ coach, plans }: { coach: AdminCoach; plans: PlanInfo[] }) {
         {!free && (
           <label className="flex flex-col gap-1 text-sm">
             <span style={{ color: 'var(--text-secondary)' }}>Pagado hasta (incluido)</span>
-            <input
-              type="date"
-              className="rounded-lg px-3 py-2 bg-black/20 border"
-              style={{ borderColor: 'var(--border-subtle)' }}
+            <DatePicker
+              className="form-input"
               aria-label={`Pagado hasta para ${coach.email}`}
               value={paidUntil}
-              onChange={(e) => setPaidUntil(e.target.value)}
+              onChange={setPaidUntil}
             />
           </label>
         )}

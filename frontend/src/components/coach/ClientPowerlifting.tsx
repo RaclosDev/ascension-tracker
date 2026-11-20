@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSessionDraft } from '../../hooks/useSessionDraft';
 import { apiErrorMessage } from '../../lib/coach/api';
@@ -15,14 +16,15 @@ import {
 } from '../../lib/coach/powerlifting';
 import { meetTotals, usePowerMeets } from '../../lib/coach/powerMeets';
 import { QueryErrorNotice } from '../QueryErrorNotice';
-import { PowerMarksEditor } from './PowerMarksEditor';
+import { bestMark, PowerMarksEditor } from './PowerMarksEditor';
 import { PowerMeets } from './PowerMeets';
 import { PowerProgress } from './PowerProgress';
 import { PowerExerciseMappings } from './PowerExerciseMappings';
 import { Select } from '@/components/ui/select';
+import { formatShortDate, todayIso } from '@/components/ui/date-picker';
 import '../../styles/coach-powerlifting.css';
 
-// Cada apartado en su sitio, con un menú como el de los ajustes del atleta.
+// Cada apartado en su pestaña; Ajustes va aparte, como botón, porque se toca poco.
 const VIEWS = [
   ['resumen', 'Resumen'],
   ['marcas', 'Marcas'],
@@ -33,6 +35,25 @@ const VIEWS = [
 type View = (typeof VIEWS)[number][0];
 type FormView = Extract<View, 'resumen' | 'marcas' | 'ajustes'>;
 
+/** La próxima competición sin archivar, con los días que faltan y el total de los intentos. */
+function useNextMeet(linkId: string) {
+  const meets = usePowerMeets(linkId);
+  const today = todayIso();
+  const next = (meets.data ?? [])
+    .filter((m) => !m.content.archived && m.content.date >= today)
+    .sort((a, b) => a.content.date.localeCompare(b.content.date))[0];
+  const days = next
+    ? Math.round(
+        (new Date(`${next.content.date}T12:00:00`).getTime() -
+          new Date(`${today}T12:00:00`).getTime()) /
+          86400000,
+      )
+    : 0;
+  const planned = next ? meetTotals(next.content.attempts).planned : null;
+  return { isPending: meets.isPending, next, days, planned };
+}
+const inDays = (days: number) => (days === 0 ? 'hoy' : days === 1 ? 'mañana' : `en ${days} días`);
+
 export default function ClientPowerlifting({
   linkId,
   canEdit,
@@ -41,6 +62,7 @@ export default function ClientPowerlifting({
   canEdit: boolean;
 }) {
   const query = usePowerProfile(linkId);
+  const meet = useNextMeet(linkId);
   const [params] = useSearchParams();
   const view: View = VIEWS.find(([id]) => id === params.get('vista'))?.[0] ?? 'resumen';
   const href = (id: View) => {
@@ -54,13 +76,31 @@ export default function ClientPowerlifting({
       <h2 id="pw-title" className="sr-only">
         Powerlifting
       </h2>
-      <nav className="athlete-manage-tabs" aria-label="Apartados de powerlifting">
-        {VIEWS.map(([id, label]) => (
-          <Link key={id} to={href(id)} replace aria-current={id === view ? 'page' : undefined}>
-            {label}
+      <div className="pw-head">
+        <nav className="athlete-manage-tabs" aria-label="Apartados de powerlifting">
+          {VIEWS.filter(([id]) => id !== 'ajustes').map(([id, label]) => (
+            <Link key={id} to={href(id)} replace aria-current={id === view ? 'page' : undefined}>
+              {label}
+            </Link>
+          ))}
+        </nav>
+        <div className="pw-head-side">
+          {meet.next && (
+            <p className="pw-head-next">
+              Próxima: <b>{meet.next.content.name}</b> · {formatShortDate(meet.next.content.date)} ·{' '}
+              {inDays(meet.days)}
+            </p>
+          )}
+          <Link
+            className="pw-settings-link"
+            to={href('ajustes')}
+            replace
+            aria-current={view === 'ajustes' ? 'page' : undefined}
+          >
+            <Settings size={15} aria-hidden /> Ajustes
           </Link>
-        ))}
-      </nav>
+        </div>
+      </div>
       <div className="athlete-manage-panel pw-panel">
         {query.isPending ? (
           <p role="status">Cargando perfil de powerlifting…</p>
@@ -143,9 +183,11 @@ function PowerForm({
           />
         )}
         {view === 'marcas' && (
-          <section className="card pw-card" aria-label="Marcas">
+          <section className="pw-marks-view" aria-label="Marcas">
+            <MarksStrip linkId={saved.linkId} profile={profile} />
             <PowerMarksEditor
               marks={profile.marks}
+              trainingMax={profile.trainingMax}
               readOnly={!canEdit}
               onChange={(marks) => set({ marks })}
             />
@@ -213,6 +255,43 @@ const shortDate = (iso: string) =>
     year: 'numeric',
   });
 
+/** La suma de los récords frente al objetivo de la próxima competición. */
+function MarksStrip({ linkId, profile }: { linkId: string; profile: PowerProfile }) {
+  const { next, planned } = useNextMeet(linkId);
+  const bests = POWER_LIFTS.map((lift) => bestMark(profile.marks, lift));
+  if (bests.every((b) => !b)) return null;
+  const sum = bests.reduce((acc, b) => acc + (b?.kg ?? 0), 0);
+  const target = next?.content.targetTotal ?? planned;
+  const kg = (n: number) => n.toLocaleString('es-ES', { maximumFractionDigits: 2 });
+  return (
+    <div className="pw-strip">
+      <p className="pw-strip-total">
+        <span>Suma de récords</span>
+        <strong>
+          {kg(sum)}
+          <small>kg</small>
+        </strong>
+      </p>
+      {bests.some((b) => !b) && <p>Falta algún levantamiento; la suma está incompleta.</p>}
+      {next && target ? (
+        <p>
+          {next.content.targetTotal ? 'Objetivo' : 'Intentos previstos'} en {next.content.name}:{' '}
+          <b>{kg(target)} kg</b> ·{' '}
+          {sum >= target ? (
+            <b>lo supera en {kg(sum - target)} kg</b>
+          ) : (
+            <>
+              faltan <b>{kg(target - sum)} kg</b>
+            </>
+          )}
+        </p>
+      ) : (
+        <p>Sin objetivo de total en una competición próxima.</p>
+      )}
+    </div>
+  );
+}
+
 function PowerSummary({
   linkId,
   profile,
@@ -226,19 +305,8 @@ function PowerSummary({
   marksHref: string;
   meetsHref: string;
 }) {
-  const meets = usePowerMeets(linkId);
-  const today = new Date().toLocaleDateString('sv-SE');
-  const next = (meets.data ?? [])
-    .filter((m) => !m.content.archived && m.content.date >= today)
-    .sort((a, b) => a.content.date.localeCompare(b.content.date))[0];
-  const days = next
-    ? Math.round(
-        (new Date(`${next.content.date}T12:00:00`).getTime() -
-          new Date(`${today}T12:00:00`).getTime()) /
-          86400000,
-      )
-    : 0;
-  const planned = next ? meetTotals(next.content.attempts).planned : null;
+  const meets = useNextMeet(linkId);
+  const { next, days, planned } = meets;
   return (
     <div className="pw-summary">
       <section className="card pw-card pw-summary-tm" aria-labelledby="pw-tm-title">
@@ -314,8 +382,7 @@ function PowerSummary({
           <div className="pw-next">
             <strong>{next.content.name}</strong>
             <span>
-              {shortDate(next.content.date)} ·{' '}
-              {days === 0 ? 'hoy' : days === 1 ? 'mañana' : `en ${days} días`}
+              {shortDate(next.content.date)} · {inDays(days)}
             </span>
             <span className="pw-hint">
               {next.content.targetTotal

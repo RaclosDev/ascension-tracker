@@ -22,6 +22,7 @@ import { WeekReview } from './WeekReview';
 import { WeekEditor } from './WeekEditor';
 import { BlockView } from './BlockView';
 import { AthleteAvoided, AthleteEffort } from './editor/prescribing';
+import { DatePicker } from '@/components/ui/date-picker';
 
 const NONE: AvoidedExercise[] = [];
 
@@ -182,24 +183,24 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
         </button>
         <label hidden={preparing} className="flex flex-col gap-1 min-w-0">
           Semana que revisas
-          <input
+          <DatePicker
             className="form-input min-h-11"
-            type="date"
             value={reviewWeek}
-            onChange={(e) => {
-              if (e.target.value) setReviewWeek(weekDate(new Date(`${e.target.value}T12:00:00`)));
+            required
+            onChange={(value) => {
+              if (value) setReviewWeek(weekDate(new Date(`${value}T12:00:00`)));
             }}
           />
         </label>
         <label hidden={!preparing} className="flex flex-col gap-1 min-w-0">
           Semana abierta
-          <input
+          <DatePicker
             className="form-input min-h-11"
-            type="date"
             value={planningWeek}
             max={shiftWeek(weekDate(), 52)}
-            onChange={(e) => {
-              if (e.target.value) setWeek(weekDate(new Date(`${e.target.value}T12:00:00`)));
+            required
+            onChange={(value) => {
+              if (value) setWeek(weekDate(new Date(`${value}T12:00:00`)));
             }}
           />
         </label>

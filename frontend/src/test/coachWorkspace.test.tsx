@@ -167,7 +167,7 @@ describe('Espacio del entrenador', () => {
     const table = await screen.findByRole('table');
     fireEvent.click(within(table).getByRole('link', { name: 'Ángela' }));
     fireEvent.click(await screen.findByRole('link', { name: 'Entrenamiento' }));
-    await screen.findByLabelText('Semana abierta', {}, { timeout: 10000 });
+    await screen.findByLabelText(/^Semana abierta/, {}, { timeout: 10000 });
     const urls = mockedApi.get.mock.calls.map(([url]) => url);
     // The calendar shows each day's food target, but the nutrition editor stays unloaded.
     expect(urls.some((url) => /\/nutrition-plan\/history/.test(url))).toBe(false);
