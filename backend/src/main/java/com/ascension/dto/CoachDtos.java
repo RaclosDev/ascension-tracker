@@ -78,7 +78,8 @@ public final class CoachDtos {
     }
 
     public record CoachClient(UUID linkId, Person client, Permissions permissions, Instant since,
-                              CoachSetupDtos.Setup setup, CoachScheduleDtos.Followup followup) {
+                              CoachSetupDtos.Setup setup, CoachScheduleDtos.Followup followup,
+                              CoachSetupDtos.CoachNotes notes) {
     }
 
     /** {@code requested} is what the coach asked for (pre-ticked); {@code profile} is null when nothing was filled in. */

@@ -72,9 +72,14 @@ describe('Semáforo de atletas', () => {
       </QueryClientProvider>,
     );
 
-    await screen.findAllByText('Semana pendiente');
-    expect(screen.queryByRole('columnheader', { name: /Peso/ })).toBeNull();
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Mostrar peso' }));
+    await screen.findAllByText('Al día');
+    expect(screen.getAllByRole('columnheader').map((th) => th.textContent)).toEqual([
+      'Atleta',
+      'Semana siguiente',
+      'Último registro',
+      'Último seguimiento',
+      'Siguiente paso',
+    ]);
     const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
     expect(rows.map((tr) => within(tr).getAllByRole('link')[0].textContent)).toEqual([
       'Bruno',
@@ -84,10 +89,12 @@ describe('Semáforo de atletas', () => {
     expect(rows[0]).toHaveTextContent('Responder seguimiento');
     expect(rows[0]).toHaveTextContent('2');
     expect(rows[1]).toHaveTextContent('Consultar seguimiento pendiente');
-    expect(rows[2]).toHaveTextContent('Semana pendiente');
-    expect(rows[2]).toHaveTextContent('-0,7 kg');
+    expect(rows[2]).toHaveTextContent('Al día');
+    for (const row of rows) expect(within(row).getAllByRole('link').length).toBeLessThanOrEqual(3);
 
-    fireEvent.click(screen.getByRole('button', { name: /Seguimientos por responder/ }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Filtrar atletas' }), {
+      target: { value: 'checkin' },
+    });
     const filtered = within(screen.getByRole('table')).getAllByRole('row').slice(1);
     expect(filtered.map((tr) => within(tr).getAllByRole('link')[0].textContent)).toEqual(['Bruno']);
   });

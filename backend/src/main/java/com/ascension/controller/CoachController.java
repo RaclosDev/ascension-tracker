@@ -30,6 +30,7 @@ public class CoachController {
     private final CoachService coachService;
     private final com.ascension.service.ConsentService consentService;
     private final ClientStatusService clientStatusService;
+    private final com.ascension.service.CoachHomeService homeService;
     private final com.ascension.service.CoachSetupService setupService;
     private final com.ascension.service.CoachScheduleService scheduleService;
 
@@ -110,6 +111,14 @@ public class CoachController {
         return ResponseEntity.ok(clientStatusService.forCoach(email, Instant.now()));
     }
 
+    /** Key lifts and upcoming meets for the coach's home. */
+    @GetMapping("/home")
+    public ResponseEntity<com.ascension.dto.CoachHomeDtos.Home> home(@AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(homeService.home(email, Instant.now()));
+    }
+
     @PutMapping("/clients/{linkId}/setup")
     public ResponseEntity<com.ascension.dto.CoachSetupDtos.Setup> setup(
             @PathVariable UUID linkId, @Valid @RequestBody com.ascension.dto.CoachSetupDtos.Setup setup,
@@ -117,6 +126,15 @@ public class CoachController {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.ok(setupService.save(email, linkId, setup));
+    }
+
+    @PutMapping("/clients/{linkId}/notes")
+    public ResponseEntity<com.ascension.dto.CoachSetupDtos.CoachNotes> notes(
+            @PathVariable UUID linkId, @Valid @RequestBody com.ascension.dto.CoachSetupDtos.CoachNotes notes,
+            @AuthenticationPrincipal Jwt jwt) {
+        String email = SecurityUtils.extractEmail(jwt);
+        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(setupService.saveNotes(email, linkId, notes));
     }
 
     @GetMapping("/clients/{linkId}/status")

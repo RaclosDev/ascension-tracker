@@ -77,6 +77,7 @@ test('exit, resume after refresh, jump backwards from preview and repeat from To
   await setupNewCoach(page);
   await page.goto('/entrenador');
   await page.getByRole('dialog').getByRole('button', { name: 'Ahora no', exact: true }).click();
+  await page.getByRole('button', { name: /^Cuenta de/ }).click();
   await page.getByRole('button', { name: 'Tour', exact: true }).click();
   await page.getByRole('button', { name: 'Repetir tour desde el principio' }).click();
   const preview = COACH_TOUR_STEPS.findIndex((step) => step.id === 'preview');

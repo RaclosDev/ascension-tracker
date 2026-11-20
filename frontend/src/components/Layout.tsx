@@ -29,8 +29,9 @@ import {
   Dumbbell,
   Wrench,
   Settings,
-  Plus,
+  Ellipsis,
   LogOut,
+  ChevronDown,
   GraduationCap,
 } from 'lucide-react';
 import { ActiveWorkoutBanner } from './workout/ActiveWorkoutBanner';
@@ -38,7 +39,12 @@ import { haptics } from '@/lib/haptics';
 import { useAuth } from '../context/AuthContext';
 import { isPathEnabled } from '../lib/appModules';
 import { useCoachProfile } from '../lib/coach/api';
-import { coachNavItems, coachBottomPaths, isItemActive } from './coach/navigation';
+import {
+  coachNavItems,
+  coachAccountItems,
+  coachBottomPaths,
+  isItemActive,
+} from './coach/navigation';
 
 const navItems = [
   {
@@ -92,6 +98,7 @@ const personalPaths = ['/dashboard', '/tracking', '/nutrition', '/workout'];
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const firstPathRef = useRef(true);
@@ -191,8 +198,11 @@ export default function Layout() {
         i.path === '/entrenador' ? false : isPathEnabled(i.path, settings?.appModules),
       );
   const bottomPaths = isCoach ? coachBottomPaths : bottomNavPaths;
+  const accountItems = isCoach ? coachAccountItems : [];
+  const accountActive = accountItems.some((i) => isItemActive(i.path, location.pathname));
+  const accountShown = accountOpen || accountActive;
   const bottomItems = visibleNav.filter((i) => bottomPaths.includes(i.path));
-  const moreItems = visibleNav.filter((i) => !bottomPaths.includes(i.path));
+  const moreItems = [...visibleNav.filter((i) => !bottomPaths.includes(i.path)), ...accountItems];
   const isMoreActive = moreItems.some((i) => isItemActive(i.path, location.pathname));
   // Index of the highlighted tab; the "Más" button is the last slot. -1 hides the pill.
   const activeBottomIndex = isMoreActive
@@ -260,22 +270,67 @@ export default function Layout() {
                 </button>
               );
             })}
-            <button
-              type="button"
-              className="nav-item"
-              onClick={() => {
-                closeSidebar();
-                void logout();
-              }}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', marginTop: 'auto' }}
-            >
-              <span className="nav-icon" style={{ pointerEvents: 'none' }}>
-                <LogOut className="w-5 h-5" aria-hidden />
-              </span>
-              <span style={{ flex: 1, textAlign: 'left', pointerEvents: 'none' }}>
-                Cerrar sesión
-              </span>
-            </button>
+            <div className="sidebar-account">
+              {isCoach && (
+                <button
+                  type="button"
+                  className="nav-item sidebar-account-toggle"
+                  data-tour-nav="cuenta"
+                  aria-expanded={accountShown}
+                  aria-controls="sidebar-account-menu"
+                  onClick={() => setAccountOpen(!accountShown)}
+                >
+                  <span className="sidebar-account-avatar" aria-hidden="true">
+                    {userInitial}
+                  </span>
+                  <span className="sidebar-account-name">
+                    <span className="sr-only">Cuenta de </span>
+                    {user?.name || user?.email || 'Tu cuenta'}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 sidebar-account-chevron ${accountShown ? 'open' : ''}`}
+                    aria-hidden
+                  />
+                </button>
+              )}
+              {(!isCoach || accountShown) && (
+                <div id="sidebar-account-menu" className="sidebar-account-menu">
+                  {accountItems.map((item) => {
+                    const isActive = isItemActive(item.path, location.pathname);
+                    return (
+                      <button
+                        key={item.path}
+                        data-tour-nav={item.path}
+                        type="button"
+                        className={`nav-item ${isActive ? 'active' : ''}`}
+                        aria-current={isActive ? 'page' : undefined}
+                        onMouseEnter={() => preloadRoute(item.path)}
+                        onClick={() => {
+                          closeSidebar();
+                          navigateTo(item.path);
+                        }}
+                      >
+                        <span className="nav-icon">{item.icon}</span>
+                        <span style={{ flex: 1 }}>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    className="nav-item"
+                    onClick={() => {
+                      closeSidebar();
+                      void logout();
+                    }}
+                  >
+                    <span className="nav-icon">
+                      <LogOut className="w-5 h-5" aria-hidden />
+                    </span>
+                    <span style={{ flex: 1 }}>Cerrar sesión</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </nav>
         </aside>
 
@@ -405,7 +460,7 @@ export default function Layout() {
           title="Más opciones"
         >
           <span className="mobile-bottom-icon" aria-hidden="true">
-            <Plus className="w-5 h-5" />
+            <Ellipsis className="w-5 h-5" />
           </span>
         </button>
       </nav>

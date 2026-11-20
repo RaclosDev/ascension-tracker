@@ -1,6 +1,6 @@
 import { confirmAction } from '../../lib/confirmation';
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ClipboardList } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -29,7 +29,8 @@ export default function ProgramsSection({
   const library = useCoachPrograms();
   const assign = useAssignProgram(linkId);
   const end = useEndAssignment(linkId);
-  const [programId, setProgramId] = useState('');
+  const [params] = useSearchParams();
+  const [programId, setProgramId] = useState(() => params.get('programa') ?? '');
   const selected = useCoachProgram(programId || null);
   const ready = library.data?.filter((program) => program.status !== 'DRAFT') ?? [];
   const [startDate, setStartDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
