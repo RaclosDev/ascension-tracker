@@ -53,6 +53,7 @@
     overflow-y: auto;
     border-right: 1px solid var(--border-medium);
     scrollbar-width: thin;
+    scrollbar-gutter: stable;
   }
   .athlete-rail .athlete-header {
     display: grid;
@@ -968,9 +969,6 @@
   .checkin-days li,
   .checkin-days-head {
     grid-template-columns: 6.25rem minmax(0, 1fr) 9.5rem;
-  }
-  .checkin-days {
-    max-width: 760px;
   }
   .checkin-days li {
     min-height: 46px;
