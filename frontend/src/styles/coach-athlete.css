@@ -6,41 +6,119 @@
 .main-content:has(.athlete-page) {
   scrollbar-gutter: stable;
 }
-@media (min-width: 1024px) {
-  .main-content-inner:has(.athlete-page) {
-    max-width: 1600px;
-  }
-}
-/* The header stays one compact row so the week and the records start high on the screen. */
+/* The athlete's file: a rail with who they are and every area; the work takes the rest. */
 .coach-workspace.athlete-page {
   gap: 0.75rem;
 }
-.athlete-header {
+.athlete-frame {
   display: grid;
-  grid-template-columns: minmax(300px, 1fr) minmax(280px, 1.2fr) auto;
-  gap: 10px 24px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+}
+.athlete-main {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+  min-width: 0;
+}
+.athlete-rail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+}
+.athlete-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
   align-items: center;
+}
+@media (min-width: 1024px) {
+  .main-content-inner:has(.athlete-frame) {
+    max-width: none;
+  }
+  .athlete-frame {
+    grid-template-columns: 228px minmax(0, 1fr);
+    gap: 0 24px;
+    align-items: start;
+  }
+  .athlete-rail {
+    position: sticky;
+    top: 12px;
+    gap: 16px;
+    max-height: calc(100dvh - 24px);
+    padding: 4px 16px 16px 0;
+    overflow-y: auto;
+    border-right: 1px solid var(--border-medium);
+    scrollbar-width: thin;
+  }
+  .athlete-rail .athlete-header {
+    display: grid;
+    gap: 12px;
+  }
+  .athlete-rail .athlete-context {
+    display: grid;
+    margin: 0;
+    border: 0;
+    gap: 8px;
+  }
+  .athlete-rail .athlete-context > div {
+    padding: 0;
+  }
+  .athlete-rail .athlete-context > div + div {
+    border-left: 0;
+  }
+  .athlete-rail > *,
+  .athlete-rail .athlete-header > * {
+    min-width: 0;
+  }
+  .athlete-rail .athlete-header .athlete-pin {
+    justify-self: start;
+  }
+  .athlete-rail .athlete-header .athlete-followup {
+    width: 100%;
+    min-height: 40px;
+    padding-block: 8px;
+    padding-inline: 10px;
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+    white-space: normal;
+    line-height: 1.2;
+    text-align: center;
+  }
+  .athlete-rail .athlete-note {
+    flex-basis: auto;
+  }
 }
 .athlete-identity {
   display: flex;
+  flex: 0 1 auto;
   align-items: center;
   gap: 10px;
   min-width: 0;
 }
 .athlete-back {
   display: inline-flex;
-  flex: 0 0 44px;
   align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  margin-left: -10px;
-  border-radius: 50%;
+  justify-self: start;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 8px 0 4px;
+  margin-left: -4px;
+  border-radius: 6px;
   color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 .athlete-back:hover {
   background: var(--bg-secondary);
   color: var(--text-primary);
+}
+.athlete-back:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 .athlete-identity .coach-client-avatar {
   flex-basis: 44px;
@@ -51,86 +129,265 @@
 .coach-page.athlete-page h1.athlete-name {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.625rem;
+  font-size: 1.6rem;
   font-weight: 400;
-  line-height: 1.15;
+  line-height: 1.1;
   overflow-wrap: anywhere;
 }
 .athlete-meta {
-  margin: 2px 0 0;
+  margin: 1px 0 0;
   color: var(--text-secondary);
-  font-size: 0.8rem;
-  line-height: 1.4;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
+/* Goal and equipment in one framed panel; the full text is in the tooltip and in Ajustes. */
 .athlete-context {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
-  margin: 0;
+  display: flex;
+  flex: 1 1 420px;
+  min-width: 0;
+  max-width: 760px;
+  margin: 0 0 0 auto;
   border: 1px solid var(--border-medium);
   border-radius: 6px;
 }
 .athlete-context > div {
-  padding: 6px 12px;
+  display: grid;
+  flex: 1 1 0;
+  gap: 2px;
   min-width: 0;
+  padding: 6px 12px;
 }
 .athlete-context > div + div {
   border-left: 1px solid var(--border-medium);
 }
 .athlete-context dt {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 0.68rem;
+  font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-secondary);
 }
 .athlete-context dd {
   display: -webkit-box;
-  margin: 1px 0 0;
+  margin: 0;
   overflow: hidden;
   font-size: 0.85rem;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
+  line-height: 1.35;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+  overflow-wrap: anywhere;
 }
 .athlete-context dd a {
   color: var(--text-secondary);
   text-decoration: underline;
 }
 .athlete-followup {
+  flex: none;
+  min-height: 44px;
   white-space: nowrap;
-  min-width: 13.5rem;
-  justify-content: center;
+}
+/* Quiet until there is a note: it must not compete with the seguimiento action. */
+.athlete-header .athlete-pin {
+  flex: none;
+  order: 1;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-color: transparent;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+.athlete-header .athlete-pin:hover {
+  color: var(--text-primary);
+  border-color: var(--border-medium);
+}
+.athlete-header .athlete-followup {
+  order: 2;
+}
+.athlete-header .athlete-note {
+  order: 3;
+}
+.athlete-note {
+  display: flex;
+  flex: 1 0 100%;
+  gap: 8px;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 7px 12px;
+  border: 1px solid var(--border-medium);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+.athlete-note > svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--text-secondary);
+}
+.athlete-note p {
+  display: -webkit-box;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.athlete-note-edit {
+  flex: none;
+  min-height: 24px;
+  padding: 0 4px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-decoration: underline;
+}
+.athlete-note-edit:hover {
+  color: var(--text-primary);
+}
+.athlete-note-form {
+  flex-direction: column;
+  align-items: stretch;
+  background: none;
+}
+.athlete-note-form label {
+  font-weight: 600;
+}
+.athlete-note-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+.athlete-note-count {
+  margin-right: auto;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .coach-client-nav.athlete-nav {
-  display: grid;
-  gap: 0;
+  display: block;
   padding: 0;
   overflow: visible;
   border-bottom: 0;
 }
-.athlete-tabs,
-.athlete-subtabs {
+/* On a phone the areas read as one bar that scrolls sideways, with the current area's views
+   right after it; on a desktop they stack in the rail, each area with its views below. */
+.athlete-tabs {
   display: flex;
+  gap: 2px;
+  padding: 4px;
   overflow-x: auto;
+  border: 1px solid var(--border-medium);
+  border-radius: 10px;
+  background: var(--bg-secondary);
   scrollbar-width: thin;
 }
-.athlete-tabs {
-  gap: 4px 22px;
-  padding: 3px 3px 0;
-  border-bottom: 1px solid var(--border-medium);
+.athlete-group {
+  display: contents;
 }
-.athlete-nav .athlete-tabs a {
+.athlete-group:not([data-current]) .athlete-subtabs {
+  display: none;
+}
+.athlete-nav a {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
   gap: 8px;
-  min-height: 44px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  font-weight: 600;
   white-space: nowrap;
+  text-decoration: none;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
 }
-.athlete-nav .athlete-tabs a[aria-current] {
+.athlete-nav a svg {
+  flex: none;
+}
+.athlete-nav a:hover {
+  background: var(--accent-light);
   color: var(--text-primary);
-  border-bottom-color: var(--accent-primary);
+}
+.athlete-nav a:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.athlete-nav .athlete-group-link[aria-current] {
+  color: var(--text-primary);
+}
+.athlete-nav a[aria-current='page'] {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+.athlete-nav a[aria-current='page'] .athlete-badge {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+.athlete-subtabs {
+  display: flex;
+  gap: 2px;
+}
+.athlete-nav .athlete-subtabs a {
+  font-weight: 500;
+}
+@media (prefers-reduced-motion: reduce) {
+  .athlete-nav a {
+    transition: none;
+  }
+}
+@media (min-width: 1024px) {
+  .athlete-tabs {
+    display: grid;
+    gap: 14px;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: none;
+  }
+  .athlete-group {
+    display: grid;
+    gap: 2px;
+  }
+  .athlete-group:not([data-current]) .athlete-subtabs {
+    display: grid;
+  }
+  .athlete-nav .athlete-group-link {
+    min-height: 32px;
+    padding: 0 8px;
+    color: var(--text-primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .athlete-nav .athlete-group-link svg {
+    color: var(--text-secondary);
+  }
+  .athlete-subtabs {
+    display: grid;
+    gap: 2px;
+  }
+  .athlete-nav .athlete-subtabs a {
+    min-height: 34px;
+    padding: 0 10px 0 32px;
+    font-size: 0.86rem;
+  }
 }
 .athlete-badge {
   display: inline-flex;
@@ -140,31 +397,23 @@
   height: 20px;
   padding: 0 6px;
   border-radius: 10px;
-  background: var(--text-primary);
+  background: var(--accent-primary);
   color: var(--bg-primary);
   font-size: 0.72rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
 }
-.athlete-subtabs {
-  gap: 6px;
-  padding: 10px 3px 3px;
+
+.athlete-locked {
+  display: grid;
+  gap: 8px;
+  max-width: 62ch;
+  justify-items: start;
 }
-.athlete-nav .athlete-subtabs a {
-  min-height: 36px;
-  padding: 0 14px;
-  border: 1px solid var(--border-medium);
-  border-radius: 18px;
-  font-size: 0.82rem;
-  white-space: nowrap;
-}
-.athlete-nav .athlete-subtabs a:hover {
-  color: var(--text-primary);
-}
-.athlete-nav .athlete-subtabs a[aria-current='page'] {
-  border-color: var(--text-primary);
-  background: var(--text-primary);
-  color: var(--bg-primary);
+.athlete-locked p {
+  margin: 0;
+  color: var(--text-secondary);
 }
 
 .athlete-section-title {
@@ -178,34 +427,54 @@
   margin: 0;
 }
 
-.athlete-checkins .athlete-section-title .segmented {
-  flex: 0 1 30rem;
-}
-
-/* Settings the coach edits on the left; facts about the relationship beside them. */
+/* Athlete settings: one group at a time, picked from a short list beside it. */
 .athlete-manage,
-.athlete-manage-main,
-.athlete-manage-side {
+.athlete-manage-panel {
   display: grid;
   gap: 16px;
   min-width: 0;
   align-content: start;
 }
+.athlete-manage-panel {
+  max-width: 860px;
+}
 .coach-student .athlete-manage .card {
   margin: 0;
   padding: 20px;
 }
-.athlete-manage-main > details > summary {
-  display: flex;
-  align-items: center;
-  min-height: 48px;
-  padding: 0 20px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  font-weight: 600;
+.coach-workspace .athlete-manage .card {
+  margin: 0;
 }
-.athlete-manage-main > details[open] > summary {
-  margin-bottom: 12px;
+.athlete-manage-tabs {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border-subtle);
+  scrollbar-width: none;
+}
+.athlete-manage-tabs a {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-bottom: 2px solid transparent;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.athlete-manage-tabs a:hover {
+  color: var(--text-primary);
+}
+.athlete-manage-tabs a:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.athlete-manage-tabs a[aria-current='page'] {
+  border-bottom-color: var(--text-primary);
+  color: var(--text-primary);
 }
 .athlete-manage .coach-facts dd {
   display: inline-flex;
@@ -219,40 +488,89 @@
 .athlete-manage .coach-facts dd[data-granted] svg {
   color: var(--success, var(--accent-primary));
 }
-@media (min-width: 1180px) {
+@media (min-width: 1000px) {
   .athlete-manage {
-    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 32px;
     align-items: start;
   }
+  .athlete-manage-tabs {
+    position: sticky;
+    top: 16px;
+    flex-direction: column;
+    gap: 2px;
+    overflow: visible;
+    border-bottom: 0;
+  }
+  .athlete-manage-tabs a {
+    min-height: 40px;
+    border-bottom: 0;
+    border-radius: 6px;
+    white-space: normal;
+  }
+  .athlete-manage-tabs a:hover {
+    background: var(--accent-light);
+  }
+  .athlete-manage-tabs a[aria-current='page'] {
+    background: var(--bg-secondary);
+  }
+}
+.avoided-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.avoided-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+.avoided-list strong {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.avoided-remove {
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  justify-content: center;
+}
+.avoided-add {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  margin-top: 12px;
+}
+.avoided-add > :first-child {
+  justify-self: stretch;
+}
+.set-card-vetoed {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-top: 2px;
+  color: var(--color-warning);
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
-@media (max-width: 1100px) {
-  .athlete-header {
+@media (max-width: 640px) {
+  .athlete-context {
+    flex-basis: 100%;
+    max-width: none;
+  }
+  .avoided-list li {
     grid-template-columns: minmax(0, 1fr) auto;
   }
-  .athlete-context {
-    grid-column: 1 / -1;
+  .avoided-list li input {
+    grid-column: 1;
     grid-row: 2;
   }
 }
-@media (max-width: 640px) {
-  .athlete-header {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .athlete-context {
-    grid-row: auto;
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .athlete-context > div + div {
-    border-left: 0;
-    border-top: 1px solid var(--border-medium);
-  }
-  .athlete-followup {
-    justify-self: start;
-  }
-}
 
-/* Seguimientos: what the athlete sent on one side, the reply on the other. */
 .checkin-card {
   display: flex;
   flex-direction: column;
@@ -261,69 +579,462 @@
 .checkin-message {
   background: var(--bg-secondary);
 }
+
+/* Seguimientos: this week open and day by day; the weeks before it folded in a list. */
+.athlete-checkins {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.athlete-checkins .athlete-section-title p {
+  margin: 0;
+}
+.checkin-week {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-card);
+}
+.checkin-week-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+.checkin-week-head h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.checkin-week-head p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.checkin-week-head .checkin-status {
+  align-self: center;
+  margin-left: auto;
+}
+.checkin-week-empty {
+  margin: 0;
+  color: var(--text-secondary);
+}
+.checkin-week-body,
+.checkin-week-main,
+.checkin-week-side {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  align-content: start;
+}
+.checkin-scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.checkin-scores dt {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.checkin-scores dd {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.checkin-scores dd small {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.checkin-answers {
+  display: grid;
+  gap: 10px;
+  max-width: 75ch;
+  margin: 0;
+}
+.checkin-answers dt {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+.checkin-answers dd {
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.checkin-meta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.checkin-thread {
+  display: grid;
+  gap: 8px;
+  max-width: 75ch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.checkin-thread li {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+.checkin-thread p {
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.checkin-thread p:first-child {
+  margin-bottom: 2px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
 .checkin-status {
   display: inline-flex;
   align-items: center;
   min-height: 22px;
-  padding: 0 8px;
-  border: 1px solid var(--border-medium);
-  border-radius: 11px;
   color: var(--text-secondary);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 600;
   white-space: nowrap;
 }
 .checkin-status-pending {
-  border-color: var(--text-primary);
+  padding: 0 8px;
+  border-radius: 11px;
   background: var(--text-primary);
   color: var(--bg-primary);
 }
-.athlete-checkins .checkin-card {
-  padding: 1rem;
-  background: var(--bg-card);
+.checkin-brief {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
 }
-.athlete-checkins .checkin-card-footer {
-  padding-top: 0.75rem;
+.checkin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Beside the reply, what comes after it is a quieter second step. */
+.checkin-week-split .checkin-actions {
+  padding-top: 16px;
   border-top: 1px solid var(--border-subtle);
 }
-.athlete-checkins .checkin-card-footer textarea {
+.checkin-week-split .checkin-actions .btn {
+  flex: 1 1 auto;
+}
+.checkin-reply {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.checkin-reply > label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.checkin-reply textarea {
   width: 100%;
   resize: vertical;
 }
-.checkin-folded {
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+
+/* Day by day: what was trained, eaten and weighed, with a note on the session of that day. */
+.checkin-days {
+  min-width: 0;
 }
-.coach-student .checkin-folded > summary {
+.checkin-days h4 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.checkin-days ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.checkin-days li,
+.checkin-days-head {
+  display: grid;
+  grid-template-columns: 3.75rem minmax(0, 1fr);
+  gap: 2px 12px;
+  align-items: center;
+}
+.checkin-days li {
+  min-height: 40px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.checkin-days li[data-future] {
+  color: var(--text-secondary);
+}
+.checkin-days-head {
+  display: none;
+  padding-bottom: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.checkin-day-name {
+  margin: 0;
+  color: var(--text-secondary);
+}
+.checkin-day-name b {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.checkin-days li[data-future] .checkin-day-name b {
+  color: inherit;
+}
+.checkin-day-name i {
+  display: block;
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.checkin-day-facts {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  min-height: 48px;
-  padding: 8px 14px;
-  cursor: pointer;
+  gap: 2px 14px;
+  min-width: 0;
+  margin: 0;
 }
-.checkin-folded .checkin-card {
-  border: 0;
-  border-top: 1px solid var(--border-subtle);
-  border-radius: 0 0 8px 8px;
+.checkin-day-facts dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin: 0;
 }
-.checkin-folded .checkin-card h3 {
+.checkin-day-facts [data-empty] {
   display: none;
 }
-@media (min-width: 1000px) {
-  .athlete-checkins .checkin-card-reply {
+.checkin-fact-workout {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.checkin-fact-workout a {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--border-medium);
+  text-underline-offset: 3px;
+}
+.checkin-fact-workout a:hover {
+  text-decoration-color: currentColor;
+}
+.checkin-fact-number {
+  color: var(--text-secondary);
+}
+.checkin-day-add,
+.checkin-day-comment,
+.checkin-day-form {
+  grid-column: 2;
+}
+.checkin-day-add {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-self: start;
+  min-height: 32px;
+  padding: 0 6px;
+  margin-left: -6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.checkin-day-add:hover {
+  background: var(--accent-light);
+  color: var(--text-primary);
+}
+.checkin-day-add:focus-visible,
+.checkin-past-toggle:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+.checkin-day-comment {
+  display: flex;
+  gap: 4px 12px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+.checkin-day-comment p {
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.checkin-day-comment .checkin-day-add {
+  margin: 0;
+}
+.checkin-day-form {
+  display: grid;
+  gap: 6px;
+  padding: 4px 0;
+}
+.checkin-day-form label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.checkin-day-form textarea {
+  width: 100%;
+  resize: vertical;
+}
+.checkin-day-form > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.checkin-past h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.checkin-past ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.checkin-past li {
+  border-top: 1px solid var(--border-subtle);
+}
+.checkin-past-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-auto-flow: dense;
+  gap: 2px 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.checkin-past-toggle:hover {
+  background: var(--accent-light);
+}
+.checkin-past-toggle b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.checkin-past-toggle .checkin-brief {
+  grid-column: 1;
+  grid-row: 2;
+}
+.checkin-past-toggle b {
+  grid-column: 1;
+  grid-row: 1;
+}
+.checkin-past-toggle .checkin-status {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+.checkin-past-toggle svg {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+}
+.checkin-past-toggle svg {
+  color: var(--text-secondary);
+  transition: transform 0.15s ease;
+}
+.checkin-past-toggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+.checkin-past-body {
+  padding: 8px 4px 24px;
+}
+@media (pointer: coarse) {
+  .checkin-day-add {
+    min-height: 44px;
+  }
+}
+@media (min-width: 640px) {
+  .checkin-days li,
+  .checkin-days-head {
+    grid-template-columns: 6.25rem minmax(0, 1fr) 9.5rem;
+  }
+  .checkin-days {
+    max-width: 760px;
+  }
+  .checkin-days li {
+    min-height: 46px;
+  }
+  .checkin-day-name i {
+    display: inline;
+    margin-left: 6px;
+  }
+  .checkin-days-head {
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
-    gap: 1.5rem;
+  }
+  .checkin-day-facts {
+    flex-wrap: nowrap;
+  }
+  .checkin-day-facts [data-empty] {
+    display: block;
+    color: var(--text-secondary);
+  }
+  .checkin-fact-workout {
+    flex: 1;
+  }
+  .checkin-fact-number {
+    flex: 0 0 5.5rem;
+    text-align: right;
+  }
+  .checkin-day-facts .checkin-fact-number dd {
+    justify-content: flex-end;
+  }
+  .checkin-day-add {
+    grid-column: 3;
+    justify-self: end;
+    margin: 0;
+  }
+  .checkin-day-comment,
+  .checkin-day-form {
+    grid-column: 2 / -1;
+  }
+  .checkin-past-toggle {
+    grid-template-columns: 9rem minmax(0, 1fr) auto auto;
+  }
+  .checkin-past-toggle b {
+    grid-column: 1;
+  }
+  .checkin-past-toggle .checkin-brief {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .checkin-past-toggle .checkin-status {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .checkin-past-toggle svg {
+    grid-column: 4;
+    grid-row: 1;
+  }
+}
+@media (min-width: 1100px) {
+  .checkin-week-split {
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+    gap: 32px;
     align-items: start;
   }
-  .athlete-checkins .checkin-card-reply .checkin-card-footer {
+  .checkin-week-split .checkin-week-side {
     position: sticky;
     top: 16px;
-    padding: 0 0 0 1.5rem;
-    border-top: 0;
-    border-left: 1px solid var(--border-subtle);
   }
 }
 .athlete-disclosure > :not(summary) {
@@ -395,12 +1106,659 @@
   }
 }
 
-/* Nutrición: the day picker of the intake log. */
-.athlete-nutrition-day {
+/* Nutrición: the plan as a summary on top, the food diary by days and meals under it. */
+.athlete-nutrition {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.coach-student .athlete-nutrition > .card {
+  margin: 0;
+  padding: 20px;
+}
+/* The published targets as one quiet line over the diary; the plan itself lives in its own view. */
+.athlete-nutrition-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+}
+.athlete-nutrition-targets dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+  margin: 0;
+  min-width: 0;
+}
+.athlete-nutrition-targets dt {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.athlete-nutrition-targets dd {
+  margin: 0;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.athlete-nutrition-targets dd b {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.athlete-nutrition-targets p {
+  margin: 0;
+}
+.athlete-nutrition-targets .btn {
+  flex: none;
+  min-height: 40px;
+}
+.athlete-nutrition-targets .athlete-nutrition-own {
+  margin-top: 2px;
+}
+.athlete-nutrition-own {
+  margin: 12px 0 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+.plan-view,
+.plan-brief {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.plan-brief-days {
+  display: grid;
+  gap: 0 32px;
+}
+.plan-brief-day {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'label toggle'
+    'kcal kcal'
+    'macros macros'
+    'meals meals';
+  gap: 2px 16px;
+  align-items: center;
+  min-width: 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--border-medium);
+}
+.plan-brief-day h3 {
+  grid-area: label;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.plan-brief-kcal {
+  grid-area: kcal;
+  margin: 0;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.plan-brief-kcal b {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+.plan-brief-macros {
+  grid-area: macros;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.plan-brief-macros div {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+.plan-brief-macros dt {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.plan-brief-macros dd {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.plan-brief-toggle,
+.plan-brief-none {
+  grid-area: toggle;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.plan-brief-toggle {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.plan-brief-toggle:hover {
+  background: var(--accent-light);
+}
+.plan-brief-toggle:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+.plan-brief-toggle svg {
+  transition: transform 0.15s ease;
+}
+.plan-brief-toggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+.plan-brief-meals {
+  grid-area: meals;
+  display: grid;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.plan-brief-meals li {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.plan-brief-slot {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.plan-brief-dish {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+}
+.plan-brief-dish small {
+  font-size: 0.8rem;
+  font-weight: 400;
+  white-space: pre-wrap;
+  color: var(--text-secondary);
+}
+.plan-brief-meal-kcal {
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+.plan-brief-notes {
+  max-width: 90ch;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text-secondary);
+}
+.plan-brief-notes b {
+  margin-right: 6px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.plan-history {
+  margin-top: 4px;
+}
+.plan-history > .plan-brief-toggle {
+  margin-left: -4px;
+  color: var(--text-secondary);
+}
+.plan-summary {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.plan-view-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+.plan-view-head > p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+@media (pointer: coarse) {
+  .plan-brief-toggle {
+    min-height: 44px;
+  }
+}
+@media (min-width: 560px) {
+  .plan-brief-day {
+    grid-template-columns: max-content minmax(0, 1fr) auto;
+    grid-template-areas:
+      'label label toggle'
+      'kcal macros macros'
+      'meals meals meals';
+    align-items: baseline;
+  }
+  .plan-brief-day h3,
+  .plan-brief-toggle,
+  .plan-brief-none {
+    align-self: center;
+  }
+}
+@media (min-width: 1000px) {
+  .plan-brief-days {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+.plan-summary-notes {
+  max-width: 75ch;
+}
+.plan-summary h3 {
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.plan-summary p {
+  margin: 0;
+}
+.plan-summary-notes p,
+.plan-summary-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.plan-summary-days {
+  display: grid;
+  gap: 20px 32px;
+}
+.plan-summary-day {
+  min-width: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-medium);
+}
+.plan-summary-kcal {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.plan-summary-macros {
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.plan-summary-day ul {
+  display: grid;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.plan-summary-day li {
+  padding: 8px 0;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.plan-summary-meal {
+  font-size: 0.92rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+}
+@media (min-width: 720px) {
+  .plan-summary-days {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.diary {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.diary-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+.diary-nav {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.diary-nav .btn {
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+}
+.diary-week {
+  min-width: 9.5rem;
+  margin: 0;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.diary-summary {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+.diary-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.diary-days li + li {
+  border-left: 1px solid var(--border-subtle);
+}
+.diary-day {
   display: grid;
   gap: 4px;
-  margin: 16px 0 8px;
+  align-content: start;
+  width: 100%;
+  min-height: 92px;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.diary-day:hover {
+  background: var(--bg-secondary);
+}
+.diary-day:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: -2px;
+}
+.diary-day[aria-pressed='true'] {
+  background: var(--accent-light);
+  outline: 2px solid var(--text-primary);
+  outline-offset: -2px;
+  color: var(--text-primary);
+}
+.diary-day-name {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  font-size: 0.8rem;
+}
+.diary-day-name b {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+.diary-day-name i {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.diary-day-kcal {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.diary-day-kcal small {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+.diary-day[data-state='empty'] .diary-day-kcal,
+.diary-day[data-state='future'] .diary-day-kcal {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+.diary-day-state {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.75rem;
+}
+.diary-day-state::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+.diary-day[data-state='on'] .diary-day-state {
+  color: var(--text-primary);
+}
+.diary-day[data-state='on'] .diary-day-state::before {
+  border-color: var(--success, var(--accent-primary));
+  background: var(--success, var(--accent-primary));
+}
+.diary-day[data-state='off'] .diary-day-state::before,
+.diary-day[data-state='today'] .diary-day-state::before {
+  background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+}
+.diary-day[data-state='logged'] .diary-day-state::before {
+  background: currentColor;
+}
+.diary-day[data-state='empty'] .diary-day-state::before,
+.diary-day[data-state='future'] .diary-day-state::before {
+  border-style: dashed;
+}
+.diary-detail {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding-top: 6px;
+}
+/* On a wide screen the week folds to a column, like the calendar, and the open day takes the rest. */
+@media (min-width: 1100px) {
+  .diary {
+    grid-template-columns: 190px minmax(0, 1fr);
+    column-gap: 20px;
+    align-items: start;
+  }
+  .diary-bar {
+    grid-column: 1 / -1;
+  }
+  .diary-days {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+  }
+  .diary-days li + li {
+    border-left: 0;
+  }
+  .diary-day {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 2px 8px;
+    min-height: 0;
+    padding: 8px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    background: var(--bg-card);
+  }
+  .diary-day-state {
+    grid-column: 1 / -1;
+  }
+  .diary-detail {
+    padding: 0 0 0 20px;
+    border-left: 1px solid var(--border-subtle);
+  }
+}
+.diary-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+.diary-detail-head h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.diary-detail-head p,
+.diary-empty {
+  margin: 0;
   font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+.diary-totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 24px;
+  margin: 0;
+}
+.diary-totals > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.diary-totals dt {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.diary-totals dd {
+  margin: 0;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.diary-totals dd b {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+.diary-meter {
+  display: block;
+  height: 4px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: var(--border-subtle);
+  overflow: hidden;
+}
+.diary-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--text-primary);
+}
+.diary-meals {
+  display: grid;
+  gap: 0 32px;
+}
+.diary-meal {
+  min-width: 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--border-medium);
+}
+.diary-meal header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.diary-meal h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.diary-meal header p {
+  margin: 0;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.diary-meal header b {
+  color: var(--text-primary);
+}
+.diary-meal ul {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+.diary-meal li {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+.diary-meal li > :first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.diary-meal li > :last-child {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.diary-meal small {
+  color: var(--text-secondary);
+}
+@media (min-width: 720px) {
+  .diary-totals {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .diary-meals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 719px) {
+  .diary-bar {
+    justify-content: flex-start;
+  }
+  .diary-day {
+    justify-items: center;
+    min-height: 76px;
+    padding: 8px 2px;
+    text-align: center;
+  }
+  .diary-day-name {
+    flex-direction: column;
+    gap: 0;
+    align-items: center;
+  }
+  .diary-day-name i,
+  .diary-day-kcal small {
+    display: none;
+  }
+  .diary-day-kcal {
+    font-size: 0.78rem;
+  }
+  .diary-day-state {
+    font-size: 0;
+    gap: 0;
+  }
 }
 
 /* Resumen: the numbers first, then this week's log, then what is planned. */
@@ -520,38 +1878,15 @@
   margin: 0;
   padding: 12px;
 }
-.week-panel-tabs {
+.week-panel-head {
   display: flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: 8px;
-  background: var(--bg-secondary);
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
-.week-panel-tabs button {
-  flex: 1 1 auto;
-  min-height: 40px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.week-panel-tabs button:hover {
-  color: var(--text-primary);
-}
-.week-panel-tabs button[aria-pressed='true'] {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  box-shadow: 0 0 0 1px var(--border-medium);
-}
-.week-panel-tabs button:focus-visible {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 1px;
+.week-panel-head h3 {
+  margin: 0;
+  font-size: 0.95rem;
 }
 .week-panel-body {
   display: flex;
@@ -648,8 +1983,33 @@
   margin: 0;
   font-size: inherit;
 }
-/* The editor reads top to bottom: what the week is and what to do with it, the seven days at a
-   glance, then the one day being edited beside the tools that feed it. */
+/* One bar for the week: which week, how it is saved and the button that delivers it. */
+.week-bar .week-toolbar {
+  gap: 8px 16px;
+}
+/* Inside the bar the arrows and the date speak for themselves; the label stays for readers. */
+.week-bar .week-toolbar-picker label {
+  font-size: 0;
+  gap: 0;
+}
+.week-bar .week-toolbar-picker input {
+  width: 150px;
+}
+.week-bar .segmented-option {
+  padding-inline: 0.75rem;
+  font-size: 0.85rem;
+}
+.week-bar .week-toolbar-picker .btn:not([aria-label]) {
+  padding-inline: 12px;
+}
+.week-bar .week-bar-info {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.week-bar .week-bar-meta {
+  flex-direction: column;
+  margin-top: 0;
+}
 .week-toolbar .segmented {
   width: auto;
   flex: 0 0 auto;
@@ -672,7 +2032,7 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px 24px;
+  gap: 10px 16px;
   padding-block: 10px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-primary);
@@ -705,27 +2065,52 @@
 .week-bar-meta [role='status'][data-dirty] {
   color: var(--accent-primary);
 }
-.week-bar-actions,
 .week-bar-publish {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
-.week-bar-publish {
-  padding-left: 16px;
-  border-left: 1px solid var(--border-medium);
+/* Load and the week's decision share one line; the muscle-group detail opens below it. */
+.week-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 24px;
 }
-.week-bar-actions .btn {
-  min-height: 40px;
-  padding-inline: 12px;
-  font-size: 0.85rem;
-  white-space: nowrap;
+.week-context .week-volume[open] {
+  flex-basis: 100%;
 }
 .week-decision {
+  flex: 1 1 280px;
+  min-width: 0;
   margin: 0;
   font-size: 0.85rem;
+  line-height: 1.4;
   color: var(--text-secondary);
+}
+.power-areas {
+  display: flex;
+  margin-bottom: 20px;
+}
+.power-areas .segmented {
+  width: auto;
+}
+.power-areas .segmented-option {
+  flex: 0 0 auto;
+  padding-inline: 1rem;
+  white-space: nowrap;
+}
+.athlete-programs-title {
+  margin: 20px 0 4px;
+  font-size: 0.95rem;
+}
+.athlete-programs-hint {
+  max-width: 68ch;
+  margin: 0 0 4px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.45;
 }
 /* A conflict states the problem and the way out; the rest waits behind one disclosure. */
 .week-conflict {
@@ -761,113 +2146,257 @@
 .week-conflict-more p {
   margin: 0;
 }
-.week-body {
+/* Below the bar: what to open beside the week, and what to do with the whole week. */
+.week-tools {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
 }
-.week-board {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 8px;
-}
-.week-day {
+.week-tools-group {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  min-height: 92px;
-  padding: 10px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  background: var(--bg-card);
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.week-tools .btn {
+  min-height: 40px;
+  padding-inline: 12px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.week-menu {
+  position: relative;
+}
+.week-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.week-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.week-menu[open] > summary {
+  border-color: var(--accent-primary);
   color: var(--text-primary);
-  font: inherit;
+}
+.week-menu-items {
+  position: absolute;
+  right: 0;
+  z-index: 20;
+  display: grid;
+  min-width: 300px;
+  max-width: calc(100vw - 32px);
+  margin-top: 6px;
+  padding: 6px;
+  border: 1px solid var(--border-medium);
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.45);
+}
+.week-menu-items button {
+  display: grid;
+  gap: 2px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
 }
-.week-day:hover {
-  border-color: var(--border-medium);
+.week-menu-items button small {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 400;
 }
-.week-day:focus-visible {
+.week-menu-items button:hover:not(:disabled),
+.week-menu-items button:focus-visible {
+  background: var(--surface-hover, rgb(255 255 255 / 0.06));
+}
+.week-menu-items button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.week-menu-items button:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+.week-volume > summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: center;
+  min-height: 36px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.week-volume > summary::-webkit-details-marker {
+  display: none;
+}
+.week-volume > summary {
+  list-style: none;
+}
+.week-volume > summary::after {
+  content: 'Por grupo muscular ▾';
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.week-volume[open] > summary::after {
+  content: 'Ocultar ▴';
+}
+.week-volume > summary:hover::after {
+  color: var(--text-primary);
+}
+.week-volume > summary strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.week-volume > summary .week-volume-jump {
+  color: var(--text-primary);
+}
+.week-tools .btn[aria-pressed='true'] {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+  box-shadow: inset 0 0 0 1px var(--accent-primary);
+}
+/* Weekly work sets per muscle group: the load of the week before any tonnage. */
+.week-volume {
+  display: grid;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.week-volume ul {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.week-volume li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex: none;
+  padding: 4px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+}
+.week-volume li strong {
+  color: var(--text-primary);
+}
+.week-volume li small {
+  font-size: 0.72rem;
+}
+.week-volume li[data-jump] {
+  border-color: var(--accent-primary);
+}
+.week-volume li[data-jump] small {
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+.week-volume p {
+  margin: 0;
+  font-size: inherit;
+}
+.week-volume .week-volume-jump {
+  color: var(--text-primary);
+}
+.week-bar-retry,
+.week-undo button {
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.week-undo {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+.week-undo button {
+  min-height: 32px;
+}
+.set-send-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.set-send .btn {
+  flex: 1 1 auto;
+  min-height: 36px;
+  padding-inline: 10px;
+  font-size: 0.8rem;
+}
+.week-bar-retry:focus-visible,
+.week-undo button:focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
 }
-.week-day[aria-pressed='true'] {
-  border-color: var(--accent-primary);
-  box-shadow: inset 0 0 0 1px var(--accent-primary);
-}
-.week-day[data-rest] {
-  border-style: dashed;
-  background: transparent;
-}
-.week-day[data-rest] strong {
-  font-weight: 400;
-  color: var(--text-secondary);
-}
-.week-day[data-drop] {
-  outline: 2px dashed var(--accent-primary);
-  outline-offset: 2px;
-}
-.week-day-date {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
-}
-.week-day strong {
-  overflow: hidden;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.week-day small {
-  font-size: 0.72rem;
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
-}
-.week-day ol {
+.set-send {
+  grid-column: 1 / -1;
   display: grid;
-  gap: 3px;
-  margin: 8px 0 0;
-  padding: 8px 0 0;
-  border-top: 1px solid var(--border-subtle);
-  list-style: none;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: end;
+  gap: 8px;
 }
-.week-day li {
+.library-insert-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 6px;
-  font-size: 0.75rem;
-  line-height: 1.35;
+  gap: 12px;
+  margin-top: 12px;
 }
-.week-day li span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.week-day li em {
-  font-style: normal;
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
-}
-.week-work {
+.library-pick {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
-  align-items: start;
-}
-.week-work > fieldset {
+  gap: 2px;
   min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
 }
-.week-work-day[data-drop] {
-  outline: 2px dashed var(--accent-primary);
-  outline-offset: 4px;
-  border-radius: 8px;
+.library-pick legend {
+  padding: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.library-pick label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-size: 0.9rem;
+}
+.week-reset {
+  align-self: flex-start;
+}
+@media (max-width: 900px) {
+  .week-bar {
+    position: static;
+  }
+}
+@media (max-width: 640px) {
+  .week-tools .btn {
+    min-height: 44px;
+  }
+  /* One swipeable row instead of five wrapped rows, so the days start closer to the top. */
+  .week-tools {
+    flex-wrap: nowrap;
+    margin-inline: -8px;
+    padding: 2px 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .week-tools-group {
+    flex-wrap: nowrap;
+  }
 }
 .coach-student .coach-day-flat {
   margin: 0;
@@ -1098,57 +2627,6 @@
     min-height: 44px;
   }
 }
-.week-rest {
-  display: grid;
-  gap: 10px;
-  justify-items: start;
-  padding: 28px 20px;
-  border: 1px dashed var(--border-medium);
-  border-radius: 8px;
-}
-.week-rest h3,
-.week-rest p {
-  margin: 0;
-}
-.week-rest h3 {
-  font-size: 1rem;
-}
-.week-rest p {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-.week-reset {
-  align-self: flex-start;
-}
-@media (min-width: 1100px) {
-  .week-work {
-    grid-template-columns: minmax(0, 1fr) 360px;
-  }
-  .week-work > fieldset:last-child {
-    position: sticky;
-    top: 76px;
-    max-height: calc(100dvh - 92px);
-    overflow-y: auto;
-    scrollbar-width: thin;
-  }
-}
-@media (max-width: 900px) {
-  .week-board {
-    display: flex;
-    overflow-x: auto;
-    scrollbar-width: thin;
-  }
-  .week-day {
-    flex: 0 0 150px;
-  }
-  .week-bar {
-    position: static;
-  }
-  .week-bar-publish {
-    padding-left: 0;
-    border-left: 0;
-  }
-}
 @media (max-width: 640px) {
   .week-toolbar-link {
     margin-left: 0;
@@ -1174,5 +2652,88 @@
     height: 1px;
     overflow: hidden;
     clip-path: inset(50%);
+  }
+}
+
+/* The week's tools ride in its bar; they drop to a second line only when they do not fit. */
+.week-bar .week-tools {
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  gap: 6px 12px;
+}
+.week-bar .week-tools .btn {
+  min-height: 36px;
+  padding-inline: 10px;
+  font-size: 0.82rem;
+}
+@media (pointer: coarse) {
+  .week-bar .week-tools .btn {
+    min-height: 44px;
+  }
+}
+@media (max-width: 640px) {
+  /* A swipeable row starts at its first button: right-aligned it would clip them out of reach. */
+  .week-bar .week-tools {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* Progreso: the two weight charts share a row on a desk, without a card inside the card. */
+.coach-student .charts-grid {
+  margin-bottom: 0;
+}
+.coach-student .charts-grid .chart-card {
+  min-width: 0;
+  padding: 16px 0 0;
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+@media (min-width: 1000px) {
+  .coach-student .charts-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+  .coach-student .charts-grid .chart-card.full-width {
+    grid-column: auto;
+  }
+}
+
+/* Desktop: the week gets the screen; lower bars. */
+@media (min-width: 1024px) {
+  .main-content:has(.athlete-page) {
+    padding-top: 14px;
+  }
+  /* The week bar keeps its two lines, each one lower. */
+  .week-editor {
+    gap: 10px;
+  }
+  .week-bar {
+    gap: 6px 14px;
+    padding-block: 6px;
+  }
+  .week-bar .segmented-option,
+  .week-bar .week-toolbar-picker .btn,
+  .week-bar .week-bar-publish .btn {
+    min-height: 36px;
+    padding-block: 0;
+  }
+  .week-bar .week-toolbar-picker input.form-input {
+    height: 36px;
+    min-height: 36px;
+  }
+  .week-bar .week-bar-meta {
+    font-size: 0.76rem;
+    line-height: 1.3;
+  }
+  .week-bar .week-tools {
+    flex: 1 0 100%;
+  }
+  .week-bar .week-tools .btn {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 0.8rem;
   }
 }

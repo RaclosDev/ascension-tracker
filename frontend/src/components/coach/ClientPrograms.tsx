@@ -1,6 +1,6 @@
 import { confirmAction } from '../../lib/confirmation';
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ClipboardList } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -11,6 +11,7 @@ import {
   useCoachPrograms,
   useCoachProgram,
   useEndAssignment,
+  type ProgramAssignment,
 } from '../../lib/coach/coachPrograms';
 import { useExerciseCatalog, getExerciseMap } from '../../lib/workout/exercises';
 import { ProgramSessions } from './ProgramSessions';
@@ -29,7 +30,8 @@ export default function ProgramsSection({
   const library = useCoachPrograms();
   const assign = useAssignProgram(linkId);
   const end = useEndAssignment(linkId);
-  const [programId, setProgramId] = useState('');
+  const [params] = useSearchParams();
+  const [programId, setProgramId] = useState(() => params.get('programa') ?? '');
   const selected = useCoachProgram(programId || null);
   const ready = library.data?.filter((program) => program.status !== 'DRAFT') ?? [];
   const [startDate, setStartDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
@@ -43,6 +45,85 @@ export default function ProgramsSection({
     [custom.data, catalog.data],
   );
   const exerciseName = (id: string) => exerciseMap.get(id)?.name ?? 'Ejercicio';
+  // Publishing a week from «Semana» reaches the athlete as a one-week plan with no library origin.
+  const shown = (assignments.data ?? []).filter((a) => showHistory || a.status !== 'ENDED');
+  const weekly = shown.filter((a) => a.sourceProgramId === null && a.weeks === 1);
+  const fromLibrary = shown.filter((a) => !weekly.includes(a));
+  const row = (a: ProgramAssignment, single: boolean) => (
+    <li key={a.id} className="flex flex-col gap-1">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="font-bold text-foreground truncate">{a.programName}</div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            <span className="athlete-program-status" data-status={a.status}>
+              {a.status === 'SCHEDULED'
+                ? single
+                  ? 'Programada'
+                  : 'Programado'
+                : a.status === 'ENDED'
+                  ? single
+                    ? 'Terminada'
+                    : 'Terminado'
+                  : 'En curso'}
+            </span>{' '}
+            {single
+              ? `Semana del ${formatCoachDate(a.startDate)}`
+              : `${a.weeks} ${a.weeks === 1 ? 'semana' : 'semanas'} · empieza el ${formatCoachDate(a.startDate)}`}
+            {a.status === 'ENDED' && a.endedAt && ` · terminado el ${formatCoachDate(a.endedAt)}`}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {a.status !== 'ENDED' && canAssign && (
+            <Link
+              className="btn btn-secondary"
+              to={
+                single
+                  ? `/entrenador/atletas/${encodeURIComponent(linkId)}?seccion=semana&semana=${a.startDate}`
+                  : `/entrenador/atletas/${encodeURIComponent(linkId)}/programas/${encodeURIComponent(a.id)}/adaptar`
+              }
+            >
+              {single ? 'Abrir en el calendario' : 'Adaptar'}
+            </Link>
+          )}
+          <button
+            type="button"
+            className="btn btn-secondary"
+            aria-expanded={openAssignment === a.id}
+            onClick={() => setOpenAssignment(openAssignment === a.id ? null : a.id)}
+          >
+            {openAssignment === a.id ? 'Ocultar sesiones' : 'Sesiones'}
+          </button>
+          {a.status !== 'ENDED' && canAssign && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              aria-label={`Terminar ${a.programName}`}
+              disabled={end.isPending}
+              onClick={async () => {
+                if (
+                  !(await confirmAction({
+                    title: 'Terminar programa',
+                    description: `¿Terminar «${a.programName}»? Tu atleta conserva su copia.`,
+                    confirmLabel: 'Terminar programa',
+                    destructive: true,
+                  }))
+                )
+                  return;
+                end.mutate(a.id, {
+                  onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo terminar')),
+                });
+              }}
+            >
+              {a.status === 'SCHEDULED' ? 'Cancelar programación' : 'Terminar'}
+            </button>
+          )}
+        </div>
+      </div>
+      {openAssignment === a.id && (
+        <ProgramSessions linkId={linkId} assignmentId={a.id} exerciseName={exerciseName} />
+      )}
+    </li>
+  );
 
   const submit = async () => {
     if (!programId || !startDate || !selected.data || selected.data.status === 'DRAFT') return;
@@ -91,83 +172,20 @@ export default function ProgramsSection({
               {showHistory ? 'Ocultar programas anteriores' : 'Ver programas anteriores'}
             </button>
           )}
-          <ul className="athlete-programs">
-            {assignments.data
-              .filter((a) => showHistory || a.status !== 'ENDED')
-              .map((a) => (
-                <li key={a.id} className="flex flex-col gap-1">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="font-bold text-foreground truncate">{a.programName}</div>
-                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                        <span className="athlete-program-status" data-status={a.status}>
-                          {a.status === 'SCHEDULED'
-                            ? 'Programado'
-                            : a.status === 'ENDED'
-                              ? 'Terminado'
-                              : 'En curso'}
-                        </span>{' '}
-                        {a.weeks} {a.weeks === 1 ? 'semana' : 'semanas'} · empieza el{' '}
-                        {formatCoachDate(a.startDate)}
-                        {a.status === 'ENDED' &&
-                          a.endedAt &&
-                          ` · terminado el ${formatCoachDate(a.endedAt)}`}
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {a.status !== 'ENDED' && canAssign && (
-                        <Link
-                          className="btn btn-secondary"
-                          to={`/entrenador/atletas/${encodeURIComponent(linkId)}/programas/${encodeURIComponent(a.id)}/adaptar`}
-                        >
-                          Adaptar
-                        </Link>
-                      )}
-                      <button
-                        type="button"
-                        className="btn btn-secondary"
-                        aria-expanded={openAssignment === a.id}
-                        onClick={() => setOpenAssignment(openAssignment === a.id ? null : a.id)}
-                      >
-                        {openAssignment === a.id ? 'Ocultar sesiones' : 'Sesiones'}
-                      </button>
-                      {a.status !== 'ENDED' && canAssign && (
-                        <button
-                          type="button"
-                          className="btn btn-secondary"
-                          aria-label={`Terminar ${a.programName}`}
-                          disabled={end.isPending}
-                          onClick={async () => {
-                            if (
-                              !(await confirmAction({
-                                title: 'Terminar programa',
-                                description: `¿Terminar «${a.programName}»? Tu atleta conserva su copia.`,
-                                confirmLabel: 'Terminar programa',
-                                destructive: true,
-                              }))
-                            )
-                              return;
-                            end.mutate(a.id, {
-                              onError: (e) =>
-                                toast.error(apiErrorMessage(e, 'No se pudo terminar')),
-                            });
-                          }}
-                        >
-                          {a.status === 'SCHEDULED' ? 'Cancelar programación' : 'Terminar'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  {openAssignment === a.id && (
-                    <ProgramSessions
-                      linkId={linkId}
-                      assignmentId={a.id}
-                      exerciseName={exerciseName}
-                    />
-                  )}
-                </li>
-              ))}
-          </ul>
+          {fromLibrary.length > 0 && (
+            <ul className="athlete-programs">{fromLibrary.map((a) => row(a, false))}</ul>
+          )}
+          {weekly.length > 0 && (
+            <>
+              <h3 className="athlete-programs-title">Semanas publicadas desde el calendario</h3>
+              <p className="athlete-programs-hint">
+                Cada semana que publicas le llega a tu atleta como un plan de una semana. Se
+                preparan y se corrigen en «Planificación»; aquí puedes ver sus sesiones o
+                retirarlas.
+              </p>
+              <ul className="athlete-programs">{weekly.map((a) => row(a, true))}</ul>
+            </>
+          )}
         </>
       )}
       {!canAssign && (
@@ -191,7 +209,7 @@ export default function ProgramsSection({
       {canAssign && library.data && ready.length === 0 && (
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           Prepara un programa y márcalo como listo en tu{' '}
-          <Link to="/entrenador/programas">biblioteca</Link> para asignarlo.
+          <Link to="/entrenador/planificacion?pestana=programas">biblioteca</Link> para asignarlo.
         </p>
       )}
       {canAssign && ready.length > 0 && (

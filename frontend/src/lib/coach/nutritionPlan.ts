@@ -62,8 +62,9 @@ const myKey = ['coaching', 'nutrition-plan'] as const;
 /** 204 means no plan: the hooks resolve to null then. */
 const orNull = <T>(data: T | '' | undefined) => (data ? data : null);
 
-export const useCoachNutritionPlan = (linkId: string) =>
+export const useCoachNutritionPlan = (linkId: string, enabled = true) =>
   useQuery({
+    enabled,
     queryKey: coachKey(linkId),
     retry: false,
     queryFn: async () =>

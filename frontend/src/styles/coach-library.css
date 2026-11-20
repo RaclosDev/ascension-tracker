@@ -1,0 +1,329 @@
+.coach-library-tabs {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border-medium);
+  scrollbar-width: none;
+}
+.coach-library-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: none;
+  min-height: 44px;
+  padding: 0 0.9rem;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.coach-library-tabs button span {
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+.coach-library-tabs button:hover {
+  color: var(--text-primary);
+}
+.coach-library-tabs button[aria-selected='true'] {
+  border-bottom-color: var(--text-primary);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.coach-library-tabs button:focus-visible,
+.coach-library-name:focus-visible,
+.coach-library-icon:focus-visible,
+.coach-library-apply:focus-visible,
+.coach-library-close:focus-visible,
+.coach-library-dialog li button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.coach-library-panel {
+  display: grid;
+  gap: 1rem;
+}
+.coach-library-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+}
+.coach-library-tools .coach-search {
+  flex: 1 1 260px;
+  max-width: 420px;
+}
+.coach-library-tools .coach-chip {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+.coach-library-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border-medium);
+  border-radius: 6px;
+}
+.coach-library-list > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 0.5rem;
+  padding: 0.35rem 0.5rem 0.35rem 1.1rem;
+}
+.coach-library-list > li:has(.coach-library-star) {
+  padding-left: 0.35rem;
+}
+.coach-library-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.15rem;
+}
+.coach-library-actions .coach-library-apply {
+  margin-right: 0.35rem;
+}
+.coach-library-star[aria-pressed='true'],
+.coach-library-icon[aria-expanded='true'] {
+  color: var(--text-primary);
+}
+.coach-library-fields {
+  display: grid;
+  flex-basis: 100%;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  align-items: end;
+  margin: 0.35rem 0 0.6rem;
+  padding: 0.9rem 0.6rem 0.3rem;
+  border-top: 1px solid var(--border-subtle);
+}
+.coach-library-fields label {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+.coach-library-fields .form-input {
+  min-height: 44px;
+}
+.coach-library-fields > div {
+  display: flex;
+  gap: 0.5rem;
+}
+.coach-library-list > li + li {
+  border-top: 1px solid var(--border-subtle);
+}
+.coach-library-name {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 0.1rem;
+  padding: 0.45rem 0;
+  color: var(--text-primary);
+}
+.coach-library-name strong {
+  overflow: hidden;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.coach-library-name:hover strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.coach-library-name small {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+.coach-library-name em {
+  color: var(--text-primary);
+  font-style: normal;
+  font-weight: 600;
+}
+.coach-library-icon,
+.coach-library-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.coach-library-icon:hover,
+.coach-library-close:hover {
+  background: var(--wall-highlight-bg);
+  color: var(--text-primary);
+}
+.coach-library-icon:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.coach-library-apply {
+  flex: none;
+  min-height: 36px;
+  padding: 0 0.85rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 999px;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.coach-library-apply:hover {
+  border-color: var(--text-primary);
+  background: var(--wall-highlight-bg);
+}
+.coach-library-empty {
+  display: grid;
+  gap: 0.9rem;
+  justify-items: start;
+  margin: 0;
+  padding: 1.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.coach-library-empty p {
+  margin: 0;
+}
+.coach-library-more {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+.coach-library-dialog {
+  width: min(440px, calc(100vw - 2rem));
+  max-height: min(640px, calc(100dvh - 2rem));
+  margin: auto;
+  padding: 1.25rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-y: auto;
+}
+.coach-library-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+.coach-library-dialog header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.coach-library-dialog h2 {
+  margin: 0;
+  padding-top: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.coach-library-dialog p {
+  margin: 0.5rem 0 1rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.coach-library-dialog ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border-subtle);
+}
+.coach-library-dialog li {
+  border-bottom: 1px solid var(--border-subtle);
+}
+.coach-library-dialog li button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 0.5rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+}
+.coach-library-dialog li button:hover {
+  background: var(--wall-highlight-bg);
+}
+.coach-library-dialog li button svg {
+  color: var(--text-secondary);
+}
+@media (max-width: 640px) {
+  .coach-library-list > li {
+    flex-wrap: wrap;
+    padding: 0.35rem 0.75rem 0.6rem 0.9rem;
+  }
+  .coach-library-name {
+    flex: 1 1 60%;
+  }
+  .coach-library-name strong {
+    white-space: normal;
+  }
+  .coach-library-actions {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* Five tabs on a phone: tighter, and without the counts, so none hides off the edge. */
+@media (max-width: 480px) {
+  .coach-library-tabs {
+    gap: 0;
+    justify-content: space-between;
+  }
+  .coach-library-tabs button {
+    padding: 0 0.4rem;
+    font-size: 0.82rem;
+  }
+  .coach-library-tabs button span {
+    display: none;
+  }
+}
+
+/* The editor of one recipe. */
+.coach-recipe-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 640px;
+}
+.coach-recipe-form label {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+.coach-recipe-form fieldset {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.coach-recipe-form legend {
+  margin-bottom: 0.5rem;
+  padding: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.coach-recipe-kcal {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.coach-recipe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

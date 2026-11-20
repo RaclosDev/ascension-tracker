@@ -87,9 +87,8 @@ for (const width of [390, 1440]) {
       return route.fulfill({ json: [] });
     });
     await page.goto('/entrenador/planificacion');
-    await page.getByRole('link', { name: 'Abrir pautas' }).click();
-    await expect(page.getByRole('heading', { name: 'Biblioteca de pautas' })).toBeVisible();
-    await page.getByRole('link', { name: 'Crear pauta' }).click();
+    await page.getByRole('tab', { name: /Nutrición/ }).click();
+    await page.getByRole('link', { name: 'Nueva pauta' }).click();
     await page.getByLabel('Nombre de la pauta').fill('Base de entrenamiento');
     for (const [label, value] of Object.entries({
       'Proteína día de entreno': '180',
@@ -117,7 +116,7 @@ for (const width of [390, 1440]) {
     await expect(page).toHaveURL(/\/entrenador\/pautas\/t1$/);
     await expect(page.getByRole('button', { name: 'Guardar en biblioteca' })).toBeDisabled();
     expect(publications).toBe(0);
-    await page.goto('/entrenador/atletas/l1?seccion=nutricion');
+    await page.goto('/entrenador/atletas/l1?seccion=pauta');
     await page.getByRole('button', { name: 'Usar pauta de biblioteca' }).click();
     await chooseOption(page.getByLabel('Pauta de biblioteca', { exact: true }), 't1');
     await page.getByRole('button', { name: 'Copiar al borrador' }).click();

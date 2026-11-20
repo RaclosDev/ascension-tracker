@@ -68,7 +68,7 @@ export function ClientOverview({
             </dd>
           </div>
           <div>
-            <dt>Próxima revisión</dt>
+            <dt>Próximo seguimiento</dt>
             <dd>
               {!followup
                 ? 'Sin agenda'
@@ -104,8 +104,8 @@ export function ClientOverview({
             {followup?.schedule.paused
               ? 'Las alertas de seguimiento están pausadas.'
               : link.setup
-                ? 'Sin señales de seguimiento pendientes.'
-                : 'Configura el servicio para activar las señales de seguimiento.'}
+                ? 'Sin alertas de seguimiento pendientes.'
+                : 'Configura el servicio para activar las alertas de seguimiento.'}
           </p>
         )}
       </section>

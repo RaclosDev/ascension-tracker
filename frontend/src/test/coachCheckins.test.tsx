@@ -7,6 +7,7 @@ import {
   renderHook,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -25,9 +26,16 @@ import api from '../api/client';
 import CoachCheckinPage from '../pages/CoachCheckinPage';
 import { CheckinsSection } from '../components/coach/CheckinsSection';
 import { CheckinTemplateEditor } from '../components/coach/CheckinTemplateEditor';
+import type { CoachClient } from '../lib/coach/api';
 import type { Checkin, ClientCheckin } from '../lib/coach/checkins';
+import { weekDate } from '../lib/coach/weeks';
 
 const mockedApi = vi.mocked(api);
+const link = {
+  linkId: 'l1',
+  permissions: { training: true },
+  notes: null,
+} as unknown as CoachClient;
 const coach = { name: 'Laura', email: 'laura@test', picture: null };
 
 const checkin = (over: Partial<Checkin> = {}): Checkin => ({
@@ -161,11 +169,17 @@ describe('Check-ins del atleta', () => {
             questions: ['¿Molestias?'],
             current: replied,
           }
-        : [replied],
+        : url.endsWith('/day-comments')
+          ? [{ date: '2026-11-04', text: 'Hoy tocaba descansar' }]
+          : [replied],
     }));
     wrap(<CoachCheckinPage />, '/checkin/l1');
 
     expect(await screen.findByText('Buen trabajo')).toBeInTheDocument();
+    expect(await screen.findByText('Hoy tocaba descansar')).toBeInTheDocument();
+    expect(mockedApi.get).toHaveBeenCalledWith('/coaching/coaches/l1/day-comments', {
+      params: { from: '2026-11-02', to: '2026-11-08' },
+    });
     expect(screen.getByRole('button', { name: 'Enviar actualización' })).toBeDisabled();
     expect(screen.queryByText('Semanas anteriores')).toBeNull();
   });
@@ -179,7 +193,7 @@ describe('Check-ins en la ficha del entrenador', () => {
     queryClient.setQueryData(['coach', 'client', 'l1', 'checkins'], []);
     mockedApi.get.mockResolvedValue({ data: [checkin()] });
 
-    wrap(<CheckinsSection linkId="l1" />, '/', queryClient);
+    wrap(<CheckinsSection link={link} />, '/', queryClient);
 
     expect(await screen.findByText('Rodilla')).toBeInTheDocument();
   });
@@ -187,11 +201,13 @@ describe('Check-ins en la ficha del entrenador', () => {
   it('shows scores, weight and answers and lets the coach reply', async () => {
     mockedApi.get.mockResolvedValue({ data: [checkin()] });
     mockedApi.put.mockResolvedValue({ data: checkin({ coachReply: 'Ánimo' }) });
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
 
     expect(await screen.findByText('Rodilla')).toBeInTheDocument();
-    expect(screen.getByText(/80,4 kg/)).toBeInTheDocument();
-    expect(screen.getByText('2/5')).toBeInTheDocument();
+    expect(screen.getAllByText(/80,4 kg/).length).toBeGreaterThan(0);
+    expect(
+      screen.getByText((_, el) => el?.tagName === 'DD' && el.textContent === '2/5'),
+    ).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Tu respuesta'), { target: { value: 'Ánimo' } });
     fireEvent.click(screen.getByRole('button', { name: 'Responder' }));
 
@@ -206,18 +222,18 @@ describe('Check-ins en la ficha del entrenador', () => {
   it('restores a reply draft, isolates accounts, and keeps it after a failed send', async () => {
     mockedApi.get.mockResolvedValue({ data: [checkin()] });
     mockedApi.put.mockRejectedValue(new Error('Sin conexión'));
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
     fireEvent.change(await screen.findByLabelText('Tu respuesta'), {
       target: { value: 'Conserva esta respuesta' },
     });
     expect(screen.getByText(/Borrador guardado/)).toBeInTheDocument();
     cleanup();
     auth.user = { email: 'other@test' };
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
     expect(await screen.findByLabelText('Tu respuesta')).toHaveValue('');
     cleanup();
     auth.user = { email: 'owner@test' };
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
     expect(await screen.findByLabelText('Tu respuesta')).toHaveValue('Conserva esta respuesta');
     fireEvent.click(screen.getByRole('button', { name: 'Responder' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('El borrador se conserva');
@@ -228,13 +244,13 @@ describe('Check-ins en la ficha del entrenador', () => {
 
   it('requires reviewing a changed check-in before sending a restored draft', async () => {
     mockedApi.get.mockResolvedValue({ data: [checkin()] });
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
     fireEvent.change(await screen.findByLabelText('Tu respuesta'), {
       target: { value: 'Sigue así' },
     });
     cleanup();
     mockedApi.get.mockResolvedValue({ data: [checkin({ updatedAt: '2026-11-04T10:00:00Z' })] });
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
     expect(await screen.findByRole('alert')).toHaveTextContent('El atleta ha cambiado');
     expect(screen.getByRole('button', { name: 'Responder' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'He revisado los cambios' }));
@@ -289,14 +305,75 @@ describe('Check-ins en la ficha del entrenador', () => {
 
   it('hides the reply form once answered and explains an empty list', async () => {
     mockedApi.get.mockResolvedValueOnce({ data: [checkin({ coachReply: 'Hecho' })] });
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
+    // An answered week of the past stays folded until the coach opens it.
+    fireEvent.click(await screen.findByRole('button', { name: /Respondido/ }));
     expect(await screen.findByText('Hecho')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Responder' })).toBeNull();
     cleanup();
 
     mockedApi.get.mockResolvedValueOnce({ data: [] });
-    wrap(<CheckinsSection linkId="l1" />);
+    wrap(<CheckinsSection link={link} />);
     expect(await screen.findByText(/aún no ha enviado/)).toBeInTheDocument();
+  });
+
+  it('shows the current week day by day and saves a comment on the session of a day', async () => {
+    const monday = new Date(`${weekDate()}T10:00:00`).getTime();
+    mockedApi.get.mockImplementation(async (url: string) => ({
+      data: url.includes('workouts/recent')
+        ? [{ id: 'w1', name: 'Torso A', startedAt: monday, finishedAt: monday + 3600000 }]
+        : url.includes('/comment')
+          ? { text: '' }
+          : [],
+    }));
+    mockedApi.put.mockResolvedValue({ data: null });
+    wrap(<CheckinsSection link={link} />);
+
+    expect(await screen.findByRole('heading', { name: 'Semana actual' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Torso A' })).toHaveAttribute(
+      'href',
+      '/entrenador/atletas/l1/entrenos/w1',
+    );
+    const mondayRow = screen.getByRole('link', { name: 'Torso A' }).closest('li') as HTMLElement;
+    fireEvent.click(await within(mondayRow).findByRole('button', { name: 'Comentar el día' }));
+    fireEvent.change(screen.getByLabelText('Comentario del día'), {
+      target: { value: ' Buen ritmo ' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() =>
+      expect(mockedApi.put).toHaveBeenCalledWith(expect.stringContaining('/workouts/w1/comment'), {
+        text: 'Buen ritmo',
+      }),
+    );
+  });
+
+  it('comments and clears a day without a session', async () => {
+    mockedApi.get.mockImplementation(async (url: string) => ({
+      data: url.includes('day-comments') ? [{ date: weekDate(), text: 'Descansa bien' }] : [],
+    }));
+    mockedApi.put.mockResolvedValue({ data: null });
+    mockedApi.delete.mockResolvedValue({ data: null });
+    wrap(<CheckinsSection link={link} />);
+
+    expect(await screen.findByText('Descansa bien')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
+    fireEvent.change(screen.getByLabelText('Comentario del día'), {
+      target: { value: 'Camina media hora' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() =>
+      expect(mockedApi.put).toHaveBeenCalledWith(
+        expect.stringContaining(`/day-comments/${weekDate()}`),
+        { text: 'Camina media hora' },
+      ),
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar' }));
+    await waitFor(() =>
+      expect(mockedApi.delete).toHaveBeenCalledWith(
+        expect.stringContaining(`/day-comments/${weekDate()}`),
+      ),
+    );
   });
 
   it('edits the template questions and blocks blank ones', async () => {

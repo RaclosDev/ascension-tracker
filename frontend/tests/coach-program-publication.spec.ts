@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { chooseOption } from './helpers/selectMenu';
 import { setupAuthMocks } from './helpers/auth';
 import type { Program } from '../src/lib/coach/coachPrograms';
 
@@ -31,7 +30,7 @@ for (const width of [390, 1440]) {
     });
 
     await page.goto('/entrenador/programas');
-    await expect(page.getByRole('heading', { name: 'Biblioteca de entrenamiento' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Biblioteca', exact: true })).toBeVisible();
     await page.getByRole('link', { name: 'Nuevo programa', exact: true }).click();
     await page.getByLabel('Nombre', { exact: true }).fill('Fuerza · bloque inicial');
     await page.getByRole('button', { name: 'Añadir entrenamiento el lunes' }).click();
@@ -56,10 +55,7 @@ for (const width of [390, 1440]) {
     await expect(
       page.getByText('Versión guardada: lista para asignar.', { exact: false }),
     ).toBeVisible();
-    await page.getByRole('link', { name: 'Volver a programas' }).click();
-    await chooseOption(page.getByRole('button', { name: 'Estado', exact: true }), 'DRAFT');
-    await expect(page.getByText('No hay programas con esos filtros.')).toBeVisible();
-    await chooseOption(page.getByRole('button', { name: 'Estado', exact: true }), 'READY');
+    await page.getByRole('link', { name: 'Volver a la biblioteca' }).click();
     await expect(page.getByText('Fuerza · bloque inicial', { exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,

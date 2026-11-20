@@ -1,10 +1,18 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, MessageSquareText } from 'lucide-react';
+import {
+  ArrowLeft,
+  Dumbbell,
+  MessageSquareText,
+  Settings,
+  TrendingUp,
+  Utensils,
+} from 'lucide-react';
 import { personName, type CoachClient } from '../../lib/coach/api';
 import { useClientStatus } from '../../lib/coach/clientStatus';
 import { nextReviewLabel, REVIEW_DAYS } from '../../lib/coach/coachSchedule';
 import { usePowerProfile } from '../../lib/coach/powerlifting';
+import { AthleteNote } from './AthleteNote';
 import { AthleteWarmup } from './AthleteWarmup';
 import { ClientAvatar } from './ClientAvatar';
 import '../../styles/coach-workspace.css';
@@ -51,55 +59,70 @@ export function useAthleteViews(link: CoachClient) {
   const power = usePowerProfile(link.linkId, link.permissions.training);
   const training = link.permissions.training;
   const trainingLog = training && link.setup?.services.training !== false;
-  const nutrition = link.permissions.nutrition && link.setup?.services.nutrition !== false;
+  const nutritionService = link.setup?.services.nutrition !== false;
+  const nutrition = link.permissions.nutrition && nutritionService;
   const body = link.permissions.body;
   const bodyLog = body && link.setup?.services.progress !== false;
   const groups = [
     {
-      id: 'resumen',
-      label: 'Resumen',
-      views: [{ id: 'resumen', label: 'Resumen', visible: true }],
-    },
-    {
-      id: 'registro',
-      label: 'Registro',
+      id: 'entrenamiento',
+      label: 'Entrenamiento',
+      icon: Dumbbell,
       views: [
-        { id: 'registro', label: 'Resumen diario', visible: true },
-        { id: 'entrenos', label: 'Entrenos', visible: trainingLog },
-        { id: 'comidas', label: 'Comidas', visible: nutrition },
-        { id: 'pasos', label: 'Pasos', visible: bodyLog },
-        { id: 'peso', label: 'Peso', visible: bodyLog },
-        { id: 'progreso', label: 'Evolución y fotos', visible: body },
-      ],
-    },
-    {
-      id: 'planificacion',
-      label: 'Planificación',
-      views: [
-        { id: 'semana', label: 'Planificar semana', visible: training },
+        { id: 'semana', label: 'Planificación', visible: training },
         { id: 'entrenamiento', label: 'Programas', visible: training },
-        { id: 'nutricion', label: 'Nutrición', visible: nutrition },
         {
           id: 'powerlifting',
           label: 'Powerlifting',
           visible: training && !!power.data?.profile.enabled,
         },
+        { id: 'entrenos', label: 'Entrenos hechos', visible: trainingLog },
+      ],
+    },
+    {
+      id: 'nutricion',
+      label: 'Nutrición',
+      icon: Utensils,
+      // Contracted but not shared yet: the tab stays and explains how the athlete grants it.
+      views: [
+        { id: 'nutricion', label: 'Diario de comidas', visible: nutritionService },
+        { id: 'pauta', label: 'Pauta de nutrición', visible: nutritionService },
+      ],
+    },
+    {
+      id: 'progreso',
+      label: 'Progreso',
+      icon: TrendingUp,
+      views: [
+        { id: 'resumen', label: 'Resumen', visible: true },
+        { id: 'registro', label: 'Registro diario', visible: true },
+        { id: 'peso', label: 'Peso', visible: bodyLog },
+        { id: 'pasos', label: 'Pasos', visible: bodyLog },
+        { id: 'progreso', label: 'Evolución y fotos', visible: body },
       ],
     },
     {
       id: 'revisiones',
       label: 'Seguimientos',
+      icon: MessageSquareText,
       views: [{ id: 'revisiones', label: 'Seguimientos', visible: true }],
     },
     {
       id: 'gestion',
-      label: 'Datos y permisos',
-      views: [{ id: 'gestion', label: 'Datos y permisos', visible: true }],
+      label: 'Ajustes del atleta',
+      icon: Settings,
+      views: [{ id: 'gestion', label: 'Ajustes del atleta', visible: true }],
     },
   ]
     .map((group) => ({ ...group, views: group.views.filter((view) => view.visible) }))
     .filter((group) => group.views.length > 0);
-  return { groups, has: (view: string) => groups.some((g) => g.views.some((v) => v.id === view)) };
+  return {
+    groups,
+    has: (view: string) => groups.some((g) => g.views.some((v) => v.id === view)),
+    /** Views the coach can see in the menu but the athlete has not shared yet. */
+    locked: (view: string) =>
+      (view === 'nutricion' || view === 'pauta') && nutritionService && !nutrition,
+  };
 }
 
 export function AthleteShell({
@@ -128,7 +151,7 @@ export function AthleteShell({
     followup &&
       (followup.schedule.paused
         ? 'Seguimiento en pausa'
-        : `Seguimiento los ${REVIEW_DAYS[followup.schedule.day - 1].toLocaleLowerCase('es')} · próximo ${nextReviewLabel(followup)}`),
+        : `Seguimiento los ${REVIEW_DAYS[followup.schedule.day - 1].toLocaleLowerCase('es').replace(/o$/, 'os')} · próximo ${nextReviewLabel(followup)}`),
   ].filter(Boolean);
   const goBack = back ?? links.back;
 
@@ -141,89 +164,99 @@ export function AthleteShell({
     void import('../../pages/CoachClientWeeklyRecordsPage');
   }, []);
 
+  // On a phone the menu scrolls sideways: keep the entry you are on in sight.
+  const tabs = useRef<HTMLDivElement>(null);
+  const activeId = activeGroup?.id;
+  useEffect(() => {
+    tabs.current
+      ?.querySelector('[aria-current="page"]')
+      ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }, [activeId]);
+
+  // The athlete's file: a rail with who they are and every area, and the work beside it.
   return (
-    <>
-      <header className="athlete-header">
-        <div className="athlete-identity">
-          <Link
-            to={goBack.to}
-            className="athlete-back"
-            aria-label={goBack.label}
-            title={goBack.label}
-          >
-            <ArrowLeft size={18} aria-hidden />
-          </Link>
-          <ClientAvatar client={link.client} />
-          <div className="min-w-0">
-            <h1 className="athlete-name">{personName(link.client)}</h1>
-            <p className="athlete-meta">{meta.join(' · ')}</p>
-          </div>
-        </div>
-        <dl className="athlete-context">
-          <div>
-            <dt>Objetivo</dt>
-            <dd>{setup?.goal || <Link to={links.sectionHref('gestion')}>Añadir objetivo</Link>}</dd>
-          </div>
-          <div>
-            <dt>Material</dt>
-            <dd>
-              {setup?.equipment || <Link to={links.sectionHref('gestion')}>Añadir material</Link>}
-            </dd>
-          </div>
-        </dl>
-        <Link
-          to={links.sectionHref('revisiones')}
-          aria-current={active === 'revisiones' ? 'page' : undefined}
-          className={`btn ${pending > 0 ? 'btn-primary' : 'btn-secondary'} athlete-followup`}
-        >
-          <MessageSquareText size={16} aria-hidden />
-          {pending > 0
-            ? `Responder ${pending} ${pending === 1 ? 'seguimiento' : 'seguimientos'}`
-            : 'Ver seguimientos'}
+    <div className="athlete-frame">
+      <aside className="athlete-rail" aria-label="Ficha del atleta">
+        <Link to={goBack.to} className="athlete-back">
+          <ArrowLeft size={16} aria-hidden />
+          {goBack.label}
         </Link>
-      </header>
-      <nav className="coach-client-nav athlete-nav" aria-label="Secciones del atleta">
-        <div className="athlete-tabs">
-          {groups.map((group) => {
-            const current = group === activeGroup;
-            return (
-              <Link
-                key={group.id}
-                to={links.viewHref(group.views[0].id)}
-                aria-current={current ? (group.views.length > 1 ? 'true' : 'page') : undefined}
-                data-athlete-nav={
-                  current && group.views.length > 1
-                    ? undefined
-                    : group.views.map((view) => view.id).join(' ')
-                }
-              >
-                {group.label}
-                {group.id === 'revisiones' && pending > 0 && (
-                  <span className="athlete-badge" aria-label={`${pending} por responder`}>
-                    {pending}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-        {activeGroup && activeGroup.views.length > 1 && (
-          <div className="athlete-subtabs" role="group" aria-label={activeGroup.label}>
-            {activeGroup.views.map((view) => (
-              <Link
-                key={view.id}
-                to={links.viewHref(view.id)}
-                aria-current={view.id === active ? 'page' : undefined}
-                data-athlete-nav={view.id}
-              >
-                {view.label}
-              </Link>
-            ))}
+        <header className="athlete-header">
+          <div className="athlete-identity">
+            <ClientAvatar client={link.client} />
+            <div className="min-w-0">
+              <h1 className="athlete-name">{personName(link.client)}</h1>
+              <p className="athlete-meta">{meta.join(' · ')}</p>
+            </div>
           </div>
-        )}
-      </nav>
-      {children}
+          <dl className="athlete-context">
+            <div>
+              <dt>Objetivo</dt>
+              <dd title={setup?.goal || undefined}>
+                {setup?.goal || <Link to={links.sectionHref('gestion')}>Añadir objetivo</Link>}
+              </dd>
+            </div>
+            <div>
+              <dt>Material</dt>
+              <dd title={setup?.equipment || undefined}>
+                {setup?.equipment || <Link to={links.sectionHref('gestion')}>Añadir material</Link>}
+              </dd>
+            </div>
+          </dl>
+          {pending > 0 && active !== 'revisiones' && (
+            <Link to={links.sectionHref('revisiones')} className="btn btn-primary athlete-followup">
+              <MessageSquareText size={16} aria-hidden />
+              Responder {pending}
+              <span>{pending === 1 ? ' seguimiento' : ' seguimientos'}</span>
+            </Link>
+          )}
+          <AthleteNote key={link.linkId} link={link} />
+        </header>
+        <nav className="coach-client-nav athlete-nav" aria-label="Secciones del atleta">
+          <div className="athlete-tabs" ref={tabs}>
+            {groups.map((group) => {
+              const current = group === activeGroup;
+              const single = group.views.length === 1;
+              return (
+                <div key={group.id} className="athlete-group" data-current={current || undefined}>
+                  <Link
+                    to={links.viewHref(group.views[0].id)}
+                    className="athlete-group-link"
+                    aria-current={current ? (single ? 'page' : 'true') : undefined}
+                    data-athlete-nav={
+                      current && !single ? undefined : group.views.map((view) => view.id).join(' ')
+                    }
+                  >
+                    <group.icon size={16} aria-hidden />
+                    {group.label}
+                    {group.id === 'revisiones' && pending > 0 && (
+                      <span className="athlete-badge" aria-label={`${pending} por responder`}>
+                        {pending}
+                      </span>
+                    )}
+                  </Link>
+                  {!single && (
+                    <div className="athlete-subtabs" role="group" aria-label={group.label}>
+                      {group.views.map((view) => (
+                        <Link
+                          key={view.id}
+                          to={links.viewHref(view.id)}
+                          aria-current={view.id === active ? 'page' : undefined}
+                          data-athlete-nav={view.id}
+                        >
+                          {view.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </nav>
+      </aside>
+      <div className="athlete-main">{children}</div>
       <AthleteWarmup link={link} />
-    </>
+    </div>
   );
 }

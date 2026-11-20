@@ -1,3 +1,4 @@
+import { format } from 'date-fns';
 import { useState } from 'react';
 import { useClientData } from '../../lib/coach/api';
 import type { FoodLog } from '../../types/api';
@@ -32,6 +33,7 @@ export function CoachFoodSummary({ linkId, date }: { linkId: string; date: strin
   if (query.isError) return <QueryErrorNotice retry={query.refetch} pending={query.isFetching} />;
   if (older.isFetching && !day && !older.data) return <p role="status">Cargando comidas…</p>;
   if (older.isError) return <QueryErrorNotice retry={older.refetch} pending={older.isFetching} />;
+  const future = date > format(new Date(), 'yyyy-MM-dd');
   const labels = { kcal: 'kcal', protein: 'Proteínas', carbs: 'Carbohidratos', fat: 'Grasas' };
   return (
     <details className="coach-food-summary" onToggle={(event) => setOpen(event.currentTarget.open)}>
@@ -52,9 +54,9 @@ export function CoachFoodSummary({ linkId, date }: { linkId: string; date: strin
             ))}
           </dl>
         ) : (
-          <span>Sin registro</span>
+          <span>{future ? '—' : 'Sin registro'}</span>
         )}
-        {!day?.target && <small>Objetivo no disponible</small>}
+        {!day?.target && !future && <small>Sin objetivo ese día</small>}
       </summary>
       {open && <ClientFoodDay linkId={linkId} date={date} />}
     </details>

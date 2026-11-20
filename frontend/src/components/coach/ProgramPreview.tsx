@@ -15,16 +15,22 @@ export function ProgramPreview({ program }: { program: Program }) {
       <ol className="flex flex-col gap-3 mt-3">
         {program.days.map((day) => (
           <li key={`${day.week}-${day.dayIndex}`}>
-            <details className="border-t pt-2" open={program.days.length <= 3}>
+            <details
+              className="border-t pt-2"
+              open={program.weeks === 1 || program.days.length <= 3}
+            >
               <summary className="cursor-pointer py-2 font-semibold break-words">
-                Semana {day.week} · {WEEKDAY_LABELS[day.dayIndex - 1]} · {day.name}
+                {program.weeks > 1 && `Semana ${day.week} · `}
+                {WEEKDAY_LABELS[day.dayIndex - 1]} · {day.name}
               </summary>
               {day.notes && <p className="whitespace-pre-wrap break-words mb-2">{day.notes}</p>}
               {!day.exercises.length && <p>Día sin ejercicios.</p>}
               <ol className="flex flex-col gap-2 text-sm">
                 {day.exercises.map((exercise, index) => (
                   <li key={index} className="break-words">
-                    <strong>{exercise.exerciseName || exercise.exerciseId}</strong>
+                    <strong className="block">
+                      {exercise.exerciseName || exercise.exerciseId}
+                    </strong>
                     <PrescriptionSummary exercise={exercise} />
                     {(exercise.variantGrip || exercise.variantMachine) && (
                       <p>

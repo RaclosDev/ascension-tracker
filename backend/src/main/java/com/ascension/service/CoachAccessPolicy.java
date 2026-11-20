@@ -33,6 +33,7 @@ public class CoachAccessPolicy {
         VIEW_PROGRAMS(Scope.TRAINING),
         ASSIGN_PROGRAM(Scope.EDIT_TRAINING),
         COMMENT_WORKOUT(Scope.TRAINING),
+        COMMENT_DAY(Scope.LINK),
         SET_NUTRITION_PLAN(Scope.EDIT_NUTRITION),
         VIEW_CHECKINS(Scope.LINK),
         REPLY_CHECKIN(Scope.LINK);

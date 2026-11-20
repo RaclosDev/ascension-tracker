@@ -14,11 +14,19 @@ import {
 import { QueryErrorNotice } from '../QueryErrorNotice';
 import { Select } from '@/components/ui/select';
 
-export function ProfessionalSettingsEditor() {
+export type ProfessionalSection = 'perfil' | 'incorporaciones' | 'pautar';
+const TITLES: Record<ProfessionalSection, string> = {
+  perfil: 'Lo que ve tu atleta',
+  incorporaciones: 'Nuevas incorporaciones',
+  pautar: 'Forma de pautar',
+};
+
+/** One part of the professional settings; the three share a draft and a single save. */
+export function ProfessionalSettingsEditor({ section }: { section: ProfessionalSection }) {
   const settings = useProfessionalSettings();
   return (
     <section data-tour="professional-settings" className="card">
-      <h2>Tu perfil y forma de trabajar</h2>
+      <h2>{TITLES[section]}</h2>
       {settings.isPending ? (
         <p role="status">Cargando ajustes profesionales…</p>
       ) : settings.isError ? (
@@ -27,6 +35,7 @@ export function ProfessionalSettingsEditor() {
         <SettingsForm
           key={settings.data.version}
           saved={settings.data}
+          section={section}
           reload={() => void settings.refetch()}
         />
       )}
@@ -34,7 +43,15 @@ export function ProfessionalSettingsEditor() {
   );
 }
 
-function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: () => void }) {
+function SettingsForm({
+  saved,
+  section,
+  reload,
+}: {
+  saved: ProfessionalSettings;
+  section: ProfessionalSection;
+  reload: () => void;
+}) {
   const draft = useSessionDraft('professional-settings', saved, isProfessionalSettings);
   const save = useSaveProfessionalSettings();
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +62,8 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
     set({ review: { ...value.review, ...patch } });
   return (
     <form
-      className="grid gap-6 lg:grid-cols-2"
+      className="coach-settings-form"
+      noValidate
       onSubmit={(event) => {
         event.preventDefault();
         if (stale || save.isPending) return;
@@ -65,8 +83,12 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
         });
       }}
     >
-      <fieldset className="flex flex-col gap-3" disabled={save.isPending}>
-        <legend className="font-semibold mb-2">Lo que ve tu atleta</legend>
+      <fieldset
+        className="flex flex-col gap-3"
+        aria-label={TITLES.perfil}
+        hidden={section !== 'perfil'}
+        disabled={save.isPending}
+      >
         <p className="coach-description">
           Esta identidad aparece en tus invitaciones, planes y seguimientos. Se guarda separada del
           nombre de tu cuenta.
@@ -110,8 +132,12 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
           </p>
         </aside>
       </fieldset>
-      <fieldset className="flex flex-col gap-3" disabled={save.isPending}>
-        <legend className="font-semibold mb-2">Nuevas incorporaciones</legend>
+      <fieldset
+        className="flex flex-col gap-3"
+        aria-label={TITLES.incorporaciones}
+        hidden={section !== 'incorporaciones'}
+        disabled={save.isPending}
+      >
         <p className="coach-description">
           Se proponen al crear invitaciones. Puedes adaptar los servicios y quién rellena los datos
           antes de enviarlas. El atleta decide sus permisos.
@@ -190,8 +216,12 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
         </p>
       </fieldset>
 
-      <fieldset className="flex flex-col gap-3 lg:col-span-2" disabled={save.isPending}>
-        <legend className="font-semibold mb-2">Forma de pautar</legend>
+      <fieldset
+        className="flex flex-col gap-3"
+        aria-label={TITLES.pautar}
+        hidden={section !== 'pautar'}
+        disabled={save.isPending}
+      >
         <p className="coach-description">
           Se aplica a todos los ejercicios que pautes, para no elegirlo en cada uno. Un atleta
           concreto puede tener otro método de esfuerzo desde su ficha.
@@ -229,25 +259,25 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
       </fieldset>
 
       {draft.notice && (
-        <p role="status" className="coach-description lg:col-span-2">
+        <p role="status" className="coach-description">
           {draft.notice}
         </p>
       )}
       {stale && (
-        <p role="alert" className="lg:col-span-2">
+        <p role="alert">
           Hay una versión más reciente. Conservamos tu borrador para que puedas copiarlo antes de
           descartarlo.
         </p>
       )}
       {error && (
-        <div role="alert" className="lg:col-span-2">
+        <div role="alert">
           <p>{error}</p>
           <button type="button" className="btn btn-secondary mt-2" onClick={reload}>
             Consultar versión guardada
           </button>
         </div>
       )}
-      <div className="flex flex-wrap gap-3 lg:col-span-2">
+      <div className="flex flex-wrap gap-3">
         <button
           className="btn btn-primary"
           type="submit"
@@ -256,10 +286,12 @@ function SettingsForm({ saved, reload }: { saved: ProfessionalSettings; reload: 
             stale ||
             !draft.dirty ||
             !value.displayName.trim() ||
+            !value.review.time ||
+            !value.review.timeZone.trim() ||
             !Object.values(value.services).some(Boolean)
           }
         >
-          {save.isPending ? 'Guardando…' : 'Guardar ajustes profesionales'}
+          {save.isPending ? 'Guardando…' : 'Guardar cambios'}
         </button>
         {draft.dirty && (
           <button

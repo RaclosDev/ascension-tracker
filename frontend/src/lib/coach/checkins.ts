@@ -193,6 +193,24 @@ export const useMyCheckinHistory = (linkId: string) =>
       (await api.get<Checkin[]>(`/coaching/coaches/${enc(linkId)}/checkins`)).data,
   });
 
+/** What this coach said about the days of one week of the client. */
+export const useMyDayComments = (linkId: string, weekStart: string | undefined) =>
+  useQuery({
+    queryKey: [...keys.mine(linkId), 'day-comments', weekStart],
+    enabled: !!weekStart,
+    retry: false,
+    queryFn: async () => {
+      const to = new Date(`${weekStart}T12:00:00Z`);
+      to.setUTCDate(to.getUTCDate() + 6);
+      return (
+        await api.get<{ date: string; text: string }[]>(
+          `/coaching/coaches/${enc(linkId)}/day-comments`,
+          { params: { from: weekStart, to: to.toISOString().slice(0, 10) } },
+        )
+      ).data;
+    },
+  });
+
 export function useSendCheckin(linkId: string) {
   const queryClient = useQueryClient();
   return useMutation({

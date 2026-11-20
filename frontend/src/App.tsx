@@ -35,13 +35,9 @@ const CoachClientWeeklyWorkoutsPage = lazyWithRetry(
 const CoachClientWeeklyRecordsPage = lazyWithRetry(
   () => import('./pages/CoachClientWeeklyRecordsPage'),
 );
-const CoachProgramsPage = lazyWithRetry(() => import('./pages/CoachProgramsPage'));
 const CoachProgramEditorPage = lazyWithRetry(() => import('./pages/CoachProgramEditorPage'));
 const CoachProgramAdaptPage = lazyWithRetry(() => import('./pages/CoachProgramAdaptPage'));
 const CoachRecipesPage = lazyWithRetry(() => import('./pages/CoachRecipesPage'));
-const CoachNutritionTemplatesPage = lazyWithRetry(
-  () => import('./pages/CoachNutritionTemplatesPage'),
-);
 const CoachNutritionTemplateEditorPage = lazyWithRetry(
   () => import('./pages/CoachNutritionTemplateEditorPage'),
 );
@@ -223,10 +219,16 @@ function AppContent() {
                 path="entrenador/atletas/:linkId/programas/:assignmentId/adaptar"
                 element={<CoachProgramAdaptPage />}
               />
-              <Route path="entrenador/programas" element={<CoachProgramsPage />} />
+              <Route
+                path="entrenador/programas"
+                element={<Navigate to="/entrenador/planificacion?pestana=programas" replace />}
+              />
               <Route path="entrenador/programas/:programId" element={<CoachProgramEditorPage />} />
               <Route path="entrenador/recetas" element={<CoachRecipesPage />} />
-              <Route path="entrenador/pautas" element={<CoachNutritionTemplatesPage />} />
+              <Route
+                path="entrenador/pautas"
+                element={<Navigate to="/entrenador/planificacion?pestana=nutricion" replace />}
+              />
               <Route
                 path="entrenador/pautas/:templateId"
                 element={<CoachNutritionTemplateEditorPage />}

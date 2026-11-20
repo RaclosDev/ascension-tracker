@@ -8,14 +8,18 @@ export interface CoachTourStep {
   prepare?: { click: string; until: string }[];
 }
 
+/** The week already has sessions: on the calendar, or in the athlete preview that replaces it. */
+const PLANNED =
+  '.cal-week[data-focus] .cal-session:not([data-state="free"]), [aria-label="Vista previa del programa"]';
+
 export const COACH_TOUR_STEPS: CoachTourStep[] = [
   {
     id: 'home',
     chapter: 'Día a día',
     title: 'Tu punto de partida',
-    body: 'Este es el Inicio real del entrenador. Aquí ves seguimientos pendientes, atletas por revisar y acceso a la agenda. El recorrido carga atletas de ejemplo.',
+    body: 'Este es el Inicio real del entrenador. Tres columnas te dicen qué vence: semanas por entregar, quién registra y seguimientos por responder. El recorrido carga atletas de ejemplo.',
     path: '/entrenador',
-    target: '[aria-label="Resumen de atletas"]',
+    target: '.coach-home-columns',
   },
   {
     id: 'go-clients',
@@ -37,7 +41,7 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     id: 'roster',
     chapter: 'Día a día',
     title: 'Encuentra a quien necesita seguimiento',
-    body: 'Los filtros y el orden por prioridad te ayudan a revisar tu cartera. Cada fila muestra actividad, seguimientos y el estado de la próxima semana.',
+    body: 'El filtro y el orden por prioridad te ayudan a revisar tu cartera. Cada fila muestra la semana siguiente, el último registro y el siguiente paso con ese atleta.',
     path: '/entrenador/atletas',
     target: '[aria-label="Filtrar atletas"]',
   },
@@ -53,9 +57,9 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     id: 'client-tabs',
     chapter: 'Planificar una semana',
     title: 'Las pestañas de cada atleta',
-    body: 'Semana reúne seguimiento y planificación. Las demás pestañas separan historial, especialidades, progreso, seguimientos y gestión. Dependen de los servicios y permisos.',
+    body: 'Entrenamiento abre el calendario del atleta: cada día con su sesión, lo que registró y su nutrición. Las demás pestañas separan nutrición, progreso, seguimientos y gestión. Dependen de los servicios y permisos.',
     path: '/entrenador/atletas/tour-lucia?seccion=semana',
-    target: '[aria-label="Secciones del atleta"]',
+    target: '.athlete-nav .athlete-tabs',
   },
   {
     id: 'review',
@@ -69,15 +73,15 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     id: 'copy',
     chapter: 'Planificar una semana',
     title: 'Copia la semana anterior',
-    body: 'Este botón reutiliza la semana vigente del atleta. Después ajustas su copia. Al avanzar lo abriremos en la pantalla real para mostrarte el editor.',
+    body: 'En «Copiar» está «Copiar semana anterior», que reutiliza la semana vigente del atleta. Después ajustas su copia. Al avanzar lo haremos en la pantalla real para mostrarte el editor.',
     path: '/entrenador/atletas/tour-lucia?seccion=semana',
-    target: '[data-tour="copy-week"]',
+    target: '[data-tour="copy-menu"]',
   },
   {
     id: 'prescription',
     chapter: 'Planificar una semana',
     title: 'Edita la prescripción aquí',
-    body: 'Este es el editor real: una fila por serie con repeticiones, esfuerzo y carga. Intro añade otra serie igual. La nota va debajo, y descanso y superserie tras los tres puntos. Cada atleta recibe su propia adaptación.',
+    body: 'Este es el editor real: al pulsar un día del calendario se abre su sesión, con cada ejercicio en una línea de series, repeticiones, esfuerzo y carga. La flecha despliega el serie a serie, la nota, el descanso y la superserie. Cada atleta recibe su propia adaptación.',
     path: '/entrenador/atletas/tour-lucia?seccion=semana',
     target: '[data-tour="exercise-prescription"]',
     prepare: [
@@ -87,7 +91,13 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
       },
       {
         click: '[data-tour="copy-week"]',
-        until: '[data-tour="exercise-prescription"], [aria-label="Vista previa del programa"]',
+        until: PLANNED,
+      },
+      {
+        // Coming back from the week settings, the day has to be opened again.
+        click:
+          '.cal-week[data-focus] .cal-cell:has(.cal-session:not([data-state="free"])) .cal-day',
+        until: '[data-tour="exercise-prescription"]',
       },
     ],
   },
@@ -102,10 +112,6 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
       {
         click: '[data-tour="student-preview"][aria-pressed="true"]',
         until: '[data-tour="student-preview"][aria-pressed="false"]',
-      },
-      {
-        click: '[data-tour="copy-week"]',
-        until: '[data-tour="exercise-prescription"], [aria-label="Vista previa del programa"]',
       },
       {
         click: '[data-week-panel="library"][aria-pressed="false"]',
@@ -177,7 +183,7 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
       },
       {
         click: '[data-tour="copy-week"]',
-        until: '[data-tour="exercise-prescription"], [aria-label="Vista previa del programa"]',
+        until: PLANNED,
       },
     ],
   },
@@ -191,7 +197,7 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     prepare: [
       {
         click: '[data-tour="copy-week"]',
-        until: '[data-tour="exercise-prescription"], [aria-label="Vista previa del programa"]',
+        until: PLANNED,
       },
       {
         click: '[data-tour="student-preview"]',
@@ -202,8 +208,8 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
   {
     id: 'publish',
     chapter: 'Planificar una semana',
-    title: 'Guarda o publica desde aquí',
-    body: 'Guardar borrador conserva tu trabajo. Publicar semana abre una confirmación con fechas, sesiones y series antes de entregarla. Durante el tour no publicamos nada.',
+    title: 'Publica desde aquí',
+    body: 'El borrador se guarda solo mientras trabajas. Publicar semana abre una confirmación con fechas, sesiones y series antes de entregarla. Durante el tour no publicamos nada.',
     path: '/entrenador/atletas/tour-lucia?seccion=semana',
     target: '[data-tour="week-publish"]',
   },
@@ -267,8 +273,8 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     id: 'nutrition',
     chapter: 'Especialidades',
     title: 'Prepara la pauta nutricional',
-    body: 'Distingue objetivos de entreno y descanso, añade comidas y revisa la vista previa antes de publicar. Debajo encuentras adherencia y registros.',
-    path: '/entrenador/atletas/tour-lucia?seccion=nutricion',
+    body: 'Distingue objetivos de entreno y descanso, añade comidas y revisa la vista previa antes de publicar. Su diario de comidas, día a día, está en la pestaña de al lado.',
+    path: '/entrenador/atletas/tour-lucia?seccion=pauta',
     target: '[data-tour="nutrition-plan"]',
   },
   {
@@ -298,33 +304,25 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
   {
     id: 'resources',
     chapter: 'Biblioteca',
-    title: 'Cada recurso tiene su lugar',
-    body: 'Elige pautas nutricionales, sesiones/semanas/programas o recetas. Preparas el recurso una vez y adaptas su copia al atleta.',
+    title: 'Cada recurso tiene su pestaña',
+    body: 'Sesiones, semanas, programas, pautas de nutrición y recetas. Preparas el recurso una vez y con «Aplicar a…» lo llevas al atleta que elijas.',
     path: '/entrenador/planificacion',
-    target: '.coach-resource-grid',
-  },
-  {
-    id: 'programs-link',
-    chapter: 'Biblioteca',
-    title: 'Abre las sesiones y programas',
-    body: 'Este enlace lleva a tu biblioteca de entrenamiento. También admite sesiones sueltas y semanas: no necesitas preparar un ciclo largo.',
-    path: '/entrenador/planificacion',
-    target: 'a[href="/entrenador/programas"]',
+    target: '.coach-library-tabs',
   },
   {
     id: 'library-filters',
     chapter: 'Biblioteca',
     title: 'Encuentra tus recursos habituales',
-    body: 'Busca por nombre o etiqueta y filtra por tipo, favoritos, material o duración para recuperar una sesión sin revisar todos tus programas.',
-    path: '/entrenador/programas',
+    body: 'Busca por nombre, etiqueta o material y quédate solo con tus favoritos. En cada fila tienes la estrella y el botón para clasificar el recurso.',
+    path: '/entrenador/planificacion',
     target: '[data-tour="library-filters"]',
   },
   {
     id: 'create-session',
     chapter: 'Biblioteca',
     title: 'Crea una sesión reutilizable',
-    body: 'Nueva sesión abre el editor para una sesión suelta. Los botones contiguos permiten crear una semana o un programa completo.',
-    path: '/entrenador/programas',
+    body: 'Nueva sesión abre el editor para una sesión suelta. En las pestañas Semanas y Programas el mismo botón crea una semana o un programa completo.',
+    path: '/entrenador/planificacion',
     target: 'a[href="/entrenador/programas/nuevo?tipo=sesion"]',
   },
   {
@@ -339,15 +337,15 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     id: 'questions',
     chapter: 'Configuración',
     title: 'Personaliza el seguimiento',
-    body: 'Aquí editas las preguntas comunes de tus seguimientos. Los avisos de nuevos seguimientos se configuran al lado y dependen de este dispositivo.',
-    path: '/entrenador/ajustes',
+    body: 'Aquí editas las preguntas comunes de tus seguimientos. Los avisos de nuevos seguimientos están en el apartado Avisos y dependen de este dispositivo.',
+    path: '/entrenador/ajustes?apartado=seguimiento',
     target: '[data-tour="checkin-template"]',
   },
   {
     id: 'subscription',
     chapter: 'Configuración',
     title: 'Tu plan está en Suscripción',
-    body: 'Este apartado contiene tu plan, límites y opciones de contratación. El recorrido no realiza compras ni envía solicitudes.',
+    body: 'Suscripción está en el menú de tu cuenta, al pie del lateral. Contiene tu plan, límites y opciones de contratación. El recorrido no realiza compras ni envía solicitudes.',
     path: '/entrenador/ajustes',
     target: '[data-tour-nav="/entrenador/plan"]',
   },
@@ -363,7 +361,7 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     id: 'finish',
     chapter: 'Para terminar',
     title: 'Vuelve al tour cuando quieras',
-    body: 'Tienes la pestaña Tour en el menú y accesos desde Inicio y Ajustes. Puedes repetir el recorrido o empezar por un capítulo. Al terminar volverás a tu cuenta.',
+    body: 'Tienes Tour en el menú de tu cuenta y accesos desde Inicio y Ajustes. Puedes repetir el recorrido o empezar por un capítulo. Al terminar volverás a tu cuenta.',
     path: '/entrenador',
     target: '[data-tour-nav="/entrenador/guia"]',
   },

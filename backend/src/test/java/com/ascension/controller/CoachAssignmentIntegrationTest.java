@@ -423,6 +423,103 @@ class CoachAssignmentIntegrationTest {
         mvc.perform(as(get("/api/user/export"), client)).andExpect(jsonPath("$.coachWeekPlans").doesNotExist());
     }
 
+    @Test
+    void blockRepeatsWeeksPublishesThemTogetherAndClosesWithItsOwnQuestions() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach), EDIT);
+        LocalDate first = LocalDate.now().with(java.time.temporal.TemporalAdjusters.next(java.time.DayOfWeek.MONDAY));
+        LocalDate second = first.plusWeeks(1);
+        LocalDate third = first.plusWeeks(2);
+        String base = "/api/coach/clients/" + link;
+        String week = PROGRAM.replace("\"weeks\":2", "\"weeks\":1");
+        String save = "{\"expectedVersion\":%d,\"content\":{\"program\":%s,\"privateNotes\":\"%s\",\"intent\":\"%s\",\"decision\":\"\"}}";
+
+        mvc.perform(as(post(base + "/block/repeat"), coach).contentType("application/json")
+                        .content("{\"source\":\"" + first + "\",\"targets\":[\"" + second + "\"]}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(as(put(base + "/weeks/" + first), coach).contentType("application/json")
+                .content(save.formatted(0, week, "Base", "BUILD"))).andExpect(status().isOk());
+        mvc.perform(as(put(base + "/weeks/" + third), coach).contentType("application/json")
+                .content(save.formatted(0, week.replace("Torso", "Descarga"), "Bajar fatiga", "DELOAD")))
+                .andExpect(status().isOk());
+        mvc.perform(as(post(base + "/block/repeat"), coach).contentType("application/json")
+                        .content("{\"source\":\"" + first + "\",\"targets\":[\"" + second + "\",\"" + third + "\"]}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].linkedFrom").value(first.toString()))
+                .andExpect(jsonPath("$[1].content.program.days[0].name").value("Torso"))
+                .andExpect(jsonPath("$[1].content.intent").value("DELOAD"))
+                .andExpect(jsonPath("$[1].content.privateNotes").value("Bajar fatiga"))
+                .andExpect(jsonPath("$[1].version").value(2));
+
+        // Saving the source carries its sessions to the weeks that repeat it.
+        mvc.perform(as(put(base + "/weeks/" + first), coach).contentType("application/json")
+                .content(save.formatted(1, week.replace("Torso", "Torso A"), "Base", "BUILD"))).andExpect(status().isOk());
+        mvc.perform(as(get(base + "/block").param("from", first.toString()).param("weeks", "4"), coach))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.block").doesNotExist())
+                .andExpect(jsonPath("$.weeks.length()").value(4))
+                .andExpect(jsonPath("$.weeks[1].content.program.days[0].name").value("Torso A"))
+                .andExpect(jsonPath("$.weeks[2].content.program.days[0].name").value("Torso A"))
+                .andExpect(jsonPath("$.weeks[3].version").value(0));
+
+        // Changing only the type of a repeated week keeps it following the source.
+        mvc.perform(as(put(base + "/weeks/" + second), coach).contentType("application/json")
+                        .content(save.formatted(2, week.replace("Torso", "Torso A"), "", "MAINTAIN")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.linkedFrom").value(first.toString()));
+
+        // Editing a repeated week by hand stops it from following the source.
+        mvc.perform(as(put(base + "/weeks/" + third), coach).contentType("application/json")
+                        .content(save.formatted(3, week.replace("Torso", "Descarga"), "Bajar fatiga", "DELOAD")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.linkedFrom").doesNotExist());
+        mvc.perform(as(put(base + "/weeks/" + first), coach).contentType("application/json")
+                .content(save.formatted(2, week.replace("Torso", "Torso B"), "Base", "BUILD"))).andExpect(status().isOk());
+        mvc.perform(as(get(base + "/weeks/" + third), coach))
+                .andExpect(jsonPath("$.content.program.days[0].name").value("Descarga"));
+
+        // A stale version publishes nothing at all.
+        String stale = "{\"weeks\":[{\"week\":\"" + first + "\",\"expectedVersion\":3},{\"week\":\"" + second + "\",\"expectedVersion\":1}]}";
+        mvc.perform(as(post(base + "/block/publish"), coach).contentType("application/json").content(stale))
+                .andExpect(status().isConflict());
+        mvc.perform(as(get(base + "/weeks/" + first), coach)).andExpect(jsonPath("$.publishedVersion").doesNotExist());
+        String both = "{\"weeks\":[{\"week\":\"" + second + "\",\"expectedVersion\":4},{\"week\":\"" + first + "\",\"expectedVersion\":3}]}";
+        mvc.perform(as(post(base + "/block/publish"), coach).contentType("application/json").content(both))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].weekStart").value(first.toString()))
+                .andExpect(jsonPath("$[0].publishedVersion").value(3))
+                .andExpect(jsonPath("$[1].publishedVersion").value(4));
+
+        // The block belongs to this coach and athlete only.
+        mvc.perform(as(get(base + "/block").param("from", first.toString()), coach())).andExpect(status().isNotFound());
+        mvc.perform(as(get(base + "/block").param("from", first.toString()), client)).andExpect(status().isNotFound());
+        mvc.perform(as(post(base + "/block/publish"), client).contentType("application/json").content(both))
+                .andExpect(status().isNotFound());
+        mvc.perform(as(get(base + "/block").param("from", first.plusDays(1).toString()), coach))
+                .andExpect(status().isBadRequest());
+
+        // The check-in of the block's last week adds the closing questions; other weeks do not.
+        LocalDate monday = LocalDate.now().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+        String block = "{\"name\":\" Fuerza base \",\"startWeek\":\"%s\",\"weeks\":%d}";
+        mvc.perform(as(put(base + "/block"), coach).contentType("application/json")
+                .content(block.formatted(monday.minusWeeks(3), 1))).andExpect(status().isBadRequest());
+        mvc.perform(as(put(base + "/block"), client).contentType("application/json")
+                .content(block.formatted(monday.minusWeeks(3), 4))).andExpect(status().isNotFound());
+        mvc.perform(as(put(base + "/block"), coach).contentType("application/json")
+                        .content(block.formatted(monday.minusWeeks(3), 5)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Fuerza base"));
+        mvc.perform(as(get("/api/coaching/coaches/{link}/checkin", link), client))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.questions.length()").value(3));
+        mvc.perform(as(put(base + "/block"), coach).contentType("application/json")
+                .content(block.formatted(monday.minusWeeks(3), 4))).andExpect(status().isOk());
+        mvc.perform(as(get(base + "/block").param("from", first.toString()), coach))
+                .andExpect(jsonPath("$.block.weeks").value(4));
+        mvc.perform(as(get("/api/coaching/coaches/{link}/checkin", link), client))
+                .andExpect(jsonPath("$.questions.length()").value(5))
+                .andExpect(jsonPath("$.questions[4]").value("Fin de bloque: ¿qué cambiarías para el siguiente?"));
+        mvc.perform(as(delete(base + "/block"), coach)).andExpect(status().isNoContent());
+        mvc.perform(as(get("/api/coaching/coaches/{link}/checkin", link), client))
+                .andExpect(jsonPath("$.questions.length()").value(3));
+    }
+
     private MockHttpServletRequestBuilder adaptRequest(String coach, String link, String assignment, String program, LocalDate start) {
         return as(post("/api/coach/clients/{link}/programs/{id}/adapt", link, assignment), coach)
                 .contentType("application/json").content("{\"program\":" + program + ",\"startDate\":\"" + start + "\"}");

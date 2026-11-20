@@ -1,19 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useCoachFilters } from '../lib/coach/useCoachFilters';
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Check,
-  ClipboardCheck,
-  CalendarDays,
-  Clock3,
-  Dumbbell,
-  Footprints,
-  Scale,
-  Search,
-  SlidersHorizontal,
-  Utensils,
-} from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Check, Clock3, Search } from 'lucide-react';
 import { personName } from '../lib/coach/api';
 import { clientTasks } from '../lib/coach/tasks';
 import { SERVICE_LABELS } from '../lib/coach/setup';
@@ -36,31 +23,27 @@ import { ClientAvatar } from '../components/coach/ClientAvatar';
 import '../styles/coach-roster.css';
 import { Select } from '@/components/ui/select';
 
-type Filter =
-  | 'all'
-  | 'attention'
-  | 'checkin'
-  | 'noProgram'
-  | 'setup'
-  | 'tasks'
-  | 'waiting'
-  | 'paused'
-  | 'nextWeek';
-const FILTERS: { value: Filter; label: string; matches: (row: CoachRow) => boolean }[] = [
-  { value: 'all', label: 'Todos', matches: () => true },
-  {
-    value: 'nextWeek',
-    label: 'Semana por preparar',
-    matches: (r) =>
-      r.link.setup?.services.training === true &&
-      (r.status?.nextWeekStatus === 'MISSING' || r.status?.nextWeekStatus === 'DRAFT'),
-  },
-  { value: 'paused', label: 'En pausa', matches: (r) => !!r.link.followup?.schedule.paused },
-  { value: 'setup', label: 'Incorporación', matches: (r) => !r.link.setup?.reviewed },
+interface Filter {
+  value: string;
+  label: string;
+  matches: (row: CoachRow) => boolean;
+}
+const weekPending = ({ link, status }: CoachRow) =>
+  link.setup?.services.training === true &&
+  link.permissions.training &&
+  (status?.nextWeekStatus === 'MISSING' || status?.nextWeekStatus === 'DRAFT');
+const ALL: Filter = { value: '', label: 'Todos los atletas', matches: () => true };
+const STATE_FILTERS: Filter[] = [
   {
     value: 'tasks',
     label: 'Con pendientes',
     matches: (r) => clientTasks(r).some((t) => t.owner === 'coach'),
+  },
+  { value: 'nextWeek', label: 'Semana por preparar', matches: weekPending },
+  {
+    value: 'checkin',
+    label: 'Seguimientos por responder',
+    matches: (r) => (r.status?.pendingReplies ?? 0) > 0,
   },
   {
     value: 'waiting',
@@ -69,25 +52,24 @@ const FILTERS: { value: Filter; label: string; matches: (row: CoachRow) => boole
   },
   {
     value: 'attention',
-    label: 'Por revisar',
+    label: 'Con alertas',
     matches: (r) => followupSignals(r.status).length > 0,
-  },
-  {
-    value: 'checkin',
-    label: 'Seguimientos por responder',
-    matches: (r) => (r.status?.pendingReplies ?? 0) > 0,
   },
   {
     value: 'noProgram',
     label: 'Sin programa',
     matches: (r) => !!r.status?.signals.some((s) => s.reason === 'NO_PROGRAM'),
   },
+  { value: 'setup', label: 'Incorporación', matches: (r) => !r.link.setup?.reviewed },
+  { value: 'paused', label: 'En pausa', matches: (r) => !!r.link.followup?.schedule.paused },
 ];
-const PRIMARY_FILTERS: Filter[] = ['all', 'tasks', 'nextWeek', 'checkin'];
-const weightFormat = new Intl.NumberFormat('es-ES', {
-  maximumFractionDigits: 1,
-  signDisplay: 'exceptZero',
-});
+const SERVICE_FILTERS: Filter[] = Object.entries(SERVICE_LABELS).map(([key, label]) => ({
+  value: `servicio-${key}`,
+  label,
+  matches: (r) =>
+    Object.entries(r.link.setup?.services ?? {}).some(([name, active]) => name === key && active),
+}));
+const FILTERS = [ALL, ...STATE_FILTERS, ...SERVICE_FILTERS];
 
 export default function CoachClientsPage() {
   return (
@@ -100,18 +82,12 @@ export default function CoachClientsPage() {
 function Clients() {
   const { clients, status, rows, ready } = useCoachRoster();
   const { params, update, clear } = useCoachFilters();
-  const filter = FILTERS.find((f) => f.value === params.get('filtro')) ?? FILTERS[0];
+  const filter = FILTERS.find((f) => f.value === params.get('filtro')) ?? ALL;
   const search = params.get('q') ?? '';
   const sort = params.get('orden') ?? 'priority';
-  const showWeight = params.get('peso') === 'si';
-  const service = params.get('servicio') ?? '';
   const visible = rows.filter(
     (r) =>
       filter.matches(r) &&
-      (!service ||
-        Object.entries(r.link.setup?.services ?? {}).some(
-          ([key, active]) => key === service && active,
-        )) &&
       searchName(personName(r.link.client)).includes(searchName(search.trim())),
   );
   if (sort === 'name')
@@ -119,8 +95,12 @@ function Clients() {
       personName(a.link.client).localeCompare(personName(b.link.client), 'es'),
     );
   if (sort === 'recent') visible.sort((a, b) => b.link.since.localeCompare(a.link.since));
-  const href = (linkId: string, section = 'resumen') =>
-    `${clientHref(linkId, section)}&lista=${encodeURIComponent(params.toString())}`;
+  const listQuery = params.toString();
+  const href = (linkId: string, section?: string) =>
+    `${clientHref(linkId, section)}${section ? '&' : '?'}lista=${encodeURIComponent(listQuery)}`;
+  const registerHref = (linkId: string) =>
+    `/entrenador/atletas/${encodeURIComponent(linkId)}/registro?${new URLSearchParams({ lista: listQuery })}`;
+  const count = (f: Filter) => (f === ALL || ready ? ` (${rows.filter(f.matches).length})` : '');
 
   return (
     <>
@@ -150,77 +130,40 @@ function Clients() {
               />
             </label>
             <label className="coach-sort">
+              <span>Mostrar</span>
+              <select
+                aria-label="Filtrar atletas"
+                value={filter.value}
+                onChange={(e) => update('filtro', e.target.value)}
+              >
+                <option value="">
+                  {ALL.label}
+                  {count(ALL)}
+                </option>
+                <optgroup label="Por estado">
+                  {STATE_FILTERS.map((f) => (
+                    <option key={f.value} value={f.value} disabled={!ready}>
+                      {f.label}
+                      {count(f)}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Por servicio">
+                  {SERVICE_FILTERS.map((f) => (
+                    <option key={f.value} value={f.value}>
+                      {f.label}
+                      {count(f)}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+            </label>
+            <label className="coach-sort">
               <span>Ordenar</span>
               <Select value={sort} onChange={(e) => update('orden', e.target.value)}>
                 <option value="priority">Prioridad</option>
                 <option value="name">Nombre</option>
                 <option value="recent">Altas recientes</option>
-              </Select>
-            </label>
-            <details className="coach-roster-options">
-              <summary>
-                <SlidersHorizontal size={17} aria-hidden /> Opciones
-                {(service || showWeight) && (
-                  <span className="coach-options-active" aria-label="Opciones activas" />
-                )}
-              </summary>
-              <div className="coach-roster-options-panel">
-                <label className="coach-weight-toggle">
-                  <input
-                    type="checkbox"
-                    checked={showWeight}
-                    onChange={(e) => update('peso', e.target.checked ? 'si' : '')}
-                  />{' '}
-                  Mostrar peso
-                </label>
-                <label className="coach-sort">
-                  <span>Servicio</span>
-                  <Select value={service} onChange={(e) => update('servicio', e.target.value)}>
-                    <option value="">Todos los servicios</option>
-                    {Object.entries(SERVICE_LABELS).map(([key, label]) => (
-                      <option key={key} value={key}>
-                        {label}
-                      </option>
-                    ))}
-                  </Select>
-                </label>
-              </div>
-            </details>
-          </div>
-          <div
-            className="coach-chips coach-roster-filters"
-            role="group"
-            aria-label="Filtrar atletas"
-          >
-            {FILTERS.filter((f) => PRIMARY_FILTERS.includes(f.value)).map((f) => (
-              <button
-                key={f.value}
-                type="button"
-                className="coach-chip"
-                aria-pressed={filter.value === f.value}
-                disabled={f.value !== 'all' && !ready}
-                onClick={() => update('filtro', f.value === 'all' ? '' : f.value)}
-              >
-                {f.label}{' '}
-                <span className="coach-chip-count">
-                  {f.value === 'all' || ready ? rows.filter(f.matches).length : '—'}
-                </span>
-              </button>
-            ))}
-            <label className="coach-more-filters">
-              <span className="sr-only">Más filtros</span>
-              <Select
-                aria-label="Más filtros"
-                value={PRIMARY_FILTERS.includes(filter.value) ? '' : filter.value}
-                disabled={!ready}
-                onChange={(e) => update('filtro', e.target.value)}
-              >
-                <option value="">Más filtros</option>
-                {FILTERS.filter((f) => !PRIMARY_FILTERS.includes(f.value)).map((f) => (
-                  <option key={f.value} value={f.value}>
-                    {f.label} ({rows.filter(f.matches).length})
-                  </option>
-                ))}
               </Select>
             </label>
           </div>
@@ -240,7 +183,7 @@ function Clients() {
               activo.
             </p>
           )}
-          {!ready && filter.value !== 'all' ? (
+          {!ready && STATE_FILTERS.includes(filter) ? (
             <p>
               Espera a que cargue el seguimiento o{' '}
               <button
@@ -267,15 +210,15 @@ function Clients() {
                   : `${visible.length} de ${rows.length} atletas`}
               </p>
               <div className="card coach-table-wrap coach-roster-wrap">
-                <table className="coach-table coach-roster-table" data-show-weight={showWeight}>
+                <table className="coach-table coach-roster-table">
                   <caption className="sr-only">Seguimiento de atletas</caption>
                   <thead>
                     <tr>
                       <th scope="col">Atleta</th>
-                      <th scope="col">Pendientes</th>
-                      <th scope="col">Última actividad</th>
                       <th scope="col">Semana siguiente</th>
-                      {showWeight && <th scope="col">Peso (4 sem.)</th>}
+                      <th scope="col">Último registro</th>
+                      <th scope="col">Último seguimiento</th>
+                      <th scope="col">Siguiente paso</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -284,43 +227,29 @@ function Clients() {
                         <td>
                           <div className="coach-client-identity">
                             <ClientAvatar client={row.link.client} />
-                            <div className="coach-roster-person">
-                              <div className="coach-roster-name-line">
-                                <Link className="coach-row-link" to={href(row.link.linkId)}>
-                                  {personName(row.link.client)}
-                                </Link>
-                                <RegisterLink
-                                  linkId={row.link.linkId}
-                                  listQuery={params.toString()}
-                                />
-                              </div>
-                              <QuickLinks row={row} listQuery={params.toString()} />
-                            </div>
+                            <Link className="coach-row-link" to={href(row.link.linkId)}>
+                              {personName(row.link.client)}
+                            </Link>
                           </div>
                         </td>
                         <td>
-                          <TaskLinks row={row} href={href} />
+                          <WeekStatus row={row} />
                         </td>
                         <td>
-                          <span className="coach-roster-activity">
-                            {row.link.permissions.training
-                              ? `Entreno: ${activityText(row.status?.lastWorkout)}`
-                              : `Actividad: ${activityText(row.status?.lastActivity)}`}
-                          </span>
-                          <span className="coach-muted">
-                            Seguimiento: {activityText(row.status?.lastCheckin)}
-                          </span>
+                          <Link
+                            className="coach-roster-register"
+                            to={registerHref(row.link.linkId)}
+                            aria-label={`Registro de ${personName(row.link.client)}: ${activityText(row.status?.lastActivity)}`}
+                          >
+                            {activityText(row.status?.lastActivity)}
+                          </Link>
                         </td>
                         <td>
-                          <WeekStatus row={row} href={href} />
+                          <span className="coach-muted">{checkinText(row)}</span>
                         </td>
-                        {showWeight && (
-                          <td>
-                            {row.link.permissions.body && row.status?.weightChange != null
-                              ? `${weightFormat.format(row.status.weightChange)} kg`
-                              : '—'}
-                          </td>
-                        )}
+                        <td>
+                          <NextStep row={row} href={href} />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -334,32 +263,17 @@ function Clients() {
                       <span className="min-w-0 flex-1 flex flex-col gap-1">
                         <strong className="coach-card-name">{personName(row.link.client)}</strong>
                         <span className="coach-muted">
-                          Última actividad: {activityText(row.status?.lastActivity)}
+                          Último registro: {activityText(row.status?.lastActivity)}
                         </span>
-                        {row.link.permissions.training && (
+                        {row.link.permissions.training && row.status?.nextWeekStatus && (
                           <span className="coach-muted">
-                            Último entreno: {activityText(row.status?.lastWorkout)} · Próxima
-                            semana:{' '}
-                            {row.status?.nextWeekStatus === 'SCHEDULED'
-                              ? 'publicada'
-                              : row.status?.nextWeekStatus === 'DRAFT'
-                                ? 'borrador'
-                                : 'sin preparar'}
+                            Semana siguiente: {weekText(row.status.nextWeekStatus).toLowerCase()}
                           </span>
                         )}
-                        {showWeight &&
-                          row.link.permissions.body &&
-                          row.status?.weightChange != null && (
-                            <span className="coach-muted">
-                              Peso (4 sem.): {weightFormat.format(row.status.weightChange)} kg
-                            </span>
-                          )}
                       </span>
                       <ArrowUpRight size={18} aria-hidden />
                     </Link>
-                    <RegisterLink linkId={row.link.linkId} listQuery={params.toString()} />
-                    <QuickLinks row={row} listQuery={params.toString()} />
-                    <TaskLinks row={row} href={href} />
+                    <NextStep row={row} href={href} />
                   </li>
                 ))}
               </ul>
@@ -372,62 +286,8 @@ function Clients() {
   );
 }
 
-function quickOptions({ link }: Pick<CoachRow, 'link'>) {
-  const services = link.setup?.services;
-  return [
-    {
-      section: 'entrenos',
-      label: 'Entrenos',
-      icon: Dumbbell,
-      visible: link.permissions.training && services?.training !== false,
-    },
-    {
-      section: 'comidas',
-      label: 'Comidas',
-      icon: Utensils,
-      visible: link.permissions.nutrition && services?.nutrition !== false,
-    },
-    {
-      section: 'pasos',
-      label: 'Pasos',
-      icon: Footprints,
-      visible: link.permissions.body && services?.progress !== false,
-    },
-    {
-      section: 'peso',
-      label: 'Peso',
-      icon: Scale,
-      visible: link.permissions.body && services?.progress !== false,
-    },
-  ].filter((option) => option.visible);
-}
-
-function QuickLinks({ row, listQuery }: { row: CoachRow; listQuery: string }) {
-  const options = quickOptions(row);
-  if (!options.length) return null;
-  const query = listQuery ? `?${new URLSearchParams({ lista: listQuery })}` : '';
-  const athletePath = `/entrenador/atletas/${encodeURIComponent(row.link.linkId)}`;
-  return (
-    <div
-      className="coach-quick-links"
-      role="group"
-      aria-label={`Consulta semanal de ${personName(row.link.client)}`}
-    >
-      {options.map(({ section, label, icon: Icon }) => (
-        <Link
-          key={section}
-          to={`${athletePath}/${section}${query}`}
-          aria-label={`Ver ${label.toLocaleLowerCase('es')} de esta semana de ${personName(row.link.client)}`}
-        >
-          <Icon size={15} aria-hidden />
-          {label}
-        </Link>
-      ))}
-    </div>
-  );
-}
-
-function TaskLinks({
+/** The one thing to do with this athlete now: what the coach owes first, then the week, then waiting. */
+function NextStep({
   row,
   href,
 }: {
@@ -435,89 +295,90 @@ function TaskLinks({
   href: (linkId: string, section: string) => string;
 }) {
   const tasks = clientTasks(row);
-  if (tasks.length === 0) {
-    const pendingWeek =
-      row.link.setup?.services.training &&
-      row.link.permissions.training &&
-      row.status?.nextWeekStatus !== 'SCHEDULED';
+  const task = tasks.find((t) => t.owner === 'coach');
+  if (task)
     return (
-      <span className="coach-roster-quiet">
-        {row.link.followup?.schedule.paused ? (
-          <>
-            <Clock3 size={15} aria-hidden /> En pausa
-          </>
-        ) : !row.status ? (
-          'Seguimiento no disponible'
-        ) : pendingWeek ? (
-          'Semana pendiente'
-        ) : (
-          <>
-            <Check size={15} aria-hidden /> Al día
-          </>
-        )}
-      </span>
-    );
-  }
-  return (
-    <ul className="coach-roster-tasks">
-      {tasks.map((task, index) => (
-        <li key={task.id}>
-          <Link
-            className={`coach-roster-action${index === 0 ? ' coach-roster-action-primary' : ''}`}
-            to={href(row.link.linkId, task.section)}
-            title={task.detail}
+      <Link
+        className="coach-roster-action coach-roster-action-primary"
+        to={href(row.link.linkId, task.section)}
+      >
+        <span className="coach-roster-action-text">
+          {task.title}
+          {task.id !== 'reply' && <small>{task.detail}</small>}
+        </span>
+        {task.id === 'reply' && (
+          <span
+            className="coach-roster-reply-count"
+            aria-label={`${row.status?.pendingReplies} por responder`}
           >
-            {task.id === 'reply' ? (
-              <ClipboardCheck size={16} aria-hidden />
-            ) : (
-              <Clock3 size={16} aria-hidden />
-            )}
-            <span>{task.id === 'reply' ? 'Responder seguimiento' : task.title}</span>
-            {task.id === 'reply' && (
-              <span
-                className="coach-roster-reply-count"
-                aria-label={`${row.status?.pendingReplies} pendientes`}
-              >
-                {row.status?.pendingReplies}
-              </span>
-            )}
-            <ArrowRight size={15} aria-hidden />
-          </Link>
-        </li>
-      ))}
-    </ul>
+            {row.status?.pendingReplies}
+          </span>
+        )}
+        <ArrowRight size={15} aria-hidden />
+      </Link>
+    );
+  if (weekPending(row))
+    return (
+      <Link
+        className="coach-roster-action coach-roster-action-primary"
+        to={href(row.link.linkId, 'semana')}
+      >
+        <span>
+          {row.status?.nextWeekStatus === 'DRAFT' ? 'Terminar semana' : 'Preparar semana'}
+        </span>
+        <ArrowRight size={15} aria-hidden />
+      </Link>
+    );
+  if (tasks[0])
+    return (
+      <Link className="coach-roster-action" to={href(row.link.linkId, tasks[0].section)}>
+        <span className="coach-roster-action-text">
+          {tasks[0].title}
+          <small>{tasks[0].detail}</small>
+        </span>
+        <ArrowRight size={15} aria-hidden />
+      </Link>
+    );
+  return (
+    <span className="coach-roster-quiet">
+      {row.link.followup?.schedule.paused ? (
+        <>
+          <Clock3 size={15} aria-hidden /> En pausa
+        </>
+      ) : !row.status ? (
+        'Seguimiento no disponible'
+      ) : (
+        <>
+          <Check size={15} aria-hidden /> Al día
+        </>
+      )}
+    </span>
   );
 }
 
-function WeekStatus({
-  row,
-  href,
-}: {
-  row: CoachRow;
-  href: (id: string, section: string) => string;
-}) {
+/** When the last seguimiento came in and whose turn it is now. */
+function checkinText({ status }: CoachRow) {
+  if (!status) return 'No disponible';
+  const late = status.signals.find((signal) => signal.reason === 'CHECKIN_MISSING')?.value;
+  if (status.pendingReplies > 0) return `${activityText(status.lastCheckin)} · por responder`;
+  if (late) return late === 1 ? 'Atrasado 1 semana' : `Atrasado ${late} semanas`;
+  return status.lastCheckin
+    ? `${activityText(status.lastCheckin)} · respondido`
+    : 'Sin seguimientos';
+}
+
+const weekText = (state: NonNullable<NonNullable<CoachRow['status']>['nextWeekStatus']>) =>
+  state === 'SCHEDULED' ? 'Publicada' : state === 'DRAFT' ? 'Borrador' : 'Sin preparar';
+
+function WeekStatus({ row }: { row: CoachRow }) {
   if (!row.link.permissions.training) return <span className="coach-muted">—</span>;
   if (!row.status) return <span className="coach-muted">No disponible</span>;
   const state = row.status.nextWeekStatus;
   if (!state) return <span className="coach-muted">—</span>;
   return (
-    <Link className="coach-roster-week" data-state={state} to={href(row.link.linkId, 'semana')}>
+    <span className="coach-roster-week" data-state={state}>
       {state === 'SCHEDULED' ? <Check size={15} aria-hidden /> : <Clock3 size={15} aria-hidden />}
-      <span>
-        {state === 'SCHEDULED' ? 'Publicada' : state === 'DRAFT' ? 'Borrador' : 'Sin preparar'}
-      </span>
-      <ArrowRight size={14} aria-hidden />
-    </Link>
-  );
-}
-
-function RegisterLink({ linkId, listQuery }: { linkId: string; listQuery: string }) {
-  return (
-    <Link
-      className="coach-register-link"
-      to={`/entrenador/atletas/${linkId}/registro?${new URLSearchParams({ lista: listQuery })}`}
-    >
-      <CalendarDays size={14} aria-hidden /> Resumen
-    </Link>
+      <span>{weekText(state)}</span>
+    </span>
   );
 }

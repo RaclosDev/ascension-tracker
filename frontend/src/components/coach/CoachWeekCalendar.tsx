@@ -69,7 +69,7 @@ export function CoachWeekGrid({
               {date === today && <span>Hoy</span>}
             </h2>
             {renderDay(date, index) ?? (
-              <p className="coach-workout-calendar-empty">Sin registros</p>
+              <p className="coach-workout-calendar-empty">{date > today ? '—' : 'Sin registros'}</p>
             )}
           </li>
         );

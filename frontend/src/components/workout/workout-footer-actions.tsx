@@ -23,6 +23,7 @@ import toast from 'react-hot-toast';
 
 export function FooterActions() {
   const activeWorkout = useWorkoutStore((s) => s.active);
+  const prescribed = !!activeWorkout?.programDayId && !activeWorkout.editingId;
   const isEditing = Boolean(activeWorkout?.editingId);
   const finishWorkout = useWorkoutStore((s) => s.finishWorkout);
   const clearActiveWorkout = useWorkoutStore((s) => s.clearActiveWorkout);
@@ -226,6 +227,9 @@ export function FooterActions() {
         <Check size={20} />
         Terminar Entrenamiento
       </button>
+      {prescribed && (
+        <p className="workout-plan-hint">Tu entrenador lo verá cuando termines la sesión.</p>
+      )}
       <button
         className="workout-secondary-btn btn-press"
         onClick={doSaveTemplate}

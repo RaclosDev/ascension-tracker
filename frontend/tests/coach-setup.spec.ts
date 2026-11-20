@@ -95,8 +95,12 @@ for (const width of [1440, 390]) {
     await page.getByLabel('Días disponibles por semana (opcional)').fill('4');
     await page.getByLabel('Material disponible (opcional)').fill('Rack, barra y discos');
     await page.getByLabel(/He revisado con el atleta/).check();
-    await page.getByRole('button', { name: 'Guardar servicio' }).click();
-    await expect(page.getByText('Servicio guardado', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Guardar objetivo' }).click();
+    await expect(page.getByText('Objetivo guardado', { exact: true })).toBeVisible();
+    await page
+      .getByRole('navigation', { name: 'Apartados de los ajustes' })
+      .getByRole('link', { name: 'Agenda del seguimiento', exact: true })
+      .click();
     await chooseOption(page.getByLabel('Día del seguimiento'), '3');
     await page.getByLabel('Hora del seguimiento').fill('17:30');
     await page.getByLabel('Zona horaria').fill('Atlantic/Canary');
@@ -118,7 +122,7 @@ for (const width of [1440, 390]) {
     await page.getByLabel('Pausar seguimiento').uncheck();
     await page.getByRole('button', { name: 'Guardar agenda' }).click();
     await expect(page.getByRole('button', { name: 'Guardar agenda' })).toBeDisabled();
-    await page.getByRole('link', { name: 'Resumen', exact: true }).click();
+    await page.getByRole('link', { name: 'Progreso', exact: true }).click();
     await expect(page.getByText(/^4 días por semana/)).toBeVisible();
     const context = page.locator('.athlete-context');
     await expect(

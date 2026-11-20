@@ -61,8 +61,8 @@ export default function CoachProgramEditorPage() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="fade-in">
-      <Link to="/entrenador/programas" className="btn btn-secondary mb-4">
-        <ArrowLeft size={16} aria-hidden /> Programas
+      <Link to="/entrenador/planificacion" className="btn btn-secondary mb-4">
+        <ArrowLeft size={16} aria-hidden /> Biblioteca
       </Link>
       {children}
     </div>
@@ -145,14 +145,18 @@ export function ProgramEditor({
   };
 
   const currentWeek = Math.min(week, program.weeks);
+  // Back to the library tab this resource is filed under by its size.
+  const library = `/entrenador/planificacion${
+    program.weeks > 1 ? '?pestana=programas' : program.days.length > 1 ? '?pestana=semanas' : ''
+  }`;
 
   return (
     <div className="fade-in pb-16">
       <header className="mb-4 pb-2 border-b border-white/5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link
-            to={publication?.returnTo ?? '/entrenador/programas'}
-            aria-label={publication ? 'Volver al atleta' : 'Volver a programas'}
+            to={publication?.returnTo ?? library}
+            aria-label={publication ? 'Volver al atleta' : 'Volver a la biblioteca'}
             className="btn btn-secondary"
             onClick={async (e) => {
               if (!dirty) return;
@@ -164,7 +168,7 @@ export function ProgramEditor({
                   confirmLabel: 'Salir del editor',
                 })
               ) {
-                navigate(publication?.returnTo ?? '/entrenador/programas');
+                navigate(publication?.returnTo ?? library);
               }
             }}
           >

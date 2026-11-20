@@ -213,6 +213,65 @@ class CoachSessionIntegrationTest {
         mvc.perform(as(delete(comment, linkId, workoutId), coach)).andExpect(status().isNotFound());
     }
 
+    @Test
+    void commentsAnyDayOfTheWeekWithinTheLink() throws Exception {
+        String coach = coach();
+        String client = user();
+        String linkId = accept(client, invite(coach), NO_TRAINING);
+        String day = "/api/coach/clients/{linkId}/day-comments/{day}";
+        String list = "/api/coach/clients/{linkId}/day-comments";
+        String mine = "/api/coaching/coaches/{linkId}/day-comments";
+        LocalDate rest = start.minusDays(1);
+
+        // A rest day needs no workout and no training consent: the comment belongs to the link.
+        mvc.perform(as(put(day, linkId, rest), coach).contentType("application/json")
+                .content("{\"text\":\"  \"}")).andExpect(status().isBadRequest());
+        mvc.perform(as(put(day, linkId, start.plusDays(3)), coach).contentType("application/json")
+                .content("{\"text\":\"Hola\"}")).andExpect(status().isBadRequest());
+        mvc.perform(as(put(day, linkId, rest), coach).contentType("application/json")
+                .content("{\"text\":\"Descansa\"}")).andExpect(status().isNoContent());
+        mvc.perform(as(put(day, linkId, rest), coach).contentType("application/json")
+                .content("{\"text\":\" Buen descanso, mañana pierna \"}")).andExpect(status().isNoContent());
+
+        mvc.perform(as(get(list, linkId).param("from", rest.minusDays(6).toString()).param("to", start.toString()), coach))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].date").value(rest.toString()))
+                .andExpect(jsonPath("$[0].text").value("Buen descanso, mañana pierna"));
+        mvc.perform(as(get(list, linkId).param("from", start.minusDays(200).toString()).param("to", start.toString()), coach))
+                .andExpect(status().isBadRequest());
+        mvc.perform(as(get(mine, linkId).param("from", rest.toString()).param("to", rest.toString()), client))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].text").value("Buen descanso, mañana pierna"));
+
+        // Another coach, another athlete, or the same coach through another link reach nothing.
+        String otherClient = user();
+        String otherLink = accept(otherClient, invite(coach), NO_TRAINING);
+        mvc.perform(as(put(day, linkId, rest), coach()).contentType("application/json")
+                .content("{\"text\":\"Hola\"}")).andExpect(status().isNotFound());
+        mvc.perform(as(get(list, otherLink).param("from", rest.toString()).param("to", rest.toString()), coach))
+                .andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(as(get(mine, linkId).param("from", rest.toString()).param("to", rest.toString()), otherClient))
+                .andExpect(jsonPath("$.length()").value(0));
+
+        mvc.perform(as(get("/api/user/export"), client))
+                .andExpect(jsonPath("$.coaching.dayComments[0].role").value("CLIENT"))
+                .andExpect(jsonPath("$.coaching.dayComments[0].other.email").value(coach))
+                .andExpect(jsonPath("$.coaching.dayComments[0].day").value(rest.toString()));
+        mvc.perform(as(get("/api/user/export"), coach))
+                .andExpect(jsonPath("$.coaching.dayComments[0].role").value("COACH"))
+                .andExpect(jsonPath("$.coaching.dayComments[0].other.email").value(client));
+
+        mvc.perform(as(delete(day, linkId, rest), coach)).andExpect(status().isNoContent());
+        mvc.perform(as(get(mine, linkId).param("from", rest.toString()).param("to", rest.toString()), client))
+                .andExpect(jsonPath("$.length()").value(0));
+
+        // Once the link ends the coach can no longer write.
+        mvc.perform(as(post("/api/coach/clients/{linkId}/end", linkId), coach)).andExpect(status().isNoContent());
+        mvc.perform(as(put(day, linkId, rest), coach).contentType("application/json")
+                .content("{\"text\":\"Hola\"}")).andExpect(status().isNotFound());
+    }
+
     private String saveWorkout(String email, String dayId) throws Exception {
         String link = dayId == null ? "" : ",\"programDayId\":\"" + dayId + "\",\"programOrigin\":\"PRESCRIBED_MODIFIED\"";
         return json.readTree(mvc.perform(as(post("/api/workouts"), email).contentType("application/json")

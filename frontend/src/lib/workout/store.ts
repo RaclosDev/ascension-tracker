@@ -46,9 +46,13 @@ export interface PrescribedDay {
     targets?: {
       weight: number | null;
       reps: number | null;
+      repsMax?: number | null;
       type: 'normal' | 'warmup';
       label?: string;
+      effort?: { kind: string; value: number } | null;
     }[];
+    protocol?: string;
+    restSeconds?: number | null;
     notes: string;
   }[];
 }
@@ -220,9 +224,16 @@ export const useWorkoutStore = create<WorkoutState>()(
       startFromProgramDay: (day) => {
         const coachSetTargets: Record<string, string> = {};
         const coachExerciseNotes: Record<string, string> = {};
+        const coachExerciseProtocols: Record<string, string> = {};
+        const coachSetPlan: NonNullable<ActiveWorkout['coachSetPlan']> = {};
+        const coachRest: Record<string, number> = {};
         const exercises = day.exercises.map((exercise) => {
           const id = uid();
           if (exercise.notes) coachExerciseNotes[id] = exercise.notes;
+          if (exercise.protocol) coachExerciseProtocols[id] = exercise.protocol;
+          if (exercise.restSeconds) coachRest[id] = exercise.restSeconds;
+          const labels = (exercise.targets ?? []).slice(0, exercise.sets).map((t) => t.label);
+          const varies = labels.some((label) => label !== labels[0]);
           const sets = Array.from({ length: exercise.sets }, (_, index) => {
             const target = exercise.targets?.[index];
             const reps = target?.reps ?? exercise.reps;
@@ -230,8 +241,21 @@ export const useWorkoutStore = create<WorkoutState>()(
               weight: target?.weight != null ? String(target.weight) : '',
               reps: reps != null ? String(reps) : '',
             });
-            if (target?.label) coachSetTargets[set.id] = target.label;
-            return { ...set, type: target?.type ?? 'normal' };
+            if (target?.label) {
+              coachSetTargets[set.id] = target.label;
+              coachSetPlan[set.id] = {
+                weight: set.weight,
+                reps: set.reps,
+                repsMax: target.repsMax ?? null,
+                varies,
+                effort: target.effort ?? null,
+              };
+            }
+            return {
+              ...set,
+              type: target?.type ?? 'normal',
+              ...(target?.effort?.kind === 'RIR' ? { rir: '' } : {}),
+            };
           });
           return {
             id,
@@ -251,6 +275,9 @@ export const useWorkoutStore = create<WorkoutState>()(
             exercises,
             coachSetTargets,
             coachExerciseNotes,
+            coachExerciseProtocols,
+            coachSetPlan,
+            coachRest,
           },
           restUntil: null,
           tab: 'train',
@@ -313,12 +340,25 @@ export const useWorkoutStore = create<WorkoutState>()(
       setRestPreset: (restPreset) => set({ restPreset }),
 
       setExerciseRestTimer: (exerciseId, seconds) => {
-        set((state) => ({
-          restTimers: {
-            ...state.restTimers,
-            [exerciseId]: seconds,
-          },
-        }));
+        set((state) => {
+          // Once the athlete picks a rest, theirs replaces the coach's for that exercise.
+          const coachRest = state.active?.coachRest;
+          const rows = new Set(
+            state.active?.exercises.filter((e) => e.exerciseId === exerciseId).map((e) => e.id),
+          );
+          return {
+            restTimers: { ...state.restTimers, [exerciseId]: seconds },
+            active:
+              state.active && coachRest
+                ? {
+                    ...state.active,
+                    coachRest: Object.fromEntries(
+                      Object.entries(coachRest).filter(([row]) => !rows.has(row)),
+                    ),
+                  }
+                : state.active,
+          };
+        });
       },
 
       syncFromPreferences: (prefs) => {
@@ -461,7 +501,7 @@ export const useWorkoutStore = create<WorkoutState>()(
             }),
           };
         });
-        const delay = restTimers[exerciseId] ?? restPreset;
+        const delay = active.coachRest?.[exerciseRowId] ?? restTimers[exerciseId] ?? restPreset;
         set({
           active: next,
           restUntil: completing ? Date.now() + delay * 1000 : get().restUntil,

@@ -116,6 +116,12 @@ function shortLoad(load: PrescribedLoad | null): string {
 const effortText = (set: SetTarget) =>
   set.rpe != null ? `RPE ${set.rpe}` : set.rir != null ? `RIR ${set.rir}` : '';
 
+/** One set's target in a few words: "8-10 reps · 50 kg · RIR 2". */
+export const setText = (set: SetTarget) =>
+  [repsText(set) && `${repsText(set)} reps`, shortLoad(set.load), effortText(set)]
+    .filter(Boolean)
+    .join(' · ');
+
 /** What the athlete reads: equal consecutive sets grouped, "1 × 5 + 2 × 8 · RIR 2 · 65 kg". */
 export function protocolText(exercise: ProgramExercise): string {
   const rows = rowsOf(exercise);

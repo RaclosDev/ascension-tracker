@@ -1,5 +1,7 @@
-import { useId, useRef, useState, type KeyboardEvent } from 'react';
-import { GripVertical, MoreHorizontal, Plus, X } from 'lucide-react';
+import { useContext, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { ChevronDown, GripVertical, MoreHorizontal, Plus, TriangleAlert, X } from 'lucide-react';
 import type { DraggableProvided } from '@hello-pangea/dnd';
 import type { PrescribedLoad, ProgramExercise, SetTarget } from '@/lib/coach/coachPrograms';
 import {
@@ -11,7 +13,8 @@ import {
   withRows,
 } from '@/lib/coach/prescription';
 import { restLabel } from '@/lib/coach/today';
-import { usePrescribing } from './prescribing';
+import { setText } from '@/lib/coach/exerciseHistory';
+import { AthleteHistory, usePrescribing } from './prescribing';
 import { Select } from '@/components/ui/select';
 
 const MAX_SETS = 20;
@@ -117,21 +120,38 @@ export function ExerciseRow({
   exercise,
   onChange,
   onRemove,
+  send,
+  compact,
+  detail,
 }: {
   drag: DraggableProvided;
   index: number;
   exercise: ProgramExercise;
   onChange: (next: ProgramExercise) => void;
   onRemove: () => void;
+  /** Week editor only: the other weekdays this exercise can be copied or moved to. */
+  send?: { days: { value: number; label: string }[]; onSend: (to: number, move: boolean) => void };
+  /** One line per exercise: equal sets are typed once and the set-by-set grid opens on demand. */
+  compact?: boolean;
+  /** With room to spare: set by set from the start, beside what the athlete did last time. */
+  detail?: boolean;
 }) {
   const name = exercise.exerciseName || exercise.exerciseId;
   const prefs = usePrescribing();
+  const vetoed = prefs.avoidedOf(exercise.exerciseId);
   const card = useRef<HTMLLIElement | null>(null);
   const optionsId = useId();
   const [options, setOptions] = useState(false);
+  const [open, setOpen] = useState(!compact || !!detail);
+  const last = useContext(AthleteHistory).find(
+    (use) => use.exerciseId === exercise.exerciseId,
+  )?.last;
+  const versus = !!detail && !!last;
+  const folded = !!compact && !open;
   const [openSet, setOpenSet] = useState<number | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [pending, setPending] = useState<Pick<PrescribedLoad, 'mode' | 'lift' | 'increment'>>();
+  const [sendTo, setSendTo] = useState(send?.days[0]?.value ?? 1);
 
   const rows = rowsOf(exercise);
   const effort = effortOf(rows, prefs.effort);
@@ -173,8 +193,10 @@ export function ExerciseRow({
   };
   const keys = (i: number, column: number) => (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
+      // Enter walks down the column like a spreadsheet; only the last row grows the exercise.
       event.preventDefault();
-      addAfter(i, column);
+      if (i < rows.length - 1) focus(i + 1, column);
+      else addAfter(i, column);
     } else if (event.key === 'ArrowDown' && i < rows.length - 1) {
       event.preventDefault();
       focus(i + 1, column);
@@ -209,7 +231,19 @@ export function ExerciseRow({
     exercise.restSeconds != null && `Descanso ${restLabel(exercise.restSeconds)}`,
     exercise.supersetGroup != null && `Superserie ${exercise.supersetGroup}`,
   ].filter(Boolean);
-  const columns = effort === 'NONE' ? 'set-grid set-grid-2' : 'set-grid';
+  const columns = `${effort === 'NONE' ? 'set-grid set-grid-2' : 'set-grid'}${versus ? ' set-grid-versus' : ''}`;
+  const variant = [exercise.variantMachine, exercise.variantGrip].filter(Boolean).join(' · ');
+  // Sets that share everything are one line of numbers; anything else reads as its protocol.
+  const uniform = rows.every(
+    (row) =>
+      row.kind === 'WORK' &&
+      !row.notes &&
+      same(
+        [row.reps, row.repsMax, row.rpe, row.rir, row.load],
+        [rows[0].reps, rows[0].repsMax, rows[0].rpe, rows[0].rir, rows[0].load],
+      ),
+  );
+  const count = numberIn(1, MAX_SETS, 1);
 
   return (
     <li
@@ -220,6 +254,8 @@ export function ExerciseRow({
       }}
       {...drag.draggableProps}
       className="set-card"
+      data-compact={compact ? '' : undefined}
+      data-open={compact && open ? '' : undefined}
       style={drag.draggableProps.style}
     >
       <div className="set-card-head">
@@ -228,18 +264,107 @@ export function ExerciseRow({
         </span>
         <span className="set-card-name">
           {index + 1}. {name}
+          {variant && folded && <span className="set-card-variant">{variant}</span>}
+          {vetoed && (
+            <span className="set-card-vetoed" role="status">
+              <TriangleAlert size={13} aria-hidden /> Vetado para este atleta
+              {vetoed.reason ? `: ${vetoed.reason}` : ''}
+            </span>
+          )}
         </span>
-        <button
-          type="button"
-          className="set-icon"
-          aria-label={`Más opciones de ${name}`}
-          aria-expanded={options}
-          aria-controls={optionsId}
-          title="Descanso, superserie y tipo de carga"
-          onClick={() => setOptions((open) => !open)}
-        >
-          <MoreHorizontal size={16} aria-hidden />
-        </button>
+        {folded &&
+          (uniform ? (
+            <span className="set-quick" data-effort={effort === 'NONE' ? undefined : ''}>
+              <Cell
+                numeric
+                label={`Número de series de ${name}`}
+                hint="Series: un número entero de 1 a 20."
+                onProblem={setProblem}
+                text={String(rows.length)}
+                parse={(text) => count(text) ?? undefined}
+                onCommit={(total) =>
+                  commit(Array.from({ length: total }, (_, i) => rows[i] ?? { ...rows[0] }))
+                }
+                onKeyDown={() => {}}
+              />
+              <span aria-hidden>×</span>
+              <Cell
+                cell="0:0"
+                label={`Repeticiones de ${name}`}
+                placeholder="reps"
+                text={repsText(rows[0])}
+                hint={HINTS.reps}
+                onProblem={setProblem}
+                parse={parseReps}
+                onCommit={(value) => edit(0, value)}
+                onKeyDown={() => {}}
+              />
+              {effort !== 'NONE' && (
+                <Cell
+                  numeric
+                  label={`${effort} de ${name}`}
+                  placeholder={effort}
+                  hint={HINTS[effort]}
+                  onProblem={setProblem}
+                  text={String((effort === 'RPE' ? rows[0].rpe : rows[0].rir) ?? '')}
+                  parse={effort === 'RPE' ? numberIn(1, 10, 0.5) : numberIn(0, 10, 1)}
+                  onCommit={(value) =>
+                    edit(
+                      0,
+                      effort === 'RPE' ? { rpe: value, rir: null } : { rir: value, rpe: null },
+                    )
+                  }
+                  onKeyDown={() => {}}
+                />
+              )}
+              <Cell
+                numeric
+                label={`Carga de ${name} (${loadHeader})`}
+                placeholder={loadHeader}
+                hint={HINTS[mode]}
+                onProblem={setProblem}
+                text={String(rows[0].load?.amount ?? '')}
+                parse={numberIn(0, mode === 'KG' ? 2000 : 200, 0.25)}
+                onCommit={(value) => edit(0, { load: value == null ? null : loadOf(value) })}
+                onKeyDown={() => {}}
+              />
+            </span>
+          ) : (
+            <button
+              type="button"
+              className="set-quick set-quick-text"
+              title="Las series son distintas: ábrelo para editarlas"
+              onClick={() => setOpen(true)}
+            >
+              {protocolText(exercise)}
+            </button>
+          ))}
+        {compact && (
+          <button
+            type="button"
+            className="set-icon"
+            aria-label={`${open ? 'Plegar' : 'Serie a serie y opciones de'} ${name}`}
+            aria-expanded={open}
+            title={open ? 'Plegar' : 'Serie a serie, descanso, nota y más'}
+            data-flip={open ? '' : undefined}
+            onClick={() => setOpen(!open)}
+          >
+            <ChevronDown size={16} aria-hidden />
+          </button>
+        )}
+        {!folded && (
+          <button
+            type="button"
+            className="set-icon"
+            aria-label={`Más opciones de ${name}`}
+            aria-expanded={options}
+            aria-controls={optionsId}
+            title="Descanso, superserie y tipo de carga"
+            onClick={() => setOptions((shown) => !shown)}
+          >
+            <MoreHorizontal size={16} aria-hidden />
+          </button>
+        )}
         <button
           type="button"
           className="set-icon"
@@ -251,7 +376,7 @@ export function ExerciseRow({
         </button>
       </div>
 
-      {options && (
+      {options && !folded && (
         <div id={optionsId} className="set-options">
           <label>
             Descanso
@@ -310,6 +435,39 @@ export function ExerciseRow({
               />
             </label>
           )}
+          {send && (
+            <div className="set-send">
+              <label>
+                Enviar a otro día
+                <select
+                  className="form-input"
+                  aria-label={`Día al que enviar ${name}`}
+                  value={sendTo}
+                  onChange={(e) => setSendTo(Number(e.target.value))}
+                >
+                  {send.days.map((day) => (
+                    <option key={day.value} value={day.value}>
+                      {day.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => send.onSend(sendTo, false)}
+              >
+                Copiar
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => send.onSend(sendTo, true)}
+              >
+                Mover
+              </button>
+            </div>
+          )}
           <p className="set-options-hint">
             Dos ejercicios con el mismo número de superserie se hacen seguidos.
             {mode !== 'KG' &&
@@ -318,12 +476,54 @@ export function ExerciseRow({
         </div>
       )}
 
-      <div role="group" aria-label={`Series de ${name}`} className="set-rows">
+      {folded && (exercise.notes || exercise.supersetGroup != null) && (
+        <p className="set-fold-note">
+          {[exercise.notes, extras.find((extra) => String(extra).startsWith('Superserie'))]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
+      )}
+      {detail && !folded && (
+        <div className="set-variant">
+          <label>
+            Agarre
+            <input
+              className="form-input"
+              aria-label={`Agarre de ${name}`}
+              placeholder={last?.variant?.grip || 'Sin indicar'}
+              maxLength={255}
+              value={exercise.variantGrip ?? ''}
+              onChange={(e) => onChange({ ...exercise, variantGrip: e.target.value || null })}
+            />
+          </label>
+          <label>
+            Máquina o variante
+            <input
+              className="form-input"
+              aria-label={`Máquina o variante de ${name}`}
+              placeholder={last?.variant?.machine || 'Sin indicar'}
+              maxLength={255}
+              value={exercise.variantMachine ?? ''}
+              onChange={(e) => onChange({ ...exercise, variantMachine: e.target.value || null })}
+            />
+          </label>
+        </div>
+      )}
+      <div role="group" aria-label={`Series de ${name}`} className="set-rows" hidden={folded}>
+        {versus && (
+          <div className={`${columns} set-grid-sides`} aria-hidden>
+            <span />
+            <span style={{ gridColumn: `span ${effort === 'NONE' ? 2 : 3}` }}>Tu pauta</span>
+            <span>Hizo el {format(last.date, 'd MMM', { locale: es })}</span>
+            <span />
+          </div>
+        )}
         <div className={`${columns} set-grid-head`} aria-hidden>
           <span />
           <span>Reps</span>
           {effort !== 'NONE' && <span>{effort}</span>}
           <span>{loadHeader}</span>
+          {versus && <span />}
           <span />
         </div>
         {rows.map((row, i) => {
@@ -382,6 +582,25 @@ export function ExerciseRow({
                   onCommit={(value) => edit(i, { load: value == null ? null : loadOf(value) })}
                   onKeyDown={keys(i, 2)}
                 />
+                {versus && (
+                  <span
+                    className="set-last"
+                    aria-label={`Última vez, serie ${i + 1}`}
+                    data-none={last.sets[i] ? undefined : ''}
+                  >
+                    {last.sets[i] ? (
+                      <>
+                        {setText(last.sets[i])}
+                        {last.sets[i].rir && <small>RIR {last.sets[i].rir}</small>}
+                        {!last.sets[i].rir && last.sets[i].rpe && (
+                          <small>RPE {last.sets[i].rpe}</small>
+                        )}
+                      </>
+                    ) : (
+                      'Sin serie'
+                    )}
+                  </span>
+                )}
                 <button
                   type="button"
                   className="set-icon"
@@ -435,6 +654,7 @@ export function ExerciseRow({
       <button
         type="button"
         className="set-add"
+        hidden={folded}
         disabled={rows.length >= MAX_SETS}
         onClick={() => addAfter(rows.length - 1)}
       >
@@ -443,6 +663,7 @@ export function ExerciseRow({
 
       <input
         className="set-exercise-note"
+        hidden={folded}
         aria-label={`Nota de ${name}`}
         placeholder="Nota para el atleta (técnica, tempo, sensaciones)"
         maxLength={500}
@@ -450,7 +671,7 @@ export function ExerciseRow({
         onChange={(e) => onChange({ ...exercise, notes: e.target.value || null })}
       />
 
-      <p className="set-protocol">
+      <p className="set-protocol" hidden={folded}>
         <span>El atleta lee</span> {protocolText(exercise)}
         {extras.length > 0 && ` · ${extras.join(' · ')}`}
       </p>

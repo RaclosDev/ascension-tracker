@@ -14,6 +14,7 @@ export function signalSection(signal: StatusSignal): string {
     case 'NO_PROGRAM':
       return 'entrenamiento';
     case 'NO_NUTRITION_PLAN':
+      return 'pauta';
     case 'FEW_FOOD_LOGS':
       return 'nutricion';
     case 'WEIGHT_STALLED':
@@ -84,7 +85,11 @@ export function clientTasks({ link, status }: CoachRow): CoachTask[] {
             ? 'Preparar pauta nutricional'
             : signal.reason === 'CHECKIN_MISSING'
               ? 'Consultar seguimiento pendiente'
-              : 'Revisar seguimiento',
+              : signal.reason === 'INACTIVE'
+                ? 'Contactar con el atleta'
+                : signal.reason === 'FEW_FOOD_LOGS'
+                  ? 'Revisar registro de comida'
+                  : 'Revisar evolución del peso',
       detail: signalText(signal),
       section: signalSection(signal),
       owner: signal.reason === 'CHECKIN_MISSING' ? 'client' : 'coach',

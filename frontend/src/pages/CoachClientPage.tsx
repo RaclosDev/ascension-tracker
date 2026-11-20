@@ -2,7 +2,7 @@ import '../styles/coach-quick-view.css';
 import { Suspense } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { apiErrorMessage, useCoachClient, type CoachClient } from '../lib/coach/api';
+import { apiErrorMessage, personName, useCoachClient, type CoachClient } from '../lib/coach/api';
 import { AthleteShell, useAthleteLinks, useAthleteViews } from '../components/coach/AthleteShell';
 import { ClientOverview } from '../components/coach/ClientOverview';
 import { ClientManagement } from '../components/coach/ClientManagement';
@@ -59,10 +59,11 @@ export default function CoachClientPage() {
 function AthleteSections({ link }: { link: CoachClient }) {
   const { linkId } = link;
   const [params] = useSearchParams();
-  const section = params.get('seccion') ?? 'resumen';
   const { sectionHref, recordHref } = useAthleteLinks(linkId);
   const views = useAthleteViews(link);
-  const open = (id: string) => section === id && views.has(id);
+  // Planning is where a coach spends the time; the summary covers athletes without that permission.
+  const section = params.get('seccion') ?? (link.permissions.training ? 'semana' : 'resumen');
+  const open = (id: string) => section === id && views.has(id) && !views.locked(id);
 
   return (
     <AthleteShell link={link} active={section}>
@@ -81,15 +82,32 @@ function AthleteSections({ link }: { link: CoachClient }) {
               </details>
             </>
           )}
-          {open('nutricion') && (
-            <ClientNutrition linkId={linkId} canEditPlan={link.permissions.editNutrition} />
+          {(open('nutricion') || open('pauta')) && (
+            <ClientNutrition
+              linkId={linkId}
+              view={section === 'pauta' ? 'pauta' : 'diario'}
+              canEditPlan={link.permissions.editNutrition}
+            />
           )}
           {open('powerlifting') && (
             <ClientPowerlifting linkId={linkId} canEdit={link.permissions.editTraining} />
           )}
           {open('progreso') && <ClientProgress linkId={linkId} />}
-          {open('revisiones') && <CheckinsSection linkId={linkId} />}
+          {open('revisiones') && <CheckinsSection link={link} />}
           {open('gestion') && <ClientManagement link={link} />}
+          {views.locked(section) && (
+            <section className="card athlete-locked">
+              <h2>{personName(link.client)} aún no comparte su nutrición contigo</h2>
+              <p>
+                El servicio de nutrición está contratado, pero falta su permiso. Se concede desde su
+                aplicación, en Configuración → Entrenador, marcando «Nutrición» y «Pautar
+                nutrición». En cuanto lo haga, aquí verás su pauta y sus comidas registradas.
+              </p>
+              <Link to={sectionHref('gestion')} className="btn btn-secondary mt-3">
+                Ver servicios y permisos
+              </Link>
+            </section>
+          )}
           {!views.has(section) && (
             <section className="card">
               <h2>Sección no disponible</h2>
