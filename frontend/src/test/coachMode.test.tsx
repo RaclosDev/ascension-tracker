@@ -20,14 +20,9 @@ vi.mock('../api/client', () => ({
 vi.mock('../lib/workout/catalog-query', () => ({
   useExerciseCatalog: () => ({ data: [] }),
 }));
-vi.mock('../components/DashboardCharts', () => ({
-  default: (props: { weightChartData: unknown[]; deltaData: unknown[]; goalWeight?: number }) => (
-    <div
-      data-testid="weight-charts"
-      data-points={props.weightChartData.length}
-      data-deltas={props.deltaData.length}
-      data-goal={props.goalWeight ?? 'none'}
-    />
+vi.mock('../components/coach/metrics/MetricsWeightChart', () => ({
+  default: (props: { entries: unknown[] }) => (
+    <div data-testid="weight-charts" data-points={props.entries.length} />
   ),
 }));
 vi.mock('../components/nutrition/NutritionPieChart', () => ({
@@ -439,8 +434,8 @@ describe('CoachClientPage', () => {
     renderAt('/entrenador/atletas/link-9?seccion=metricas', routes);
     const weightChart = await screen.findByTestId('weight-charts');
     expect(weightChart.dataset.points).toBe('2');
-    expect(weightChart.dataset.deltas).toBe('1');
-    expect(weightChart.dataset.goal).toBe('none');
+    // The coach sees the trend and how far the goal is, never the goal weight itself.
+    expect(screen.getByRole('progressbar', { name: /objetivo de peso/i })).toBeInTheDocument();
   }, 15000);
 
   it('only asks for the areas the client shares', async () => {
