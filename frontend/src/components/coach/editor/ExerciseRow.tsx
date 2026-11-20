@@ -12,14 +12,7 @@ import {
 } from 'lucide-react';
 import type { DraggableProvided } from '@hello-pangea/dnd';
 import type { PrescribedLoad, ProgramExercise, SetTarget } from '@/lib/coach/coachPrograms';
-import {
-  effortOf,
-  parseReps,
-  protocolText,
-  repsText,
-  rowsOf,
-  withRows,
-} from '@/lib/coach/prescription';
+import { effortOf, parseReps, repsText, rowsOf, withRows } from '@/lib/coach/prescription';
 import { restLabel } from '@/lib/coach/today';
 import type { WorkoutSet } from '@/lib/workout/types';
 import type { EffortMethod } from '@/lib/coach/prescription';
@@ -285,20 +278,43 @@ export function ExerciseRow({
     exercise.restSeconds != null && `Descanso ${restLabel(exercise.restSeconds)}`,
     exercise.supersetGroup != null && `Superserie ${exercise.supersetGroup}`,
   ].filter(Boolean);
+  // Folded, the card reads as one line of figures: series, reps, effort and load, each named once.
+  const spread = (values: (number | null | undefined)[]) => {
+    const set = [...new Set(values.filter((v): v is number => v != null))];
+    if (!set.length) return null;
+    const lo = Math.min(...set);
+    const hi = Math.max(...set);
+    return lo === hi ? String(lo) : `${lo}–${hi}`;
+  };
+  const reps = [...new Set(rows.map((row) => repsText(row).replace('-', '–')).filter(Boolean))];
+  type Part = { lead?: string; value: string | null; unit: string };
+  const parts: (Part | false | 0)[] = [
+    { value: String(rows.length), unit: rows.length === 1 ? 'serie' : 'series' },
+    reps.length && {
+      value:
+        reps.length === 1
+          ? reps[0]
+          : rows.map((row) => repsText(row).replace('-', '–') || '–').join(' · '),
+      unit: 'reps',
+    },
+    effort !== 'NONE' && {
+      lead: effort,
+      value: spread(rows.map((row) => (effort === 'RPE' ? row.rpe : row.rir))),
+      unit: '',
+    },
+    {
+      value: spread(rows.map((row) => row.load?.amount)),
+      unit: loadHeader,
+    },
+  ];
+  // Every card keeps the four slots so the figures line up in columns down the day.
+  const slots = parts.map((part) =>
+    part && part.value ? (part as Part & { value: string }) : null,
+  );
+  const summary = slots.filter((part): part is Part & { value: string } => !!part);
   const columns = `${effort === 'NONE' ? 'set-grid set-grid-2' : 'set-grid'}${versus ? ' set-grid-versus' : ''}`;
   const sides = effort === 'NONE' ? 2 : 3;
   const variant = [exercise.variantMachine, exercise.variantGrip].filter(Boolean).join(' · ');
-  // Sets that share everything are one line of numbers; anything else reads as its protocol.
-  const uniform = rows.every(
-    (row) =>
-      row.kind === 'WORK' &&
-      !row.notes &&
-      same(
-        [row.reps, row.repsMax, row.rpe, row.rir, row.load],
-        [rows[0].reps, rows[0].repsMax, rows[0].rpe, rows[0].rir, rows[0].load],
-      ),
-  );
-  const count = numberIn(1, MAX_SETS, 1);
 
   return (
     <li
@@ -320,7 +336,7 @@ export function ExerciseRow({
           if (!compact) return;
           if (
             (e.target as HTMLElement).closest(
-              'button, input, select, a, .variant-chip, .set-quick, [data-rbd-drag-handle-draggable-id]',
+              'button, input, select, a, .variant-chip, [data-rbd-drag-handle-draggable-id]',
             )
           )
             return;
@@ -363,73 +379,26 @@ export function ExerciseRow({
             />
           </span>
         )}
-        {folded &&
-          (uniform ? (
-            <span className="set-quick" data-effort={effort === 'NONE' ? undefined : ''}>
-              <Cell
-                numeric
-                label={`Número de series de ${name}`}
-                hint="Series: un número entero de 1 a 20."
-                onProblem={setProblem}
-                text={String(rows.length)}
-                parse={(text) => count(text) ?? undefined}
-                onCommit={(total) =>
-                  commit(Array.from({ length: total }, (_, i) => rows[i] ?? { ...rows[0] }))
-                }
-                onKeyDown={() => {}}
-              />
-              <span aria-hidden>×</span>
-              <Cell
-                cell="0:0"
-                label={`Repeticiones de ${name}`}
-                placeholder="reps"
-                text={repsText(rows[0])}
-                hint={HINTS.reps}
-                onProblem={setProblem}
-                parse={parseReps}
-                onCommit={(value) => edit(0, value)}
-                onKeyDown={() => {}}
-              />
-              {effort !== 'NONE' && (
-                <Cell
-                  numeric
-                  label={`${effort} de ${name}`}
-                  placeholder={effort}
-                  hint={HINTS[effort]}
-                  onProblem={setProblem}
-                  text={String((effort === 'RPE' ? rows[0].rpe : rows[0].rir) ?? '')}
-                  parse={effort === 'RPE' ? numberIn(1, 10, 0.5) : numberIn(0, 10, 1)}
-                  onCommit={(value) =>
-                    edit(
-                      0,
-                      effort === 'RPE' ? { rpe: value, rir: null } : { rir: value, rpe: null },
-                    )
-                  }
-                  onKeyDown={() => {}}
-                />
-              )}
-              <Cell
-                numeric
-                label={`Carga de ${name} (${loadHeader})`}
-                placeholder={loadHeader}
-                hint={HINTS[mode]}
-                onProblem={setProblem}
-                text={String(rows[0].load?.amount ?? '')}
-                parse={numberIn(0, mode === 'KG' ? 2000 : 200, 0.25)}
-                onCommit={(value) => edit(0, { load: value == null ? null : loadOf(value) })}
-                onKeyDown={() => {}}
-              />
-            </span>
-          ) : (
-            <button
-              type="button"
-              className="set-quick set-quick-text"
-              title="Las series son distintas: ábrelo para editarlas"
-              onClick={() => setOpen(true)}
-            >
-              {protocolText(exercise)}
-            </button>
-          ))}
+        {folded && (
+          <button
+            type="button"
+            className="set-sum"
+            aria-label={`Abrir ${name}: ${summary.map((part) => [part.lead, part.value, part.unit].filter(Boolean).join(' ')).join(', ')}`}
+            onClick={() => setOpen(true)}
+          >
+            {slots.map((part, i) =>
+              part ? (
+                <span key={i} className="set-sum-part" data-slot={i}>
+                  {part.lead && <small>{part.lead}</small>}
+                  <strong>{part.value}</strong>
+                  <small>{part.unit}</small>
+                </span>
+              ) : (
+                <span key={i} className="set-sum-part" data-slot={i} data-empty="" />
+              ),
+            )}
+          </button>
+        )}
         {compact && (
           <button
             type="button"

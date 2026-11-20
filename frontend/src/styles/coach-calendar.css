@@ -119,8 +119,7 @@
 .cal-day:focus-visible,
 .cal-week-head:focus-visible,
 .day-add:focus-visible,
-.day-session-name:focus-visible,
-.set-quick-text:focus-visible {
+.day-session-name:focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: -2px;
 }
@@ -416,35 +415,6 @@
   list-style: none;
 }
 /* What each cell of an exercise's line holds, once for the whole list. */
-.day-cols {
-  display: flex;
-  justify-content: flex-end;
-  gap: 4px;
-  padding: 0 5px 0 9px;
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-}
-.day-cols-quick {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.day-cols-quick span {
-  width: 54px;
-  text-align: center;
-}
-.day-cols-quick span:first-child {
-  width: 40px;
-}
-.day-cols-quick b {
-  visibility: hidden;
-  font-size: 0.875rem;
-  font-weight: 400;
-}
-.day-cols-pad {
-  flex: none;
-  width: 68px;
-}
 .day-list:empty {
   display: none;
 }
@@ -491,36 +461,57 @@
   font-size: 0.88rem;
   font-weight: 600;
 }
-.set-quick {
+.set-sum {
   display: flex;
-  align-items: center;
-  flex: none;
-  gap: 4px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2px 10px;
   min-width: 0;
-  color: var(--text-secondary);
-}
-.set-quick .set-cell {
-  width: 54px;
-  height: 32px;
-  font-size: 0.85rem;
-}
-.set-quick .set-cell:first-child {
-  width: 40px;
-}
-.set-quick-text {
-  height: 32px;
-  max-width: 260px;
-  padding: 0 8px;
-  border: 1px solid var(--border-subtle);
+  padding: 4px 8px;
   border-radius: 6px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  cursor: pointer;
 }
-.set-quick-text:hover {
-  border-color: var(--border-medium);
+.set-sum:hover {
+  background: var(--bg-secondary);
+}
+.set-sum:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.set-sum-part {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+}
+.set-sum-part strong {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
   color: var(--text-primary);
+}
+.set-sum-part small {
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+/* Fixed slots, right-aligned: the figures of every folded card read as columns. */
+.set-sum-part {
+  justify-content: flex-end;
+}
+.set-sum-part[data-slot='0'] {
+  min-width: 3.9rem;
+}
+.set-sum-part[data-slot='1'] {
+  min-width: 5rem;
+}
+.set-sum-part[data-slot='2'] {
+  min-width: 3.6rem;
+}
+.set-sum-part[data-slot='3'] {
+  min-width: 5.4rem;
 }
 .set-fold-note {
   margin: 0;
@@ -536,35 +527,15 @@
   .set-card[data-compact] .set-card-head {
     flex-wrap: wrap;
   }
-  .set-quick {
+  .set-sum {
     order: 5;
+    justify-content: flex-start;
     flex: 1 1 100%;
-    padding: 0 0 4px 18px;
   }
-  .set-quick .set-cell {
-    flex: 1;
-    width: auto;
+  .set-sum-part[data-slot] {
+    min-width: 0;
   }
-  .set-quick .set-cell:first-child {
-    flex: none;
-    width: 44px;
-  }
-  .set-quick-text {
-    max-width: none;
-  }
-  .day-cols {
-    padding-left: 27px;
-  }
-  .day-cols-quick,
-  .day-cols-quick span {
-    flex: 1;
-    width: auto;
-  }
-  .day-cols-quick span:first-child {
-    flex: none;
-    width: 44px;
-  }
-  .day-cols-pad {
+  .set-sum-part[data-empty] {
     display: none;
   }
 }
@@ -684,9 +655,7 @@
 }
 @media (pointer: coarse) {
   .day-add,
-  .day-session-name,
-  .set-quick .set-cell,
-  .set-quick-text {
+  .day-session-name {
     height: 44px;
   }
 }
