@@ -15,6 +15,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -421,6 +423,47 @@ class CoachAssignmentIntegrationTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.assignmentId").value(assignment));
         mvc.perform(as(get("/api/user/export"), coach)).andExpect(jsonPath("$.coachWeekPlans[0].content.privateNotes").value("Solo entrenador"));
         mvc.perform(as(get("/api/user/export"), client)).andExpect(jsonPath("$.coachWeekPlans").doesNotExist());
+    }
+
+    @Test
+    void aWeekPublishedInsideAProgramReplacesOnlyThatWeekAndTheProgramCarriesOn() throws Exception {
+        String coach = coach();
+        String link = accept(user(), invite(coach), EDIT);
+        String threeWeeks = PROGRAM.replace("\"weeks\":2", "\"weeks\":3").replace("]}]}", "]},"
+                + "{\"week\":3,\"dayIndex\":2,\"name\":\"Pierna\",\"exercises\":[{\"exerciseId\":\"bench-press\","
+                + "\"exerciseName\":\"Sentadilla\",\"sets\":5,\"repsMin\":3,\"repsMax\":5}]}]}");
+        String library = json.readTree(mvc.perform(as(post("/api/coach/programs"), coach)
+                        .contentType("application/json").content(threeWeeks))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("id").asString();
+        String original = assign(coach, link, library).get("id").asString();
+        LocalDate monday = LocalDate.now().with(java.time.temporal.TemporalAdjusters.next(java.time.DayOfWeek.MONDAY));
+        String path = "/api/coach/clients/" + link + "/weeks/" + monday;
+        mvc.perform(as(put(path), coach).contentType("application/json").content(
+                        "{\"expectedVersion\":0,\"content\":{\"program\":%s,\"privateNotes\":\"\",\"intent\":\"BUILD\",\"decision\":\"\"}}".formatted(PROGRAM.replace("\"weeks\":2", "\"weeks\":1"))))
+                .andExpect(status().isOk());
+        String week = json.readTree(mvc.perform(as(post(path + "/publish"), coach)
+                        .contentType("application/json").content("{\"expectedVersion\":1}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("assignmentId").asString();
+
+        List<Map<String, Object>> rows = jdbc.queryForList("""
+                SELECT a.id::text AS id, a.start_date, a.effective_until, p.weeks, p.source_program_id::text AS source
+                FROM program_assignments a JOIN programs p ON p.id = a.program_id
+                WHERE a.coach_link_id = ?::uuid AND a.status = 'ACTIVE' ORDER BY a.start_date, a.created_at
+                """, link);
+        assertThat(rows).hasSize(3);
+        assertThat(rows.get(0)).containsEntry("id", original)
+                .containsEntry("effective_until", java.sql.Date.valueOf(monday));
+        assertThat(rows.get(1)).containsEntry("id", week)
+                .containsEntry("effective_until", java.sql.Date.valueOf(monday.plusWeeks(1)));
+        assertThat(rows.get(2)).containsEntry("start_date", java.sql.Date.valueOf(monday.plusWeeks(1)))
+                .containsEntry("weeks", 3 - weeksElapsed(monday) - 1).containsEntry("source", library)
+                .containsEntry("effective_until", null);
+    }
+
+    /** Program weeks before {@code monday}, counting the partial week it was assigned in. */
+    private static int weeksElapsed(LocalDate monday) {
+        LocalDate first = LocalDate.now().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+        return (int) java.time.temporal.ChronoUnit.DAYS.between(first, monday) / 7;
     }
 
     @Test

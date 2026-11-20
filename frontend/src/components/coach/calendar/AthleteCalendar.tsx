@@ -103,6 +103,10 @@ export function AthleteCalendar({
                 <span className="cal-state" data-state={week.state}>
                   {WEEK_STATE[week.state]}
                 </span>
+              ) : week.programName ? (
+                <span className="cal-state" data-state="program" title={week.programName}>
+                  Programa
+                </span>
               ) : (
                 !week.days[6].past && (
                   <span className="cal-state" data-state="empty">

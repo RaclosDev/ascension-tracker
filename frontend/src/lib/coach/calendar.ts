@@ -9,7 +9,7 @@ import { findDay, type Program, type ProgramDay } from './coachPrograms';
 import { useNutritionAdherence, type AdherenceDay } from './nutritionAdherence';
 import { useCoachNutritionPlan, type DayTargets } from './nutritionPlan';
 import type { DayComment } from './sessions';
-import { shiftWeek, weekDate, type SavedWeek } from './weeks';
+import { shiftWeek, useProgramWeeks, weekDate, type SavedWeek } from './weeks';
 
 export interface CalendarDay {
   /** yyyy-MM-dd */
@@ -40,6 +40,8 @@ export interface CalendarWeek {
   weekStart: string;
   state: WeekState | null;
   saved: SavedWeek | null;
+  /** The library program the week falls in when nobody has prepared it by hand. */
+  programName: string | null;
   days: CalendarDay[];
 }
 
@@ -54,6 +56,7 @@ export function useAthleteCalendar(
   const id = link.linkId;
   const { training, body, nutrition } = link.permissions;
   const block = useCoachBlock(id, from, count);
+  const { find: programWeek } = useProgramWeeks(id, training);
   const since = parseISO(from).getTime();
   const workouts = useClientData<CompletedWorkout[]>(
     id,
@@ -108,11 +111,14 @@ export function useAthleteCalendar(
     return Array.from({ length: count }, (_, n) => {
       const weekStart = shiftWeek(from, n);
       const saved = block.data?.weeks?.find((week) => week.weekStart === weekStart) ?? null;
-      const program = live?.weekStart === weekStart ? live.program : saved?.content.program;
+      const covered = !saved || saved.version === 0 ? programWeek(weekStart) : null;
+      const program =
+        live?.weekStart === weekStart ? live.program : (covered?.program ?? saved?.content.program);
       return {
         weekStart,
         saved,
-        state: saved ? weekState(saved, current) : null,
+        programName: covered ? covered.assignment.programName : null,
+        state: saved && !covered ? weekState(saved, current) : null,
         days: Array.from({ length: 7 }, (_, i) => {
           const date = format(addDays(parseISO(weekStart), i), 'yyyy-MM-dd');
           const session = (program && findDay(program, 1, i + 1)) ?? null;
@@ -145,6 +151,7 @@ export function useAthleteCalendar(
     count,
     current,
     block.data,
+    programWeek,
     live?.weekStart,
     live?.program,
     workouts.data,

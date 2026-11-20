@@ -1,7 +1,14 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { addDays, differenceInCalendarWeeks, format, parseISO, startOfWeek } from 'date-fns';
 import api from '@/api/client';
-import { isProgramDraft, type Program, type ProgramAssignment } from './coachPrograms';
+import {
+  assignedProgramQuery,
+  isProgramDraft,
+  useClientAssignments,
+  type Program,
+  type ProgramAssignment,
+} from './coachPrograms';
 
 export const weekDate = (date = new Date()) =>
   format(startOfWeek(date, { weekStartsOn: 1 }), 'yyyy-MM-dd');
@@ -76,6 +83,46 @@ export function overlapsWeek(a: ProgramAssignment, week: string) {
   return (
     a.startDate < shiftWeek(week, 1) && end > week && (!a.endedAt || a.endedAt.slice(0, 10) >= week)
   );
+}
+export interface ProgramWeek {
+  assignment: ProgramAssignment;
+  /** That week's sessions, as a one-week plan ready to edit. */
+  program: Program;
+  /** 1-based week of the program. */
+  week: number;
+}
+const plansOf = (results: { data?: Program }[]) => results.map((r) => r.data);
+/** The library program each week falls in, with its sessions, for weeks never prepared by hand. */
+export function useProgramWeeks(linkId: string, enabled = true) {
+  const assignments = useClientAssignments(linkId, enabled);
+  const running = useMemo(
+    () => (assignments.data ?? []).filter((a) => a.status !== 'ENDED' && a.weeks > 1),
+    [assignments.data],
+  );
+  const plans = useQueries({
+    queries: running.map((a) => assignedProgramQuery(linkId, a.id)),
+    combine: plansOf,
+  });
+  const find = useMemo(
+    () =>
+      (week: string): ProgramWeek | null => {
+        const i = running.findIndex((a) => overlapsWeek(a, week));
+        const plan = plans[i];
+        if (i < 0 || !plan) return null;
+        const assignment = running[i];
+        return {
+          assignment,
+          program: weekFrom(plan, assignment, week),
+          week:
+            differenceInCalendarWeeks(parseISO(week), parseISO(assignment.startDate), {
+              weekStartsOn: 1,
+            }) + 1,
+        };
+      },
+    [running, plans],
+  );
+  const loading = assignments.isLoading || running.some((_, i) => plans[i] === undefined);
+  return { find, loading };
 }
 const path = (id: string, week: string) => `/coach/clients/${encodeURIComponent(id)}/weeks/${week}`;
 const key = (id: string, week: string) => ['coach', 'clients', id, 'weeks', week];

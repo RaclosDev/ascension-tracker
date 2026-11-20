@@ -11,6 +11,7 @@ import { HomeRedirect, RememberInvitation } from '../components/coach/Invitation
 import { SettingsCoachSection } from '../components/settings/SettingsCoachSection';
 import { peekPendingInvitation, rememberPendingInvitation } from '../lib/coach/api';
 import CoachClientPage from '../pages/CoachClientPage';
+import CoachClientWeeklyWorkoutsPage from '../pages/CoachClientWeeklyWorkoutsPage';
 import type { CompletedWorkout, Exercise } from '../lib/workout/types';
 import { chooseOption } from './selectMenu';
 
@@ -382,6 +383,7 @@ describe('CoachClientPage', () => {
     mockedApi.get.mockImplementation((url: string) => {
       if (url === '/coach/clients/link-9')
         return Promise.resolve({ data: { ...clientLink, permissions } });
+      if (url === '/coach/profile') return Promise.resolve({ data: { coach: true } });
       if (url === '/coach/programs')
         return Promise.resolve({
           data: [{ id: 'p-2', name: 'Hipertrofia', weeks: 6, dayCount: 4, updatedAt: '' }],
@@ -416,8 +418,17 @@ describe('CoachClientPage', () => {
 
   it('shows the real charts and the client custom exercise names', async () => {
     mockClient();
-    renderAt('/entrenador/atletas/link-9?seccion=entrenamiento', routes);
-
+    // The history and its charts sit under «Entrenos hechos», beside the weeks it summarises.
+    renderAt(
+      '/entrenador/atletas/link-9/entrenos',
+      <>
+        {routes}
+        <Route
+          path="/entrenador/atletas/:linkId/entrenos/:workoutId?"
+          element={<CoachClientWeeklyWorkoutsPage />}
+        />
+      </>,
+    );
     expect(
       await screen.findByText('1. Press inclinado en polea', {}, { timeout: 10000 }),
     ).toBeDefined();

@@ -73,6 +73,10 @@
   background: var(--accent-light);
   color: var(--text-primary);
 }
+.cal-state[data-state='program'] {
+  border-color: var(--accent-light);
+  color: var(--text-primary);
+}
 .cal-state[data-state='empty'] {
   border-color: transparent;
   padding-inline: 0;

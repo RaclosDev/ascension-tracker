@@ -94,9 +94,12 @@ export function WeekEditor({
   onSelect,
   wide,
   onWide,
+  programWeek,
 }: {
   saved: SavedWeek;
   source?: ProgramAssignment;
+  /** The program this week already belongs to, when it opens with that program's sessions. */
+  programWeek?: { name: string; week: number; weeks: number };
   canEdit: boolean;
   reload: () => Promise<unknown>;
   /** The week picker: it shares the bar with the saving state and the publish button. */
@@ -470,7 +473,9 @@ export function WeekEditor({
               ? 'Cambios guardados · publica para que el atleta los vea'
               : saved.version > 0
                 ? 'Borrador guardado · el atleta aún no lo ve'
-                : 'Semana sin preparar';
+                : programWeek
+                  ? `Semana ${programWeek.week} de ${programWeek.weeks} de «${programWeek.name}» · si la cambias, solo cambia esta semana`
+                  : 'Semana sin preparar';
   const panelTabs = focused ? (
     <div className="week-support-tabs" role="group" aria-label="Paneles de apoyo">
       <button

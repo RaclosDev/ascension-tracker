@@ -2,11 +2,19 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { SegmentedControl } from '../ui/segmented-control';
 import { useState } from 'react';
+import { differenceInCalendarWeeks, parseISO } from 'date-fns';
 import { useSearchParams } from 'react-router-dom';
 import { type CoachClient } from '@/lib/coach/api';
 import type { AvoidedExercise } from '@/lib/coach/setup';
-import { useClientAssignments } from '@/lib/coach/coachPrograms';
-import { overlapsWeek, shiftWeek, useCoachWeek, weekDate, type SavedWeek } from '@/lib/coach/weeks';
+import { useAssignedProgram, useClientAssignments } from '@/lib/coach/coachPrograms';
+import {
+  overlapsWeek,
+  shiftWeek,
+  useCoachWeek,
+  weekDate,
+  weekFrom,
+  type SavedWeek,
+} from '@/lib/coach/weeks';
 import { useAthleteLinks } from './AthleteShell';
 import { useAthleteCalendar } from '@/lib/coach/calendar';
 import { AthleteCalendar } from './calendar/AthleteCalendar';
@@ -100,6 +108,33 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
   const assignments = useClientAssignments(link.linkId);
   const draft = useCoachWeek(link.linkId, planningWeek);
   const previous = assignments.data?.find((a) => overlapsWeek(a, shiftWeek(planningWeek, -1)));
+  // A week never prepared by hand opens with what the running program already has for it.
+  const covering = assignments.data?.find(
+    (a) => a.status !== 'ENDED' && a.weeks > 1 && overlapsWeek(a, planningWeek),
+  );
+  const fromProgram = draft.data?.version === 0 ? covering : undefined;
+  const programPlan = useAssignedProgram(link.linkId, fromProgram?.id ?? '');
+  const programWeek =
+    fromProgram && programPlan.data
+      ? {
+          name: fromProgram.programName,
+          week:
+            differenceInCalendarWeeks(parseISO(planningWeek), parseISO(fromProgram.startDate), {
+              weekStartsOn: 1,
+            }) + 1,
+          weeks: fromProgram.weeks,
+        }
+      : undefined;
+  const saved: SavedWeek | undefined =
+    draft.data && programWeek && programPlan.data && fromProgram
+      ? {
+          ...draft.data,
+          content: {
+            ...draft.data.content,
+            program: weekFrom(programPlan.data, fromProgram, planningWeek),
+          },
+        }
+      : draft.data;
   const preparing = view === 'prepare';
   const week = preparing ? planningWeek : reviewWeek;
   const setWeek = preparing
@@ -122,6 +157,7 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
     preparing &&
     !assignments.isPending &&
     !draft.isPending &&
+    !(fromProgram && programPlan.isPending) &&
     !assignments.isError &&
     !draft.isError;
   const toolbar = (
@@ -200,7 +236,7 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
   return (
     <div className="coach-planning-workspace flex flex-col gap-4">
       {!ready && toolbar}
-      {assignments.isPending || draft.isPending ? (
+      {assignments.isPending || draft.isPending || (fromProgram && programPlan.isPending) ? (
         <PendingCalendar link={link} from={from} focus={planningWeek} onSelect={pick} />
       ) : assignments.isError || draft.isError ? (
         <p role="alert">
@@ -226,14 +262,15 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
               <AthleteAvoided.Provider value={link.notes?.avoidedExercises ?? NONE}>
                 <WeekEditor
                   key={`${link.linkId}:${planningWeek}`}
-                  saved={draft.data}
+                  saved={saved!}
                   source={previous}
+                  programWeek={programWeek}
                   canEdit={link.permissions.editTraining && planningWeek >= weekDate()}
                   reload={() => draft.refetch()}
                   lead={toolbar}
                   link={link}
                   from={from}
-                  day={day === undefined ? openingDay(draft.data) : day}
+                  day={day === undefined ? openingDay(saved!) : day}
                   onSelect={pick}
                   wide={wide}
                   onWide={setWide}

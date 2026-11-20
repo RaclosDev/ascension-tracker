@@ -12,7 +12,6 @@ import { lazyWithRetry } from '../utils/lazyWithRetry';
 import '../styles/coach-workspace.css';
 import '../styles/coach-student.css';
 
-const ClientTraining = lazyWithRetry(() => import('../components/coach/ClientTraining'));
 const ClientProgress = lazyWithRetry(() => import('../components/coach/ClientProgress'));
 const ClientMetrics = lazyWithRetry(() => import('../components/coach/ClientMetrics'));
 const ClientPrograms = lazyWithRetry(() => import('../components/coach/ClientPrograms'));
@@ -76,13 +75,7 @@ function AthleteSections({ link }: { link: CoachClient }) {
         <Suspense fallback={<SectionSkeleton />}>
           {open('semana') && <ClientWeek link={link} />}
           {open('entrenamiento') && (
-            <>
-              <ClientPrograms linkId={linkId} canAssign={link.permissions.editTraining} />
-              <details className="card athlete-disclosure">
-                <summary>Historial y estadísticas de entreno</summary>
-                <ClientTraining linkId={linkId} />
-              </details>
-            </>
+            <ClientPrograms linkId={linkId} canAssign={link.permissions.editTraining} />
           )}
           {(open('nutricion') || open('pauta')) && (
             <ClientNutrition

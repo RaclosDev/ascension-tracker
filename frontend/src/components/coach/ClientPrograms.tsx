@@ -2,7 +2,7 @@ import { confirmAction } from '../../lib/confirmation';
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { differenceInCalendarDays, format, parseISO } from 'date-fns';
-import { CalendarRange, ChevronDown, Library } from 'lucide-react';
+import { ChevronDown, Library } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useClientCustomExercises, formatCoachDate, apiErrorMessage } from '../../lib/coach/api';
 import {
@@ -18,18 +18,11 @@ import { ProgramSessions } from './ProgramSessions';
 import { QueryState } from './ClientSection';
 import { ProgramPreview } from './ProgramPreview';
 import { Select } from '@/components/ui/select';
+import { useAthleteLinks } from './AthleteShell';
 import '../../styles/coach-programs.css';
 
-const statusText = (a: ProgramAssignment, single: boolean) =>
-  a.status === 'SCHEDULED'
-    ? single
-      ? 'Programada'
-      : 'Programado'
-    : a.status === 'ENDED'
-      ? single
-        ? 'Terminada'
-        : 'Terminado'
-      : 'En curso';
+const statusText = (a: ProgramAssignment) =>
+  a.status === 'SCHEDULED' ? 'Programado' : a.status === 'ENDED' ? 'Terminado' : 'En curso';
 
 export default function ProgramsSection({
   linkId,
@@ -40,6 +33,7 @@ export default function ProgramsSection({
 }) {
   const assignments = useClientAssignments(linkId);
   const library = useCoachPrograms();
+  const { sectionHref, viewHref } = useAthleteLinks(linkId);
   const assign = useAssignProgram(linkId);
   const end = useEndAssignment(linkId);
   const [params] = useSearchParams();
@@ -57,13 +51,15 @@ export default function ProgramsSection({
     [custom.data, catalog.data],
   );
   const exerciseName = (id: string) => exerciseMap.get(id)?.name ?? 'Ejercicio';
-  // Publishing a week from «Semana» reaches the athlete as a one-week plan with no library origin.
-  const shown = (assignments.data ?? []).filter((a) => showHistory || a.status !== 'ENDED');
-  const weekly = shown.filter((a) => a.sourceProgramId === null && a.weeks === 1);
-  const fromLibrary = shown.filter((a) => !weekly.includes(a));
-  const hasEnded = !!assignments.data?.some((a) => a.status === 'ENDED');
+  // Weeks published from Planificación reach the athlete as one-week plans with no library origin;
+  // they live in Planificación, so this list keeps only the library programs.
+  const programs = (assignments.data ?? []).filter(
+    (a) => a.sourceProgramId !== null || a.weeks > 1,
+  );
+  const fromLibrary = programs.filter((a) => showHistory || a.status !== 'ENDED');
+  const hasEnded = programs.some((a) => a.status === 'ENDED');
 
-  const row = (a: ProgramAssignment, single: boolean) => {
+  const row = (a: ProgramAssignment) => {
     // The week of the program that today falls in, for the ones running now.
     const week = Math.min(
       a.weeks,
@@ -75,17 +71,15 @@ export default function ProgramsSection({
         <div className="pg-item-row">
           <div className="pg-item-text">
             <span className="pg-status" data-status={a.status}>
-              {statusText(a, single)}
+              {statusText(a)}
             </span>
             <strong>{a.programName}</strong>
             <small>
-              {single
-                ? `Semana del ${formatCoachDate(a.startDate)}`
-                : `${a.weeks} ${a.weeks === 1 ? 'semana' : 'semanas'} · empieza el ${formatCoachDate(a.startDate)}`}
+              {`${a.weeks} ${a.weeks === 1 ? 'semana' : 'semanas'} · empieza el ${formatCoachDate(a.startDate)}`}
               {a.status === 'ENDED' && a.endedAt && ` · terminado el ${formatCoachDate(a.endedAt)}`}
             </small>
           </div>
-          {!single && a.status === 'ACTIVE' && a.weeks > 1 && (
+          {a.status === 'ACTIVE' && a.weeks > 1 && (
             <div className="pg-progress">
               <span>
                 Semana <b>{week}</b> de {a.weeks}
@@ -99,13 +93,9 @@ export default function ProgramsSection({
             {a.status !== 'ENDED' && canAssign && (
               <Link
                 className="btn btn-secondary"
-                to={
-                  single
-                    ? `/entrenador/atletas/${encodeURIComponent(linkId)}?seccion=semana&semana=${a.startDate}`
-                    : `/entrenador/atletas/${encodeURIComponent(linkId)}/programas/${encodeURIComponent(a.id)}/adaptar`
-                }
+                to={`/entrenador/atletas/${encodeURIComponent(linkId)}/programas/${encodeURIComponent(a.id)}/adaptar`}
               >
-                {single ? 'Abrir en el calendario' : 'Adaptar'}
+                Adaptar
               </Link>
             )}
             <button
@@ -190,42 +180,35 @@ export default function ProgramsSection({
   return (
     <div className="pg">
       <div className="pg-main">
-        {weekly.length > 0 && (
-          <section className="card pg-card" aria-labelledby="pg-weekly-title">
-            <header className="pg-head">
-              <h2 id="pg-weekly-title">
-                <CalendarRange size={16} aria-hidden /> Semanas publicadas desde el calendario
-              </h2>
-              {historyToggle}
-            </header>
-            <p className="pg-hint">
-              Cada semana que publicas le llega a tu atleta como un plan de una semana. Se preparan
-              y se corrigen en «Planificación»; aquí puedes ver sus sesiones o retirarlas.
+        <section className="card pg-card" aria-labelledby="pg-library-title">
+          <header className="pg-head">
+            <h2 id="pg-library-title">
+              <Library size={16} aria-hidden /> Programas de tu biblioteca
+            </h2>
+            {historyToggle}
+          </header>
+          <p className="pg-hint">
+            Un programa es la base: cada semana se abre ya rellena en{' '}
+            <Link className="pg-link" to={sectionHref('semana')}>
+              Planificación
+            </Link>
+            , donde puedes cambiar solo esa semana y el resto sigue igual. Lo que ha entrenado está
+            en{' '}
+            <Link className="pg-link" to={viewHref('entrenos')}>
+              Entrenos hechos
+            </Link>
+            .
+          </p>
+          <QueryState isLoading={assignments.isLoading} isError={assignments.isError} />
+          {assignments.data && fromLibrary.length === 0 && (
+            <p className="pg-empty">
+              {programs.length === 0
+                ? 'Aún no le has asignado ningún programa.'
+                : 'Ningún programa de tu biblioteca en marcha.'}
             </p>
-            <ul className="pg-list">{weekly.map((a) => row(a, true))}</ul>
-          </section>
-        )}
-        {(fromLibrary.length > 0 || !weekly.length) && (
-          <section className="card pg-card" aria-labelledby="pg-library-title">
-            <header className="pg-head">
-              <h2 id="pg-library-title">
-                <Library size={16} aria-hidden /> Programas de tu biblioteca
-              </h2>
-              {!weekly.length && historyToggle}
-            </header>
-            <QueryState isLoading={assignments.isLoading} isError={assignments.isError} />
-            {assignments.data && fromLibrary.length === 0 && (
-              <p className="pg-empty">
-                {assignments.data.length === 0
-                  ? 'Aún no le has asignado ningún programa.'
-                  : 'Ningún programa de tu biblioteca en marcha.'}
-              </p>
-            )}
-            {fromLibrary.length > 0 && (
-              <ul className="pg-list">{fromLibrary.map((a) => row(a, false))}</ul>
-            )}
-          </section>
-        )}
+          )}
+          {fromLibrary.length > 0 && <ul className="pg-list">{fromLibrary.map(row)}</ul>}
+        </section>
       </div>
       <aside className="card pg-card pg-assign" aria-labelledby="pg-assign-title">
         <header className="pg-head">

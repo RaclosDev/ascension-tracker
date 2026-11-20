@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { shiftWeek, weekDate } from '../lib/coach/weeks';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -9,6 +10,9 @@ import { useCoachCalendarWeek } from '../hooks/useCoachCalendarWeek';
 import { QueryErrorNotice } from '../components/QueryErrorNotice';
 import { useCoachClient } from '../lib/coach/api';
 import { CoachWeekNavigation } from '../components/coach/CoachWeekCalendar';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
+
+const ClientTraining = lazyWithRetry(() => import('../components/coach/ClientTraining'));
 
 export default function CoachClientWeeklyWorkoutsPage() {
   const { workoutId } = useParams();
@@ -65,6 +69,12 @@ function WeeklyWorkoutsPage() {
                   />
                 </section>
               ))}
+              <details className="card athlete-disclosure">
+                <summary>Historial y estadísticas de entreno</summary>
+                <Suspense fallback={<p role="status">Cargando historial…</p>}>
+                  <ClientTraining linkId={linkId} />
+                </Suspense>
+              </details>
             </>
           )}
         </AthleteShell>
