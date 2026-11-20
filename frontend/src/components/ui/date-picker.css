@@ -1,0 +1,226 @@
+/* Selector de fecha (date-picker.tsx): el botón es un .ui-select; la hoja, la del menú. */
+.ui-date {
+  justify-content: flex-start;
+  font-variant-numeric: tabular-nums;
+}
+.ui-date-icon {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+.ui-date:hover:not(:disabled) .ui-date-icon,
+.ui-date[aria-expanded='true'] .ui-date-icon {
+  opacity: 1;
+}
+.ui-date-placeholder {
+  color: var(--text-muted, var(--text-secondary));
+}
+.ui-date-proxy {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ui-date-sheet[popover] {
+  position: fixed;
+  inset: auto;
+  width: 296px;
+  max-width: calc(100vw - 16px);
+  margin: 0;
+  padding: 12px 12px 10px;
+  background-color: var(--sheet);
+  color: var(--sheet-ink);
+  border: 2px solid var(--sheet-edge);
+  border-radius: 4px;
+  box-shadow: 3px 4px 0 var(--menu-shadow, rgba(17, 24, 39, 0.3));
+  font-family: var(--font-main);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity 140ms ease-out,
+    translate 140ms ease-out,
+    display 140ms allow-discrete,
+    overlay 140ms allow-discrete;
+}
+@starting-style {
+  .ui-date-sheet:popover-open {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+.ui-date-sheet:not(:popover-open) {
+  opacity: 0;
+}
+.ui-date-sheet button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.ui-date-sheet button:disabled {
+  cursor: not-allowed;
+}
+.ui-date-sheet button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
+}
+
+.ui-date-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.ui-date-head strong {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.ui-date-nav {
+  display: flex;
+  gap: 2px;
+}
+.ui-date-nav button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+}
+.ui-date-nav button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--sheet-ink) 35%, transparent);
+}
+.ui-date-nav button:disabled {
+  opacity: 0.3;
+}
+
+.ui-date-grid {
+  display: grid;
+  gap: 2px;
+}
+.ui-date-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+.ui-date-wd {
+  padding: 2px 0 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  opacity: 0.7;
+}
+.ui-date-day {
+  position: relative;
+  width: 100%;
+  height: 34px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  font-variant-numeric: tabular-nums;
+}
+.ui-date-day:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--sheet-ink) 10%, transparent);
+}
+.ui-date-day[data-outside] {
+  color: color-mix(in srgb, var(--sheet-ink) 55%, transparent);
+}
+.ui-date-day:disabled {
+  color: color-mix(in srgb, var(--sheet-ink) 30%, transparent);
+}
+.ui-date-day[aria-current='date'] {
+  border-color: color-mix(in srgb, var(--sheet-ink) 55%, transparent);
+}
+.ui-date-day[data-selected] {
+  background: var(--sheet-ink);
+  color: var(--sheet);
+  font-weight: 700;
+}
+.ui-date-day[data-marked]::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.ui-date-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed color-mix(in srgb, var(--sheet-ink) 35%, transparent);
+}
+.ui-date-foot:has(.ui-date-quick:empty):not(:has(.ui-date-legend)) {
+  display: none;
+}
+.ui-date-quick {
+  display: flex;
+  gap: 4px;
+}
+.ui-date-quick button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--sheet-ink) 35%, transparent);
+  border-radius: 3px;
+  background: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.ui-date-quick button:hover {
+  border-color: var(--sheet-ink);
+}
+.ui-date-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+.ui-date-legend i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-date-sheet[popover] {
+    transition: none;
+  }
+}
+
+/* Diario de nutrición: la fecha va entre las flechas, como título y sin caja. */
+.ui-date.nutrition-date-trigger {
+  width: auto;
+  min-width: 10rem;
+  justify-content: center;
+  background: transparent;
+  border-color: transparent;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+.ui-date.nutrition-date-trigger:hover {
+  border-color: var(--border-subtle);
+}
+.ui-date.nutrition-date-trigger .ui-select-value {
+  flex: none;
+}
