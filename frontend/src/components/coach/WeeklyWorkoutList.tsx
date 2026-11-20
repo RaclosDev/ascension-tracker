@@ -14,7 +14,14 @@ import { WorkoutReview } from './WorkoutReview';
 import type { TodayDay } from '../../lib/coach/today';
 import { QueryErrorNotice } from '../QueryErrorNotice';
 import { WorkoutSessionStats } from '../workout/WorkoutSessionSummary';
-import { completedSets, formatDay, formatDuration } from '../../lib/workout/format';
+import {
+  completedSets,
+  formatDay,
+  formatDuration,
+  formatKg,
+  sessionVolume,
+} from '../../lib/workout/format';
+import { es } from 'date-fns/locale';
 import { ClientAvatar } from './ClientAvatar';
 import { CoachPageHeader } from './CoachWorkspace';
 import { CoachWeekGrid } from './CoachWeekCalendar';
@@ -22,10 +29,13 @@ import { CoachWeekGrid } from './CoachWeekCalendar';
 export function WeeklyWorkoutList({
   linkId,
   week,
+  current = false,
   workoutHref,
 }: {
   linkId: string;
   week: string;
+  /** The week being looked at, marked like Tracking semanal marks the current one. */
+  current?: boolean;
   workoutHref: (workoutId: string) => string;
 }) {
   const monday = parseISO(week);
@@ -46,14 +56,58 @@ export function WeeklyWorkoutList({
         workout.startedAt >= monday.getTime() && workout.startedAt < addDays(monday, 7).getTime(),
     )
     .sort((a, b) => a.startedAt - b.startedAt);
-  if (query.isPending) return <p role="status">Cargando entrenos…</p>;
+  const heading = (
+    <h2>
+      <span className="sr-only">Semana del </span>
+      {format(monday, 'd MMM', { locale: es })}
+      {current && <span className="ew-current">Actual</span>}
+    </h2>
+  );
+  if (query.isPending)
+    return (
+      <>
+        <header className="ew-head">{heading}</header>
+        <p role="status">Cargando entrenos…</p>
+      </>
+    );
   if (query.isError)
-    return <QueryErrorNotice retry={() => void query.refetch()} pending={query.isFetching} />;
+    return (
+      <>
+        <header className="ew-head">{heading}</header>
+        <QueryErrorNotice retry={() => void query.refetch()} pending={query.isFetching} />
+      </>
+    );
+  const sets = workouts.reduce((sum, w) => sum + completedSets(w.exercises), 0);
+  const volume = workouts.reduce((sum, w) => sum + sessionVolume(w.exercises), 0);
+  const time = workouts.reduce((sum, w) => sum + (w.finishedAt - w.startedAt), 0);
   return (
     <>
-      <p className="coach-muted" role="status">
-        {workouts.length === 1 ? '1 entreno registrado' : `${workouts.length} entrenos registrados`}
-      </p>
+      <header className="ew-head">
+        {heading}
+        <dl className="ew-sum">
+          <div>
+            <dt>Entrenos</dt>
+            <dd role="status">
+              {workouts.length}
+              <span className="sr-only">
+                {workouts.length === 1 ? ' entreno registrado' : ' entrenos registrados'}
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt>Series</dt>
+            <dd>{sets}</dd>
+          </div>
+          <div>
+            <dt>Volumen</dt>
+            <dd>{volume ? formatKg(volume) : '—'}</dd>
+          </div>
+          <div>
+            <dt>Tiempo</dt>
+            <dd>{time ? formatDuration(time) : '—'}</dd>
+          </div>
+        </dl>
+      </header>
       <CoachWeekGrid
         week={week}
         renderDay={(date) => {

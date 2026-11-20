@@ -1,4 +1,4 @@
-import { shiftWeek } from '../lib/coach/weeks';
+import { shiftWeek, weekDate } from '../lib/coach/weeks';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useParams } from 'react-router-dom';
@@ -53,14 +53,14 @@ function WeeklyWorkoutsPage() {
               {[week, shiftWeek(week, -1)].map((visibleWeek) => (
                 <section
                   key={visibleWeek}
-                  className="coach-weekly-workouts-list"
-                  aria-label="Entrenamientos registrados"
+                  className="card coach-weekly-workouts-list ew-week"
+                  aria-label={`Entrenamientos de la semana del ${format(parseISO(visibleWeek), 'd MMM yyyy', { locale: es })}`}
                 >
-                  <h2>Semana del {format(parseISO(visibleWeek), 'd MMM yyyy', { locale: es })}</h2>
                   <WeeklyWorkoutList
                     key={visibleWeek}
                     linkId={linkId}
                     week={visibleWeek}
+                    current={visibleWeek === weekDate()}
                     workoutHref={(id) => `${workoutsPath}/${encodeURIComponent(id)}${search}`}
                   />
                 </section>

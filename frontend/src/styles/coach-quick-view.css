@@ -591,3 +591,88 @@ a.coach-workout-calendar-session:focus-visible {
     min-height: 0;
   }
 }
+
+/* Entrenos hechos: cada semana en su tarjeta, con su resumen arriba como en Tracking semanal. */
+.card.ew-week {
+  gap: 14px;
+  padding: 18px 20px 20px;
+}
+.ew-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px 32px;
+}
+.card.ew-week .ew-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.ew-current {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-primary) 20%, transparent);
+  font-family: var(--font-main);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--accent-primary-light, var(--accent-primary));
+}
+.ew-sum {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 28px;
+  margin: 0;
+}
+.ew-sum dt {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.ew-sum dd {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  line-height: 1.1;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.ew-week .coach-workout-calendar {
+  gap: 8px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+}
+.ew-week .coach-workout-calendar-day {
+  min-height: 7.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+.ew-week .coach-workout-calendar-day:has(time[datetime]) h2 {
+  background: none;
+}
+.ew-week .coach-workout-calendar-day:has(h2 span) {
+  border-color: color-mix(in srgb, var(--accent-primary) 60%, transparent);
+}
+.ew-week .coach-workout-calendar-sessions {
+  padding: 8px;
+}
+.ew-week .coach-workout-calendar-session {
+  padding: 10px;
+  border-radius: 6px;
+}
+.ew-week .coach-workout-calendar-empty {
+  text-align: center;
+  opacity: 0.7;
+}

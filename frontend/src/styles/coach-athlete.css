@@ -1052,61 +1052,6 @@
   display: none;
 }
 
-/* Programas: one row per assignment, then the form to assign another. */
-.athlete-programs {
-  display: grid;
-  margin: 0 0 4px;
-  padding: 0;
-  list-style: none;
-}
-.athlete-programs > li {
-  display: grid;
-  gap: 12px;
-  padding: 14px 0;
-  border-top: 1px solid var(--border-subtle);
-}
-.athlete-programs > li:first-child {
-  border-top: 0;
-  padding-top: 4px;
-}
-.athlete-program-status {
-  display: inline-block;
-  margin-right: 6px;
-  padding: 1px 8px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 999px;
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-.athlete-program-status[data-status='ACTIVE'] {
-  border-color: color-mix(in srgb, var(--accent-primary) 55%, transparent);
-  color: var(--text-primary);
-}
-.athlete-assign {
-  display: grid;
-  gap: 12px;
-  margin-top: 8px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border-subtle);
-}
-.athlete-assign > h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-.athlete-assign-form {
-  display: grid;
-  gap: 12px;
-  align-items: end;
-}
-@media (min-width: 720px) {
-  .athlete-assign-form {
-    grid-template-columns: minmax(0, 28rem) 11rem auto;
-    justify-content: start;
-  }
-}
-
 /* Nutrición: the plan as a summary on top, the food diary by days and meals under it. */
 .athlete-nutrition {
   display: grid;
@@ -1985,17 +1930,6 @@
   flex: 0 0 auto;
   padding-inline: 1rem;
   white-space: nowrap;
-}
-.athlete-programs-title {
-  margin: 20px 0 4px;
-  font-size: 0.95rem;
-}
-.athlete-programs-hint {
-  max-width: 68ch;
-  margin: 0 0 4px;
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  line-height: 1.45;
 }
 /* A conflict states the problem and the way out; the rest waits behind one disclosure. */
 .week-conflict {
