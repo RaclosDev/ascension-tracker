@@ -1,11 +1,13 @@
-import { lazy, Suspense, useState } from 'react';
-import { ArrowRight, Clock3, Dumbbell, Play, X } from 'lucide-react';
+import { lazy, Suspense, useMemo, useState } from 'react';
+import { addDays, format, isToday, isYesterday, startOfWeek } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { ArrowRight, Clock3, Dumbbell, Play, Repeat2, X } from 'lucide-react';
 import { ActivityHeatmap } from '@/components/workout/heatmap';
 import { MuscleRecovery } from '@/components/workout/muscle-recovery';
 import { BodyHeatmap } from '@/components/workout/body-heatmap';
 import { getExerciseMap } from '@/lib/workout/exercises';
-import { formatDuration, formatKg, sessionVolume } from '@/lib/workout/format';
-import type { Template, CompletedWorkout, WorkoutExercise } from '@/lib/workout/types';
+import { completedSets, formatDuration, formatKg, sessionVolume } from '@/lib/workout/format';
+import type { Template, CompletedWorkout } from '@/lib/workout/types';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { useRecentWorkouts, useWorkoutTemplates, useCustomExercises } from '@/lib/workout/api';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,6 +20,53 @@ const TodayProgramCard = lazy(() =>
     .then((m) => ({ default: m.TodayProgramCard }))
     .catch(() => ({ default: () => null })),
 );
+
+const DAY_LETTERS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+
+/** «Hoy», «Ayer» o «Lun 17»: lo justo para situar una sesión reciente. */
+function whenLabel(ts: number) {
+  if (isToday(ts)) return 'Hoy';
+  if (isYesterday(ts)) return 'Ayer';
+  const label = format(ts, 'EEE d', { locale: es });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+/** Lo hecho esta semana (de lunes a hoy) frente a la anterior. */
+function useWeek(history: CompletedWorkout[]) {
+  return useMemo(() => {
+    const start = startOfWeek(new Date(), { weekStartsOn: 1 }).getTime();
+    const prevStart = addDays(start, -7).getTime();
+    const week = history.filter((w) => w.finishedAt >= start);
+    const prev = history.filter((w) => w.finishedAt >= prevStart && w.finishedAt < start);
+    const days = DAY_LETTERS.map((letter, i) => {
+      const from = addDays(start, i).getTime();
+      const to = addDays(start, i + 1).getTime();
+      return {
+        letter,
+        date: from,
+        done: week.some((w) => w.finishedAt >= from && w.finishedAt < to),
+        today: isToday(from),
+      };
+    });
+    return {
+      count: week.length,
+      prevCount: prev.length,
+      volume: week.reduce((n, w) => n + sessionVolume(w.exercises), 0),
+      time: week.reduce((n, w) => n + (w.finishedAt - w.startedAt), 0),
+      sets: week.reduce((n, w) => n + completedSets(w.exercises), 0),
+      days,
+    };
+  }, [history]);
+}
+
+function compareLabel(count: number, prev: number) {
+  if (prev === 0) {
+    return count > 0 ? 'La semana pasada no entrenaste' : 'Aún sin entrenos esta semana';
+  }
+  const diff = count - prev;
+  if (diff === 0) return `Igual que la semana pasada (${prev})`;
+  return `${Math.abs(diff)} ${diff > 0 ? 'más' : 'menos'} que la semana pasada (${prev})`;
+}
 
 function Dashboard() {
   const coaches = useMyCoaches();
@@ -36,111 +85,115 @@ function Dashboard() {
   const setDetailId = useWorkoutStore((s) => s.setDetailId);
   const active = useWorkoutStore((s) => s.active);
   const catalog = getExerciseMap(customExercises);
+  const week = useWeek(history);
 
   const [startModalOpen, setStartModalOpen] = useState(false);
 
   if (isLoadingHistory) {
     return (
-      <div className="space-y-8">
-        <section
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '1rem',
-            marginBottom: '1.5rem',
-          }}
-        >
-          <Skeleton className="h-[200px] w-full rounded-xl" />
-          <Skeleton className="h-[200px] w-full rounded-xl" />
-        </section>
-
-        <section style={{ marginBottom: '1.5rem' }}>
-          <div className="card">
-            <Skeleton className="h-[150px] w-full" />
+      <div className="wk" aria-busy="true">
+        <Skeleton className="h-[190px] w-full rounded-xl" />
+        <div className="wk-grid">
+          <div className="wk-main">
+            <Skeleton className="h-[260px] w-full rounded-xl" />
+            <Skeleton className="h-[220px] w-full rounded-xl" />
           </div>
-        </section>
-
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '0.5rem',
-            }}
-          >
-            <Skeleton className="h-6 w-32" />
-          </div>
-          <ul
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem',
-              padding: 0,
-              margin: 0,
-              listStyle: 'none',
-            }}
-          >
-            {[1, 2, 3].map((i) => (
-              <li key={i}>
-                <div
-                  className="card"
-                  style={{
-                    display: 'flex',
-                    width: '100%',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.85rem 1rem',
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <Skeleton className="h-5 w-40 mb-2" />
-                    <Skeleton className="h-3 w-24" />
-                  </div>
-                  <div
-                    style={{
-                      textAlign: 'right',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'flex-end',
-                    }}
-                  >
-                    <Skeleton className="h-4 w-12 mb-2" />
-                    <Skeleton className="h-3 w-8" />
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
+          <Skeleton className="h-[320px] w-full rounded-xl" />
+        </div>
       </div>
     );
   }
 
+  const last = history[0];
+
   return (
-    <div className="space-y-8">
-      {!active && (
-        <button
-          onClick={() => setStartModalOpen(true)}
-          className="btn btn-primary"
-          style={{
-            width: '100%',
-            padding: '1rem',
-            fontSize: '1.1rem',
-            fontWeight: 700,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: '0.5rem',
-            marginBottom: '1.5rem',
-            // Sombra plana desplazada, como las hojas: marca la acción principal sin brillo.
-            boxShadow: 'var(--shadow-md)',
-          }}
-        >
-          <Play size={20} fill="currentColor" />
-          Empezar Entrenamiento
-        </button>
-      )}
+    <div className="wk">
+      <section className="card wk-hero" aria-labelledby="wk-week-title">
+        <div className="wk-hero-week">
+          <h2 id="wk-week-title" className="wk-eyebrow">
+            Esta semana
+          </h2>
+          <p className="wk-count">
+            {week.count}
+            <span>{week.count === 1 ? 'entreno' : 'entrenos'}</span>
+          </p>
+          <p className="wk-compare">{compareLabel(week.count, week.prevCount)}</p>
+          <ol className="wk-days" aria-label="Días entrenados esta semana">
+            {week.days.map((d) => (
+              <li
+                key={d.letter}
+                data-done={d.done || undefined}
+                data-today={d.today || undefined}
+                title={format(d.date, "EEEE d 'de' MMMM", { locale: es })}
+              >
+                <span aria-hidden="true">{d.letter}</span>
+                <span className="sr-only">
+                  {format(d.date, 'EEEE', { locale: es })}: {d.done ? 'entrenado' : 'sin entreno'}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <dl className="wk-stats">
+          <div>
+            <dt>Volumen</dt>
+            <dd className="tabular-nums">{formatKg(week.volume)}</dd>
+          </div>
+          <div>
+            <dt>Tiempo</dt>
+            <dd className="tabular-nums">{week.time > 0 ? formatDuration(week.time) : '—'}</dd>
+          </div>
+          <div>
+            <dt>Series</dt>
+            <dd className="tabular-nums">{week.sets}</dd>
+          </div>
+        </dl>
+
+        <div className="wk-actions">
+          {active ? (
+            <button
+              type="button"
+              className="btn btn-primary wk-start"
+              onClick={() => setTab('train')}
+            >
+              <Play size={18} fill="currentColor" aria-hidden /> Continuar entreno
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="btn btn-primary wk-start"
+                onClick={() => setStartModalOpen(true)}
+              >
+                <Play size={18} fill="currentColor" aria-hidden /> Empezar entrenamiento
+              </button>
+              {last && (
+                <button
+                  type="button"
+                  className="btn btn-secondary wk-repeat"
+                  onClick={() => startFromHistory(last)}
+                >
+                  <Repeat2 size={16} aria-hidden />
+                  <span className="wk-repeat-label">Repetir {last.name}</span>
+                </button>
+              )}
+            </>
+          )}
+          {active ? (
+            <p className="wk-last">
+              En curso: {active.name} · {active.exercises?.length || 0} ejercicios
+            </p>
+          ) : (
+            last && (
+              <p className="wk-last">
+                Último: {last.name} · {whenLabel(last.finishedAt).toLowerCase()}
+              </p>
+            )
+          )}
+        </div>
+      </section>
+
       {!active && (
         <Suspense fallback={null}>
           <TodayProgramCard exerciseName={(id) => catalog.get(id)?.name ?? id} />
@@ -262,192 +315,73 @@ function Dashboard() {
         </>
       )}
 
-      {active ? (
-        <button
-          type="button"
-          onClick={() => setTab('train')}
-          className="card"
-          style={{
-            display: 'flex',
-            width: '100%',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            textAlign: 'left',
-            cursor: 'pointer',
-            marginBottom: '1rem',
-          }}
-        >
-          <div>
-            <p
-              style={{
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                color: 'var(--accent-primary)',
-              }}
-            >
-              En curso
-            </p>
-            <p
-              style={{
-                marginTop: '0.25rem',
-                fontSize: '1.25rem',
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-              }}
-            >
-              {active.name}
-            </p>
-            <p
-              style={{ marginTop: '0.25rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}
-            >
-              {active?.exercises?.length || 0} ejercicios · continuar
-            </p>
-          </div>
-          <ArrowRight className="size-5 text-muted-foreground" />
-        </button>
-      ) : null}
+      <div className="wk-grid">
+        <div className="wk-main">
+          <section className="wk-body" aria-label="Recuperación y músculos trabajados">
+            <MuscleRecovery history={history} customExercises={customExercises} />
+            <BodyHeatmap history={history} customExercises={customExercises} />
+          </section>
 
-      <section className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6 items-stretch">
-        <MuscleRecovery history={history} customExercises={customExercises} />
-        <BodyHeatmap history={history} customExercises={customExercises} />
-      </section>
+          {showPowerlifting && <PowerliftingCard />}
 
-      {showPowerlifting && <PowerliftingCard />}
+          <section className="card wk-panel" aria-labelledby="wk-activity-title">
+            <header className="wk-panel-head">
+              <h3 id="wk-activity-title" className="wk-title">
+                Actividad
+              </h3>
+              <span className="wk-note">Volumen por día, dos meses</span>
+            </header>
+            <ActivityHeatmap history={history} />
+          </section>
+        </div>
 
-      <section style={{ marginBottom: '1.5rem' }}>
-        <div className="card">
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              justifyContent: 'space-between',
-              marginBottom: '1rem',
-            }}
-          >
-            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-              Actividad
+        <aside className="card wk-panel wk-recent" aria-labelledby="wk-recent-title">
+          <header className="wk-panel-head">
+            <h3 id="wk-recent-title" className="wk-title">
+              Recientes
             </h3>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Volumen por día, dos meses
-            </span>
-          </div>
-          <ActivityHeatmap history={history} />
-        </div>
-      </section>
-
-      <section style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-            Recientes
-          </h3>
-          <button
-            onClick={() => setTab('history')}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--color-primary)',
-              fontWeight: 600,
-              cursor: 'pointer',
-              minHeight: '44px',
-              padding: '0 0.5rem',
-              margin: '-0.5rem -0.5rem -0.5rem 0',
-            }}
-          >
-            Ver todo
-          </button>
-        </div>
-        {history.length === 0 ? (
-          <EmptyCard
-            title="Todavía no hay sesiones"
-            body="Empieza un entrenamiento vacío o usa una plantilla."
-          />
-        ) : (
-          <ul
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem',
-              padding: 0,
-              margin: 0,
-              listStyle: 'none',
-            }}
-          >
-            {history.slice(0, 4).map((w: CompletedWorkout) => {
-              const names = w.exercises
-                .slice(0, 4)
-                .map((e: WorkoutExercise) => catalog.get(e.exerciseId)?.name ?? 'Ejercicio');
-              return (
+            <button type="button" className="wk-link" onClick={() => setTab('history')}>
+              Ver todo <ArrowRight size={14} aria-hidden />
+            </button>
+          </header>
+          {history.length === 0 ? (
+            <p className="wk-empty">
+              Todavía no hay sesiones. Empieza un entrenamiento vacío o usa una plantilla.
+            </p>
+          ) : (
+            <ul className="wk-recent-list">
+              {history.slice(0, 6).map((w: CompletedWorkout) => (
                 <li key={w.id}>
-                  <div
-                    className="card"
-                    style={{
-                      display: 'flex',
-                      width: '100%',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      padding: '0.85rem 1rem',
+                  <button
+                    type="button"
+                    className="wk-recent-item"
+                    onClick={() => {
+                      setDetailId(w.id);
+                      setTab('history');
                     }}
                   >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDetailId(w.id);
-                        setTab('history');
-                      }}
-                      style={{
-                        flex: 1,
-                        minWidth: 0,
-                        textAlign: 'left',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: 'inherit',
-                      }}
-                    >
-                      <p
-                        style={{
-                          fontWeight: 600,
-                          color: 'var(--text-primary)',
-                          fontSize: '0.9rem',
-                        }}
-                      >
-                        {w.name}
-                      </p>
-                      <p
-                        style={{
-                          marginTop: '0.1rem',
-                          fontSize: '0.8rem',
-                          color: 'var(--text-secondary)',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {names.join(' · ')}
-                        {w.exercises.length > 4 ? '...' : ''}
-                      </p>
-                    </button>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <p
-                        style={{
-                          fontSize: '0.85rem',
-                          fontWeight: 600,
-                          color: 'var(--text-primary)',
-                        }}
-                      >
-                        {formatKg(sessionVolume(w.exercises))}
-                      </p>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                        {formatDuration(w.finishedAt - w.startedAt)}
-                      </p>
-                    </div>
-                  </div>
+                    <span className="wk-recent-when">{whenLabel(w.finishedAt)}</span>
+                    <span className="wk-recent-name">
+                      <strong>{w.name}</strong>
+                      <small>
+                        {w.exercises
+                          .slice(0, 3)
+                          .map((e) => catalog.get(e.exerciseId)?.name ?? 'Ejercicio')
+                          .join(' · ')}
+                        {w.exercises.length > 3 ? ` · +${w.exercises.length - 3}` : ''}
+                      </small>
+                    </span>
+                    <span className="wk-recent-figs tabular-nums">
+                      <strong>{formatKg(sessionVolume(w.exercises))}</strong>
+                      <small>{formatDuration(w.finishedAt - w.startedAt)}</small>
+                    </span>
+                  </button>
                 </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+              ))}
+            </ul>
+          )}
+        </aside>
+      </div>
     </div>
   );
 }
