@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Minus, Plus, Trophy, X } from 'lucide-react';
 
-// Two small hands-on demos on the landing: nothing is saved and nothing reaches the server.
+// Two small hands-on demos in the landing's hero: nothing is saved and nothing reaches the server.
 
 // Epley, the estimate the app uses to compare sets with different reps.
 const estimate = (kg: number, reps: number) => (reps === 1 ? kg : kg * (1 + reps / 30));
@@ -226,19 +226,33 @@ export function MealsDemo() {
   );
 }
 
-export default function LandingTryIt() {
+type DemoTab = 'entreno' | 'comida';
+
+// The hero's card: the two demos behind a switch, so the first screen stays one card tall.
+export function HeroDemo() {
+  const [tab, setTab] = useState<DemoTab>('entreno');
   return (
-    <section id="pruebalo" className="fam-container mt-20 lg:mt-28" aria-labelledby="try-title">
-      <h2 id="try-title" className="fam-h2">
-        Pruébalo aquí
-      </h2>
-      <p className="fam-lede mt-4">
-        Así se apunta en la app. Sin cuenta: lo que registres aquí no se guarda.
-      </p>
-      <div className="mt-10 grid gap-6 lg:grid-cols-2">
-        <BenchDemo />
-        <MealsDemo />
+    <div className="try-hero">
+      <div className="try-switch" role="group" aria-label="Elige una demo">
+        {(
+          [
+            ['entreno', 'Entreno'],
+            ['comida', 'Comida'],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            className="try-switch__btn"
+            aria-pressed={tab === value}
+            onClick={() => setTab(value)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
-    </section>
+      {tab === 'entreno' ? <BenchDemo /> : <MealsDemo />}
+      <p className="try-note">Sin cuenta: lo que registres aquí no se guarda.</p>
+    </div>
   );
 }

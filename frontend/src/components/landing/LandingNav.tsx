@@ -19,7 +19,7 @@ export default function LandingNav() {
         ))}
       </nav>
       <Link to="/login" className="fam-btn fam-btn--ink">
-        Entrar
+        Iniciar sesión
       </Link>
     </SiteHeader>
   );

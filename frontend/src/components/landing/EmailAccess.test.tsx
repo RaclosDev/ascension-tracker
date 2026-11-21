@@ -42,7 +42,7 @@ describe('EmailAccess', () => {
     render(<EmailAccess />);
     type('Email', ' ana@example.com ');
     type('Contraseña', 'una-frase-larga');
-    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
 
     await waitFor(() => expect(mocks.login).toHaveBeenCalledWith('session'));
     expect(mocks.signInWithPassword).toHaveBeenCalledWith('ana@example.com', 'una-frase-larga');
@@ -56,7 +56,7 @@ describe('EmailAccess', () => {
     render(<EmailAccess />);
     type('Email', 'ana@example.com');
     type('Contraseña', 'mala');
-    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/incorrectos|No se ha podido/);
     expect(mocks.login).not.toHaveBeenCalled();
@@ -84,7 +84,7 @@ describe('EmailAccess', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('Si hay una cuenta');
     expect(mocks.requestPasswordReset).toHaveBeenCalledWith('ana@example.com');
     fireEvent.click(screen.getByRole('button', { name: 'Volver a iniciar sesión' }));
-    expect(screen.getByRole('button', { name: 'Entrar' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument();
   });
 
   it('signs in with a passkey and stops offering one on this device', async () => {
