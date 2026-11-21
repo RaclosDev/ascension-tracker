@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
     r.fulfill({ status: 200, json: { googleClientId: 'ci-mock-id' } }),
   );
   await page.route('**/api/auth/refresh', (r) => r.fulfill({ status: 401, body: '' }));
-  await page.goto('/login');
+  await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15000 });
 });
 
