@@ -1,8 +1,8 @@
-import GoogleSignInButton from '../GoogleSignInButton';
-import { Crown, ArrowDown } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import api from '../../api/client';
-import EmailAccess from './EmailAccess';
+import { Link } from 'react-router-dom';
+import { ArrowDown } from 'lucide-react';
+import InkButton from './InkButton';
+import { SIGN_UP } from './routes';
+import LandingShowcase from './LandingShowcase';
 
 // Marker stroke under the blue tag word, drawn by hand so it never repeats exactly.
 const Stroke = () => (
@@ -17,22 +17,16 @@ const Stroke = () => (
   </svg>
 );
 
-// The page is /login: the poster on the left says what the app is, and the access sheet on the
-// right is pinned where the eye lands, with email first and Google as the other way in.
+// The poster at the top of the landing: what the app is and the way in on the left, the real
+// screens on the right. The sign-in form lives on its own page (/login).
 export default function LandingHero() {
-  const { login } = useAuth();
-
   return (
     <section
       id="inicio"
-      className="relative mx-auto grid max-w-6xl items-start gap-10 px-5 pb-16 pt-8 sm:px-8 sm:pt-14 lg:grid-cols-12 lg:gap-12 lg:pb-24"
+      className="relative mx-auto grid max-w-6xl items-center gap-6 px-5 pb-12 pt-8 sm:px-8 sm:pt-12 lg:grid-cols-12 lg:gap-8 lg:pb-20"
     >
-      <div className="landing-rise lg:col-span-7 lg:pt-7">
-        <p className="landing-display flex items-center gap-2 text-[1.15rem] tracking-[0.08em] text-[var(--landing-blue)]">
-          <Crown size={20} aria-hidden="true" />
-          Entreno · Nutrición · Peso
-        </p>
-        <h1 className="landing-display mt-4 mb-8 text-[clamp(3.2rem,9vw,6rem)] font-bold text-white">
+      <div className="landing-rise lg:col-span-6 xl:col-span-5">
+        <h1 className="landing-display mb-7 text-[clamp(3.2rem,8vw,5.6rem)] font-bold xl:text-[4.7rem] text-white">
           Tu progreso
           <br />
           bajo{' '}
@@ -45,47 +39,31 @@ export default function LandingHero() {
           Récords por ejercicio y por variante, comidas registradas con una foto, peso y pasos cada
           día. Una PWA gratuita en español que funciona sin conexión y se instala en el móvil.
         </p>
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          <InkButton to={SIGN_UP}>Crear mi cuenta</InkButton>
+          <a href="/demo" className="landing-alt-cta inline-flex items-center">
+            Probar la demo
+          </a>
+        </div>
+        <p className="mt-4 text-[0.9rem] text-[var(--landing-muted)]">
+          ¿Ya tienes cuenta?{' '}
+          <Link
+            to="/login"
+            className="font-bold text-[var(--landing-ink)] underline underline-offset-4"
+          >
+            Inicia sesión
+          </Link>
+        </p>
         <a
           href="#funciones"
-          className="landing-display mt-6 hidden min-h-11 items-center gap-2 text-[0.85rem] tracking-[0.1em] text-[var(--landing-muted)] hover:text-white focus-visible:text-white lg:inline-flex"
+          className="landing-display mt-4 hidden min-h-11 items-center gap-2 text-[0.85rem] tracking-[0.1em] text-[var(--landing-muted)] hover:text-white focus-visible:text-white lg:inline-flex"
         >
           Ver qué incluye
           <ArrowDown size={16} aria-hidden="true" />
         </a>
       </div>
-
-      <div
-        id="entrar"
-        className="landing-rise landing-rise-2 landing-sheet w-full max-w-md justify-self-center p-5 sm:p-7 lg:col-span-5 lg:justify-self-end"
-        aria-labelledby="entrar-title"
-        role="region"
-      >
-        <h2 id="entrar-title" className="landing-display text-[1.9rem] font-bold text-white">
-          Entra en Ascension
-        </h2>
-        <p className="mt-1 mb-5 text-[0.9rem] text-[var(--landing-muted)]">
-          Gratis para uso personal, sin anuncios y sin tarjeta.
-        </p>
-        <EmailAccess
-          alternatives={
-            <GoogleSignInButton
-              className="landing-alt-cta w-full"
-              onCredential={async (credential) => {
-                const res = await api.post<{ token?: string }>('/auth/login', {
-                  token: credential,
-                });
-                if (!res.data.token) throw new Error('Invalid authentication response');
-                login(res.data.token);
-              }}
-            />
-          }
-        />
-        <a
-          href="/demo"
-          className="landing-display mt-4 flex min-h-11 w-full items-center justify-center border border-white/30 text-[0.9rem] tracking-[0.08em] text-white hover:bg-white/10"
-        >
-          Probar la demo sin registrarte
-        </a>
+      <div className="landing-rise landing-rise-2 lg:col-span-6 xl:col-span-7">
+        <LandingShowcase />
       </div>
     </section>
   );

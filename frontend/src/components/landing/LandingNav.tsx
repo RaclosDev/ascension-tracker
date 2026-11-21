@@ -1,6 +1,5 @@
 import InkButton from './InkButton';
 import Wordmark from './Wordmark';
-import { requestEmailAccess } from './emailAccessEvents';
 
 const links = [
   { href: '#funciones', label: 'Funciones' },
@@ -25,9 +24,7 @@ export default function LandingNav() {
           </a>
         ))}
       </nav>
-      <InkButton href="#entrar" onClick={requestEmailAccess('login')}>
-        Entrar
-      </InkButton>
+      <InkButton to="/login">Entrar</InkButton>
     </header>
   );
 }

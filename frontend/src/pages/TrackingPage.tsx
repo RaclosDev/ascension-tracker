@@ -280,6 +280,12 @@ export default function TrackingPage() {
                 </strong>
                 {isCurrentWeek && <span>{format(monday, 'd MMM', { locale: es })}</span>}
               </div>
+              <div className="track-legend" aria-hidden>
+                <span className="track-day-date">&nbsp;</span>
+                {showWeight && <span className="track-line track-weight">kg</span>}
+                {showSteps && <span className="track-line track-minor">pas</span>}
+                {showCalories && <span className="track-line track-minor">kcal</span>}
+              </div>
               {week.days.map((dayData: DayData, d: number) => {
                 const date = new Date(monday);
                 date.setDate(date.getDate() + d);
@@ -301,7 +307,9 @@ export default function TrackingPage() {
               <dl className="track-week-sum">
                 {showWeight && (
                   <div className="track-sum-weight">
-                    <dt className="sr-only">Peso medio</dt>
+                    <dt className="track-sum-label">
+                      Media<span className="sr-only"> de peso</span>
+                    </dt>
                     <dd className="track-sum-avg tabular-nums">
                       {week.averageWeight != null ? (
                         <>
@@ -314,7 +322,14 @@ export default function TrackingPage() {
                     </dd>
                     {week.deltaWeight != null && (
                       <>
-                        <dt className="sr-only">Cambio frente a la semana anterior</dt>
+                        <dt className="track-sum-label">
+                          <span className="track-sum-long">
+                            Vs. anterior<span className="sr-only"> semana</span>
+                          </span>
+                          <span className="track-sum-short" aria-hidden>
+                            Dif.
+                          </span>
+                        </dt>
                         <dd className="track-sum-delta tabular-nums">
                           {signed(week.deltaWeight)}
                           <span className="track-unit"> kg</span>
@@ -326,27 +341,22 @@ export default function TrackingPage() {
                     </dd>
                   </div>
                 )}
-                {((showSteps && week.averageSteps != null) ||
-                  (showCalories && week.averageCalories != null)) && (
-                  <div className="track-sub tabular-nums">
-                    {showSteps && week.averageSteps != null && (
-                      <>
-                        <dt className="sr-only">Pasos medios</dt>
-                        <dd className="track-minor">
-                          {Math.round(week.averageSteps).toLocaleString('es-ES')}
-                          <span className="track-unit"> pas</span>
-                        </dd>
-                      </>
-                    )}
-                    {showCalories && week.averageCalories != null && (
-                      <>
-                        <dt className="sr-only">Calorías medias</dt>
-                        <dd className="track-minor">
-                          {Math.round(week.averageCalories).toLocaleString('es-ES')}
-                          <span className="track-unit"> kcal</span>
-                        </dd>
-                      </>
-                    )}
+                {showSteps && week.averageSteps != null && (
+                  <div className="track-sum-line tabular-nums">
+                    <dt className="sr-only">Pasos medios</dt>
+                    <dd className="track-minor">
+                      {Math.round(week.averageSteps).toLocaleString('es-ES')}
+                      <span className="track-unit"> pas</span>
+                    </dd>
+                  </div>
+                )}
+                {showCalories && week.averageCalories != null && (
+                  <div className="track-sum-line tabular-nums">
+                    <dt className="sr-only">Calorías medias</dt>
+                    <dd className="track-minor">
+                      {Math.round(week.averageCalories).toLocaleString('es-ES')}
+                      <span className="track-unit"> kcal</span>
+                    </dd>
                   </div>
                 )}
               </dl>

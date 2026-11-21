@@ -41,7 +41,7 @@ export function PowerMeets({
           </button>
           {saved ? (
             <PowerMeetForm
-              key={`${saved.id}:${saved.version}:${canEdit}`}
+              key={`${saved.id}:${canEdit}`}
               saved={saved}
               canEdit={canEdit}
               reload={() => void meets.refetch()}

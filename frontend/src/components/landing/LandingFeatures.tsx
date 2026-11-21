@@ -1,6 +1,6 @@
 import { Dumbbell, Camera, Scale, Download } from 'lucide-react';
 import InkButton from './InkButton';
-import { requestEmailAccess } from './emailAccessEvents';
+import { SIGN_UP } from './routes';
 
 const groups = [
   {
@@ -37,12 +37,9 @@ export default function LandingFeatures() {
       aria-labelledby="features-title"
     >
       <div className="lg:col-span-4">
-        <p className="landing-display text-[0.85rem] tracking-[0.12em] text-[var(--landing-blue)]">
-          Qué incluye
-        </p>
         <h2
           id="features-title"
-          className="landing-display mt-3 text-[clamp(2.2rem,6vw,4rem)] font-bold text-white"
+          className="landing-display text-[clamp(2.2rem,6vw,4rem)] font-bold text-white"
         >
           Todo lo que registras, en un sitio
         </h2>
@@ -50,36 +47,40 @@ export default function LandingFeatures() {
           Gratis para uso personal y sin anuncios. Código abierto, en español.
         </p>
         <div className="mt-6">
-          <InkButton href="#entrar" onClick={requestEmailAccess('register')}>
-            Crear mi cuenta
-          </InkButton>
+          <InkButton to={SIGN_UP}>Crear mi cuenta</InkButton>
         </div>
       </div>
 
-      <ul className="grid gap-px border border-[var(--landing-steel)] bg-[var(--landing-steel)] sm:grid-cols-2 lg:col-span-8">
+      <ul className="border-t-2 border-[var(--landing-ink)] lg:col-span-8">
         {groups.map((g) => (
           <li
             key={g.title}
             id={g.title === 'Tus datos' ? 'datos' : undefined}
-            className="bg-[var(--landing-bg)] p-6"
+            className="grid gap-3 border-b border-[var(--landing-steel)] py-6 sm:grid-cols-[11rem_1fr] sm:items-start sm:gap-6"
           >
-            <g.icon size={22} className="text-[var(--landing-blue)]" aria-hidden="true" />
-            <h3 className="landing-display mt-4 text-[1.5rem] font-semibold text-white">
+            <h3 className="landing-display flex items-center gap-3 text-[1.5rem] font-semibold text-white">
+              <g.icon
+                size={22}
+                className="shrink-0 text-[var(--landing-blue)]"
+                aria-hidden="true"
+              />
               {g.title}
             </h3>
-            <p className="mt-2 text-[0.95rem] leading-relaxed text-[var(--landing-muted)]">
-              {g.text}
-            </p>
-            <ul className="mt-4 flex flex-wrap gap-2" aria-label={`Puntos clave de ${g.title}`}>
-              {g.tags.map((t) => (
-                <li
-                  key={t}
-                  className="landing-display border border-[var(--landing-steel)] px-2 py-1 text-[0.7rem] tracking-[0.08em] text-[var(--landing-ink)]"
-                >
-                  {t}
-                </li>
-              ))}
-            </ul>
+            <div>
+              <p className="max-w-[60ch] text-[0.95rem] leading-relaxed text-[var(--landing-muted)]">
+                {g.text}
+              </p>
+              <ul className="mt-3 flex flex-wrap gap-2" aria-label={`Puntos clave de ${g.title}`}>
+                {g.tags.map((t) => (
+                  <li
+                    key={t}
+                    className="landing-display border border-[var(--landing-steel)] px-2 py-1 text-[0.7rem] tracking-[0.08em] text-[var(--landing-ink)]"
+                  >
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </li>
         ))}
       </ul>

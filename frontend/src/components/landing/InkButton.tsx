@@ -1,17 +1,17 @@
-import React from 'react';
+import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 
 type Props = {
-  href: string;
-  children: React.ReactNode;
+  to: string;
+  children: ReactNode;
   className?: string;
-  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
 };
 
-// The landing's call to action: a solid ink block. Always a real anchor.
-export default function InkButton({ href, children, className = '', onClick }: Props) {
+// The landing's call to action: a solid ink block that leads to another page of the site.
+export default function InkButton({ to, children, className = '' }: Props) {
   return (
-    <a href={href} className={`landing-cta ${className}`} onClick={onClick}>
+    <Link to={to} className={`landing-cta ${className}`}>
       {children}
-    </a>
+    </Link>
   );
 }

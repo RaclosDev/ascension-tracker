@@ -120,6 +120,28 @@
   background: var(--accent-primary);
   color: var(--bg-card);
 }
+.wk-days li > button {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: filter 0.12s ease;
+}
+.wk-days li > button:hover {
+  filter: brightness(1.15);
+  background: rgb(255 255 255 / 0.12);
+}
+.wk-days li > button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
 .wk-days li[data-today]:not([data-done]) {
   border-color: var(--accent-primary);
   color: var(--accent-primary);

@@ -1,5 +1,5 @@
-/* Public landing. Paper and ink, like PorrApp and LoopDeck: a poster pinned to the sheet,
-   the app shots as taped prints, and the accent ink the app uses. */
+/* Public landing and /login. Paper and ink, like PorrApp and LoopDeck: a poster, the app shots
+   in phone bodies, and the accent ink the app uses. No tape or stickers. */
 .landing {
   --landing-bg: var(--paper);
   --landing-ink: var(--ink);
@@ -139,25 +139,12 @@
   transform: none;
 }
 
-/* Access sheet: a print pinned to the poster, with the same tape and hard shadow as the shots. */
+/* Access sheet on /login: a straight print with the hard shadow, nothing stuck on it. */
 .landing-sheet {
-  position: relative;
   background: #fffdf7;
   border: 2px solid var(--ink);
   border-radius: 4px;
   box-shadow: 6px 8px 0 rgba(0, 0, 0, 0.2);
-}
-.landing-sheet::before {
-  content: '';
-  position: absolute;
-  top: -14px;
-  left: 50%;
-  width: 96px;
-  height: 26px;
-  background: rgba(255, 230, 140, 0.8);
-  border-inline: 1px dashed rgba(17, 24, 39, 0.19);
-  transform: translateX(-50%) rotate(-3deg);
-  pointer-events: none;
 }
 
 /* Sign in / Create account: two halves of one ink frame, the active one filled. */

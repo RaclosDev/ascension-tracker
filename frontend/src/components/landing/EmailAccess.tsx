@@ -1,6 +1,5 @@
-import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import { KeyRound } from 'lucide-react';
-import { EMAIL_ACCESS_EVENT, type AccessMode } from './emailAccessEvents';
 import { useAuth } from '../../context/AuthContext';
 import { apiErrorMessage } from '../../lib/coach/api';
 import {
@@ -12,6 +11,7 @@ import {
 import { isPasskeyCancel, passkeysSupported } from '../../utils/webauthn';
 import { markPasskeyPromptAnswered } from '../../utils/passkeyPrompt';
 
+export type AccessMode = 'login' | 'register';
 type Mode = AccessMode;
 type Step = 'form' | 'forgot' | 'forgot-sent';
 
@@ -24,37 +24,25 @@ const linkButton =
 
 /**
  * Sign-in and sign-up with email, the forgotten-password link and the passkey button.
- * `alternatives` (the Google button) sits under the email form as the second way in.
+ * `alternatives` (the Google button) sits under the email form as the second way in, and
+ * `initialMode` opens it on "Crear cuenta" when the visitor came from a sign-up call to action.
  */
-export default function EmailAccess({ alternatives }: { alternatives?: ReactNode }) {
+export default function EmailAccess({
+  alternatives,
+  initialMode = 'login',
+}: {
+  alternatives?: ReactNode;
+  initialMode?: AccessMode;
+}) {
   const { login } = useAuth();
   const ids = useId();
-  const emailInput = useRef<HTMLInputElement>(null);
-  const [focusRequest, setFocusRequest] = useState(0);
-  const [mode, setMode] = useState<Mode>('login');
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [step, setStep] = useState<Step>('form');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const registering = mode === 'register';
-
-  // Calls to action elsewhere on the page open the panel in their mode, ready to type.
-  useEffect(() => {
-    const open = (event: Event) => {
-      const next = (event as CustomEvent<Mode>).detail;
-      setError('');
-      setMode(next === 'register' ? 'register' : 'login');
-      setStep('form');
-      setFocusRequest((n) => n + 1);
-    };
-    window.addEventListener(EMAIL_ACCESS_EVENT, open);
-    return () => window.removeEventListener(EMAIL_ACCESS_EVENT, open);
-  }, []);
-
-  useEffect(() => {
-    if (focusRequest) emailInput.current?.focus({ preventScroll: true });
-  }, [focusRequest]);
 
   const run = async (action: () => Promise<void>, fallback: string) => {
     setError('');
@@ -174,7 +162,6 @@ export default function EmailAccess({ alternatives }: { alternatives?: ReactNode
           Email
         </label>
         <input
-          ref={emailInput}
           id={`${ids}-email`}
           className={field}
           type="email"

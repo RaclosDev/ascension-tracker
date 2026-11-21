@@ -47,6 +47,7 @@ const AdminPlansPage = lazyWithRetry(() => import('./pages/AdminPlansPage'));
 const CoachCheckinPage = lazyWithRetry(() => import('./pages/CoachCheckinPage'));
 const InvitationPage = lazyWithRetry(() => import('./pages/InvitationPage'));
 import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
 import { DEMO } from './demo/mode';
 import { HomeRedirect, RememberInvitation } from './components/coach/InvitationRedirects';
 
@@ -147,7 +148,8 @@ function AppContent() {
     return (
       <ErrorBoundary>
         <Routes>
-          <Route path="/login" element={<LandingPage />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/invitacion/:token" element={<RememberInvitation />} />
           <Route
             path="/restablecer-contrasena"

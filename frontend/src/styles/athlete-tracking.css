@@ -34,7 +34,7 @@
 }
 .track-week {
   display: grid;
-  grid-template-columns: 120px repeat(7, minmax(0, 1fr)) 168px;
+  grid-template-columns: 120px repeat(7, minmax(0, 1fr)) 184px;
   gap: 4px;
   padding: 6px 0;
   border-top: 1px solid var(--border-subtle);
@@ -143,14 +143,16 @@
   color: var(--text-muted);
   opacity: 0.5;
 }
-.track-sub {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  margin: auto 0 0;
+.track-line {
+  display: block;
+  line-height: 1;
+}
+.track-legend {
+  display: none;
 }
 .track-minor {
   margin: 0;
+  line-height: 1.15;
   font-size: 0.72rem;
   color: var(--text-secondary);
   white-space: nowrap;
@@ -196,6 +198,25 @@
   justify-content: end;
   align-items: baseline;
   column-gap: 8px;
+  row-gap: 4px;
+}
+.track-sum-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: right;
+}
+.track-sum-short {
+  display: none;
+}
+.track-sum-avg,
+.track-sum-delta {
+  white-space: nowrap;
+}
+.track-sum-line {
+  margin: 0;
 }
 .track-sum-avg {
   font-family: var(--font-display);
@@ -229,11 +250,6 @@
 .track-spark circle {
   fill: var(--accent-primary);
 }
-.track-week-sum .track-sub {
-  flex-direction: row;
-  gap: 10px;
-  margin: 0;
-}
 .track-empty {
   padding: 48px 16px;
 }
@@ -244,13 +260,13 @@
     padding: 0 4px 4px;
   }
   .track-week {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-columns: 22px repeat(7, minmax(0, 1fr));
     gap: 2px;
     padding: 10px 0 6px;
   }
   .track-week-label {
     grid-row: 1;
-    grid-column: 1 / 3;
+    grid-column: 1 / 4;
     justify-content: center;
     padding: 0 6px;
   }
@@ -259,7 +275,7 @@
   }
   .track-week-sum {
     grid-row: 1;
-    grid-column: 3 / -1;
+    grid-column: 4 / -1;
     flex-direction: row;
     align-items: center;
     justify-content: flex-end;
@@ -269,25 +285,69 @@
   .track-sum-weight {
     display: flex;
     align-items: baseline;
-    gap: 6px;
+    gap: 5px;
     white-space: nowrap;
   }
   .track-sum-avg {
     font-size: 1.25rem;
   }
-  .track-spark-cell {
-    order: -1;
-    margin: 0 4px 0 0 !important;
+  .track-sum-delta {
+    margin-left: 6px !important;
   }
-  .track-spark {
-    width: 72px;
+  .track-sum-long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
-  .track-week-sum .track-sub {
+  .track-sum-short {
+    display: inline;
+  }
+  /* La forma de la semana no cabe con sentido en móvil. */
+  .track-spark-cell,
+  .track-sum-line {
     display: none;
   }
-  .track-cols .track-week-label,
+  .track-cols .track-week-label {
+    visibility: hidden;
+    grid-column: 1;
+  }
   .track-cols .track-week-sum {
     display: none;
+  }
+  /* Sin unidades en las casillas: la leyenda nombra cada línea a su altura. */
+  .track-legend {
+    grid-row: 2;
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    padding: 6px 0;
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+  }
+  .track-legend .track-day-date {
+    visibility: hidden;
+  }
+  .track-legend .track-weight,
+  .track-legend .track-minor {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+  }
+  .track-day-date,
+  .track-line {
+    display: flex;
+    align-items: center;
+    height: 0.75rem;
+  }
+  .track-weight.track-line {
+    height: 1rem;
   }
   .track-cols {
     padding: 10px 0 0;
@@ -305,9 +365,6 @@
   }
   .track-weight {
     font-size: 0.95rem;
-  }
-  .track-sub {
-    align-items: center;
   }
   .track-minor {
     font-size: 0.62rem;
