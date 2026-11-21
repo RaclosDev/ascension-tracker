@@ -1,0 +1,132 @@
+import React from 'react';
+import {
+  BarChart,
+  Bar,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+  ReferenceLine,
+} from 'recharts';
+
+interface DashboardChartsProps {
+  weightChartData: Array<{ label: string; weight: number; [key: string]: unknown }>;
+  deltaData: Array<{ week: string; delta: number; fill: string; [key: string]: unknown }>;
+  /** Omitted in the coach's view: the client's goal weight is not shared. */
+  goalWeight?: number;
+}
+
+export default React.memo(function DashboardCharts({
+  weightChartData,
+  deltaData,
+  goalWeight,
+}: DashboardChartsProps) {
+  return (
+    <div className="charts-grid">
+      <div className="chart-card full-width">
+        <div className="chart-title">Evolución de Peso</div>
+        <div className="chart-wrapper">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={weightChartData} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="weightGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--accent-primary)" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+              <XAxis
+                dataKey="label"
+                tick={{ fill: 'var(--text-muted, #64748b)', fontSize: 11 }}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                width={40}
+                tick={{ fill: 'var(--text-muted, #64748b)', fontSize: 11 }}
+                domain={[
+                  (dataMin: number) => Math.floor(dataMin),
+                  (dataMax: number) => Math.ceil(dataMax),
+                ]}
+                tickFormatter={(v: number) => `${v}`}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: 'var(--bg-card, #1C1C1E)',
+                  border: '1px solid var(--border-medium, rgba(255,255,255,0.12))',
+                  borderRadius: 8,
+                }}
+                labelStyle={{ color: 'var(--text-primary, #F4F5F7)' }}
+                itemStyle={{ color: 'var(--text-secondary, #9BA3AF)' }}
+                formatter={(v: number | string | undefined | readonly (string | number)[]) => [
+                  `${Number(v).toFixed(2)} kg`,
+                  'Peso',
+                ]}
+              />
+              {goalWeight != null && (
+                <ReferenceLine
+                  y={goalWeight}
+                  stroke="rgba(52, 211, 153, 0.5)"
+                  strokeDasharray="8 4"
+                  label={{
+                    value: 'Obj.',
+                    fill: 'var(--color-success)',
+                    fontSize: 12,
+                    position: 'insideTopLeft',
+                  }}
+                />
+              )}
+              <Area
+                type="monotone"
+                dataKey="weight"
+                stroke="var(--accent-primary)"
+                strokeWidth={2.5}
+                fill="url(#weightGrad)"
+                dot={weightChartData.length === 1 ? { r: 3 } : false}
+                activeDot={{ r: 4, fill: 'var(--accent-primary-light)' }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="chart-card">
+        <div className="chart-title">Variación Semanal (Δ)</div>
+        <div className="chart-wrapper">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={deltaData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+              <XAxis dataKey="week" tick={{ fill: 'var(--text-muted, #64748b)', fontSize: 11 }} />
+              <YAxis
+                width={40}
+                tick={{ fill: 'var(--text-muted, #64748b)', fontSize: 11 }}
+                tickFormatter={(v: number) => `${v > 0 ? '+' : ''}${v.toFixed(1)}`}
+              />
+              <Tooltip
+                labelStyle={{ color: 'var(--text-primary, #F4F5F7)' }}
+                itemStyle={{ color: 'var(--text-secondary, #9BA3AF)' }}
+                contentStyle={{
+                  background: 'var(--bg-card, #1C1C1E)',
+                  border: '1px solid var(--border-medium, rgba(255,255,255,0.1))',
+                  borderRadius: 8,
+                }}
+                formatter={(v: number | string | undefined | readonly (string | number)[]) => [
+                  `${Number(v) > 0 ? '+' : ''}${Number(v).toFixed(2)} kg`,
+                  'Variación',
+                ]}
+              />
+              <Bar dataKey="delta" radius={[6, 6, 0, 0]}>
+                {deltaData.map((entry: { fill: string }, i: number) => (
+                  <Cell key={i} fill={entry.fill} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+});
