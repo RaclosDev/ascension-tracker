@@ -9,7 +9,6 @@ import '../styles/athlete-nutrition.css';
 import { SegmentedControl } from '../components/ui/segmented-control';
 import { Skeleton } from '../components/ui/skeleton';
 import MacroSummaryHeader from '../components/nutrition/MacroSummaryHeader';
-import { NutritionDateBar } from '../components/nutrition/NutritionDateBar';
 import { MealFoodGroup } from '../components/nutrition/MealFoodGroup';
 import { useNutritionDiary } from '../hooks/nutrition/useNutritionDiary';
 import { useAnyInView } from '../hooks/use-any-in-view';
@@ -151,8 +150,6 @@ export default function NutritionPage() {
         </Suspense>
       ) : macros && settings ? (
         <>
-          <NutritionDateBar selectedDate={selectedDate} onDateChange={setSelectedDate} />
-
           <button
             type="button"
             className={`fixed z-40 min-[1025px]:hidden rounded-full w-14 h-14 flex items-center justify-center bg-[var(--accent-primary)] text-[var(--accent-text)] shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 motion-reduce:transition-none ${
@@ -180,7 +177,12 @@ export default function NutritionPage() {
 
           <div className="nutri-layout">
             <aside className="nutri-aside">
-              <MacroSummaryHeader consumed={consumed} macros={macros} />
+              <MacroSummaryHeader
+                date={selectedDate}
+                onDateChange={setSelectedDate}
+                consumed={consumed}
+                macros={macros}
+              />
             </aside>
             <div className="nutri-main">
               {macros.coachName && (
