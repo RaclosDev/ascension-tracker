@@ -138,22 +138,26 @@ test.describe('Workout History and Exercise Catalog', () => {
     // Click en el entrenamiento para abrir el modal a pantalla completa
     await workoutCard.getByRole('button').first().click();
 
-    // Verificar modal .workout-detail-modal
-    const detailModal = page.locator('.workout-detail-modal');
+    // Verificar el detalle del entreno
+    const detailModal = page.getByRole('dialog', { name: 'Torso Potencia' });
     await expect(detailModal).toBeVisible({ timeout: 10000 });
     await expect(detailModal.getByRole('heading', { name: 'Torso Potencia' })).toBeVisible();
 
     // Verificar duración (1:00:00)
-    await expect(detailModal.getByText('Duración', { exact: false })).toBeVisible();
+    await expect(detailModal.getByRole('term').filter({ hasText: /^Duración$/ })).toBeVisible();
     await expect(detailModal.getByText('1:00:00')).toBeVisible();
 
     // Verificar volumen total (80*8 + 80*8 = 1280 kg)
-    await expect(detailModal.getByText('Volumen', { exact: false })).toBeVisible();
-    await expect(detailModal.getByText(/1\.?280 kg/i)).toBeVisible();
+    await expect(detailModal.getByRole('term').filter({ hasText: /^Volumen$/ })).toBeVisible();
+    await expect(
+      detailModal.getByRole('definition').filter({ hasText: /1\.?280 kg/i }),
+    ).toBeVisible();
 
     // Verificar series completadas (2 series) en la estadística de resumen
-    await expect(detailModal.getByText('Series', { exact: false })).toBeVisible();
-    await expect(detailModal.getByRole('paragraph').filter({ hasText: /^2$/ })).toBeVisible();
+    await expect(detailModal.getByRole('term').filter({ hasText: /^Series$/ })).toBeVisible();
+    await expect(
+      detailModal.getByRole('definition').filter({ hasText: /^2$/ }).first(),
+    ).toBeVisible();
   });
 
   test('2. Edición de entreno pasado previene duplicados', async ({ page }) => {
