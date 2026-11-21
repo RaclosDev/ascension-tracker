@@ -50,13 +50,13 @@ const navItems = [
   {
     path: '/tracking',
     icon: <LineChart className="w-5 h-5" />,
-    label: 'Tracking Semanal',
-    shortLabel: 'Tracking',
+    label: 'Seguimiento',
+    shortLabel: 'Seguimiento',
   },
   {
     path: '/nutrition',
     icon: <Utensils className="w-5 h-5" />,
-    label: 'Nutrición & Macros',
+    label: 'Nutrición',
     shortLabel: 'Nutrición',
   },
   {
@@ -172,10 +172,17 @@ export default function Layout() {
       const anchor = target?.closest('a');
       if (!anchor) return;
       const href = anchor.getAttribute('href');
-      if (href && href.startsWith('/') && !href.startsWith('//') && anchor.target !== '_blank') {
+      if (
+        href &&
+        href.startsWith('/') &&
+        !href.startsWith('//') &&
+        anchor.target !== '_blank' &&
+        !anchor.hasAttribute('data-reload')
+      ) {
         e.preventDefault();
         e.stopPropagation();
-        navigateTo(href);
+        // El href ya lleva el prefijo del router (/demo); navigate lo vuelve a poner.
+        navigateTo(DEMO ? href.replace(/^\/demo(?=\/|$)/, '') || '/' : href);
       }
     };
     document.addEventListener('click', handleGlobalClick, { capture: true });
@@ -283,7 +290,7 @@ export default function Layout() {
           {DEMO && (
             <p className="demo-banner" role="note">
               Modo demo. Datos ficticios: los cambios se pierden al recargar.{' '}
-              <a href={DEMO_COACH ? '/demo' : '/demo/entrenador'}>
+              <a href={DEMO_COACH ? '/demo' : '/demo/entrenador'} data-reload>
                 {DEMO_COACH ? 'Ver la demo de atleta' : 'Ver la demo de entrenador'}
               </a>
               {' · '}

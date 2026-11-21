@@ -24,7 +24,7 @@ describe('TrackingDayCell accessible name', () => {
 
     // jsdom drops the space between a value and its unit span; Chrome keeps it.
     const cell = screen.getByRole('button', {
-      name: /^Lun 12 oct 81\.20\s*kg.*8500\s*pas\s*\(pasos\)\s*2000\s*kcal\s*\(calorías\)$/,
+      name: /^Lun 12 oct 81\.2\s*kg.*8500\s*pas\s*\(pasos\)\s*2000\s*kcal\s*\(calorías\)$/,
     });
     expect(cell.getAttribute('aria-label')).toBeNull();
   });

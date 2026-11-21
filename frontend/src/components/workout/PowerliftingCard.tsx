@@ -41,7 +41,7 @@ export function PowerliftingCard() {
   const anyLift = LIFTS.some((l) => best[l]);
 
   return (
-    <section className="card" style={{ marginBottom: '1.5rem' }} aria-labelledby="power-title">
+    <section className="card mb-6" aria-labelledby="power-title">
       <div className="flex items-baseline justify-between mb-3">
         <h3
           id="power-title"
@@ -74,7 +74,10 @@ export function PowerliftingCard() {
                 </dd>
                 {best[lift] && (
                   <dd className="text-xs text-[var(--text-secondary)]">
-                    {new Date(best[lift].date).toLocaleDateString('es-ES')}
+                    {new Date(best[lift].date).toLocaleDateString('es-ES', {
+                      day: 'numeric',
+                      month: 'short',
+                    })}
                     {best[lift].actual !== null && (
                       <span className="block">Mejor single: {formatKg(best[lift].actual)}</span>
                     )}
@@ -102,12 +105,13 @@ export function PowerliftingCard() {
               'Registra los tres básicos para comparar sus estimaciones.'
             )}
           </p>
-          <p className="mt-2 text-xs text-[var(--text-secondary)]">
+          <details className="mt-2 text-xs text-[var(--text-secondary)]">
+            <summary className="cursor-pointer w-fit">Cómo se calcula</summary>
             Últimos 365 días. Epley para series de 2 a 10 repeticiones; una repetición usa la carga
             realizada. La suma combina días distintos y no es un total de competición.
             {dots !== null &&
               ` DOTS usa ${formatKg(bodyweight!)} ${latestWeight ? `del ${new Date(`${latestWeight.date}T12:00:00`).toLocaleDateString('es-ES')}` : 'del peso inicial configurado'}.`}
-          </p>
+          </details>
           {(weights.isError || settings.isError) && (
             <p className="mt-2 text-sm" role="status">
               No se pudieron cargar los datos para DOTS.{' '}

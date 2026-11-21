@@ -14,6 +14,10 @@ interface QuickWeightCardProps {
   recentWeight?: number;
   yesterdayWeight?: number;
   hasTodayWeight: boolean;
+  /** `hero`: the weight as the headline of the home sheet, without a card of its own. */
+  variant?: 'row' | 'hero';
+  /** With a gain goal, going up is the good direction. */
+  gaining?: boolean;
 }
 
 export const QuickWeightCard = React.memo(function QuickWeightCard({
@@ -23,6 +27,8 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
   recentWeight,
   yesterdayWeight,
   hasTodayWeight,
+  variant = 'row',
+  gaining = false,
 }: QuickWeightCardProps) {
   const queryClient = useQueryClient();
   const [quickWeight, setQuickWeight] = useState('');
@@ -119,14 +125,14 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
           ? TrendingUp
           : Minus;
 
+  const towardGoal =
+    deltaVsYesterday !== null && (gaining ? deltaVsYesterday > 0 : deltaVsYesterday < 0);
   const deltaColor =
-    deltaVsYesterday === null
+    deltaVsYesterday === null || deltaVsYesterday === 0
       ? 'var(--text-secondary)'
-      : deltaVsYesterday < 0
+      : towardGoal
         ? 'var(--color-success, #34d399)'
-        : deltaVsYesterday > 0
-          ? 'var(--color-fat-strong, #f87171)'
-          : 'var(--text-secondary)';
+        : 'var(--color-fat-strong, #f87171)';
 
   const parsedCurrent = parseSafeWeight(quickWeight);
   const isDirty =
@@ -134,6 +140,81 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
     (todayWeight === undefined || Math.abs(parsedCurrent - todayWeight) > 0.001);
 
   const registered = hasTodayWeight || justSaved;
+
+  if (variant === 'hero') {
+    return (
+      <div className="weigh-in">
+        <div className="weigh-in-head">
+          <label htmlFor="quick-weight-input" className="panel-title">
+            Peso de hoy
+          </label>
+          <span className={`weigh-in-status${registered ? ' is-done' : ''}`}>
+            {registered ? <Check size={12} aria-hidden="true" /> : null}
+            {registered ? 'Registrado' : 'Sin registrar'}
+          </span>
+        </div>
+        <div className="weigh-in-entry">
+          <div className="weigh-in-field">
+            <input
+              ref={inputRef}
+              id="quick-weight-input"
+              type="text"
+              inputMode="decimal"
+              pattern="[0-9]*[.,]?[0-9]*"
+              aria-label="Peso corporal de hoy en kilogramos"
+              className="weigh-in-input tabular-nums"
+              data-dirty={isDirty || undefined}
+              value={quickWeight}
+              onChange={(e) => setQuickWeight(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && saveWeight()}
+              placeholder={hasTodayWeight && todayWeight ? todayWeight.toFixed(2) : '00.00'}
+              disabled={isPending}
+            />
+            <span className="weigh-in-unit" aria-hidden="true">
+              kg
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => saveWeight()}
+            disabled={isPending || (registered && !isDirty)}
+            className={`btn ${isDirty || !hasTodayWeight ? 'btn-primary' : 'btn-secondary'} btn-press weigh-in-save`}
+            aria-label={
+              hasTodayWeight ? 'Actualizar peso corporal de hoy' : 'Registrar peso corporal de hoy'
+            }
+          >
+            {isPending ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : justSaved ? (
+              'Guardado'
+            ) : hasTodayWeight ? (
+              'Actualizar'
+            ) : (
+              'Registrar'
+            )}
+          </button>
+        </div>
+        <p className="weigh-in-meta">
+          {yesterdayWeight !== undefined ? (
+            <>
+              <span>
+                Anterior <span className="tabular-nums">{yesterdayWeight.toFixed(2)} kg</span>
+              </span>
+              {DeltaIcon !== null && deltaVsYesterday !== null && (
+                <span className="weigh-in-delta tabular-nums" style={{ color: deltaColor }}>
+                  <DeltaIcon size={13} aria-hidden="true" />
+                  {deltaVsYesterday > 0 ? '+' : ''}
+                  {deltaVsYesterday.toFixed(2)} kg
+                </span>
+              )}
+            </>
+          ) : (
+            <span>Tu primer registro marca el punto de partida.</span>
+          )}
+        </p>
+      </div>
+    );
+  }
 
   // Compact row: the weight is the one daily action, so it is the key sheet of the page.
   return (

@@ -1,0 +1,273 @@
+/* Nutrición: comidas a la izquierda, los totales del día fijos a la derecha en PC. */
+.nutri-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 8px;
+}
+.nutri-main {
+  min-width: 0;
+}
+@media (min-width: 1025px) {
+  .nutri-layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+  }
+  .nutri-aside {
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    top: 16px;
+  }
+  .nutri-main {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .nutri-main .nutrition-meals-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (min-width: 1600px) {
+  .nutri-main .nutrition-meals-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.day-totals {
+  margin: 0;
+  padding: 20px;
+}
+/* Cabecera: flechas a los lados y el día en medio; pulsarlo abre el calendario. */
+.day-nav {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 4px;
+  margin: -8px -8px 0;
+}
+.day-nav-btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.day-nav-btn:hover {
+  background: var(--bg-glass-strong);
+}
+.ui-date.day-nav-date {
+  width: 100%;
+  min-height: 40px;
+  justify-content: center;
+  border-color: transparent;
+  background: transparent;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.ui-date.day-nav-date:hover {
+  border-color: var(--border-subtle);
+}
+.ui-date.day-nav-date .ui-select-value {
+  flex: none;
+}
+.ui-date.day-nav-date .ui-date-icon {
+  color: var(--text-muted);
+}
+.day-totals-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.day-totals-pct {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.day-totals-coach {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.day-totals-kcal {
+  margin: 14px 0 0;
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--text-primary);
+}
+.day-totals-kcal span {
+  margin-left: 4px;
+  font-family: var(--font-body, inherit);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.day-totals-left {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.day-totals-left[data-over] {
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.macro-bar {
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 2px;
+  background: var(--bg-glass-strong);
+  overflow: hidden;
+}
+.macro-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-primary);
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.macro-bar-lg {
+  height: 8px;
+  margin-top: 12px;
+}
+.macro-bar[data-over] span {
+  background: var(--color-danger);
+}
+
+.day-macros {
+  display: grid;
+  gap: 14px;
+  margin: 20px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+}
+.day-macro {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+}
+.day-macro dt {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.day-macro dd {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.day-macro dd span {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.day-macro .macro-bar {
+  grid-column: 1 / -1;
+}
+[data-tone='p'] {
+  --tone: var(--color-protein);
+}
+[data-tone='c'] {
+  --tone: var(--color-carbs);
+}
+[data-tone='f'] {
+  --tone: var(--color-fat);
+}
+.day-macro .macro-bar span {
+  background: var(--tone);
+}
+
+.day-split {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+.day-split-bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  margin-top: 8px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.day-split-bar span {
+  flex-basis: 0;
+  background: var(--tone);
+}
+.day-split-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.day-split-keys li::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 2px;
+  background: var(--tone);
+}
+.day-split-keys strong {
+  color: var(--text-primary);
+}
+
+/* Móvil y tableta: la tarjeta abre la página, más compacta y con los macros en tres columnas. */
+@media (max-width: 1024px) {
+  .day-totals {
+    padding: 16px;
+  }
+  .day-totals-kcal {
+    margin-top: 10px;
+    font-size: 2.1rem;
+  }
+  .macro-bar-lg {
+    margin-top: 8px;
+  }
+  .day-totals-left {
+    margin-top: 6px;
+  }
+  .day-macros {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+  .day-macro {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .day-macro dt {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+  }
+  .day-macro dd {
+    font-size: 0.85rem;
+  }
+  .day-split {
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+}
+
+.day-split .panel-note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

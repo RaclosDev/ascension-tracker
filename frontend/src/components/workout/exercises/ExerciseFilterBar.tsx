@@ -42,14 +42,15 @@ export function ExerciseFilterBar({
         </label>
         <Search
           size={14}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
           aria-hidden="true"
         />
         <input
           id="exercise-search-input"
           type="search"
           aria-label="Buscar ejercicio por nombre"
-          className="form-input w-full pl-8 pr-2 py-1.5 text-sm"
+          className="form-input w-full py-1.5 pr-2 text-sm"
+          style={{ paddingLeft: '2.25rem' }}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar press, sentadilla"

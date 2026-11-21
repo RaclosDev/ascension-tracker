@@ -41,32 +41,32 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await page.goto('/tracking');
 
     await expect(page).toHaveURL(/.*tracking.*/, { timeout: 15000 });
-    const container = page.locator('.calendar-container');
+    const container = page.getByRole('region', { name: 'Registro diario por semanas' });
     await expect(container).toBeVisible({ timeout: 15000 });
 
-    const weekCards = page.locator('.calendar-week');
+    const weekCards = page.locator('.track-week[role="group"]');
     await expect(weekCards).toHaveCount(2);
 
     // 1. Carga de cuadrícula ordenada cronológicamente inverso
     const firstWeek = weekCards.nth(0);
     const secondWeek = weekCards.nth(1);
 
-    await expect(firstWeek.locator('.calendar-week-title')).toContainText('12 oct');
-    await expect(secondWeek.locator('.calendar-week-title')).toContainText('5 oct');
+    await expect(firstWeek.locator('.track-week-label')).toContainText('12 oct');
+    await expect(secondWeek.locator('.track-week-label')).toContainText('5 oct');
 
     // 2. Cabecera de resumen con media y delta
-    const firstWeekStats = firstWeek.locator('.calendar-week-stats');
+    const firstWeekStats = firstWeek.locator('.track-week-sum');
     await expect(firstWeekStats).toBeVisible();
-    await expect(firstWeekStats).toContainText('81.20');
-    await expect(firstWeekStats).toContainText('-0.50');
+    await expect(firstWeekStats).toContainText('81.2');
+    await expect(firstWeekStats).toContainText('−0.50');
 
     // 3. Días lunes a domingo en la cuadrícula semanal
-    const days = firstWeek.locator('.calendar-day[role="button"]');
+    const days = firstWeek.locator('.track-day');
     await expect(days).toHaveCount(7);
 
     const expectedDayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     for (let i = 0; i < 7; i++) {
-      await expect(days.nth(i).locator('.calendar-day-name')).toHaveText(expectedDayNames[i]);
+      await expect(days.nth(i).locator('.track-day-name')).toHaveText(expectedDayNames[i]);
     }
   });
 
@@ -95,15 +95,15 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await expect(kcalToggle).toHaveAttribute('aria-pressed', 'true');
 
     // Celda de lunes con valores iniciales
-    const firstDayCell = page.locator('.calendar-day[role="button"]').first();
-    await expect(firstDayCell).toContainText('81.20');
+    const firstDayCell = page.locator('.track-day').first();
+    await expect(firstDayCell).toContainText('81.2');
     await expect(firstDayCell).toContainText('8500');
     await expect(firstDayCell).toContainText('2000');
 
     // 3. Visibilidad condicional y persistencia de Peso
     await weightToggle.click();
     await expect(weightToggle).toHaveAttribute('aria-pressed', 'false');
-    await expect(firstDayCell).not.toContainText('81.20');
+    await expect(firstDayCell).not.toContainText('81.2');
     expect(await page.evaluate(() => localStorage.getItem('tracking_showWeight'))).toBe('false');
 
     // Visibilidad condicional y persistencia de Pasos
@@ -141,15 +141,15 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await expect(reloadedStepsToggle).toHaveAttribute('aria-pressed', 'false');
     await expect(reloadedKcalToggle).toHaveAttribute('aria-pressed', 'false');
 
-    const reloadedCell = page.locator('.calendar-day[role="button"]').first();
-    await expect(reloadedCell).not.toContainText('81.20');
+    const reloadedCell = page.locator('.track-day').first();
+    await expect(reloadedCell).not.toContainText('81.2');
     await expect(reloadedCell).not.toContainText('8500');
     await expect(reloadedCell).not.toContainText('2000');
 
     // Reactivar Peso y comprobar que vuelve a mostrarse
     await reloadedWeightToggle.click();
     await expect(reloadedWeightToggle).toHaveAttribute('aria-pressed', 'true');
-    await expect(reloadedCell).toContainText('81.20');
+    await expect(reloadedCell).toContainText('81.2');
     expect(await page.evaluate(() => localStorage.getItem('tracking_showWeight'))).toBe('true');
   });
 
@@ -159,7 +159,7 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await page.goto('/tracking');
 
     // Click en una celda de día abre TrackingEntryModal
-    const firstDayCell = page.locator('.calendar-day[role="button"]').first();
+    const firstDayCell = page.locator('.track-day').first();
     await firstDayCell.click();
 
     const modal = page.locator('.modal-content');
@@ -245,7 +245,7 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
 
     await page.goto('/tracking');
 
-    const firstDayCell = page.locator('.calendar-day[role="button"]').first();
+    const firstDayCell = page.locator('.track-day').first();
     await firstDayCell.click();
 
     const modal = page.locator('.modal-content');
@@ -347,10 +347,12 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     });
 
     await page.goto('/tracking');
-    await expect(page.locator('.calendar-container')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('region', { name: 'Registro diario por semanas' })).toBeVisible({
+      timeout: 15000,
+    });
 
-    const firstDayCell = page.locator('.calendar-day[role="button"]').first();
-    await expect(firstDayCell).toContainText('81.20');
+    const firstDayCell = page.locator('.track-day').first();
+    await expect(firstDayCell).toContainText('81.2');
     await expect(firstDayCell).toContainText('8500');
 
     await firstDayCell.click();
@@ -378,7 +380,7 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await expect(page.getByRole('dialog')).not.toBeVisible();
 
     // Celda queda limpia sin valores numéricos
-    await expect(firstDayCell).not.toContainText('81.20');
+    await expect(firstDayCell).not.toContainText('81.2');
     await expect(firstDayCell).not.toContainText('8500');
   });
 });

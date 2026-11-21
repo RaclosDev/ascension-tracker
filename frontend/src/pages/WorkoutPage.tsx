@@ -1,12 +1,14 @@
 import { useWorkoutPersistenceError, useUnclaimedWorkoutBackup } from '../lib/workout/storage';
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useWorkoutStore, useWorkoutHydrated } from '../lib/workout/store';
 import { SegmentedControl } from '../components/ui/segmented-control';
 import { Loader2 } from 'lucide-react';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useExerciseCatalog } from '../lib/workout/exercises';
+import { TabActionSlot } from '../components/workout/tab-action';
 import { WorkoutPageSkeleton } from '../components/workout/skeletons/WorkoutPageSkeleton';
+import '../styles/athlete-workout.css';
 
 const Dashboard = lazyWithRetry(() => import('../components/workout/dashboard'));
 const ActiveWorkout = lazyWithRetry(() => import('../components/workout/active-workout'));
@@ -26,6 +28,7 @@ export default function WorkoutPage() {
   const persistenceError = useWorkoutPersistenceError();
   const unclaimedBackup = useUnclaimedWorkoutBackup();
   const tab = useWorkoutStore((s) => s.tab);
+  const [actionSlot, setActionSlot] = useState<HTMLDivElement | null>(null);
   const { data: exercises, isLoading, isError, refetch } = useExerciseCatalog();
   const pageTitle = <h1 className="page-title-desktop">Entreno</h1>;
   // Resumen and Ejercicios put their sections at h3, so the view's name fills the h2 level.
@@ -98,38 +101,42 @@ export default function WorkoutPage() {
       <div className="fade-in">
         <div className="workout-page-wrapper">
           {tab !== 'train' && (
-            <SegmentedControl
-              options={VIEW_OPTIONS}
-              value={tab}
-              onChange={(val) =>
-                useWorkoutStore
-                  .getState()
-                  .setTab(val as 'home' | 'history' | 'templates' | 'exercises' | 'train')
-              }
-              className="mb-6"
-            />
+            <div className="workout-tabs-row">
+              <SegmentedControl
+                options={VIEW_OPTIONS}
+                value={tab}
+                onChange={(val) =>
+                  useWorkoutStore
+                    .getState()
+                    .setTab(val as 'home' | 'history' | 'templates' | 'exercises' | 'train')
+                }
+              />
+              <div ref={setActionSlot} className="workout-tab-action" />
+            </div>
           )}
           {viewTitle && <h2 className="sr-only">{viewTitle}</h2>}
 
-          <Suspense
-            fallback={
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-                <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
-              </div>
-            }
-          >
-            {tab === 'train' ? (
-              <ActiveWorkout />
-            ) : tab === 'templates' ? (
-              <TemplatesView />
-            ) : tab === 'history' ? (
-              <HistoryView />
-            ) : tab === 'exercises' ? (
-              <ExercisesView />
-            ) : (
-              <Dashboard />
-            )}
-          </Suspense>
+          <TabActionSlot.Provider value={tab === 'train' ? undefined : actionSlot}>
+            <Suspense
+              fallback={
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+                  <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+                </div>
+              }
+            >
+              {tab === 'train' ? (
+                <ActiveWorkout />
+              ) : tab === 'templates' ? (
+                <TemplatesView />
+              ) : tab === 'history' ? (
+                <HistoryView />
+              ) : tab === 'exercises' ? (
+                <ExercisesView />
+              ) : (
+                <Dashboard />
+              )}
+            </Suspense>
+          </TabActionSlot.Provider>
         </div>
       </div>
     </ErrorBoundary>

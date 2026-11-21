@@ -60,7 +60,7 @@ export function ActivityCalendar({
       <div
         className={`activity-calendar-months${onSelect ? ' activity-calendar-months-interactive' : ''}`}
       >
-        {[month, previousMonth].map((start) => (
+        {[previousMonth, month].map((start) => (
           <div key={getLocalDateString(start)}>
             <h5>{capitalizeFirst(format(start, 'MMMM yyyy', { locale: es }))}</h5>
             <div className="activity-calendar-days">

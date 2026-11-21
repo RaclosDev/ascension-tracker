@@ -1,0 +1,293 @@
+/* Detalle de un entreno del historial: cifras arriba, cada ejercicio en su tarjeta, acciones a mano. */
+.hd {
+  position: fixed;
+  z-index: 99999;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'head close'
+    'stats stats'
+    'body body'
+    'actions actions';
+  inset: 0;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  outline: none;
+}
+.hd[data-state='open'] {
+  animation: hd-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes hd-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hd[data-state='open'] {
+    animation: none;
+  }
+}
+
+.hd-head {
+  grid-area: head;
+  min-width: 0;
+  padding: calc(env(safe-area-inset-top) + 16px) 0 0 16px;
+}
+.hd .hd-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.hd-date {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.hd-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
+}
+.hd-icon:hover {
+  background: var(--bg-glass-strong);
+}
+.hd-close {
+  grid-area: close;
+  align-self: start;
+  margin: calc(env(safe-area-inset-top) + 10px) 10px 0 8px;
+  border-color: transparent;
+}
+.hd-delete:hover {
+  border-color: color-mix(in srgb, var(--color-danger) 50%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  color: var(--color-danger);
+}
+.hd-actions {
+  grid-area: actions;
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px calc(env(safe-area-inset-bottom) + 12px);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+}
+.hd-repeat {
+  flex: 1;
+  min-height: 44px;
+  gap: 8px;
+}
+
+/* Cifras: una tira con divisores, la cifra en display. */
+.hd-stats {
+  grid-area: stats;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  margin: 16px 16px 0;
+  padding: 12px 0;
+  border-block: 1px solid var(--border-subtle);
+}
+.hd-stats > div {
+  min-width: 0;
+  padding: 0 12px;
+  border-left: 1px solid var(--border-subtle);
+}
+.hd-stats > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+.hd-stats dt {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.hd-stats dd {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.hd-stats [data-pr] dd {
+  color: var(--accent-primary);
+}
+
+.hd-body {
+  grid-area: body;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 0;
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.hd-list {
+  gap: 10px;
+}
+.hd-card {
+  padding: 12px 14px 10px;
+}
+.hd-card .wr-name small {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  margin-top: 2px;
+}
+.hd-tag {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.hd-pr {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-primary) 18%, transparent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+}
+.hd-sets thead th:not(:first-child) {
+  width: 26%;
+}
+.hd-sets thead th:last-child,
+.hd-sets .hd-pr-cell {
+  width: 44px;
+  text-align: right;
+}
+.hd-sets .hd-effort {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+.hd-sets .hd-pr {
+  padding: 1px 6px;
+  font-size: 0.65rem;
+}
+.hd-sets tbody tr:first-child th,
+.hd-sets tbody tr:first-child td {
+  border-top: 0;
+}
+
+/* PC: panel ancho y centrado; acciones arriba junto al cierre, ejercicios en dos columnas. */
+@media (min-width: 1025px) {
+  .hd {
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    width: min(1080px, calc(100vw - 64px));
+    max-height: 88dvh;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas:
+      'head actions close'
+      'stats stats stats'
+      'body body body';
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    box-shadow: var(--shadow-elevated);
+    transform: translate(-50%, -50%);
+    overflow: hidden;
+  }
+  @keyframes hd-in-desk {
+    from {
+      opacity: 0;
+      transform: translate(-50%, calc(-50% + 12px));
+    }
+  }
+  .hd[data-state='open'] {
+    animation-name: hd-in-desk;
+  }
+  .hd-head {
+    padding: 28px 0 0 32px;
+  }
+  .hd .hd-name {
+    font-size: 2.1rem;
+  }
+  .hd-date {
+    font-size: 0.88rem;
+  }
+  .hd-actions {
+    align-self: start;
+    padding: 24px 0 0 16px;
+    border: 0;
+    background: none;
+  }
+  .hd-repeat {
+    flex: none;
+    padding: 0 18px;
+  }
+  .hd-close {
+    margin: 24px 24px 0 8px;
+    border-color: var(--border-subtle);
+  }
+  .hd-stats {
+    grid-auto-columns: auto;
+    justify-content: start;
+    margin: 20px 32px 0;
+    padding: 16px 0;
+  }
+  .hd-stats > div {
+    padding: 0 32px;
+  }
+  .hd-stats dd {
+    font-size: 1.9rem;
+  }
+  .hd-body {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 20px 32px 32px;
+  }
+  .hd-body > :not(.hd-list) {
+    grid-column: 1 / -1;
+  }
+  .hd-list {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 12px;
+  }
+}
+
+/* Móvil estrecho: cifras más pequeñas para que quepan en una fila. */
+@media (max-width: 479px) {
+  .hd-stats > div {
+    padding: 0 8px;
+  }
+  .hd-stats dt {
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+  }
+  .hd-stats dd {
+    font-size: 1.1rem;
+  }
+}

@@ -4,7 +4,7 @@ import { setupAuthMocks } from './helpers/auth';
 test('tracking dialog traps focus and restores the day button on Escape', async ({ page }) => {
   await setupAuthMocks(page);
   await page.goto('/tracking');
-  const trigger = page.locator('.calendar-day[role="button"]').first();
+  const trigger = page.locator('.track-day').first();
   await trigger.click();
   const dialog = page.getByRole('dialog');
   const close = dialog.getByRole('button', { name: /Cerrar modal/ });

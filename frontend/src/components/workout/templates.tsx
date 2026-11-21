@@ -3,6 +3,7 @@ import { EmptyCard } from '@/components/workout/dashboard';
 import { getExerciseMap } from '@/lib/workout/exercises';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { Skeleton } from '@/components/ui/skeleton';
+import { TabAction } from '@/components/workout/tab-action';
 
 import {
   useWorkoutTemplates,
@@ -24,31 +25,15 @@ export default function TemplatesView() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <header
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '1rem',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-          marginBottom: '0.5rem',
-        }}
-      >
+      <TabAction>
         <button
+          type="button"
           onClick={() => startEmpty('Nueva Plantilla')}
-          className="btn btn-primary"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            padding: '0.5rem 0.8rem',
-            fontSize: '0.9rem',
-          }}
+          className="btn btn-primary tab-action-btn"
         >
-          <Plus size={16} />
-          Nueva Plantilla
+          <Plus size={16} aria-hidden /> <span className="tab-action-label">Nueva plantilla</span>
         </button>
-      </header>
+      </TabAction>
 
       {isLoading ? (
         <ul

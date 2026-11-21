@@ -13,6 +13,7 @@ import {
   type Pose,
 } from '../../lib/progressPhotos';
 import { PhotoGallery } from './PhotoGallery';
+import { DatePicker } from '@/components/ui/date-picker';
 
 function errorMessage(error: unknown, fallback: string) {
   const data = (error as { response?: { data?: { error?: string; message?: string } } })?.response
@@ -89,13 +90,12 @@ export default function ProgressPhotosSection() {
             </fieldset>
             <label className="flex flex-col text-sm" style={{ color: 'var(--text-secondary)' }}>
               Fecha
-              <input
-                type="date"
-                className="rounded-lg px-3 py-2 bg-black/20 border"
-                style={{ borderColor: 'var(--border-subtle)' }}
+              <DatePicker
+                aria-label="Fecha de la foto"
+                className="form-input"
                 max={today}
                 value={takenOn}
-                onChange={(e) => setTakenOn(e.target.value || today)}
+                onChange={(value) => setTakenOn(value || today)}
               />
             </label>
             <button
