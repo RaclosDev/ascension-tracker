@@ -23,6 +23,7 @@ import { RenameExerciseModal } from './exercises/RenameExerciseModal';
 import { ExerciseVariantsTab } from './exercises/ExerciseVariantsTab';
 import { ExercisesLoadingSkeleton } from './exercises/ExercisesLoadingSkeleton';
 import { ExerciseDetailsModal } from './exercise-details-modal';
+import { TabAction } from './tab-action';
 
 export default function ExercisesView() {
   const { data: customExercises = [], isLoading } = useCustomExercises();
@@ -100,18 +101,18 @@ export default function ExercisesView() {
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="flex items-center justify-end gap-3 -mb-2">
+      <TabAction>
         <button
           type="button"
           onClick={() => {
             setInitialVariantName(undefined);
             setCreating(true);
           }}
-          className="btn btn-primary btn-sm flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5"
+          className="btn btn-primary tab-action-btn"
         >
-          <Plus size={16} /> Crear
+          <Plus size={16} aria-hidden /> <span className="tab-action-label">Crear ejercicio</span>
         </button>
-      </header>
+      </TabAction>
 
       <section className="card p-3 flex flex-col gap-3">
         <ExerciseFilterBar {...filterState} hiddenEquipments={hiddenEquipments} />
