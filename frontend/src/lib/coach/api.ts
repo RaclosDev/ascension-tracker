@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
 import type { Exercise } from '../workout/types';
-import type { CoachSetup } from './setup';
+import type { CoachNotes, CoachSetup } from './setup';
 import type { CoachFollowup, ReviewSchedule } from './coachSchedule';
 
 export interface CoachPermissions {
@@ -23,6 +23,7 @@ export interface CoachPerson {
 export interface CoachClient {
   followup?: CoachFollowup;
   setup?: CoachSetup | null;
+  notes?: CoachNotes | null;
   linkId: string;
   client: CoachPerson;
   permissions: CoachPermissions;
@@ -129,6 +130,7 @@ const ACTION_LABELS: Record<string, string> = {
   VIEW_TARGETS: 'Objetivos de nutrición',
   VIEW_PROGRAMS: 'Programas asignados',
   COMMENT_WORKOUT: 'Comentar entrenamiento',
+  COMMENT_DAY: 'Comentar un día',
   ASSIGN_PROGRAM: 'Asignar programa',
   SET_NUTRITION_PLAN: 'Pautar nutrición',
 };
@@ -233,6 +235,8 @@ export const useCoachClient = (linkId: string) =>
   useQuery({
     queryKey: ['coach', 'clients', linkId] as const,
     enabled: !!linkId,
+    // The athlete grants permissions from their own device: pick them up without a reload.
+    refetchOnWindowFocus: true,
     queryFn: async () =>
       (await api.get<CoachClient>(`/coach/clients/${encodeURIComponent(linkId)}`)).data,
   });

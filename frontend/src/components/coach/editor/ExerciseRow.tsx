@@ -1,18 +1,26 @@
-import { useId, useRef, useState, type KeyboardEvent } from 'react';
-import { GripVertical, MoreHorizontal, Plus, X } from 'lucide-react';
-import type { DraggableProvided } from '@hello-pangea/dnd';
-import type { PrescribedLoad, ProgramExercise, SetTarget } from '@/lib/coach/coachPrograms';
+import { useContext, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import {
-  effortOf,
-  parseReps,
-  protocolText,
-  repsText,
-  rowsOf,
-  withRows,
-} from '@/lib/coach/prescription';
+  ChevronDown,
+  Dumbbell,
+  GripVertical,
+  MoreHorizontal,
+  Plus,
+  TriangleAlert,
+  X,
+} from 'lucide-react';
+import type { DraggableProvided } from '@hello-pangea/dnd';
+import '../../../styles/coach-athlete.css';
+import type { PrescribedLoad, ProgramExercise, SetTarget } from '@/lib/coach/coachPrograms';
+import { effortOf, parseReps, repsText, rowsOf, withRows } from '@/lib/coach/prescription';
 import { restLabel } from '@/lib/coach/today';
-import { usePrescribing } from './prescribing';
+import type { WorkoutSet } from '@/lib/workout/types';
+import type { EffortMethod } from '@/lib/coach/prescription';
+import { AthleteHistory, usePrescribing } from './prescribing';
 import { Select } from '@/components/ui/select';
+import { GRIPS, MACHINES, VariantChip } from './VariantChip';
+import { BASE_EXERCISES, useExerciseCatalog } from '@/lib/workout/exercises';
 
 const MAX_SETS = 20;
 const KINDS: { value: SetTarget['kind']; label: string; tag: string }[] = [
@@ -111,27 +119,87 @@ function Cell<T>({
   );
 }
 
+/** What the athlete did in one set, laid out in the same cells as the prescription beside it. */
+function PastSet({
+  set,
+  effort,
+  index,
+}: {
+  set?: WorkoutSet;
+  effort: EffortMethod;
+  index: number;
+}) {
+  const other = effort === 'RPE' ? set?.rir && `RIR ${set.rir}` : set?.rpe && `RPE ${set.rpe}`;
+  const effortValue = effort === 'RPE' ? set?.rpe || other : set?.rir || other;
+  const cells = [set?.reps, ...(effort === 'NONE' ? [] : [effortValue]), set?.weight];
+  return (
+    <span
+      className="contents"
+      role="group"
+      aria-label={
+        set
+          ? `Última vez, serie ${index + 1}: ${[set.weight && `${set.weight} kg`, set.reps && `${set.reps} reps`, set.rpe && `RPE ${set.rpe}`, set.rir && `RIR ${set.rir}`].filter(Boolean).join(', ')}`
+          : `Última vez, serie ${index + 1}: no la hizo`
+      }
+    >
+      {cells.map((value, j) => (
+        <span
+          key={j}
+          className="set-past"
+          data-first={j === 0 ? '' : undefined}
+          data-none={value ? undefined : ''}
+          aria-hidden
+        >
+          {value || '–'}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export function ExerciseRow({
   drag,
   index,
   exercise,
   onChange,
   onRemove,
+  send,
+  compact,
+  detail,
 }: {
   drag: DraggableProvided;
   index: number;
   exercise: ProgramExercise;
   onChange: (next: ProgramExercise) => void;
   onRemove: () => void;
+  /** Week editor only: the other weekdays this exercise can be copied or moved to. */
+  send?: { days: { value: number; label: string }[]; onSend: (to: number, move: boolean) => void };
+  /** One line per exercise: equal sets are typed once and the set-by-set grid opens on demand. */
+  compact?: boolean;
+  /** With room to spare: set by set from the start, beside what the athlete did last time. */
+  detail?: boolean;
 }) {
   const name = exercise.exerciseName || exercise.exerciseId;
   const prefs = usePrescribing();
+  // The same GIF the exercise shows everywhere else: quicker to spot than the name.
+  const catalog = useExerciseCatalog().data;
+  const gif = [...BASE_EXERCISES, ...(catalog ?? [])].find(
+    (e) => e.id === exercise.exerciseId,
+  )?.gifUrl;
+  const vetoed = prefs.avoidedOf(exercise.exerciseId);
   const card = useRef<HTMLLIElement | null>(null);
   const optionsId = useId();
   const [options, setOptions] = useState(false);
+  const [open, setOpen] = useState(!compact || !!detail);
+  const last = useContext(AthleteHistory).find(
+    (use) => use.exerciseId === exercise.exerciseId,
+  )?.last;
+  const versus = !!detail && !!last;
+  const folded = !!compact && !open;
   const [openSet, setOpenSet] = useState<number | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [pending, setPending] = useState<Pick<PrescribedLoad, 'mode' | 'lift' | 'increment'>>();
+  const [sendTo, setSendTo] = useState(send?.days[0]?.value ?? 1);
 
   const rows = rowsOf(exercise);
   const effort = effortOf(rows, prefs.effort);
@@ -173,8 +241,10 @@ export function ExerciseRow({
   };
   const keys = (i: number, column: number) => (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
+      // Enter walks down the column like a spreadsheet; only the last row grows the exercise.
       event.preventDefault();
-      addAfter(i, column);
+      if (i < rows.length - 1) focus(i + 1, column);
+      else addAfter(i, column);
     } else if (event.key === 'ArrowDown' && i < rows.length - 1) {
       event.preventDefault();
       focus(i + 1, column);
@@ -209,7 +279,43 @@ export function ExerciseRow({
     exercise.restSeconds != null && `Descanso ${restLabel(exercise.restSeconds)}`,
     exercise.supersetGroup != null && `Superserie ${exercise.supersetGroup}`,
   ].filter(Boolean);
-  const columns = effort === 'NONE' ? 'set-grid set-grid-2' : 'set-grid';
+  // Folded, the card reads as one line of figures: series, reps, effort and load, each named once.
+  const spread = (values: (number | null | undefined)[]) => {
+    const set = [...new Set(values.filter((v): v is number => v != null))];
+    if (!set.length) return null;
+    const lo = Math.min(...set);
+    const hi = Math.max(...set);
+    return lo === hi ? String(lo) : `${lo}–${hi}`;
+  };
+  const reps = [...new Set(rows.map((row) => repsText(row).replace('-', '–')).filter(Boolean))];
+  type Part = { lead?: string; value: string | null; unit: string };
+  const parts: (Part | false | 0)[] = [
+    { value: String(rows.length), unit: rows.length === 1 ? 'serie' : 'series' },
+    reps.length && {
+      value:
+        reps.length === 1
+          ? reps[0]
+          : rows.map((row) => repsText(row).replace('-', '–') || '–').join(' · '),
+      unit: 'reps',
+    },
+    effort !== 'NONE' && {
+      lead: effort,
+      value: spread(rows.map((row) => (effort === 'RPE' ? row.rpe : row.rir))),
+      unit: '',
+    },
+    {
+      value: spread(rows.map((row) => row.load?.amount)),
+      unit: loadHeader,
+    },
+  ];
+  // Every card keeps the four slots so the figures line up in columns down the day.
+  const slots = parts.map((part) =>
+    part && part.value ? (part as Part & { value: string }) : null,
+  );
+  const summary = slots.filter((part): part is Part & { value: string } => !!part);
+  const columns = `${effort === 'NONE' ? 'set-grid set-grid-2' : 'set-grid'}${versus ? ' set-grid-versus' : ''}`;
+  const sides = effort === 'NONE' ? 2 : 3;
+  const variant = [exercise.variantMachine, exercise.variantGrip].filter(Boolean).join(' · ');
 
   return (
     <li
@@ -220,26 +326,106 @@ export function ExerciseRow({
       }}
       {...drag.draggableProps}
       className="set-card"
+      data-compact={compact ? '' : undefined}
+      data-open={compact && open ? '' : undefined}
       style={drag.draggableProps.style}
     >
-      <div className="set-card-head">
+      {/* The chevron is the keyboard path; a click anywhere else on the head that is not a control does the same. */}
+      <div
+        className="set-card-head"
+        onClick={(e) => {
+          if (!compact) return;
+          if (
+            (e.target as HTMLElement).closest(
+              'button, input, select, a, .variant-chip, [data-rbd-drag-handle-draggable-id]',
+            )
+          )
+            return;
+          setOpen(!open);
+        }}
+      >
         <span {...drag.dragHandleProps} aria-label={`Arrastrar ${name}`} className="set-card-grip">
           <GripVertical size={16} aria-hidden />
         </span>
+        <span className="set-card-media" aria-hidden="true">
+          {gif ? <img src={gif} alt="" loading="lazy" /> : <Dumbbell size={16} />}
+        </span>
         <span className="set-card-name">
           {index + 1}. {name}
+          {variant && folded && <span className="set-card-variant">{variant}</span>}
+          {vetoed && (
+            <span className="set-card-vetoed" role="status">
+              <TriangleAlert size={13} aria-hidden /> Vetado para este atleta
+              {vetoed.reason ? `: ${vetoed.reason}` : ''}
+            </span>
+          )}
         </span>
-        <button
-          type="button"
-          className="set-icon"
-          aria-label={`Más opciones de ${name}`}
-          aria-expanded={options}
-          aria-controls={optionsId}
-          title="Descanso, superserie y tipo de carga"
-          onClick={() => setOptions((open) => !open)}
-        >
-          <MoreHorizontal size={16} aria-hidden />
-        </button>
+        {detail && !folded && (
+          <span className="set-card-variants">
+            <VariantChip
+              label="Agarre"
+              what={`Agarre de ${name}`}
+              value={exercise.variantGrip}
+              options={GRIPS}
+              last={last?.variant?.grip}
+              onChange={(variantGrip) => onChange({ ...exercise, variantGrip })}
+            />
+            <VariantChip
+              label="Máquina o variante"
+              what={`Máquina o variante de ${name}`}
+              value={exercise.variantMachine}
+              options={MACHINES}
+              last={last?.variant?.machine}
+              onChange={(variantMachine) => onChange({ ...exercise, variantMachine })}
+            />
+          </span>
+        )}
+        {folded && (
+          <button
+            type="button"
+            className="set-sum"
+            aria-label={`Abrir ${name}: ${summary.map((part) => [part.lead, part.value, part.unit].filter(Boolean).join(' ')).join(', ')}`}
+            onClick={() => setOpen(true)}
+          >
+            {slots.map((part, i) =>
+              part ? (
+                <span key={i} className="set-sum-part" data-slot={i}>
+                  {part.lead && <small>{part.lead}</small>}
+                  <strong>{part.value}</strong>
+                  <small>{part.unit}</small>
+                </span>
+              ) : (
+                <span key={i} className="set-sum-part" data-slot={i} data-empty="" />
+              ),
+            )}
+          </button>
+        )}
+        {compact && (
+          <button
+            type="button"
+            className="set-icon"
+            aria-label={`${open ? 'Plegar' : 'Serie a serie y opciones de'} ${name}`}
+            aria-expanded={open}
+            title={open ? 'Plegar' : 'Serie a serie, descanso, nota y más'}
+            data-flip={open ? '' : undefined}
+            onClick={() => setOpen(!open)}
+          >
+            <ChevronDown size={16} aria-hidden />
+          </button>
+        )}
+        {!folded && (
+          <button
+            type="button"
+            className="set-icon"
+            aria-label={`Más opciones de ${name}`}
+            aria-expanded={options}
+            aria-controls={optionsId}
+            title="Descanso, superserie y tipo de carga"
+            onClick={() => setOptions((shown) => !shown)}
+          >
+            <MoreHorizontal size={16} aria-hidden />
+          </button>
+        )}
         <button
           type="button"
           className="set-icon"
@@ -251,7 +437,7 @@ export function ExerciseRow({
         </button>
       </div>
 
-      {options && (
+      {options && !folded && (
         <div id={optionsId} className="set-options">
           <label>
             Descanso
@@ -310,6 +496,39 @@ export function ExerciseRow({
               />
             </label>
           )}
+          {send && (
+            <div className="set-send">
+              <label>
+                Enviar a otro día
+                <select
+                  className="form-input"
+                  aria-label={`Día al que enviar ${name}`}
+                  value={sendTo}
+                  onChange={(e) => setSendTo(Number(e.target.value))}
+                >
+                  {send.days.map((day) => (
+                    <option key={day.value} value={day.value}>
+                      {day.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => send.onSend(sendTo, false)}
+              >
+                Copiar
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => send.onSend(sendTo, true)}
+              >
+                Mover
+              </button>
+            </div>
+          )}
           <p className="set-options-hint">
             Dos ejercicios con el mismo número de superserie se hacen seguidos.
             {mode !== 'KG' &&
@@ -318,12 +537,36 @@ export function ExerciseRow({
         </div>
       )}
 
-      <div role="group" aria-label={`Series de ${name}`} className="set-rows">
+      {folded && (exercise.notes || exercise.supersetGroup != null) && (
+        <p className="set-fold-note">
+          {[exercise.notes, extras.find((extra) => String(extra).startsWith('Superserie'))]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
+      )}
+      <div role="group" aria-label={`Series de ${name}`} className="set-rows" hidden={folded}>
+        {versus && (
+          <div className={`${columns} set-grid-sides`} aria-hidden>
+            <span />
+            <span style={{ gridColumn: `span ${sides}` }}>Pauta</span>
+            <span className="set-past-side" style={{ gridColumn: `span ${sides}` }}>
+              Hizo el {format(last.date, 'd MMM', { locale: es })}
+            </span>
+            <span />
+          </div>
+        )}
         <div className={`${columns} set-grid-head`} aria-hidden>
           <span />
           <span>Reps</span>
           {effort !== 'NONE' && <span>{effort}</span>}
           <span>{loadHeader}</span>
+          {versus && (
+            <>
+              <span className="set-past-side">Reps</span>
+              {effort !== 'NONE' && <span>{effort}</span>}
+              <span>kg</span>
+            </>
+          )}
           <span />
         </div>
         {rows.map((row, i) => {
@@ -382,6 +625,7 @@ export function ExerciseRow({
                   onCommit={(value) => edit(i, { load: value == null ? null : loadOf(value) })}
                   onKeyDown={keys(i, 2)}
                 />
+                {versus && <PastSet set={last.sets[i]} effort={effort} index={i} />}
                 <button
                   type="button"
                   className="set-icon"
@@ -435,6 +679,7 @@ export function ExerciseRow({
       <button
         type="button"
         className="set-add"
+        hidden={folded}
         disabled={rows.length >= MAX_SETS}
         onClick={() => addAfter(rows.length - 1)}
       >
@@ -443,17 +688,13 @@ export function ExerciseRow({
 
       <input
         className="set-exercise-note"
+        hidden={folded}
         aria-label={`Nota de ${name}`}
         placeholder="Nota para el atleta (técnica, tempo, sensaciones)"
         maxLength={500}
         value={exercise.notes ?? ''}
         onChange={(e) => onChange({ ...exercise, notes: e.target.value || null })}
       />
-
-      <p className="set-protocol">
-        <span>El atleta lee</span> {protocolText(exercise)}
-        {extras.length > 0 && ` · ${extras.join(' · ')}`}
-      </p>
     </li>
   );
 }

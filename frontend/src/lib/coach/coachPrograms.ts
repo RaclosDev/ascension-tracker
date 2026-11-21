@@ -345,8 +345,9 @@ export interface ProgramAssignment {
 const assignmentsKey = (linkId: string) => ['coach', 'clients', linkId, 'programs'] as const;
 const assignmentsPath = (linkId: string) => `/coach/clients/${encodeURIComponent(linkId)}/programs`;
 
-export const useClientAssignments = (linkId: string) =>
+export const useClientAssignments = (linkId: string, enabled = true) =>
   useQuery({
+    enabled,
     queryKey: assignmentsKey(linkId),
     queryFn: async () => (await api.get<ProgramAssignment[]>(assignmentsPath(linkId))).data,
   });
@@ -373,18 +374,16 @@ export function useEndAssignment(linkId: string) {
   });
 }
 
+export const assignedProgramQuery = (linkId: string, assignmentId: string) => ({
+  enabled: !!assignmentId,
+  queryKey: [...assignmentsKey(linkId), assignmentId, 'plan'],
+  queryFn: async () =>
+    (await api.get<Program>(`${assignmentsPath(linkId)}/${encodeURIComponent(assignmentId)}/plan`))
+      .data,
+  retry: false,
+});
 export const useAssignedProgram = (linkId: string, assignmentId: string) =>
-  useQuery({
-    enabled: !!assignmentId,
-    queryKey: [...assignmentsKey(linkId), assignmentId, 'plan'],
-    queryFn: async () =>
-      (
-        await api.get<Program>(
-          `${assignmentsPath(linkId)}/${encodeURIComponent(assignmentId)}/plan`,
-        )
-      ).data,
-    retry: false,
-  });
+  useQuery(assignedProgramQuery(linkId, assignmentId));
 
 export function useAdaptProgram(linkId: string, assignmentId: string) {
   const queryClient = useQueryClient();

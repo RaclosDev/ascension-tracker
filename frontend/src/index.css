@@ -680,6 +680,27 @@ body {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
+select.form-input {
+  max-width: 100%;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: right 0.65rem top 50%;
+  background-size: 0.65rem auto;
+  /* Hueco justo para la flecha: el texto de la opción no la pisa y cabe entero en media fila. */
+  padding-left: 0.75rem;
+  padding-right: 1.6rem;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+select.form-input option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+}
 .ui-select.form-input {
   /* La flecha la pinta el componente; el hueco a la derecha ya no hace falta. */
   padding-left: 0.75rem;
@@ -979,6 +1000,49 @@ input[type='number']::-webkit-outer-spin-button {
 .nav-icon {
   margin-right: 12px;
   font-size: 1.1rem;
+}
+.sidebar-account {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-color);
+}
+.sidebar-account-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar-account-toggle {
+  gap: 10px;
+}
+.sidebar-account-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-glow);
+  color: var(--accent-primary-light);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.sidebar-account-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+.sidebar-account-chevron {
+  flex: none;
+  transition: transform var(--transition-fast);
+}
+.sidebar-account-chevron.open {
+  transform: rotate(180deg);
 }
 .main-content {
   flex: 1;
@@ -2801,6 +2865,40 @@ textarea,
   padding: 0.35rem 0.65rem;
   color: var(--text-secondary);
   font-size: 0.8125rem;
+}
+
+.workout-coach-plan {
+  display: grid;
+  gap: 2px;
+  padding: 0.6rem 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+.workout-coach-plan-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.workout-coach-plan strong {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.workout-coach-plan p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.workout-plan-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.workout-saved {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .set-grid-header {

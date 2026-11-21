@@ -24,22 +24,20 @@ export function PowerAttemptsEditor({
       ),
     );
   return (
-    <section className="flex flex-col gap-4">
-      <h3 className="font-semibold">Intentos y resultado</h3>
-      <p className="coach-description">
+    <section className="card pw-card">
+      <h4>Intentos y resultado</h4>
+      <p className="pw-hint">
         Mantén el plan previsto y registra aparte el peso realizado. Los resultados los anota el
         entrenador.
       </p>
-      <dl className="flex flex-wrap gap-6" aria-live="polite">
+      <dl className="pw-best" aria-live="polite">
         <div>
           <dt>Total previsto</dt>
-          <dd className="font-semibold">
-            {totals.planned === null ? 'Faltan cargas previstas' : `${totals.planned} kg`}
-          </dd>
+          <dd>{totals.planned === null ? 'Faltan cargas previstas' : `${totals.planned} kg`}</dd>
         </div>
         <div>
           <dt>{totals.finished ? 'Total registrado' : 'Total provisional'}</dt>
-          <dd className="font-semibold">
+          <dd>
             {totals.actual === null
               ? `Sin total · ${totals.validLifts}/3 levantamientos válidos`
               : `${totals.actual} kg`}
@@ -47,7 +45,7 @@ export function PowerAttemptsEditor({
         </div>
       </dl>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
+        <table className="pw-attempts">
           <caption className="sr-only">Los nueve intentos de competición</caption>
           <thead>
             <tr>

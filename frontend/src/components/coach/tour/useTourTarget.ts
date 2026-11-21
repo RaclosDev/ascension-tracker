@@ -76,6 +76,7 @@ export function useTourTarget(
       if (!target) {
         if (step.target.includes('data-tour-nav')) {
           visibleTarget(doc, '[aria-label="Más opciones"][aria-expanded="false"]')?.click();
+          visibleTarget(doc, '[data-tour-nav="cuenta"][aria-expanded="false"]')?.click();
         }
         return;
       }

@@ -75,3 +75,23 @@ export function useSaveComment(linkId: string, assignmentId: string) {
     },
   });
 }
+
+/** The coach's comment on one day of the athlete's week, with or without a workout. */
+export interface DayComment {
+  date: string;
+  text: string;
+  updatedAt: string;
+}
+
+/** Saves (text) or removes (null) the coach's comment on a day without a workout. */
+export function useSaveDayComment(linkId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ date, text }: { date: string; text: string | null }) => {
+      const path = `${clientPath(linkId)}/day-comments/${date}`;
+      if (text == null) await api.delete(path);
+      else await api.put(path, { text });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['coach', 'client', linkId] }),
+  });
+}

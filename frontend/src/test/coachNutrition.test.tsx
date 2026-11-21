@@ -98,14 +98,15 @@ describe('Pauta de nutrición', () => {
         },
       }),
     );
-    expect(await screen.findByRole('button', { name: 'Quitar pauta' })).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar pauta' }));
+    expect(screen.getByRole('button', { name: 'Quitar pauta' })).toBeTruthy();
   });
 
   it('shows the plan read-only without the edit permission', async () => {
     mockedApi.get.mockResolvedValue({ data: plan });
     wrap(<NutritionPlanSection linkId="l1" canEdit={false} />);
 
-    expect(await screen.findByText('2550 kcal')).toBeTruthy();
+    expect(await screen.findByText('2550')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Publicar pauta' })).toBeNull();
     expect(screen.queryByLabelText('Proteína día de entreno')).toBeNull();
   });
@@ -119,6 +120,7 @@ describe('Pauta de nutrición', () => {
       response: { data: { message: 'La pauta activa ha cambiado.' } },
     });
     const first = wrap(<NutritionPlanSection linkId="l1" canEdit />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar pauta' }));
     await screen.findByLabelText('Proteína día de entreno');
     fill('Proteína día de entreno', '190');
     fireEvent.click(screen.getByRole('button', { name: 'Publicar pauta' }));
@@ -140,6 +142,7 @@ describe('Pauta de nutrición', () => {
     }));
     mockedApi.post.mockResolvedValue({ data: '' });
     wrap(<NutritionPlanSection linkId="l1" canEdit />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar pauta' }));
     await screen.findByLabelText('Proteína día de entreno');
     fill('Proteína día de entreno', '190');
     vi.mocked(confirmAction).mockResolvedValue(false);
@@ -199,7 +202,7 @@ describe('Pauta de nutrición', () => {
     mockedApi.get.mockRejectedValueOnce(new Error('offline')).mockResolvedValue({ data: plan });
     wrap(<NutritionPlanSection linkId="l1" canEdit={false} />);
     fireEvent.click(await screen.findByRole('button', { name: 'Reintentar pauta' }));
-    expect(await screen.findByText('2550 kcal')).toBeTruthy();
+    expect(await screen.findByText('2550')).toBeTruthy();
     expect(screen.queryByText('Sin pauta: tu atleta usa sus propios objetivos.')).toBeNull();
   });
 

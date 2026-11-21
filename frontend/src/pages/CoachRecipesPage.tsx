@@ -1,18 +1,18 @@
-import { confirmAction } from '../lib/confirmation';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { CoachPageHeader } from '../components/coach/CoachWorkspace';
 import { apiErrorMessage } from '../lib/coach/api';
 import {
   recipeKcal,
   useCoachRecipes,
-  useDeleteRecipe,
   useSaveRecipe,
   type CoachRecipe,
 } from '../lib/coach/coachRecipes';
+import '../styles/coach-library.css';
 
+const LIBRARY = '/entrenador/planificacion?pestana=recetas';
 const MACROS = [
   { key: 'protein', label: 'Proteína' },
   { key: 'carbs', label: 'Carbohidratos' },
@@ -25,96 +25,32 @@ const parseGrams = (value: string) => {
   return value.trim() !== '' && Number.isFinite(n) && n >= 0 && n <= 1000 ? n : null;
 };
 
-/** The coach's recipe library: dishes with macros per serving to build meal plans from. */
+/** Editor of one recipe of the coach's library; the list lives in the library itself. */
 export default function CoachRecipesPage() {
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
   const recipes = useCoachRecipes();
-  const remove = useDeleteRecipe();
-  // null: no form open; 'new': creating; otherwise the recipe being edited.
-  const [editing, setEditing] = useState<CoachRecipe | 'new' | null>(null);
+  const id = params.get('editar');
+  const recipe = id ? recipes.data?.find((r) => r.id === id) : undefined;
+
+  if (!id && !params.has('nueva')) return <Navigate to={LIBRARY} replace />;
+  if (id && recipes.isSuccess && !recipe) return <Navigate to={LIBRARY} replace />;
 
   return (
     <div className="fade-in coach-page coach-workspace">
-      <Link to="/entrenador/planificacion" className="coach-back-link">
+      <Link to={LIBRARY} className="coach-back-link">
         <ArrowLeft size={16} aria-hidden /> Volver a biblioteca
       </Link>
       <CoachPageHeader
-        title="Recetas"
-        description="Platos con sus macros por ración para pautar comidas a tus atletas."
-      >
-        {editing === null && (
-          <button type="button" className="btn btn-primary" onClick={() => setEditing('new')}>
-            <Plus size={16} aria-hidden /> Nueva receta
-          </button>
-        )}
-      </CoachPageHeader>
-
-      {editing !== null && (
-        <RecipeForm
-          key={editing === 'new' ? 'new' : editing.id}
-          recipe={editing === 'new' ? null : editing}
-          onDone={() => setEditing(null)}
-        />
+        title={id ? 'Editar receta' : 'Nueva receta'}
+        description="Un plato con sus macros por ración, para pautar comidas a tus atletas."
+      />
+      {id && recipes.isLoading && <p role="status">Cargando…</p>}
+      {id && recipes.isError && (
+        <p role="alert">{apiErrorMessage(recipes.error, 'No se pudo cargar la receta.')}</p>
       )}
-
-      {recipes.isLoading && <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>}
-      {recipes.isError && (
-        <p role="alert">{apiErrorMessage(recipes.error, 'No se pudieron cargar tus recetas.')}</p>
-      )}
-      {recipes.data?.length === 0 && editing === null && (
-        <section className="card">
-          <p style={{ color: 'var(--text-secondary)' }}>
-            Aún no tienes recetas. Guarda platos con sus macros por ración para pautar comidas a tus
-            atletas.
-          </p>
-        </section>
-      )}
-
-      {recipes.data && recipes.data.length > 0 && (
-        <ul className="flex flex-col gap-3">
-          {recipes.data.map((recipe) => (
-            <li key={recipe.id} className="card flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="font-bold text-white truncate">{recipe.name}</div>
-                <div className="text-sm truncate" style={{ color: 'var(--text-secondary)' }}>
-                  {recipe.kcal} kcal · P {recipe.protein} g · C {recipe.carbs} g · G {recipe.fat} g
-                  por ración
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  aria-label={`Editar ${recipe.name}`}
-                  onClick={() => setEditing(recipe)}
-                >
-                  <Pencil size={16} aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  aria-label={`Borrar ${recipe.name}`}
-                  disabled={remove.isPending}
-                  onClick={async () => {
-                    if (
-                      !(await confirmAction({
-                        title: 'Borrar receta',
-                        description: `¿Borrar «${recipe.name}»? No se puede deshacer.`,
-                        confirmLabel: 'Borrar receta',
-                        destructive: true,
-                      }))
-                    )
-                      return;
-                    remove.mutate(recipe.id, {
-                      onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo borrar')),
-                    });
-                  }}
-                >
-                  <Trash2 size={16} aria-hidden />
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+      {(!id || recipe) && (
+        <RecipeForm key={id ?? 'new'} recipe={recipe ?? null} onDone={() => navigate(LIBRARY)} />
       )}
     </div>
   );
@@ -134,68 +70,64 @@ function RecipeForm({ recipe, onDone }: { recipe: CoachRecipe | null; onDone: ()
   const fat = parseGrams(grams.fat);
   const valid = name.trim() !== '' && protein != null && carbs != null && fat != null;
 
-  const submit = () => {
-    if (!valid) return;
-    save.mutate(
-      {
-        id: recipe?.id ?? null,
-        request: {
-          name: name.trim(),
-          description: description.trim() || null,
-          protein,
-          carbs,
-          fat,
-        },
-      },
-      {
-        onSuccess: () => {
-          toast.success('Receta guardada');
-          onDone();
-        },
-        onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo guardar la receta')),
-      },
-    );
-  };
-
   return (
-    <section className="card mb-6 flex flex-col gap-3">
-      <h2 className="card-title">{recipe ? 'Editar receta' : 'Nueva receta'}</h2>
-      <label className="flex flex-col gap-1 text-sm">
-        <span style={{ color: 'var(--text-secondary)' }}>Nombre</span>
+    <form
+      className="card coach-recipe-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!valid) return;
+        save.mutate(
+          {
+            id: recipe?.id ?? null,
+            request: {
+              name: name.trim(),
+              description: description.trim() || null,
+              protein,
+              carbs,
+              fat,
+            },
+          },
+          {
+            onSuccess: () => {
+              toast.success('Receta guardada');
+              onDone();
+            },
+            onError: (e) => toast.error(apiErrorMessage(e, 'No se pudo guardar la receta')),
+          },
+        );
+      }}
+    >
+      <label>
+        Nombre
         <input
-          className="rounded-lg px-3 py-2 bg-black/20 border min-w-0"
-          style={{ borderColor: 'var(--border-subtle)' }}
+          className="form-input"
           maxLength={120}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
       </label>
-      <label className="flex flex-col gap-1 text-sm">
-        <span style={{ color: 'var(--text-secondary)' }}>Ingredientes y preparación</span>
+      <label>
+        Ingredientes y preparación
         <textarea
-          className="rounded-lg px-3 py-2 bg-black/20 border min-w-0"
-          style={{ borderColor: 'var(--border-subtle)' }}
-          rows={3}
+          className="form-input"
+          rows={5}
           maxLength={2000}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
       </label>
-      <fieldset className="grid gap-2 sm:grid-cols-3">
-        <legend className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>
-          Macros por ración
-        </legend>
+      <fieldset>
+        <legend>Macros por ración (g)</legend>
         {MACROS.map((macro) => (
-          <label key={macro.key} className="flex items-center justify-between gap-3 text-sm">
-            <span style={{ color: 'var(--text-secondary)' }}>{macro.label} (g)</span>
+          <label key={macro.key}>
+            {macro.label}
             <input
               type="number"
               inputMode="decimal"
               min={0}
               max={1000}
               step={0.1}
-              className="w-24 rounded-lg px-3 py-2 bg-black/20 border text-right"
-              style={{ borderColor: 'var(--border-subtle)' }}
+              className="form-input"
               aria-label={`${macro.label} por ración`}
               value={grams[macro.key]}
               onChange={(e) => setGrams((g) => ({ ...g, [macro.key]: e.target.value }))}
@@ -203,24 +135,19 @@ function RecipeForm({ recipe, onDone }: { recipe: CoachRecipe | null; onDone: ()
           </label>
         ))}
       </fieldset>
-      <p className="text-sm font-bold text-white">
+      <p className="coach-recipe-kcal">
         {protein != null && carbs != null && fat != null
           ? `${recipeKcal({ protein, carbs, fat })} kcal por ración`
           : 'Gramos entre 0 y 1000'}
       </p>
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          className="btn btn-primary"
-          disabled={!valid || save.isPending}
-          onClick={submit}
-        >
+      <div className="coach-recipe-actions">
+        <button type="submit" className="btn btn-primary" disabled={!valid || save.isPending}>
           Guardar receta
         </button>
         <button type="button" className="btn btn-secondary" onClick={onDone}>
           Cancelar
         </button>
       </div>
-    </section>
+    </form>
   );
 }

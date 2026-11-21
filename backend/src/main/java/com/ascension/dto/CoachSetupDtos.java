@@ -26,4 +26,17 @@ public final class CoachSetupDtos {
                         boolean reviewed,
                         @jakarta.validation.constraints.Pattern(regexp="GENERAL|PERFORMANCE|MAINTAIN|WEIGHT_CHANGE") String goalFocus,
                         @jakarta.validation.constraints.Pattern(regexp="RIR|RPE|NONE") String effortMethod) { }
+
+    /** An exercise the coach does not want to prescribe to this athlete, with the reason if any. */
+    public record Avoided(@jakarta.validation.constraints.NotBlank @Size(max = 80) String exerciseId,
+                          @Size(max = 120) String name,
+                          @Size(max = 200) String reason) { }
+
+    /** What the coach keeps about one athlete for themselves. The athlete never receives it. */
+    public record CoachNotes(@Size(max = 600) String pinnedNote,
+                             @Size(max = 40) java.util.List<@NotNull @Valid Avoided> avoidedExercises) {
+        public CoachNotes {
+            avoidedExercises = avoidedExercises == null ? java.util.List.of() : java.util.List.copyOf(avoidedExercises);
+        }
+    }
 }

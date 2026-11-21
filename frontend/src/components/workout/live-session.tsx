@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Edit3, Calendar, Clock } from 'lucide-react';
 
@@ -14,6 +14,43 @@ import type { WorkoutExercise } from '@/lib/workout/types';
 import { NumberInput } from '@/components/ui/number-input';
 
 const EMPTY_EXERCISES: WorkoutExercise[] = [];
+
+/**
+ * Says the session is kept on the device right after the athlete changes something. It is not
+ * sent to the coach until the session is finished, so it never claims more than that.
+ */
+function SavedMark() {
+  const active = useWorkoutStore((s) => s.active);
+  const first = useRef(true);
+  const touched = useRef(0);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const mark = () => {
+      touched.current = Date.now();
+    };
+    document.addEventListener('pointerdown', mark, true);
+    document.addEventListener('keydown', mark, true);
+    return () => {
+      document.removeEventListener('pointerdown', mark, true);
+      document.removeEventListener('keydown', mark, true);
+    };
+  }, []);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    if (Date.now() - touched.current > 1500) return;
+    setShown(true);
+    const timer = setTimeout(() => setShown(false), 2500);
+    return () => clearTimeout(timer);
+  }, [active]);
+  return (
+    <span className="workout-saved" role="status">
+      {shown ? 'Guardado en este dispositivo' : ''}
+    </span>
+  );
+}
 
 function toLocalDatetimeString(timestamp: number): string {
   const d = new Date(timestamp);
@@ -38,6 +75,7 @@ export function LiveSession() {
   const setWorkoutName = useWorkoutStore((s) => s.setWorkoutName);
   const setWorkoutDate = useWorkoutStore((s) => s.setWorkoutDate);
   const isEditing = Boolean(activeWorkout?.editingId);
+  const prescribed = !!activeWorkout?.coachSetPlan && !isEditing;
   const workoutName = activeWorkout?.name?.trim() || 'Entrenamiento';
   const exercises = activeWorkout?.exercises ?? EMPTY_EXERCISES;
 
@@ -158,6 +196,7 @@ export function LiveSession() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {!isEditing && <SavedMark />}
           {totalSetsCount > 0 && (
             <span
               style={{
@@ -315,6 +354,12 @@ export function LiveSession() {
       )}
 
       {!isEditing && <RestBanner />}
+      {prescribed && exercises.length > 0 && (
+        <p className="workout-plan-hint">
+          Las series traen el peso y las repeticiones mínimas pautadas. Si haces más repeticiones u
+          otro peso, cámbialo antes de marcar la casilla.
+        </p>
+      )}
 
       {exercises.length === 0 ? (
         <EmptyCard

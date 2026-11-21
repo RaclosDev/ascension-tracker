@@ -60,6 +60,7 @@ public class CoachClientDataController {
     private final SettingsService settingsService;
     private final CustomExerciseService customExerciseService;
     private final CoachSessionService sessionService;
+    private final com.ascension.service.CoachDayCommentService dayCommentService;
     private final ProgressPhotoService photoService;
 
     @GetMapping("/weights")
@@ -169,6 +170,41 @@ public class CoachClientDataController {
         String coachEmail = SecurityUtils.extractEmail(jwt);
         if (coachEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         sessionService.deleteComment(accessPolicy.require(coachEmail, linkId, Action.COMMENT_WORKOUT), workoutId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /** The coach's own comments on the client's days between two dates, both included. */
+    @GetMapping("/day-comments")
+    public ResponseEntity<List<com.ascension.dto.CoachDtos.DayComment>> dayComments(
+            @PathVariable UUID linkId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @AuthenticationPrincipal Jwt jwt) {
+        String coachEmail = SecurityUtils.extractEmail(jwt);
+        if (coachEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(dayCommentService.list(
+                accessPolicy.require(coachEmail, linkId, Action.COMMENT_DAY), from, to));
+    }
+
+    /** The coach's comment on one day of the client's week; saving again replaces it. */
+    @PutMapping("/day-comments/{day}")
+    public ResponseEntity<Void> dayComment(@PathVariable UUID linkId,
+                                           @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate day,
+                                           @Valid @RequestBody CommentRequest request,
+                                           @AuthenticationPrincipal Jwt jwt) {
+        String coachEmail = SecurityUtils.extractEmail(jwt);
+        if (coachEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        dayCommentService.save(accessPolicy.require(coachEmail, linkId, Action.COMMENT_DAY), day, request.text());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/day-comments/{day}")
+    public ResponseEntity<Void> deleteDayComment(@PathVariable UUID linkId,
+                                                 @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate day,
+                                                 @AuthenticationPrincipal Jwt jwt) {
+        String coachEmail = SecurityUtils.extractEmail(jwt);
+        if (coachEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        dayCommentService.delete(accessPolicy.require(coachEmail, linkId, Action.COMMENT_DAY), day);
         return ResponseEntity.noContent().build();
     }
 

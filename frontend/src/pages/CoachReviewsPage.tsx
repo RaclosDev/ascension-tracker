@@ -35,32 +35,48 @@ function Reviews() {
           Configurar seguimiento
         </Link>
       </CoachPageHeader>
-      <div className="coach-chips coach-review-tabs" role="group" aria-label="Filtrar seguimientos">
-        <button
-          type="button"
-          className="coach-chip"
-          aria-pressed={!waiting && !agenda}
-          onClick={() => update('vista', '')}
+      <div className="coach-review-bar">
+        <div
+          className="coach-chips coach-review-tabs"
+          role="group"
+          aria-label="Filtrar seguimientos"
         >
-          Por responder <span className="coach-chip-count">{ready ? count : '—'}</span>
-        </button>
-        <button
-          type="button"
-          className="coach-chip"
-          aria-pressed={waiting}
-          onClick={() => update('vista', 'esperando')}
-        >
-          Pendiente del atleta{' '}
-          <span className="coach-chip-count">{ready ? missing.length : '—'}</span>
-        </button>
-        <button
-          type="button"
-          className="coach-chip"
-          aria-pressed={agenda}
-          onClick={() => update('vista', 'agenda')}
-        >
-          Agenda semanal
-        </button>
+          <button
+            type="button"
+            className="coach-chip"
+            aria-pressed={!waiting && !agenda}
+            onClick={() => update('vista', '')}
+          >
+            Por responder <span className="coach-chip-count">{ready ? count : '—'}</span>
+          </button>
+          <button
+            type="button"
+            className="coach-chip"
+            aria-pressed={waiting}
+            onClick={() => update('vista', 'esperando')}
+          >
+            Pendiente del atleta{' '}
+            <span className="coach-chip-count">{ready ? missing.length : '—'}</span>
+          </button>
+          <button
+            type="button"
+            className="coach-chip"
+            aria-pressed={agenda}
+            onClick={() => update('vista', 'agenda')}
+          >
+            Agenda semanal
+          </button>
+        </div>
+        <label className="coach-search">
+          <Search size={18} aria-hidden />
+          <span className="sr-only">Buscar seguimiento por atleta</span>
+          <input
+            type="search"
+            placeholder="Buscar atleta"
+            value={search}
+            onChange={(e) => update('q', e.target.value)}
+          />
+        </label>
       </div>
       {clients.isError ? (
         <QueryErrorNotice retry={() => void clients.refetch()} pending={clients.isFetching} />
@@ -74,23 +90,11 @@ function Reviews() {
         </p>
       ) : (
         <>
-          {!agenda && (
+          {waiting && (
             <p className="coach-description">
-              {waiting
-                ? 'Atletas que han superado la fecha acordada sin enviar su seguimiento. Consulta su situación antes de hacer seguimiento.'
-                : `${count} ${count === 1 ? 'seguimiento' : 'seguimientos'} por responder de ${pending.length} ${pending.length === 1 ? 'atleta' : 'atletas'}.`}
+              Han pasado la fecha acordada sin enviar su seguimiento.
             </p>
           )}
-          <label className="coach-search">
-            <Search size={18} aria-hidden />
-            <span className="sr-only">Buscar seguimiento por atleta</span>
-            <input
-              type="search"
-              placeholder="Buscar atleta"
-              value={search}
-              onChange={(e) => update('q', e.target.value)}
-            />
-          </label>
           {agenda ? (
             <CoachReviewAgenda rows={rows} search={search} />
           ) : (

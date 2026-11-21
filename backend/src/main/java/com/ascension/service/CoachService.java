@@ -59,17 +59,20 @@ public class CoachService {
     private final CoachSubscriptionService subscriptionService;
     private final UserIdLookup userIdLookup;
     private final CoachSetupService setupService;
+    private final CoachDayCommentService dayCommentService;
     private final SecureRandom random = new SecureRandom();
 
     public CoachService(JdbcTemplate jdbcTemplate, NutritionPlanService nutritionPlanService,
                         CheckinService checkinService, CoachSubscriptionService subscriptionService,
-                        UserIdLookup userIdLookup, CoachSetupService setupService) {
+                        UserIdLookup userIdLookup, CoachSetupService setupService,
+                        CoachDayCommentService dayCommentService) {
         this.jdbcTemplate = jdbcTemplate;
         this.nutritionPlanService = nutritionPlanService;
         this.checkinService = checkinService;
         this.subscriptionService = subscriptionService;
         this.userIdLookup = userIdLookup;
         this.setupService = setupService;
+        this.dayCommentService = dayCommentService;
     }
 
     // ---- Coach side ----
@@ -193,7 +196,7 @@ public class CoachService {
     private List<CoachClient> findClients(String coachEmail, UUID linkId) {
         UUID coachId = requireCoachId(coachEmail);
         return jdbcTemplate.query("""
-                SELECT %s, cc.id, cc.created_at, cc.coaching_setup, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
+                SELECT %s, cc.id, cc.created_at, cc.coaching_setup, cc.coach_notes, cc.can_view_training, cc.can_view_nutrition, cc.can_view_body, cc.can_edit_training, cc.can_edit_nutrition,
                        u.name, u.email, u.picture
                 FROM coach_clients cc JOIN users u ON u.id = cc.client_user_id
                 WHERE cc.coach_user_id = ? AND cc.status = 'ACTIVE'
@@ -202,7 +205,7 @@ public class CoachService {
                 """.formatted(CoachScheduleService.COLUMNS),
                 (rs, n) -> new CoachClient(rs.getObject("id", UUID.class), person(rs),
                         permissions(rs), instant(rs, "created_at"), setupService.decode(rs.getString("coaching_setup")),
-                        CoachScheduleService.read(rs, Instant.now())),
+                        CoachScheduleService.read(rs, Instant.now()), setupService.decodeNotes(rs.getString("coach_notes"))),
                 coachId, linkId, linkId);
     }
 
@@ -412,16 +415,17 @@ public class CoachService {
                         rs.getString("workout_id"), rs.getString("body"), instant(rs, "created_at"),
                         instant(rs, "updated_at")),
                 userId, userId, userId, userId);
+        var dayComments = dayCommentService.exportFor(userId);
         var nutritionPlans = nutritionPlanService.exportFor(userId);
         var checkins = checkinService.exportFor(userId);
         var subscription = subscriptionService.exportFor(userId);
         if (coachSince.isEmpty() && subscription == null && asClient.isEmpty() && asCoach.isEmpty() && invitations.isEmpty()
                 && accessesToMyData.isEmpty() && myAccessesAsCoach.isEmpty() && assignments.isEmpty()
-                && comments.isEmpty() && nutritionPlans.isEmpty() && checkins.isEmpty()) {
+                && comments.isEmpty() && dayComments.isEmpty() && nutritionPlans.isEmpty() && checkins.isEmpty()) {
             return null;
         }
         return new CoachingExport(coachSince.isEmpty() ? null : coachSince.get(0), subscription, asClient, asCoach,
-                invitations, accessesToMyData, myAccessesAsCoach, assignments, comments, nutritionPlans, checkins);
+                invitations, accessesToMyData, myAccessesAsCoach, assignments, comments, dayComments, nutritionPlans, checkins);
     }
 
     // Column names come from the two callers above, never from input.

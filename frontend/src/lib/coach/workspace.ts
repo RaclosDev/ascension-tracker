@@ -44,8 +44,9 @@ export function activityText(iso: string | null | undefined) {
   return `Hace ${days} días`;
 }
 
-export const clientHref = (linkId: string, section = 'resumen') =>
-  `/entrenador/atletas/${encodeURIComponent(linkId)}?seccion=${section}`;
+/** Without a section the athlete opens on planning, or on the summary when there is none. */
+export const clientHref = (linkId: string, section?: string) =>
+  `/entrenador/atletas/${encodeURIComponent(linkId)}${section ? `?seccion=${section}` : ''}`;
 
 export const searchName = (text: string) =>
   text

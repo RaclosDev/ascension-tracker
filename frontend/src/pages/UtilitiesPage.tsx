@@ -5,6 +5,8 @@ import api from '../api/client';
 import CalculatorCard from '../components/calculators/CalculatorCard';
 import NutritionCalculators from '../components/calculators/NutritionCalculators';
 import AiNutritionChef from '../components/utilities/AiNutritionChef';
+import { useCoachProfile } from '../lib/coach/api';
+import { CoachPageHeader } from '../components/coach/CoachWorkspace';
 import { calculateWeyandSteps, calculateWeyandMetabolic } from '../utils/fitnessCalculators';
 import '../styles/utilities.css';
 
@@ -26,12 +28,16 @@ export default function UtilitiesPage() {
   const [minutes, setMinutes] = useState('');
   const [seconds, setSeconds] = useState('');
 
+  // A coach works out figures for an athlete, so nothing is filled in from the coach's own data.
+  const coach = useCoachProfile().data?.coach === true;
   const { data: dashboardData } = useQuery<DashboardData>({
+    enabled: !coach,
     queryKey: ['dashboard'],
     queryFn: () => api.get('/weights/dashboard').then((res) => res.data),
   });
 
   const { data: settingsData } = useQuery<SettingsData>({
+    enabled: !coach,
     queryKey: ['settings'],
     queryFn: () => api.get('/settings').then((res) => res.data),
   });
@@ -70,25 +76,42 @@ export default function UtilitiesPage() {
   });
 
   return (
-    <div className="fade-in util-page">
-      <header className="util-head">
-        <h1 className="page-title-desktop">Utilidades y calculadoras</h1>
-        <p className="util-lede">Gasto calórico, composición corporal y recetas con tus macros.</p>
-      </header>
+    <div
+      className={
+        coach ? 'fade-in coach-page coach-workspace coach-utilities util-page' : 'fade-in util-page'
+      }
+    >
+      {coach ? (
+        <CoachPageHeader
+          title="Utilidades"
+          description="Calculadoras de gasto y de nutrición para preparar las pautas de tus atletas."
+        />
+      ) : (
+        <header className="util-head">
+          <h1 className="page-title-desktop">Utilidades y calculadoras</h1>
+          <p className="util-lede">
+            Gasto calórico, composición corporal y recetas con tus macros.
+          </p>
+        </header>
+      )}
 
+      {!coach && (
+        <section className="util-section">
+          <h2 className="util-section-title">Chef nutricional</h2>
+          <CalculatorCard
+            title="Estratega Nutricional IA"
+            subtitle="Chef culinario y recetas según tus macros de hoy"
+            icon={<ChefHat size={18} />}
+            defaultOpen={false}
+          >
+            <AiNutritionChef />
+          </CalculatorCard>
+        </section>
+      )}
       <section className="util-section">
-        <h2 className="util-section-title">Chef nutricional</h2>
-        <CalculatorCard
-          title="Estratega Nutricional IA"
-          subtitle="Chef culinario y recetas según tus macros de hoy"
-          icon={<ChefHat size={18} />}
-          defaultOpen={false}
-        >
-          <AiNutritionChef />
-        </CalculatorCard>
-      </section>
-      <section className="util-section">
-        <h2 className="util-section-title">Calculadoras biomecánicas</h2>
+        <h2 className="util-section-title">
+          {coach ? 'Gasto calórico' : 'Calculadoras biomecánicas'}
+        </h2>
         <div className="util-cards">
           {/* Calculator 1: Steps */}
           <CalculatorCard
@@ -166,7 +189,7 @@ export default function UtilitiesPage() {
           >
             <p className="text-xs text-[var(--text-secondary)] mb-3">
               Calcula el VO2 y gasto calórico avanzado de una sesión de carrera/caminata
-              considerando tu biometría.
+              considerando {coach ? 'la biometría del atleta' : 'tu biometría'}.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -282,7 +305,7 @@ export default function UtilitiesPage() {
         </div>
       </section>
       <section className="util-section">
-        <h2 className="util-section-title">Calculadoras de nutrición</h2>
+        <h2 className="util-section-title">{coach ? 'Nutrición' : 'Calculadoras de nutrición'}</h2>
         <NutritionCalculators />
       </section>
       <p className="util-disclaimer">

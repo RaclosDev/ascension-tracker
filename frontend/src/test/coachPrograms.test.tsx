@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import api from '../api/client';
 import CoachProgramEditorPage from '../pages/CoachProgramEditorPage';
-import CoachProgramsPage from '../pages/CoachProgramsPage';
 import CoachProgramAdaptPage from '../pages/CoachProgramAdaptPage';
 import { clearSessionDrafts } from '../lib/sessionDrafts';
 import {
@@ -21,7 +20,7 @@ import {
   updateDay,
   type Program,
 } from '../lib/coach/coachPrograms';
-import { chooseOption } from './selectMenu';
+import { chooseDate, chooseOption } from './selectMenu';
 
 vi.mock('../api/client', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
@@ -65,7 +64,6 @@ function renderAt(path: string) {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[path]}>
         <Routes>
-          <Route path="/entrenador/programas" element={<CoachProgramsPage />} />
           <Route path="/entrenador/programas/:programId" element={<CoachProgramEditorPage />} />
           <Route
             path="/entrenador/atletas/:linkId/programas/:assignmentId/adaptar"
@@ -134,25 +132,6 @@ describe('program editor helpers', () => {
     }));
     expect(programProblems({ ...bad, name: '' })).toHaveLength(5);
     expect(programProblems(withDay())).toEqual([]);
-  });
-});
-
-describe('CoachProgramsPage', () => {
-  it('lists the library and duplicates a program', async () => {
-    mockedApi.get.mockResolvedValue({
-      data: [
-        { id: 'p-1', name: 'Fuerza', weeks: 4, dayCount: 3, updatedAt: '2026-11-04T10:00:00Z' },
-      ],
-    });
-    mockedApi.post.mockResolvedValue({ data: { id: 'p-2' } });
-    renderAt('/entrenador/programas');
-
-    expect(await screen.findByText('Fuerza')).toBeDefined();
-    expect(screen.getByText(/4 semanas · 3 días/)).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: 'Duplicar Fuerza' }));
-    await waitFor(() =>
-      expect(mockedApi.post).toHaveBeenCalledWith('/coach/programs/p-1/duplicate'),
-    );
   });
 });
 
@@ -385,11 +364,10 @@ describe('individual program adaptation', () => {
       expect.objectContaining({ description: expect.stringContaining('continúa hasta esa fecha') }),
     );
     expect(mockedApi.post).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByLabelText('Empieza la nueva versión el'), {
-      target: { value: '2000-01-01' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Publicar adaptación' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('próximos 365 días');
+    // El selector no deja ir a meses pasados ni elegir una fecha anterior a hoy.
+    expect(() =>
+      chooseDate(screen.getByLabelText(/^Empieza la nueva versión el/), '2000-01-01'),
+    ).toThrow(/fuera del selector/);
     expect(mockedApi.post).not.toHaveBeenCalled();
   });
 
