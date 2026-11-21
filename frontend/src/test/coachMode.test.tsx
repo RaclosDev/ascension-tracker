@@ -26,11 +26,6 @@ vi.mock('../components/coach/metrics/MetricsWeightChart', () => ({
     <div data-testid="weight-charts" data-points={props.entries.length} />
   ),
 }));
-vi.mock('../components/nutrition/NutritionPieChart', () => ({
-  default: ({ pieData }: { pieData: unknown[] }) => (
-    <div data-testid="macro-pie" data-slices={pieData.length} />
-  ),
-}));
 vi.mock('../components/workout/heatmap', () => ({
   ActivityHeatmap: ({ history }: { history: CompletedWorkout[] }) => (
     <div data-testid="activity-heatmap" data-workouts={history.length} />

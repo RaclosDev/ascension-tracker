@@ -115,7 +115,7 @@ export function MuscleRecovery({
             </button>
             <span
               className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
-              style={{ color: 'var(--text-secondary)', background: 'rgba(255, 255, 255, 0.05)' }}
+              style={{ color: 'var(--text-secondary)', background: 'var(--bg-glass-strong)' }}
             >
               72h
             </span>
@@ -124,7 +124,7 @@ export function MuscleRecovery({
           {musclesToRecover.length === 0 ? (
             // Centrado en todo el alto de la tarjeta: con la del mapa al lado, no queda un hueco abajo.
             <div className="flex flex-1 flex-col items-center justify-center py-5 text-center">
-              <div className="w-9 h-9 sm:w-14 sm:h-14 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mb-1.5 sm:mb-3 text-emerald-400">
+              <div className="w-9 h-9 sm:w-14 sm:h-14 rounded-full border border-[var(--border-subtle)] flex items-center justify-center mb-1.5 sm:mb-3 text-[var(--color-success)]">
                 <BatteryFull className="size-[18px] sm:size-7" aria-hidden />
               </div>
               <p
@@ -140,17 +140,18 @@ export function MuscleRecovery({
           ) : (
             <div className="flex flex-col gap-2">
               {displayedMuscles.map(({ key, label, recoveryPct }) => {
-                let barColor = 'var(--color-success)';
-                if (recoveryPct < 30) barColor = 'var(--color-fat)';
-                else if (recoveryPct < 60) barColor = 'var(--color-carbs)';
+                const barColor = 'var(--accent-primary)';
 
                 return (
                   <div key={key} className="flex flex-col gap-1 min-w-0">
                     <div className="flex items-baseline justify-between text-xs leading-none">
-                      <span className="font-medium truncate text-zinc-200" title={label}>
+                      <span
+                        className="font-medium truncate text-[var(--text-primary)]"
+                        title={label}
+                      >
                         {label}
                       </span>
-                      <span className="text-[10.5px] font-bold tabular-nums ml-1 flex-shrink-0 text-zinc-400">
+                      <span className="text-[10.5px] font-bold tabular-nums ml-1 flex-shrink-0 text-[var(--text-secondary)]">
                         {recoveryPct}%
                       </span>
                     </div>

@@ -3,157 +3,79 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { DayCellProps } from '../../types/tracking';
 
-// Below 769px .hide-on-mobile drops the visible unit, so screen readers get it in parentheses
-// instead; parentheses keep the visible text a contiguous part of the button's name (WCAG 2.5.3).
+/** Kilos with one decimal, or two when the scale gave a second one (80.6, 80.65). */
+export const formatKg = (w: number) => (Math.round(w * 100) % 10 ? w.toFixed(2) : w.toFixed(1));
+const formatCount = (n: number) => Math.round(n).toLocaleString('es-ES');
+
+// Narrow screens drop the visible unit, so screen readers get it in parentheses instead;
+// parentheses keep the visible text a contiguous part of the button's name (WCAG 2.5.3).
 const MetricUnit = ({ visible, spoken }: { visible: string; spoken: string }) => (
   <>
-    <span className="hide-on-mobile" style={{ fontWeight: 400, opacity: 0.7, marginLeft: '2px' }}>
-      {' '}
-      {visible}
-    </span>
-    <span className="sr-only min-[769px]:hidden"> ({spoken})</span>
+    <span className="track-unit"> {visible}</span>
+    <span className="sr-only"> ({spoken})</span>
   </>
 );
 
-const EmptyMetric = () => (
-  <span aria-hidden="true" style={{ opacity: 0.3 }}>
-    -
-  </span>
-);
-
+/** One day of the week row: the date, the weight large, steps and kcal on one quiet line. */
 export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
   ({ dateStr, dayName, dayData, isToday, onOpenModal, showWeight, showSteps, showCalories }) => {
     const isFuture = dateStr > format(new Date(), 'yyyy-MM-dd');
-
-    const handleClick = () => {
-      if (isFuture) return;
-      onOpenModal({ dateStr, dayName, dayData });
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (isFuture) return;
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        onOpenModal({ dateStr, dayName, dayData });
-      }
-    };
-
-    const formattedDate = format(new Date(dateStr + 'T00:00:00'), 'd MMM', { locale: es });
+    const date = new Date(dateStr + 'T00:00:00');
+    const hasSteps = showSteps && dayData.steps !== null;
+    const hasKcal = showCalories && dayData.calories !== null;
+    const empty = (!showWeight || dayData.weight === null) && !hasSteps && !hasKcal;
 
     return (
-      <div
-        role="button"
-        tabIndex={isFuture ? -1 : 0}
-        aria-disabled={isFuture}
-        onKeyDown={handleKeyDown}
-        className={`calendar-day ${isToday ? 'is-today' : ''} ${isFuture ? 'is-future' : ''}`}
-        onClick={handleClick}
-        style={{
-          cursor: isFuture ? 'default' : 'pointer',
-          minHeight: '100px',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+      <button
+        type="button"
+        disabled={isFuture}
+        className="track-day"
+        data-today={isToday || undefined}
+        data-empty={(empty && !isFuture) || undefined}
+        onClick={() => onOpenModal({ dateStr, dayName, dayData })}
       >
-        <div className="calendar-day-name">{dayName}</div>{' '}
-        <div className="calendar-day-date">{formattedDate}</div>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.35rem',
-            marginTop: 'auto',
-            paddingTop: '0.5rem',
-            flex: 1,
-            justifyContent: 'flex-end',
-            width: '100%',
-          }}
-        >
-          {showWeight && (
-            <div
-              style={{
-                background: 'var(--bg-glass)',
-                padding: '0.2rem',
-                borderRadius: '6px',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-                textAlign: 'center',
-                border: '1px solid var(--border-subtle)',
-                minHeight: '26px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {dayData.weight !== null ? (
-                <>
-                  {dayData.weight.toFixed(2)}
-                  <MetricUnit visible="kg" spoken="kilos" />
-                </>
-              ) : (
-                <EmptyMetric />
-              )}
-            </div>
-          )}
-          {showSteps && (
-            <div
-              style={{
-                background: 'var(--bg-glass)',
-                padding: '0.2rem',
-                borderRadius: '6px',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-                textAlign: 'center',
-                border: '1px solid var(--border-subtle)',
-                minHeight: '26px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {dayData.steps !== null ? (
-                <>
-                  {Math.round(dayData.steps)}
-                  <MetricUnit visible="pas" spoken="pasos" />
-                </>
-              ) : (
-                <EmptyMetric />
-              )}
-            </div>
-          )}
-          {showCalories && (
-            <div
-              style={{
-                background: 'var(--bg-glass)',
-                padding: '0.2rem',
-                borderRadius: '6px',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-                textAlign: 'center',
-                border: '1px solid var(--border-subtle)',
-                minHeight: '26px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {dayData.calories !== null ? (
-                <>
-                  {Math.round(dayData.calories)}
-                  <MetricUnit visible="kcal" spoken="calorías" />
-                </>
-              ) : (
-                <EmptyMetric />
-              )}
-            </div>
-          )}
-        </div>
+        <span className="track-day-date">
+          <span className="track-day-name">{dayName}</span>{' '}
+          <span className="track-day-num">{format(date, 'd')}</span>{' '}
+          <span className="sr-only">{format(date, 'MMM', { locale: es })}</span>
+        </span>{' '}
+        {showWeight &&
+          (dayData.weight !== null ? (
+            <span className="track-weight tabular-nums">
+              {formatKg(dayData.weight)}
+              <MetricUnit visible="kg" spoken="kilos" />{' '}
+            </span>
+          ) : (
+            !empty && (
+              <span className="track-weight track-none" aria-hidden="true">
+                —
+              </span>
+            )
+          ))}
+        {(hasSteps || hasKcal) && (
+          <span className="track-sub tabular-nums">
+            {hasSteps && (
+              <span className="track-minor">
+                {formatCount(dayData.steps as number)}
+                <MetricUnit visible="pas" spoken="pasos" />{' '}
+              </span>
+            )}
+            {hasKcal && (
+              <span className="track-minor">
+                {formatCount(dayData.calories as number)}
+                <MetricUnit visible="kcal" spoken="calorías" />
+              </span>
+            )}
+          </span>
+        )}
+        {empty && !isFuture && (
+          <span className="track-add" aria-hidden="true">
+            +
+          </span>
+        )}
         {isToday && <span className="sr-only">, hoy</span>}
         {isFuture && <span className="sr-only">, fecha futura</span>}
-      </div>
+      </button>
     );
   },
 );

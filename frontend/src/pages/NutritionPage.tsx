@@ -4,7 +4,8 @@ import { Suspense, useRef, useMemo } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useQueryClient } from '@tanstack/react-query';
 import { Meal } from '../types/api';
-import { Loader2, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import '../styles/athlete-nutrition.css';
 import { SegmentedControl } from '../components/ui/segmented-control';
 import { Skeleton } from '../components/ui/skeleton';
 import MacroSummaryHeader from '../components/nutrition/MacroSummaryHeader';
@@ -15,7 +16,6 @@ import { useAnyInView } from '../hooks/use-any-in-view';
 
 const MyFoodsPage = lazyWithRetry(() => import('./MyFoodsPage'));
 const FoodSearchModal = lazyWithRetry(() => import('../components/FoodSearchModal'));
-const NutritionPieChart = lazyWithRetry(() => import('../components/nutrition/NutritionPieChart'));
 const PlannedMealsCard = lazyWithRetry(() => import('../components/coach/PlannedMealsCard'));
 
 export default function NutritionPage() {
@@ -34,7 +34,6 @@ export default function NutritionPage() {
     dragOverMealIndex,
     activeTab,
     setActiveTab,
-    showChart,
     foodLogs,
     macros,
     meals,
@@ -44,7 +43,6 @@ export default function NutritionPage() {
     isError,
     isFetching,
     consumed,
-    pieData,
     toggleMealCollapse,
     handleDragStart,
     handleDrag,
@@ -180,100 +178,81 @@ export default function NutritionPage() {
             <Plus size={26} strokeWidth={2.5} />
           </button>
 
-          <MacroSummaryHeader consumed={consumed} macros={macros} />
-          {macros.coachName && (
-            <Suspense fallback={null}>
-              <PlannedMealsCard date={selectedDate} dayType={macros.dayType} meals={meals} />
-            </Suspense>
-          )}
+          <div className="nutri-layout">
+            <aside className="nutri-aside">
+              <MacroSummaryHeader consumed={consumed} macros={macros} />
+            </aside>
+            <div className="nutri-main">
+              {macros.coachName && (
+                <Suspense fallback={null}>
+                  <PlannedMealsCard date={selectedDate} dayType={macros.dayType} meals={meals} />
+                </Suspense>
+              )}
 
-          <div
-            className="pb-16 min-[1025px]:pb-32"
-            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
-          >
-            <div className="nutrition-meals-grid" ref={mealsGridRef}>
-              {meals.map((meal: Meal, index: number) => {
-                const logs = mealGroups.active[index];
-                const isCollapsed = collapsedMeals[index];
+              <div className="pb-16 min-[1025px]:pb-8">
+                <div className="nutrition-meals-grid" ref={mealsGridRef}>
+                  {meals.map((meal: Meal, index: number) => {
+                    const logs = mealGroups.active[index];
+                    const isCollapsed = collapsedMeals[index];
 
-                return (
-                  <MealFoodGroup
-                    key={meal.mealKey || meal.id || index}
-                    meal={meal}
-                    mealIndex={index}
-                    logs={logs}
-                    isCollapsed={isCollapsed}
-                    isDragOver={dragOverMealIndex === index}
-                    editingLog={editingLog}
-                    editInputMode={editInputMode}
-                    onToggleCollapse={toggleMealCollapse}
-                    onCopyFromYesterday={handleCopyFromYesterday}
-                    onOpenAddFoodModal={(mIdx) => {
-                      setSelectedMealIndex(mIdx);
-                      setSearchModalOpen(true);
-                    }}
-                    onDragStart={handleDragStart}
-                    onDrag={handleDrag}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDropOnMeal}
-                    onEditLog={handleEditLog}
-                    onDeleteLog={handleDeleteLog}
-                    onEditInputModeChange={setEditInputMode}
-                    onEditQuantityChange={handleEditQuantityChange}
-                    onUpdateLog={handleUpdateLog}
-                    onCancelEdit={() => setEditingLog(null)}
-                  />
-                );
-              })}
-              {mealGroups.historical.map((group, historicalIndex) => (
-                <MealFoodGroup
-                  key={group.key}
-                  historical
-                  meal={group.meal}
-                  mealIndex={-historicalIndex - 1}
-                  logs={group.logs}
-                  isCollapsed={Boolean(collapsedMeals[-historicalIndex - 1])}
-                  isDragOver={false}
-                  editingLog={editingLog}
-                  editInputMode={editInputMode}
-                  onToggleCollapse={toggleMealCollapse}
-                  onCopyFromYesterday={handleCopyFromYesterday}
-                  onOpenAddFoodModal={() => {}}
-                  onDragStart={handleDragStart}
-                  onDrag={handleDrag}
-                  onDragOver={() => {}}
-                  onDragLeave={handleDragLeave}
-                  onDrop={() => {}}
-                  onEditLog={handleEditLog}
-                  onDeleteLog={handleDeleteLog}
-                  onEditInputModeChange={setEditInputMode}
-                  onEditQuantityChange={handleEditQuantityChange}
-                  onUpdateLog={handleUpdateLog}
-                  onCancelEdit={() => setEditingLog(null)}
-                />
-              ))}
-            </div>
-
-            <div className="card flex flex-col items-center p-6">
-              <h2 className="text-xs font-semibold text-gray-300 mb-4">Distribución de macros</h2>
-              <div
-                style={{
-                  width: '100%',
-                  maxWidth: '300px',
-                  height: 250,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                {showChart ? (
-                  <Suspense fallback={<Skeleton className="w-48 h-48 rounded-full mx-auto" />}>
-                    <NutritionPieChart pieData={pieData} />
-                  </Suspense>
-                ) : (
-                  <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
-                )}
+                    return (
+                      <MealFoodGroup
+                        key={meal.mealKey || meal.id || index}
+                        meal={meal}
+                        mealIndex={index}
+                        logs={logs}
+                        isCollapsed={isCollapsed}
+                        isDragOver={dragOverMealIndex === index}
+                        editingLog={editingLog}
+                        editInputMode={editInputMode}
+                        onToggleCollapse={toggleMealCollapse}
+                        onCopyFromYesterday={handleCopyFromYesterday}
+                        onOpenAddFoodModal={(mIdx) => {
+                          setSelectedMealIndex(mIdx);
+                          setSearchModalOpen(true);
+                        }}
+                        onDragStart={handleDragStart}
+                        onDrag={handleDrag}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDropOnMeal}
+                        onEditLog={handleEditLog}
+                        onDeleteLog={handleDeleteLog}
+                        onEditInputModeChange={setEditInputMode}
+                        onEditQuantityChange={handleEditQuantityChange}
+                        onUpdateLog={handleUpdateLog}
+                        onCancelEdit={() => setEditingLog(null)}
+                      />
+                    );
+                  })}
+                  {mealGroups.historical.map((group, historicalIndex) => (
+                    <MealFoodGroup
+                      key={group.key}
+                      historical
+                      meal={group.meal}
+                      mealIndex={-historicalIndex - 1}
+                      logs={group.logs}
+                      isCollapsed={Boolean(collapsedMeals[-historicalIndex - 1])}
+                      isDragOver={false}
+                      editingLog={editingLog}
+                      editInputMode={editInputMode}
+                      onToggleCollapse={toggleMealCollapse}
+                      onCopyFromYesterday={handleCopyFromYesterday}
+                      onOpenAddFoodModal={() => {}}
+                      onDragStart={handleDragStart}
+                      onDrag={handleDrag}
+                      onDragOver={() => {}}
+                      onDragLeave={handleDragLeave}
+                      onDrop={() => {}}
+                      onEditLog={handleEditLog}
+                      onDeleteLog={handleDeleteLog}
+                      onEditInputModeChange={setEditInputMode}
+                      onEditQuantityChange={handleEditQuantityChange}
+                      onUpdateLog={handleUpdateLog}
+                      onCancelEdit={() => setEditingLog(null)}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
