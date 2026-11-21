@@ -21,12 +21,6 @@ export function useNutritionDiary() {
   const [collapsedMeals, setCollapsedMeals] = useState<Record<number, boolean>>({});
   const [dragOverMealIndex, setDragOverMealIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'diary' | 'foods'>('diary');
-  const [showChart, setShowChart] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowChart(true), 150);
-    return () => clearTimeout(timer);
-  }, []);
 
   const {
     data,
@@ -432,20 +426,6 @@ export function useNutritionDiary() {
     );
   }, [foodLogs]);
 
-  const pieData = useMemo(() => {
-    if (!macros) return [];
-    return [
-      { name: 'Proteínas Consumidas', value: consumed.protein * 4, color: 'var(--color-protein)' },
-      { name: 'Hidratos Consumidos', value: consumed.carbs * 4, color: 'var(--color-carbs)' },
-      { name: 'Grasas Consumidas', value: consumed.fat * 9, color: 'var(--color-fat)' },
-      {
-        name: 'Calorías Restantes',
-        value: Math.max(0, macros.kcal - consumed.kcal),
-        color: 'rgba(255,255,255,0.05)',
-      },
-    ];
-  }, [macros, consumed]);
-
   return {
     isError,
     isFetching,
@@ -462,7 +442,6 @@ export function useNutritionDiary() {
     dragOverMealIndex,
     activeTab,
     setActiveTab,
-    showChart,
     foodLogs,
     macros,
     meals,
@@ -470,7 +449,6 @@ export function useNutritionDiary() {
     loading,
     fetchData,
     consumed,
-    pieData,
     toggleMealCollapse,
     handleDragStart,
     handleDrag,

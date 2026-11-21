@@ -327,7 +327,9 @@ function Dashboard() {
             <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
               Actividad
             </h3>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>12 semanas</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              Volumen por día, dos meses
+            </span>
           </div>
           <ActivityHeatmap history={history} />
         </div>

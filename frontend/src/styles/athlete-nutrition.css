@@ -1,0 +1,183 @@
+/* Nutrición: comidas a la izquierda, los totales del día fijos a la derecha en PC. */
+.nutri-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 8px;
+}
+.nutri-main {
+  min-width: 0;
+}
+@media (min-width: 1025px) {
+  .nutri-layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+  }
+  .nutri-aside {
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    top: 16px;
+  }
+  .nutri-main {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .nutri-main .nutrition-meals-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (min-width: 1600px) {
+  .nutri-main .nutrition-meals-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.day-totals {
+  margin: 0;
+  padding: 20px;
+}
+.day-totals-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.day-totals-pct {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.day-totals-coach {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.day-totals-kcal {
+  margin: 14px 0 0;
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--text-primary);
+}
+.day-totals-kcal span {
+  margin-left: 4px;
+  font-family: var(--font-body, inherit);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.day-totals-left {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.day-totals-left[data-over] {
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.macro-bar {
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 2px;
+  background: var(--bg-glass-strong);
+  overflow: hidden;
+}
+.macro-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-primary);
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.macro-bar-lg {
+  height: 8px;
+  margin-top: 12px;
+}
+.macro-bar[data-over] span {
+  background: var(--color-danger);
+}
+
+.day-macros {
+  display: grid;
+  gap: 14px;
+  margin: 20px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+}
+.day-macro {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+}
+.day-macro dt {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.day-macro dd {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.day-macro dd span {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.day-macro .macro-bar {
+  grid-column: 1 / -1;
+}
+[data-tone='p'] {
+  --tone: var(--color-protein);
+}
+[data-tone='c'] {
+  --tone: var(--color-carbs);
+}
+[data-tone='f'] {
+  --tone: var(--color-fat);
+}
+.day-macro .macro-bar span {
+  background: var(--tone);
+}
+
+.day-split {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+.day-split-bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  margin-top: 8px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.day-split-bar span {
+  flex-basis: 0;
+  background: var(--tone);
+}
+.day-split-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.day-split-keys li::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 2px;
+  background: var(--tone);
+}
+.day-split-keys strong {
+  color: var(--text-primary);
+}

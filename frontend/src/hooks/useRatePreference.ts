@@ -49,20 +49,24 @@ export function useRatePreference() {
   return { pref, update };
 }
 
-/** Recalculates estimated date locally given current weight, goal, and a weekly rate (kg/week) */
+/** Arrival date (yyyy-MM-dd) at a weekly rate (kg/week), whether the goal is to lose or gain. */
 export function calcEstimatedDate(current: number, goal: number, weeklyRate: number): string {
-  const remaining = current - goal;
-  if (remaining <= 0) {
-    return new Date().toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  }
+  const remaining = Math.abs(current - goal);
   const absRate = Math.abs(weeklyRate);
-  if (absRate < 0.01) return '--';
-  const days = Math.round((remaining / absRate) * 7);
+  if (remaining < 0.05) return new Date().toISOString().slice(0, 10);
+  if (absRate < 0.01) return '';
   const target = new Date();
-  target.setDate(target.getDate() + days);
-  return target.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+  target.setDate(target.getDate() + Math.round((remaining / absRate) * 7));
+  return target.toISOString().slice(0, 10);
+}
+
+/** «9 ene 2027» from a yyyy-MM-dd date; anything else is shown as it comes. */
+export function formatEstimate(value?: string | null): string {
+  if (!value) return '';
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) return value;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return date
+    .toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+    .replace('.', '');
 }

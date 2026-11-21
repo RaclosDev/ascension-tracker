@@ -55,7 +55,7 @@ export function WorkoutHistoryDetail({
           <div
             style={{
               padding: 'calc(env(safe-area-inset-top, 44px) + 1rem) 1rem 0.5rem 1rem',
-              borderBottom: '1px solid rgba(255,255,255,0.05)',
+              borderBottom: '1px solid var(--border-subtle)',
               flexShrink: 0,
             }}
           >
@@ -111,9 +111,9 @@ export function WorkoutHistoryDetail({
                 style={{
                   marginTop: '0.5rem',
                   padding: '0.75rem',
-                  background: 'rgba(255, 255, 255, 0.02)',
+                  background: 'var(--bg-glass)',
                   borderRadius: '8px',
-                  borderLeft: '3px solid var(--accent-color)',
+                  border: '1px solid var(--border-subtle)',
                 }}
               >
                 <p
@@ -196,7 +196,7 @@ export function WorkoutHistoryDetail({
                                     height: '24px',
                                     lineHeight: '24px',
                                     borderRadius: '6px',
-                                    background: 'rgba(255,255,255,0.05)',
+                                    background: 'var(--bg-glass-strong)',
                                     fontSize: '0.75rem',
                                     fontWeight: 600,
                                     color: 'var(--text-secondary)',
@@ -342,9 +342,9 @@ function CoachComments({ workoutId }: { workoutId: string }) {
           key={c.coach.email}
           style={{
             padding: '0.75rem',
-            background: 'rgba(255, 255, 255, 0.02)',
+            background: 'var(--bg-glass)',
             borderRadius: '8px',
-            borderLeft: '3px solid var(--success, #22c55e)',
+            border: '1px solid var(--border-subtle)',
           }}
         >
           <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>

@@ -50,8 +50,8 @@ const navItems = [
   {
     path: '/tracking',
     icon: <LineChart className="w-5 h-5" />,
-    label: 'Tracking',
-    shortLabel: 'Tracking',
+    label: 'Seguimiento',
+    shortLabel: 'Seguimiento',
   },
   {
     path: '/nutrition',
