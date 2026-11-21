@@ -42,8 +42,8 @@ const TAGS: Partial<Record<WorkoutSet['type'], { tag: string; label: string }>> 
   failure: { tag: 'F', label: 'al fallo' },
 };
 
-const kgNum = (v: string) => {
-  const n = Number.parseFloat(v?.replace(',', '.'));
+const kgNum = (v: unknown) => {
+  const n = Number.parseFloat(String(v ?? '').replace(',', '.'));
   return Number.isFinite(n) ? n : 0;
 };
 

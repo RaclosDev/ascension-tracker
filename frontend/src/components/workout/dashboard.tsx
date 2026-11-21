@@ -88,6 +88,7 @@ function Dashboard() {
   const week = useWeek(history);
 
   const [startModalOpen, setStartModalOpen] = useState(false);
+  const [repeatOpen, setRepeatOpen] = useState(false);
 
   if (isLoadingHistory) {
     return (
@@ -104,20 +105,44 @@ function Dashboard() {
     );
   }
 
-  const last = history[0];
-
   return (
     <div className="wk">
       <section className="card wk-hero" aria-labelledby="wk-week-title">
         <div className="wk-hero-week">
-          <h2 id="wk-week-title" className="wk-eyebrow">
-            Esta semana
-          </h2>
-          <p className="wk-count">
-            {week.count}
-            <span>{week.count === 1 ? 'entreno' : 'entrenos'}</span>
-          </p>
-          <p className="wk-compare">{compareLabel(week.count, week.prevCount)}</p>
+          <div className="wk-week-head">
+            <div>
+              <h2 id="wk-week-title" className="wk-eyebrow">
+                Esta semana
+              </h2>
+              <p className="wk-count">
+                {week.count}
+                <span>{week.count === 1 ? 'entreno' : 'entrenos'}</span>
+              </p>
+              <p className="wk-compare">{compareLabel(week.count, week.prevCount)}</p>
+            </div>
+            <div className="wk-quick">
+              {history.length > 0 && !active && (
+                <button
+                  type="button"
+                  className="btn btn-secondary wk-quick-repeat"
+                  onClick={() => setRepeatOpen(true)}
+                  aria-label="Repetir un entreno"
+                  title="Repetir un entreno"
+                >
+                  <Repeat2 size={18} aria-hidden />
+                </button>
+              )}
+              <button
+                type="button"
+                className="btn btn-primary wk-quick-start"
+                onClick={() => (active ? setTab('train') : setStartModalOpen(true))}
+                aria-label={active ? 'Continuar entreno' : 'Empezar entrenamiento'}
+              >
+                <Play size={16} fill="currentColor" aria-hidden />
+                {active ? 'Continuar' : 'Empezar'}
+              </button>
+            </div>
+          </div>
           <ol className="wk-days" aria-label="Días entrenados esta semana">
             {week.days.map((d) => (
               <li
@@ -168,28 +193,17 @@ function Dashboard() {
               >
                 <Play size={18} fill="currentColor" aria-hidden /> Empezar entrenamiento
               </button>
-              {last && (
+              {history.length > 0 && (
                 <button
                   type="button"
                   className="btn btn-secondary wk-repeat"
-                  onClick={() => startFromHistory(last)}
+                  onClick={() => setRepeatOpen(true)}
                 >
                   <Repeat2 size={16} aria-hidden />
-                  <span className="wk-repeat-label">Repetir {last.name}</span>
+                  <span className="wk-repeat-label">Repetir entreno</span>
                 </button>
               )}
             </>
-          )}
-          {active ? (
-            <p className="wk-last">
-              En curso: {active.name} · {active.exercises?.length || 0} ejercicios
-            </p>
-          ) : (
-            last && (
-              <p className="wk-last">
-                Último: {last.name} · {whenLabel(last.finishedAt).toLowerCase()}
-              </p>
-            )
           )}
         </div>
       </section>
@@ -198,6 +212,56 @@ function Dashboard() {
         <Suspense fallback={null}>
           <TodayProgramCard exerciseName={(id) => catalog.get(id)?.name ?? id} />
         </Suspense>
+      )}
+
+      {repeatOpen && (
+        <>
+          <div
+            className="workout-sheet-overlay"
+            aria-hidden="true"
+            onClick={() => setRepeatOpen(false)}
+          />
+          <div className="workout-sheet" role="dialog" aria-label="Repetir un entreno">
+            <div className="workout-sheet-handle" />
+            <div className="workout-sheet-header">
+              <span className="workout-sheet-title">Repetir entreno</span>
+              <button
+                className="workout-sheet-close"
+                onClick={() => setRepeatOpen(false)}
+                aria-label="Cerrar"
+              >
+                <X size={22} />
+              </button>
+            </div>
+            <div className="workout-sheet-body">
+              <ul className="wk-repeat-list">
+                {history.slice(0, 10).map((w: CompletedWorkout) => (
+                  <li key={w.id}>
+                    <button
+                      type="button"
+                      className="start-workout-option start-workout-option-secondary"
+                      onClick={() => {
+                        startFromHistory(w);
+                        setRepeatOpen(false);
+                      }}
+                    >
+                      <div className="start-workout-option-icon">
+                        <Repeat2 size={18} />
+                      </div>
+                      <div className="wk-repeat-text">
+                        <div className="start-workout-option-title">{w.name}</div>
+                        <div className="start-workout-option-desc">
+                          {whenLabel(w.finishedAt)} · {w.exercises?.length || 0} ejercicios ·{' '}
+                          {formatKg(sessionVolume(w.exercises))}
+                        </div>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </>
       )}
 
       {startModalOpen && (

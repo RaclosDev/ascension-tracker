@@ -100,19 +100,27 @@ export function WorkoutCelebrationModal({
   const [customNotes, setCustomNotes] = useState('');
   const [customDateTime, setCustomDateTime] = useState('');
 
-  useEffect(() => {
-    if (open && currentWorkout) {
-      setCustomName(currentWorkout.name?.trim() || 'Entrenamiento');
-      setCustomDuration(initialDurationMin);
-      setCustomNotes(currentWorkout.notes || '');
-      const initialStartedAt =
+  // Fill the form once, in the same render that opens the modal, so nothing typed into it
+  // is overwritten later by changes to the running session.
+  const [filled, setFilled] = useState(false);
+  if (!open && filled) setFilled(false);
+  if (open && currentWorkout && !filled) {
+    setFilled(true);
+    setCustomName(currentWorkout.name?.trim() || 'Entrenamiento');
+    setCustomDuration(initialDurationMin);
+    setCustomNotes(currentWorkout.notes || '');
+    setCustomDateTime(
+      toLocalDatetimeString(
         'startedAt' in currentWorkout && currentWorkout.startedAt
           ? currentWorkout.startedAt
-          : Date.now();
-      setCustomDateTime(toLocalDatetimeString(initialStartedAt));
-      haptics.celebration();
-    }
-  }, [open, currentWorkout, initialDurationMin]);
+          : new Date().getTime(),
+      ),
+    );
+  }
+
+  useEffect(() => {
+    if (open) haptics.celebration();
+  }, [open]);
 
   if (!open || !currentWorkout) return null;
 

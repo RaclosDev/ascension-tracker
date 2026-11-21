@@ -178,11 +178,60 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.wk-last {
-  margin: 2px 0 0;
-  font-size: 0.75rem;
-  text-align: center;
-  color: var(--text-muted);
+
+/* Cabecera de la semana: cifra a la izquierda; en móvil, empezar y repetir a la derecha. */
+.wk-week-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.wk-quick {
+  display: none;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+.wk-quick .btn {
+  min-height: 44px;
+}
+.wk-quick-repeat {
+  width: 44px;
+  padding: 0;
+  justify-content: center;
+}
+.wk-quick-start {
+  gap: 6px;
+  padding: 0 16px;
+  font-weight: 700;
+}
+.wk-repeat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wk-repeat-list .start-workout-option {
+  width: 100%;
+}
+.wk-repeat-text {
+  flex: 1;
+  min-width: 0;
+}
+.wk-repeat-text .start-workout-option-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+@media (max-width: 1024px) {
+  .wk-quick {
+    display: flex;
+  }
+  .wk-actions {
+    display: none;
+  }
 }
 
 .wk-grid {
@@ -364,10 +413,6 @@
     grid-template-columns: minmax(0, 1fr) 360px;
     align-items: start;
   }
-  .wk-recent {
-    position: sticky;
-    top: 16px;
-  }
 }
 
 @media (max-width: 1024px) {
@@ -391,5 +436,24 @@
   .wk-recent-item {
     grid-template-columns: 36px minmax(0, 1fr) auto;
     gap: 8px;
+  }
+}
+
+/* Todas las tarjetas del Resumen con el mismo relleno y el mismo título. */
+.wk-main .card,
+.wk-recent {
+  padding: 18px 20px;
+}
+.wk-main .card h3 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+@media (max-width: 1024px) {
+  .wk-main .card,
+  .wk-recent {
+    padding: 16px;
   }
 }
