@@ -229,6 +229,8 @@ describe('Pauta de nutrición', () => {
     cleanup();
     render(
       <MacroSummaryHeader
+        date="2026-01-05"
+        onDateChange={() => {}}
         consumed={{ kcal: 0, protein: 0, carbs: 0, fat: 0 }}
         macros={{
           kcal: 2550,
