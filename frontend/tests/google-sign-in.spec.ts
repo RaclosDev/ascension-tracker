@@ -92,7 +92,7 @@ test('the installed PWA redirects in the same window and restores its session th
   await page.getByRole('button', { name: 'Continuar con Google', exact: true }).click();
   await page.getByRole('button', { name: 'Abrir cuenta de prueba' }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.locator('.quick-add-card')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Peso' })).toBeVisible();
   expect(returnedToApp).toBe(true);
   expect(popupCount).toBe(0);
 });
