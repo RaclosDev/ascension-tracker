@@ -2,55 +2,30 @@ import { test, expect } from '@playwright/test';
 import { setupAuthMocks } from './helpers/auth';
 
 test.describe('Dashboard Page & KPI Metrics Suite', () => {
-  test('1. renders KPI cards and goal progress bar with configured markers', async ({ page }) => {
+  test('1. renders the weight card, goal progress and figures', async ({ page }) => {
     await setupAuthMocks(page);
 
     await page.goto('/dashboard');
     await expect(page).toHaveURL(/.*dashboard.*/, { timeout: 15000 });
 
-    // Verify Quick-add container
-    const quickAddCard = page.locator('.quick-add-card');
-    await expect(quickAddCard).toBeVisible({ timeout: 10000 });
-
-    // Verify all 4 KPI cards and expected metric labels/values
-    const kpiCards = page.locator('.kpi-card');
-    await expect(kpiCards).toHaveCount(4);
-
-    // Card 1: Media semanal (the current weight lives in the weight card, not repeated here)
-    const weightCard = kpiCards.filter({ hasText: /media semanal/i });
-    await expect(weightCard).toBeVisible();
-    await expect(weightCard.locator('.kpi-value')).toContainText('81.20 kg');
-    await expect(weightCard.locator('.kpi-detail')).toContainText(/últimos 7 días/i);
-
-    // Card 2: Total Perdido
-    const lostCard = kpiCards.filter({ hasText: /total perdido/i });
-    await expect(lostCard).toBeVisible();
-    await expect(lostCard.locator('.kpi-value')).toContainText('3.80 kg');
-    await expect(lostCard.locator('.kpi-detail')).toContainText(/desde el inicio/i);
-
-    // Card 3: Te Falta
-    const remainingCard = kpiCards.filter({ hasText: /te falta/i });
-    await expect(remainingCard).toBeVisible();
-    await expect(remainingCard.locator('.kpi-value')).toContainText('3.2 kg');
-    await expect(remainingCard.locator('.kpi-detail')).toContainText(/por perder/i);
-
-    // Card 4: Fecha Estimada
-    const estimatedCard = kpiCards.filter({ hasText: /fecha estimada/i });
-    await expect(estimatedCard).toBeVisible();
-    await expect(estimatedCard.locator('.kpi-value')).toContainText('2026-12-01');
-    await expect(estimatedCard.locator('.kpi-detail')).toContainText(/a ritmo de/i);
-
-    // Progress Bar with progress percentage and markers (startWeight & goalWeight)
-    const progressCard = page.locator('.progress-card');
-    await expect(progressCard).toBeVisible();
-    await expect(progressCard.locator('.progress-label')).toHaveText('Progreso hacia tu meta');
-    await expect(progressCard.locator('.progress-pct')).toContainText('54.3%');
-
-    const progressMarkers = progressCard.locator('.progress-markers');
-    await expect(progressMarkers).toBeVisible();
+    // Weight card: today's entry, the goal bar with its start and goal markers, and the projection
+    const weightCard = page.getByRole('region', { name: 'Peso' });
+    await expect(weightCard).toBeVisible({ timeout: 10000 });
+    await expect(weightCard.getByText('54%')).toBeVisible();
+    await expect(
+      weightCard.getByRole('progressbar', { name: /progreso hacia la meta/i }),
+    ).toBeVisible();
     // SETTINGS_FIXTURE has startWeight: 85.0 and goalWeight: 78.0
-    await expect(progressMarkers.getByText(/85(\.0)? kg/)).toBeVisible();
-    await expect(progressMarkers.getByText(/78(\.0)? kg/)).toBeVisible();
+    await expect(weightCard.getByText(/85(\.0)? kg/)).toBeVisible();
+    await expect(weightCard.getByText(/78(\.0)? kg/)).toBeVisible();
+    await expect(weightCard.getByRole('definition').filter({ hasText: '3.2 kg' })).toBeVisible();
+
+    // Figures strip: weekly average and total change since the start
+    const main = page.getByRole('main');
+    await expect(main.getByRole('term').filter({ hasText: 'Media 7 días' })).toBeVisible();
+    await expect(main.getByRole('definition').filter({ hasText: '81.2' }).first()).toBeVisible();
+    await expect(main.getByRole('term').filter({ hasText: 'Desde el inicio' })).toBeVisible();
+    await expect(main.getByRole('definition').filter({ hasText: '3.8' })).toBeVisible();
   });
 
   test('2. quick-add new weight submits POST /api/weights and shows success toast when today has no entry', async ({
@@ -81,8 +56,7 @@ test.describe('Dashboard Page & KPI Metrics Suite', () => {
     await page.goto('/dashboard');
     await expect(page).toHaveURL(/.*dashboard.*/, { timeout: 15000 });
 
-    const form = page.locator('.quick-add-card');
-    await expect(form).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Peso' })).toBeVisible();
 
     const weightInput = page.getByRole('textbox', { name: /peso corporal de hoy/i });
     await expect(weightInput).toBeVisible();
@@ -217,29 +191,19 @@ test.describe('Dashboard Page & KPI Metrics Suite', () => {
     expect(mutationTriggered).toBe(false);
   });
 
-  test('5. renders interactive AreaChart and BarChart recharts containers', async ({ page }) => {
+  test('5. renders the evolution and weekly change charts', async ({ page }) => {
     await setupAuthMocks(page);
 
     await page.goto('/dashboard');
     await expect(page).toHaveURL(/.*dashboard.*/, { timeout: 15000 });
 
-    // Verify chart cards and containers
-    const chartCards = page.locator('.chart-card');
-    await expect(chartCards).toHaveCount(2);
-
-    const responsiveContainers = page.locator('.recharts-responsive-container');
-    await expect(responsiveContainers).toHaveCount(2);
-
-    // Verify Weight Evolution AreaChart
-    const evolutionCard = chartCards.filter({ hasText: /evoluci.*n de peso/i });
+    // Weight evolution and weekly change charts
+    const evolutionCard = page.getByRole('region', { name: 'Evolución' });
     await expect(evolutionCard).toBeVisible();
-    await expect(evolutionCard.locator('.recharts-responsive-container')).toBeVisible();
-    await expect(evolutionCard.locator('.recharts-surface')).toBeVisible();
+    await expect(evolutionCard.locator('.recharts-surface').first()).toBeVisible();
 
-    // Verify Weekly Delta BarChart
-    const deltaCard = chartCards.filter({ hasText: /variaci.*n semanal/i });
+    const deltaCard = page.getByRole('region', { name: 'Cambio semanal' });
     await expect(deltaCard).toBeVisible();
-    await expect(deltaCard.locator('.recharts-responsive-container')).toBeVisible();
-    await expect(deltaCard.locator('.recharts-surface')).toBeVisible();
+    await expect(deltaCard.locator('.recharts-surface').first()).toBeVisible();
   });
 });

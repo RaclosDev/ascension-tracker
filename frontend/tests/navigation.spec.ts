@@ -26,7 +26,7 @@ test.describe('Navigation', () => {
     await expect(page).toHaveURL(/.*workout.*/, { timeout: 15000 });
 
     // 3. Navigate to Tracking
-    const trackingButton = bottomNav.getByRole('button', { name: /Tracking/i });
+    const trackingButton = bottomNav.getByRole('button', { name: /Seguimiento/i });
     await trackingButton.click();
     await expect(page).toHaveURL(/.*tracking.*/, { timeout: 15000 });
   });

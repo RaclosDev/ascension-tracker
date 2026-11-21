@@ -34,7 +34,7 @@ async function setupNutritionHelpers(page: import('@playwright/test').Page) {
 }
 
 test.describe('Nutrition Diary E2E Suite', () => {
-  test('1. renders diary, macro summary, meal groups, and distribution chart', async ({ page }) => {
+  test('1. renders diary, day total and meal groups', async ({ page }) => {
     await setupAuthMocks(page);
     await setupNutritionHelpers(page);
 
@@ -47,25 +47,21 @@ test.describe('Nutrition Diary E2E Suite', () => {
     const nextDayBtn = page.getByRole('button', { name: /d[ií]a siguiente/i });
     await expect(prevDayBtn).toBeVisible({ timeout: 10000 });
     await expect(nextDayBtn).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Hoy')).toBeVisible({ timeout: 10000 });
+    const dateButton = page.getByRole('button', { name: /seleccionar fecha/i });
+    await expect(dateButton).toHaveText('Total del día', { timeout: 10000 });
 
-    // 2. Macro summary card with Calories, Protein, Carbs, Fat
-    const macroSummary = page.locator('.nutrition-summary-card');
+    // 2. Day total with calories and the three macros
+    const macroSummary = page.getByRole('region', { name: 'Total del día' });
     await expect(macroSummary).toBeVisible({ timeout: 10000 });
-    await expect(macroSummary.getByText(/Calor[ií]as/i)).toBeVisible();
+    await expect(macroSummary.getByText(/kcal/i).first()).toBeVisible();
     await expect(macroSummary.getByText(/Prote[ií]nas/i)).toBeVisible();
     await expect(macroSummary.getByText(/Hidratos/i)).toBeVisible();
     await expect(macroSummary.getByText(/Grasas/i)).toBeVisible();
 
     // 3. Meal groups (Desayuno, Comida, Cena)
-    await expect(page.getByText('Desayuno')).toBeVisible();
-    await expect(page.getByText('Comida', { exact: true })).toBeVisible();
-    await expect(page.getByText('Cena')).toBeVisible();
-
-    // 4. Macro distribution chart
-    await expect(page.getByText(/Distribuci[óo]n de Macros/i)).toBeVisible({ timeout: 10000 });
-    const pieChart = page.locator('.recharts-responsive-container').first();
-    await expect(pieChart).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('button', { name: /^Desayuno,/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Comida,/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Cena,/ })).toBeVisible();
   });
 
   test('2. date navigation buttons reload logs with GET /api/nutrition/logs?date=YYYY-MM-DD', async ({
@@ -102,11 +98,12 @@ test.describe('Nutrition Diary E2E Suite', () => {
     // Click previous day
     await prevDayBtn.click();
     await expect.poll(() => requestedDates.includes(yesterday)).toBe(true);
-    await expect(page.getByText('Hoy')).not.toBeVisible();
+    const dateButton = page.getByRole('button', { name: /seleccionar fecha/i });
+    await expect(dateButton).not.toHaveText('Total del día');
 
     // Click next day to return to today
     await nextDayBtn.click();
-    await expect(page.getByText('Hoy')).toBeVisible({ timeout: 5000 });
+    await expect(dateButton).toHaveText('Total del día', { timeout: 5000 });
   });
 
   test('3. collapsible meal accordion collapses and expands food list upon header click', async ({
