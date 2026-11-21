@@ -27,6 +27,7 @@ import {
 import { WeekBar } from '../components/coach/editor/WeekBar';
 import { DayEditor } from '../components/coach/editor/DayEditor';
 import { inputClass, inputStyle } from '../components/coach/editor/fields';
+import { NumberInput } from '@/components/ui/number-input';
 
 const NEW_ID = 'nuevo';
 
@@ -294,15 +295,15 @@ export function ProgramEditor({
               <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 Semanas
               </span>
-              <input
+              <NumberInput
                 className={inputClass}
                 style={inputStyle}
-                type="number"
                 min={1}
                 max={MAX_WEEKS}
                 value={program.weeks}
-                onChange={async (e) => {
-                  const weeks = Number(e.target.value);
+                onValueChange={async (n) => {
+                  const weeks = Math.min(MAX_WEEKS, Math.max(1, Math.round(n)));
+                  if (weeks === program.weeks) return;
                   const dropped = program.days.filter((d) => d.week > weeks).length;
                   if (
                     dropped > 0 &&

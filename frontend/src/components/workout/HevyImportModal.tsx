@@ -144,15 +144,7 @@ export function HevyImportModal({ isOpen, onClose, customExercises = [] }: HevyI
           onClick={onClose}
           disabled={importMutation.isPending}
           aria-label="Cerrar modal de importación"
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: 'var(--text-muted, #a1a1aa)',
-            cursor: 'pointer',
-            padding: '0.25rem',
-            display: 'flex',
-            alignItems: 'center',
-          }}
+          className="close-btn"
         >
           <X size={20} />
         </button>

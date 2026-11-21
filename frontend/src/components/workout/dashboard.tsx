@@ -275,7 +275,11 @@ function Dashboard() {
             <div className="workout-sheet-handle" />
             <div className="workout-sheet-header">
               <span className="workout-sheet-title">Empezar Entrenamiento</span>
-              <button className="workout-sheet-close" onClick={() => setStartModalOpen(false)}>
+              <button
+                className="workout-sheet-close"
+                onClick={() => setStartModalOpen(false)}
+                aria-label="Cerrar"
+              >
                 <X size={22} />
               </button>
             </div>

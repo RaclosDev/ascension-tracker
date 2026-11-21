@@ -22,6 +22,7 @@ import MacroConfigurator from './calculators/MacroConfigurator';
 
 import { MacroForm } from './calculators/MacroConfigurator';
 import { Select } from '@/components/ui/select';
+import { NumberInput } from '@/components/ui/number-input';
 
 interface OnboardingForm extends MacroForm {
   sex: 'M' | 'F';
@@ -557,11 +558,12 @@ export default function OnboardingScreen({
                   Elige el número de comidas y las llamaremos "Comida 1", "Comida 2", etc.
                 </div>
                 {mealOption === 'custom' && (
-                  <input
-                    type="number"
+                  <NumberInput
                     className="form-input"
                     value={customMealsCount}
-                    onChange={(e) => setCustomMealsCount(parseInt(e.target.value) || 1)}
+                    onValueChange={(n) =>
+                      setCustomMealsCount(Math.min(10, Math.max(1, Math.round(n))))
+                    }
                     min={1}
                     max={10}
                     style={{ width: '100px' }}

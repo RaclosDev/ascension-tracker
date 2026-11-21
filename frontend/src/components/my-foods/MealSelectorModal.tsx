@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../../api/client';
 import { Meal, SavedFood } from '../../types/api';
 import { DatePicker } from '@/components/ui/date-picker';
+import { NumberInput } from '@/components/ui/number-input';
 
 interface MealSelectorModalProps {
   isOpen: boolean;
@@ -79,17 +80,7 @@ export default function MealSelectorModal({
           {' '}
           Añadir al Diario
         </h3>
-        <button
-          onClick={onClose}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-secondary)',
-            cursor: 'pointer',
-            fontSize: '1.2rem',
-          }}
-          aria-label="Cerrar"
-        >
+        <button onClick={onClose} className="close-btn" aria-label="Cerrar">
           <X size={20} />
         </button>
       </div>
@@ -156,8 +147,7 @@ export default function MealSelectorModal({
                 {food.name}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                <input
-                  type="number"
+                <NumberInput
                   inputMode="decimal"
                   className="form-input"
                   aria-label={`Cantidad en gramos para ${food.name}`}
@@ -168,9 +158,8 @@ export default function MealSelectorModal({
                     fontSize: '0.85rem',
                   }}
                   value={bulkQuantities[id] === undefined ? 100 : bulkQuantities[id]}
-                  onChange={(e) =>
-                    setBulkQuantities((prev) => ({ ...prev, [id]: Number(e.target.value) }))
-                  }
+                  onValueChange={(n) => setBulkQuantities((prev) => ({ ...prev, [id]: n }))}
+                  emptyValue={0}
                 />
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>g</span>
               </div>

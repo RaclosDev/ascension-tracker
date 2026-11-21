@@ -229,7 +229,7 @@ export function RestoreBackupModal({ isOpen, onClose }: RestoreBackupModalProps)
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="p-1 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5 transition-colors"
+            className="close-btn"
             aria-label="Cerrar modal de restauración"
           >
             <X className="w-5 h-5" />

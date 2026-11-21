@@ -271,3 +271,14 @@
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+/* Meal blocks: roomy on desktop, tight on phones so the three meals fit on one screen. */
+.card.meal-group {
+  padding: 1.25rem;
+}
+@media (max-width: 768px) {
+  .card.meal-group {
+    padding: 0.5rem 0.75rem;
+    gap: 0.25rem !important;
+  }
+}

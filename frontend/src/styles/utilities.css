@@ -1,0 +1,61 @@
+/* Utilities: same column as the other pages; tools sit two by two on desktop. */
+.util-page {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+}
+.util-head {
+  margin-bottom: 1.25rem;
+}
+.util-head .page-title-desktop {
+  margin-bottom: 0.35rem;
+}
+.util-lede {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--wall-ink, var(--text-secondary));
+  opacity: 0.8;
+}
+.util-section + .util-section {
+  margin-top: 1.5rem;
+}
+.util-section-title {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--wall-ink, var(--text-muted));
+}
+.util-cards {
+  display: grid;
+  gap: 0.75rem;
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .util-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.util-note {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.util-disclaimer {
+  max-width: 60ch;
+  margin: 2rem 0 0;
+  font-size: 0.75rem;
+  color: var(--wall-ink, var(--text-muted));
+  opacity: 0.7;
+}
+@media (max-width: 768px) {
+  .util-head {
+    margin-bottom: 0.25rem;
+  }
+  .util-lede {
+    display: none;
+  }
+  .util-section + .util-section {
+    margin-top: 1.1rem;
+  }
+}

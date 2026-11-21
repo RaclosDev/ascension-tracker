@@ -1,5 +1,5 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, type ReactNode } from 'react';
 import { Trash2, Scale, Footprints, Apple, X } from 'lucide-react';
 import { TrackingModalData } from '../../types/tracking';
 import { capitalizeFirst } from '../../utils/dateHelper';
@@ -13,6 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import '../../styles/tracking-entry.css';
 
 interface TrackingEntryModalProps {
   pending?: boolean;
@@ -60,7 +61,7 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="modal-backdrop">
           <DialogPrimitive.Content
-            className="modal-content"
+            className="modal-content te"
             aria-describedby={undefined}
             onOpenAutoFocus={() => {
               previousFocus.current =
@@ -76,276 +77,100 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
             onPointerDownOutside={(event) => {
               if (pending) event.preventDefault();
             }}
-            style={{ maxWidth: '420px', width: '100%' }}
           >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1.5rem',
-              }}
-            >
+            <header className="te-head">
               <div>
-                <DialogPrimitive.Title
-                  id="tracking-modal-title"
-                  style={{
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    margin: 0,
-                  }}
-                >
+                <p className="te-eyebrow">Registro del día</p>
+                <DialogPrimitive.Title id="tracking-modal-title" className="te-title">
                   {capitalizeFirst(modalData.fullLabel)}
                 </DialogPrimitive.Title>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Edita las métricas del día
-                </div>
               </div>
               <button
                 type="button"
-                className="btn btn-secondary btn-sm min-w-11 min-h-11"
+                className="close-btn"
                 onClick={onClose}
                 aria-label="Cerrar modal de edición"
-                style={{ padding: 0, borderRadius: '50%' }}
               >
                 <X size={18} aria-hidden="true" />
               </button>
-            </div>
+            </header>
 
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1.5rem',
-                marginBottom: '1.5rem',
-              }}
-            >
-              {/* Weight Section */}
-              <div
-                style={{
-                  background: 'var(--bg-secondary)',
-                  padding: '1rem',
-                  borderRadius: '12px',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '0.75rem',
-                  }}
-                >
-                  <label
-                    htmlFor="modal-weight-input"
-                    style={{
-                      fontWeight: 600,
-                      color: 'var(--accent-primary-light)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <Scale className="w-4 h-4 inline-block mr-1" aria-hidden="true" /> Peso
-                  </label>
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.75rem',
-                  }}
-                >
-                  <input
-                    id="modal-weight-input"
-                    type="text"
-                    inputMode="decimal"
-                    pattern="[0-9]*[.,]?[0-9]*"
-                    className="form-input"
-                    style={{
-                      fontSize: '1.2rem',
-                      textAlign: 'center',
-                      fontWeight: 700,
-                      padding: '0.5rem',
-                      width: '120px',
-                    }}
-                    placeholder="00.00"
-                    value={modalWeight}
-                    onChange={(e) => onWeightChange(e.target.value)}
-                  />
-                  <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>kg</span>
-                </div>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(4, 1fr)',
-                    gap: '0.4rem',
-                  }}
-                >
-                  {weightDeltas.map((step) => (
-                    <button
-                      key={step}
-                      type="button"
-                      className="btn btn-secondary btn-sm min-h-11"
-                      style={{ padding: '0.25rem 0' }}
-                      onClick={() => onDeltaAdjust('weight', step)}
-                      aria-label={`Ajustar peso en ${step > 0 ? `+${step.toFixed(2)}` : step.toFixed(2)} kg`}
-                    >
-                      {step > 0 ? `+${step.toFixed(2)}` : step.toFixed(2)}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <MetricStepper
+              id="modal-weight-input"
+              label="Peso"
+              icon={<Scale size={16} aria-hidden="true" />}
+              unit="kg"
+              inputMode="decimal"
+              pattern="[0-9]*[.,]?[0-9]*"
+              placeholder="00.0"
+              value={modalWeight}
+              onChange={onWeightChange}
+              deltas={weightDeltas}
+              format={(step) => (step > 0 ? `+${step.toFixed(2)}` : step.toFixed(2))}
+              short={(step) =>
+                `${step > 0 ? '+' : '−'}${String(Math.abs(step)).replace(/^0\./, '.')}`
+              }
+              ariaPrefix="Ajustar peso en"
+              ariaUnit=" kg"
+              onDelta={(step) => onDeltaAdjust('weight', step)}
+            />
+            <MetricStepper
+              id="modal-steps-input"
+              label="Pasos"
+              icon={<Footprints size={16} aria-hidden="true" />}
+              unit="pasos"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="0"
+              value={modalSteps}
+              onChange={onStepsChange}
+              deltas={stepsDeltas}
+              format={(step) => (step > 0 ? `+${step}` : `${step}`)}
+              short={(step) =>
+                Math.abs(step) >= 1000
+                  ? `${step > 0 ? '+' : '−'}${Math.abs(step) / 1000}k`
+                  : step > 0
+                    ? `+${step}`
+                    : `−${Math.abs(step)}`
+              }
+              ariaPrefix="Ajustar pasos en"
+              ariaUnit=""
+              onDelta={(step) => onDeltaAdjust('steps', step)}
+            />
 
-              {/* Steps Section */}
-              <div
-                style={{
-                  background: 'var(--bg-secondary)',
-                  padding: '1rem',
-                  borderRadius: '12px',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '0.75rem',
-                  }}
-                >
-                  <label
-                    htmlFor="modal-steps-input"
-                    style={{
-                      fontWeight: 600,
-                      color: 'var(--accent-primary-light)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <Footprints className="w-4 h-4 inline-block mr-1" aria-hidden="true" /> Pasos
-                  </label>
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.75rem',
-                  }}
-                >
-                  <input
-                    id="modal-steps-input"
-                    type="number"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    className="form-input"
-                    style={{
-                      fontSize: '1.2rem',
-                      textAlign: 'center',
-                      fontWeight: 700,
-                      padding: '0.5rem',
-                      width: '120px',
-                    }}
-                    placeholder="0"
-                    value={modalSteps}
-                    onChange={(e) => onStepsChange(e.target.value)}
-                  />
-                  <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>pasos</span>
-                </div>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(4, 1fr)',
-                    gap: '0.4rem',
-                  }}
-                >
-                  {stepsDeltas.map((step) => (
-                    <button
-                      key={step}
-                      type="button"
-                      className="btn btn-secondary btn-sm min-h-11"
-                      style={{ padding: '0.25rem 0' }}
-                      onClick={() => onDeltaAdjust('steps', step)}
-                      aria-label={`Ajustar pasos en ${step > 0 ? `+${step}` : step}`}
-                    >
-                      {step > 0 ? `+${step}` : step}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <p className="te-kcal">
+              <Apple size={16} aria-hidden="true" />
+              <span>Calorías del día</span>
+              <strong>
+                {modalData.dayData.calories !== null
+                  ? `${Math.round(modalData.dayData.calories)} kcal`
+                  : 'Sin comidas'}
+              </strong>
+            </p>
 
-              {/* Calories Read-only Section */}
-              <div
-                style={{
-                  background: 'var(--bg-secondary)',
-                  padding: '1rem',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <span
-                  style={{
-                    fontWeight: 600,
-                    color: 'var(--accent-primary-light)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem',
-                  }}
-                >
-                  <Apple className="w-4 h-4 inline-block mr-1" aria-hidden="true" /> Calorías de hoy
-                </span>
-                <span
-                  style={{
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    color: 'var(--accent-primary-light)',
-                  }}
-                >
-                  {modalData.dayData.calories !== null
-                    ? `${Math.round(modalData.dayData.calories)} kcal`
-                    : ''}
-                </span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'space-between' }}>
-              <button
-                type="button"
-                className="btn btn-danger btn-sm min-h-11"
-                onClick={() => setConfirmDeleteOpen(true)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.3rem',
-                  opacity: hasDataToDelete ? 1 : 0,
-                  pointerEvents: hasDataToDelete ? 'auto' : 'none',
-                }}
-                disabled={pending || !hasDataToDelete}
-              >
-                <Trash2 size={16} aria-hidden="true" /> Borrar Ambos
-              </button>
-
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button type="button" className="btn btn-secondary" onClick={onClose}>
-                  Cancelar
-                </button>
+            <footer className="te-foot">
+              {hasDataToDelete && (
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="te-delete"
+                  onClick={() => setConfirmDeleteOpen(true)}
                   disabled={pending}
-                  onClick={onSave}
-                  style={{ minWidth: '110px' }}
                 >
-                  Guardar
+                  <Trash2 size={16} aria-hidden="true" /> Borrar día
                 </button>
-              </div>
-            </div>
+              )}
+              <button type="button" className="btn btn-secondary te-cancel" onClick={onClose}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary te-save"
+                disabled={pending}
+                onClick={onSave}
+              >
+                Guardar
+              </button>
+            </footer>
           </DialogPrimitive.Content>
         </DialogPrimitive.Overlay>
       </DialogPrimitive.Portal>
@@ -397,3 +222,79 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
     </DialogPrimitive.Root>
   );
 };
+
+type MetricStepperProps = {
+  id: string;
+  label: string;
+  icon: ReactNode;
+  unit: string;
+  inputMode: 'decimal' | 'numeric';
+  pattern: string;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  deltas: number[];
+  format: (step: number) => string;
+  short: (step: number) => string;
+  ariaPrefix: string;
+  ariaUnit: string;
+  onDelta: (step: number) => void;
+};
+
+/** One metric: the figure in the middle, the small steps down on the left and up on the right. */
+function MetricStepper({
+  id,
+  label,
+  icon,
+  unit,
+  inputMode,
+  pattern,
+  placeholder,
+  value,
+  onChange,
+  deltas,
+  format,
+  short,
+  ariaPrefix,
+  ariaUnit,
+  onDelta,
+}: MetricStepperProps) {
+  const down = deltas.filter((d) => d < 0).sort((a, b) => a - b);
+  const up = deltas.filter((d) => d > 0).sort((a, b) => a - b);
+  const chip = (step: number) => (
+    <button
+      key={step}
+      type="button"
+      className="te-chip"
+      onClick={() => onDelta(step)}
+      aria-label={`${ariaPrefix} ${format(step)}${ariaUnit}`}
+    >
+      {short(step)}
+    </button>
+  );
+  return (
+    <section className="te-metric">
+      <label htmlFor={id} className="te-label">
+        {icon} {label}
+      </label>
+      <div className="te-row">
+        <div className="te-chips">{down.map(chip)}</div>
+        <div className="te-field">
+          <input
+            id={id}
+            type="text"
+            inputMode={inputMode}
+            pattern={pattern}
+            autoComplete="off"
+            className="te-input"
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+          />
+          <span className="te-unit">{unit}</span>
+        </div>
+        <div className="te-chips">{up.map(chip)}</div>
+      </div>
+    </section>
+  );
+}

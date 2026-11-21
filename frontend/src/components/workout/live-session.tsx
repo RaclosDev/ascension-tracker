@@ -11,6 +11,7 @@ import { useWorkoutStore } from '@/lib/workout/store';
 import { haptics } from '@/lib/haptics';
 
 import type { WorkoutExercise } from '@/lib/workout/types';
+import { NumberInput } from '@/components/ui/number-input';
 
 const EMPTY_EXERCISES: WorkoutExercise[] = [];
 
@@ -284,13 +285,12 @@ export function LiveSession() {
                     marginTop: '0.2rem',
                   }}
                 >
-                  <input
-                    type="number"
+                  <NumberInput
                     min="1"
                     max="999"
                     value={durationMin}
-                    onChange={(e) => {
-                      const min = Math.max(1, parseInt(e.target.value, 10) || 1);
+                    onValueChange={(n) => {
+                      const min = Math.max(1, Math.round(n));
                       const newFinishedAt = activeWorkout.startedAt + min * 60000;
                       setWorkoutDate(activeWorkout.startedAt, newFinishedAt);
                     }}

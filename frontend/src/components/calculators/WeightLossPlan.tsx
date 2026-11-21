@@ -9,6 +9,7 @@ import {
   calcStepsFromKcal,
   calcStepsKcal,
 } from '../../utils/nutritionCalculators';
+import { NumberInput } from '@/components/ui/number-input';
 
 /** Within this margin of the current weight the goal is to keep it, not to lose or gain. */
 const MAINTAIN_MARGIN_KG = 0.5;
@@ -146,9 +147,8 @@ export default function WeightLossPlan({
     return { dailyIntake: tdee + surplus, surplus, weeklyRate, warnings };
   }, [tdee, pWeight, pGoal, pWeeks, goal]);
 
-  const handleManualSteps = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseInt(e.target.value);
-    if (!plan || !pWeight || isNaN(val)) return;
+  const handleManualSteps = (val: number) => {
+    if (!plan || !pWeight || val < 0) return;
     const manualStepsKcal = calcStepsKcal(pWeight, val);
     const newStepsPct = Math.min(
       100,
@@ -377,8 +377,7 @@ export default function WeightLossPlan({
               <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                 Pasos diarios (estimado)
               </span>
-              <input
-                type="number"
+              <NumberInput
                 className="form-input"
                 style={{
                   width: '100px',
@@ -387,7 +386,7 @@ export default function WeightLossPlan({
                   color: 'var(--color-carbs)',
                 }}
                 value={plan.stepsNeeded}
-                onChange={handleManualSteps}
+                onValueChange={(n) => handleManualSteps(Math.round(n))}
               />
             </div>
           </div>

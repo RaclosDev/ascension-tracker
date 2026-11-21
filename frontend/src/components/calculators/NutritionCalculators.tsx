@@ -76,7 +76,7 @@ export default function NutritionCalculators() {
   const bodyComp = bfPct && pWeight ? calcBodyComposition(pWeight, bfPct) : null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+    <div className="util-cards">
       <CalculatorCard
         title="Gasto de mantenimiento (TDEE)"
         subtitle="Metabolismo basal y gasto calórico diario"
