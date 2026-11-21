@@ -1,227 +1,671 @@
-import { useState } from 'react';
-import { Minus, Plus, Trophy, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Check, Plus, Timer, Trash2, X } from 'lucide-react';
+import { SetAdjustmentBar } from '../workout/SetAdjustmentBar';
+import MacroSummaryHeader from '../nutrition/MacroSummaryHeader';
+import { MealFoodGroup } from '../nutrition/MealFoodGroup';
+import { formatKg, formatRest, formatRestFriendly } from '@/lib/workout/format';
+import type { FoodLog, Meal } from '../../types/api';
+import type { EditingLog } from '../../types/nutrition';
+import { getBasePortion } from '../../utils/nutritionHelpers';
+import '../../styles/athlete-nutrition.css';
 
-// Two small hands-on demos in the landing's hero: nothing is saved and nothing reaches the server.
+// The hero's hands-on demos. They reuse the app's own markup and pieces (exercise card, set rows,
+// adjustment bar, rest banner, macro header, meal groups) with local state only: nothing is saved,
+// nothing touches the workout store and nothing reaches the server.
 
-// Epley, the estimate the app uses to compare sets with different reps.
-const estimate = (kg: number, reps: number) => (reps === 1 ? kg : kg * (1 + reps / 30));
-const fmt = (n: number) => n.toLocaleString('es-ES', { maximumFractionDigits: 1 });
+// ---------- Workout ----------
 
-type LoggedSet = { kg: number; reps: number; record: boolean };
+type DemoSet = { id: number; weight: string; reps: string; completed: boolean };
+type DemoExercise = {
+  id: string;
+  name: string;
+  variant: string;
+  muscle: string;
+  rest: number;
+  previous: [number, number][];
+  best: number;
+  sets: DemoSet[];
+};
 
-function Stepper({
-  label,
-  value,
-  unit,
+const COLS = '50px minmax(0,1fr) minmax(0,1fr) 44px';
+
+const START: DemoExercise[] = [
+  {
+    id: 'bench',
+    name: 'Press de banca',
+    variant: 'Agarre medio',
+    muscle: 'Pecho',
+    rest: 120,
+    previous: [
+      [80, 8],
+      [80, 8],
+      [77.5, 7],
+    ],
+    best: 80,
+    sets: [],
+  },
+  {
+    id: 'row',
+    name: 'Remo con barra',
+    variant: 'Agarre prono',
+    muscle: 'Espalda',
+    rest: 90,
+    previous: [
+      [70, 10],
+      [70, 9],
+      [70, 8],
+    ],
+    best: 70,
+    sets: [],
+  },
+];
+
+let nextSetId = 1;
+const freshSets = (ex: DemoExercise): DemoExercise => ({
+  ...ex,
+  sets: ex.previous.map(() => ({ id: nextSetId++, weight: '', reps: '', completed: false })),
+});
+
+const prevLabel = (ex: DemoExercise, i: number) => {
+  const p = ex.previous[i];
+  return p ? `${p[0].toLocaleString('es-ES')} × ${p[1]}` : '';
+};
+
+type Stepper = { setId: number; field: 'weight' | 'reps' } | null;
+
+function DemoSetRow({
+  ex,
+  s,
+  index,
+  stepper,
+  setStepper,
   onChange,
-  step,
-  min,
-  max,
+  onToggle,
+  onRemove,
 }: {
-  label: string;
-  value: number;
-  unit: string;
-  onChange: (v: number) => void;
-  step: number;
-  min: number;
-  max: number;
+  ex: DemoExercise;
+  s: DemoSet;
+  index: number;
+  stepper: Stepper;
+  setStepper: (next: Stepper | ((curr: Stepper) => Stepper)) => void;
+  onChange: (patch: Partial<DemoSet>) => void;
+  onToggle: () => void;
+  onRemove: () => void;
 }) {
+  const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prev = prevLabel(ex, index);
+  const placeholderKg = prev === '' ? '0' : (prev.split('×')[0]?.trim() ?? '0');
+  const placeholderReps = prev === '' ? '0' : (prev.split('×')[1]?.trim() ?? '0');
+  const pr = s.completed && parseFloat(s.weight) > ex.best && ex.best > 0;
+  const open = (field: 'weight' | 'reps') => {
+    if (blurTimeout.current) clearTimeout(blurTimeout.current);
+    if (!s.completed) setStepper({ setId: s.id, field });
+  };
+  const close = () => {
+    blurTimeout.current = setTimeout(() => {
+      setStepper((curr) => (curr?.setId === s.id ? null : curr));
+    }, 300);
+  };
+  const keep = () => {
+    if (blurTimeout.current) clearTimeout(blurTimeout.current);
+  };
+  const base = (value: string, placeholder: string) =>
+    parseFloat((value || placeholder).replace(',', '.')) || 0;
+  const adjustWeight = (delta: number) =>
+    onChange({ weight: String(Math.max(0, base(s.weight, placeholderKg) + delta)) });
+  const adjustReps = (delta: number) =>
+    onChange({ reps: String(Math.max(0, base(s.reps, placeholderReps) + delta)) });
+
   return (
-    <div className="try-stepper" role="group" aria-label={label}>
-      <span className="fam-label">{label}</span>
-      <div className="try-stepper__row">
-        <button
-          type="button"
-          className="try-stepper__btn"
-          aria-label={`Menos ${unit}`}
-          disabled={value <= min}
-          onClick={() => onChange(Math.max(min, value - step))}
+    <div className="set-row-wrapper" style={{ position: 'relative' }}>
+      <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px' }}>
+        <div
+          className={`set-row ${s.completed ? 'completed' : ''}`}
+          style={{
+            gridTemplateColumns: COLS,
+            background: s.completed
+              ? 'rgba(var(--accent-primary-rgb, 11, 95, 116), 0.05)'
+              : 'var(--bg-card)',
+            position: 'relative',
+            zIndex: 1,
+          }}
         >
-          <Minus size={18} aria-hidden="true" />
-        </button>
-        <output className="try-stepper__value" aria-live="polite">
-          {fmt(value)}
-          <small> {unit}</small>
-        </output>
-        <button
-          type="button"
-          className="try-stepper__btn"
-          aria-label={`Más ${unit}`}
-          disabled={value >= max}
-          onClick={() => onChange(Math.min(max, value + step))}
-        >
-          <Plus size={18} aria-hidden="true" />
-        </button>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '0.05rem',
+            }}
+          >
+            <span className="set-type-btn">{index + 1}</span>
+            {prev !== '' && (
+              <span
+                style={{
+                  fontSize: '0.55rem',
+                  color: 'var(--text-muted)',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '48px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  lineHeight: 1,
+                }}
+              >
+                {prev}
+              </span>
+            )}
+            {pr && (
+              <span
+                style={{
+                  fontSize: '0.5rem',
+                  fontWeight: 700,
+                  color: 'var(--accent-primary-light)',
+                }}
+              >
+                PR
+              </span>
+            )}
+          </div>
+          <input
+            inputMode="decimal"
+            aria-label={`Kg de la serie ${index + 1}`}
+            value={s.weight}
+            placeholder={placeholderKg}
+            onFocus={(e) => {
+              open('weight');
+              e.currentTarget.select();
+            }}
+            onChange={(e) => onChange({ weight: e.target.value.replace(',', '.') })}
+            onBlur={close}
+            className={`set-input ${s.completed ? 'completed' : ''}`}
+          />
+          <input
+            inputMode="numeric"
+            pattern="[0-9]*"
+            aria-label={`Repeticiones de la serie ${index + 1}`}
+            value={s.reps}
+            placeholder={placeholderReps}
+            onFocus={(e) => {
+              open('reps');
+              e.currentTarget.select();
+            }}
+            onChange={(e) => onChange({ reps: e.target.value.replace(/[^\d]/g, '') })}
+            onBlur={close}
+            className={`set-input ${s.completed ? 'completed' : ''}`}
+          />
+          <button
+            type="button"
+            className="desktop-row-delete-btn"
+            title="Eliminar serie"
+            aria-label={`Borrar serie ${index + 1}`}
+            onClick={onRemove}
+          >
+            <Trash2 size={15} />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setStepper(null);
+              onToggle();
+            }}
+            aria-label={s.completed ? 'Desmarcar serie' : 'Completar serie'}
+            className={`set-check-btn ${s.completed ? 'checked' : ''}`}
+            style={
+              s.completed
+                ? {
+                    background: 'var(--accent-primary)',
+                    borderColor: 'var(--accent-primary)',
+                    color: 'var(--accent-text, #ffffff)',
+                  }
+                : undefined
+            }
+          >
+            <Check size={16} strokeWidth={s.completed ? 3 : 2} />
+          </button>
+        </div>
+      </div>
+      {stepper?.setId === s.id && stepper.field === 'weight' && (
+        <SetAdjustmentBar
+          label="Kg"
+          negative={[-5, -2.5, -1.25]}
+          positive={[1.25, 2.5, 5]}
+          onAdjust={adjustWeight}
+          onInteract={keep}
+        />
+      )}
+      {stepper?.setId === s.id && stepper.field === 'reps' && (
+        <SetAdjustmentBar
+          label="Reps"
+          negative={[-2, -1]}
+          positive={[1, 2, 5]}
+          onAdjust={adjustReps}
+          onInteract={keep}
+        />
+      )}
+    </div>
+  );
+}
+
+function DemoRestBanner({
+  remaining,
+  total,
+  onAdd,
+  onSkip,
+}: {
+  remaining: number;
+  total: number;
+  onAdd: (delta: number) => void;
+  onSkip: () => void;
+}) {
+  const pct = total > 0 ? Math.max(0, Math.min(100, (remaining / total) * 100)) : 0;
+  return (
+    <div className="try-rest" role="timer" aria-live="off" aria-label="Descanso">
+      <div className="try-rest__bar" style={{ width: `${pct}%` }} />
+      <div className="try-rest__body">
+        <div>
+          <div className="try-rest__label">Descanso</div>
+          <div className="try-rest__time">{formatRest(remaining)}</div>
+        </div>
+        <div className="try-rest__actions">
+          <button type="button" className="btn btn-secondary" onClick={() => onAdd(-15)}>
+            -15
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={() => onAdd(15)}>
+            +15
+          </button>
+          <button type="button" className="btn btn-primary" onClick={onSkip}>
+            Omitir
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-export function BenchDemo() {
-  const [best, setBest] = useState({ kg: 80, reps: 8 });
-  const [kg, setKg] = useState(80);
-  const [reps, setReps] = useState(8);
-  const [sets, setSets] = useState<LoggedSet[]>([]);
-  const last = sets[sets.length - 1];
+export function WorkoutDemo() {
+  const [exercises, setExercises] = useState<DemoExercise[]>(() => START.map(freshSets));
+  const [stepper, setStepper] = useState<Stepper>(null);
+  const [rest, setRest] = useState<{ remaining: number; total: number } | null>(null);
 
-  const log = () => {
-    const record = estimate(kg, reps) > estimate(best.kg, best.reps) + 0.05;
-    if (record) setBest({ kg, reps });
-    setSets((s) => [...s, { kg, reps, record }].slice(-4));
+  const resting = rest !== null;
+  useEffect(() => {
+    if (!resting) return;
+    const t = setInterval(
+      () => setRest((r) => (r && r.remaining > 1 ? { ...r, remaining: r.remaining - 1 } : null)),
+      1000,
+    );
+    return () => clearInterval(t);
+  }, [resting]);
+
+  const updateSets = (exId: string, fn: (ex: DemoExercise) => DemoSet[]) =>
+    setExercises((list) => list.map((ex) => (ex.id === exId ? { ...ex, sets: fn(ex) } : ex)));
+
+  const toggle = (ex: DemoExercise, i: number) => {
+    const s = ex.sets[i];
+    if (!s) return;
+    if (s.completed) {
+      updateSets(ex.id, (e) => e.sets.map((x) => (x.id === s.id ? { ...x, completed: false } : x)));
+      return;
+    }
+    // Like the app: an empty field takes the last time's value before the set is marked done.
+    const prev = ex.previous[i] ?? ex.previous[ex.previous.length - 1];
+    const weight = s.weight || (prev ? String(prev[0]) : '0');
+    const reps = s.reps || (prev ? String(prev[1]) : '0');
+    updateSets(ex.id, (e) =>
+      e.sets.map((x) => (x.id === s.id ? { ...x, weight, reps, completed: true } : x)),
+    );
+    setRest({ remaining: ex.rest, total: ex.rest });
   };
 
+  const done = exercises.flatMap((ex) => ex.sets).filter((s) => s.completed);
+  const volume = done.reduce(
+    (t, s) => t + (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0),
+    0,
+  );
+  const prs = exercises.reduce(
+    (n, ex) => n + ex.sets.filter((s) => s.completed && parseFloat(s.weight) > ex.best).length,
+    0,
+  );
+
   return (
-    <article className="try-panel" aria-labelledby="try-bench-title">
+    <article className="try-panel try-app" aria-labelledby="try-workout-title">
       <header className="try-panel__head">
-        <h3 id="try-bench-title" className="fam-h3">
-          Registra una serie
-        </h3>
-        <p className="try-panel__meta">Press de banca · agarre medio</p>
+        <h2 id="try-workout-title" className="fam-h3">
+          Entreno de hoy
+        </h2>
+        <p className="try-panel__meta" aria-live="polite">
+          {done.length} series · {formatKg(volume)}
+          {prs > 0 && (
+            <strong className="try-pr"> · {prs === 1 ? '1 récord' : `${prs} récords`}</strong>
+          )}
+        </p>
       </header>
-      <p className="try-best">
-        Récord actual{' '}
-        <strong>
-          {fmt(best.kg)} kg × {best.reps}
-        </strong>{' '}
-        <span>(1RM est. {fmt(Math.round(estimate(best.kg, best.reps)))} kg)</span>
-      </p>
-      <div className="try-steppers">
-        <Stepper label="Peso" unit="kg" value={kg} onChange={setKg} step={2.5} min={20} max={200} />
-        <Stepper
-          label="Repeticiones"
-          unit="reps"
-          value={reps}
-          onChange={setReps}
-          step={1}
-          min={1}
-          max={20}
+      <div className="try-screen">
+        {exercises.map((ex) => (
+          <article key={ex.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="exercise-card-header">
+              <div style={{ minWidth: 0 }}>
+                <h3
+                  className="exercise-card-name"
+                  style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  <span>{ex.name}</span>
+                  <span className="exercise-card-variant-badge">{ex.variant}</span>
+                </h3>
+                <div className="exercise-card-meta">
+                  <span>{ex.muscle}</span>
+                  <span className="exercise-card-meta-dot">•</span>
+                  <span className="exercise-card-rest-pill" title="Tiempo de descanso">
+                    <Timer size={12} className="exercise-card-rest-icon" />
+                    {formatRestFriendly(ex.rest)}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div style={{ padding: '0.25rem 0.5rem 0.75rem' }}>
+              <div className="set-grid-header" style={{ gridTemplateColumns: COLS }}>
+                <span>#</span>
+                <span>Kg</span>
+                <span>Reps</span>
+                <span />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                {ex.sets.map((s, i) => (
+                  <DemoSetRow
+                    key={s.id}
+                    ex={ex}
+                    s={s}
+                    index={i}
+                    stepper={stepper}
+                    setStepper={setStepper}
+                    onChange={(patch) =>
+                      updateSets(ex.id, (e) =>
+                        e.sets.map((x) => (x.id === s.id ? { ...x, ...patch } : x)),
+                      )
+                    }
+                    onToggle={() => toggle(ex, i)}
+                    onRemove={() => updateSets(ex.id, (e) => e.sets.filter((x) => x.id !== s.id))}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                className="add-set-btn btn-press"
+                disabled={ex.sets.length >= 6}
+                onClick={() =>
+                  updateSets(ex.id, (e) => {
+                    const last = e.sets[e.sets.length - 1];
+                    return [
+                      ...e.sets,
+                      {
+                        id: nextSetId++,
+                        weight: last?.weight ?? '',
+                        reps: last?.reps ?? '',
+                        completed: false,
+                      },
+                    ];
+                  })
+                }
+              >
+                <Plus size={16} />
+                Añadir serie
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+      {rest && (
+        <DemoRestBanner
+          remaining={rest.remaining}
+          total={rest.total}
+          onAdd={(d) =>
+            setRest((r) =>
+              r
+                ? {
+                    remaining: Math.max(0, r.remaining + d),
+                    total: Math.max(r.total, r.remaining + d),
+                  }
+                : r,
+            )
+          }
+          onSkip={() => setRest(null)}
         />
-      </div>
-      <button type="button" className="fam-btn fam-btn--ink fam-btn--block" onClick={log}>
-        Registrar serie
-      </button>
-      <div className="try-log" aria-live="polite">
-        {last?.record && (
-          <p className="try-stamp" key={sets.length}>
-            <Trophy size={20} aria-hidden="true" />
-            ¡Nuevo récord!
-          </p>
-        )}
-        {sets.length === 0 ? (
-          <p className="try-empty">Sube el peso o las repeticiones para batir tu récord.</p>
-        ) : (
-          <ol className="try-sets">
-            {sets.map((s, i) => (
-              <li key={i} className={s.record ? 'is-record' : undefined}>
-                <span>
-                  {fmt(s.kg)} kg × {s.reps}
-                </span>
-                <span>
-                  {s.record ? 'Récord' : `1RM est. ${fmt(Math.round(estimate(s.kg, s.reps)))}`}
-                </span>
-              </li>
-            ))}
-          </ol>
-        )}
-      </div>
+      )}
     </article>
   );
 }
 
-const FOODS = [
-  { name: 'Avena con plátano', kcal: 420, p: 14, c: 72, f: 8 },
-  { name: 'Pollo con arroz', kcal: 610, p: 48, c: 70, f: 14 },
-  { name: 'Ensalada de atún', kcal: 380, p: 30, c: 18, f: 20 },
-  { name: 'Yogur con nueces', kcal: 260, p: 15, c: 12, f: 17 },
-];
-const GOAL = 2200;
+// ---------- Nutrition ----------
 
-export function MealsDemo() {
-  const [meals, setMeals] = useState<{ id: number; food: (typeof FOODS)[number] }[]>([]);
-  const [next, setNext] = useState(0);
-  const total = meals.reduce(
-    (t, { food }) => ({
-      kcal: t.kcal + food.kcal,
-      p: t.p + food.p,
-      c: t.c + food.c,
-      f: t.f + food.f,
+type DemoFood = {
+  product: string;
+  per100: { kcal: number; protein: number; carbs: number; fat: number };
+  grams: number;
+  portion?: { label: string; amount: number };
+};
+
+const FOODS: DemoFood[] = [
+  {
+    product: 'Copos de avena',
+    per100: { kcal: 372, protein: 13.5, carbs: 58.7, fat: 7 },
+    grams: 60,
+  },
+  {
+    product: 'Plátano',
+    per100: { kcal: 94, protein: 1.2, carbs: 20, fat: 0.3 },
+    grams: 120,
+    portion: { label: 'unidad', amount: 120 },
+  },
+  {
+    product: 'Huevo',
+    per100: { kcal: 143, protein: 12.6, carbs: 0.7, fat: 9.5 },
+    grams: 120,
+    portion: { label: 'huevo', amount: 60 },
+  },
+  {
+    product: 'Pechuga de pollo',
+    per100: { kcal: 110, protein: 23, carbs: 0, fat: 1.6 },
+    grams: 150,
+  },
+  {
+    product: 'Arroz blanco cocido',
+    per100: { kcal: 130, protein: 2.7, carbs: 28, fat: 0.3 },
+    grams: 200,
+  },
+  {
+    product: 'Yogur griego natural',
+    per100: { kcal: 115, protein: 4, carbs: 4, fat: 9 },
+    grams: 125,
+    portion: { label: 'yogur', amount: 125 },
+  },
+  {
+    product: 'Salmón',
+    per100: { kcal: 208, protein: 20, carbs: 0, fat: 13 },
+    grams: 150,
+  },
+];
+
+const MEALS: Meal[] = [
+  { name: 'Desayuno', icon: 'coffee', mealKey: 'breakfast' },
+  { name: 'Comida', icon: 'utensils', mealKey: 'lunch' },
+  { name: 'Cena', icon: 'moon', mealKey: 'dinner' },
+];
+
+// Yesterday's meals, for "copy from yesterday".
+const YESTERDAY: Record<number, string[]> = {
+  0: ['Copos de avena', 'Plátano'],
+  1: ['Pechuga de pollo', 'Arroz blanco cocido'],
+  2: ['Salmón', 'Yogur griego natural'],
+};
+
+const MACROS = { kcal: 2400, protein: 160, carbs: 270, fat: 75 };
+const round1 = (n: number) => Math.round(n * 10) / 10;
+const todayIso = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+let nextLogId = 1;
+const toLog = (food: DemoFood, mealIndex: number, date: string, grams = food.grams): FoodLog => ({
+  id: nextLogId++,
+  date,
+  mealIndex,
+  product: food.product,
+  quantity: grams,
+  kcal: round1((food.per100.kcal * grams) / 100),
+  protein: round1((food.per100.protein * grams) / 100),
+  carbs: round1((food.per100.carbs * grams) / 100),
+  fat: round1((food.per100.fat * grams) / 100),
+  portionsJson: food.portion
+    ? JSON.stringify([{ label: `1 ${food.portion.label}`, amount: food.portion.amount }])
+    : undefined,
+});
+
+const noop = () => {};
+
+export function NutritionDemo() {
+  const [date, setDate] = useState(todayIso);
+  const [logs, setLogs] = useState<FoodLog[]>(() => [
+    toLog(FOODS[0], 0, todayIso()),
+    toLog(FOODS[1], 0, todayIso()),
+  ]);
+  const [collapsed, setCollapsed] = useState<Record<number, boolean>>({});
+  const [picker, setPicker] = useState<number | null>(null);
+  const [editing, setEditing] = useState<EditingLog | null>(null);
+  const [editMode, setEditMode] = useState<'grams' | 'portions'>('grams');
+
+  const dayLogs = useMemo(() => logs.filter((l) => l.date === date), [logs, date]);
+  const consumed = dayLogs.reduce(
+    (t, l) => ({
+      kcal: t.kcal + l.kcal,
+      protein: t.protein + l.protein,
+      carbs: t.carbs + l.carbs,
+      fat: t.fat + l.fat,
     }),
-    { kcal: 0, p: 0, c: 0, f: 0 },
+    { kcal: 0, protein: 0, carbs: 0, fat: 0 },
   );
-  const pct = Math.min(100, (total.kcal / GOAL) * 100);
+
+  const add = (food: DemoFood, mealIndex: number) => {
+    setLogs((l) => [...l, toLog(food, mealIndex, date)]);
+    setCollapsed((c) => ({ ...c, [mealIndex]: false }));
+  };
+
+  const editLog = (log: FoodLog) => {
+    const q = log.quantity || 1;
+    setEditMode(getBasePortion(log.portionsJson ?? null) ? 'portions' : 'grams');
+    setEditing({
+      ...log,
+      _kcalPer100: (log.kcal / q) * 100,
+      _protPer100: (log.protein / q) * 100,
+      _carbsPer100: (log.carbs / q) * 100,
+      _fatPer100: (log.fat / q) * 100,
+    });
+  };
+
+  const changeQuantity = (qty: number | string) =>
+    setEditing((e) => {
+      if (!e) return e;
+      const q = typeof qty === 'number' ? qty : parseFloat(qty) || 0;
+      return {
+        ...e,
+        quantity: q,
+        kcal: round1((e._kcalPer100 * q) / 100),
+        protein: round1((e._protPer100 * q) / 100),
+        carbs: round1((e._carbsPer100 * q) / 100),
+        fat: round1((e._fatPer100 * q) / 100),
+      };
+    });
 
   return (
-    <article className="try-panel" aria-labelledby="try-meals-title">
+    <article className="try-panel try-app" aria-labelledby="try-nutrition-title">
       <header className="try-panel__head">
-        <h3 id="try-meals-title" className="fam-h3">
-          Añade una comida
-        </h3>
-        <p className="try-panel__meta">Objetivo de hoy · {GOAL.toLocaleString('es-ES')} kcal</p>
+        <h2 id="try-nutrition-title" className="fam-h3">
+          Tu diario de hoy
+        </h2>
+        <p className="try-panel__meta">Pulsa + en una comida o copia la de ayer</p>
       </header>
-      <div className="try-kcal" aria-live="polite">
-        <p>
-          <strong>{total.kcal.toLocaleString('es-ES')}</strong> kcal
-          <span> · faltan {Math.max(0, GOAL - total.kcal).toLocaleString('es-ES')}</span>
-        </p>
-        <div
-          className="try-bar"
-          role="progressbar"
-          aria-label="Calorías del día"
-          aria-valuemin={0}
-          aria-valuemax={GOAL}
-          aria-valuenow={total.kcal}
-        >
-          <span style={{ width: `${pct}%` }} />
-        </div>
-        <dl className="try-macros">
-          <div>
-            <dt>Proteína</dt>
-            <dd>{total.p} g</dd>
+      <div className="try-screen">
+        <MacroSummaryHeader
+          date={date}
+          onDateChange={setDate}
+          consumed={consumed}
+          macros={MACROS}
+        />
+        {MEALS.map((meal, index) => (
+          <div key={meal.mealKey}>
+            <MealFoodGroup
+              meal={meal}
+              mealIndex={index}
+              logs={dayLogs.filter((l) => l.mealIndex === index)}
+              isCollapsed={!!collapsed[index]}
+              isDragOver={false}
+              editingLog={editing?.mealIndex === index ? editing : null}
+              editInputMode={editMode}
+              onToggleCollapse={(i) => setCollapsed((c) => ({ ...c, [i]: !c[i] }))}
+              onCopyFromYesterday={(_e, i) => {
+                const names = YESTERDAY[i] ?? [];
+                setLogs((l) => [
+                  ...l,
+                  ...FOODS.filter((f) => names.includes(f.product)).map((f) => toLog(f, i, date)),
+                ]);
+                setCollapsed((c) => ({ ...c, [i]: false }));
+              }}
+              onOpenAddFoodModal={(i) => setPicker((p) => (p === i ? null : i))}
+              onDragStart={noop}
+              onDrag={noop}
+              onDragOver={noop}
+              onDragLeave={noop}
+              onDrop={noop}
+              onEditLog={editLog}
+              onDeleteLog={(id) => setLogs((l) => l.filter((x) => x.id !== id))}
+              onEditInputModeChange={setEditMode}
+              onEditQuantityChange={changeQuantity}
+              onUpdateLog={() => {
+                if (!editing) return;
+                const { id, quantity, kcal, protein, carbs, fat } = editing;
+                const update = { quantity, kcal, protein, carbs, fat };
+                setLogs((l) => l.map((x) => (x.id === id ? { ...x, ...update } : x)));
+                setEditing(null);
+              }}
+              onCancelEdit={() => setEditing(null)}
+            />
+            {picker === index && (
+              <div className="try-picker" role="dialog" aria-label={`Añadir a ${meal.name}`}>
+                <div className="try-picker__head">
+                  <span>Añadir a {meal.name}</span>
+                  <button
+                    type="button"
+                    className="try-picker__close"
+                    aria-label="Cerrar"
+                    onClick={() => setPicker(null)}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <ul>
+                  {FOODS.map((food) => (
+                    <li key={food.product}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          add(food, index);
+                          setPicker(null);
+                        }}
+                      >
+                        <span>{food.product}</span>
+                        <small>
+                          {food.grams} g · {Math.round((food.per100.kcal * food.grams) / 100)} kcal
+                        </small>
+                        <Plus size={16} aria-hidden="true" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
-          <div>
-            <dt>Carbohidratos</dt>
-            <dd>{total.c} g</dd>
-          </div>
-          <div>
-            <dt>Grasa</dt>
-            <dd>{total.f} g</dd>
-          </div>
-        </dl>
-      </div>
-      <div className="try-foods">
-        {FOODS.map((food) => (
-          <button
-            key={food.name}
-            type="button"
-            className="try-food"
-            onClick={() => {
-              setMeals((m) => [...m, { id: next, food }]);
-              setNext((n) => n + 1);
-            }}
-          >
-            <Plus size={16} aria-hidden="true" />
-            <span>{food.name}</span>
-            <small>{food.kcal} kcal</small>
-          </button>
         ))}
       </div>
-      {meals.length > 0 && (
-        <ul className="try-sets">
-          {meals.map(({ id, food }) => (
-            <li key={id}>
-              <span>{food.name}</span>
-              <button
-                type="button"
-                className="try-remove"
-                aria-label={`Quitar ${food.name}`}
-                onClick={() => setMeals((m) => m.filter((x) => x.id !== id))}
-              >
-                <X size={16} aria-hidden="true" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
     </article>
   );
 }
@@ -237,7 +681,7 @@ export function HeroDemo() {
         {(
           [
             ['entreno', 'Entreno'],
-            ['comida', 'Comida'],
+            ['comida', 'Nutrición'],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -251,7 +695,7 @@ export function HeroDemo() {
           </button>
         ))}
       </div>
-      {tab === 'entreno' ? <BenchDemo /> : <MealsDemo />}
+      {tab === 'entreno' ? <WorkoutDemo /> : <NutritionDemo />}
       <p className="try-note">Sin cuenta: lo que registres aquí no se guarda.</p>
     </div>
   );

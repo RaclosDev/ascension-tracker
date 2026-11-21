@@ -1,35 +1,56 @@
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import { BenchDemo, HeroDemo, MealsDemo } from './LandingTryIt';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { HeroDemo, NutritionDemo, WorkoutDemo } from './LandingTryIt';
 
 describe('landing demos', () => {
-  it('stamps a new record only when the set beats the estimated best', () => {
-    render(<BenchDemo />);
-    fireEvent.click(screen.getByRole('button', { name: 'Registrar serie' }));
-    expect(screen.queryByText('¡Nuevo récord!')).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Más kg' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Registrar serie' }));
-    expect(screen.getByText('¡Nuevo récord!')).toBeInTheDocument();
-    expect(screen.getByText(/82,5 kg × 8/, { selector: 'strong' })).toBeInTheDocument();
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
-  it('adds meals to the day and takes them out again', () => {
-    render(<MealsDemo />);
-    fireEvent.click(screen.getByRole('button', { name: /Pollo con arroz/ }));
-    fireEvent.click(screen.getByRole('button', { name: /Avena con plátano/ }));
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '1030');
+  it('fills an empty set from last time, starts the rest and marks a record', () => {
+    vi.useFakeTimers();
+    render(<WorkoutDemo />);
+    const checks = screen.getAllByRole('button', { name: 'Completar serie' });
+    fireEvent.click(checks[0]);
+    expect(screen.getAllByLabelText('Kg de la serie 1')[0]).toHaveValue('80');
+    expect(screen.getByRole('timer', { name: 'Descanso' })).toHaveTextContent('2:00');
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(screen.getByRole('timer', { name: 'Descanso' })).toHaveTextContent('1:57');
+    fireEvent.click(screen.getByRole('button', { name: 'Omitir' }));
+    expect(screen.queryByRole('timer')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Quitar Pollo con arroz' }));
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '420');
+    const kg = screen.getAllByLabelText('Kg de la serie 2')[0];
+    fireEvent.focus(kg);
+    fireEvent.click(screen.getByRole('button', { name: '+2.5' }));
+    expect(kg).toHaveValue('82.5');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Completar serie' })[0]);
+    expect(screen.getByText('PR')).toBeInTheDocument();
+    expect(screen.getByText(/1 récord/)).toBeInTheDocument();
   });
 
-  it('switches the hero card between the workout and the meals demo', () => {
+  it('adds, edits and copies foods in the day', () => {
+    render(<NutritionDemo />);
+    expect(screen.getByRole('button', { name: /^Desayuno, 2 alimentos/ })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir alimento a Cena' }));
+    fireEvent.click(screen.getByRole('button', { name: /Salmón/ }));
+    expect(screen.getByRole('button', { name: 'Cena, 1 alimentos, 312 kcal' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copiar comida Comida de ayer' }));
+    expect(screen.getByRole('button', { name: /^Comida, 2 alimentos/ })).toBeInTheDocument();
+  });
+
+  it('switches the hero card between the workout and the nutrition demo', () => {
     render(<HeroDemo />);
-    expect(screen.getByRole('heading', { name: 'Registra una serie' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Comida' }));
-    expect(screen.getByRole('heading', { name: 'Añade una comida' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Comida' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('heading', { name: 'Entreno de hoy' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Nutrición' }));
+    expect(screen.getByRole('heading', { name: 'Tu diario de hoy' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Nutrición' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 });
