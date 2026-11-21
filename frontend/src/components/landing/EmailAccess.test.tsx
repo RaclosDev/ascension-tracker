@@ -1,8 +1,7 @@
 import '@testing-library/jest-dom/vitest';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import EmailAccess from './EmailAccess';
-import { requestEmailAccess } from './emailAccessEvents';
 
 const mocks = vi.hoisted(() => ({
   login: vi.fn(),
@@ -107,22 +106,19 @@ describe('EmailAccess', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('opens in the mode a call to action asks for, with the cursor in the email field', () => {
-    render(<EmailAccess alternatives={<button type="button">Continuar con Google</button>} />);
-    expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
+  it('opens on sign-up when a call to action asks for it, without the passkey button', () => {
+    render(
+      <EmailAccess
+        initialMode="register"
+        alternatives={<button type="button">Continuar con Google</button>}
+      />,
     );
-    expect(screen.getByRole('button', { name: 'Continuar con Google' })).toBeInTheDocument();
-
-    act(() => requestEmailAccess('register')());
-
     expect(screen.getAllByRole('button', { name: 'Crear cuenta' })[0]).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     expect(screen.getAllByRole('button', { name: 'Crear cuenta' })).toHaveLength(2);
-    expect(screen.getByLabelText('Email')).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Continuar con Google' })).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Entrar con huella o llave de acceso' }),
     ).not.toBeInTheDocument();

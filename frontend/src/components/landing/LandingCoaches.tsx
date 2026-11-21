@@ -1,6 +1,6 @@
 import { ClipboardList, MessageSquare, Users } from 'lucide-react';
 import InkButton from './InkButton';
-import { requestEmailAccess } from './emailAccessEvents';
+import { SIGN_UP } from './routes';
 import { planName } from '../../lib/coach/plan';
 import { usePublicInfo } from '../../lib/publicInfo';
 
@@ -35,12 +35,9 @@ export default function LandingCoaches() {
       className="mx-auto mt-20 max-w-6xl px-5 sm:px-8 lg:mt-28"
       aria-labelledby="coaches-title"
     >
-      <p className="landing-display text-[0.85rem] tracking-[0.12em] text-[var(--landing-blue)]">
-        Para entrenadores
-      </p>
       <h2
         id="coaches-title"
-        className="landing-display mt-3 max-w-[18ch] text-[clamp(2.2rem,6vw,4rem)] font-bold text-white"
+        className="landing-display max-w-[18ch] text-[clamp(2.2rem,6vw,4rem)] font-bold text-white"
       >
         Lleva a tus atletas desde la misma app
       </h2>
@@ -49,14 +46,21 @@ export default function LandingCoaches() {
         Prueba el plan Pro 14 días gratis, sin tarjeta.
       </p>
 
-      <ul className="mt-10 grid gap-px border border-[var(--landing-steel)] bg-[var(--landing-steel)] md:grid-cols-3">
+      <ul className="mt-10 border-t-2 border-[var(--landing-ink)]">
         {features.map((f) => (
-          <li key={f.title} className="bg-[var(--landing-bg)] p-6">
-            <f.icon size={22} className="text-[var(--landing-blue)]" aria-hidden="true" />
-            <h3 className="landing-display mt-4 text-[1.4rem] font-semibold text-white">
+          <li
+            key={f.title}
+            className="grid gap-2 border-b border-[var(--landing-steel)] py-5 md:grid-cols-[22rem_1fr] md:items-baseline md:gap-6"
+          >
+            <h3 className="landing-display flex items-center gap-3 text-[1.4rem] font-semibold text-white">
+              <f.icon
+                size={22}
+                className="shrink-0 text-[var(--landing-blue)]"
+                aria-hidden="true"
+              />
               {f.title}
             </h3>
-            <p className="mt-2 text-[0.95rem] leading-relaxed text-[var(--landing-muted)]">
+            <p className="max-w-[60ch] text-[0.95rem] leading-relaxed text-[var(--landing-muted)]">
               {f.text}
             </p>
           </li>
@@ -65,7 +69,7 @@ export default function LandingCoaches() {
 
       {plans.length > 0 && (
         <ul
-          className="mt-6 grid grid-cols-2 gap-px border border-[var(--landing-steel)] bg-[var(--landing-steel)] lg:grid-cols-4"
+          className="mt-10 grid grid-cols-2 gap-px border border-[var(--landing-steel)] bg-[var(--landing-steel)] lg:grid-cols-4"
           aria-label="Planes para entrenadores"
         >
           {plans.map((p) => (
@@ -118,7 +122,7 @@ export default function LandingCoaches() {
             Te respondemos por email.
           </p>
         </div>
-        <InkButton href="#entrar" onClick={requestEmailAccess('register')} className="shrink-0">
+        <InkButton to={SIGN_UP} className="shrink-0">
           Probar 14 días gratis
         </InkButton>
       </div>
