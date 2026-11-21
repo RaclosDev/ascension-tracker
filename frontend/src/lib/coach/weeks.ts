@@ -84,6 +84,29 @@ export function overlapsWeek(a: ProgramAssignment, week: string) {
     a.startDate < shiftWeek(week, 1) && end > week && (!a.endedAt || a.endedAt.slice(0, 10) >= week)
   );
 }
+const programEnd = (a: ProgramAssignment) => shiftWeek(weekDate(parseISO(a.startDate)), a.weeks);
+/**
+ * Week number and length counted from where the program first started. Publishing a week by hand
+ * splits a program: the rest goes on as a renumbered copy that ends on the same day.
+ */
+export function programPosition(all: ProgramAssignment[], a: ProgramAssignment, week: string) {
+  const origin = all
+    .filter(
+      (o) =>
+        a.sourceProgramId !== null &&
+        o.sourceProgramId === a.sourceProgramId &&
+        o.weeks > 1 &&
+        o.startDate < a.startDate &&
+        programEnd(o) === programEnd(a),
+    )
+    .reduce((first, o) => (o.startDate < first.startDate ? o : first), a);
+  return {
+    week:
+      differenceInCalendarWeeks(parseISO(week), parseISO(origin.startDate), { weekStartsOn: 1 }) +
+      1,
+    weeks: origin.weeks,
+  };
+}
 export interface ProgramWeek {
   assignment: ProgramAssignment;
   /** That week's sessions, as a one-week plan ready to edit. */
@@ -113,13 +136,10 @@ export function useProgramWeeks(linkId: string, enabled = true) {
         return {
           assignment,
           program: weekFrom(plan, assignment, week),
-          week:
-            differenceInCalendarWeeks(parseISO(week), parseISO(assignment.startDate), {
-              weekStartsOn: 1,
-            }) + 1,
+          week: programPosition(assignments.data ?? [], assignment, week).week,
         };
       },
-    [running, plans],
+    [running, plans, assignments.data],
   );
   const loading = assignments.isLoading || running.some((_, i) => plans[i] === undefined);
   return { find, loading };

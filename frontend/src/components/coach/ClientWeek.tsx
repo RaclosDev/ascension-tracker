@@ -2,13 +2,13 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { SegmentedControl } from '../ui/segmented-control';
 import { useState } from 'react';
-import { differenceInCalendarWeeks, parseISO } from 'date-fns';
 import { useSearchParams } from 'react-router-dom';
 import { type CoachClient } from '@/lib/coach/api';
 import type { AvoidedExercise } from '@/lib/coach/setup';
 import { useAssignedProgram, useClientAssignments } from '@/lib/coach/coachPrograms';
 import {
   overlapsWeek,
+  programPosition,
   shiftWeek,
   useCoachWeek,
   weekDate,
@@ -113,17 +113,17 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
   const covering = assignments.data?.find(
     (a) => a.status !== 'ENDED' && a.weeks > 1 && overlapsWeek(a, planningWeek),
   );
+  const coveringAt = covering && programPosition(assignments.data ?? [], covering, planningWeek);
+  // Publishing replaces only this week; the program picks up again the next Monday.
+  const programGoesOn =
+    covering && coveringAt && coveringAt.week < coveringAt.weeks ? covering.programName : undefined;
   const fromProgram = draft.data?.version === 0 ? covering : undefined;
   const programPlan = useAssignedProgram(link.linkId, fromProgram?.id ?? '');
   const programWeek =
     fromProgram && programPlan.data
       ? {
           name: fromProgram.programName,
-          week:
-            differenceInCalendarWeeks(parseISO(planningWeek), parseISO(fromProgram.startDate), {
-              weekStartsOn: 1,
-            }) + 1,
-          weeks: fromProgram.weeks,
+          ...programPosition(assignments.data ?? [], fromProgram, planningWeek),
         }
       : undefined;
   const saved: SavedWeek | undefined =
@@ -266,6 +266,7 @@ export default function ClientWeek({ link }: { link: CoachClient }) {
                   saved={saved!}
                   source={previous}
                   programWeek={programWeek}
+                  programGoesOn={programGoesOn}
                   canEdit={link.permissions.editTraining && planningWeek >= weekDate()}
                   reload={() => draft.refetch()}
                   lead={toolbar}

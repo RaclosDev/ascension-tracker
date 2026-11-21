@@ -95,11 +95,14 @@ export function WeekEditor({
   wide,
   onWide,
   programWeek,
+  programGoesOn,
 }: {
   saved: SavedWeek;
   source?: ProgramAssignment;
   /** The program this week already belongs to, when it opens with that program's sessions. */
   programWeek?: { name: string; week: number; weeks: number };
+  /** The program that carries on the next Monday once this week is published. */
+  programGoesOn?: string;
   canEdit: boolean;
   reload: () => Promise<unknown>;
   /** The week picker: it shares the bar with the saving state and the publish button. */
@@ -687,7 +690,7 @@ export function WeekEditor({
                 if (
                   !(await confirmAction({
                     title: 'Publicar semana',
-                    description: `El atleta verá ${sessions} ${sessions === 1 ? 'sesión' : 'sesiones'} (${sets} series) y tu comentario desde el ${formatCoachDate(start)}. Sustituye a lo que tuviera pautado a partir de ese día; los días ya pasados no se le marcan como pendientes.`,
+                    description: `El atleta verá ${sessions} ${sessions === 1 ? 'sesión' : 'sesiones'} (${sets} series) y tu comentario desde el ${formatCoachDate(start)}. ${programGoesOn ? `Sustituye solo esta semana: «${programGoesOn}» sigue desde el lunes siguiente` : 'Sustituye a lo que tuviera pautado a partir de ese día'}; los días ya pasados no se le marcan como pendientes.`,
                     confirmLabel: 'Publicar semana',
                   }))
                 )
