@@ -16,7 +16,14 @@ const MetricUnit = ({ visible, spoken }: { visible: string; spoken: string }) =>
   </>
 );
 
-/** One day of the week row: the date, the weight large, steps and kcal on one quiet line. */
+// A gap keeps its line so each metric stays on the same row across the week.
+const Missing = ({ className }: { className: string }) => (
+  <span className={`track-line ${className} track-none`} aria-hidden="true">
+    —
+  </span>
+);
+
+/** One day of the week row: the date, then one fixed line per metric (weight large). */
 export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
   ({ dateStr, dayName, dayData, isToday, onOpenModal, showWeight, showSteps, showCalories }) => {
     const isFuture = dateStr > format(new Date(), 'yyyy-MM-dd');
@@ -39,34 +46,36 @@ export const TrackingDayCell: React.FC<DayCellProps> = React.memo(
           <span className="track-day-num">{format(date, 'd')}</span>{' '}
           <span className="sr-only">{format(date, 'MMM', { locale: es })}</span>
         </span>{' '}
-        {showWeight &&
-          (dayData.weight !== null ? (
-            <span className="track-weight tabular-nums">
-              {formatKg(dayData.weight)}
-              <MetricUnit visible="kg" spoken="kilos" />{' '}
-            </span>
-          ) : (
-            !empty && (
-              <span className="track-weight track-none" aria-hidden="true">
-                —
-              </span>
-            )
-          ))}
-        {(hasSteps || hasKcal) && (
-          <span className="track-sub tabular-nums">
-            {hasSteps && (
-              <span className="track-minor">
-                {formatCount(dayData.steps as number)}
-                <MetricUnit visible="pas" spoken="pasos" />{' '}
-              </span>
-            )}
-            {hasKcal && (
-              <span className="track-minor">
-                {formatCount(dayData.calories as number)}
-                <MetricUnit visible="kcal" spoken="calorías" />
-              </span>
-            )}
-          </span>
+        {!empty && (
+          <>
+            {showWeight &&
+              (dayData.weight !== null ? (
+                <span className="track-line track-weight tabular-nums">
+                  {formatKg(dayData.weight)}
+                  <MetricUnit visible="kg" spoken="kilos" />{' '}
+                </span>
+              ) : (
+                <Missing className="track-weight" />
+              ))}
+            {showSteps &&
+              (hasSteps ? (
+                <span className="track-line track-minor tabular-nums">
+                  {formatCount(dayData.steps as number)}
+                  <MetricUnit visible="pas" spoken="pasos" />{' '}
+                </span>
+              ) : (
+                <Missing className="track-minor" />
+              ))}
+            {showCalories &&
+              (hasKcal ? (
+                <span className="track-line track-minor tabular-nums">
+                  {formatCount(dayData.calories as number)}
+                  <MetricUnit visible="kcal" spoken="calorías" />
+                </span>
+              ) : (
+                <Missing className="track-minor" />
+              ))}
+          </>
         )}
         {empty && !isFuture && (
           <span className="track-add" aria-hidden="true">

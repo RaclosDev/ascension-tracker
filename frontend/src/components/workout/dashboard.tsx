@@ -84,10 +84,12 @@ function useWeek(history: CompletedWorkout[]) {
     const days = DAY_LETTERS.map((letter, i) => {
       const from = addDays(start, i).getTime();
       const to = addDays(start, i + 1).getTime();
+      // El más reciente del día: el historial va de nuevo a antiguo.
+      const last = week.find((w) => w.finishedAt >= from && w.finishedAt < to);
       return {
         letter,
         date: from,
-        done: week.some((w) => w.finishedAt >= from && w.finishedAt < to),
+        workout: last,
         today: isToday(from),
       };
     });
@@ -188,19 +190,38 @@ function Dashboard() {
             </div>
           </div>
           <ol className="wk-days" aria-label="Días entrenados esta semana">
-            {week.days.map((d) => (
-              <li
-                key={d.letter}
-                data-done={d.done || undefined}
-                data-today={d.today || undefined}
-                title={format(d.date, "EEEE d 'de' MMMM", { locale: es })}
-              >
-                <span aria-hidden="true">{d.letter}</span>
-                <span className="sr-only">
-                  {format(d.date, 'EEEE', { locale: es })}: {d.done ? 'entrenado' : 'sin entreno'}
-                </span>
-              </li>
-            ))}
+            {week.days.map((d) => {
+              const dayName = format(d.date, 'EEEE', { locale: es });
+              const workout = d.workout;
+              return (
+                <li
+                  key={d.letter}
+                  data-done={workout ? true : undefined}
+                  data-today={d.today || undefined}
+                  title={format(d.date, "EEEE d 'de' MMMM", { locale: es })}
+                >
+                  {workout ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDetailId(workout.id);
+                        setTab('history');
+                      }}
+                    >
+                      <span aria-hidden="true">{d.letter}</span>
+                      <span className="sr-only">
+                        {dayName}: entrenado, abrir {workout.name}
+                      </span>
+                    </button>
+                  ) : (
+                    <>
+                      <span aria-hidden="true">{d.letter}</span>
+                      <span className="sr-only">{dayName}: sin entreno</span>
+                    </>
+                  )}
+                </li>
+              );
+            })}
           </ol>
         </div>
 
