@@ -1,11 +1,11 @@
 import { collectExerciseVariants } from '../../utils/exerciseHistoryVariants';
 import { useMemo, useState } from 'react';
-import { Search, X, Plus } from 'lucide-react';
+import { Search, X, Plus, Dumbbell } from 'lucide-react';
 import { ExercisePickerList } from './ExercisePickerList';
 import { EXERCISE_CATALOG, BASE_EXERCISES } from '@/lib/workout/exercises';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { normalizeString } from '@/lib/workout/format';
-import { MUSCLE_LABEL, type Equipment, type MuscleGroup } from '@/lib/workout/types';
+import { MUSCLE_LABEL, type Equipment, type Exercise, type MuscleGroup } from '@/lib/workout/types';
 import { EQUIPMENT_OPTIONS, MUSCLE_OPTIONS } from '@/lib/workout/equipmentOptions';
 import { useExerciseCatalog } from '@/lib/workout/catalog-query';
 import {
@@ -15,6 +15,7 @@ import {
   useWorkoutPreferencesActions,
 } from '@/lib/workout/api';
 import { Select } from '@/components/ui/select';
+import '@/styles/workout-sheets.css';
 
 export function ExercisePicker() {
   const { data: catalogExercises } = useExerciseCatalog();
@@ -110,6 +111,7 @@ export function ExercisePicker() {
         timestamp: number;
         nameStr: string;
         strKey: string;
+        ex: Exercise;
       }
     >();
 
@@ -135,6 +137,7 @@ export function ExercisePicker() {
             timestamp: w.startedAt,
             nameStr,
             strKey,
+            ex: baseEx,
           });
         }
       }
@@ -248,10 +251,13 @@ export function ExercisePicker() {
 
   if (!open) return null;
 
+  const showRecents =
+    recentExercises.length > 0 && !query && filterMuscle === 'ALL' && filterEquip === 'ALL';
+
   return (
     <>
       <div className="workout-sheet-overlay" aria-hidden="true" onClick={close} />
-      <div className="workout-sheet" style={{ maxHeight: '95dvh' }}>
+      <div className="workout-sheet picker-sheet" role="dialog" aria-label="Añadir ejercicios">
         <div className="workout-sheet-handle" />
         <div className="workout-sheet-header">
           <span className="workout-sheet-title">Añadir ejercicios</span>
@@ -260,33 +266,16 @@ export function ExercisePicker() {
           </button>
         </div>
 
-        {/* Tabs */}
-        <div
-          style={{
-            display: 'flex',
-            gap: '0.5rem',
-            padding: '0 1.25rem 0.5rem',
-            borderBottom: '1px solid var(--border-medium)',
-            marginBottom: '0.5rem',
-          }}
-        >
+        <div className="picker-tabs" role="group" aria-label="Catálogo">
           {(['base', 'all', 'custom'] as const).map((t) => (
             <button
               key={t}
+              type="button"
+              className="picker-tab"
+              aria-pressed={tab === t}
               onClick={() => {
                 setTab(t);
                 setExpandedId(null);
-              }}
-              style={{
-                flex: 1,
-                padding: '0.5rem',
-                borderRadius: '8px',
-                fontSize: '0.85rem',
-                fontWeight: tab === t ? '600' : '400',
-                background: tab === t ? 'var(--text-primary)' : 'transparent',
-                color: tab === t ? 'var(--bg-primary)' : 'var(--text-secondary)',
-                border: 'none',
-                cursor: 'pointer',
               }}
             >
               {t === 'base' ? 'Básicos' : t === 'all' ? 'Todos' : 'Personalizados'}
@@ -294,7 +283,7 @@ export function ExercisePicker() {
           ))}
         </div>
 
-        <div style={{ padding: '0 1.25rem' }}>
+        <div className="picker-controls">
           <div className="picker-search-wrapper">
             <Search size={16} className="picker-search-icon" />
             <input
@@ -309,30 +298,15 @@ export function ExercisePicker() {
             />
           </div>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0.5rem',
-              marginTop: '0.5rem',
-            }}
-          >
+          <div className="picker-filters">
             <Select
               value={filterMuscle}
               onChange={(e) =>
                 setFilterMuscle(e.target.value as import('@/lib/workout/types').MuscleGroup | 'ALL')
               }
-              className="form-input"
-              style={{
-                padding: '0.5rem',
-                fontSize: '0.85rem',
-                background: 'var(--bg-secondary)',
-                borderRadius: '8px',
-                border: '1px solid var(--border-medium)',
-                color: 'var(--text-primary)',
-              }}
+              className="form-input picker-filter"
             >
-              <option value="ALL">Músculo: Todos</option>
+              <option value="ALL">Músculo</option>
               {MUSCLE_OPTIONS.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.label}
@@ -344,17 +318,9 @@ export function ExercisePicker() {
               onChange={(e) =>
                 setFilterEquip(e.target.value as import('@/lib/workout/types').Equipment | 'ALL')
               }
-              className="form-input"
-              style={{
-                padding: '0.5rem',
-                fontSize: '0.85rem',
-                background: 'var(--bg-secondary)',
-                borderRadius: '8px',
-                border: '1px solid var(--border-medium)',
-                color: 'var(--text-primary)',
-              }}
+              className="form-input picker-filter"
             >
-              <option value="ALL">Material: Todos</option>
+              <option value="ALL">Material</option>
               {EQUIPMENT_OPTIONS.filter((eq) => !hiddenEquipments.includes(eq.id)).map((eq) => (
                 <option key={eq.id} value={eq.id}>
                   {eq.label}
@@ -364,36 +330,59 @@ export function ExercisePicker() {
           </div>
         </div>
 
-        {/* Scrollable body */}
-        <div
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '0 0.75rem',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          {recentExercises.length > 0 &&
-            !query &&
-            filterMuscle === 'ALL' &&
-            filterEquip === 'ALL' && (
-              <div className="picker-recents-section">
-                <div className="picker-recents-label"> Recientes</div>
-                <div className="picker-recents-grid">
-                  {recentExercises.map((r) => (
-                    <button
-                      key={r.strKey}
-                      className="picker-recent-chip"
-                      onClick={() =>
-                        addExercises([{ exerciseId: r.exId, variant: r.variant }], history)
-                      }
-                    >
-                      {r.nameStr}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+        <div className="picker-scroll">
+          {showRecents && (
+            <section aria-labelledby="picker-recents-title">
+              <h3 id="picker-recents-title" className="picker-section-label">
+                Recientes
+              </h3>
+              <ul className="picker-recents">
+                {recentExercises.map((r) => {
+                  const thumb =
+                    customGifs[r.exId] !== 'none' && (customGifs[r.exId] || r.ex.gifUrl);
+                  return (
+                    <li key={r.strKey}>
+                      <button
+                        type="button"
+                        className="picker-exercise-item"
+                        aria-label={`Añadir ${r.nameStr}`}
+                        onClick={() =>
+                          addExercises([{ exerciseId: r.exId, variant: r.variant }], history)
+                        }
+                      >
+                        {thumb ? (
+                          <img
+                            src={thumb}
+                            alt=""
+                            loading="lazy"
+                            className="picker-exercise-thumb"
+                          />
+                        ) : (
+                          <div className="picker-exercise-thumb-placeholder">
+                            <Dumbbell size={18} />
+                          </div>
+                        )}
+                        <div className="picker-exercise-info">
+                          <div className="picker-exercise-name">
+                            {r.nameStr}
+                            {r.ex.custom && <span className="picker-custom-badge">Propio</span>}
+                          </div>
+                          <div className="picker-exercise-meta">
+                            {MUSCLE_LABEL[r.ex.muscle as keyof typeof MUSCLE_LABEL]} ·{' '}
+                            {r.ex.equipment}
+                          </div>
+                        </div>
+                        <span className="picker-recent-add" aria-hidden="true">
+                          <Plus size={16} />
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+              <h3 className="picker-section-label">Catálogo</h3>
+            </section>
+          )}
 
           {/* Exercise List */}
           <ExercisePickerList

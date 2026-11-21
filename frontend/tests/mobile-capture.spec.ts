@@ -135,9 +135,7 @@ test.describe('Visual Screenshots Capture Suite', () => {
       await expect(startBtn).toBeVisible({ timeout: 15000 });
       await startBtn.click();
 
-      const emptyOption = page
-        .locator('.start-workout-option')
-        .filter({ hasText: /entrenamiento vac[ií]o/i });
+      const emptyOption = page.locator('.ws-empty').filter({ hasText: /entreno vac[ií]o/i });
       await expect(emptyOption).toBeVisible({ timeout: 10000 });
       await emptyOption.click();
 
@@ -336,9 +334,7 @@ test.describe('Visual Screenshots Capture Suite', () => {
       await expect(startBtn).toBeVisible({ timeout: 10000 });
       await startBtn.click();
 
-      const emptyOption = page
-        .locator('.start-workout-option')
-        .filter({ hasText: /entrenamiento vac[ií]o/i });
+      const emptyOption = page.locator('.ws-empty').filter({ hasText: /entreno vac[ií]o/i });
       await expect(emptyOption).toBeVisible({ timeout: 5000 });
       await emptyOption.click();
 

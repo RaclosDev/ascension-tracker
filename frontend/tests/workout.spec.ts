@@ -55,7 +55,7 @@ test.describe('Workout Page', () => {
     await startWorkoutBtn.click();
 
     // Seleccionar entrenamiento vacío en el modal
-    const startEmptyOption = page.locator('.start-workout-option').first();
+    const startEmptyOption = page.getByRole('button', { name: /Entreno vacío/i });
     await expect(startEmptyOption).toBeVisible({ timeout: 10000 });
     await startEmptyOption.click();
 
@@ -124,7 +124,7 @@ test.describe('Workout Page', () => {
     await expect(startWorkoutBtn).toBeVisible({ timeout: 15000 });
     await startWorkoutBtn.click();
 
-    const startEmptyOption = page.locator('.start-workout-option').first();
+    const startEmptyOption = page.getByRole('button', { name: /Entreno vacío/i });
     await expect(startEmptyOption).toBeVisible({ timeout: 10000 });
     await startEmptyOption.click();
 

@@ -2354,109 +2354,12 @@ textarea,
   }
 }
 
-/* ---- Start Workout Modal ---- */
-.start-workout-option {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-subtle);
-  border-radius: 14px;
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-  transition: all 0.15s ease;
-  font-family: var(--font-main);
-}
-.start-workout-option:hover {
-  border-color: var(--border-medium);
-  background: var(--bg-glass-strong);
-}
-.start-workout-option-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.start-workout-option-primary .start-workout-option-icon {
-  background: var(--gradient-primary);
-  color: var(--accent-text, white);
-}
-.start-workout-option-secondary .start-workout-option-icon {
-  background: var(--bg-card);
-  color: var(--text-secondary);
-}
-.start-workout-option-title {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 0.95rem;
-}
-.start-workout-option-desc {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-top: 0.2rem;
-}
-
-.start-workout-section-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  padding: 0.25rem 0;
-}
-
 .filter-chip.active {
   background: var(--accent-glow);
   border-color: var(--accent-primary);
   color: var(--accent-primary-light);
 }
 
-/* ---- Recents Section in Picker ---- */
-.picker-recents-section {
-  padding: 0.5rem 0 0.75rem;
-  border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: 0.5rem;
-}
-.picker-recents-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  margin-bottom: 0.5rem;
-}
-.picker-recents-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-.picker-recent-chip {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.7rem;
-  border-radius: 10px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
-  font-size: 0.8rem;
-  font-weight: 500;
-  font-family: var(--font-main);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-.picker-recent-chip:hover {
-  border-color: var(--accent-primary);
-  background: var(--accent-glow);
-}
-.picker-recent-chip.selected {
-  background: var(--accent-glow);
-  border-color: var(--accent-primary);
-  color: var(--accent-primary-light);
-}
 /* ---- Exercise Picker Item ---- */
 .picker-exercise-item {
   display: flex;

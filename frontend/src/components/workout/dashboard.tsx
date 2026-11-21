@@ -1,7 +1,7 @@
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { addDays, format, isToday, isYesterday, startOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ArrowRight, Clock3, Dumbbell, Play, Repeat2, X } from 'lucide-react';
+import { ArrowRight, Play, Repeat2, X } from 'lucide-react';
 import { ActivityHeatmap } from '@/components/workout/heatmap';
 import { MuscleRecovery } from '@/components/workout/muscle-recovery';
 import { BodyHeatmap } from '@/components/workout/body-heatmap';
@@ -13,6 +13,7 @@ import { useRecentWorkouts, useWorkoutTemplates, useCustomExercises } from '@/li
 import { Skeleton } from '@/components/ui/skeleton';
 import { PowerliftingCard } from '@/components/workout/PowerliftingCard';
 import { useMyCoaches } from '@/lib/coach/api';
+import '@/styles/workout-sheets.css';
 
 // Outside the precache like the coach pages: it needs the network, and offline it just renders nothing.
 const TodayProgramCard = lazy(() =>
@@ -29,6 +30,48 @@ function whenLabel(ts: number) {
   if (isYesterday(ts)) return 'Ayer';
   const label = format(ts, 'EEE d', { locale: es });
   return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+/** Los tres primeros ejercicios de una sesión, para reconocerla sin abrirla. */
+function exerciseLine(
+  exercises: { exerciseId: string }[] | undefined,
+  name: (id: string) => string | undefined,
+) {
+  const names = (exercises ?? []).map((e) => name(e.exerciseId)).filter((n): n is string => !!n);
+  const rest = names.length - 3;
+  return names.slice(0, 3).join(' · ') + (rest > 0 ? ` +${rest}` : '');
+}
+
+/** Una fila de las hojas de empezar y repetir: cuándo, qué y una cifra. */
+function SessionRow({
+  when,
+  name,
+  detail,
+  figure,
+  note,
+  onClick,
+}: {
+  when?: string;
+  name: string;
+  detail: string;
+  figure: string;
+  note: string;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" className={when ? 'ws-row' : 'ws-row ws-row-plain'} onClick={onClick}>
+      {when && <span className="ws-when">{when}</span>}
+      <span className="ws-main">
+        <span className="ws-name">{name}</span>
+        {detail && <span className="ws-detail">{detail}</span>}
+      </span>
+      <span className="ws-aside">
+        <span className="ws-figure">{figure}</span>
+        <span className="ws-note">{note}</span>
+      </span>
+      <ArrowRight size={16} className="ws-go" aria-hidden="true" />
+    </button>
+  );
 }
 
 /** Lo hecho esta semana (de lunes a hoy) frente a la anterior. */
@@ -85,6 +128,7 @@ function Dashboard() {
   const setDetailId = useWorkoutStore((s) => s.setDetailId);
   const active = useWorkoutStore((s) => s.active);
   const catalog = getExerciseMap(customExercises);
+  const exerciseName = (id: string) => catalog.get(id)?.name;
   const week = useWeek(history);
 
   const [startModalOpen, setStartModalOpen] = useState(false);
@@ -221,41 +265,39 @@ function Dashboard() {
             aria-hidden="true"
             onClick={() => setRepeatOpen(false)}
           />
-          <div className="workout-sheet" role="dialog" aria-label="Repetir un entreno">
+          <div className="workout-sheet ws" role="dialog" aria-labelledby="ws-repeat-title">
             <div className="workout-sheet-handle" />
-            <div className="workout-sheet-header">
-              <span className="workout-sheet-title">Repetir entreno</span>
+            <header className="workout-sheet-header ws-head">
+              <div>
+                <p className="ws-eyebrow">Mismos ejercicios y series</p>
+                <h2 id="ws-repeat-title" className="workout-sheet-title">
+                  Repetir entreno
+                </h2>
+              </div>
               <button
+                type="button"
                 className="workout-sheet-close"
                 onClick={() => setRepeatOpen(false)}
                 aria-label="Cerrar"
               >
-                <X size={22} />
+                <X size={20} />
               </button>
-            </div>
+            </header>
             <div className="workout-sheet-body">
-              <ul className="wk-repeat-list">
+              <ul className="ws-list">
                 {history.slice(0, 10).map((w: CompletedWorkout) => (
                   <li key={w.id}>
-                    <button
-                      type="button"
-                      className="start-workout-option start-workout-option-secondary"
+                    <SessionRow
+                      when={whenLabel(w.finishedAt)}
+                      name={w.name}
+                      detail={exerciseLine(w.exercises, exerciseName)}
+                      figure={formatKg(sessionVolume(w.exercises))}
+                      note={`${w.exercises?.length || 0} ejercicios`}
                       onClick={() => {
                         startFromHistory(w);
                         setRepeatOpen(false);
                       }}
-                    >
-                      <div className="start-workout-option-icon">
-                        <Repeat2 size={18} />
-                      </div>
-                      <div className="wk-repeat-text">
-                        <div className="start-workout-option-title">{w.name}</div>
-                        <div className="start-workout-option-desc">
-                          {whenLabel(w.finishedAt)} · {w.exercises?.length || 0} ejercicios ·{' '}
-                          {formatKg(sessionVolume(w.exercises))}
-                        </div>
-                      </div>
-                    </button>
+                    />
                   </li>
                 ))}
               </ul>
@@ -271,113 +313,91 @@ function Dashboard() {
             aria-hidden="true"
             onClick={() => setStartModalOpen(false)}
           />
-          <div className="workout-sheet">
+          <div className="workout-sheet ws" role="dialog" aria-labelledby="ws-start-title">
             <div className="workout-sheet-handle" />
-            <div className="workout-sheet-header">
-              <span className="workout-sheet-title">Empezar Entrenamiento</span>
+            <header className="workout-sheet-header ws-head">
+              <div>
+                <p className="ws-eyebrow">Nuevo entreno</p>
+                <h2 id="ws-start-title" className="workout-sheet-title">
+                  Empezar entreno
+                </h2>
+              </div>
               <button
+                type="button"
                 className="workout-sheet-close"
                 onClick={() => setStartModalOpen(false)}
                 aria-label="Cerrar"
               >
-                <X size={22} />
+                <X size={20} />
               </button>
-            </div>
+            </header>
             <div className="workout-sheet-body">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {/* Empty workout */}
-                <button
-                  className="start-workout-option start-workout-option-primary"
-                  onClick={() => {
-                    startEmpty();
-                    setStartModalOpen(false);
-                  }}
-                >
-                  <div className="start-workout-option-icon">
-                    <Play size={22} />
-                  </div>
-                  <div>
-                    <div className="start-workout-option-title">Entrenamiento Vacío</div>
-                    <div className="start-workout-option-desc">
-                      Empezar desde cero sin ejercicios predefinidos
-                    </div>
-                  </div>
-                </button>
+              <button
+                type="button"
+                className="ws-empty"
+                onClick={() => {
+                  startEmpty();
+                  setStartModalOpen(false);
+                }}
+              >
+                <span className="ws-empty-icon" aria-hidden="true">
+                  <Play size={18} />
+                </span>
+                <span className="ws-main">
+                  <span className="ws-name">Entreno vacío</span>
+                  <span className="ws-detail">Añades los ejercicios sobre la marcha</span>
+                </span>
+                <ArrowRight size={18} className="ws-go" aria-hidden="true" />
+              </button>
 
-                {templates?.length > 0 && (
-                  <>
-                    <div className="start-workout-section-label" style={{ marginTop: '0.5rem' }}>
-                      Plantillas
-                    </div>
+              {templates?.length > 0 && (
+                <section className="ws-section" aria-labelledby="ws-templates">
+                  <h3 id="ws-templates" className="ws-label">
+                    Plantillas <span>{templates.length}</span>
+                  </h3>
+                  <ul className="ws-list">
                     {templates.map((t: Template) => (
-                      <button
-                        key={t.id}
-                        className="start-workout-option start-workout-option-secondary"
-                        onClick={() => {
-                          startFromTemplate(t, history);
-                          setStartModalOpen(false);
-                        }}
-                      >
-                        <div className="start-workout-option-icon">
-                          <Dumbbell size={20} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div className="start-workout-option-title">{t.name}</div>
-                          <div className="start-workout-option-desc">
-                            {t.exercises?.length || 0} ejercicios
-                          </div>
-                        </div>
-                        <ArrowRight
-                          size={16}
-                          style={{ color: 'var(--text-muted)', flexShrink: 0 }}
+                      <li key={t.id}>
+                        <SessionRow
+                          name={t.name}
+                          detail={exerciseLine(t.exercises, exerciseName)}
+                          figure={`${t.exercises?.length || 0}`}
+                          note="ejercicios"
+                          onClick={() => {
+                            startFromTemplate(t, history);
+                            setStartModalOpen(false);
+                          }}
                         />
-                      </button>
+                      </li>
                     ))}
-                  </>
-                )}
+                  </ul>
+                </section>
+              )}
 
-                {history?.length > 0 && (
-                  <>
-                    <div className="start-workout-section-label" style={{ marginTop: '0.5rem' }}>
-                      Repetir Reciente
-                    </div>
+              {history?.length > 0 && (
+                <section className="ws-section" aria-labelledby="ws-recent">
+                  <h3 id="ws-recent" className="ws-label">
+                    Repetir uno reciente
+                  </h3>
+                  <ul className="ws-list">
                     {history.slice(0, 3).map((w: CompletedWorkout) => (
-                      <button
-                        key={w.id}
-                        className="start-workout-option start-workout-option-secondary"
-                        onClick={() => {
-                          startFromHistory(w);
-                          setStartModalOpen(false);
-                        }}
-                      >
-                        <div className="start-workout-option-icon">
-                          <Clock3 size={20} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                          <div
-                            className="start-workout-option-title"
-                            style={{
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
-                          >
-                            {w.name}
-                          </div>
-                          <div className="start-workout-option-desc">
-                            {formatDuration(w.finishedAt - w.startedAt)} ·{' '}
-                            {w?.exercises?.length || 0} ejercicios
-                          </div>
-                        </div>
-                        <ArrowRight
-                          size={16}
-                          style={{ color: 'var(--text-muted)', flexShrink: 0 }}
+                      <li key={w.id}>
+                        <SessionRow
+                          when={whenLabel(w.finishedAt)}
+                          name={w.name}
+                          detail={exerciseLine(w.exercises, exerciseName)}
+                          figure={formatDuration(w.finishedAt - w.startedAt)}
+                          note={`${w.exercises?.length || 0} ejercicios`}
+                          onClick={() => {
+                            startFromHistory(w);
+                            setStartModalOpen(false);
+                          }}
                         />
-                      </button>
+                      </li>
                     ))}
-                  </>
-                )}
-              </div>
+                  </ul>
+                </section>
+              )}
             </div>
           </div>
         </>

@@ -18,8 +18,8 @@ test('descartar el entrenamiento en móvil cierra el diálogo y deja la app usab
 
   await page.getByRole('button', { name: /empezar entrenamiento/i }).tap();
   await page
-    .locator('.start-workout-option')
-    .filter({ hasText: /entrenamiento vac[ií]o/i })
+    .locator('.ws-empty')
+    .filter({ hasText: /entreno vac[ií]o/i })
     .tap();
   // El selector de ejercicios se abre al empezar vacío; ciérralo.
   await page.locator('.workout-sheet-close').tap();
@@ -52,5 +52,5 @@ test('descartar el entrenamiento en móvil cierra el diálogo y deja la app usab
 
   // La app sigue respondiendo a toques: se puede empezar otro entrenamiento.
   await page.getByRole('button', { name: /empezar entrenamiento/i }).tap();
-  await expect(page.locator('.start-workout-option').first()).toBeVisible();
+  await expect(page.locator('.ws-empty').first()).toBeVisible();
 });
