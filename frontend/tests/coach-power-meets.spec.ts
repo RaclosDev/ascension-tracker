@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { chooseOption } from './helpers/selectMenu';
+import { pickDate } from './helpers/datePicker';
 import { setupAuthMocks } from './helpers/auth';
 import type { MeetContent, PowerMeet } from '../src/lib/coach/powerMeets';
 
@@ -69,12 +70,12 @@ for (const width of [390, 1440]) {
     await page.goto('/entrenador/atletas/l1?seccion=powerlifting&vista=competiciones');
     await page.getByRole('button', { name: 'Nueva competición' }).click();
     await page.getByLabel('Nombre de la competición').fill('Campeonato de primavera');
-    await page.getByLabel('Fecha de competición').fill('2027-06-01');
+    await pickDate(page.getByRole('button', { name: 'Fecha de competición' }), '2027-06-01');
     await expect(page.getByLabel('Federación', { exact: true })).toHaveValue('AEPower');
     await page.getByRole('button', { name: 'Añadir bloque' }).click();
     await page.getByLabel('Nombre del bloque').fill('Preparación específica');
-    await page.getByLabel('Inicio', { exact: true }).fill('2027-04-01');
-    await page.getByLabel('Fin', { exact: true }).fill('2027-05-25');
+    await pickDate(page.getByLabel(/^Inicio/).and(page.locator('.ui-date')), '2027-04-01');
+    await pickDate(page.getByLabel(/^Fin/).and(page.locator('.ui-date')), '2027-05-25');
     await page.getByLabel('Objetivo del bloque').fill('Practicar comandos y afinar aperturas');
     await page.getByRole('button', { name: 'Día de competición', exact: true }).click();
     for (const [lift, planned, actual] of [

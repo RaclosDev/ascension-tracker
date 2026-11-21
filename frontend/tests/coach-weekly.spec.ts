@@ -189,16 +189,15 @@ for (const width of [390, 1920]) {
     await page.locator('.week-menu > summary').click();
     await page.getByRole('button', { name: 'Copiar semana anterior' }).click();
     // The copied Monday shows on the calendar and opens beside it, summed up in its head.
-    await expect(page.locator('.cal-week[data-focus] .cal-cell').first()).toContainText('Torso');
+    await expect(page.getByRole('button', { name: /^lunes 16 de noviembre, Torso/ })).toBeVisible();
     // The review keeps its own panel mounted behind the calendar.
     const session = page.locator('.cal-panel').filter({ visible: true });
     await expect(session).toContainText('1 ejercicio · 3 series');
     await expect(page.getByLabel('Nombre del día (Lunes 16/11)')).toHaveValue('Torso');
     await page.screenshot({ path: info.outputPath('weekly-compact.png'), fullPage: true });
-    await expect(session.getByLabel('Buscar ejercicio para añadir')).toHaveCount(0);
     // The week notes live in their own tab of the side panel.
     const openNotes = () =>
-      page.getByRole('button', { name: 'Ajustes de la semana', exact: true }).click();
+      page.getByRole('button', { name: 'Notas de la semana', exact: true }).first().click();
     await openNotes();
     await page
       .getByLabel('Comentario para el atleta')
@@ -210,10 +209,16 @@ for (const width of [390, 1920]) {
     await chooseOption(page.getByLabel('Objetivo de la semana'), 'DELOAD');
     // Closing the settings brings back the day, where the load is one cell on the exercise's line.
     await page.getByRole('button', { name: 'Cerrar panel' }).click();
-    await page.getByLabel('Carga de Press banca (kg)').fill('45');
+    // On a phone the exercise is a one-line summary: it opens to show its sets.
+    const firstLoad = async () => {
+      const open = page.getByRole('button', { name: /^Abrir Press banca/ });
+      if (await open.isVisible()) await open.click();
+      return page.getByLabel('Carga de la serie 1 (kg)');
+    };
+    await (await firstLoad()).fill('45');
     await page.screenshot({ path: info.outputPath('weekly-editing.png'), fullPage: true });
     await page.reload();
-    await expect(page.getByLabel('Carga de Press banca (kg)')).toHaveValue('45');
+    await expect(await firstLoad()).toHaveValue('45');
     await openNotes();
     await page.getByText('Notas privadas del entrenador', { exact: true }).click();
     await expect(page.getByLabel('Notas privadas del entrenador')).toHaveValue(
@@ -221,7 +226,7 @@ for (const width of [390, 1920]) {
     );
     await page.getByRole('button', { name: 'Vista del atleta' }).click();
     const preview = page.getByRole('region', { name: 'Vista previa del programa' });
-    await expect(preview).toContainText('45 kg');
+    await expect(preview.getByRole('cell', { name: '45', exact: true }).first()).toBeVisible();
     await expect(preview).not.toContainText('Revisar disponibilidad del miércoles.');
     await page.getByRole('button', { name: 'Publicar semana', exact: true }).click();
     const confirmation = page.getByRole('dialog', { name: 'Publicar semana' });

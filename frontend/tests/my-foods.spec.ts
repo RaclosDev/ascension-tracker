@@ -477,6 +477,7 @@ test.describe('Mis Alimentos & Recetas (MyFoodsPage)', () => {
     const saveRecipeBtn = page.getByRole('button', { name: /guardar receta/i });
     await saveRecipeBtn.click();
 
+    await expect.poll(() => createdRecipePayload).not.toBeNull();
     expect(createdRecipePayload).toMatchObject({
       name: 'Batido Proteico Casero',
       totalProtein: 32,

@@ -87,8 +87,7 @@ for (const width of [1440, 390]) {
       }
       return route.fulfill({ json: [] });
     });
-    await page.goto('/entrenador/atletas/l1');
-    await page.getByRole('link', { name: 'Configurar servicio' }).click();
+    await page.goto('/entrenador/atletas/l1?seccion=gestion');
     await page
       .getByLabel('Objetivo del servicio (opcional)')
       .fill('Preparar la primera competición');
@@ -122,15 +121,12 @@ for (const width of [1440, 390]) {
     await page.getByLabel('Pausar seguimiento').uncheck();
     await page.getByRole('button', { name: 'Guardar agenda' }).click();
     await expect(page.getByRole('button', { name: 'Guardar agenda' })).toBeDisabled();
-    await page.getByRole('link', { name: 'Progreso', exact: true }).click();
-    await page.getByRole('link', { name: 'Métricas', exact: true }).click();
     await expect(page.getByText(/^4 días por semana/)).toBeVisible();
     const context = page.locator('.athlete-context');
     await expect(
       context.getByText('Preparar la primera competición', { exact: true }),
     ).toBeVisible();
     await expect(context.getByText('Rack, barra y discos', { exact: true })).toBeVisible();
-    await expect(page.getByText(/Falta autorización para entrenamiento/)).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );

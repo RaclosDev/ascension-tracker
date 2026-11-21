@@ -8,9 +8,12 @@ export interface CoachTourStep {
   prepare?: { click: string; until: string }[];
 }
 
-/** The week already has sessions: on the calendar, or in the athlete preview that replaces it. */
+/**
+ * The week already has sessions: on the calendar, on the day strip that replaces it on wide
+ * screens while a day is open, or in the athlete preview.
+ */
 const PLANNED =
-  '.cal-week[data-focus] .cal-session:not([data-state="free"]), [aria-label="Vista previa del programa"]';
+  '.cal-week[data-focus] .cal-session:not([data-state="free"]), .cal-strip-plan:not([data-rest]), [aria-label="Vista previa del programa"]';
 
 export const COACH_TOUR_STEPS: CoachTourStep[] = [
   {
@@ -96,7 +99,7 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
       {
         // Coming back from the week settings, the day has to be opened again.
         click:
-          '.cal-week[data-focus] .cal-cell:has(.cal-session:not([data-state="free"])) .cal-day',
+          '.cal-week[data-focus] .cal-cell:has(.cal-session:not([data-state="free"])) .cal-day, .cal-strip-day:has(.cal-strip-plan:not([data-rest]))',
         until: '[data-tour="exercise-prescription"]',
       },
     ],
@@ -242,7 +245,7 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     chapter: 'Seguimiento',
     title: 'Busca y revisa sesiones',
     body: 'Filtra por nombre u origen. Al abrir una sesión comparas lo pautado con las series registradas y revisas esfuerzo, notas y comentarios.',
-    path: '/entrenador/atletas/tour-lucia?seccion=entrenamiento',
+    path: '/entrenador/atletas/tour-lucia/entrenos',
     target: '[data-tour="training-history"]',
   },
   {
@@ -259,7 +262,7 @@ export const COACH_TOUR_STEPS: CoachTourStep[] = [
     title: 'Perfil, competiciones y seguimiento S/B/D',
     body: 'Perfil y marcas contiene los TM y referencias. Competiciones separa preparación e intentos; Seguimiento S/B/D analiza las sesiones registradas.',
     path: '/entrenador/atletas/tour-lucia?seccion=powerlifting',
-    target: '[aria-label="Áreas de powerlifting"]',
+    target: '[aria-label="Apartados de powerlifting"]',
   },
   {
     id: 'nutrition-tab',

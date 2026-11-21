@@ -75,31 +75,26 @@ for (const width of [390, 1440]) {
     await expect(page.getByLabel('Mostrar herramientas de powerlifting')).toBeChecked();
     await page.getByRole('link', { name: 'Entrenamiento', exact: true }).click();
     await page.getByRole('link', { name: 'Powerlifting', exact: true }).click();
-    await page.getByLabel('Sentadilla (kg)', { exact: true }).fill('180');
-    await page.getByRole('button', { name: 'Añadir marca' }).click();
-    await page.getByLabel('Peso (kg)', { exact: true }).fill('190');
-    await page.getByLabel('Referencia (opcional)', { exact: true }).fill('Campeonato local');
+    const tm = page.getByRole('spinbutton', { name: 'Sentadilla', exact: true });
+    await tm.fill('180');
+    await expect(page.getByText('Tienes cambios sin guardar.')).toBeVisible();
     await page.reload();
-    await expect(page.getByLabel('Sentadilla (kg)', { exact: true })).toHaveValue('180');
-    await expect(page.getByLabel('Referencia (opcional)', { exact: true })).toHaveValue(
-      'Campeonato local',
-    );
-    await page.getByRole('button', { name: 'Guardar perfil de powerlifting' }).click();
+    await expect(tm).toHaveValue('180');
+    const saveBtn = page.getByRole('button', { name: 'Guardar', exact: true });
+    await saveBtn.click();
     await expect(page.getByText('Perfil de powerlifting guardado')).toBeVisible();
-    expect(saved.profile.marks[0].kg).toBe(190);
+    expect(saved.profile.trainingMax.squat).toBe(180);
     conflict = true;
-    await page.getByLabel('Sentadilla (kg)', { exact: true }).fill('185');
-    await page.getByRole('button', { name: 'Guardar perfil de powerlifting' }).click();
+    await tm.fill('185');
+    await saveBtn.click();
     await page.getByRole('button', { name: 'Consultar versión guardada' }).click();
     await expect(
       page.getByText('Existe una versión más reciente.', { exact: false }),
     ).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: 'Guardar perfil de powerlifting' }),
-    ).toBeDisabled();
-    await expect(page.getByLabel('Sentadilla (kg)', { exact: true })).toHaveValue('185');
-    await page.getByRole('button', { name: 'Descartar borrador' }).click();
-    await expect(page.getByLabel('Sentadilla (kg)', { exact: true })).toHaveValue('180');
+    await expect(saveBtn).toBeDisabled();
+    await expect(tm).toHaveValue('185');
+    await page.getByRole('button', { name: 'Descartar cambios' }).click();
+    await expect(tm).toHaveValue('180');
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
