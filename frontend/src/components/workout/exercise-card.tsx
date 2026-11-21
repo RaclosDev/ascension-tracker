@@ -129,6 +129,10 @@ export const ExerciseCard = React.memo(function ExerciseCard({
   const settings = useWorkoutStore((s) => s.settings);
   const prescribed = useWorkoutStore((state) => !!state.active?.programDayId);
   const coachNotes = useWorkoutStore((state) => state.active?.coachExerciseNotes?.[row?.id ?? '']);
+  const coachRest = useWorkoutStore((state) => state.active?.coachRest?.[row?.id ?? '']);
+  const coachProtocol = useWorkoutStore(
+    (state) => state.active?.coachExerciseProtocols?.[row?.id ?? ''],
+  );
   const showRpe =
     (settings?.showRpe ?? false) || prescribed || !!row?.sets.some((set) => set.rir || set.rpe);
   const isCardio = meta?.muscle === 'cardio';
@@ -207,7 +211,7 @@ export const ExerciseCard = React.memo(function ExerciseCard({
               >
                 <Timer size={12} className="exercise-card-rest-icon" />
                 <Select
-                  value={restTimers[row.exerciseId] ?? restPreset}
+                  value={coachRest ?? restTimers[row.exerciseId] ?? restPreset}
                   onChange={(e) => {
                     const val = Number(e.target.value);
                     setExerciseRestTimer(row.exerciseId, val);
@@ -216,11 +220,25 @@ export const ExerciseCard = React.memo(function ExerciseCard({
                   className="exercise-card-rest-select"
                   aria-label="Tiempo de descanso para este ejercicio"
                 >
-                  {[30, 60, 90, 120, 150, 180, 240, 300].map((s) => (
-                    <option key={s} value={s}>
-                      {formatRestFriendly(s)}
-                    </option>
-                  ))}
+                  {[
+                    ...new Set([
+                      30,
+                      60,
+                      90,
+                      120,
+                      150,
+                      180,
+                      240,
+                      300,
+                      ...(coachRest ? [coachRest] : []),
+                    ]),
+                  ]
+                    .sort((a, b) => a - b)
+                    .map((s) => (
+                      <option key={s} value={s}>
+                        {formatRestFriendly(s)}
+                      </option>
+                    ))}
                 </Select>
               </div>
             </div>
@@ -329,12 +347,29 @@ export const ExerciseCard = React.memo(function ExerciseCard({
             </div>
           )}
 
+          {(coachProtocol || coachNotes) && (
+            <div className="workout-coach-plan">
+              <span className="workout-coach-plan-label">Pauta de tu entrenador</span>
+              {coachProtocol && <strong>{coachProtocol}</strong>}
+              {coachNotes && <p>{coachNotes}</p>}
+            </div>
+          )}
+
           {/* Notes */}
           <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '0.4rem 1rem' }}>
             <input
               value={row.notes}
               onChange={(e) => setExerciseNotes(row.id, e.target.value)}
-              placeholder="Notas de la serie, tempo, RIR"
+              placeholder={
+                coachProtocol || coachNotes
+                  ? 'Nota para tu entrenador (opcional)'
+                  : 'Notas del ejercicio (opcional)'
+              }
+              aria-label={
+                coachProtocol || coachNotes
+                  ? 'Nota para tu entrenador sobre este ejercicio'
+                  : 'Notas de este ejercicio'
+              }
               className="form-input"
               style={{
                 width: '100%',
@@ -348,11 +383,6 @@ export const ExerciseCard = React.memo(function ExerciseCard({
 
           {/* Sets */}
           <TechniqueVideoEditor exercise={row} />
-          {coachNotes && (
-            <p className="workout-coach-target">
-              <strong>Pauta del entrenador</strong> · {coachNotes}
-            </p>
-          )}
           <div style={{ padding: '0.25rem 0.5rem 0.75rem' }}>
             <div className="set-grid-header" style={{ gridTemplateColumns: cols }}>
               <span>#</span>

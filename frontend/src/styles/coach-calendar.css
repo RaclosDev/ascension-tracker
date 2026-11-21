@@ -1,0 +1,1432 @@
+/* The athlete's calendar: weeks as rows, days as cells, and the open day beside it. */
+.cal-body {
+  display: grid;
+  gap: 12px;
+  align-items: start;
+  min-width: 0;
+}
+.cal-body[hidden] {
+  display: none;
+}
+.cal {
+  container: cal / inline-size;
+  min-width: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+.cal-head,
+.cal-week {
+  display: grid;
+  grid-template-columns: 104px repeat(7, minmax(0, 1fr));
+}
+.cal-head span {
+  padding: 6px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.cal-week {
+  border-top: 1px solid var(--border-subtle);
+}
+.cal-week-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px;
+  text-align: left;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.cal-week-head strong {
+  font-weight: 600;
+}
+.cal-week-head:hover {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+}
+/* The open week is the one the bar above publishes: its head is the only inked one. */
+.cal-week[data-focus] .cal-week-head {
+  color: var(--bg-primary);
+  background: var(--text-primary);
+}
+.cal-week[data-focus] .cal-week-head strong {
+  font-weight: 800;
+}
+.cal-week[data-focus] .cal-week-head .cal-state {
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+}
+.cal-state {
+  padding: 1px 6px;
+  border: 1px solid var(--border-medium);
+  border-radius: 999px;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.cal-state[data-state='published'] {
+  border-color: transparent;
+  background: var(--accent-light);
+  color: var(--text-primary);
+}
+.cal-state[data-state='program'] {
+  border-color: var(--accent-light);
+  color: var(--text-primary);
+}
+.cal-state[data-state='empty'] {
+  border-color: transparent;
+  padding-inline: 0;
+}
+.cal-state[data-state='changed'],
+.cal-state[data-state='incomplete'] {
+  border-style: dashed;
+  color: var(--text-primary);
+}
+.cal-cell {
+  min-width: 0;
+  min-height: 78px;
+  border-left: 1px solid var(--border-subtle);
+}
+.cal-week[data-focus] .cal-cell {
+  min-height: 104px;
+}
+.cal-cell[draggable='true'] {
+  cursor: grab;
+}
+/* The day open in the panel: ringed on its button, which paints above the cell. */
+.cal-cell[data-selected] .cal-day {
+  background: var(--accent-light);
+  outline: 2px solid var(--text-primary);
+  outline-offset: -2px;
+}
+.cal-cell[data-drop] {
+  box-shadow: inset 0 0 0 2px var(--border-medium);
+  background: var(--accent-light);
+}
+.cal-day {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 6px;
+  text-align: left;
+}
+.cal-day:hover {
+  background: var(--bg-secondary);
+}
+.cal-day:focus-visible,
+.cal-week-head:focus-visible,
+.day-add:focus-visible,
+.day-session-name:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.cal-date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.cal-date-weekday {
+  display: none;
+}
+.cal-date-number {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.cal-cell[data-today] .cal-date-number {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  font-weight: 800;
+}
+.cal-cell:not([data-past]) .cal-date-number {
+  color: var(--text-primary);
+}
+.cal-cell[data-today] .cal-date-number {
+  color: var(--bg-primary);
+}
+.cal-items {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.cal-session {
+  display: grid;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid var(--border-medium);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+.cal-session[data-state='done'] {
+  border-color: transparent;
+  background: var(--accent-light);
+}
+.cal-session[data-state='missed'],
+.cal-session[data-state='free'] {
+  border-style: dashed;
+}
+.cal-session-name {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.cal-session small {
+  display: block;
+}
+.cal-session-name svg {
+  display: inline;
+  margin-right: 4px;
+  vertical-align: -1px;
+}
+.cal-session small {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+.cal-fact {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.cal-fact svg {
+  flex: none;
+}
+.cal-fact[data-ok],
+.cal-fact[data-note] {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+/* Narrow calendar (phone, or squeezed by the open day): a month-style grid of markers. */
+@container cal (max-width: 640px) {
+  .cal-head,
+  .cal-week {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .cal-head span:first-child {
+    display: none;
+  }
+  .cal-head span {
+    padding: 6px 0;
+    text-align: center;
+  }
+  .cal-week-head {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 36px;
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .cal-cell,
+  .cal-week[data-focus] .cal-cell {
+    min-height: 60px;
+  }
+  .cal-cell:nth-child(2) {
+    border-left: 0;
+  }
+  .cal-day {
+    align-items: center;
+    padding: 4px 2px;
+  }
+  .cal-date-month {
+    display: none;
+  }
+  .cal-items {
+    width: 100%;
+  }
+  .cal-session {
+    padding: 2px 3px;
+    font-size: 0.68rem;
+    line-height: 1.25;
+  }
+  .cal-session-name svg {
+    width: 11px;
+    height: 11px;
+    margin-right: 2px;
+  }
+  .cal-session small,
+  .cal-fact {
+    display: none;
+  }
+}
+/* Too narrow for a name per day: each session is its mark alone. */
+@container cal (max-width: 470px) {
+  .cal-items {
+    flex-flow: row wrap;
+    justify-content: center;
+    gap: 3px;
+  }
+  .cal-session {
+    padding: 2px 4px;
+  }
+  .cal-session-name {
+    font-size: 0;
+    line-height: 0;
+  }
+  .cal-session-name svg {
+    width: revert-layer;
+    height: revert-layer;
+    margin: 0;
+  }
+}
+.cal-panel {
+  scroll-margin-top: 12px;
+}
+@media (min-width: 901px) and (max-width: 1099px) {
+  /* The week bar stays stuck on top at this width. */
+  .cal-panel {
+    scroll-margin-top: 150px;
+  }
+}
+@media (min-width: 1100px) {
+  .cal-body[data-panel] {
+    grid-template-columns: minmax(0, 1fr) clamp(380px, 40vw, 620px);
+  }
+  .cal-panel {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+    border-radius: 12px;
+  }
+}
+
+/* The open day. */
+.cal-panel {
+  container: daypanel / inline-size;
+  min-width: 0;
+}
+.cal-panel .week-panel-head h3 {
+  flex: 1;
+  min-width: 0;
+}
+.cal-fieldset {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.cal-fieldset[hidden] {
+  display: none;
+}
+.day-empty {
+  display: grid;
+  gap: 10px;
+  padding: 4px 0 8px;
+}
+.day-empty p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+.day-empty-actions,
+.day-menu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.day-session {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.day-session-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.day-session-head small {
+  flex: none;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.day-session-name {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 8px;
+  margin-left: -8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.day-session-name:hover,
+.day-session-name:focus {
+  border-color: var(--border-medium);
+}
+.day-session-notes {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  color: var(--text-secondary);
+}
+.day-menu {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+.day-menu label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.day-menu-wide,
+.day-menu-actions {
+  grid-column: 1 / -1;
+}
+.day-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* What each cell of an exercise's line holds, once for the whole list. */
+.day-list:empty {
+  display: none;
+}
+.day-list-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.day-search {
+  display: grid;
+  gap: 8px;
+}
+.day-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  border: 1px dashed var(--border-medium);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.day-add:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+}
+.day-add:disabled {
+  opacity: 0.4;
+}
+
+/* An exercise on one line: name, sets × reps, effort and load. The rest unfolds. */
+.set-card[data-compact] {
+  gap: 6px;
+  padding: 4px 4px 4px 8px;
+}
+.set-card[data-compact][data-open] {
+  padding-bottom: 10px;
+  border-color: var(--border-medium);
+}
+.set-card[data-compact] .set-card-name {
+  flex: 1 1 120px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.set-sum {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2px 10px;
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.set-sum:hover {
+  background: var(--bg-secondary);
+}
+.set-sum:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.set-sum-part {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+}
+.set-sum-part strong {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.set-sum-part small {
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+/* Fixed slots, right-aligned: the figures of every folded card read as columns. */
+.set-sum-part {
+  justify-content: flex-end;
+}
+.set-sum-part[data-slot='0'] {
+  min-width: 3.9rem;
+}
+.set-sum-part[data-slot='1'] {
+  min-width: 5rem;
+}
+.set-sum-part[data-slot='2'] {
+  min-width: 3.6rem;
+}
+.set-sum-part[data-slot='3'] {
+  min-width: 5.4rem;
+}
+.set-fold-note {
+  margin: 0;
+  padding: 0 8px 2px 18px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+.set-icon[data-flip] svg {
+  transform: rotate(180deg);
+}
+@container daypanel (max-width: 470px) {
+  .set-card[data-compact] .set-card-head {
+    flex-wrap: wrap;
+  }
+  .set-sum {
+    order: 5;
+    justify-content: flex-start;
+    flex: 1 1 100%;
+  }
+  .set-sum-part[data-slot] {
+    min-width: 0;
+  }
+  .set-sum-part[data-empty] {
+    display: none;
+  }
+}
+
+/* What surrounds the session that day. */
+.day-facts {
+  display: grid;
+}
+.day-fact {
+  display: grid;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border-subtle);
+}
+.day-fact:last-child {
+  padding-bottom: 0;
+}
+.day-fact h4 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.day-fact p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.day-fact ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.day-fact li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.88rem;
+}
+.day-fact li small,
+.day-fact-note {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.day-fact a,
+.day-fact-links a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.day-macros {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.day-macros dt {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+.day-macros dd {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.day-macros dd small {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+/* Something written about the day: the words quoted under who said them and where. */
+.day-note {
+  display: grid;
+  gap: 2px;
+  padding-left: 10px;
+  border-left: 2px solid var(--border-medium);
+  font-size: 0.85rem;
+}
+.day-note[data-coach] {
+  border-left-color: var(--accent-primary);
+}
+.day-note strong {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.day-note-scores {
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.day-note q {
+  quotes: none;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+}
+.day-fact p.day-fact-links,
+.day-fact p.day-records {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 0.82rem;
+}
+.day-records span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary);
+}
+@media (pointer: coarse) {
+  .day-add,
+  .day-session-name {
+    height: 44px;
+  }
+}
+
+/* The session takes the screen: the calendar folds into its week and the exercises sit beside. */
+.week-panel-wide {
+  flex: none;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 0.8rem;
+}
+.cal-strip {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.cal-strip-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.cal-strip-back:hover {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+}
+.cal-strip-whole {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--text-primary);
+  background: var(--bg-card);
+}
+.cal-strip-whole:hover {
+  background: var(--bg-secondary);
+}
+.cal-strip-whole[aria-current] {
+  border-color: var(--accent-primary);
+  background: var(--bg-secondary);
+}
+.cal-strip ol {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cal-strip-day {
+  min-width: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-card);
+}
+.cal-strip-day[data-selected] {
+  border-color: var(--accent-primary);
+  background: var(--bg-secondary);
+}
+.cal-strip-day[data-drop] {
+  box-shadow: inset 0 0 0 2px var(--border-medium);
+  background: var(--accent-light);
+}
+.cal-strip-day button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-height: 56px;
+  padding: 6px 4px;
+  border-radius: 7px;
+  text-align: left;
+}
+.cal-strip-day button:hover {
+  background: var(--bg-secondary);
+}
+.cal-strip-back:focus-visible,
+.cal-strip-whole:focus-visible,
+.cal-strip-day button:focus-visible,
+.ex-item:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.cal-strip-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: none;
+  width: 34px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.cal-strip-date b {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.cal-strip-day[data-today] .cal-strip-date b {
+  color: var(--accent-primary);
+}
+/* Folded into a row there is only room for a mark on the days that have a session. */
+.cal-strip-plan {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  overflow: hidden;
+  font-size: 0;
+  background: var(--accent-primary);
+}
+.cal-strip-plan[data-rest] {
+  background: none;
+}
+.cal-strip-done {
+  display: none;
+  flex: none;
+  color: var(--success, #2e9e6b);
+}
+@media (min-width: 1100px) {
+  .cal-body[data-panel='wide'] {
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+  .cal-body[data-panel='wide'] .cal-panel {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+  .cal-strip {
+    position: sticky;
+    top: 12px;
+  }
+  .cal-strip ol {
+    grid-auto-flow: row;
+  }
+  .cal-strip-day button {
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px;
+  }
+  .cal-strip-plan,
+  .cal-strip-plan[data-rest] {
+    display: grid;
+    flex: 1;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    border-radius: 0;
+    font-size: 0.8rem;
+    background: none;
+  }
+  .cal-strip-plan strong {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .cal-strip-plan[data-rest] strong {
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+  .cal-strip-plan small {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+  }
+  .cal-strip-done {
+    display: block;
+  }
+}
+
+/* A reviewed week reuses the wide session: the days as a column, the week or the day beside. */
+.coach-student .week-review-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.week-review-title::first-letter {
+  text-transform: uppercase;
+}
+.week-review-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.week-review-feedback {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+  font-size: 0.88rem;
+}
+.week-review-feedback .coach-review-scores {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+}
+.week-review-feedback .coach-review-scores dt {
+  font-size: 0.72rem;
+}
+.week-review-feedback .coach-review-scores dd {
+  font-size: 1.05rem;
+}
+.day-review {
+  display: grid;
+  gap: 4px;
+}
+/* Beside the day's facts there is room for one column: the plan first, what was done under it. */
+.day-review > .grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.day-review > .grid > * {
+  grid-column: 1 / -1;
+}
+.day-review table :is(th, td) {
+  padding: 6px 14px 6px 0;
+  text-align: left;
+  vertical-align: top;
+}
+.day-review-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.day-review-head strong {
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+.day-fact-links {
+  margin: 0;
+  font-size: 0.82rem;
+}
+.cal-day-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  border-radius: 10px;
+}
+.cal-day-main[data-drop] {
+  outline: 2px dashed var(--accent-primary);
+  outline-offset: 6px;
+}
+.cal-day-body[data-wide] {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+@container daypanel (min-width: 780px) {
+  .cal-day-body[data-wide] {
+    /* The exercise list is read; the set grid only needs room for three short numbers. */
+    grid-template-columns: minmax(0, 1.2fr) minmax(320px, 1fr);
+    gap: 20px;
+  }
+  .ex-panel {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+    padding-left: 20px;
+    border-left: 1px solid var(--border-subtle);
+  }
+}
+.ex-panel {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-width: 0;
+}
+.ex-panel h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.ex-search {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ex-group {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.ex-group {
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+.ex-group h4 {
+  margin: 0 0 2px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.ex-group ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ex-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 4px 8px 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  text-align: left;
+  color: var(--text-secondary);
+  background: none;
+  cursor: grab;
+}
+.ex-item:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+}
+.ex-item:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.ex-item[data-added] {
+  opacity: 0.6;
+}
+.ex-item-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.ex-item-text strong {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.ex-item-text small {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+}
+.ex-none {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* What the coach writes on the left, what the athlete did last time on the right, in the same cells. */
+.set-grid-versus {
+  grid-template-columns: 36px repeat(6, minmax(0, 1fr)) 32px;
+}
+.set-grid-2.set-grid-versus {
+  grid-template-columns: 36px repeat(4, minmax(0, 1fr)) 32px;
+}
+.set-grid-sides {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--text-primary);
+}
+.set-grid-sides .set-past-side {
+  color: var(--text-secondary);
+}
+.set-grid-versus .set-past-side {
+  margin-left: 8px;
+}
+.set-past {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 36px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.04);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+}
+.set-past[data-first] {
+  margin-left: 8px;
+  position: relative;
+}
+.set-past[data-first]::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: -2px;
+  bottom: -2px;
+  border-left: 1px solid var(--border-subtle);
+}
+.set-past[data-none] {
+  background: transparent;
+  opacity: 0.6;
+}
+.set-past[data-first] {
+  overflow: visible;
+}
+.set-card-variant {
+  margin-left: 6px;
+  font-size: 0.76rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+.set-card-variants {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: auto;
+}
+.variant-chip {
+  position: relative;
+}
+.variant-chip-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 160px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px dashed var(--border-medium);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.variant-chip-trigger:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+.variant-chip-trigger[data-set] {
+  border-style: solid;
+  border-color: var(--border-medium);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+.variant-chip-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  right: 0;
+  display: grid;
+  gap: 2px;
+  width: 200px;
+  padding: 6px;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  background: var(--bg-card, var(--bg-secondary));
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.45);
+}
+.variant-chip-menu button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  font-size: 0.82rem;
+  text-align: left;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.variant-chip-menu button:hover,
+.variant-chip-menu button[aria-pressed='true'] {
+  background: var(--bg-secondary);
+}
+.variant-chip-menu button small {
+  margin-left: auto;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+.variant-chip-menu button svg {
+  margin-left: auto;
+}
+.variant-chip-menu .form-input {
+  height: 30px;
+  margin-top: 4px;
+  font-size: 0.82rem;
+}
+.variant-chip-menu .variant-chip-clear {
+  color: var(--text-secondary);
+}
+@media (max-width: 900px) {
+  .set-grid-versus {
+    grid-template-columns: 40px repeat(6, minmax(0, 1fr)) 40px;
+  }
+  .set-grid-2.set-grid-versus {
+    grid-template-columns: 40px repeat(4, minmax(0, 1fr)) 40px;
+  }
+  .set-past {
+    height: 44px;
+  }
+}
+/* The search inside the panel: results as quiet rows, like the athlete's own exercises below. */
+.ex-search .btn {
+  min-height: 40px;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: none;
+  border-width: 1px;
+  border-color: var(--border-subtle);
+}
+.ex-search label:first-child {
+  gap: 6px;
+}
+@container daypanel (max-width: 470px) {
+  .set-grid-versus {
+    grid-template-columns: 28px repeat(6, minmax(0, 1fr)) 28px;
+  }
+  .set-grid-2.set-grid-versus {
+    grid-template-columns: 28px repeat(4, minmax(0, 1fr)) 28px;
+  }
+  .set-grid-versus .set-cell,
+  .set-past {
+    padding: 0 2px;
+    font-size: 0.8rem;
+  }
+  .set-grid-versus .set-icon {
+    width: 28px;
+  }
+}
+
+/* Planning wide: the days as a ribbon on top, the session across and its support column beside. */
+.week-support {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+}
+.week-support-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--bg-secondary);
+}
+.week-support-tabs button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  min-height: 52px;
+  padding: 6px 4px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: center;
+  cursor: pointer;
+}
+.week-support-tabs button:hover {
+  color: var(--text-primary);
+}
+.week-support-tabs button[aria-pressed='true'] {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.25),
+    inset 0 -2px 0 var(--accent-primary);
+}
+.week-support-tabs button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
+}
+.week-support .ex-panel {
+  position: static;
+  max-height: none;
+  overflow: visible;
+  padding-left: 0;
+  border-left: 0;
+}
+.week-support > .cal-fieldset {
+  font-size: 0.85rem;
+}
+@media (min-width: 1100px) {
+  .week-editor .cal-body[data-panel='wide'] {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-strip {
+    position: static;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: stretch;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-back {
+    flex-direction: column;
+    padding: 0 12px;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-strip ol {
+    grid-auto-flow: column;
+    gap: 6px;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-day button {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    min-height: 64px;
+    padding: 8px 10px;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-date {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+    width: auto;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-done {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-strip-day {
+    position: relative;
+  }
+  .week-editor .cal-body[data-panel='wide'] .cal-day-body[data-wide] .day-facts {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+}
+@container daypanel (min-width: 980px) {
+  .week-editor .cal-day-body[data-wide] {
+    grid-template-columns: minmax(0, 1fr) 400px;
+    gap: 24px;
+  }
+  .week-editor .week-support {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+    padding-left: 20px;
+    border-left: 1px solid var(--border-subtle);
+    scrollbar-width: thin;
+  }
+}
+
+/* Exercise card, set by set: the head breathes and, folded or open, a click on it toggles the card. */
+.set-card:is(:not([data-compact]), [data-open]) {
+  gap: 10px;
+  padding: 12px 14px 14px;
+}
+.set-card:is(:not([data-compact]), [data-open]) .set-card-head {
+  padding-bottom: 2px;
+}
+.set-card:is(:not([data-compact]), [data-open]) .set-card-name {
+  font-size: 1rem;
+  line-height: 1.25;
+}
+.set-card[data-compact]:not([data-open]) .set-card-media {
+  flex-basis: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+.set-grid-sides {
+  margin-bottom: -4px;
+}
+.set-grid-sides > span:nth-child(2) {
+  color: var(--text-primary);
+}
+.set-card .set-exercise-note {
+  margin-top: 2px;
+  border-style: solid;
+  background: rgb(0 0 0 / 0.12);
+}
+.set-card .set-exercise-note:placeholder-shown {
+  border-style: dashed;
+  background: transparent;
+}
+.set-card[data-compact] .set-card-head {
+  cursor: pointer;
+}
+
+/* Library program editor: the week's days on the left, the exercises to add on the right. */
+.program-editor-body {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+@media (min-width: 1100px) {
+  .program-editor-body {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+  }
+  .program-ex-panel {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+    padding-left: 20px;
+    border-left: 1px solid var(--border-subtle);
+  }
+}
+.program-ex-target {
+  display: grid;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.program-day-drop {
+  border-radius: 6px;
+  transition: outline-color 0.12s ease;
+  outline: 2px dashed transparent;
+  outline-offset: 3px;
+}
+.program-day-drop[data-target] > .card {
+  border-color: var(--text-secondary);
+}
+.program-day-drop[data-drop] {
+  outline-color: var(--accent-primary);
+}
+@media (prefers-reduced-motion: reduce) {
+  .program-day-drop {
+    transition: none;
+  }
+}

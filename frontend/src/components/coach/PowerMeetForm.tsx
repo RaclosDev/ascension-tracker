@@ -11,6 +11,7 @@ import {
 import { PowerAttemptsEditor } from './PowerAttemptsEditor';
 import { PowerBlocksEditor } from './PowerBlocksEditor';
 import { Select } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 
 export function PowerMeetForm({
   saved,
@@ -38,7 +39,7 @@ export function PowerMeetForm({
     draft.setValue({ ...value, content: { ...content, ...patch } });
   return (
     <form
-      className="flex flex-col gap-5"
+      className="pw-form"
       onSubmit={(e) => {
         e.preventDefault();
         if (!canEdit || stale || save.isPending) return;
@@ -56,11 +57,9 @@ export function PowerMeetForm({
         });
       }}
     >
-      <h3 className="text-xl font-semibold">
-        {saved.id ? saved.content.name : 'Nueva competición'}
-      </h3>
+      <h3 className="pw-meet-title">{saved.id ? saved.content.name : 'Nueva competición'}</h3>
       {!canEdit && <p>Solo lectura con los permisos actuales de entrenamiento.</p>}
-      <nav aria-label="Vista de la competición" className="flex gap-2">
+      <nav aria-label="Vista de la competición" className="pw-meet-views">
         <button
           type="button"
           className={`btn ${view === 'PREP' ? 'btn-primary' : 'btn-secondary'}`}
@@ -79,101 +78,103 @@ export function PowerMeetForm({
           Día de competición
         </button>
       </nav>
-      <fieldset disabled={!canEdit || save.isPending} className="flex flex-col gap-6 min-w-0">
+      <fieldset disabled={!canEdit || save.isPending} className="pw-meet-body">
         {view === 'PREP' && (
           <>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="flex flex-col gap-1">
-                Nombre de la competición
-                <input
-                  className="form-input min-h-11"
-                  required
-                  maxLength={120}
-                  value={content.name}
-                  onChange={(e) => set({ name: e.target.value })}
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                Fecha de competición
-                <input
-                  className="form-input min-h-11"
-                  type="date"
-                  required
-                  value={content.date}
-                  onChange={(e) => set({ date: e.target.value })}
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                Equipamiento
-                <Select
-                  className="form-input min-h-11"
-                  value={content.equipment}
-                  onChange={(e) => set({ equipment: e.target.value as MeetContent['equipment'] })}
-                >
-                  <option value="CLASSIC">Clásico / raw</option>
-                  <option value="EQUIPPED">Equipado</option>
-                  <option value="OTHER">Otro</option>
-                </Select>
-              </label>
-              <label className="flex flex-col gap-1">
-                Federación
-                <input
-                  className="form-input min-h-11"
-                  maxLength={100}
-                  value={content.federation}
-                  onChange={(e) => set({ federation: e.target.value })}
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                Categoría (opcional)
-                <input
-                  className="form-input min-h-11"
-                  maxLength={80}
-                  value={content.category}
-                  onChange={(e) => set({ category: e.target.value })}
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                Objetivo de total (kg)
-                <input
-                  className="form-input min-h-11"
-                  type="number"
-                  min="0.01"
-                  max="4500"
-                  step="0.01"
-                  value={content.targetTotal ?? ''}
-                  onChange={(e) =>
-                    set({ targetTotal: e.target.value ? Number(e.target.value) : null })
-                  }
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                Referencia de reglas
-                <Select
-                  className="form-input min-h-11"
-                  value={content.rules}
-                  onChange={(e) => set({ rules: e.target.value as MeetContent['rules'] })}
-                >
-                  <option value="CUSTOM">Reglas de la organización</option>
-                  <option value="IPF_2026">IPF · marzo de 2026</option>
-                </Select>
-              </label>
-            </div>
-            {content.rules === 'IPF_2026' && (
-              <p className="coach-description">
-                Avisos orientativos sobre incrementos; no validan inscripción, récords ni decisiones
-                arbitrales.{' '}
-                <a
-                  className="underline"
-                  href="https://www.powerlifting.sport/fileadmin/ipf/data/rules/technical-rules/english/2026_IPF_Technical_Rulebook__effective_01_March_2026__v3.pdf"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Consultar reglamento IPF 2026 (PDF)
-                </a>
-                .
-              </p>
-            )}
+            <section className="card pw-card pw-meet-data">
+              <h4>Datos de la competición</h4>
+              <div className="pw-meet-fields">
+                <label className="pw-field">
+                  Nombre de la competición
+                  <input
+                    className="form-input min-h-11"
+                    required
+                    maxLength={120}
+                    value={content.name}
+                    onChange={(e) => set({ name: e.target.value })}
+                  />
+                </label>
+                <label className="pw-field">
+                  Fecha de competición
+                  <DatePicker
+                    className="form-input min-h-11"
+                    required
+                    value={content.date}
+                    onChange={(date) => set({ date })}
+                  />
+                </label>
+                <label className="pw-field">
+                  Equipamiento
+                  <Select
+                    className="form-input min-h-11"
+                    value={content.equipment}
+                    onChange={(e) => set({ equipment: e.target.value as MeetContent['equipment'] })}
+                  >
+                    <option value="CLASSIC">Clásico / raw</option>
+                    <option value="EQUIPPED">Equipado</option>
+                    <option value="OTHER">Otro</option>
+                  </Select>
+                </label>
+                <label className="pw-field">
+                  Federación
+                  <input
+                    className="form-input min-h-11"
+                    maxLength={100}
+                    value={content.federation}
+                    onChange={(e) => set({ federation: e.target.value })}
+                  />
+                </label>
+                <label className="pw-field">
+                  Categoría (opcional)
+                  <input
+                    className="form-input min-h-11"
+                    maxLength={80}
+                    value={content.category}
+                    onChange={(e) => set({ category: e.target.value })}
+                  />
+                </label>
+                <label className="pw-field">
+                  Objetivo de total (kg)
+                  <input
+                    className="form-input min-h-11"
+                    type="number"
+                    min="0.01"
+                    max="4500"
+                    step="0.01"
+                    value={content.targetTotal ?? ''}
+                    onChange={(e) =>
+                      set({ targetTotal: e.target.value ? Number(e.target.value) : null })
+                    }
+                  />
+                </label>
+                <label className="pw-field">
+                  Referencia de reglas
+                  <Select
+                    className="form-input min-h-11"
+                    value={content.rules}
+                    onChange={(e) => set({ rules: e.target.value as MeetContent['rules'] })}
+                  >
+                    <option value="CUSTOM">Reglas de la organización</option>
+                    <option value="IPF_2026">IPF · marzo de 2026</option>
+                  </Select>
+                </label>
+              </div>
+              {content.rules === 'IPF_2026' && (
+                <p className="pw-hint">
+                  Avisos orientativos sobre incrementos; no validan inscripción, récords ni
+                  decisiones arbitrales.{' '}
+                  <a
+                    className="underline"
+                    href="https://www.powerlifting.sport/fileadmin/ipf/data/rules/technical-rules/english/2026_IPF_Technical_Rulebook__effective_01_March_2026__v3.pdf"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Consultar reglamento IPF 2026 (PDF)
+                  </a>
+                  .
+                </p>
+              )}
+            </section>
             <PowerBlocksEditor
               linkId={saved.linkId}
               blocks={content.blocks}
@@ -181,29 +182,31 @@ export function PowerMeetForm({
               canEdit={canEdit}
               onChange={(blocks) => set({ blocks })}
             />
-            <label className="flex flex-col gap-1">
-              Notas de competición
-              <textarea
-                className="form-input"
-                rows={3}
-                maxLength={2000}
-                value={content.notes}
-                onChange={(e) => set({ notes: e.target.value })}
-              />
-            </label>
-            <label className="flex items-center gap-2 min-h-11">
-              <input
-                type="checkbox"
-                checked={content.archived}
-                onChange={(e) => set({ archived: e.target.checked })}
-              />
-              Archivar competición conservando los resultados
-            </label>
+            <section className="card pw-card">
+              <label className="pw-field">
+                Notas de competición
+                <textarea
+                  className="form-input"
+                  rows={3}
+                  maxLength={2000}
+                  value={content.notes}
+                  onChange={(e) => set({ notes: e.target.value })}
+                />
+              </label>
+              <label className="pw-check">
+                <input
+                  type="checkbox"
+                  checked={content.archived}
+                  onChange={(e) => set({ archived: e.target.checked })}
+                />
+                Archivar competición conservando los resultados
+              </label>
+            </section>
           </>
         )}
         {view === 'DAY' && (
           <>
-            <p>
+            <p className="pw-hint">
               {formatCoachDate(content.date)} · {content.category || 'Sin categoría'} ·{' '}
               {{ CLASSIC: 'Clásico / raw', EQUIPPED: 'Equipado', OTHER: 'Otro' }[content.equipment]}
             </p>
@@ -235,10 +238,7 @@ export function PowerMeetForm({
         </div>
       )}
       {canEdit && (
-        <div
-          className="card sticky bottom-3 z-10 flex flex-wrap gap-3"
-          style={{ background: 'var(--bg-card)' }}
-        >
+        <div className="pw-save pw-save-actions">
           <button className="btn btn-primary" disabled={save.isPending || stale || !draft.dirty}>
             {save.isPending ? 'Guardando…' : 'Guardar competición'}
           </button>

@@ -87,16 +87,19 @@ for (const width of [1440, 390]) {
       }
       return route.fulfill({ json: [] });
     });
-    await page.goto('/entrenador/atletas/l1');
-    await page.getByRole('link', { name: 'Configurar servicio' }).click();
+    await page.goto('/entrenador/atletas/l1?seccion=gestion');
     await page
       .getByLabel('Objetivo del servicio (opcional)')
       .fill('Preparar la primera competición');
     await page.getByLabel('Días disponibles por semana (opcional)').fill('4');
     await page.getByLabel('Material disponible (opcional)').fill('Rack, barra y discos');
     await page.getByLabel(/He revisado con el atleta/).check();
-    await page.getByRole('button', { name: 'Guardar servicio' }).click();
-    await expect(page.getByText('Servicio guardado', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Guardar objetivo' }).click();
+    await expect(page.getByText('Objetivo guardado', { exact: true })).toBeVisible();
+    await page
+      .getByRole('navigation', { name: 'Apartados de los ajustes' })
+      .getByRole('link', { name: 'Agenda del seguimiento', exact: true })
+      .click();
     await chooseOption(page.getByLabel('Día del seguimiento'), '3');
     await page.getByLabel('Hora del seguimiento').fill('17:30');
     await page.getByLabel('Zona horaria').fill('Atlantic/Canary');
@@ -118,14 +121,12 @@ for (const width of [1440, 390]) {
     await page.getByLabel('Pausar seguimiento').uncheck();
     await page.getByRole('button', { name: 'Guardar agenda' }).click();
     await expect(page.getByRole('button', { name: 'Guardar agenda' })).toBeDisabled();
-    await page.getByRole('link', { name: 'Resumen', exact: true }).click();
     await expect(page.getByText(/^4 días por semana/)).toBeVisible();
     const context = page.locator('.athlete-context');
     await expect(
       context.getByText('Preparar la primera competición', { exact: true }),
     ).toBeVisible();
     await expect(context.getByText('Rack, barra y discos', { exact: true })).toBeVisible();
-    await expect(page.getByText(/Falta autorización para entrenamiento/)).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );

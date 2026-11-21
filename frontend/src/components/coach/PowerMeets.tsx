@@ -53,46 +53,54 @@ export function PowerMeets({
         </>
       ) : (
         <>
-          <div className="flex flex-wrap justify-between items-center gap-3">
-            <h3 className="font-semibold">Calendario de competiciones</h3>
+          <div className="pw-toolbar">
+            <div className="pw-toolbar-text">
+              <h3>Calendario de competiciones</h3>
+            </div>
+            <label className="pw-check">
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(e) => setShowArchived(e.target.checked)}
+              />
+              Mostrar archivadas
+            </label>
             {canEdit && (
               <button className="btn btn-primary" onClick={() => choose('nueva')}>
                 Nueva competición
               </button>
             )}
           </div>
-          <label className="flex items-center gap-2 min-h-11">
-            <input
-              type="checkbox"
-              checked={showArchived}
-              onChange={(e) => setShowArchived(e.target.checked)}
-            />
-            Mostrar archivadas
-          </label>
           {meets.data.filter((m) => showArchived || !m.content.archived).length === 0 && (
-            <p>
+            <p className="pw-empty">
               No hay competiciones en esta vista. Añade una fecha para organizar la preparación y
               los intentos.
             </p>
           )}
-          <ul className="grid gap-3 sm:grid-cols-2">
+          <ul className="pw-meets">
             {meets.data
               .filter((m) => showArchived || !m.content.archived)
               .map((meet) => {
                 const totals = meetTotals(meet.content.attempts);
                 return (
                   <li key={meet.id}>
-                    <button
-                      className="w-full text-left rounded-xl border border-[var(--border-color)] p-4 flex flex-col gap-2 hover:bg-[var(--bg-secondary)]"
-                      onClick={() => choose(meet.id)}
-                    >
-                      <span className="text-sm">
-                        {new Date(`${meet.content.date}T12:00:00`).toLocaleDateString('es-ES')} ·{' '}
-                        {meet.content.archived
-                          ? 'Archivada'
-                          : meet.content.date < today
-                            ? 'Pasada'
-                            : 'Próxima'}
+                    <button className="card pw-meet" onClick={() => choose(meet.id)}>
+                      <span className="pw-meet-date">
+                        {new Date(`${meet.content.date}T12:00:00`).toLocaleDateString('es-ES')}
+                        <span
+                          className="pw-status"
+                          data-status={
+                            !meet.content.archived && meet.content.date >= today
+                              ? 'ACTIVE'
+                              : undefined
+                          }
+                        >
+                          {meet.content.archived
+                            ? 'Archivada'
+                            : meet.content.date < today
+                              ? 'Pasada'
+                              : 'Próxima'}
+                        </span>
                       </span>
                       <strong>{meet.content.name}</strong>
                       <span>

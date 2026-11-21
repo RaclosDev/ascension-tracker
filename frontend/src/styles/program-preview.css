@@ -1,0 +1,132 @@
+/* The program as the athlete will read it: the history's exercise cards, one row per set. */
+.program-preview {
+  display: grid;
+  gap: 20px;
+}
+.program-preview-head h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.program-preview-head p {
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.program-preview-day {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+.program-preview-day > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.program-preview-day h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.program-preview-day > header p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.program-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 10px;
+  align-items: start;
+}
+.program-preview-note {
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  border-left: 3px solid var(--accent-color, var(--border-medium));
+  border-radius: 4px;
+  background: rgb(255 255 255 / 0.02);
+  font-size: 0.82rem;
+  font-style: italic;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text-secondary);
+}
+.program-preview-rest {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: -6px 0 10px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.program-preview-sets {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+.program-preview-sets th {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-muted, var(--text-secondary));
+}
+.program-preview-sets td {
+  padding: 0.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+.program-preview-sets tr + tr td {
+  border-top: 1px solid rgb(255 255 255 / 0.04);
+}
+.program-preview-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-primary) !important;
+}
+.program-preview-value small {
+  font-family: var(--font-main);
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.program-preview-tag {
+  display: inline-block;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 4px;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.05);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 24px;
+  color: var(--text-secondary);
+}
+.program-preview-sets tr[data-kind='WARMUP'] {
+  opacity: 0.7;
+}
+.program-preview-sets tr[data-kind='TOP'] .program-preview-tag {
+  background: var(--accent-glow, rgb(255 255 255 / 0.1));
+  color: var(--text-primary);
+}
+.program-preview-empty {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+.program-preview-set-notes {
+  display: grid;
+  gap: 2px;
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.program-preview-set-notes strong {
+  margin-right: 4px;
+  font-weight: 600;
+  color: var(--text-primary);
+}

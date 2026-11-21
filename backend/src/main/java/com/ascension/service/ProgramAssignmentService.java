@@ -3,6 +3,7 @@ package com.ascension.service;
 import com.ascension.dto.ProgramDtos.AssignRequest;
 import com.ascension.dto.ProgramDtos.AdaptRequest;
 import com.ascension.dto.ProgramDtos.Assignment;
+import com.ascension.dto.ProgramDtos.Day;
 import com.ascension.dto.ProgramDtos.Program;
 import com.ascension.exception.EntityNotFoundException;
 import com.ascension.exception.InvalidInputException;
@@ -15,7 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.UUID;
 
@@ -94,8 +98,49 @@ public class ProgramAssignmentService {
         ProgramService.validateReady(program);
         schedule.lock(access.linkId());
         requireCopyCapacity(access.clientUserId());
+        Rest rest = rest(access, startDate);
         UUID copy = programService.insertProgram(access.clientUserId(), prescriptions.snapshot(program, access.linkId()), false, null);
-        return createAssignment(access, copy, startDate);
+        Assignment week = createAssignment(access, copy, startDate);
+        if (rest == null) return week;
+        // The week replaces only its own week: the program it fell in carries on from the next Monday.
+        LocalDate next = startDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).plusWeeks(1);
+        jdbcTemplate.update("UPDATE program_assignments SET effective_until = ? WHERE id = ?", next, week.id());
+        UUID restCopy = programService.insertProgram(access.clientUserId(), rest.program(), false, rest.sourceProgramId());
+        jdbcTemplate.update("""
+                INSERT INTO program_assignments (program_id, client_user_id, coach_user_id, coach_link_id,
+                                                 start_date, effective_until, status)
+                VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE')
+                """, restCopy, access.clientUserId(), access.coachUserId(), access.linkId(), next, rest.until());
+        return jdbcTemplate.queryForObject(SELECT + " WHERE a.id = ?", ProgramAssignmentService::assignment, week.id());
+    }
+
+    private record Rest(Program program, UUID sourceProgramId, LocalDate until) {
+    }
+
+    /** The weeks after {@code startDate}'s week of the multi-week program running then, renumbered from 1. */
+    private Rest rest(ClientAccess access, LocalDate startDate) {
+        LocalDate monday = startDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        List<Rest> found = jdbcTemplate.query("""
+                SELECT a.program_id, p.source_program_id, p.weeks, a.start_date, a.effective_until
+                FROM program_assignments a JOIN programs p ON p.id = a.program_id
+                WHERE a.coach_link_id = ? AND a.status = 'ACTIVE' AND a.start_date <= ?
+                  AND (a.effective_until IS NULL OR a.effective_until > ?)
+                ORDER BY a.start_date DESC, a.created_at DESC LIMIT 1
+                """, (rs, n) -> {
+                    LocalDate first = rs.getObject("start_date", LocalDate.class)
+                            .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                    int done = (int) (ChronoUnit.DAYS.between(first, monday) / 7) + 1;
+                    int left = rs.getInt("weeks") - done;
+                    LocalDate until = rs.getObject("effective_until", LocalDate.class);
+                    if (left < 1 || (until != null && !until.isAfter(monday.plusWeeks(1)))) return null;
+                    Program whole = programService.readProgram(rs.getObject("program_id", UUID.class));
+                    List<Day> days = whole.days().stream().filter(d -> d.week() > done)
+                            .map(d -> new Day(d.week() - done, d.dayIndex(), d.name(), d.notes(), d.exercises()))
+                            .toList();
+                    return new Rest(new Program(null, whole.name(), whole.notes(), left, days, null, "READY"),
+                            rs.getObject("source_program_id", UUID.class), until);
+                }, access.linkId(), startDate, startDate);
+        return found.isEmpty() ? null : found.getFirst();
     }
 
     @Transactional

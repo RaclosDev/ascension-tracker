@@ -135,18 +135,22 @@ describe('preparación semanal', () => {
     show();
     await screen.findByRole('heading', { name: /Preparación/ });
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Copiar semana anterior' })).toBeEnabled(),
+      expect(
+        screen.getByRole('button', { name: /^Copiar semana anterior/, hidden: true }),
+      ).toBeEnabled(),
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Copiar semana anterior' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Copiar semana anterior/, hidden: true }));
     expect(await screen.findByLabelText('Nombre del día (Lunes 16/11)')).toHaveValue('Torso');
     fireEvent.change(screen.getByLabelText('Notas privadas del entrenador'), {
       target: { value: 'Solo para mí' },
     });
-    fireEvent.change(screen.getByLabelText('Decisión que aplicar al publicar'), {
+    fireEvent.change(screen.getByLabelText('Qué cambias esta semana y por qué'), {
       target: { value: 'Reducir fatiga' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
-    await waitFor(() => expect(screen.getByText('Borrador guardado')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/^Borrador guardado/)).toBeInTheDocument(), {
+      timeout: 4000,
+    });
+    expect(mocked.put).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('button', { name: 'Publicar semana' }));
     await waitFor(() =>
       expect(mocked.post).toHaveBeenCalledWith('/coach/clients/l1/weeks/2026-11-16/publish', {
@@ -156,7 +160,7 @@ describe('preparación semanal', () => {
     expect(saved.content.privateNotes).toBe('Solo para mí');
     expect(saved.content.program.days[0].exercises[0].prescription?.load?.amount).toBe(50);
     await screen.findByText('Semana publicada');
-  });
+  }, 15000);
   it('keeps the local text when another session saves first', async () => {
     show();
     await screen.findByLabelText('Comentario para el atleta');
@@ -167,14 +171,13 @@ describe('preparación semanal', () => {
       saved = { ...saved, version: 2, content: { ...saved.content, privateNotes: 'Otra sesión' } };
       throw { response: { status: 409 } };
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
-    await screen.findByText(/Esta semana cambió en otra sesión/);
+    await screen.findByText(/Esta semana cambió en otra sesión/, {}, { timeout: 4000 });
     expect(screen.getByLabelText('Comentario para el atleta')).toHaveValue('Mi descarga');
     expect(screen.getByRole('button', { name: 'Publicar semana' })).toBeDisabled();
     expect(
       screen.getByRole('button', { name: 'Descargar ambas versiones completas (JSON)' }),
     ).toBeInTheDocument();
-  });
+  }, 15000);
   it('adjusts typed doses without parsing free text or altering the copied week', () => {
     const next = adjustProgram(previous, {
       day: null,

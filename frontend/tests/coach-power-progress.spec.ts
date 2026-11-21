@@ -101,14 +101,15 @@ for (const width of [390, 1440]) {
     failHistory = false;
     await page.getByRole('button', { name: 'Reintentar', exact: true }).click();
     const squat = page.getByRole('region', { name: 'Sentadilla', exact: true });
-    await expect(squat.getByText('1110 kg', { exact: true })).toBeVisible();
-    await expect(squat.getByText(/110 % del máximo de trabajo actual/)).toBeVisible();
-    await chooseOption(page.getByRole('button', { name: 'Periodo de seguimiento' }), '4');
-    await expect(squat.getByText('610 kg', { exact: true })).toBeVisible();
-    await expect(squat.getByText('8 / 10 · 1 de 2 series', { exact: true })).toBeVisible();
-    await chooseOption(page.getByRole('button', { name: 'Levantamiento', exact: true }), 'bench');
-    await expect(page.getByText('No hay carga registrada para este levantamiento.')).toBeVisible();
-    await chooseOption(page.getByRole('button', { name: 'Levantamiento', exact: true }), 'squat');
+    await expect(squat.getByText('1110 kg de volumen', { exact: true })).toBeVisible();
+    await expect(squat.getByText('110 % del TM (100 kg)', { exact: true })).toBeVisible();
+    await chooseOption(page.getByLabel('Periodo'), '4');
+    await expect(squat.getByText('610 kg de volumen', { exact: true })).toBeVisible();
+    await expect(squat.getByText('1 de 2 series', { exact: true })).toBeVisible();
+    const lifts = page.getByRole('group', { name: 'Levantamiento', exact: true });
+    await lifts.getByRole('button', { name: /^Press banca/ }).click();
+    await expect(page.getByText(/^No hay series válidas de press banca/)).toBeVisible();
+    await lifts.getByRole('button', { name: /^Sentadilla/ }).click();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);

@@ -99,6 +99,7 @@ describe('Comidas pautadas', () => {
     });
     mockedApi.post.mockResolvedValue({ data: { ...plan([]), id: 'p2' } });
     wrap(<NutritionPlanSection linkId="l1" canEdit />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar pauta' }));
 
     // The deleted recipe blocks saving until the coach replaces or removes it.
     expect(

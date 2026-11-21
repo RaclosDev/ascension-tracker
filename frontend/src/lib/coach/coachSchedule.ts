@@ -44,6 +44,21 @@ export function nextReviewLabel(followup: CoachFollowup): string {
   }).format(new Date(followup.nextDueAt));
 }
 
+/** Days left until the next follow-up, counted in calendar days of the athlete's time zone. */
+export function nextReviewCountdown(followup: CoachFollowup, now = new Date()): string {
+  if (followup.schedule.paused) return 'En pausa';
+  if (!followup.nextDueAt) return 'Sin fecha';
+  const day = (date: Date) =>
+    Date.parse(
+      new Intl.DateTimeFormat('en-CA', { timeZone: followup.schedule.timeZone }).format(date),
+    );
+  const days = Math.round((day(new Date(followup.nextDueAt)) - day(now)) / 86_400_000);
+  if (days < 0) return days === -1 ? 'venció ayer' : `venció hace ${-days} días`;
+  if (days === 0) return 'hoy';
+  if (days === 1) return 'mañana';
+  return `en ${days} días`;
+}
+
 export function useSaveSchedule(linkId: string) {
   const cache = useQueryClient();
   return useMutation({

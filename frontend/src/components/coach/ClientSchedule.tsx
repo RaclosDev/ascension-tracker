@@ -41,6 +41,7 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
         <label className="coach-schedule-field flex flex-col gap-2 min-w-0">
           <span>Día del seguimiento</span>
           <Select
+            className="form-input"
             value={schedule.day}
             onChange={(e) => setSchedule({ ...schedule, day: Number(e.target.value) })}
           >
@@ -55,6 +56,7 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
           <span>Hora del seguimiento</span>
           <input
             type="time"
+            className="form-input"
             required
             value={schedule.time.slice(0, 5)}
             onChange={(e) => setSchedule({ ...schedule, time: e.target.value })}
@@ -63,6 +65,7 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
         <label className="coach-schedule-field flex flex-col gap-2 min-w-0 sm:col-span-2">
           <span>Zona horaria</span>
           <input
+            className="form-input"
             required
             list="review-time-zones"
             maxLength={80}
@@ -97,7 +100,7 @@ export function ClientSchedule({ link }: { link: CoachClient }) {
       <p className="coach-description">
         La pausa detiene recordatorios y alertas de seguimiento. Conserva el historial y los
         permisos; el atleta sigue ocupando una plaza. Al reanudar o cambiar el horario, dispone de
-        al menos siete días para la siguiente seguimiento.
+        al menos siete días para el siguiente seguimiento.
       </p>
       {link.followup && (
         <p className="text-sm">

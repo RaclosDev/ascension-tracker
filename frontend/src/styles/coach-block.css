@@ -1,0 +1,433 @@
+/* The block: several weeks of one athlete read as rows, then the load they add up to. */
+.block-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.block-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+.block-head-title {
+  min-width: 0;
+}
+.block-head h3,
+.block-load h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+.block-head p,
+.block-load > p,
+.block-hint,
+.block-panel p,
+.block-week-foot p,
+.block-days-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+/* The explanation reads as four short steps side by side, not as a paragraph to get through. */
+.block-explain {
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-card);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+details.block-explain:not([open]) {
+  padding-block: 0;
+}
+.block-explain h4,
+.block-explain summary {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.block-explain summary {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  cursor: pointer;
+}
+.block-explain ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 24px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.block-explain li {
+  line-height: 1.45;
+}
+.block-explain li strong {
+  color: var(--text-primary);
+}
+.block-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.block-range .btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding-inline: 0;
+  justify-content: center;
+}
+.block-range select {
+  width: 9.5rem;
+}
+.block-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.block-actions .btn {
+  min-height: 44px;
+}
+.block-hint {
+  flex: 1 1 240px;
+}
+.block-link {
+  min-height: 44px;
+  padding: 0;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.block-head .block-link {
+  min-height: 0;
+}
+.block-link:focus-visible,
+.block-week-open:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.block-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+}
+.block-panel > label {
+  display: grid;
+  gap: 6px;
+  max-width: 28rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.block-panel p {
+  max-width: 65ch;
+}
+.block-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.block-panel-actions .btn {
+  min-height: 44px;
+}
+.block-repeat {
+  grid-column: 1 / -1;
+}
+.block-repeat fieldset {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.block-repeat legend {
+  margin-bottom: 6px;
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.block-repeat fieldset label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.block-repeat fieldset small {
+  color: var(--text-secondary);
+}
+.block-repeat input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  accent-color: var(--accent-primary);
+}
+
+.block-weeks {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border-subtle);
+}
+.block-week {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.block-week-head {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.block-week-open {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.block-week-open strong {
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+.block-week-open span {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+.block-week-open:hover strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.block-week-state {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.75rem;
+}
+.block-week-state span {
+  padding: 2px 8px;
+  border: 1px solid var(--border-medium);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.block-week-state span[data-state='published'] {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+.block-week-state span[data-state='changed'],
+.block-week-state span[data-state='incomplete'] {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+.block-week-intent select {
+  width: 100%;
+  max-width: 14rem;
+}
+.block-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+.block-days li {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--wall-highlight-bg);
+}
+/* On a phone the days without a session say nothing worth a row. */
+.block-days li[data-empty] {
+  display: none;
+}
+.block-days span {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+.block-days strong {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+.block-days small {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+.block-week-foot {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.block-week-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+}
+
+.block-load {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.block-load-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+.block-load table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+.block-load th,
+.block-load td {
+  padding: 8px 10px;
+  text-align: center;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.block-load tr:last-child > * {
+  border-bottom: 0;
+}
+.block-load th {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.block-load th[scope='row'] {
+  position: sticky;
+  left: 0;
+  text-align: left;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+}
+.block-load thead th:first-child {
+  text-align: left;
+}
+.block-load thead small {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+.block-load tbody td {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--text-primary) calc(var(--heat, 0) * 30%), transparent);
+}
+.block-load tfoot td {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.block-load .block-load-tonnage > * {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+.week-linked {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+@media (min-width: 1000px) {
+  .block-week {
+    grid-template-columns: 11rem 9.5rem minmax(0, 1fr);
+    align-items: start;
+    gap: 10px 16px;
+  }
+  .block-days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .block-days li[data-empty] {
+    display: grid;
+    background: transparent;
+  }
+  .block-days-empty {
+    align-self: center;
+  }
+  .block-week-foot {
+    grid-column: 3;
+  }
+}
+/* Three views do not fit a phone on one line: they share the width and wrap inside. */
+@media (max-width: 640px) {
+  .week-toolbar .segmented {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+  .week-toolbar .segmented-option {
+    flex: 1 1 auto;
+    padding-inline: 0.5rem;
+    white-space: normal;
+    line-height: 1.15;
+  }
+  .block-load th,
+  .block-load td {
+    padding-inline: 8px;
+  }
+}
+
+.block-panel-span {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.block-panel-span label {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 11rem;
+  max-width: 14rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.block-week-intent {
+  display: grid;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.block-week-actions .block-link {
+  min-width: 44px;
+  text-align: left;
+}
+.block-remove {
+  margin-left: auto;
+}
+.block-remove:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

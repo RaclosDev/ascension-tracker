@@ -60,7 +60,7 @@ function WeeklyRecords({ metric }: { metric: Metric }) {
       ) : (
         <AthleteShell
           link={link}
-          active={metric === 'meals' ? 'comidas' : metric === 'steps' ? 'pasos' : 'peso'}
+          active={metric === 'meals' ? 'nutricion' : metric === 'steps' ? 'pasos' : 'peso'}
           back={date ? { to: mealsBack, label: 'Volver a la semana' } : undefined}
         >
           {!canRead ? (

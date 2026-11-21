@@ -47,7 +47,7 @@ export default function CoachNutritionTemplateEditorPage() {
   const template = useNutritionTemplate(existing ? templateId : null);
   return (
     <CoachWorkspace>
-      <Link to="/entrenador/pautas" className="coach-back-link">
+      <Link to="/entrenador/planificacion?pestana=nutricion" className="coach-back-link">
         <ArrowLeft size={16} aria-hidden /> Volver a pautas
       </Link>
       <CoachPageHeader

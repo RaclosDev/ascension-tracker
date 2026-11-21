@@ -1,7 +1,7 @@
 import { confirmAction } from '../lib/confirmation';
 vi.mock('../lib/confirmation', () => ({ confirmAction: vi.fn().mockResolvedValue(true) }));
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { ReactNode } from 'react';
@@ -11,8 +11,9 @@ import { HomeRedirect, RememberInvitation } from '../components/coach/Invitation
 import { SettingsCoachSection } from '../components/settings/SettingsCoachSection';
 import { peekPendingInvitation, rememberPendingInvitation } from '../lib/coach/api';
 import CoachClientPage from '../pages/CoachClientPage';
+import CoachClientWeeklyWorkoutsPage from '../pages/CoachClientWeeklyWorkoutsPage';
 import type { CompletedWorkout, Exercise } from '../lib/workout/types';
-import { chooseOption } from './selectMenu';
+import { chooseDate, chooseOption } from './selectMenu';
 
 vi.mock('../api/client', () => ({
   default: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
@@ -20,19 +21,9 @@ vi.mock('../api/client', () => ({
 vi.mock('../lib/workout/catalog-query', () => ({
   useExerciseCatalog: () => ({ data: [] }),
 }));
-vi.mock('../components/DashboardCharts', () => ({
-  default: (props: { weightChartData: unknown[]; deltaData: unknown[]; goalWeight?: number }) => (
-    <div
-      data-testid="weight-charts"
-      data-points={props.weightChartData.length}
-      data-deltas={props.deltaData.length}
-      data-goal={props.goalWeight ?? 'none'}
-    />
-  ),
-}));
-vi.mock('../components/nutrition/NutritionPieChart', () => ({
-  default: ({ pieData }: { pieData: unknown[] }) => (
-    <div data-testid="macro-pie" data-slices={pieData.length} />
+vi.mock('../components/coach/metrics/MetricsWeightChart', () => ({
+  default: (props: { entries: unknown[] }) => (
+    <div data-testid="weight-charts" data-points={props.entries.length} />
   ),
 }));
 vi.mock('../components/workout/heatmap', () => ({
@@ -387,6 +378,7 @@ describe('CoachClientPage', () => {
     mockedApi.get.mockImplementation((url: string) => {
       if (url === '/coach/clients/link-9')
         return Promise.resolve({ data: { ...clientLink, permissions } });
+      if (url === '/coach/profile') return Promise.resolve({ data: { coach: true } });
       if (url === '/coach/programs')
         return Promise.resolve({
           data: [{ id: 'p-2', name: 'Hipertrofia', weeks: 6, dayCount: 4, updatedAt: '' }],
@@ -421,8 +413,17 @@ describe('CoachClientPage', () => {
 
   it('shows the real charts and the client custom exercise names', async () => {
     mockClient();
-    renderAt('/entrenador/atletas/link-9?seccion=entrenamiento', routes);
-
+    // The history and its charts sit under «Entrenos hechos», beside the weeks it summarises.
+    renderAt(
+      '/entrenador/atletas/link-9/entrenos',
+      <>
+        {routes}
+        <Route
+          path="/entrenador/atletas/:linkId/entrenos/:workoutId?"
+          element={<CoachClientWeeklyWorkoutsPage />}
+        />
+      </>,
+    );
     expect(
       await screen.findByText('1. Press inclinado en polea', {}, { timeout: 10000 }),
     ).toBeDefined();
@@ -431,14 +432,16 @@ describe('CoachClientPage', () => {
     expect(mockedApi.get.mock.calls.some(([url]) => url.includes('/weights'))).toBe(false);
     expect(mockedApi.get.mock.calls.some(([url]) => url.includes('/nutrition/'))).toBe(false);
     fireEvent.click(screen.getByRole('link', { name: 'Nutrición' }));
-    expect((await screen.findByTestId('macro-pie')).dataset.slices).toBe('3');
-    // Evolución lives with the athlete's records, a different group of the navigation.
+    expect(
+      await within(await screen.findByRole('region', { name: 'Día abierto' })).findByText('Arroz'),
+    ).toBeTruthy();
+    // Evolución lives in Progreso → Métricas, a different group of the navigation.
     cleanup();
-    renderAt('/entrenador/atletas/link-9?seccion=progreso', routes);
+    renderAt('/entrenador/atletas/link-9?seccion=metricas', routes);
     const weightChart = await screen.findByTestId('weight-charts');
     expect(weightChart.dataset.points).toBe('2');
-    expect(weightChart.dataset.deltas).toBe('1');
-    expect(weightChart.dataset.goal).toBe('none');
+    // The coach sees the trend and how far the goal is, never the goal weight itself.
+    expect(screen.getByRole('progressbar', { name: /objetivo de peso/i })).toBeInTheDocument();
   }, 15000);
 
   it('only asks for the areas the client shares', async () => {
@@ -449,7 +452,7 @@ describe('CoachClientPage', () => {
       editTraining: false,
       editNutrition: false,
     });
-    renderAt('/entrenador/atletas/link-9?seccion=progreso', routes);
+    renderAt('/entrenador/atletas/link-9?seccion=metricas', routes);
 
     expect(await screen.findByTestId('weight-charts')).toBeDefined();
     const urls = mockedApi.get.mock.calls.map(([url]) => url as string);
@@ -490,7 +493,7 @@ describe('CoachClientPage', () => {
     const select = await screen.findByLabelText('Programa');
     await screen.findByRole('menuitemradio', { name: 'Hipertrofia', hidden: true });
     chooseOption(select, 'p-2');
-    fireEvent.change(screen.getByLabelText('Empieza el'), { target: { value: '2026-11-09' } });
+    chooseDate(screen.getByLabelText('Empieza el'), '2026-11-09');
     await waitFor(() => expect(screen.getByRole('button', { name: 'Asignar' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Asignar' }));
 

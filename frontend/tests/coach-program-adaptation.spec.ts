@@ -115,7 +115,7 @@ for (const width of [390, 1440]) {
     await expect(page.getByLabel('Repeticiones de la serie 5')).toHaveValue('6-8');
     await page.getByRole('button', { name: 'Vista previa', exact: true }).click();
     await expect(page.getByRole('region', { name: 'Vista previa del programa' })).toContainText(
-      '5 × 6–8',
+      '6–8',
     );
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
@@ -127,7 +127,8 @@ for (const width of [390, 1440]) {
     });
     const lastExercise = page
       .getByRole('region', { name: 'Vista previa del programa' })
-      .getByText('5 × 6–8', { exact: false });
+      .getByRole('cell', { name: '6–8' })
+      .last();
     await lastExercise.evaluate((element) => element.scrollIntoView({ block: 'center' }));
     await expect(lastExercise).toBeInViewport();
     await page.screenshot({

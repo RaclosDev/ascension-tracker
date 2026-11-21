@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { formatCoachDate } from '../../lib/coach/api';
 import { SCORE_KEYS, SCORE_LABELS, type Checkin } from '../../lib/coach/checkins';
 import '../../styles/coach-athlete.css';
@@ -8,27 +7,16 @@ const kg = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
 const dateTime = new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
 
 /** One weekly seguimiento as both sides read it: scores, weight, answers, notes and the coach's reply. */
-export function CheckinCard({
-  checkin,
-  footer,
-  status,
-}: {
-  checkin: Checkin;
-  footer?: ReactNode;
-  /** Short state shown next to the week, e.g. whether it still needs a reply. */
-  status?: ReactNode;
-}) {
+export function CheckinCard({ checkin }: { checkin: Checkin }) {
   return (
     <article
-      data-tour="checkin-card"
-      className={`checkin-card rounded-lg p-3 border${footer ? ' checkin-card-reply' : ''}`}
+      className="checkin-card rounded-lg p-3 border"
       style={{ borderColor: 'var(--border-subtle)' }}
     >
       <div className="checkin-card-body flex flex-col gap-3 min-w-0">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="font-bold flex flex-wrap items-center gap-2">
             Semana del {formatCoachDate(checkin.weekStart)}
-            {status}
           </h3>
           {checkin.weightAvg != null && (
             <span className="text-sm" style={muted}>
@@ -119,7 +107,6 @@ export function CheckinCard({
           </details>
         )}
       </div>
-      {footer && <div className="checkin-card-footer min-w-0">{footer}</div>}
     </article>
   );
 }

@@ -78,7 +78,8 @@ public final class CoachDtos {
     }
 
     public record CoachClient(UUID linkId, Person client, Permissions permissions, Instant since,
-                              CoachSetupDtos.Setup setup, CoachScheduleDtos.Followup followup) {
+                              CoachSetupDtos.Setup setup, CoachScheduleDtos.Followup followup,
+                              CoachSetupDtos.CoachNotes notes) {
     }
 
     /** {@code requested} is what the coach asked for (pre-ticked); {@code profile} is null when nothing was filled in. */
@@ -110,6 +111,7 @@ public final class CoachDtos {
                                  List<AccessExport> accessesToMyData, List<AccessExport> myAccessesAsCoach,
                                  List<AssignmentExport> programAssignments,
                                  List<CommentExport> workoutComments,
+                                 List<DayCommentExport> dayComments,
                                  List<com.ascension.dto.NutritionPlanDtos.PlanExport> nutritionPlans,
                                  List<com.ascension.dto.CheckinDtos.CheckinExport> checkins) {
     }
@@ -123,6 +125,15 @@ public final class CoachDtos {
     public record CommentRequest(
             @NotBlank(message = "Escribe un comentario")
             @Size(max = 1000, message = "El comentario no puede pasar de 1000 caracteres") String text) {
+    }
+
+    /** The coach's comment on one day of the client's week. */
+    public record DayComment(LocalDate date, String text, Instant updatedAt) {
+    }
+
+    /** {@code role} is CLIENT for comments on the exporting user's days, COACH for comments they wrote. */
+    public record DayCommentExport(UUID id, String role, Person other, LocalDate day, String text,
+                                   Instant createdAt, Instant updatedAt) {
     }
 
     /** A comment as the client reads it on their workout. */

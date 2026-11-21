@@ -11,7 +11,7 @@ vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() 
 import api from '../api/client';
 import AdminPlansPage from '../pages/AdminPlansPage';
 import type { CoachPlans } from '../lib/admin/plans';
-import { chooseOption } from './selectMenu';
+import { chooseDate, chooseOption } from './selectMenu';
 
 const mockedApi = vi.mocked(api);
 
@@ -68,9 +68,7 @@ describe('Planes de entrenadores (administración)', () => {
     expect(screen.getByText(/3\/25 atletas/)).toBeTruthy();
 
     chooseOption(screen.getByLabelText('Plan de ana@coach.test'), 'PRO');
-    fireEvent.change(screen.getByLabelText('Pagado hasta para ana@coach.test'), {
-      target: { value: '2026-12-04' },
-    });
+    chooseDate(screen.getByLabelText('Pagado hasta para ana@coach.test'), '2026-12-04');
     const saveButton = screen.getByRole('button', { name: 'Guardar plan' }) as HTMLButtonElement;
     expect(saveButton.disabled).toBe(true);
     fireEvent.change(screen.getByLabelText('Importe cobrado a ana@coach.test'), {

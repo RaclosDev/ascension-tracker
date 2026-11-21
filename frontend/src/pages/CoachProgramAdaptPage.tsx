@@ -6,6 +6,7 @@ import { useSessionDraft } from '../hooks/useSessionDraft';
 import { apiErrorMessage, personName, useCoachClient } from '../lib/coach/api';
 import { useAdaptProgram, useAssignedProgram, type Program } from '../lib/coach/coachPrograms';
 import { ProgramEditor } from './CoachProgramEditorPage';
+import { DatePicker } from '@/components/ui/date-picker';
 
 const isDate = (value: unknown): value is string =>
   typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
@@ -91,17 +92,17 @@ export default function CoachProgramAdaptPage() {
           <>
             <label className="coach-schedule-field flex flex-col gap-1 mt-3 max-w-sm">
               Empieza la nueva versión el
-              <input
-                type="date"
-                className="min-h-11"
+              <DatePicker
+                className="form-input min-h-11"
+                required
                 min={format(new Date(), 'yyyy-MM-dd')}
                 max={format(addDays(new Date(), 365), 'yyyy-MM-dd')}
                 value={date.value}
                 disabled={publish.isPending}
                 aria-invalid={!!dateError}
                 aria-describedby={dateError ? 'adapt-date-error' : undefined}
-                onChange={(event) => {
-                  date.setValue(event.target.value);
+                onChange={(value) => {
+                  date.setValue(value);
                   setDateError(null);
                 }}
               />

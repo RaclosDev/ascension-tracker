@@ -8,6 +8,7 @@ import {
   SCORE_LABELS,
   useMyCheckin,
   useMyCheckinHistory,
+  useMyDayComments,
   useSendCheckin,
   type ClientCheckin,
   type Scores,
@@ -28,6 +29,7 @@ export default function CoachCheckinPage() {
   const { linkId = '' } = useParams();
   const current = useMyCheckin(linkId);
   const history = useMyCheckinHistory(linkId);
+  const dayComments = useMyDayComments(linkId, current.data?.weekStart);
   const past = (history.data ?? []).filter((c) => c.id !== current.data?.current?.id);
 
   return (
@@ -71,6 +73,21 @@ export default function CoachCheckinPage() {
             )}
             <PushToggle text="Activa los avisos para recibir el recordatorio en el horario acordado y saber cuándo te responde tu entrenador." />
           </>
+        )}
+        {dayComments.data && dayComments.data.length > 0 && (
+          <section className="card flex flex-col gap-3">
+            <h2 className="card-title">Comentarios de tu entrenador esta semana</h2>
+            <ul className="flex flex-col gap-3">
+              {dayComments.data.map((comment) => (
+                <li key={comment.date}>
+                  <p className="text-sm" style={muted}>
+                    {formatCoachDate(comment.date)}
+                  </p>
+                  <p className="whitespace-pre-wrap break-words">{comment.text}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
         {current.data &&
           (current.data.current?.coachReply ? (

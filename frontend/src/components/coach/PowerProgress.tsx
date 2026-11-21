@@ -10,7 +10,26 @@ import { Select } from '@/components/ui/select';
 const DAY = 24 * 60 * 60 * 1000;
 const number = (value: number) => value.toLocaleString('es-ES', { maximumFractionDigits: 1 });
 const date = (value: number) => new Date(value).toLocaleDateString('es-ES');
+const weekKey = (time: number) => {
+  const monday = new Date(time);
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  return monday.toLocaleDateString('sv-SE');
+};
+/** Todas las semanas del periodo, también las que no tienen series, para que el eje sea el tiempo real. */
+const allWeeks = (since: number, until: number) => {
+  const keys: string[] = [];
+  const cursor = new Date(`${weekKey(since)}T12:00:00`);
+  const last = weekKey(until);
+  while (cursor.toLocaleDateString('sv-SE') <= last) {
+    keys.push(cursor.toLocaleDateString('sv-SE'));
+    cursor.setDate(cursor.getDate() + 7);
+  }
+  return keys;
+};
+const weekDate = (week: string) =>
+  new Date(`${week}T12:00:00`).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 
+/** Un levantamiento cada vez: sus cifras del periodo y la carga semanal en columnas. */
 export function PowerProgress({ linkId, profile }: { linkId: string; profile: PowerProfile }) {
   const [now] = useState(Date.now);
   const [weeks, setWeeks] = useState(12);
@@ -33,27 +52,42 @@ export function PowerProgress({ linkId, profile }: { linkId: string; profile: Po
       ),
     [query.data, since, now, profile.exerciseMappings, includeVariations],
   );
-  const selected = progress.find((p) => p.lift === lift)!;
-  const highestVolume = Math.max(1, ...selected.weeks.map((w) => w.volume));
+  const p = progress.find((row) => row.lift === lift)!;
+  const tm = profile.trainingMax[lift];
+  const chart = allWeeks(since, now).map(
+    (week) =>
+      p.weeks.find((w) => w.week === week) ?? {
+        week,
+        sets: 0,
+        reps: 0,
+        volume: 0,
+        maxLoad: 0,
+        rpe: null,
+        rpeCount: 0,
+      },
+  );
+  const highestVolume = Math.max(1, ...chart.map((w) => w.volume));
+  // Cada cuántas columnas se rotula la fecha para que no se pisen.
+  const labelEvery = Math.max(1, Math.ceil(chart.length / 13));
   return (
-    <div className="flex flex-col gap-5">
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={includeVariations}
-          onChange={(event) => setIncludeVariations(event.target.checked)}
-        />
-        Incluir variantes clasificadas por el entrenador
-      </label>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h3 className="font-semibold text-xl">Seguimiento de los tres básicos</h3>
-          <p className="coach-description">
-            Del {date(since)} al {date(now)} · cargas en kg
+    <div className="pw-progress">
+      <div className="pw-toolbar">
+        <div className="pw-toolbar-text">
+          <h3>Seguimiento de los tres básicos</h3>
+          <p className="pw-hint">
+            Del {date(since)} al {date(now)}
           </p>
         </div>
-        <label className="flex flex-col gap-1">
-          Periodo de seguimiento
+        <label className="pw-check">
+          <input
+            type="checkbox"
+            checked={includeVariations}
+            onChange={(event) => setIncludeVariations(event.target.checked)}
+          />
+          Incluir variantes
+        </label>
+        <label className="pw-field">
+          Periodo
           <Select
             className="form-input min-h-11"
             value={weeks}
@@ -65,139 +99,121 @@ export function PowerProgress({ linkId, profile }: { linkId: string; profile: Po
           </Select>
         </label>
       </div>
-      <p className="coach-description">
-        Series completadas de sentadilla con barra, banca plana con barra y peso muerto convencional
-        o sumo del catálogo. No incluye calentamientos ni ejercicios personalizados sin identificar.
-      </p>
       {query.isPending ? (
         <p role="status">Cargando sesiones de powerlifting…</p>
       ) : query.isError ? (
         <QueryErrorNotice pending={query.isFetching} retry={() => void query.refetch()} />
       ) : (
         <>
-          <div className="grid gap-4 xl:grid-cols-3">
-            {progress.map((p) => {
-              const tm = profile.trainingMax[p.lift];
-              return (
-                <section
-                  key={p.lift}
-                  aria-label={LIFT_LABELS[p.lift]}
-                  className="rounded-xl border border-[var(--border-color)] p-4 flex flex-col gap-3 min-w-0"
-                >
-                  <h4 className="font-semibold">{LIFT_LABELS[p.lift]}</h4>
-                  {p.sets === 0 ? (
-                    <p>Sin series válidas en este periodo.</p>
-                  ) : (
-                    <>
-                      <p>
-                        <strong>{p.sets}</strong> {p.sets === 1 ? 'serie' : 'series'} · {p.reps}{' '}
-                        {p.reps === 1 ? 'repetición' : 'repeticiones'}
-                      </p>
-                      <dl className="flex flex-col gap-3">
-                        <div>
-                          <dt>Volumen (carga × repeticiones)</dt>
-                          <dd className="font-semibold">{number(p.volume)} kg</dd>
-                        </div>
-                        <div>
-                          <dt>Mejor repetición única registrada</dt>
-                          <dd>
-                            {p.single
-                              ? `${number(p.single.weight)} kg · ${date(p.single.date)}`
-                              : 'Sin series de una repetición'}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt>Mejor 1RM estimado</dt>
-                          <dd>
-                            {p.estimate
-                              ? `${number(p.estimate.kg)} kg · ${date(p.estimate.date)}`
-                              : 'Sin series de 1 a 10 repeticiones'}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt>Carga máxima de una serie</dt>
-                          <dd>
-                            {number(p.maxLoad)} kg
-                            {tm && tm > 0
-                              ? ` · ${number((p.maxLoad / tm) * 100)} % del máximo de trabajo actual (${number(tm)} kg)`
-                              : ' · Máximo de trabajo sin definir'}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt>RPE medio registrado</dt>
-                          <dd>
-                            {p.rpe === null
-                              ? 'Sin RPE registrado'
-                              : `${number(p.rpe)} / 10 · ${p.rpeCount} de ${p.sets} ${p.sets === 1 ? 'serie' : 'series'}`}
-                          </dd>
-                        </div>
-                      </dl>
-                    </>
-                  )}
-                </section>
-              );
-            })}
+          <div className="pw-lift-picker" role="group" aria-label="Levantamiento">
+            {progress.map((row) => (
+              <button
+                key={row.lift}
+                type="button"
+                className="card pw-lift-pick"
+                aria-pressed={row.lift === lift}
+                onClick={() => setLift(row.lift)}
+              >
+                <span className="pw-lift-pick-name">{LIFT_LABELS[row.lift]}</span>
+                <strong>{row.estimate ? `${number(row.estimate.kg)} kg` : '—'}</strong>
+                <small>
+                  {row.sets
+                    ? `1RM estimado · ${row.sets} ${row.sets === 1 ? 'serie' : 'series'}`
+                    : 'Sin series en el periodo'}
+                </small>
+              </button>
+            ))}
           </div>
-          <p className="coach-description">
-            1RM estimado con Epley para series de 2 a 10 repeticiones; en series de una repetición
-            se usa la carga realizada. Redondeo a 0,5 kg. Las mejores series pueden ser de días
-            distintos y no forman un total de competición. El porcentaje usa el máximo de trabajo
-            actual, no el histórico.
-          </p>
-          <section className="flex flex-col gap-3" aria-label="Carga semanal">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <h4 className="font-semibold">Carga semanal</h4>
-              <label className="flex flex-col gap-1">
-                Levantamiento
-                <Select
-                  className="form-input min-h-11"
-                  value={lift}
-                  onChange={(e) => setLift(e.target.value as Lift)}
-                >
-                  {Object.entries(LIFT_LABELS).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-                </Select>
-              </label>
-            </div>
-            <p className="coach-description">
-              Semanas con registros, de lunes a domingo según la fecha local. Los extremos incluyen
-              solo los días del periodo seleccionado.
-            </p>
-            {selected.weeks.length === 0 ? (
-              <p>No hay carga registrada para este levantamiento.</p>
+          <section className="card pw-card" aria-label={LIFT_LABELS[lift]}>
+            {p.sets === 0 ? (
+              <p className="pw-empty">
+                No hay series válidas de {LIFT_LABELS[lift].toLocaleLowerCase('es')} en este
+                periodo.
+              </p>
             ) : (
-              <ol className="flex flex-col gap-3">
-                {selected.weeks.map((w) => (
-                  <li key={w.week} className="rounded-xl border border-[var(--border-color)] p-3">
-                    <div className="flex flex-wrap justify-between gap-2">
-                      <strong>Semana del {date(new Date(`${w.week}T12:00:00`).getTime())}</strong>
-                      <span>{number(w.volume)} kg de volumen</span>
-                    </div>
-                    <div
-                      className="h-2 bg-[var(--bg-secondary)] rounded mt-2 mb-2 overflow-hidden"
-                      aria-hidden="true"
-                    >
-                      <div
-                        className="h-full bg-[var(--text-primary)] rounded"
-                        style={{ width: `${(w.volume / highestVolume) * 100}%` }}
-                      />
-                    </div>
-                    <p>
-                      {w.sets} {w.sets === 1 ? 'serie' : 'series'} · {w.reps}{' '}
-                      {w.reps === 1 ? 'repetición' : 'repeticiones'} · Carga máxima{' '}
-                      {number(w.maxLoad)} kg ·{' '}
-                      {w.rpe === null
-                        ? 'RPE sin datos'
-                        : `RPE ${number(w.rpe)} (${w.rpeCount} ${w.rpeCount === 1 ? 'serie' : 'series'})`}
-                    </p>
-                  </li>
-                ))}
-              </ol>
+              <>
+                <dl className="pw-lift-stats">
+                  <div>
+                    <dt>Mejor e1RM</dt>
+                    <dd>
+                      {p.estimate ? `${number(p.estimate.kg)} kg` : '—'}
+                      <small>
+                        {p.estimate ? date(p.estimate.date) : 'Sin series de 1 a 10 reps'}
+                      </small>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Mejor single</dt>
+                    <dd>
+                      {p.single ? `${number(p.single.weight)} kg` : '—'}
+                      <small>{p.single ? date(p.single.date) : 'Sin series de 1 rep'}</small>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Carga máxima</dt>
+                    <dd>
+                      {number(p.maxLoad)} kg
+                      <small>
+                        {tm && tm > 0
+                          ? `${number((p.maxLoad / tm) * 100)} % del TM (${number(tm)} kg)`
+                          : 'TM sin definir'}
+                      </small>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Series · reps</dt>
+                    <dd>
+                      {p.sets} · {p.reps}
+                      <small>{number(p.volume)} kg de volumen</small>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>RPE medio</dt>
+                    <dd>
+                      {p.rpe === null ? '—' : number(p.rpe)}
+                      <small>
+                        {p.rpe === null
+                          ? 'Sin RPE registrado'
+                          : `${p.rpeCount} de ${p.sets} series`}
+                      </small>
+                    </dd>
+                  </div>
+                </dl>
+                <div className="pw-chart-head">
+                  <h4>Volumen semanal</h4>
+                  <span className="pw-hint">toneladas por semana (kg × reps)</span>
+                </div>
+                <ol className="pw-chart" aria-label="Volumen semanal">
+                  {chart.map((w, index) => {
+                    const detail =
+                      w.sets === 0
+                        ? `Semana del ${weekDate(w.week)}: sin series`
+                        : `Semana del ${weekDate(w.week)}: ${number(w.volume)} kg de volumen, ${w.sets} ${w.sets === 1 ? 'serie' : 'series'}, carga máxima ${number(w.maxLoad)} kg${w.rpe === null ? '' : `, RPE ${number(w.rpe)}`}`;
+                    return (
+                      <li key={w.week} title={detail}>
+                        <span className="sr-only">{detail}</span>
+                        <span className="pw-chart-value" aria-hidden="true">
+                          {chart.length <= 16 && w.volume > 0
+                            ? `${number(Math.round(w.volume / 100) / 10)} t`
+                            : ''}
+                        </span>
+                        <span className="pw-chart-bar" aria-hidden="true">
+                          <span style={{ height: `${(w.volume / highestVolume) * 100}%` }} />
+                        </span>
+                        <span className="pw-chart-label" aria-hidden="true">
+                          {index % labelEvery === 0 ? weekDate(w.week) : ''}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </>
             )}
           </section>
+          <p className="pw-hint">
+            Series completadas de los básicos del catálogo, sin calentamientos. 1RM estimado con
+            Epley (2 a 10 reps), redondeado a 0,5 kg; el % usa el TM actual.
+          </p>
         </>
       )}
     </div>

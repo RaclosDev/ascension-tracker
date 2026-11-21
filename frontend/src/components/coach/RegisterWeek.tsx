@@ -38,6 +38,7 @@ export function RegisterWeek({
         pending={queries.some((query) => query.isFetching)}
       />
     );
+  const today = format(new Date(), 'yyyy-MM-dd');
   return (
     <CoachWeekGrid
       week={week}
@@ -58,7 +59,7 @@ export function RegisterWeek({
                 ))}
               {!(workouts.data ?? []).some(
                 (workout) => format(workout.startedAt, 'yyyy-MM-dd') === date,
-              ) && <span>Sin registro</span>}
+              ) && <span>{date > today ? '—' : 'Sin registro'}</span>}
             </div>
           )}
           {body && (

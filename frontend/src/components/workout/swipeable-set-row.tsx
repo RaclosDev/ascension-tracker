@@ -61,6 +61,7 @@ export const SwipeableSetRow = React.memo(
     );
     const s = storeSet ?? propSet;
     const coachTarget = useWorkoutStore((state) => state.active?.coachSetTargets?.[effectiveSetId]);
+    const coachPlan = useWorkoutStore((state) => state.active?.coachSetPlan?.[effectiveSetId]);
 
     const updateSet = useWorkoutStore((s) => s.updateSet);
     const cycleSetType = useWorkoutStore((s) => s.cycleSetType);
@@ -123,11 +124,29 @@ export const SwipeableSetRow = React.memo(
       updateSet(rowId, s.id, { reps: nextVal.toString() });
     };
 
+    // Equal sets are already read in the exercise's protocol line; a set says its target only
+    // when the sets differ or when what was done is not what was prescribed.
+    const offPlan =
+      !!coachPlan &&
+      (Number(s.weight || 0) !== Number(coachPlan.weight || 0) ||
+        Number(s.reps || 0) < Number(coachPlan.reps || 0) ||
+        // Sessions started before the plan kept its range cannot tell more reps from a deviation.
+        (coachPlan.repsMax !== undefined &&
+          Number(s.reps || 0) > Math.max(Number(coachPlan.reps || 0), coachPlan.repsMax ?? 0)));
+    const effortKind = s.rir != null ? 'RIR' : 'RPE';
+    const setEffort = (text: string) => {
+      const clean = text.replace(',', '.').replace(/[^\d.]/g, '');
+      const value = clean !== '' && Number(clean) > 10 ? '10' : clean;
+      updateSet(rowId, s.id, effortKind === 'RIR' ? { rir: value } : { rpe: value });
+    };
+    const showTarget = !!coachTarget && (!coachPlan || (s.completed ? offPlan : coachPlan.varies));
+
     return (
       <div className="set-row-wrapper" style={{ position: 'relative' }}>
-        {coachTarget && (
+        {showTarget && (
           <p className="workout-coach-target">
-            <strong>Pautado</strong> · {coachTarget}
+            <strong>{s.completed && offPlan ? 'Distinto de lo pautado' : 'Pautado'}</strong> ·{' '}
+            {coachTarget}
           </p>
         )}
         {/* Swipeable row; the trash button stays within the row height */}
@@ -303,19 +322,13 @@ export const SwipeableSetRow = React.memo(
                 </Select>
                 <input
                   inputMode="decimal"
-                  aria-label={`${s.rir != null ? 'RIR' : 'RPE'} de la serie ${i + 1}`}
+                  aria-label={`${effortKind} de la serie ${i + 1}${effortKind === 'RPE' ? ', del 1 al 10' : ', repeticiones que te quedaban'} (opcional)`}
                   value={s.rir ?? s.rpe ?? ''}
-                  placeholder=""
-                  onFocus={(e) => e.currentTarget.select()}
-                  onChange={(e) =>
-                    updateSet(
-                      rowId,
-                      s.id,
-                      s.rir != null
-                        ? { rir: e.target.value.replace(',', '.') }
-                        : { rpe: e.target.value.replace(',', '.') },
-                    )
+                  placeholder={
+                    coachPlan?.effort?.kind === effortKind ? String(coachPlan.effort.value) : ''
                   }
+                  onFocus={(e) => e.currentTarget.select()}
+                  onChange={(e) => setEffort(e.target.value)}
                   className={`set-input ${s.completed ? 'completed' : ''}`}
                 />
               </div>

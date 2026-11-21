@@ -120,7 +120,8 @@ for (const width of [390, 1440]) {
       if (path === 'clients/l1/nutrition-plan/adherence') adherenceReads++;
       return route.fulfill({ json: [] });
     });
-    await page.goto('/entrenador/atletas/l1?seccion=nutricion');
+    await page.goto('/entrenador/atletas/l1?seccion=pauta');
+    await page.getByRole('button', { name: 'Editar pauta', exact: true }).click();
     await page.getByLabel('Proteína día de entreno', { exact: true }).fill('200');
     await page.getByLabel('Raciones de la comida 1 día de entreno').fill('1.5');
     await page.getByLabel('Notas para tu atleta').fill('Versión preparada para Ana');
@@ -157,7 +158,10 @@ for (const width of [390, 1440]) {
     await confirmation.getByRole('button', { name: 'Publicar pauta', exact: true }).click();
     await expect(page.getByText('Pauta de nutrición publicada', { exact: true })).toBeVisible();
     await expect.poll(() => targetReads).toBeGreaterThan(targetReadsBefore);
+    // The diary lives in the tab beside the plan: it has to read the adherence again.
+    await page.getByRole('link', { name: 'Diario de comidas', exact: true }).click();
     await expect.poll(() => adherenceReads).toBeGreaterThan(adherenceReadsBefore);
+    await page.getByRole('link', { name: 'Pauta de nutrición', exact: true }).click();
     expect(submitted).toMatchObject({
       expectedPlanId: 'p1',
       plan: {
@@ -167,13 +171,14 @@ for (const width of [390, 1440]) {
       },
     });
     await page.reload();
-    await expect(page.getByRole('button', { name: 'Publicar pauta', exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Editar pauta', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Publicar pauta', exact: true })).toHaveCount(0);
     await expect(page.getByText('La pauta publicada ha cambiado', { exact: false })).toHaveCount(0);
     await page.getByRole('button', { name: 'Historial de pautas' }).click();
     const archived = page.getByRole('listitem').filter({ hasText: 'Finalizada' });
     await archived.getByRole('button', { name: 'Ver versión', exact: true }).click();
     await expect(archived).toContainText('Bowl original');
-    await expect(archived).toContainText('1 raciones · 450 kcal');
+    await expect(archived).toContainText('1 ración · 450 kcal');
     await expect(archived).not.toContainText('Bowl actualizado');
     await expect(archived.getByRole('spinbutton')).toHaveCount(0);
     await archived

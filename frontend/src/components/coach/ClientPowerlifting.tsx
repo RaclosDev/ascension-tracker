@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSessionDraft } from '../../hooks/useSessionDraft';
 import { apiErrorMessage } from '../../lib/coach/api';
@@ -13,12 +14,45 @@ import {
   type PowerProfile,
   type SavedPowerProfile,
 } from '../../lib/coach/powerlifting';
+import { meetTotals, usePowerMeets } from '../../lib/coach/powerMeets';
 import { QueryErrorNotice } from '../QueryErrorNotice';
-import { PowerMarksEditor } from './PowerMarksEditor';
+import { bestMark, PowerMarksEditor } from './PowerMarksEditor';
 import { PowerMeets } from './PowerMeets';
 import { PowerProgress } from './PowerProgress';
 import { PowerExerciseMappings } from './PowerExerciseMappings';
 import { Select } from '@/components/ui/select';
+import { formatShortDate, todayIso } from '@/components/ui/date-picker';
+import '../../styles/coach-powerlifting.css';
+
+// Cada apartado en su pestaña; Ajustes va aparte, como botón, porque se toca poco.
+const VIEWS = [
+  ['resumen', 'Resumen'],
+  ['marcas', 'Marcas'],
+  ['seguimiento', 'Seguimiento S/B/D'],
+  ['competiciones', 'Competiciones'],
+  ['ajustes', 'Ajustes'],
+] as const;
+type View = (typeof VIEWS)[number][0];
+type FormView = Extract<View, 'resumen' | 'marcas' | 'ajustes'>;
+
+/** La próxima competición sin archivar, con los días que faltan y el total de los intentos. */
+function useNextMeet(linkId: string) {
+  const meets = usePowerMeets(linkId);
+  const today = todayIso();
+  const next = (meets.data ?? [])
+    .filter((m) => !m.content.archived && m.content.date >= today)
+    .sort((a, b) => a.content.date.localeCompare(b.content.date))[0];
+  const days = next
+    ? Math.round(
+        (new Date(`${next.content.date}T12:00:00`).getTime() -
+          new Date(`${today}T12:00:00`).getTime()) /
+          86400000,
+      )
+    : 0;
+  const planned = next ? meetTotals(next.content.attempts).planned : null;
+  return { isPending: meets.isPending, next, days, planned };
+}
+const inDays = (days: number) => (days === 0 ? 'hoy' : days === 1 ? 'mañana' : `en ${days} días`);
 
 export default function ClientPowerlifting({
   linkId,
@@ -28,66 +62,86 @@ export default function ClientPowerlifting({
   canEdit: boolean;
 }) {
   const query = usePowerProfile(linkId);
-  const [params, setParams] = useSearchParams();
-  const requestedView = params.get('vista');
-  const view =
-    requestedView === 'competiciones' || requestedView === 'seguimiento' ? requestedView : 'perfil';
+  const meet = useNextMeet(linkId);
+  const [params] = useSearchParams();
+  const view: View = VIEWS.find(([id]) => id === params.get('vista'))?.[0] ?? 'resumen';
+  const href = (id: View) => {
+    const next = new URLSearchParams(params);
+    next.set('vista', id);
+    next.delete('competicion');
+    return `?${next}`;
+  };
   return (
-    <section className="card">
-      <h2>Powerlifting</h2>
-      <p className="coach-description mb-5">
-        Referencias de fuerza y seguimiento de sentadilla, banca y peso muerto.
-      </p>
-      <nav aria-label="Áreas de powerlifting" className="flex flex-wrap gap-3 mb-5">
-        {[
-          ['perfil', 'Perfil y marcas'],
-          ['competiciones', 'Competiciones'],
-          ['seguimiento', 'Seguimiento S/B/D'],
-        ].map(([id, label]) => (
-          <button
-            key={id}
-            className={`btn ${view === id ? 'btn-primary' : 'btn-secondary'}`}
-            aria-current={view === id ? 'page' : undefined}
-            onClick={() => {
-              const next = new URLSearchParams(params);
-              next.set('vista', id);
-              next.delete('competicion');
-              setParams(next);
-            }}
+    <section className="pw athlete-manage" aria-labelledby="pw-title">
+      <h2 id="pw-title" className="sr-only">
+        Powerlifting
+      </h2>
+      <div className="pw-head">
+        <nav className="athlete-manage-tabs" aria-label="Apartados de powerlifting">
+          {VIEWS.filter(([id]) => id !== 'ajustes').map(([id, label]) => (
+            <Link key={id} to={href(id)} replace aria-current={id === view ? 'page' : undefined}>
+              {label}
+            </Link>
+          ))}
+        </nav>
+        <div className="pw-head-side">
+          {meet.next && (
+            <p className="pw-head-next">
+              Próxima: <b>{meet.next.content.name}</b> · {formatShortDate(meet.next.content.date)} ·{' '}
+              {inDays(meet.days)}
+            </p>
+          )}
+          <Link
+            className="pw-settings-link"
+            to={href('ajustes')}
+            replace
+            aria-current={view === 'ajustes' ? 'page' : undefined}
           >
-            {label}
-          </button>
-        ))}
-      </nav>
-      {query.isPending ? (
-        <p role="status">Cargando perfil de powerlifting…</p>
-      ) : query.isError ? (
-        <QueryErrorNotice pending={query.isFetching} retry={() => void query.refetch()} />
-      ) : view === 'competiciones' ? (
-        <PowerMeets linkId={linkId} profile={query.data.profile} canEdit={canEdit} />
-      ) : view === 'seguimiento' ? (
-        <PowerProgress linkId={linkId} profile={query.data.profile} />
-      ) : (
-        <PowerForm
-          key={`${query.data.version}:${canEdit}`}
-          saved={query.data}
-          canEdit={canEdit}
-          reload={() => void query.refetch()}
-        />
-      )}
+            <Settings size={15} aria-hidden /> Ajustes
+          </Link>
+        </div>
+      </div>
+      <div className="athlete-manage-panel pw-panel">
+        {query.isPending ? (
+          <p role="status">Cargando perfil de powerlifting…</p>
+        ) : query.isError ? (
+          <QueryErrorNotice pending={query.isFetching} retry={() => void query.refetch()} />
+        ) : view === 'competiciones' ? (
+          <PowerMeets linkId={linkId} profile={query.data.profile} canEdit={canEdit} />
+        ) : view === 'seguimiento' ? (
+          <PowerProgress linkId={linkId} profile={query.data.profile} />
+        ) : (
+          <PowerForm
+            key={`${query.data.version}:${canEdit}`}
+            view={view}
+            saved={query.data}
+            canEdit={canEdit}
+            reload={() => void query.refetch()}
+            marksHref={href('marcas')}
+            meetsHref={href('competiciones')}
+          />
+        )}
+      </div>
     </section>
   );
 }
 
 function PowerForm({
+  view,
   saved,
   canEdit,
   reload,
+  marksHref,
+  meetsHref,
 }: {
+  view: FormView;
   saved: SavedPowerProfile;
   canEdit: boolean;
   reload: () => void;
+  marksHref: string;
+  meetsHref: string;
 }) {
+  // El borrador vive en la sesión, así que cambiar de apartado no pierde lo escrito.
   const draft = useSessionDraft(`powerlifting:${saved.linkId}`, saved, isSavedPowerProfile);
   const save = useSavePowerProfile(saved.linkId);
   const [error, setError] = useState<string | null>(null);
@@ -98,7 +152,7 @@ function PowerForm({
     draft.setValue({ ...value, profile: { ...profile, ...patch } });
   return (
     <form
-      className="flex flex-col gap-5"
+      className="pw-form"
       onSubmit={(e) => {
         e.preventDefault();
         if (!canEdit || stale || save.isPending) return;
@@ -114,17 +168,251 @@ function PowerForm({
       }}
     >
       {!canEdit && (
-        <p role="status">
+        <p role="status" className="pw-hint">
           Solo lectura. El atleta debe permitirte editar su entrenamiento para guardar cambios.
         </p>
       )}
-      <fieldset disabled={!canEdit || save.isPending} className="flex flex-col gap-5 min-w-0">
-        <PowerExerciseMappings
-          linkId={saved.linkId}
-          value={profile.exerciseMappings ?? []}
-          onChange={(exerciseMappings) => set({ exerciseMappings })}
-        />
-        <label className="flex items-center gap-3 min-h-11">
+      <fieldset disabled={!canEdit || save.isPending} className="pw-body">
+        {view === 'resumen' && (
+          <PowerSummary
+            linkId={saved.linkId}
+            profile={profile}
+            set={set}
+            marksHref={marksHref}
+            meetsHref={meetsHref}
+          />
+        )}
+        {view === 'marcas' && (
+          <section className="pw-marks-view" aria-label="Marcas">
+            <MarksStrip linkId={saved.linkId} profile={profile} />
+            <PowerMarksEditor
+              marks={profile.marks}
+              trainingMax={profile.trainingMax}
+              readOnly={!canEdit}
+              onChange={(marks) => set({ marks })}
+            />
+          </section>
+        )}
+        {view === 'ajustes' && <PowerSettings linkId={saved.linkId} profile={profile} set={set} />}
+      </fieldset>
+      {(canEdit || stale || error) && (
+        <div className="pw-save">
+          {canEdit && draft.notice && (
+            <p role="status" className="pw-hint">
+              {draft.notice}
+            </p>
+          )}
+          {stale && (
+            <p role="alert">
+              Existe una versión más reciente. Tu borrador sigue disponible; revisa tus cambios
+              antes de descartarlo y cargar la versión guardada.
+            </p>
+          )}
+          {error && (
+            <div role="alert">
+              <p>{error}</p>
+              <button type="button" className="btn btn-secondary mt-2" onClick={reload}>
+                Consultar versión guardada
+              </button>
+            </div>
+          )}
+          {canEdit && (
+            <div className="pw-save-actions">
+              <span className="pw-hint">
+                {draft.dirty ? 'Tienes cambios sin guardar.' : 'Sin cambios pendientes.'}
+              </span>
+              {draft.dirty && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  disabled={save.isPending}
+                  onClick={() => {
+                    draft.clear();
+                    setError(null);
+                  }}
+                >
+                  Descartar cambios
+                </button>
+              )}
+              <button
+                className="btn btn-primary"
+                disabled={save.isPending || stale || !draft.dirty}
+              >
+                {save.isPending ? 'Guardando…' : 'Guardar'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </form>
+  );
+}
+
+const shortDate = (iso: string) =>
+  new Date(`${iso}T12:00:00`).toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+
+/** La suma de los récords frente al objetivo de la próxima competición. */
+function MarksStrip({ linkId, profile }: { linkId: string; profile: PowerProfile }) {
+  const { next, planned } = useNextMeet(linkId);
+  const bests = POWER_LIFTS.map((lift) => bestMark(profile.marks, lift));
+  if (bests.every((b) => !b)) return null;
+  const sum = bests.reduce((acc, b) => acc + (b?.kg ?? 0), 0);
+  const target = next?.content.targetTotal ?? planned;
+  const kg = (n: number) => n.toLocaleString('es-ES', { maximumFractionDigits: 2 });
+  return (
+    <div className="pw-strip">
+      <p className="pw-strip-total">
+        <span>Suma de récords</span>
+        <strong>
+          {kg(sum)}
+          <small>kg</small>
+        </strong>
+      </p>
+      {bests.some((b) => !b) && <p>Falta algún levantamiento; la suma está incompleta.</p>}
+      {next && target ? (
+        <p>
+          {next.content.targetTotal ? 'Objetivo' : 'Intentos previstos'} en {next.content.name}:{' '}
+          <b>{kg(target)} kg</b> ·{' '}
+          {sum >= target ? (
+            <b>lo supera en {kg(sum - target)} kg</b>
+          ) : (
+            <>
+              faltan <b>{kg(target - sum)} kg</b>
+            </>
+          )}
+        </p>
+      ) : (
+        <p>Sin objetivo de total en una competición próxima.</p>
+      )}
+    </div>
+  );
+}
+
+function PowerSummary({
+  linkId,
+  profile,
+  set,
+  marksHref,
+  meetsHref,
+}: {
+  linkId: string;
+  profile: PowerProfile;
+  set: (patch: Partial<PowerProfile>) => void;
+  marksHref: string;
+  meetsHref: string;
+}) {
+  const meets = useNextMeet(linkId);
+  const { next, days, planned } = meets;
+  return (
+    <div className="pw-summary">
+      <section className="card pw-card pw-summary-tm" aria-labelledby="pw-tm-title">
+        <h3 id="pw-tm-title">Máximos de entrenamiento (TM)</h3>
+        <div className="pw-tm">
+          {POWER_LIFTS.map((lift) => (
+            <label key={lift} className="pw-tm-field">
+              <span>{POWER_LABELS[lift]}</span>
+              <span className="pw-tm-input">
+                <input
+                  type="number"
+                  min="0.01"
+                  max="1500"
+                  step="0.01"
+                  placeholder="—"
+                  value={profile.trainingMax[MAX_KEYS[lift]] ?? ''}
+                  onChange={(e) =>
+                    set({
+                      trainingMax: {
+                        ...profile.trainingMax,
+                        [MAX_KEYS[lift]]: e.target.value === '' ? null : Number(e.target.value),
+                      },
+                    })
+                  }
+                />
+                <span aria-hidden="true">kg</span>
+              </span>
+            </label>
+          ))}
+        </div>
+        <p className="pw-hint">
+          La referencia con la que programas las cargas. Puede no coincidir con el 1RM real.
+        </p>
+      </section>
+      <section className="card pw-card" aria-labelledby="pw-best-title">
+        <div className="pw-card-head">
+          <h3 id="pw-best-title">Mejores marcas</h3>
+          <Link className="pw-link" to={marksHref} replace>
+            {profile.marks.length
+              ? `Ver las ${profile.marks.length} marcas`
+              : 'Anotar la primera marca'}
+          </Link>
+        </div>
+        <dl className="pw-best">
+          {POWER_LIFTS.map((lift) => {
+            const best = profile.marks
+              .filter((m) => m.lift === lift && m.kg > 0)
+              .sort((a, b) => b.kg - a.kg || b.date.localeCompare(a.date))[0];
+            return (
+              <div key={lift}>
+                <dt>{POWER_LABELS[lift]}</dt>
+                <dd>{best ? `${best.kg.toLocaleString('es')} kg` : '—'}</dd>
+                <dd className="pw-best-meta">
+                  {best
+                    ? `${shortDate(best.date)} · ${best.context === 'COMPETITION' ? 'competición' : 'entreno'}`
+                    : 'Sin marcas'}
+                </dd>
+              </div>
+            );
+          })}
+        </dl>
+      </section>
+      <section className="card pw-card" aria-labelledby="pw-next-title">
+        <div className="pw-card-head">
+          <h3 id="pw-next-title">Próxima competición</h3>
+          <Link className="pw-link" to={meetsHref} replace>
+            Ver competiciones
+          </Link>
+        </div>
+        {meets.isPending ? (
+          <p className="pw-hint">Cargando…</p>
+        ) : next ? (
+          <div className="pw-next">
+            <strong>{next.content.name}</strong>
+            <span>
+              {shortDate(next.content.date)} · {inDays(days)}
+            </span>
+            <span className="pw-hint">
+              {next.content.targetTotal
+                ? `Objetivo de total: ${next.content.targetTotal} kg`
+                : 'Sin total objetivo'}
+              {planned ? ` · Intentos previstos: ${planned} kg` : ''}
+            </span>
+          </div>
+        ) : (
+          <p className="pw-empty">No hay ninguna competición próxima.</p>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function PowerSettings({
+  linkId,
+  profile,
+  set,
+}: {
+  linkId: string;
+  profile: PowerProfile;
+  set: (patch: Partial<PowerProfile>) => void;
+}) {
+  return (
+    <div className="pw-settings">
+      <section className="card pw-card" aria-labelledby="pw-spec-title">
+        <h3 id="pw-spec-title">Especialización</h3>
+        <label className="pw-check">
           <input
             type="checkbox"
             checked={profile.enabled}
@@ -132,14 +420,12 @@ function PowerForm({
           />
           Especialización en powerlifting activa
         </label>
-        {!profile.enabled && (
-          <p className="coach-description">
-            Actívala cuando trabajéis esta especialidad. Desactivarla conserva el perfil y las
-            marcas.
-          </p>
-        )}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-1">
+        <p className="pw-hint">
+          Al desactivarla, Powerlifting desaparece del menú del atleta; el perfil y las marcas se
+          conservan.
+        </p>
+        <div className="pw-settings-fields">
+          <label className="pw-field">
             Equipamiento
             <Select
               className="form-input min-h-11"
@@ -151,7 +437,7 @@ function PowerForm({
               <option value="OTHER">Otro</option>
             </Select>
           </label>
-          <label className="flex flex-col gap-1">
+          <label className="pw-field">
             Federación de referencia (opcional)
             <input
               className="form-input min-h-11"
@@ -161,91 +447,26 @@ function PowerForm({
             />
           </label>
         </div>
-        <section>
-          <h3 className="font-semibold">Máximos de entrenamiento (TM)</h3>
-          <p className="coach-description mb-3">
-            Referencia en kg elegida por ti para programar cargas. Puede diferir del 1RM real y de
-            su estimación. Deja vacío lo que aún no tengas definido.
-          </p>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {POWER_LIFTS.map((lift) => (
-              <label key={lift} className="flex flex-col gap-1">
-                {POWER_LABELS[lift]} (kg)
-                <input
-                  className="form-input min-h-11"
-                  type="number"
-                  min="0.01"
-                  max="1500"
-                  step="0.01"
-                  value={profile.trainingMax[MAX_KEYS[lift]] ?? ''}
-                  onChange={(e) =>
-                    set({
-                      trainingMax: {
-                        ...profile.trainingMax,
-                        [MAX_KEYS[lift]]: e.target.value === '' ? null : Number(e.target.value),
-                      },
-                    })
-                  }
-                />
-              </label>
-            ))}
-          </div>
-        </section>
-        <PowerMarksEditor
-          marks={profile.marks}
-          readOnly={!canEdit}
-          onChange={(marks) => set({ marks })}
-        />
-        <label className="flex flex-col gap-1">
+      </section>
+      <section className="card pw-card">
+        <label className="pw-field">
           Notas de entrenamiento
           <textarea
             className="form-input"
-            rows={3}
+            rows={4}
             maxLength={2000}
             value={profile.notes}
             onChange={(e) => set({ notes: e.target.value })}
           />
         </label>
-      </fieldset>
-      {canEdit && draft.notice && (
-        <p role="status" className="coach-description">
-          {draft.notice}
-        </p>
-      )}
-      {stale && (
-        <p role="alert">
-          Existe una versión más reciente. Tu borrador sigue disponible; revisa tus cambios antes de
-          descartarlo y cargar la versión guardada.
-        </p>
-      )}
-      {error && (
-        <div role="alert">
-          <p>{error}</p>
-          <button type="button" className="btn btn-secondary mt-2" onClick={reload}>
-            Consultar versión guardada
-          </button>
-        </div>
-      )}
-      {canEdit && (
-        <div className="flex flex-wrap gap-3">
-          <button className="btn btn-primary" disabled={save.isPending || stale || !draft.dirty}>
-            {save.isPending ? 'Guardando…' : 'Guardar perfil de powerlifting'}
-          </button>
-          {draft.dirty && (
-            <button
-              type="button"
-              className="btn btn-secondary"
-              disabled={save.isPending}
-              onClick={() => {
-                draft.clear();
-                setError(null);
-              }}
-            >
-              Descartar borrador
-            </button>
-          )}
-        </div>
-      )}
-    </form>
+      </section>
+      <section className="card pw-card pw-mappings">
+        <PowerExerciseMappings
+          linkId={linkId}
+          value={profile.exerciseMappings ?? []}
+          onChange={(exerciseMappings) => set({ exerciseMappings })}
+        />
+      </section>
+    </div>
   );
 }

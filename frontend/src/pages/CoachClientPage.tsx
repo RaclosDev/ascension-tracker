@@ -1,10 +1,9 @@
 import '../styles/coach-quick-view.css';
 import { Suspense } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { apiErrorMessage, useCoachClient, type CoachClient } from '../lib/coach/api';
+import { apiErrorMessage, personName, useCoachClient, type CoachClient } from '../lib/coach/api';
 import { AthleteShell, useAthleteLinks, useAthleteViews } from '../components/coach/AthleteShell';
-import { ClientOverview } from '../components/coach/ClientOverview';
 import { ClientManagement } from '../components/coach/ClientManagement';
 import { CheckinsSection } from '../components/coach/CheckinsSection';
 import { SectionSkeleton } from '../components/coach/SectionSkeleton';
@@ -13,8 +12,8 @@ import { lazyWithRetry } from '../utils/lazyWithRetry';
 import '../styles/coach-workspace.css';
 import '../styles/coach-student.css';
 
-const ClientTraining = lazyWithRetry(() => import('../components/coach/ClientTraining'));
 const ClientProgress = lazyWithRetry(() => import('../components/coach/ClientProgress'));
+const ClientMetrics = lazyWithRetry(() => import('../components/coach/ClientMetrics'));
 const ClientPrograms = lazyWithRetry(() => import('../components/coach/ClientPrograms'));
 const ClientNutrition = lazyWithRetry(() => import('../components/coach/ClientNutrition'));
 const ClientPowerlifting = lazyWithRetry(() => import('../components/coach/ClientPowerlifting'));
@@ -59,43 +58,60 @@ export default function CoachClientPage() {
 function AthleteSections({ link }: { link: CoachClient }) {
   const { linkId } = link;
   const [params] = useSearchParams();
-  const section = params.get('seccion') ?? 'resumen';
-  const { sectionHref, recordHref } = useAthleteLinks(linkId);
+  const { sectionHref, recordHref, viewHref } = useAthleteLinks(linkId);
   const views = useAthleteViews(link);
-  const open = (id: string) => section === id && views.has(id);
+  // Planning is where a coach spends the time; the summary covers athletes without that permission.
+  const asked = params.get('seccion') ?? (link.permissions.training ? 'semana' : 'progreso');
+  // The summary now opens inside Progreso; old links keep working.
+  const section = asked === 'resumen' ? 'metricas' : asked;
+  const open = (id: string) => section === id && views.has(id) && !views.locked(id);
+  // Entrenos hechos y los registros tienen ruta propia; un ?seccion= a ellos no debe quedar en blanco.
+  if (viewHref(section) !== sectionHref(section))
+    return <Navigate to={viewHref(section)} replace />;
 
   return (
     <AthleteShell link={link} active={section}>
       <div className="coach-client-content" key={`${linkId}:${section}`}>
         <Suspense fallback={<SectionSkeleton />}>
-          {open('resumen') && (
-            <ClientOverview link={link} sectionHref={sectionHref} recordHref={recordHref} />
-          )}
           {open('semana') && <ClientWeek link={link} />}
           {open('entrenamiento') && (
-            <>
-              <ClientPrograms linkId={linkId} canAssign={link.permissions.editTraining} />
-              <details className="card athlete-disclosure">
-                <summary>Historial y estadísticas de entreno</summary>
-                <ClientTraining linkId={linkId} />
-              </details>
-            </>
+            <ClientPrograms linkId={linkId} canAssign={link.permissions.editTraining} />
           )}
-          {open('nutricion') && (
-            <ClientNutrition linkId={linkId} canEditPlan={link.permissions.editNutrition} />
+          {(open('nutricion') || open('pauta')) && (
+            <ClientNutrition
+              linkId={linkId}
+              view={section === 'pauta' ? 'pauta' : 'diario'}
+              canEditPlan={link.permissions.editNutrition}
+            />
           )}
           {open('powerlifting') && (
             <ClientPowerlifting linkId={linkId} canEdit={link.permissions.editTraining} />
           )}
-          {open('progreso') && <ClientProgress linkId={linkId} />}
-          {open('revisiones') && <CheckinsSection linkId={linkId} />}
+          {open('progreso') && <ClientProgress link={link} recordHref={recordHref} />}
+          {open('metricas') && (
+            <ClientMetrics link={link} sectionHref={sectionHref} recordHref={recordHref} />
+          )}
+          {open('revisiones') && <CheckinsSection link={link} />}
           {open('gestion') && <ClientManagement link={link} />}
+          {views.locked(section) && (
+            <section className="card athlete-locked">
+              <h2>{personName(link.client)} aún no comparte su nutrición contigo</h2>
+              <p>
+                El servicio de nutrición está contratado, pero falta su permiso. Se concede desde su
+                aplicación, en Configuración → Entrenador, marcando «Nutrición» y «Pautar
+                nutrición». En cuanto lo haga, aquí verás su pauta y sus comidas registradas.
+              </p>
+              <Link to={sectionHref('gestion')} className="btn btn-secondary mt-3">
+                Ver servicios y permisos
+              </Link>
+            </section>
+          )}
           {!views.has(section) && (
             <section className="card">
               <h2>Sección no disponible</h2>
               <p>Esta sección no está disponible con los permisos actuales.</p>
-              <Link to={sectionHref('resumen')} className="btn btn-secondary mt-3">
-                Ir al resumen
+              <Link to={sectionHref('progreso')} className="btn btn-secondary mt-3">
+                Ir a progreso
               </Link>
             </section>
           )}
