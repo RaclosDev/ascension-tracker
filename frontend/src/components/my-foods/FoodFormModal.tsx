@@ -80,17 +80,7 @@ export default function FoodFormModal({
           >
             {editingFoodId ? ' Editar Alimento' : ' Crear Alimento'}
           </h3>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontSize: '1.2rem',
-            }}
-            aria-label="Cerrar"
-          >
+          <button onClick={onClose} className="close-btn" aria-label="Cerrar">
             <X size={20} />
           </button>
         </div>

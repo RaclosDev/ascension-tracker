@@ -72,13 +72,7 @@ export default function AiFoodModal({
               stopListening();
               onClose();
             }}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontSize: '1.2rem',
-            }}
+            className="close-btn"
             aria-label="Cerrar"
           >
             <X size={20} />

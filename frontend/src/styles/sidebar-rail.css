@@ -1,0 +1,107 @@
+/*
+ * Desktop side menu as a rail: icons only until the pointer reaches the left edge (or focus
+ * enters it), then it opens to full width and pushes the page aside. The push is a transform,
+ * so charts and lists are not re-laid out on every frame.
+ */
+@media (min-width: 769px) {
+  .app-container.has-rail {
+    --rail-width: 76px;
+    --rail-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    padding-left: var(--rail-width);
+  }
+
+  .has-rail > .sidebar {
+    width: var(--rail-width);
+    overflow: hidden;
+    /* Closing waits a beat so a quick pass over the edge does not flicker the menu. */
+    transition: width 0.28s var(--rail-ease) 0.22s;
+  }
+  .has-rail > .sidebar:hover,
+  .has-rail > .sidebar:focus-within {
+    width: var(--sidebar-width);
+    transition-delay: 0.06s;
+  }
+
+  .has-rail > .main-content {
+    transition: transform 0.28s var(--rail-ease) 0.22s;
+  }
+  .has-rail:has(> .sidebar:hover, > .sidebar:focus-within) > .main-content {
+    transform: translateX(calc(var(--sidebar-width) - var(--rail-width)));
+    transition-delay: 0.06s;
+  }
+
+  /* Header: a monogram on the rail, the full wordmark once open. */
+  .has-rail .sidebar-header {
+    position: relative;
+    min-height: 92px;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .has-rail .sidebar-mono {
+    position: absolute;
+    left: 0;
+    top: calc(var(--space-xl) + env(safe-area-inset-top, 0px));
+    width: var(--rail-width);
+    font-family: var(--font-display);
+    font-size: 2rem;
+    line-height: 1;
+    text-align: center;
+    transition: opacity 0.16s ease 0.22s;
+  }
+  .has-rail .sidebar-brand-container {
+    width: calc(var(--sidebar-width) - 36px);
+    opacity: 0;
+    transition: opacity 0.16s ease;
+  }
+
+  .has-rail .sidebar-nav {
+    padding: 12px;
+    overflow-x: hidden;
+  }
+  .has-rail .sidebar .nav-item {
+    padding-left: 16px;
+    padding-right: 16px;
+    white-space: nowrap;
+  }
+  .has-rail .sidebar .nav-icon {
+    flex: none;
+    display: inline-flex;
+    margin-right: 14px;
+  }
+  .has-rail .nav-label {
+    opacity: 0;
+    transition: opacity 0.14s ease;
+  }
+
+  .has-rail > .sidebar:hover .nav-label,
+  .has-rail > .sidebar:focus-within .nav-label,
+  .has-rail > .sidebar:hover .sidebar-brand-container,
+  .has-rail > .sidebar:focus-within .sidebar-brand-container {
+    opacity: 1;
+    transition-delay: 0.16s;
+  }
+  .has-rail > .sidebar:hover .sidebar-mono,
+  .has-rail > .sidebar:focus-within .sidebar-mono {
+    opacity: 0;
+    transition-delay: 0s;
+  }
+}
+
+.sidebar-mono {
+  display: none;
+}
+@media (min-width: 769px) {
+  .has-rail .sidebar-mono {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .has-rail > .sidebar,
+  .has-rail > .main-content,
+  .has-rail .nav-label,
+  .has-rail .sidebar-mono,
+  .has-rail .sidebar-brand-container {
+    transition: none !important;
+  }
+}

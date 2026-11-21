@@ -360,8 +360,8 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     const modal = page.locator('.modal-content');
     await expect(modal).toBeVisible();
 
-    // Click en 'Borrar Ambos'
-    const deleteBtn = page.getByRole('button', { name: /borrar ambos/i });
+    // Click en "Borrar día"
+    const deleteBtn = page.getByRole('button', { name: /borrar día/i });
     await expect(deleteBtn).toBeVisible();
     await deleteBtn.click();
     const confirmBtn = page.getByRole('button', { name: /^Eliminar$/i });

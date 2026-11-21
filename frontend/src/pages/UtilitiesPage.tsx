@@ -8,6 +8,7 @@ import AiNutritionChef from '../components/utilities/AiNutritionChef';
 import { useCoachProfile } from '../lib/coach/api';
 import { CoachPageHeader } from '../components/coach/CoachWorkspace';
 import { calculateWeyandSteps, calculateWeyandMetabolic } from '../utils/fitnessCalculators';
+import '../styles/utilities.css';
 
 interface DashboardData {
   currentWeight?: number;
@@ -16,14 +17,6 @@ interface DashboardData {
 interface SettingsData {
   heightCm?: number;
 }
-
-const GROUP_TITLE = {
-  fontSize: '0.8rem',
-  fontWeight: 700,
-  color: 'var(--text-muted)',
-  marginBottom: '0.65rem',
-  paddingLeft: '0.25rem',
-} as const;
 
 export default function UtilitiesPage() {
   const [weight1, setWeight1] = useState('');
@@ -85,12 +78,7 @@ export default function UtilitiesPage() {
   return (
     <div
       className={
-        coach
-          ? 'fade-in coach-page coach-workspace coach-utilities'
-          : 'fade-in max-w-2xl mx-auto px-4 pt-2 sm:pt-4'
-      }
-      style={
-        coach ? undefined : { paddingBottom: 'calc(110px + env(safe-area-inset-bottom, 24px))' }
+        coach ? 'fade-in coach-page coach-workspace coach-utilities util-page' : 'fade-in util-page'
       }
     >
       {coach ? (
@@ -99,19 +87,17 @@ export default function UtilitiesPage() {
           description="Calculadoras de gasto y de nutrición para preparar las pautas de tus atletas."
         />
       ) : (
-        <header className="mb-6 pb-2 border-b border-white/5">
-          <h1 className="text-2xl font-black text-white tracking-tight">
-            Utilidades y Calculadoras
-          </h1>
-          <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
-            Herramientas biomecánicas, gasto calórico y nutrición deportiva.
+        <header className="util-head">
+          <h1 className="page-title-desktop">Utilidades y calculadoras</h1>
+          <p className="util-lede">
+            Gasto calórico, composición corporal y recetas con tus macros.
           </p>
         </header>
       )}
 
       {!coach && (
-        <section style={{ marginBottom: '1.75rem', marginTop: '1.25rem' }}>
-          <h2 style={GROUP_TITLE}>Chef nutricional</h2>
+        <section className="util-section">
+          <h2 className="util-section-title">Chef nutricional</h2>
           <CalculatorCard
             title="Estratega Nutricional IA"
             subtitle="Chef culinario y recetas según tus macros de hoy"
@@ -122,10 +108,11 @@ export default function UtilitiesPage() {
           </CalculatorCard>
         </section>
       )}
-
-      <section style={{ marginBottom: '1.75rem' }}>
-        <h2 style={GROUP_TITLE}>{coach ? 'Gasto calórico' : 'Calculadoras biomecánicas'}</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+      <section className="util-section">
+        <h2 className="util-section-title">
+          {coach ? 'Gasto calórico' : 'Calculadoras biomecánicas'}
+        </h2>
+        <div className="util-cards">
           {/* Calculator 1: Steps */}
           <CalculatorCard
             title="Gasto por Pasos"
@@ -309,7 +296,7 @@ export default function UtilitiesPage() {
                 <span style={{ fontSize: '1.1rem', fontWeight: 500 }}>kcal</span>
               </div>
               {metabolicResult.vo2 > 0 && (
-                <div className="text-xs text-gray-400 mt-2">
+                <div className="util-note">
                   VO2 Consumido: {metabolicResult.vo2.toFixed(2)} ml/kg/min
                 </div>
               )}
@@ -317,12 +304,11 @@ export default function UtilitiesPage() {
           </CalculatorCard>
         </div>
       </section>
-      <section style={{ marginBottom: '1.75rem' }}>
-        <h2 style={GROUP_TITLE}>{coach ? 'Nutrición' : 'Calculadoras de nutrición'}</h2>
+      <section className="util-section">
+        <h2 className="util-section-title">{coach ? 'Nutrición' : 'Calculadoras de nutrición'}</h2>
         <NutritionCalculators />
       </section>
-      {/* DISCLAIMER */}
-      <p className="text-xs text-[var(--text-secondary)] text-center mt-10 mb-4 px-4 opacity-75">
+      <p className="util-disclaimer">
         Las calculadoras proporcionan estimaciones orientativas basadas en fórmulas estándar. No
         sustituyen el consejo de un profesional médico o nutricionista.
       </p>

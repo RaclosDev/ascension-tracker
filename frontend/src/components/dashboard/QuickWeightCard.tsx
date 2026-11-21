@@ -36,14 +36,16 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
   const undoToastIdRef = useRef<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize display value only once when empty
+  // Seed the field once, when the first weight arrives. Afterwards an empty field is the user
+  // clearing it to type a new value, and must stay empty.
+  const seeded = useRef(false);
   useEffect(() => {
-    if (todayWeight !== undefined && quickWeight === '') {
-      setQuickWeight(todayWeight.toString());
-    } else if (recentWeight !== undefined && quickWeight === '') {
-      setQuickWeight(recentWeight.toString());
-    }
-  }, [todayWeight, recentWeight, quickWeight]);
+    if (seeded.current) return;
+    const initial = todayWeight ?? recentWeight;
+    if (initial === undefined) return;
+    seeded.current = true;
+    setQuickWeight((current) => (current === '' ? initial.toString() : current));
+  }, [todayWeight, recentWeight]);
 
   const invalidateQueries = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['weights'] });

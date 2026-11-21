@@ -71,9 +71,8 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
 
   return (
     <div
-      className="card"
+      className="card meal-group"
       style={{
-        padding: '1.25rem',
         border: isDragOver ? '2px dashed var(--color-carbs)' : undefined,
         transition: 'all 0.2s ease',
         display: 'flex',

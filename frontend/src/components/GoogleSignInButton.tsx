@@ -127,7 +127,7 @@ export default function GoogleSignInButton({
           type="button"
           variant="ghost"
           size="icon"
-          className="google-sign-in-close"
+          className="google-sign-in-close close-btn"
           aria-label="Cerrar"
           onClick={() => dialog.current?.close()}
         >

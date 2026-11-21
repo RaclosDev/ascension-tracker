@@ -1,0 +1,224 @@
+/* Day entry for weight and steps: paper sheet, hairline rules, steps around the figure. */
+.modal-content.te {
+  width: 100%;
+  max-width: 440px;
+  padding: 1.25rem 1.25rem 1rem;
+  border-radius: var(--radius-lg);
+  border-color: var(--border-medium);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+}
+
+.te-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border-medium);
+}
+.te-eyebrow {
+  margin: 0 0 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.te-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.6rem;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+}
+
+.te-metric {
+  padding: 0.95rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.te-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.te-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+.te-chips {
+  display: flex;
+  gap: 0.3rem;
+}
+.te-chip {
+  min-width: 2.75rem;
+  height: 2.5rem;
+  padding: 0 0.45rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+.te-chip:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+.te-chip:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+.te-chip:active {
+  transform: translateY(1px);
+}
+
+.te-field {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.3rem;
+  min-width: 0;
+  padding: 0.15rem 0.25rem;
+  border-bottom: 2px solid var(--border-medium);
+  transition: border-color 0.15s ease;
+}
+.te-field:focus-within {
+  border-bottom-color: var(--accent-primary);
+}
+.te-input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 2rem;
+  line-height: 1.1;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  padding: 0;
+}
+.te-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+.te-unit {
+  flex: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.te-kcal {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.8rem 0 0.2rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.te-kcal strong {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.te-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.te-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-right: auto;
+  padding: 0.5rem 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--color-danger);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.te-delete:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.te-delete:focus-visible {
+  outline: 2px solid var(--color-danger);
+  outline-offset: 2px;
+}
+.te-delete:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.te-cancel {
+  margin-left: auto;
+}
+.te-delete + .te-cancel {
+  margin-left: 0;
+}
+
+/* Phones: the entry rises from the bottom edge, thumb-reachable. */
+@media (max-width: 640px) {
+  .modal-backdrop:has(> .te) {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal-content.te {
+    max-width: none;
+    border-radius: 20px 20px 0 0;
+    border-bottom: 0;
+    padding: 0.75rem 1rem calc(1rem + env(safe-area-inset-bottom));
+    animation: te-rise 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .te-title {
+    font-size: 1.4rem;
+  }
+  .te-chip {
+    min-width: 2.6rem;
+    height: 2.75rem;
+  }
+  .te-input {
+    font-size: 1.75rem;
+  }
+  .te-foot .btn {
+    flex: 1;
+  }
+  .te-delete {
+    flex: none;
+  }
+}
+@keyframes te-rise {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-content.te {
+    animation: none;
+  }
+}

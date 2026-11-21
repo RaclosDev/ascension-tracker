@@ -98,7 +98,7 @@
   height: 40px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 50%;
   cursor: pointer;
 }
 .coach-tour-close:hover {

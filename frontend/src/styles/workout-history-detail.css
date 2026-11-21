@@ -72,6 +72,7 @@
 }
 .hd-close {
   grid-area: close;
+  border-radius: 50%;
   align-self: start;
   margin: calc(env(safe-area-inset-top) + 10px) 10px 0 8px;
   border-color: transparent;

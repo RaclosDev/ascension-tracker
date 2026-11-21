@@ -26,6 +26,7 @@ import { useExerciseCatalog } from '@/lib/workout/catalog-query';
 import { useCustomExercises, useRecentWorkouts } from '@/lib/workout/api';
 import { getExerciseMap } from '@/lib/workout/exercises';
 import type { CompletedWorkout, ActiveWorkout, WorkoutExercise } from '@/lib/workout/types';
+import { NumberInput } from '@/components/ui/number-input';
 
 interface Props {
   open: boolean;
@@ -203,12 +204,7 @@ export function WorkoutCelebrationModal({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 flex items-center justify-center text-zinc-400 hover:text-white transition-all"
-            aria-label="Cerrar resumen"
-          >
+          <button type="button" onClick={onClose} className="close-btn" aria-label="Cerrar resumen">
             <X size={16} />
           </button>
         </div>
@@ -266,14 +262,11 @@ export function WorkoutCelebrationModal({
               </label>
               <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900/90 border border-white/10 focus-within:border-[var(--accent-primary)] focus-within:ring-1 focus-within:ring-[var(--accent-primary)] transition-all">
                 <Clock size={15} className="text-[var(--accent-primary-light)] shrink-0" />
-                <input
+                <NumberInput
                   id="finish-workout-duration"
-                  type="number"
                   min="1"
                   value={customDuration}
-                  onChange={(e) =>
-                    setCustomDuration(Math.max(1, parseInt(e.target.value, 10) || 1))
-                  }
+                  onValueChange={(n) => setCustomDuration(Math.max(1, Math.round(n)))}
                   disabled={isSaving}
                   className="w-full bg-transparent text-white font-semibold focus:outline-none tabular-nums text-sm"
                 />

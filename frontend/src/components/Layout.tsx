@@ -14,11 +14,12 @@ import { DEMO, DEMO_COACH } from '../demo/mode';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import BottomSheet from './BottomSheet';
+import { isCoachTourFrame } from './coach/tour/frame';
+import '../styles/sidebar-rail.css';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { useQuery } from '@tanstack/react-query';
 import { WorkoutElapsedTimer } from './workout/WorkoutElapsedTimer';
 import OnboardingScreen from './OnboardingScreen';
-import { isCoachTourFrame } from './coach/tour/frame';
 import { PasskeyPrompt } from './PasskeyPrompt';
 import { preloadRoute } from '../utils/routePreload';
 
@@ -34,6 +35,7 @@ import {
   LogOut,
   ChevronDown,
   GraduationCap,
+  ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
@@ -93,6 +95,13 @@ const navItems = [
     shortLabel: 'Ajustes',
   },
 ];
+
+/** One line under each entry of the "Más" sheet, so the destination reads before the tap. */
+const moreHints: Record<string, string> = {
+  '/utilities': 'Calculadoras y herramientas',
+  '/settings': 'Perfil, objetivos, avisos y copias',
+  '/entrenador': 'Tu entrenador y lo que te ha pautado',
+};
 
 const bottomNavPaths = ['/dashboard', '/tracking', '/nutrition', '/workout'];
 
@@ -253,24 +262,33 @@ export default function Layout() {
         onClick={closeSidebar}
       />
 
-      <div className="app-container">
+      <div className={`app-container${isCoachTourFrame() || isCoach ? '' : ' has-rail'}`}>
         {/* Barra lateral / Cajón deslizable (desktop) */}
-        <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`} data-rail={rail || undefined}>
+        <aside
+          className={`sidebar ${sidebarOpen ? 'open' : ''}`}
+          data-rail={(isCoach && rail) || undefined}
+        >
           <div className="sidebar-header">
-            <button
-              type="button"
-              className="sidebar-rail-toggle"
-              aria-pressed={rail}
-              aria-label="Plegar el menú a iconos"
-              title={rail ? 'Desplegar el menú' : 'Plegar el menú a iconos'}
-              onClick={toggleRail}
-            >
-              {rail ? (
-                <PanelLeftOpen size={18} aria-hidden />
-              ) : (
-                <PanelLeftClose size={18} aria-hidden />
-              )}
-            </button>
+            {isCoach ? (
+              <button
+                type="button"
+                className="sidebar-rail-toggle"
+                aria-pressed={rail}
+                aria-label="Plegar el menú a iconos"
+                title={rail ? 'Desplegar el menú' : 'Plegar el menú a iconos'}
+                onClick={toggleRail}
+              >
+                {rail ? (
+                  <PanelLeftOpen size={18} aria-hidden />
+                ) : (
+                  <PanelLeftClose size={18} aria-hidden />
+                )}
+              </button>
+            ) : (
+              <span className="sidebar-mono" aria-hidden="true">
+                A<span className="app-wordmark-dot">.</span>
+              </span>
+            )}
             <div className="sidebar-brand-container">
               <span className="app-wordmark">
                 Ascension<span className="app-wordmark-dot">.</span>
@@ -304,7 +322,10 @@ export default function Layout() {
                   <span className="nav-icon" style={{ pointerEvents: 'none' }}>
                     {item.icon}
                   </span>
-                  <span style={{ flex: 1, textAlign: 'left', pointerEvents: 'none' }}>
+                  <span
+                    className="nav-label"
+                    style={{ flex: 1, textAlign: 'left', pointerEvents: 'none' }}
+                  >
                     {item.label}
                   </span>
                 </button>
@@ -354,7 +375,9 @@ export default function Layout() {
                         }}
                       >
                         <span className="nav-icon">{item.icon}</span>
-                        <span style={{ flex: 1 }}>{item.label}</span>
+                        <span className="nav-label" style={{ flex: 1 }}>
+                          {item.label}
+                        </span>
                       </button>
                     );
                   })}
@@ -370,7 +393,9 @@ export default function Layout() {
                     <span className="nav-icon">
                       <LogOut className="w-5 h-5" aria-hidden />
                     </span>
-                    <span style={{ flex: 1 }}>Cerrar sesión</span>
+                    <span className="nav-label" style={{ flex: 1 }}>
+                      Cerrar sesión
+                    </span>
                   </button>
                 </div>
               )}
@@ -515,50 +540,52 @@ export default function Layout() {
         onClose={() => setMoreMenuOpen(false)}
         title="Más opciones"
       >
-        <div className="bottom-sheet-grid">
-          {moreItems.map((item) => {
-            const isActive = isItemActive(item.path, location.pathname);
-            return (
-              <button
-                key={item.path}
-                data-tour-nav={item.path}
-                type="button"
-                className={`bottom-sheet-item ${isActive ? 'active' : ''}`}
-                aria-current={isActive ? 'page' : undefined}
-                onMouseEnter={() => preloadRoute(item.path)}
-                onTouchStart={() => preloadRoute(item.path)}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setMoreMenuOpen(false);
-                  navigateTo(item.path);
-                }}
-                style={{ width: '100%', display: 'flex', alignItems: 'center' }}
-              >
-                <div className="bottom-sheet-item-icon" style={{ pointerEvents: 'none' }}>
-                  {item.icon}
-                </div>
-                <span style={{ pointerEvents: 'none', flex: 1, textAlign: 'left' }}>
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
+        <nav className="more-sheet" aria-label="Más secciones">
+          <ul className="more-sheet-list">
+            {moreItems.map((item) => {
+              const isActive = isItemActive(item.path, location.pathname);
+              const hint = moreHints[item.path];
+              return (
+                <li key={item.path}>
+                  <button
+                    data-tour-nav={item.path}
+                    type="button"
+                    className={`more-sheet-item${isActive ? ' active' : ''}`}
+                    aria-current={isActive ? 'page' : undefined}
+                    onMouseEnter={() => preloadRoute(item.path)}
+                    onTouchStart={() => preloadRoute(item.path)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setMoreMenuOpen(false);
+                      navigateTo(item.path);
+                    }}
+                  >
+                    <span className="more-sheet-icon" aria-hidden="true">
+                      {item.icon}
+                    </span>
+                    <span className="more-sheet-text">
+                      <span className="more-sheet-label">{item.label}</span>
+                      {hint && <span className="more-sheet-hint">{hint}</span>}
+                    </span>
+                    <ChevronRight className="more-sheet-chevron" size={18} aria-hidden="true" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
           <button
             type="button"
-            className="bottom-sheet-item"
+            className="more-sheet-logout"
             onClick={() => {
               setMoreMenuOpen(false);
               void logout();
             }}
-            style={{ width: '100%', display: 'flex', alignItems: 'center' }}
           >
-            <div className="bottom-sheet-item-icon" style={{ pointerEvents: 'none' }}>
-              <LogOut className="w-5 h-5" aria-hidden />
-            </div>
-            <span style={{ pointerEvents: 'none', flex: 1, textAlign: 'left' }}>Cerrar sesión</span>
+            <LogOut size={18} aria-hidden="true" />
+            Cerrar sesión
           </button>
-        </div>
+        </nav>
       </BottomSheet>
     </div>
   );

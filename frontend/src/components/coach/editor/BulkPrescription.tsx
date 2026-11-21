@@ -3,6 +3,7 @@ import type { Program } from '@/lib/coach/coachPrograms';
 import { adjustProgram, type DoseAdjustment } from '@/lib/coach/bulkPrescription';
 import { PrescriptionSummary } from '../PrescriptionSummary';
 import { Select } from '@/components/ui/select';
+import { NumberInput } from '@/components/ui/number-input';
 
 const INITIAL: DoseAdjustment = {
   day: null,
@@ -89,14 +90,14 @@ export function BulkPrescription({
         ).map((field) => (
           <label className="flex flex-col gap-1 min-w-0" key={field.key}>
             {field.label}
-            <input
+            <NumberInput
               className="w-24 form-input min-h-11"
-              type="number"
               min={-100}
               max={100}
               step={field.step}
               value={delta[field.key]}
-              onChange={(e) => edit({ [field.key]: Number(e.target.value) })}
+              onValueChange={(n) => edit({ [field.key]: n })}
+              emptyValue={0}
             />
           </label>
         ))}

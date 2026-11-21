@@ -255,7 +255,7 @@ export function ExercisePicker() {
         <div className="workout-sheet-handle" />
         <div className="workout-sheet-header">
           <span className="workout-sheet-title">Añadir ejercicios</span>
-          <button className="workout-sheet-close" onClick={close}>
+          <button className="workout-sheet-close" onClick={close} aria-label="Cerrar">
             <X size={22} />
           </button>
         </div>

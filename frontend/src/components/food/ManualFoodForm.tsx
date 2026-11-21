@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 import { getLocalDateString } from '../../utils/dateHelper';
+import { NumberInput } from '@/components/ui/number-input';
 
 const BASE_GRAMS = 100;
 
@@ -164,12 +165,12 @@ export default function ManualFoodForm({
           <label className="form-label" htmlFor="food-portion">
             Porción consumida (g)
           </label>
-          <input
+          <NumberInput
             id="food-portion"
-            type="number"
             className="form-input"
-            value={quantity}
-            onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
+            value={Number(quantity) || 0}
+            onValueChange={setQuantity}
+            emptyValue={0}
             min="1"
           />
         </div>
