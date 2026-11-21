@@ -109,7 +109,45 @@
   }
 }
 
-/* "Pruébalo aquí": two hands-on demos printed on paper sheets. */
+/* The hero's demo: a switch between the two hands-on demos, each printed on a paper sheet. */
+.try-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.try-switch {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 2px solid var(--fam-ink);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.try-switch__btn {
+  min-height: 40px;
+  padding: 0 18px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--fam-ink);
+  background: var(--fam-sheet);
+  border: 0;
+  cursor: pointer;
+}
+.try-switch__btn + .try-switch__btn {
+  border-left: 2px solid var(--fam-ink);
+}
+.try-switch__btn[aria-pressed='true'] {
+  color: var(--fam-sheet);
+  background: var(--fam-ink);
+}
+.try-switch__btn:focus-visible {
+  outline: 3px solid var(--fam-accent);
+  outline-offset: -5px;
+}
+.try-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--fam-muted);
+}
 .try-panel {
   display: flex;
   flex-direction: column;

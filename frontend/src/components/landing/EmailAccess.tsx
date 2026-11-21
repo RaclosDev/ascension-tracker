@@ -41,6 +41,7 @@ export default function EmailAccess({
   const [step, setStep] = useState<Step>('form');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const registering = mode === 'register';
@@ -173,17 +174,28 @@ export default function EmailAccess({
             </button>
           )}
         </div>
-        <input
-          id={`${ids}-password`}
-          className={field}
-          type="password"
-          autoComplete={registering ? 'new-password' : 'current-password'}
-          minLength={registering ? 8 : undefined}
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          aria-describedby={registering ? `${ids}-hint` : undefined}
-        />
+        <div className="fam-password">
+          <input
+            id={`${ids}-password`}
+            className={field}
+            type={showPassword ? 'text' : 'password'}
+            autoComplete={registering ? 'new-password' : 'current-password'}
+            minLength={registering ? 8 : undefined}
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            aria-describedby={registering ? `${ids}-hint` : undefined}
+          />
+          <button
+            type="button"
+            className="fam-password__toggle"
+            aria-pressed={showPassword}
+            aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            onClick={() => setShowPassword((shown) => !shown)}
+          >
+            {showPassword ? 'Ocultar' : 'Mostrar'}
+          </button>
+        </div>
         {registering && (
           <p id={`${ids}-hint`} className="text-[0.8rem] text-[var(--fam-muted)]">
             Mínimo 8 caracteres. Entrarás directamente al crear la cuenta.
@@ -195,7 +207,7 @@ export default function EmailAccess({
           className={`${primary} fam-btn--lg mt-1`}
           disabled={busy || !email.trim() || !password}
         >
-          {busy ? 'Un momento…' : registering ? 'Crear cuenta' : 'Entrar'}
+          {busy ? 'Un momento…' : registering ? 'Crear cuenta' : 'Iniciar sesión'}
         </button>
       </form>
       {!registering && passkeysSupported() && (

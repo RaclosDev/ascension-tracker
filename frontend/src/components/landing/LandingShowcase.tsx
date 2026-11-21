@@ -16,8 +16,8 @@ const shots = [
   },
 ];
 
-// Real screens, each in a phone body and fanned with the middle one forward, next to the headline
-// so the first screen already shows the app. Nothing clips them: the tilted corners show whole.
+// Real screens, each in a phone body and fanned with the middle one forward, in their own section
+// under the features. Nothing clips them: the tilted corners show whole.
 export default function LandingShowcase() {
   return (
     <ul

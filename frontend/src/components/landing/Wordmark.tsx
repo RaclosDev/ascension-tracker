@@ -1,9 +1,8 @@
-// The brand as the three paper-and-ink apps show it: the app icon and the name in the display
-// face, one ink.
+// The brand as the three paper-and-ink apps show it: the name in the display face, one ink,
+// with the accent full stop from family.css.
 export default function Wordmark() {
   return (
     <>
-      <img src="/icon-192.png" alt="" width={32} height={32} />
       <span>Ascension</span>
     </>
   );
