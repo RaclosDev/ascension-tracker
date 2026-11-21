@@ -1,0 +1,52 @@
+/* Entreno: la acción de la pestaña abierta va en la misma fila que las pestañas, a la derecha. */
+.workout-tabs-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+.workout-tabs-row .segmented {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.workout-tab-action {
+  display: flex;
+  flex: none;
+  margin-left: auto;
+}
+.workout-tab-action:empty {
+  display: none;
+}
+.tab-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+@media (min-width: 1025px) {
+  .workout-tabs-row .segmented {
+    flex: 0 1 auto;
+  }
+}
+/* Móvil y tableta: las pestañas ocupan el ancho y la acción se queda en un cuadrado con el +. */
+@media (max-width: 1024px) {
+  .workout-tabs-row {
+    gap: 6px;
+  }
+  .workout-tab-action .tab-action-btn {
+    justify-content: center;
+    width: 44px;
+    padding: 0;
+  }
+  .workout-tab-action .tab-action-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
