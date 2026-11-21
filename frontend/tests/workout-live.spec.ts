@@ -66,9 +66,7 @@ async function startWorkoutWithExercise(page: Page) {
   await expect(startBtn).toBeVisible({ timeout: 15000 });
   await startBtn.click();
 
-  const emptyOption = page
-    .locator('.start-workout-option')
-    .filter({ hasText: /entrenamiento vac[ií]o/i });
+  const emptyOption = page.locator('.ws-empty').filter({ hasText: /entreno vac[ií]o/i });
   await expect(emptyOption).toBeVisible({ timeout: 10000 });
   await emptyOption.click();
 
@@ -96,9 +94,7 @@ test.describe('Sesión de Entrenamiento en Vivo (Workout Live)', () => {
     await startBtn.click();
 
     // 2. Elegir "Entrenamiento vacío"
-    const emptyOption = page
-      .locator('.start-workout-option')
-      .filter({ hasText: /entrenamiento vac[ií]o/i });
+    const emptyOption = page.locator('.ws-empty').filter({ hasText: /entreno vac[ií]o/i });
     await expect(emptyOption).toBeVisible({ timeout: 10000 });
     await emptyOption.click();
 
@@ -293,9 +289,7 @@ test.describe('Sesión de Entrenamiento en Vivo (Workout Live)', () => {
       await expect(startBtn).toBeVisible({ timeout: 15000 });
       await startBtn.click();
 
-      const emptyOption = page
-        .locator('.start-workout-option')
-        .filter({ hasText: /entrenamiento vac[ií]o/i });
+      const emptyOption = page.locator('.ws-empty').filter({ hasText: /entreno vac[ií]o/i });
       await expect(emptyOption).toBeVisible({ timeout: 10000 });
       await emptyOption.click();
 

@@ -71,9 +71,7 @@ async function startWorkoutWithBenchPress(page: Page) {
   await expect(startBtn).toBeVisible({ timeout: 15000 });
   await startBtn.click();
 
-  const emptyOption = page
-    .locator('.start-workout-option')
-    .filter({ hasText: /entrenamiento vac[ií]o/i });
+  const emptyOption = page.locator('.ws-empty').filter({ hasText: /entreno vac[ií]o/i });
   await expect(emptyOption).toBeVisible({ timeout: 10000 });
   await emptyOption.click();
 
@@ -255,9 +253,7 @@ test.describe('Pruebas E2E de Interacción Real en Gimnasio (Interactive Gym Wor
 
     if (await page.getByRole('button', { name: /empezar entrenamiento/i }).isVisible()) {
       await page.getByRole('button', { name: /empezar entrenamiento/i }).click();
-      const emptyOption = page
-        .locator('.start-workout-option')
-        .filter({ hasText: /entrenamiento vac[ií]o/i });
+      const emptyOption = page.locator('.ws-empty').filter({ hasText: /entreno vac[ií]o/i });
       await emptyOption.click();
       await page.locator('.picker-exercise-item').first().click();
       await page.getByRole('button', { name: /a[ñn]adir al entreno/i }).click();
@@ -412,9 +408,7 @@ test.describe('Pruebas E2E de Interacción Real en Gimnasio (Interactive Gym Wor
     const startBtn = page.getByRole('button', { name: /empezar entrenamiento/i });
     if (await startBtn.isVisible()) {
       await startBtn.click();
-      const emptyOption = page
-        .locator('.start-workout-option')
-        .filter({ hasText: /entrenamiento vac[ií]o/i });
+      const emptyOption = page.locator('.ws-empty').filter({ hasText: /entreno vac[ií]o/i });
       await emptyOption.click();
 
       // El catálogo contiene "Press de Banca" (barra) y "Sentadilla en Multipower" (multipower)
