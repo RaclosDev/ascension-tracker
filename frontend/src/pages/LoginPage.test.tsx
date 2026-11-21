@@ -46,9 +46,10 @@ describe('Google authentication contract', () => {
 
   it('opens on "Crear cuenta" when it comes from a sign-up call to action', () => {
     renderLogin('/login?modo=registro');
-    expect(screen.getAllByRole('button', { name: 'Crear cuenta' })[0]).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    expect(
+      screen.getByRole('heading', { name: 'Crea tu cuenta en Ascension' }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Inicia sesión' }));
+    expect(screen.getByRole('heading', { name: 'Inicia sesión en Ascension' })).toBeInTheDocument();
   });
 });

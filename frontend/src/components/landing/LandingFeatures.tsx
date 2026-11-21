@@ -33,14 +33,11 @@ export default function LandingFeatures() {
   return (
     <section
       id="funciones"
-      className="mx-auto mt-20 grid max-w-6xl gap-10 px-5 sm:px-8 lg:mt-28 lg:grid-cols-12"
+      className="fam-container mt-20 grid gap-10 lg:mt-28 lg:grid-cols-12"
       aria-labelledby="features-title"
     >
       <div className="lg:col-span-4">
-        <h2
-          id="features-title"
-          className="landing-display text-[clamp(2.2rem,6vw,4rem)] font-bold text-white"
-        >
+        <h2 id="features-title" className="fam-h2">
           Todo lo que registras, en un sitio
         </h2>
         <p className="mt-4 max-w-[38ch] text-[var(--landing-muted)]">

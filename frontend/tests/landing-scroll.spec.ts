@@ -21,9 +21,12 @@ test('landing scrolls on a phone', async ({ page }) => {
 });
 
 test('the features link scrolls to the features section', async ({ page }) => {
-  // On a phone the hero goes straight to the sign-in panel; the link only shows on wide screens.
+  // The section nav only shows on wide screens.
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.getByRole('link', { name: /Ver qué incluye/i }).click();
+  await page
+    .getByRole('navigation', { name: 'Secciones' })
+    .getByRole('link', { name: 'Funciones' })
+    .click();
   await expect(page.getByRole('heading', { name: /Todo lo que registras/i })).toBeInViewport();
 });
 
@@ -33,7 +36,7 @@ test('section links leave space above their targets', async ({ page }) => {
 
   for (const [label, id] of [
     ['Funciones', 'funciones'],
-    ['Tus datos', 'datos'],
+    ['Pruébalo', 'pruebalo'],
     ['Entrenadores', 'entrenadores'],
   ]) {
     await page
@@ -49,5 +52,7 @@ test('section links leave space above their targets', async ({ page }) => {
       .toBeLessThan(5);
   }
 
-  await expect(page.locator('#datos').getByRole('heading', { name: 'Tus datos' })).toBeVisible();
+  await expect(
+    page.locator('#pruebalo').getByRole('heading', { name: 'Pruébalo aquí' }),
+  ).toBeVisible();
 });

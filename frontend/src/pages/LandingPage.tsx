@@ -2,6 +2,7 @@ import LandingNav from '../components/landing/LandingNav';
 import LandingHero from '../components/landing/LandingHero';
 import { LandingStatement } from '../components/landing/LandingShowcase';
 import LandingFeatures from '../components/landing/LandingFeatures';
+import LandingTryIt from '../components/landing/LandingTryIt';
 import LandingCoaches from '../components/landing/LandingCoaches';
 import LandingFooter from '../components/landing/LandingFooter';
 import '../components/landing/landing.css';
@@ -10,12 +11,13 @@ import '../components/landing/landing.css';
 // own page, /login, behind the header's "Entrar".
 export default function LandingPage() {
   return (
-    <div className="landing">
+    <div className="landing fam">
       <LandingNav />
       <main>
         <LandingHero />
         <LandingStatement />
         <LandingFeatures />
+        <LandingTryIt />
         <LandingCoaches />
       </main>
       <LandingFooter />

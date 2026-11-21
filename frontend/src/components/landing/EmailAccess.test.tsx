@@ -65,10 +65,10 @@ describe('EmailAccess', () => {
   it('creates an account and signs in directly', async () => {
     mocks.startSignUp.mockResolvedValue('new-session');
     render(<EmailAccess />);
-    fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Crea una gratis' }));
     type('Email', 'ana@example.com');
     type('Contraseña', 'una-frase-larga');
-    fireEvent.click(screen.getAllByRole('button', { name: 'Crear cuenta' })[1]);
+    fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
 
     await waitFor(() => expect(mocks.login).toHaveBeenCalledWith('new-session'));
     expect(mocks.startSignUp).toHaveBeenCalledWith('ana@example.com', 'una-frase-larga');
@@ -113,11 +113,8 @@ describe('EmailAccess', () => {
         alternatives={<button type="button">Continuar con Google</button>}
       />,
     );
-    expect(screen.getAllByRole('button', { name: 'Crear cuenta' })[0]).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    expect(screen.getAllByRole('button', { name: 'Crear cuenta' })).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toHaveAttribute('type', 'submit');
+    expect(screen.getByRole('button', { name: 'Inicia sesión' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Continuar con Google' })).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Entrar con huella o llave de acceso' }),

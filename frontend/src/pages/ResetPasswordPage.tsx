@@ -46,7 +46,7 @@ export default function ResetPasswordPage() {
     'w-full min-h-11 rounded-[4px] border-2 border-[var(--landing-ink)] bg-[var(--paper)] px-3 text-base';
 
   return (
-    <div className="landing">
+    <div className="landing fam">
       <main className="mx-auto flex max-w-sm flex-col gap-4 px-5 py-16">
         <h1 className="landing-display text-[2rem] font-bold">Nueva contraseña</h1>
         {!token ? (
@@ -94,7 +94,7 @@ export default function ResetPasswordPage() {
             )}
             <button
               type="submit"
-              className="landing-google-cta w-full"
+              className="fam-btn fam-btn--ink fam-btn--block"
               disabled={busy || !password || !repeat}
             >
               {busy ? 'Guardando…' : 'Guardar y entrar'}

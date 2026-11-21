@@ -48,11 +48,8 @@ export default function LandingShowcase() {
 // The one thing that sets the app apart, in the display face at full width under the hero.
 export function LandingStatement() {
   return (
-    <section className="mx-auto max-w-6xl px-5 sm:px-8" aria-labelledby="statement-title">
-      <h2
-        id="statement-title"
-        className="landing-display max-w-4xl text-[clamp(1.6rem,4.6vw,3rem)] font-bold leading-[1.1] text-balance text-white"
-      >
+    <section className="fam-container" aria-labelledby="statement-title">
+      <h2 id="statement-title" className="landing-statement max-w-4xl">
         Cada ejercicio guarda su historial y sus récords por variante. Agarre, inclinación o
         máquina:{' '}
         <span className="text-[var(--landing-blue)]">nada se mezcla y nada se pierde.</span>
