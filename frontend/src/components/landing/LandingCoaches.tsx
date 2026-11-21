@@ -32,13 +32,10 @@ export default function LandingCoaches() {
   return (
     <section
       id="entrenadores"
-      className="mx-auto mt-20 max-w-6xl px-5 sm:px-8 lg:mt-28"
+      className="fam-container mt-20 lg:mt-28"
       aria-labelledby="coaches-title"
     >
-      <h2
-        id="coaches-title"
-        className="landing-display max-w-[18ch] text-[clamp(2.2rem,6vw,4rem)] font-bold text-white"
-      >
+      <h2 id="coaches-title" className="fam-h2 max-w-[18ch]">
         Lleva a tus atletas desde la misma app
       </h2>
       <p className="mt-4 max-w-[52ch] text-[var(--landing-muted)]">

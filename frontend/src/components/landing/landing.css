@@ -1,3 +1,5 @@
+@import './family.css';
+
 /* Public landing and /login. Paper and ink, like PorrApp and LoopDeck: a poster, the app shots
    in phone bodies, and the accent ink the app uses. No tape or stickers. */
 .landing {
@@ -19,7 +21,7 @@
 }
 
 .landing #funciones,
-.landing #datos,
+.landing #pruebalo,
 .landing #entrenadores {
   scroll-margin-top: 3rem;
 }
@@ -37,139 +39,16 @@
   line-height: 0.92;
 }
 
-/* Blue tag word inside the headline: italic, tilted, with a marker stroke under it. */
-.landing-tag {
-  display: inline-block;
-  color: var(--landing-blue);
-  font-style: italic;
-  transform: rotate(-2deg);
-  position: relative;
-}
-.landing-tag svg {
-  position: absolute;
-  left: -2%;
-  right: -4%;
-  bottom: -0.18em;
-  width: 106%;
-  height: 0.28em;
-}
-
-/* Name in the header and footer: the headline's face, tight, with the accent full stop. */
-.landing-wordmark {
-  color: var(--ink);
+/* The line under the hero: display face, a step below H2, with room between its lines. */
+.landing-statement {
+  font-family: var(--fam-display);
   font-weight: 400;
+  font-size: clamp(1.6rem, 3.2vw, 2.5rem);
+  line-height: 1.12;
   letter-spacing: 0.01em;
-  line-height: 1;
-}
-
-/* Solid ink call to action. */
-.landing-cta {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.6rem;
-  min-height: 48px;
-  padding: 0 1.25rem;
-  background: var(--ink);
-  color: var(--paper);
-  border: 2px solid var(--ink);
-  border-radius: 4px;
-  font-family: var(--font-display);
-  font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: 1rem;
-  transition: transform 160ms ease;
-}
-.landing-cta:hover {
-  transform: translateY(-1px);
-}
-.landing-cta:focus-visible {
-  outline: 2px solid var(--landing-blue);
-  outline-offset: 3px;
-}
-/* Submit inside the access sheet: the same ink block as the header button. */
-.landing-google-cta {
-  min-height: 48px;
-  padding: 0 1.25rem;
-  background: var(--ink);
-  color: var(--paper);
-  border: 2px solid var(--ink);
-  border-radius: 4px;
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.landing-google-cta:hover {
-  background: var(--ink);
-  color: var(--paper);
-  transform: translateY(-1px);
-}
-.landing-google-cta:focus-visible {
-  outline: 2px solid var(--landing-blue);
-  outline-offset: 3px;
-}
-/* Second way in (passkey, Google): same block, paper instead of ink, so email stays the one
-   solid action in the sheet. */
-.landing-alt-cta {
-  min-height: 48px;
-  padding: 0 1.25rem;
-  background: transparent;
-  color: var(--ink);
-  border: 2px solid var(--ink);
-  border-radius: 4px;
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-.landing-alt-cta:hover {
-  background: rgba(17, 24, 39, 0.06);
-  color: var(--ink);
-}
-.landing-alt-cta:focus-visible,
-.landing-switch:focus-visible {
-  outline: 2px solid var(--landing-blue);
-  outline-offset: 3px;
-}
-.landing-google-cta:disabled,
-.landing-alt-cta:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Access sheet on /login: a straight print with the hard shadow, nothing stuck on it. */
-.landing-sheet {
-  background: #fffdf7;
-  border: 2px solid var(--ink);
-  border-radius: 4px;
-  box-shadow: 6px 8px 0 rgba(0, 0, 0, 0.2);
-}
-
-/* Sign in / Create account: two halves of one ink frame, the active one filled. */
-.landing-switches {
-  border: 2px solid var(--ink);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.landing-switch {
-  background: transparent;
-  color: var(--ink);
-}
-.landing-switch + .landing-switch {
-  border-left: 2px solid var(--ink);
-}
-.landing-switch[aria-pressed='true'] {
-  background: var(--ink);
-  color: var(--paper);
-}
-.landing-switch:focus-visible {
-  outline-offset: -5px;
-  outline-color: var(--paper);
-}
-.landing-switch[aria-pressed='false']:focus-visible {
-  outline-color: var(--landing-blue);
+  text-wrap: balance;
+  color: var(--fam-ink);
 }
 
 /* Three real screens, each inside a phone body, fanned with the middle one forward. */
@@ -222,11 +101,259 @@
   .landing-rise {
     animation: none;
   }
-  .landing-phone,
-  .landing-cta {
+  .landing-phone {
     transition: none;
   }
   .landing-phone:hover {
     transform: none !important;
+  }
+}
+
+/* "Pruébalo aquí": two hands-on demos printed on paper sheets. */
+.try-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: clamp(20px, 3vw, 32px);
+  background: var(--fam-sheet);
+  border: 2px solid var(--fam-ink);
+  border-radius: 4px;
+  box-shadow: 6px 8px 0 rgba(17, 24, 39, 0.18);
+}
+.try-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+.try-panel__meta,
+.try-empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--fam-muted);
+}
+.try-best {
+  margin: 0;
+  padding: 12px 14px;
+  background: rgba(11, 95, 116, 0.08);
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+.try-best span {
+  color: var(--fam-muted);
+}
+.try-steppers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.try-stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.try-stepper__row {
+  display: flex;
+  align-items: center;
+  border: 2px solid var(--fam-ink);
+  border-radius: 4px;
+  background: #fff;
+}
+.try-stepper__btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 48px;
+  flex: none;
+  background: none;
+  border: 0;
+  color: var(--fam-ink);
+  cursor: pointer;
+}
+.try-stepper__btn:hover {
+  background: rgba(17, 24, 39, 0.06);
+}
+.try-stepper__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.try-stepper__btn:focus-visible,
+.try-food:focus-visible,
+.try-remove:focus-visible {
+  outline: 3px solid var(--fam-accent);
+  outline-offset: 2px;
+}
+.try-stepper__value {
+  flex: 1;
+  text-align: center;
+  font-family: var(--fam-display);
+  font-size: 1.6rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.try-stepper__value small {
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--fam-muted);
+}
+.try-log {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 96px;
+}
+.try-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  margin: 0;
+  padding: 6px 14px;
+  background: var(--fam-accent);
+  color: var(--fam-sheet);
+  border-radius: 4px;
+  font-family: var(--fam-display);
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  animation: try-stamp 420ms var(--fam-ease) both;
+}
+@keyframes try-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.35) rotate(-4deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-2deg);
+  }
+}
+.try-sets {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--fam-rule);
+}
+.try-sets li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  border-bottom: 1px solid var(--fam-rule);
+  font-variant-numeric: tabular-nums;
+}
+.try-sets li span:last-child {
+  font-size: 0.9rem;
+  color: var(--fam-muted);
+}
+.try-sets li.is-record span:last-child {
+  color: var(--fam-accent);
+  font-weight: 700;
+}
+.try-kcal p {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  color: var(--fam-muted);
+}
+.try-kcal strong {
+  font-family: var(--fam-display);
+  font-size: 2.4rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--fam-ink);
+  font-variant-numeric: tabular-nums;
+}
+.try-bar {
+  height: 12px;
+  background: rgba(17, 24, 39, 0.08);
+  border: 2px solid var(--fam-ink);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.try-bar span {
+  display: block;
+  height: 100%;
+  background: var(--fam-accent);
+  transition: width 420ms var(--fam-ease);
+}
+.try-macros {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 12px 0 0;
+}
+.try-macros dt {
+  font-size: 0.8rem;
+  color: var(--fam-muted);
+}
+.try-macros dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.try-foods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.try-food {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 8px;
+  min-height: 56px;
+  padding: 8px 12px;
+  background: #fff;
+  border: 2px solid var(--fam-ink);
+  border-radius: 4px;
+  color: var(--fam-ink);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 160ms var(--fam-ease);
+}
+.try-food:hover {
+  background: rgba(11, 95, 116, 0.08);
+}
+.try-food svg {
+  grid-row: span 2;
+  color: var(--fam-accent);
+}
+.try-food span {
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+.try-food small {
+  font-size: 0.8rem;
+  color: var(--fam-muted);
+  font-variant-numeric: tabular-nums;
+}
+.try-remove {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: 0;
+  color: var(--fam-muted);
+  cursor: pointer;
+}
+.try-remove:hover {
+  color: var(--fam-ink);
+}
+@media (max-width: 479px) {
+  .try-steppers,
+  .try-foods {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .try-stamp {
+    animation: none;
+  }
+  .try-bar span {
+    transition: none;
   }
 }

@@ -15,24 +15,25 @@ export type AccessMode = 'login' | 'register';
 type Mode = AccessMode;
 type Step = 'form' | 'forgot' | 'forgot-sent';
 
-const field =
-  'landing-field w-full min-h-11 rounded-[4px] border-2 border-[var(--landing-ink)] bg-[var(--paper)] px-3 text-base text-[var(--landing-ink)]';
-const primary = 'landing-google-cta w-full';
-const secondary = 'landing-alt-cta w-full';
-const linkButton =
-  'min-h-11 self-start bg-transparent p-0 text-[0.85rem] font-bold text-[var(--landing-ink)] underline underline-offset-4';
+const field = 'fam-input';
+const primary = 'fam-btn fam-btn--ink fam-btn--block';
+const secondary = 'fam-btn fam-btn--block';
+const linkButton = 'fam-textlink self-start text-[0.85rem]';
 
 /**
- * Sign-in and sign-up with email, the forgotten-password link and the passkey button.
- * `alternatives` (the Google button) sits under the email form as the second way in, and
- * `initialMode` opens it on "Crear cuenta" when the visitor came from a sign-up call to action.
+ * Access card body in the order the three paper-and-ink apps share: Google (`alternatives`),
+ * then email and password, then the passkey, and a closing line to switch between signing in and
+ * creating an account. `initialMode` opens it on "Crear cuenta" when the visitor came from a
+ * sign-up call to action; `onModeChange` lets the page retitle the card.
  */
 export default function EmailAccess({
   alternatives,
   initialMode = 'login',
+  onModeChange,
 }: {
   alternatives?: ReactNode;
   initialMode?: AccessMode;
+  onModeChange?: (mode: AccessMode) => void;
 }) {
   const { login } = useAuth();
   const ids = useId();
@@ -91,6 +92,7 @@ export default function EmailAccess({
     if (next === 'login' || next === 'register') {
       setMode(next);
       setStep('form');
+      onModeChange?.(next);
     } else {
       setStep(next);
     }
@@ -115,7 +117,7 @@ export default function EmailAccess({
             <p className="text-[0.95rem]">
               Escribe tu email y te mandaremos un enlace para elegir una contraseña nueva.
             </p>
-            <label htmlFor={`${ids}-forgot`} className="text-sm font-bold">
+            <label htmlFor={`${ids}-forgot`} className="fam-label">
               Email
             </label>
             <input
@@ -140,25 +142,12 @@ export default function EmailAccess({
     );
   }
 
-  const tab = (target: Mode, label: string) => (
-    <button
-      type="button"
-      aria-pressed={mode === target}
-      className="landing-switch min-h-11 flex-1 px-3 text-[0.9rem] font-bold"
-      onClick={() => switchTo(target)}
-    >
-      {label}
-    </button>
-  );
-
   return (
     <div className="flex w-full flex-col gap-3">
-      <div role="group" aria-label="Tipo de acceso" className="landing-switches flex">
-        {tab('login', 'Iniciar sesión')}
-        {tab('register', 'Crear cuenta')}
-      </div>
+      {alternatives}
+      {alternatives && <p className="fam-divider">o con tu email</p>}
       <form onSubmit={submit} className="flex flex-col gap-3" noValidate>
-        <label htmlFor={`${ids}-email`} className="text-sm font-bold">
+        <label htmlFor={`${ids}-email`} className="fam-label">
           Email
         </label>
         <input
@@ -170,9 +159,20 @@ export default function EmailAccess({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <label htmlFor={`${ids}-password`} className="text-sm font-bold">
-          Contraseña
-        </label>
+        <div className="fam-field-head">
+          <label htmlFor={`${ids}-password`} className="fam-label">
+            Contraseña
+          </label>
+          {!registering && (
+            <button
+              type="button"
+              className="fam-textlink fam-textlink--sm"
+              onClick={() => switchTo('forgot')}
+            >
+              ¿Has olvidado la contraseña?
+            </button>
+          )}
+        </div>
         <input
           id={`${ids}-password`}
           className={field}
@@ -185,43 +185,35 @@ export default function EmailAccess({
           aria-describedby={registering ? `${ids}-hint` : undefined}
         />
         {registering && (
-          <p id={`${ids}-hint`} className="text-[0.8rem] text-[var(--landing-muted)]">
+          <p id={`${ids}-hint`} className="text-[0.8rem] text-[var(--fam-muted)]">
             Mínimo 8 caracteres. Entrarás directamente al crear la cuenta.
           </p>
         )}
         {alert}
         <button
           type="submit"
-          className={`${primary} mt-1`}
+          className={`${primary} fam-btn--lg mt-1`}
           disabled={busy || !email.trim() || !password}
         >
           {busy ? 'Un momento…' : registering ? 'Crear cuenta' : 'Entrar'}
         </button>
       </form>
-      {!registering && (
-        <button type="button" className={linkButton} onClick={() => switchTo('forgot')}>
-          ¿Has olvidado la contraseña?
-        </button>
-      )}
-      <div
-        className="flex items-center gap-3 text-[0.8rem] text-[var(--landing-muted)]"
-        aria-hidden="true"
-      >
-        <span className="flex-1 border-t border-current opacity-40" />o
-        <span className="flex-1 border-t border-current opacity-40" />
-      </div>
       {!registering && passkeysSupported() && (
-        <button
-          type="button"
-          className={`${secondary} flex items-center justify-center gap-2`}
-          disabled={busy}
-          onClick={passkey}
-        >
+        <button type="button" className={secondary} disabled={busy} onClick={passkey}>
           <KeyRound size={16} aria-hidden="true" />
           Entrar con huella o llave de acceso
         </button>
       )}
-      {alternatives}
+      <p className="fam-card__switch">
+        {registering ? '¿Ya tienes cuenta? ' : '¿No tienes cuenta? '}
+        <button
+          type="button"
+          className="fam-textlink"
+          onClick={() => switchTo(registering ? 'login' : 'register')}
+        >
+          {registering ? 'Inicia sesión' : 'Crea una gratis'}
+        </button>
+      </p>
     </div>
   );
 }

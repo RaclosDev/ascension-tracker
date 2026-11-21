@@ -1,30 +1,26 @@
-import InkButton from './InkButton';
-import Wordmark from './Wordmark';
+import { Link } from 'react-router-dom';
+import SiteHeader from './SiteHeader';
 
 const links = [
   { href: '#funciones', label: 'Funciones' },
-  { href: '#datos', label: 'Tus datos' },
+  { href: '#pruebalo', label: 'Pruébalo' },
   { href: '#entrenadores', label: 'Entrenadores' },
+  { href: '/demo', label: 'Demo' },
 ];
 
 export default function LandingNav() {
   return (
-    <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
-      <a href="#inicio" className="flex min-h-11 items-center" aria-label="Ascension, inicio">
-        <Wordmark className="text-[1.6rem] sm:text-[1.85rem]" />
-      </a>
-      <nav aria-label="Secciones" className="hidden items-center gap-2 md:flex">
+    <SiteHeader>
+      <nav aria-label="Secciones" className="fam-nav">
         {links.map((l) => (
-          <a
-            key={l.href}
-            href={l.href}
-            className="landing-display flex min-h-11 items-center px-3 text-[1.05rem] tracking-[0.06em] text-[var(--landing-muted)] transition-colors hover:text-[var(--landing-blue)] focus-visible:text-[var(--landing-blue)]"
-          >
+          <a key={l.href} href={l.href} className="fam-navlink">
             {l.label}
           </a>
         ))}
       </nav>
-      <InkButton to="/login">Entrar</InkButton>
-    </header>
+      <Link to="/login" className="fam-btn fam-btn--ink">
+        Entrar
+      </Link>
+    </SiteHeader>
   );
 }

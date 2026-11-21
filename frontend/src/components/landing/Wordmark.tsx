@@ -1,9 +1,10 @@
-// The name set in the landing's display face, so the header and footer speak the same type as
-// the headline instead of the app's brush logo.
-export default function Wordmark({ className = '' }: { className?: string }) {
+// The brand as the three paper-and-ink apps show it: the app icon and the name in the display
+// face, one ink.
+export default function Wordmark() {
   return (
-    <span className={`landing-display landing-wordmark ${className}`}>
-      Ascension<span className="text-[var(--landing-blue)]">.</span>
-    </span>
+    <>
+      <img src="/icon-192.png" alt="" width={32} height={32} />
+      <span>Ascension</span>
+    </>
   );
 }

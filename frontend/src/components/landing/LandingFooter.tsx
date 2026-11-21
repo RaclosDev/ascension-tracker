@@ -2,29 +2,24 @@ import Wordmark from './Wordmark';
 
 export default function LandingFooter() {
   return (
-    <footer className="mx-auto mt-24 flex max-w-6xl flex-wrap items-center justify-between gap-4 border-t border-[var(--landing-steel)] px-5 py-8 text-[0.85rem] text-[var(--landing-muted)] sm:px-8">
-      <Wordmark className="text-[1.4rem]" />
-      <p className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span>Código abierto, licencia MIT.</span>
-        <a
-          href="/privacidad"
-          className="flex min-h-11 items-center underline-offset-4 hover:text-white hover:underline focus-visible:text-white"
-        >
-          Privacidad
-        </a>
-        <a
-          href="/terminos"
-          className="flex min-h-11 items-center underline-offset-4 hover:text-white hover:underline focus-visible:text-white"
-        >
-          Términos
-        </a>
-        <a
-          href="https://github.com/RaclosDev/ascension-tracker"
-          className="flex min-h-11 items-center underline-offset-4 hover:text-white hover:underline focus-visible:text-white"
-        >
-          Ver el código en GitHub
-        </a>
-      </p>
+    <footer className="fam-container">
+      <div className="fam-footer">
+        <span className="fam-brand">
+          <Wordmark />
+        </span>
+        <p className="fam-footer__links">
+          <span>Código abierto, licencia MIT.</span>
+          <a href="/privacidad" className="fam-link">
+            Privacidad
+          </a>
+          <a href="/terminos" className="fam-link">
+            Términos
+          </a>
+          <a href="https://github.com/RaclosDev/ascension-tracker" className="fam-link">
+            Ver el código en GitHub
+          </a>
+        </p>
+      </div>
     </footer>
   );
 }
