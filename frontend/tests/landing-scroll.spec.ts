@@ -47,9 +47,13 @@ test('section links leave space above their targets', async ({ page }) => {
       .poll(async () => {
         const target = await page.locator(`#${id}`).boundingBox();
         const container = await landing.boundingBox();
-        return Math.abs(target!.y - container!.y - 48);
+        return Math.abs(target!.y - container!.y - 88);
       })
       .toBeLessThan(5);
+    // The sticky header (72px) must not cover the start of the section.
+    const header = await page.locator('.fam-header').boundingBox();
+    const target = await page.locator(`#${id}`).boundingBox();
+    expect(target!.y).toBeGreaterThanOrEqual(header!.y + header!.height);
   }
 
   await expect(page.locator('#pruebalo .landing-live__poster')).toBeVisible();
