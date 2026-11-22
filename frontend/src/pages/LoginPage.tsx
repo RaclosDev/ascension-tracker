@@ -28,19 +28,13 @@ export default function LoginPage() {
       <main className="fam-container fam-auth">
         <section className="fam-card landing-rise" aria-labelledby="entrar-title">
           <h1 id="entrar-title" className="fam-card__title">
-            {registering ? 'Crea tu cuenta en Ascension' : 'Inicia sesión en Ascension'}
+            {registering ? 'Crea tu cuenta' : 'Inicia sesión'}
           </h1>
-          <p className="fam-card__sub">
-            {registering
-              ? 'Gratis para uso personal, sin anuncios y sin tarjeta.'
-              : 'Tus entrenos, comidas y peso, tal y como los dejaste.'}
-          </p>
           <EmailAccess
             initialMode={mode}
             onModeChange={setMode}
             alternatives={
               <GoogleSignInButton
-                className="fam-btn fam-btn--block"
                 onCredential={async (credential) => {
                   const res = await api.post<{ token?: string }>('/auth/login', {
                     token: credential,

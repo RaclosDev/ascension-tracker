@@ -29,7 +29,7 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
-test('Google is prepared before opening, the first click opens a window, and Escape restores focus', async ({
+test('Google renders its own button inline and the first click opens a window', async ({
   page,
 }) => {
   await page.route('**/api/auth/config**', (route) =>
@@ -37,20 +37,12 @@ test('Google is prepared before opening, the first click opens a window, and Esc
   );
   await page.route('**/api/auth/refresh**', (route) => route.fulfill({ status: 401, body: '' }));
   await page.goto('/login');
-  const entry = page.getByRole('button', { name: 'Continuar con Google', exact: true });
   const googleButton = page.getByText('Abrir cuenta de prueba', { exact: true });
-  await expect(googleButton).toHaveCount(1);
-  await expect(googleButton).toBeHidden();
-  await entry.click();
-  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(googleButton).toBeVisible();
   const popupPromise = page.waitForEvent('popup');
   await googleButton.click();
   await (await popupPromise).close();
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(entry).toBeFocused();
   await expect(googleButton).toHaveCount(1);
-  await expect(googleButton).toBeHidden();
 });
 
 test('the installed PWA redirects in the same window and restores its session through the refresh cookie', async ({
@@ -89,7 +81,6 @@ test('the installed PWA redirects in the same window and restores its session th
     popupCount += 1;
   });
   await page.goto('/login');
-  await page.getByRole('button', { name: 'Continuar con Google', exact: true }).click();
   await page.getByRole('button', { name: 'Abrir cuenta de prueba' }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByRole('region', { name: 'Peso' })).toBeVisible();

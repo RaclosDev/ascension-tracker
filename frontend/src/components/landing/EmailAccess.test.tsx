@@ -77,7 +77,7 @@ describe('EmailAccess', () => {
   it('sends the reset link and goes back to sign-in', async () => {
     mocks.requestPasswordReset.mockResolvedValue(undefined);
     render(<EmailAccess />);
-    fireEvent.click(screen.getByRole('button', { name: '¿Has olvidado la contraseña?' }));
+    fireEvent.click(screen.getByRole('button', { name: '¿Has olvidado tu contraseña?' }));
     type('Email', 'ana@example.com');
     fireEvent.click(screen.getByRole('button', { name: 'Enviar enlace' }));
 

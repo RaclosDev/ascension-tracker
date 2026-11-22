@@ -60,6 +60,10 @@ export default function EmailAccess({
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
+    if (!email.trim() || !password) {
+      setError('Escribe tu email y tu contraseña.');
+      return;
+    }
     if (registering) {
       void run(async () => {
         await login(await startSignUp(email.trim(), password));
@@ -157,23 +161,13 @@ export default function EmailAccess({
           type="email"
           autoComplete={registering ? 'email' : 'username webauthn'}
           required
+          placeholder="tu@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <div className="fam-field-head">
-          <label htmlFor={`${ids}-password`} className="fam-label">
-            Contraseña
-          </label>
-          {!registering && (
-            <button
-              type="button"
-              className="fam-textlink fam-textlink--sm"
-              onClick={() => switchTo('forgot')}
-            >
-              ¿Has olvidado la contraseña?
-            </button>
-          )}
-        </div>
+        <label htmlFor={`${ids}-password`} className="fam-label">
+          Contraseña
+        </label>
         <div className="fam-password">
           <input
             id={`${ids}-password`}
@@ -196,6 +190,15 @@ export default function EmailAccess({
             {showPassword ? 'Ocultar' : 'Mostrar'}
           </button>
         </div>
+        {!registering && (
+          <button
+            type="button"
+            className="fam-textlink fam-textlink--sm self-end"
+            onClick={() => switchTo('forgot')}
+          >
+            ¿Has olvidado tu contraseña?
+          </button>
+        )}
         {registering && (
           <p id={`${ids}-hint`} className="text-[0.8rem] text-[var(--fam-muted)]">
             Mínimo 8 caracteres. Entrarás directamente al crear la cuenta.
@@ -205,7 +208,7 @@ export default function EmailAccess({
         <button
           type="submit"
           className={`${primary} fam-btn--lg mt-1`}
-          disabled={busy || !email.trim() || !password}
+          disabled={busy}
         >
           {busy ? 'Un momento…' : registering ? 'Crear cuenta' : 'Iniciar sesión'}
         </button>
