@@ -46,7 +46,9 @@
   inset: 0 calc(50% - 50vw);
   z-index: -1;
   background: var(--fam-wall);
-  box-shadow: 0 1px 0 var(--fam-rule), 0 10px 24px -18px rgba(17, 24, 39, 0.35);
+  box-shadow:
+    0 1px 0 var(--fam-rule),
+    0 10px 24px -18px rgba(17, 24, 39, 0.35);
   pointer-events: none;
 }
 @supports (animation-timeline: scroll()) {
@@ -469,4 +471,34 @@ section[id] {
   .fam-btn:active {
     transform: none;
   }
+}
+
+/* Â«Continuar con GoogleÂ» with the family's button face. Google's own button is an iframe that
+   can't be restyled, so it sits on top, almost transparent: one click still opens the account
+   chooser, and the hover and focus it receives move the face underneath. Pages without this
+   sheet keep Google's button as it is. */
+.fam .fam-google {
+  position: relative;
+  width: 100%;
+}
+.fam .fam-google__face {
+  display: flex;
+  pointer-events: none;
+}
+.fam .fam-google:hover .fam-google__face {
+  transform: translate(-1px, -2px);
+  box-shadow: 4px 6px 0 var(--fam-ink);
+}
+.fam .fam-google:focus-within .fam-google__face {
+  outline: 3px solid var(--fam-accent);
+  outline-offset: 3px;
+}
+.fam .fam-google__hit {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 0.01;
 }
