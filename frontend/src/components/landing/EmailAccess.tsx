@@ -204,11 +204,7 @@ export default function EmailAccess({
           </p>
         )}
         {alert}
-        <button
-          type="submit"
-          className={`${primary} fam-btn--lg mt-1`}
-          disabled={busy}
-        >
+        <button type="submit" className={`${primary} fam-btn--lg mt-1`} disabled={busy}>
           {busy ? 'Un momento…' : registering ? 'Crear cuenta' : 'Iniciar sesión'}
         </button>
       </form>

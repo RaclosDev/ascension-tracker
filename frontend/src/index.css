@@ -3604,3 +3604,11 @@ input[type='range']:active::-moz-range-thumb {
   color: inherit;
   text-decoration: underline;
 }
+
+/* Demo dentro del visor móvil de la landing: sin barra de desplazamiento propia, como en un teléfono. */
+html.is-embed {
+  scrollbar-width: none;
+}
+html.is-embed::-webkit-scrollbar {
+  display: none;
+}

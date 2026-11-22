@@ -1,4 +1,4 @@
-import './demo/mode';
+import { EMBED } from './demo/mode';
 import React, { StrictMode } from 'react';
 import ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
@@ -90,6 +90,7 @@ if (isCoachTourFrame()) {
 import { registerSW } from 'virtual:pwa-register';
 
 if (
+  !EMBED &&
   'serviceWorker' in navigator &&
   (window.location.protocol === 'https:' || window.location.hostname === 'localhost')
 ) {
