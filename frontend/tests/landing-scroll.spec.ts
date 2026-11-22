@@ -27,7 +27,7 @@ test('the features link scrolls to the features section', async ({ page }) => {
     .getByRole('navigation', { name: 'Secciones' })
     .getByRole('link', { name: 'Funciones' })
     .click();
-  await expect(page.getByRole('heading', { name: /Todo lo que registras/i })).toBeInViewport();
+  await expect(page.getByRole('heading', { name: /Lo que apuntas cada día/i })).toBeInViewport();
 });
 
 test('section links leave space above their targets', async ({ page }) => {
