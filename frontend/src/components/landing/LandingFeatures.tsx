@@ -41,7 +41,8 @@ export default function LandingFeatures() {
           Lo que apuntas cada día
         </h2>
         <p className="mt-4 max-w-[38ch] text-[var(--landing-muted)]">
-          Entreno, comidas, peso y pasos en la misma app. Gratis para uso personal, sin anuncios y de código abierto.
+          Entreno, comidas, peso y pasos en la misma app. Gratis para uso personal, sin anuncios y
+          de código abierto.
         </p>
         <div className="mt-6">
           <InkButton to={SIGN_UP}>Crear mi cuenta</InkButton>

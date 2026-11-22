@@ -4,14 +4,13 @@ const START = '/demo/dashboard';
 const POSTER = '/landing/dashboard';
 const DESKTOP = '(min-width: 1024px)';
 
-// The real /demo, in a phone body, under the features. Until it is near the screen (and on phones and tablets,
+// The real /demo, in a phone body, under the features. Until the app has loaded (and on phones and tablets,
 // always) the phone shows a still of the same screen; on a computer the app loads behind it and fades in once it
 // has painted. Phones get a button instead: there the demo already is phone-sized at full screen.
 export default function LandingLiveDemo() {
-  const phone = useRef<HTMLDivElement>(null);
   const timer = useRef(0);
   const [desktop, setDesktop] = useState(() => window.matchMedia(DESKTOP).matches);
-  const [near, setNear] = useState(false);
+  const [started, setStarted] = useState(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -21,22 +20,27 @@ export default function LandingLiveDemo() {
     return () => mq.removeEventListener('change', sync);
   }, []);
 
+  // Once the landing has loaded and the browser is idle, the demo starts loading behind the still, without
+  // waiting to be scrolled to: by the time the visitor gets there it is ready.
   useEffect(() => {
-    const el = phone.current;
-    if (!desktop || near || !el) return;
-    if (!('IntersectionObserver' in window)) {
-      setNear(true);
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) setNear(true);
-      },
-      { rootMargin: '300px 0px' },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [desktop, near]);
+    if (!desktop || started) return;
+    let idle = 0;
+    let t = 0;
+    const start = () => {
+      if (typeof window.requestIdleCallback === 'function') {
+        idle = window.requestIdleCallback(() => setStarted(true), { timeout: 3000 });
+      } else {
+        t = window.setTimeout(() => setStarted(true), 1500);
+      }
+    };
+    if (document.readyState === 'complete') start();
+    else window.addEventListener('load', start, { once: true });
+    return () => {
+      window.removeEventListener('load', start);
+      if (idle) window.cancelIdleCallback(idle);
+      window.clearTimeout(t);
+    };
+  }, [desktop, started]);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
@@ -50,7 +54,7 @@ export default function LandingLiveDemo() {
     timer.current = window.setTimeout(() => waitForApp(frame, since), 120);
   };
 
-  const live = desktop && near;
+  const live = desktop && started;
 
   return (
     <section
@@ -74,13 +78,17 @@ export default function LandingLiveDemo() {
       </div>
 
       <div className="flex justify-center lg:col-span-6 xl:col-span-7">
-        <div ref={phone} className="landing-phone landing-live">
+        <div className="landing-phone landing-live">
           <div className="landing-live__screen">
             <img
               src={`${POSTER}-520.webp`}
               srcSet={`${POSTER}-520.webp 520w, ${POSTER}.webp 860w`}
               sizes="390px"
-              alt={live ? '' : 'Panel principal de la demo con el peso de hoy, el total perdido y la fecha estimada'}
+              alt={
+                live
+                  ? ''
+                  : 'Panel principal de la demo con el peso de hoy, el total perdido y la fecha estimada'
+              }
               width="860"
               height="1864"
               loading="lazy"
