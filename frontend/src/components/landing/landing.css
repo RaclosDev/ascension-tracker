@@ -122,19 +122,12 @@
   align-items: center;
   gap: 14px;
 }
-.landing-live__caption {
-  max-width: 34ch;
-  text-align: center;
-  font-size: 14px;
-  color: var(--landing-muted);
-}
 @media (min-width: 1024px) {
-  /* Real pixels, no scaling: the frame is exactly as wide as a phone and as tall as the window allows. */
+  /* Same footprint as porrApp and LoopDeck: the whole phone is 390px wide and as tall as the window allows. */
   .landing-live {
-    width: auto;
+    width: 390px;
   }
   .landing-live__screen {
-    width: 390px;
     height: clamp(520px, calc(100svh - 260px), 720px);
     aspect-ratio: auto;
   }
