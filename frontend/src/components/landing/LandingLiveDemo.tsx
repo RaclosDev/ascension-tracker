@@ -47,10 +47,12 @@ export default function LandingLiveDemo() {
   // Show the app once it has drawn its own screen, not the blank page or the loading spinner before it.
   const waitForApp = (frame: HTMLIFrameElement, since = Date.now()) => {
     const painted = frame.contentDocument?.querySelector('.main-content');
-    if (painted || Date.now() - since > 6000) {
+    if (painted) {
       timer.current = window.setTimeout(() => setReady(true), 200);
       return;
     }
+    // If it never paints (blocked or failed), the still stays: better than the browser's error page.
+    if (Date.now() - since > 12000) return;
     timer.current = window.setTimeout(() => waitForApp(frame, since), 120);
   };
 
