@@ -27,6 +27,11 @@ export default function LandingHero() {
               Probar la demo
             </a>
           </div>
+          <ul className="hero-points" aria-label="Qué puedes hacer">
+            <li>Cada serie te muestra lo que levantaste la última vez y avisa si es récord.</li>
+            <li>Haz una foto al plato y cuadra calorías y macros del día.</li>
+            <li>Tu entrenador ve tus entrenos, te ajusta el plan y revisa tus check-ins.</li>
+          </ul>
         </div>
         <div id="pruebalo" className="landing-rise landing-rise-2 fam-hero__demo">
           <HeroDemo />
