@@ -15,8 +15,8 @@ export default function LandingHero() {
             en <span className="fam-mark">una app</span>
           </h1>
           <p className="fam-lede">
-            Apunta cada serie viendo lo que levantaste la última vez, registra las comidas con una
-            foto y sigue tu peso hasta el objetivo. Gratis, en español y también sin conexión.
+            Tus series, tus comidas y tu peso en el mismo sitio, para ver de un vistazo si vas hacia
+            tu objetivo. Gratis, en español y también sin conexión.
           </p>
           <div className="fam-cta-row">
             <Link to={SIGN_UP} className="fam-btn fam-btn--ink fam-btn--lg">
@@ -26,10 +26,19 @@ export default function LandingHero() {
               Probar la demo
             </a>
           </div>
-          <ul className="hero-points" aria-label="Qué puedes hacer">
-            <li>Cada serie te muestra lo que levantaste la última vez y avisa si es récord.</li>
-            <li>Haz una foto al plato y cuadra calorías y macros del día.</li>
-            <li>Tu entrenador ve tus entrenos, te ajusta el plan y revisa tus check-ins.</li>
+          <ul className="hero-facts" aria-label="Qué puedes hacer">
+            <li>
+              <strong>Récords</strong>
+              Cada serie te enseña lo que levantaste la última vez y te avisa al superarlo.
+            </li>
+            <li>
+              <strong>Foto al plato</strong>
+              Haz una foto y la app cuadra las calorías y los macros del día.
+            </li>
+            <li>
+              <strong>Entrenador</strong>
+              Ve tus entrenos, te ajusta el plan y revisa tus check-ins.
+            </li>
           </ul>
         </div>
         <div id="pruebalo" className="landing-rise landing-rise-2 fam-hero__demo">

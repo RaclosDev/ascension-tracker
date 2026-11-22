@@ -110,29 +110,40 @@
 }
 
 /* Under the hero's buttons: three lines of what the app does, so the left column reaches the demo. */
-.hero-points {
+/* Three facts under the calls to action: a short title in the display face, one line under it. */
+.hero-facts {
   display: grid;
-  gap: 12px;
-  margin: 40px 0 0;
-  padding: 24px 0 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  margin: 48px 0 0;
+  padding: 0;
   list-style: none;
-  border-top: 2px solid var(--fam-ink);
-  max-width: 34rem;
+  max-width: 40rem;
 }
-.hero-points li {
-  position: relative;
-  padding-left: 28px;
+.hero-facts li {
+  padding-top: 14px;
+  border-top: 3px solid var(--fam-ink);
+  font-size: 0.95rem;
   line-height: 1.45;
+  color: var(--fam-ink-soft);
+  text-wrap: pretty;
+}
+.hero-facts strong {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--fam-display);
+  font-weight: 400;
+  font-size: 1.35rem;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   color: var(--fam-ink);
 }
-.hero-points li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0.55em;
-  width: 14px;
-  height: 3px;
-  background: var(--fam-accent);
+@media (max-width: 640px) {
+  .hero-facts {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
 }
 
 /* The hero's demo: one paper sheet with the Entreno/Nutrición tabs printed at its top. */
