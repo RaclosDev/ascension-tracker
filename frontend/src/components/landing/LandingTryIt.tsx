@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Check, Plus, Timer, Trash2, X } from 'lucide-react';
 import { SetAdjustmentBar } from '../workout/SetAdjustmentBar';
 import MacroSummaryHeader from '../nutrition/MacroSummaryHeader';
 import { MealFoodGroup } from '../nutrition/MealFoodGroup';
-import { formatKg, formatRest, formatRestFriendly } from '@/lib/workout/format';
+import { formatRest, formatRestFriendly } from '@/lib/workout/format';
 import type { FoodLog, Meal } from '../../types/api';
 import type { EditingLog } from '../../types/nutrition';
 import { getBasePortion } from '../../utils/nutritionHelpers';
@@ -38,8 +38,7 @@ const START: DemoExercise[] = [
     rest: 120,
     previous: [
       [80, 8],
-      [80, 8],
-      [77.5, 7],
+      [80, 7],
     ],
     best: 80,
     sets: [],
@@ -52,7 +51,6 @@ const START: DemoExercise[] = [
     rest: 90,
     previous: [
       [70, 10],
-      [70, 9],
       [70, 8],
     ],
     best: 70,
@@ -282,7 +280,7 @@ function DemoRestBanner({
   );
 }
 
-export function WorkoutDemo() {
+export function WorkoutDemo({ tabs }: { tabs?: ReactNode }) {
   const [exercises, setExercises] = useState<DemoExercise[]>(() => START.map(freshSets));
   const [stepper, setStepper] = useState<Stepper>(null);
   const [rest, setRest] = useState<{ remaining: number; total: number } | null>(null);
@@ -317,29 +315,9 @@ export function WorkoutDemo() {
     setRest({ remaining: ex.rest, total: ex.rest });
   };
 
-  const done = exercises.flatMap((ex) => ex.sets).filter((s) => s.completed);
-  const volume = done.reduce(
-    (t, s) => t + (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0),
-    0,
-  );
-  const prs = exercises.reduce(
-    (n, ex) => n + ex.sets.filter((s) => s.completed && parseFloat(s.weight) > ex.best).length,
-    0,
-  );
-
   return (
-    <article className="try-panel try-app" aria-labelledby="try-workout-title">
-      <header className="try-panel__head">
-        <h2 id="try-workout-title" className="fam-h3">
-          Entreno de hoy
-        </h2>
-        <p className="try-panel__meta" aria-live="polite">
-          {done.length} series · {formatKg(volume)}
-          {prs > 0 && (
-            <strong className="try-pr"> · {prs === 1 ? '1 récord' : `${prs} récords`}</strong>
-          )}
-        </p>
-      </header>
+    <article className="try-panel try-app" aria-label="Demo de entreno">
+      {tabs}
       <div className="try-screen">
         {exercises.map((ex) => (
           <article key={ex.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -523,7 +501,7 @@ const toLog = (food: DemoFood, mealIndex: number, date: string, grams = food.gra
 
 const noop = () => {};
 
-export function NutritionDemo() {
+export function NutritionDemo({ tabs }: { tabs?: ReactNode }) {
   const [date, setDate] = useState(todayIso);
   const [logs, setLogs] = useState<FoodLog[]>(() => [
     toLog(FOODS[0], 0, todayIso()),
@@ -577,13 +555,8 @@ export function NutritionDemo() {
     });
 
   return (
-    <article className="try-panel try-app" aria-labelledby="try-nutrition-title">
-      <header className="try-panel__head">
-        <h2 id="try-nutrition-title" className="fam-h3">
-          Tu diario de hoy
-        </h2>
-        <p className="try-panel__meta">Pulsa + en una comida o copia la de ayer</p>
-      </header>
+    <article className="try-panel try-app" aria-label="Demo de nutrición">
+      {tabs}
       <div className="try-screen">
         <MacroSummaryHeader
           date={date}
@@ -672,31 +645,29 @@ export function NutritionDemo() {
 
 type DemoTab = 'entreno' | 'comida';
 
-// The hero's card: the two demos behind a switch, so the first screen stays one card tall.
+// The hero's card: the two demos behind tabs printed on the sheet itself, like porrApp's.
 export function HeroDemo() {
   const [tab, setTab] = useState<DemoTab>('entreno');
-  return (
-    <div className="try-hero">
-      <div className="try-switch" role="group" aria-label="Elige una demo">
-        {(
-          [
-            ['entreno', 'Entreno'],
-            ['comida', 'Nutrición'],
-          ] as const
-        ).map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            className="try-switch__btn"
-            aria-pressed={tab === value}
-            onClick={() => setTab(value)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      {tab === 'entreno' ? <WorkoutDemo /> : <NutritionDemo />}
-      <p className="try-note">Sin cuenta: lo que registres aquí no se guarda.</p>
+  const tabs = (
+    <div className="try-tabs" role="tablist" aria-label="Elige una demo">
+      {(
+        [
+          ['entreno', 'Entreno'],
+          ['comida', 'Nutrición'],
+        ] as const
+      ).map(([value, label]) => (
+        <button
+          key={value}
+          type="button"
+          role="tab"
+          className="try-tab"
+          aria-selected={tab === value}
+          onClick={() => setTab(value)}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   );
+  return tab === 'entreno' ? <WorkoutDemo tabs={tabs} /> : <NutritionDemo tabs={tabs} />;
 }

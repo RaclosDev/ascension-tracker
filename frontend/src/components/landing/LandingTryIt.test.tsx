@@ -28,7 +28,6 @@ describe('landing demos', () => {
     expect(kg).toHaveValue('82.5');
     fireEvent.click(screen.getAllByRole('button', { name: 'Completar serie' })[0]);
     expect(screen.getByText('PR')).toBeInTheDocument();
-    expect(screen.getByText(/1 récord/)).toBeInTheDocument();
   });
 
   it('adds, edits and copies foods in the day', () => {
@@ -45,12 +44,9 @@ describe('landing demos', () => {
 
   it('switches the hero card between the workout and the nutrition demo', () => {
     render(<HeroDemo />);
-    expect(screen.getByRole('heading', { name: 'Entreno de hoy' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Nutrición' }));
-    expect(screen.getByRole('heading', { name: 'Tu diario de hoy' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Nutrición' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    expect(screen.getByRole('article', { name: 'Demo de entreno' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Nutrición' }));
+    expect(screen.getByRole('article', { name: 'Demo de nutrición' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Nutrición' })).toHaveAttribute('aria-selected', 'true');
   });
 });
