@@ -24,6 +24,7 @@ type DemoExercise = {
   rest: number;
   previous: [number, number][];
   best: number;
+  gif: string;
   sets: DemoSet[];
 };
 
@@ -32,6 +33,7 @@ const COLS = '50px minmax(0,1fr) minmax(0,1fr) 44px';
 const START: DemoExercise[] = [
   {
     id: 'bench',
+    gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0025-EIeI8Vf.gif',
     name: 'Press de banca',
     variant: 'Agarre medio',
     muscle: 'Pecho',
@@ -45,6 +47,7 @@ const START: DemoExercise[] = [
   },
   {
     id: 'row',
+    gif: 'https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0027-eZyBC3j.gif',
     name: 'Remo con barra',
     variant: 'Agarre prono',
     muscle: 'Espalda',
@@ -322,21 +325,29 @@ export function WorkoutDemo({ tabs }: { tabs?: ReactNode }) {
         {exercises.map((ex) => (
           <article key={ex.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
             <div className="exercise-card-header">
-              <div style={{ minWidth: 0 }}>
-                <h3
-                  className="exercise-card-name"
-                  style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}
-                >
-                  <span>{ex.name}</span>
-                  <span className="exercise-card-variant-badge">{ex.variant}</span>
-                </h3>
-                <div className="exercise-card-meta">
-                  <span>{ex.muscle}</span>
-                  <span className="exercise-card-meta-dot">•</span>
-                  <span className="exercise-card-rest-pill" title="Tiempo de descanso">
-                    <Timer size={12} className="exercise-card-rest-icon" />
-                    {formatRestFriendly(ex.rest)}
-                  </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0 }}>
+                <img src={ex.gif} alt="" className="exercise-card-thumb" loading="lazy" />
+                <div style={{ minWidth: 0 }}>
+                  <h3
+                    className="exercise-card-name"
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                    }}
+                  >
+                    <span>{ex.name}</span>
+                    <span className="exercise-card-variant-badge">{ex.variant}</span>
+                  </h3>
+                  <div className="exercise-card-meta">
+                    <span>{ex.muscle}</span>
+                    <span className="exercise-card-meta-dot">•</span>
+                    <span className="exercise-card-rest-pill" title="Tiempo de descanso">
+                      <Timer size={12} className="exercise-card-rest-icon" />
+                      {formatRestFriendly(ex.rest)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
