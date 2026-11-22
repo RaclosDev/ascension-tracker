@@ -50,9 +50,9 @@ export function LandingStatement() {
   return (
     <section className="fam-container" aria-labelledby="statement-title">
       <h2 id="statement-title" className="landing-statement max-w-4xl">
-        Cada ejercicio guarda su historial y sus récords por variante. Agarre, inclinación o
-        máquina:{' '}
-        <span className="text-[var(--landing-blue)]">nada se mezcla y nada se pierde.</span>
+        Cada variante de un ejercicio lleva su propio historial y sus récords. Agarre, inclinación
+        o máquina:{' '}
+        <span className="text-[var(--landing-blue)]">sabes si de verdad estás progresando.</span>
       </h2>
     </section>
   );

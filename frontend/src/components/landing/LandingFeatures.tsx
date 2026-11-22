@@ -38,10 +38,10 @@ export default function LandingFeatures() {
     >
       <div className="lg:col-span-4">
         <h2 id="features-title" className="fam-h2">
-          Todo lo que registras, en un sitio
+          Lo que apuntas cada día
         </h2>
         <p className="mt-4 max-w-[38ch] text-[var(--landing-muted)]">
-          Gratis para uso personal y sin anuncios. Código abierto, en español.
+          Entreno, comidas, peso y pasos en la misma app. Gratis para uso personal, sin anuncios y de código abierto.
         </p>
         <div className="mt-6">
           <InkButton to={SIGN_UP}>Crear mi cuenta</InkButton>

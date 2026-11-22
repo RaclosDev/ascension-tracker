@@ -10,14 +10,13 @@ export default function LandingHero() {
       <section id="inicio" className="fam-hero">
         <div className="landing-rise">
           <h1 className="fam-h1">
-            Tu progreso
+            Entreno y dieta
             <br />
-            bajo <span className="fam-mark">control</span>
+            en <span className="fam-mark">una app</span>
           </h1>
           <p className="fam-lede">
-            Récords por ejercicio y por variante, comidas registradas con una foto, peso y pasos
-            cada día. Una PWA gratuita en español que funciona sin conexión y se instala en el
-            móvil.
+            Apunta cada serie viendo lo que levantaste la última vez, registra las comidas con una
+            foto y sigue tu peso hasta el objetivo. Gratis, en español y también sin conexión.
           </p>
           <div className="fam-cta-row">
             <Link to={SIGN_UP} className="fam-btn fam-btn--ink fam-btn--lg">
