@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { SIGN_UP } from './routes';
-import { HeroDemo } from './LandingTryIt';
+import LandingLiveDemo from './LandingLiveDemo';
 
-// The poster at the top of the landing: what the app is and the way in on the left, a playable demo
-// on the right (same layout as the other landings of the family). Signing in has its own page.
+// The poster at the top of the landing: what the app is and the way in on the left, the real demo
+// in a phone on the right (same layout as the other landings of the family). Signing in has its own page.
 export default function LandingHero() {
   return (
     <div className="fam-container">
@@ -42,7 +42,7 @@ export default function LandingHero() {
           </ul>
         </div>
         <div id="pruebalo" className="landing-rise landing-rise-2 fam-hero__demo">
-          <HeroDemo />
+          <LandingLiveDemo />
         </div>
       </section>
     </div>

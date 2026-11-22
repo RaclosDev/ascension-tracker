@@ -4,9 +4,9 @@ const START = '/demo/dashboard';
 const POSTER = '/landing/dashboard';
 const DESKTOP = '(min-width: 1024px)';
 
-// The real /demo, in a phone body, under the features. Until the app has loaded (and on phones and tablets,
+// The real /demo, in a phone body, beside the hero copy. Until the app has loaded (and on phones and tablets,
 // always) the phone shows a still of the same screen; on a computer the app loads behind it and fades in once it
-// has painted. Phones get a button instead: there the demo already is phone-sized at full screen.
+// has painted. On phones the still opens the demo: there it already is phone-sized at full screen.
 export default function LandingLiveDemo() {
   const timer = useRef(0);
   const [desktop, setDesktop] = useState(() => window.matchMedia(DESKTOP).matches);
@@ -20,8 +20,8 @@ export default function LandingLiveDemo() {
     return () => mq.removeEventListener('change', sync);
   }, []);
 
-  // Once the landing has loaded and the browser is idle, the demo starts loading behind the still, without
-  // waiting to be scrolled to: by the time the visitor gets there it is ready.
+  // Once the landing has loaded and the browser is idle, the demo starts loading behind the still, so the page
+  // itself is never kept waiting by it.
   useEffect(() => {
     if (!desktop || started) return;
     let idle = 0;
@@ -59,58 +59,42 @@ export default function LandingLiveDemo() {
   const live = desktop && started;
 
   return (
-    <section
-      id="demo-en-vivo"
-      className="fam-container mt-20 grid items-center gap-10 lg:mt-28 lg:grid-cols-12"
-      aria-labelledby="live-demo-title"
-    >
-      <div className="lg:col-span-6 xl:col-span-5">
-        <h2 id="live-demo-title" className="fam-h2 max-w-[16ch]">
-          La app entera, para tocarla
-        </h2>
-        <p className="mt-4 max-w-[46ch] text-[var(--landing-muted)]">
-          Es la demo de verdad, con datos ficticios. Abre un entreno, apunta una comida o mira cómo
-          va el peso. Nada de lo que cambies se guarda.
-        </p>
-        <p className="mt-6">
-          <a href={START} className="fam-btn">
-            {desktop ? 'Abrir a pantalla completa' : 'Abrir la demo'}
-          </a>
-        </p>
-      </div>
-
-      <div className="flex justify-center lg:col-span-6 xl:col-span-7">
-        <div className="landing-phone landing-live">
-          <div className="landing-live__screen">
-            <img
-              src={`${POSTER}-520.webp`}
-              srcSet={`${POSTER}-520.webp 520w, ${POSTER}.webp 860w`}
-              sizes="390px"
-              alt={
-                live
-                  ? ''
-                  : 'Panel principal de la demo con el peso de hoy, el total perdido y la fecha estimada'
-              }
-              width="860"
-              height="1864"
-              loading="lazy"
-              className="landing-live__poster"
+    <figure className="landing-live-wrap">
+      <div className="landing-phone landing-live">
+        <div className="landing-live__screen">
+          <img
+            src={`${POSTER}-520.webp`}
+            srcSet={`${POSTER}-520.webp 520w, ${POSTER}.webp 860w`}
+            sizes="390px"
+            alt={
+              live
+                ? ''
+                : 'Panel principal de la demo con el peso de hoy, el total perdido y la fecha estimada'
+            }
+            width="860"
+            height="1864"
+            fetchPriority="high"
+            className="landing-live__poster"
+          />
+          {!desktop && (
+            // On phones the still itself opens the demo; «Probar la demo» beside it is the accessible way in.
+            <a href={START} className="absolute inset-0" tabIndex={-1} aria-hidden="true" />
+          )}
+          {live && (
+            <iframe
+              src={START}
+              title="Demo de Ascension"
+              className={`landing-live__frame${ready ? ' is-ready' : ''}`}
+              onLoad={(e) => waitForApp(e.currentTarget)}
             />
-            {!desktop && (
-              // On phones the still itself opens the demo too; the button above is the accessible way in.
-              <a href={START} className="absolute inset-0" tabIndex={-1} aria-hidden="true" />
-            )}
-            {live && (
-              <iframe
-                src={START}
-                title="Demo de Ascension"
-                className={`landing-live__frame${ready ? ' is-ready' : ''}`}
-                onLoad={(e) => waitForApp(e.currentTarget)}
-              />
-            )}
-          </div>
+          )}
         </div>
       </div>
-    </section>
+      <figcaption className="landing-live__caption">
+        {desktop
+          ? 'Es la app de verdad, con datos ficticios: tócala. Nada de lo que cambies se guarda.'
+          : 'Toca el móvil para abrir la demo, con datos ficticios.'}
+      </figcaption>
+    </figure>
   );
 }
