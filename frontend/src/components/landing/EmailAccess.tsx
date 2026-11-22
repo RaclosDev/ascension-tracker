@@ -161,7 +161,6 @@ export default function EmailAccess({
           type="email"
           autoComplete={registering ? 'email' : 'username webauthn'}
           required
-          placeholder="tu@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
