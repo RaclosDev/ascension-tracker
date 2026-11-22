@@ -29,7 +29,6 @@ describe('Google authentication contract', () => {
   it('exchanges the Google identity credential for an application session', async () => {
     post.mockResolvedValue({ data: { token: 'application-session' } });
     renderLogin();
-    fireEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
     fireEvent.click(screen.getByRole('button', { name: 'Elegir cuenta' }));
     await waitFor(() => expect(login).toHaveBeenCalledWith('application-session'));
     expect(post).toHaveBeenCalledWith('/auth/login', { token: 'google-id-credential' });
@@ -38,7 +37,6 @@ describe('Google authentication contract', () => {
   it('does not establish a session when the backend omits its token', async () => {
     post.mockResolvedValue({ data: {} });
     renderLogin();
-    fireEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
     fireEvent.click(screen.getByRole('button', { name: 'Elegir cuenta' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('No se ha podido iniciar sesión');
     expect(login).not.toHaveBeenCalled();
@@ -47,9 +45,9 @@ describe('Google authentication contract', () => {
   it('opens on "Crear cuenta" when it comes from a sign-up call to action', () => {
     renderLogin('/login?modo=registro');
     expect(
-      screen.getByRole('heading', { name: 'Crea tu cuenta en Ascension' }),
+      screen.getByRole('heading', { name: 'Crea tu cuenta' }),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Inicia sesión' }));
-    expect(screen.getByRole('heading', { name: 'Inicia sesión en Ascension' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
   });
 });
