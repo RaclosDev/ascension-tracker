@@ -52,7 +52,5 @@ test('section links leave space above their targets', async ({ page }) => {
       .toBeLessThan(5);
   }
 
-  await expect(
-    page.locator('#pruebalo').getByRole('article', { name: 'Demo de entreno' }),
-  ).toBeVisible();
+  await expect(page.locator('#pruebalo .landing-live__poster')).toBeVisible();
 });
