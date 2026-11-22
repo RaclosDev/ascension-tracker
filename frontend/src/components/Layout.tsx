@@ -411,7 +411,9 @@ export default function Layout() {
                 {DEMO_COACH ? 'Ver la demo de atleta' : 'Ver la demo de entrenador'}
               </a>
               {' · '}
-              <a href="/">Salir y crear una cuenta</a>
+              <a href="/" data-reload>
+                Salir y crear una cuenta
+              </a>
             </p>
           )}
           {/* Cabecera móvil: marca a la izquierda y sesión a la derecha; se desplaza con el contenido */}

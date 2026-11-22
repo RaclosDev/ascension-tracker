@@ -23,7 +23,7 @@
 .landing #funciones,
 .landing #pruebalo,
 .landing #entrenadores {
-  scroll-margin-top: 3rem;
+  scroll-margin-top: 88px;
 }
 
 @media (prefers-reduced-motion: reduce) {
