@@ -53,6 +53,6 @@ test('section links leave space above their targets', async ({ page }) => {
   }
 
   await expect(
-    page.locator('#pruebalo').getByRole('heading', { name: 'Entreno de hoy' }),
+    page.locator('#pruebalo').getByRole('article', { name: 'Demo de entreno' }),
   ).toBeVisible();
 });
