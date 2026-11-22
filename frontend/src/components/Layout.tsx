@@ -10,7 +10,7 @@ import {
   CSSProperties,
 } from 'react';
 import { UserSettings } from '../types/api';
-import { DEMO, DEMO_COACH } from '../demo/mode';
+import { DEMO, DEMO_COACH, EMBED } from '../demo/mode';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import BottomSheet from './BottomSheet';
@@ -404,7 +404,7 @@ export default function Layout() {
         </aside>
 
         <main className="main-content">
-          {DEMO && (
+          {DEMO && !EMBED && (
             <p className="demo-banner" role="note">
               Modo demo. Datos ficticios: los cambios se pierden al recargar.{' '}
               <a href={DEMO_COACH ? '/demo' : '/demo/entrenador'} data-reload>

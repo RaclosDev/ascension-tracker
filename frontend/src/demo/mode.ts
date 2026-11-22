@@ -7,6 +7,13 @@ export const DEMO = /^\/demo(\/|$)/.test(window.location.pathname);
 /** /demo enseña la zona de atleta; /demo/entrenador, el panel de entrenador (solo lectura). */
 export const DEMO_COACH = /^\/demo\/entrenador(\/|$)/.test(window.location.pathname);
 
+/**
+ * La demo dentro del visor móvil de la landing (mismo origen, en un iframe). Sin aviso de demo ni service worker:
+ * la landing ya explica qué es y el iframe no debe instalar nada.
+ */
+export const EMBED = DEMO && window.parent !== window;
+if (EMBED) document.documentElement.classList.add('is-embed');
+
 const DEMO_EMAIL = 'demo@ascension.example';
 
 /** Almacén en memoria con la misma interfaz que localStorage. */
