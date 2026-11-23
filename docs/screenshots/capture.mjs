@@ -26,8 +26,10 @@ const { setupAuthMocks } = await import(asModule(auth.replace("'./fixtures'", JS
 
 // ---------- Datos de demo ----------
 const DAY = 86_400_000;
+// «Hoy» es el jueves de la semana en curso, para que la semana enseñe varios días con registros.
 const today = new Date();
 today.setHours(0, 0, 0, 0);
+today.setDate(today.getDate() - ((today.getDay() + 6) % 7) + 3);
 const iso = (d) => d.toLocaleDateString('en-CA');
 const daysAgo = (n) => new Date(today.getTime() - n * DAY);
 const monday = (d) => new Date(d.getTime() - ((d.getDay() + 6) % 7) * DAY);
@@ -183,6 +185,19 @@ async function mockCoachApi(page) {
   }))));
   await page.route('**/api/coach/clients/showcase-0', json(clients[0]));
   await page.route('**/api/coach/clients/showcase-0/status', json({ linkId: 'showcase-0', level: 'GREEN', lastActivity: iso(daysAgo(1)), pendingReplies: 1, weightChange: -0.4, signals: [] }));
+  await page.route('**/api/coach/home', json({ lifts: [], meets: [] }));
+  await page.route('**/api/coach/programs', json([]));
+  await page.route('**/api/coach/library-items', json([]));
+  // El día a día del seguimiento reutiliza los registros del atleta de ejemplo.
+  await page.route('**/api/coach/clients/showcase-0/workouts/recent**', json(recent));
+  await page.route('**/api/coach/clients/showcase-0/weights/weekly', json(weekly(weightOn)));
+  await page.route('**/api/coach/clients/showcase-0/nutrition/calories/weekly', json(weekly(kcalOn)));
+  await page.route('**/api/coach/clients/showcase-0/day-comments**', json([]));
+  await page.route('**/api/coach/clients/showcase-0/programs', json([]));
+  await page.route('**/api/coach/clients/showcase-0/weeks/**', json([]));
+  await page.route('**/api/coach/clients/showcase-0/workouts/custom-exercises', json([]));
+  await page.route('**/api/coach/clients/showcase-0/workouts/*/comment', json({ text: '' }));
+  await page.route('**/api/coach/clients/showcase-0/nutrition-plan', json(null));
   await page.route('**/api/coach/clients/showcase-0/powerlifting', (route) => route.fulfill({ status: 404, json: {} }));
   await page.route('**/api/coach/clients/showcase-0/checkins', json([{
     id: 'showcase-checkin',
@@ -267,7 +282,7 @@ try {
 
   const page = await open(true);
   await page.goto(origin + '/dashboard');
-  await expect(page.locator('.kpi-card').first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Cambio semanal' })).toBeVisible();
   await capture(page, 'dashboard');
 
   await page.goto(origin + '/tracking');
@@ -282,20 +297,21 @@ try {
   await page.waitForLoadState('networkidle');
   await capture(page, 'training');
 
-  await page.getByRole('button', { name: /empezar entrenamiento/i }).click();
-  await page.locator('.start-workout-option').filter({ hasText: 'Torso A' }).first().click();
+  await page.getByRole('button', { name: /empezar entrenamiento/i }).first().click();
+  await page.getByRole('dialog').locator('.ws-section', { hasText: 'Plantillas' }).getByRole('button', { name: /Torso A/ }).first().click();
   await expect(page.locator('.exercise-card-header').first()).toBeVisible();
   await page.getByRole('button', { name: 'Completar serie' }).nth(0).click();
   await page.getByRole('button', { name: 'Completar serie' }).nth(0).click();
   await page.context().clock.setFixedTime(at(19, 12));
-  await page.waitForTimeout(1500);
+  // El aviso de «Guardado en este dispositivo» dura un par de segundos tras cada cambio.
+  await expect(page.locator('.workout-saved')).toBeEmpty();
   await capture(page, 'workout');
 
   const coach = await open(true);
   await mockCoachApi(coach);
   await coach.goto(origin + '/entrenador');
   await coach.getByRole('button', { name: 'Ahora no' }).click({ timeout: 8000 }).catch(() => {});
-  await expect(coach.getByRole('heading', { name: 'Pendiente de ti' })).toBeVisible();
+  await expect(coach.getByRole('region', { name: 'Seguimientos' })).toBeVisible();
   await capture(coach, 'coach');
 
   await coach.goto(origin + '/entrenador/atletas');

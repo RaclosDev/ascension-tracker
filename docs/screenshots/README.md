@@ -8,7 +8,7 @@ Las capturas del README muestran la interfaz React real con la sesión iniciada 
 - [nutrition.png](nutrition.png): diario con calorías y macronutrientes.
 - [training.png](training.png): resumen de entreno con recuperación muscular y actividad.
 - [workout.png](workout.png): entreno en curso con series completadas.
-- [coach.png](coach.png): inicio del entrenador con seguimientos por responder, atletas por revisar y tareas pendientes.
+- [coach.png](coach.png): inicio del entrenador con las semanas por entregar, el último registro de cada atleta y los seguimientos por responder.
 - [coach-clients.png](coach-clients.png): lista de atletas con búsqueda y acceso a su ficha.
 - [coach-review.png](coach-review.png): ficha de una atleta en la pestaña de seguimientos, con el seguimiento semanal por responder.
 - [hero.jpg](hero.jpg): composición de la cabecera a partir de `workout`, `coach` y `nutrition`.
@@ -34,7 +34,7 @@ node docs/screenshots/capture.mjs
 node docs/screenshots/capture.mjs http://localhost:5181
 ```
 
-El script sobrescribe las nueve capturas PNG. Solo permite conexiones externas a Google Fonts y a las miniaturas públicas de ejercicios; el resto se bloquea. La sesión y los ajustes salen de las fixtures de `frontend/tests/helpers`; los datos de demo están en el propio script. Las fechas se calculan con respecto al día de ejecución para que los resúmenes semanales y las revisiones sigan siendo visibles.
+El script sobrescribe las nueve capturas PNG. Solo permite conexiones externas a Google Fonts y a las miniaturas públicas de ejercicios; el resto se bloquea. La sesión y los ajustes salen de las fixtures de `frontend/tests/helpers`; los datos de demo están en el propio script. Las fechas se calculan con respecto al jueves de la semana de ejecución, para que la semana en curso enseñe varios días con registros y las revisiones sigan siendo visibles.
 
 Esta comprobación cubre el renderizado del frontend con fixtures, no la autenticación real, la persistencia del backend ni la entrega de correo o notificaciones.
 
