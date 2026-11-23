@@ -221,7 +221,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           break;
         } catch (err: unknown) {
-          if (attempt === maxRetries) {
+          // A 4xx (expired or revoked session) is the server's final answer: retrying it only kept the
+          // landing blank for 7 s. Only network errors, 5xx, 408 and 429 are worth another try.
+          const status = (err as { response?: { status?: number } })?.response?.status;
+          const definitive = !!status && status >= 400 && status < 500 && status !== 408 && status !== 429;
+          if (attempt === maxRetries || definitive) {
             if (!cancelled) {
               const cachedUser = getCachedUser();
               const axiosErr = err as { response?: { status?: number } };
@@ -250,6 +254,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setUser(null);
               }
             }
+            break;
           } else {
             await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
           }

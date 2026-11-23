@@ -12,6 +12,7 @@
       "https://lh3.googleusercontent.com",
       "https://images.openfoodfacts.org",
       "https://raw.githubusercontent.com",
+      "https://randomuser.me",
       "https://*.r2.cloudflarestorage.com"
     ],
     "connect-src": [
@@ -28,5 +29,9 @@
     "base-uri": ["'self'"],
     "form-action": ["'self'"],
     "frame-ancestors": ["'self'"]
+  },
+  "$comment-demo": "Only /demo (sample data, no session) may also be framed by the author's portfolio. Applied by frontend/vercel.json.",
+  "demo": {
+    "frame-ancestors": ["'self'", "https://raclosdev.github.io"]
   }
 }
