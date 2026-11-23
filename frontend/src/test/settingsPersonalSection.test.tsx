@@ -31,7 +31,7 @@ describe('SettingsPersonalSection Component', () => {
     render(<SettingsPersonalSection form={initialForm} setForm={setForm} onSave={onSave} />);
 
     expect(screen.getByRole('heading', { name: 'Datos Personales' })).toBeDefined();
-    expect(screen.getByText('Métricas Corporales y Biometría')).toBeDefined();
+    expect(screen.getByText('Sobre ti')).toBeDefined();
     expect(screen.getByLabelText('Sexo')).toHaveAttribute('data-value', 'M');
   });
 

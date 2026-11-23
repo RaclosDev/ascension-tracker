@@ -371,8 +371,12 @@ export default function SettingsPage() {
 
           {activeSection === 'plan' && (
             <div className="card p-4 sm:p-6">
-              <SettingsSectionHeader title="Plan de peso" icon={Activity} />
-              <div className="mt-5 pt-5 border-t border-white/10">
+              <SettingsSectionHeader
+                title="Plan de peso"
+                icon={Activity}
+                description="Calcula las calorías diarias que necesitas para llegar a tu peso objetivo en el plazo que elijas."
+              />
+              <div className="settings-card-body">
                 <WeightLossPlan
                   initialWeightKg={String(
                     dashboard?.currentWeight ||
@@ -401,8 +405,12 @@ export default function SettingsPage() {
 
           {activeSection === 'macros' && (
             <div className="card p-4 sm:p-6">
-              <SettingsSectionHeader title="Estrategia de Macros" icon={Scale} />
-              <div className="mt-5 pt-5 border-t border-white/10">
+              <SettingsSectionHeader
+                title="Estrategia de Macros"
+                icon={Scale}
+                description="Tus calorías diarias y cómo se reparten entre proteína, grasa y carbohidratos."
+              />
+              <div className="settings-card-body">
                 <MacroEditorGate>
                   <MacroConfigurator
                     form={form}

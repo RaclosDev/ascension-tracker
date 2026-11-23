@@ -28,10 +28,16 @@ export function SettingsCoachSection() {
 
   return (
     <div className="card p-4 sm:p-6">
-      <SettingsSectionHeader title="Entrenador" icon={GraduationCap} />
-      <div className="mt-5 pt-5 border-t border-white/10 flex flex-col gap-6">
+      <SettingsSectionHeader
+        title="Entrenador"
+        icon={GraduationCap}
+        description="Quién te entrena y qué ha consultado de tus datos."
+      />
+      <div className="settings-card-body flex flex-col gap-6">
         <div>
-          <h3 className="form-label mb-2">Mis entrenadores</h3>
+          <h3 className="settings-group-title" style={{ marginBottom: '0.5rem' }}>
+            Mis entrenadores
+          </h3>
           {coaches.isLoading && <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>}
           {coaches.isError && <p role="alert">No se pudieron cargar tus entrenadores.</p>}
           {coaches.data?.length === 0 && (
@@ -48,7 +54,9 @@ export function SettingsCoachSection() {
 
         {accessLog.data && accessLog.data.length > 0 && (
           <div>
-            <h3 className="form-label mb-2">Qué han consultado (últimos 90 días)</h3>
+            <h3 className="settings-group-title" style={{ marginBottom: '0.5rem' }}>
+              Qué han consultado (últimos 90 días)
+            </h3>
             <ul className="flex flex-col gap-1 text-sm">
               {accessLog.data.map((entry) => (
                 <li
@@ -68,7 +76,9 @@ export function SettingsCoachSection() {
         )}
 
         <div>
-          <h3 className="form-label mb-2">¿Eres entrenador?</h3>
+          <h3 className="settings-group-title" style={{ marginBottom: '0.5rem' }}>
+            ¿Eres entrenador?
+          </h3>
           <Link to="/entrenador" className="btn btn-secondary">
             Abrir modo entrenador
           </Link>

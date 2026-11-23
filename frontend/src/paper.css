@@ -481,10 +481,16 @@ body,
 /* KPIs: la cifra es el titular de su recuadro. */
 .kpi-card,
 .kpi-card:is(.accent, .success, .info, .warning, .danger) {
-  background: var(--paper);
-  border: 1.5px solid rgba(17, 24, 39, 0.55);
+  background: var(--inset-card-bg);
+  border: 1.5px solid var(--inset-card-edge);
   border-radius: 4px;
   box-shadow: none;
+}
+/* Sobre la pared oscura, fuera de una hoja, el recuadro tampoco puede ser papel crema:
+   el texto que hereda ya lo es. */
+html:not([data-mode='light']) .kpi-card:not(.landing *) {
+  --inset-card-bg: rgba(243, 236, 220, 0.04);
+  --inset-card-edge: var(--wall-line-soft);
 }
 .kpi-label {
   font-size: 0.75rem;
@@ -847,6 +853,23 @@ body,
 .settings-section-panel {
   min-width: 0;
 }
+/* El índice va por grupos: cada uno con su rótulo y su lista. */
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+.settings-nav-heading {
+  margin: 0 0 6px;
+  padding: 0 4px;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
 .settings-nav-list {
   display: flex;
   flex-direction: column;
@@ -875,8 +898,25 @@ body,
     background-color 0.2s ease,
     color 0.2s ease;
 }
-.settings-nav-item > span {
+.settings-nav-item > svg {
+  flex-shrink: 0;
+}
+.settings-nav-text {
+  display: flex;
   flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+/* La pista explica la sección en texto corriente, no en rótulo. */
+.settings-nav-hint {
+  font-family: var(--font-main);
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 .settings-nav-item:focus-visible {
   outline-color: var(--wall-highlight);
@@ -903,8 +943,18 @@ body,
     color: var(--text-secondary);
     box-shadow: none;
   }
+  .settings-nav-list {
+    gap: 0;
+    padding: 0 4px;
+  }
   .settings-nav-list li + li {
     border-top: 1px solid var(--border-subtle);
+  }
+  .settings-nav-item {
+    min-height: 60px;
+    padding: 0.7rem 0.6rem;
+    gap: 0.8rem;
+    color: var(--text-primary);
   }
   /* Guardar queda a mano encima de la barra inferior aunque el formulario sea largo; el
      relleno inferior de .main-content ya deja el hueco de la barra. */
@@ -934,12 +984,200 @@ body,
     position: sticky;
     top: var(--space-lg);
   }
+  .settings-nav-list {
+    padding: 0;
+    border: 0;
+  }
   .settings-nav-list li + li {
     border-top: 0;
   }
-  .settings-nav-chevron {
+  .settings-nav-chevron,
+  .settings-nav-hint {
     display: none;
   }
+}
+/* Dentro de cada sección: descripción bajo el título, cuerpo, grupos, campos y filas. */
+.settings-card-desc {
+  max-width: 62ch;
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+.settings-card-body {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-subtle);
+}
+.settings-group + .settings-group {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-subtle);
+}
+.settings-group-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.settings-group-hint {
+  max-width: 62ch;
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+.settings-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 1rem 0.75rem;
+  margin-top: 1rem;
+}
+.settings-fields > .form-group {
+  margin-bottom: 0;
+}
+.settings-fields > .is-wide {
+  grid-column: 1 / -1;
+}
+/* En pantallas estrechas una fecha no cabe en media columna. */
+@media (max-width: 419px) {
+  .settings-fields > .is-wide-narrow {
+    grid-column: 1 / -1;
+  }
+}
+.settings-rows {
+  margin-top: 1rem;
+}
+/* La fila parte en dos lineas cuando el control no cabe junto al texto. */
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+  margin: 0;
+  padding: 0.9rem 0;
+}
+.settings-row:first-child {
+  padding-top: 0;
+}
+.settings-row:last-child {
+  padding-bottom: 0;
+}
+.settings-row + .settings-row {
+  border-top: 1px solid var(--border-subtle);
+}
+.settings-row-text {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+.settings-row-text > .form-label {
+  display: block;
+  margin-bottom: 2px;
+}
+.settings-row-text > .form-hint {
+  margin-top: 0;
+}
+/* Dentro de Ajustes los subtitulos comparten el estilo de grupo. */
+.settings-card-body .subsection-title {
+  margin: 0 0 1rem;
+  padding-bottom: 0;
+  border-bottom: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.settings-row-control {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+/* Opción única que ocupa toda la fila: marca de radio, título y explicación. */
+.settings-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 1rem 0 0;
+  padding: 0;
+  border: 0;
+}
+.settings-choice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding: 0.8rem 0.9rem;
+  background: var(--inset-card-bg);
+  border: 1.5px solid var(--inset-card-edge);
+  border-radius: 4px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+@media (hover: hover) {
+  .settings-choice:not(:has(:checked)):hover {
+    border-color: var(--inset-card-edge-hover);
+    background: var(--bg-glass);
+  }
+}
+.settings-choice:has(:checked) {
+  border-color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 12%, var(--inset-card-bg));
+}
+.settings-choice:has(:focus-visible) {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+.settings-choices:disabled .settings-choice {
+  cursor: progress;
+}
+.settings-choice-mark {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  border: 2px solid var(--border-medium);
+  border-radius: 50%;
+}
+.settings-choice-mark::after {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  content: '';
+  transform: scale(0);
+  transition: transform 0.15s ease;
+}
+.settings-choice:has(:checked) .settings-choice-mark {
+  border-color: var(--accent-primary);
+}
+.settings-choice:has(:checked) .settings-choice-mark::after {
+  transform: scale(1);
+}
+.settings-choice-title {
+  display: block;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.settings-choice-desc {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
 }
 
 [role='tablist'] [role='tab'] {

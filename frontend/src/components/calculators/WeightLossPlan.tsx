@@ -219,7 +219,7 @@ export default function WeightLossPlan({
               textAlign: 'center',
               padding: '24px',
               marginBottom: '1rem',
-              borderTop: '3px solid var(--accent-primary)',
+              border: '1.5px solid var(--accent-primary)',
             }}
           >
             <div
@@ -244,7 +244,7 @@ export default function WeightLossPlan({
               className={`kpi-card ${w.level}`}
               style={{
                 marginBottom: '8px',
-                borderLeft: '4px solid var(--color-carbs)',
+                border: '1.5px solid var(--color-carbs)',
                 padding: '12px 16px',
               }}
             >
@@ -398,7 +398,7 @@ export default function WeightLossPlan({
               textAlign: 'center',
               padding: '24px',
               marginBottom: '1rem',
-              borderTop: '3px solid var(--accent-primary)',
+              border: '1.5px solid var(--accent-primary)',
             }}
           >
             <div
@@ -420,7 +420,7 @@ export default function WeightLossPlan({
               className={`kpi-card ${w.level}`}
               style={{
                 marginBottom: '8px',
-                borderLeft: `4px solid var(--color-${w.level === 'danger' ? 'fat' : 'carbs'})`,
+                border: `1.5px solid var(--color-${w.level === 'danger' ? 'fat' : 'carbs'})`,
                 padding: '12px 16px',
               }}
             >

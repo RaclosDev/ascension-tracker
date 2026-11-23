@@ -25,142 +25,156 @@ export function SettingsPersonalSection({
 
   return (
     <div className="card p-4 sm:p-6">
-      <SettingsSectionHeader title="Datos Personales" icon={User} />
-      <div className="mt-5 pt-5 border-t border-[var(--border-subtle)]">
-        <h3 className="subsection-title">Métricas Corporales y Biometría</h3>
-        <div className="grid grid-cols-1 items-end gap-4 sm:grid-cols-2">
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label htmlFor="settings-personal-section-sexo" className="form-label">
-              Sexo
-            </label>
-            <Select
-              id="settings-personal-section-sexo"
-              className="form-input"
-              value={form.sex || 'M'}
-              onChange={(e) => setForm({ ...form, sex: e.target.value })}
-              aria-label="Sexo"
-            >
-              <option value="M">Hombre</option>
-              <option value="F">Mujer</option>
-            </Select>
+      <SettingsSectionHeader
+        title="Datos Personales"
+        icon={User}
+        description="Con estos datos se calculan tu gasto diario, tus calorías y la fecha en que llegarías a tu meta."
+      />
+      <div className="settings-card-body">
+        <section className="settings-group" aria-labelledby="settings-personal-about">
+          <h3 id="settings-personal-about" className="settings-group-title">
+            Sobre ti
+          </h3>
+          <p className="settings-group-hint">Sirven para estimar cuánta energía gastas al día.</p>
+          <div className="settings-fields">
+            <div className="form-group">
+              <label htmlFor="settings-personal-section-sexo" className="form-label">
+                Sexo
+              </label>
+              <Select
+                id="settings-personal-section-sexo"
+                className="form-input"
+                value={form.sex || 'M'}
+                onChange={(e) => setForm({ ...form, sex: e.target.value })}
+                aria-label="Sexo"
+              >
+                <option value="M">Hombre</option>
+                <option value="F">Mujer</option>
+              </Select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="settings-personal-section-edad" className="form-label">
+                Edad
+              </label>
+              <input
+                id="settings-personal-section-edad"
+                type="number"
+                className="form-input"
+                value={form.age || ''}
+                onChange={(e) => setForm({ ...form, age: e.target.value })}
+                aria-label="Edad"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="settings-personal-section-altura-cm" className="form-label">
+                Altura (cm)
+              </label>
+              <input
+                id="settings-personal-section-altura-cm"
+                type="number"
+                className="form-input"
+                value={form.heightCm || ''}
+                onChange={(e) => setForm({ ...form, heightCm: e.target.value })}
+                aria-label="Altura en cm"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="settings-personal-section-actividad" className="form-label">
+                Actividad
+              </label>
+              <Select
+                id="settings-personal-section-actividad"
+                className="form-input"
+                value={form.activityFactor || '1.2'}
+                onChange={(e) => setForm({ ...form, activityFactor: e.target.value })}
+                aria-label="Nivel de actividad"
+              >
+                <option value="1.2">Sedentario</option>
+                <option value="1.375">Ligero</option>
+                <option value="1.55">Moderado</option>
+                <option value="1.725">Alto</option>
+                <option value="1.9">Muy Alto</option>
+              </Select>
+            </div>
           </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label htmlFor="settings-personal-section-edad" className="form-label">
-              Edad
-            </label>
-            <input
-              id="settings-personal-section-edad"
-              type="number"
-              className="form-input"
-              value={form.age || ''}
-              onChange={(e) => setForm({ ...form, age: e.target.value })}
-              aria-label="Edad"
-            />
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label htmlFor="settings-personal-section-altura-cm" className="form-label">
-              Altura (cm)
-            </label>
-            <input
-              id="settings-personal-section-altura-cm"
-              type="number"
-              className="form-input"
-              value={form.heightCm || ''}
-              onChange={(e) => setForm({ ...form, heightCm: e.target.value })}
-              aria-label="Altura en cm"
-            />
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label htmlFor="settings-personal-section-actividad" className="form-label">
-              Actividad
-            </label>
-            <Select
-              id="settings-personal-section-actividad"
-              className="form-input"
-              value={form.activityFactor || '1.2'}
-              onChange={(e) => setForm({ ...form, activityFactor: e.target.value })}
-              aria-label="Nivel de actividad"
-            >
-              <option value="1.2">Sedentario</option>
-              <option value="1.375">Ligero</option>
-              <option value="1.55">Moderado</option>
-              <option value="1.725">Alto</option>
-              <option value="1.9">Muy Alto</option>
-            </Select>
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label htmlFor="settings-personal-section-peso-inicial-kg" className="form-label">
-              Peso Inicial (kg)
-            </label>
-            <input
-              id="settings-personal-section-peso-inicial-kg"
-              type="number"
-              inputMode="decimal"
-              className="form-input"
-              step="0.1"
-              value={form.startWeight || ''}
-              onChange={(e) => setForm({ ...form, startWeight: e.target.value })}
-              aria-label="Peso inicial en kg"
-            />
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label htmlFor="settings-personal-section-peso-deseado-kg" className="form-label">
-              Peso meta (kg)
-            </label>
-            <input
-              id="settings-personal-section-peso-deseado-kg"
-              type="number"
-              inputMode="decimal"
-              className="form-input"
-              step="0.1"
-              value={form.goalWeight || ''}
-              onChange={(e) => setForm({ ...form, goalWeight: e.target.value })}
-              aria-label="Peso objetivo en kg"
-            />
-          </div>
-        </div>
+        </section>
 
-        <h3 className="subsection-title" style={{ marginTop: '1.5rem' }}>
-          Progreso y Fechas
-        </h3>
-        <div className="grid grid-cols-1 items-end gap-4 sm:grid-cols-2">
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label htmlFor="settings-personal-section-ritmo" className="form-label">
-              {isGaining ? 'Ganancia (kg/sem)' : 'Pérdida (kg/sem)'}
-            </label>
-            <input
-              id="settings-personal-section-ritmo"
-              type="number"
-              inputMode="decimal"
-              className="form-input"
-              step="0.1"
-              min="0.1"
-              max="2"
-              value={form.weeklyGoal || ''}
-              onChange={(e) => setForm({ ...form, weeklyGoal: e.target.value })}
-              aria-label={
-                isGaining
-                  ? 'Objetivo semanal de ganancia en kg'
-                  : 'Objetivo semanal de pérdida en kg'
-              }
-            />
+        <section className="settings-group" aria-labelledby="settings-personal-goal">
+          <h3 id="settings-personal-goal" className="settings-group-title">
+            Objetivo de peso
+          </h3>
+          <p className="settings-group-hint">
+            De dónde partes, a dónde quieres llegar y a qué ritmo.
+          </p>
+          <div className="settings-fields">
+            <div className="form-group">
+              <label htmlFor="settings-personal-section-peso-inicial-kg" className="form-label">
+                Peso Inicial (kg)
+              </label>
+              <input
+                id="settings-personal-section-peso-inicial-kg"
+                type="number"
+                inputMode="decimal"
+                className="form-input"
+                step="0.1"
+                value={form.startWeight || ''}
+                onChange={(e) => setForm({ ...form, startWeight: e.target.value })}
+                aria-label="Peso inicial en kg"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="settings-personal-section-peso-deseado-kg" className="form-label">
+                Peso meta (kg)
+              </label>
+              <input
+                id="settings-personal-section-peso-deseado-kg"
+                type="number"
+                inputMode="decimal"
+                className="form-input"
+                step="0.1"
+                value={form.goalWeight || ''}
+                onChange={(e) => setForm({ ...form, goalWeight: e.target.value })}
+                aria-label="Peso objetivo en kg"
+              />
+            </div>
+            <div className="form-group is-wide-narrow">
+              <label htmlFor="settings-personal-section-ritmo" className="form-label">
+                {isGaining ? 'Ganancia (kg/sem)' : 'Pérdida (kg/sem)'}
+              </label>
+              <input
+                id="settings-personal-section-ritmo"
+                type="number"
+                inputMode="decimal"
+                className="form-input"
+                step="0.1"
+                min="0.1"
+                max="2"
+                value={form.weeklyGoal || ''}
+                onChange={(e) => setForm({ ...form, weeklyGoal: e.target.value })}
+                aria-label={
+                  isGaining
+                    ? 'Objetivo semanal de ganancia en kg'
+                    : 'Objetivo semanal de pérdida en kg'
+                }
+              />
+            </div>
+            <div className="form-group is-wide-narrow">
+              <label htmlFor="settings-personal-section-fecha-de-inicio" className="form-label">
+                Fecha de Inicio
+              </label>
+              <DatePicker
+                id="settings-personal-section-fecha-de-inicio"
+                className="form-input"
+                value={form.startDate || ''}
+                onChange={(value) => setForm({ ...form, startDate: value })}
+                aria-label="Fecha de inicio"
+              />
+            </div>
           </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label htmlFor="settings-personal-section-fecha-de-inicio" className="form-label">
-              Fecha de Inicio
-            </label>
-            <DatePicker
-              id="settings-personal-section-fecha-de-inicio"
-              className="form-input"
-              value={form.startDate || ''}
-              onChange={(value) => setForm({ ...form, startDate: value })}
-              aria-label="Fecha de inicio"
-            />
-          </div>
-        </div>
+        </section>
         <button
           className="btn btn-primary settings-save min-h-11"
-          style={{ width: '100%', marginTop: '0.5rem' }}
+          style={{ width: '100%', marginTop: '1.5rem' }}
           onClick={onSave}
           disabled={isSaving}
         >
