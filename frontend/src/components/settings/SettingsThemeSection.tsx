@@ -37,25 +37,33 @@ export function SettingsThemeSection({
 
   return (
     <div className="card p-4 sm:p-6">
-      <SettingsSectionHeader title="Tema y Apariencia" icon={Palette} />
-      <div className="mt-5 pt-5 border-t border-white/10">
-        <div className="form-group" role="group" aria-labelledby="settings-color-mode-label">
-          <span
+      <SettingsSectionHeader
+        title="Tema y Apariencia"
+        icon={Palette}
+        description="Cómo se ve la app en este dispositivo."
+      />
+      <div className="settings-card-body">
+        <div
+          className="form-group settings-group"
+          role="group"
+          aria-labelledby="settings-color-mode-label"
+        >
+          <h3
             id="settings-color-mode-label"
-            className="form-label"
-            style={{ marginBottom: '0.5rem', display: 'block' }}
+            className="settings-group-title"
+            style={{ marginBottom: '0.75rem' }}
           >
             Modo
-          </span>
+          </h3>
           <SegmentedControl options={MODE_OPTIONS} value={colorMode} onChange={handleModeChange} />
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
             «Sistema» sigue el modo claro u oscuro de tu dispositivo.
           </p>
         </div>
-        <div className="form-group">
-          <span className="form-label" style={{ marginBottom: '0.5rem', display: 'block' }}>
+        <div className="form-group settings-group">
+          <h3 className="settings-group-title" style={{ marginBottom: '0.75rem' }}>
             Color Principal
-          </span>
+          </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <input
               type="color"
@@ -82,12 +90,17 @@ export function SettingsThemeSection({
                   className="flex items-center justify-center w-11 h-11 p-0 bg-transparent border-none cursor-pointer"
                   title={color}
                   aria-label={`Color ${color}`}
+                  aria-pressed={customColor === color}
                 >
                   <span
-                    className="block w-8 h-8 rounded-full"
+                    className="block w-7 h-7 rounded-full"
                     style={{
                       background: color,
-                      border: customColor === color ? '2px solid white' : '2px solid transparent',
+                      outline:
+                        customColor === color
+                          ? '2px solid var(--text-primary)'
+                          : '2px solid transparent',
+                      outlineOffset: '3px',
                     }}
                   />
                 </button>

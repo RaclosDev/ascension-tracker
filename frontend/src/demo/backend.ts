@@ -58,7 +58,7 @@ let settings: UserSettings = {
   weeklyGoal: -0.4,
   startDate: daysAgo(HISTORY_DAYS),
   kcal: 2300,
-  macroStrategy: 'balanced',
+  macroStrategy: 'BALANCED',
   age: 29,
   heightCm: 178,
   sex: 'M',

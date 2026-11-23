@@ -48,7 +48,7 @@ export function SettingsDataSection({
         <div
           style={{
             marginTop: '1.25rem',
-            borderTop: '1px solid rgba(255,255,255,0.06)',
+            borderTop: '1px solid var(--border-subtle)',
             paddingTop: '1.25rem',
           }}
         >
@@ -93,9 +93,7 @@ export function SettingsDataSection({
               Restaurar copia de seguridad (JSON)
             </button>
           </div>
-          <div
-            style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '1.5rem 0' }}
-          />
+          <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '1.5rem 0' }} />
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
             Descarga todos tus datos de peso registrados en un archivo CSV.
           </p>
@@ -138,7 +136,7 @@ export function SettingsDataSection({
         <div
           style={{
             marginTop: '1.25rem',
-            borderTop: '1px solid rgba(255,255,255,0.06)',
+            borderTop: '1px solid var(--border-subtle)',
             paddingTop: '1.25rem',
           }}
         >

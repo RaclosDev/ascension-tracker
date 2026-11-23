@@ -41,24 +41,15 @@ export function SettingsModulesSection() {
 
   return (
     <div className="card p-4 sm:p-6">
-      <SettingsSectionHeader title="Módulos" icon={LayoutGrid} />
-      <p className="mt-3 text-sm text-[var(--text-secondary)]">
-        Oculta lo que no uses. Tus datos no se borran: si vuelves a activar un módulo, siguen ahí.
-      </p>
-      <fieldset className="mt-4 flex flex-col gap-2" disabled={!settings || saving !== null}>
+      <SettingsSectionHeader
+        title="Módulos"
+        icon={LayoutGrid}
+        description="Oculta lo que no uses. Tus datos no se borran: si vuelves a activar un módulo, siguen ahí."
+      />
+      <fieldset className="settings-choices" disabled={!settings || saving !== null}>
         <legend className="sr-only">Qué quieres llevar en la app</legend>
         {APP_MODULE_OPTIONS.map((o) => (
-          <label
-            key={o.value}
-            className="kpi-card"
-            style={{
-              display: 'block',
-              padding: '0.75rem',
-              cursor: 'pointer',
-              border:
-                current === o.value ? '2px solid var(--accent-primary)' : '2px solid transparent',
-            }}
-          >
+          <label key={o.value} className="settings-choice">
             <input
               type="radio"
               name="settings-modules"
@@ -67,12 +58,13 @@ export function SettingsModulesSection() {
               onChange={() => void choose(o.value)}
               className="sr-only"
             />
-            <span style={{ fontWeight: 600, display: 'block' }}>
-              {o.label}
-              {saving === o.value && ' · guardando…'}
-            </span>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-              {o.description}
+            <span className="settings-choice-mark" aria-hidden="true" />
+            <span>
+              <span className="settings-choice-title">
+                {o.label}
+                {saving === o.value && ' · guardando…'}
+              </span>
+              <span className="settings-choice-desc">{o.description}</span>
             </span>
           </label>
         ))}

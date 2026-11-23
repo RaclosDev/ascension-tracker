@@ -12,8 +12,12 @@ interface Props {
 export function SettingsMealsSection({ onSaved }: Props) {
   return (
     <div id="meals-section" className="card p-4 sm:p-6">
-      <SettingsSectionHeader title="Configurar Comidas" icon={Utensils} />
-      <div className="mt-5 pt-5 border-t border-white/10">
+      <SettingsSectionHeader
+        title="Configurar Comidas"
+        icon={Utensils}
+        description="Las comidas en las que registras lo que comes cada día."
+      />
+      <div className="settings-card-body">
         <Suspense fallback={<div className="spinner" style={{ margin: 'auto' }} />}>
           <MealConfigurator onSaved={onSaved} />
         </Suspense>
