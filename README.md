@@ -11,6 +11,7 @@ Aplicación full-stack con Java y React: desde el registro de una serie en el gi
 [![Abrir la app](https://img.shields.io/badge/Abrir_la_app-ascension.raclos.es-f2c94c?style=for-the-badge&logo=googlechrome&logoColor=black)](https://ascension.raclos.es)
 
 **Demo sin registro:** [ascension.raclos.es/demo](https://ascension.raclos.es/demo) (atleta) y [/demo/entrenador](https://ascension.raclos.es/demo/entrenador) (panel de entrenador), con datos ficticios.
+
 [![CI](https://img.shields.io/github/actions/workflow/status/RaclosDev/ascension-tracker/ci.yml?branch=main&style=for-the-badge&label=CI&logo=githubactions&logoColor=white)](https://github.com/RaclosDev/ascension-tracker/actions/workflows/ci.yml)
 
 ![Java](https://img.shields.io/badge/Java_21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
@@ -35,7 +36,7 @@ Aplicación full-stack con Java y React: desde el registro de una serie en el gi
     <td align="center" width="33%"><img src="docs/screenshots/nutrition.png" alt="Diario de nutrición con calorías y macronutrientes" width="240"><br><sub><b>Nutrición</b> · calorías y macros del día</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/coach.png" alt="Inicio del entrenador con seguimientos por responder, atletas por revisar y tareas pendientes" width="240"><br><sub><b>Entrenador</b> · qué necesita atención</sub></td>
+    <td align="center"><img src="docs/screenshots/coach.png" alt="Inicio del entrenador con las semanas por entregar, el último registro de cada atleta y los seguimientos por responder" width="240"><br><sub><b>Entrenador</b> · qué vence esta semana</sub></td>
     <td align="center"><img src="docs/screenshots/coach-clients.png" alt="Listado de atletas con búsqueda y acceso a su ficha" width="240"><br><sub><b>Atletas</b> · una ficha para cada persona</sub></td>
     <td align="center"><img src="docs/screenshots/coach-review.png" alt="Ficha de una atleta con sus pestañas y el seguimiento semanal pendiente de respuesta" width="240"><br><sub><b>Ficha de atleta</b> · seguimiento y respuesta semanal</sub></td>
   </tr>
