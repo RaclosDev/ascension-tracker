@@ -3605,10 +3605,12 @@ input[type='range']:active::-moz-range-thumb {
   text-decoration: underline;
 }
 
-/* Demo dentro del visor móvil de la landing: sin barra de desplazamiento propia, como en un teléfono. */
-html.is-embed {
-  scrollbar-width: none;
+/* Demo dentro de un visor móvil (landing o portfolio): sin barras de desplazamiento, ni la de la página ni las de dentro, como en un teléfono. */
+html.is-embed,
+html.is-embed * {
+  scrollbar-width: none !important;
 }
-html.is-embed::-webkit-scrollbar {
+html.is-embed::-webkit-scrollbar,
+html.is-embed *::-webkit-scrollbar {
   display: none;
 }
