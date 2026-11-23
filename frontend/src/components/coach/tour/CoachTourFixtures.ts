@@ -9,7 +9,11 @@ export const tourNextWeek = shiftWeek(tourWeek, 1);
 export const tourClients: CoachClient[] = [
   {
     linkId: 'tour-lucia',
-    client: { name: 'Lucía Vega', email: 'lucia@example.test', picture: null },
+    client: {
+      name: 'Lucía Vega',
+      email: 'lucia@example.test',
+      picture: 'https://randomuser.me/api/portraits/women/47.jpg',
+    },
     since: shiftWeek(tourWeek, -3),
     permissions: {
       training: true,
@@ -29,7 +33,11 @@ export const tourClients: CoachClient[] = [
   },
   {
     linkId: 'tour-mateo',
-    client: { name: 'Mateo Gil', email: 'mateo@example.test', picture: null },
+    client: {
+      name: 'Mateo Gil',
+      email: 'mateo@example.test',
+      picture: 'https://randomuser.me/api/portraits/men/29.jpg',
+    },
     since: shiftWeek(tourWeek, -2),
     permissions: {
       training: true,

@@ -65,6 +65,8 @@ export const DEMO_TOKEN = [
     sub: 'demo',
     email: DEMO_EMAIL,
     name: DEMO_COACH ? 'Entrenador demo' : 'Atleta demo',
+    // Retratos libres de randomuser.me para que la cabecera se vea como con una cuenta real.
+    picture: `https://randomuser.me/api/portraits/${DEMO_COACH ? 'men/32' : 'women/68'}.jpg`,
     exp: Math.floor(Date.now() / 1000) + 10 * 365 * 24 * 3600,
   }),
   'demo',

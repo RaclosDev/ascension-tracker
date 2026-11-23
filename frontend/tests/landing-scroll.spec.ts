@@ -56,5 +56,5 @@ test('section links leave space above their targets', async ({ page }) => {
     expect(target!.y).toBeGreaterThanOrEqual(header!.y + header!.height);
   }
 
-  await expect(page.locator('#pruebalo .landing-live__poster')).toBeVisible();
+  await expect(page.locator('#pruebalo .landing-live__frame')).toBeVisible();
 });

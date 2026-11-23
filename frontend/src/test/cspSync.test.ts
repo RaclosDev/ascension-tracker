@@ -54,16 +54,27 @@ describe('CSP Policy Synchronization (Single Source of Truth)', () => {
   it('frontend/vercel.json must match the canonical CSP policy', () => {
     const vercelContent = fs.readFileSync(vercelFile, 'utf-8');
     const vercelJson = JSON.parse(vercelContent);
-    let vercelCsp: string | null = null;
-    for (const block of vercelJson.headers || []) {
-      for (const h of block.headers || []) {
-        if (h.key === 'Content-Security-Policy') {
-          vercelCsp = h.value;
-        }
-      }
-    }
-    expect(vercelCsp).not.toBeNull();
-    expect(vercelCsp).toBe(canonicalCsp);
+    type Header = { key: string; value: string };
+    type Block = { source: string; headers: Header[] };
+    const header = (block: Block, key: string) => block.headers.find((h) => h.key === key)?.value;
+    const blocks = (vercelJson.headers as Block[]).filter((block) =>
+      header(block, 'Content-Security-Policy'),
+    );
+    const demo = blocks.filter((block) => block.source.startsWith('/demo'));
+    const general = blocks.filter((block) => !block.source.startsWith('/demo'));
+
+    expect(general).toHaveLength(1);
+    expect(header(general[0], 'Content-Security-Policy')).toBe(canonicalCsp);
+    expect(header(general[0], 'X-Frame-Options')).toBe('SAMEORIGIN');
+
+    // Solo la demo (datos de ejemplo, sin sesión) se puede enmarcar también desde el portfolio.
+    const demoCsp = Object.entries({ ...directives, ...policyJson.demo })
+      .map(([key, values]) => `${key} ${(values as string[]).join(' ')}`)
+      .join('; ');
+    expect(demo).toHaveLength(1);
+    expect(header(demo[0], 'Content-Security-Policy')).toBe(demoCsp);
+    expect(demoCsp).toContain("frame-ancestors 'self' https://raclosdev.github.io");
+    expect(header(demo[0], 'X-Frame-Options')).toBeUndefined();
   });
 
   it('backend SecurityConfig.java CSP_POLICY must match the canonical CSP policy', () => {
