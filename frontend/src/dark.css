@@ -1,0 +1,50 @@
+/*
+ * Modo oscuro: negro puro. Sustituye la pared azul marino de paper.css por
+ * negro neutro con hojas gris carbón y tinta blanca. El acento sigue siendo
+ * el elegido en Ajustes → Apariencia.
+ * Va con !important porque paper.css vuelve a declarar estos tokens en varios
+ * ámbitos (hojas, tarjetas) y aquí se fijan todos de una vez.
+ */
+html:not([data-mode='light']) {
+  --wall: #0a0a0a !important;
+  --bg-main: #0a0a0a !important;
+  --bg-primary: #0a0a0a !important;
+  --bg-secondary: #171717 !important;
+  --bg-card: #171717 !important;
+  --bg-card-hover: #212121 !important;
+  --bg-input: #101010 !important;
+  --bg-surface: #171717 !important;
+  --bg-surface-hover: #212121 !important;
+  --bg-glass: rgba(243, 244, 246, 0.06) !important;
+  --bg-glass-strong: rgba(243, 244, 246, 0.12) !important;
+  --wall-ink: #f3f4f6 !important;
+  --wall-line: rgba(243, 244, 246, 0.3) !important;
+  --wall-line-soft: rgba(243, 244, 246, 0.16) !important;
+  --card-edge: rgba(243, 244, 246, 0.14) !important;
+  --border-subtle: rgba(243, 244, 246, 0.12) !important;
+  --border-medium: rgba(243, 244, 246, 0.24) !important;
+  --border-color: rgba(243, 244, 246, 0.2) !important;
+  --text-primary: #f3f4f6 !important;
+  --text-main: #f3f4f6 !important;
+  --text-secondary: #c4c8ce !important;
+  --text-muted: #9aa0a8 !important;
+  --paper: #f3f4f6 !important;
+  /* Sin el grano ni el rayado del papel: llevan azul marino y crema y velan la página. */
+  --paper-grain: none !important;
+  --paper-lines: none !important;
+  --wall-active-bg: #f3f4f6 !important;
+  --wall-active-ink: #111317 !important;
+  --wall-highlight-bg: rgba(243, 244, 246, 0.1) !important;
+}
+
+html:not([data-mode='light']) :is(body, .main-content) {
+  background-color: #0a0a0a !important;
+  background-image: none !important;
+}
+
+html:not([data-mode='light']) *:not(.landing *) {
+  --bg-input: #101010 !important;
+  --sheet: #171717 !important;
+  --sheet-edge: rgba(243, 244, 246, 0.2) !important;
+  --inset-card-bg: rgba(243, 244, 246, 0.04) !important;
+}

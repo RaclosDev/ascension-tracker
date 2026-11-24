@@ -121,14 +121,14 @@ for (const mode of ['dark', 'light']) {
       await expect(tab).toHaveAttribute('aria-selected', 'true');
       await expect(tab).toHaveCSS(
         'background-color',
-        mode === 'dark' ? 'rgb(243, 236, 220)' : 'rgb(17, 24, 39)',
+        mode === 'dark' ? 'rgb(243, 244, 246)' : 'rgb(17, 24, 39)',
       );
       await expectReadable(tab);
     }
     await filters.getByRole('tab', { name: 'Básicos', exact: true }).click();
     await expect(filters.getByRole('tab', { name: 'Básicos', exact: true })).toHaveCSS(
       'color',
-      mode === 'dark' ? 'rgb(15, 23, 42)' : 'rgb(243, 236, 220)',
+      mode === 'dark' ? 'rgb(10, 10, 10)' : 'rgb(243, 236, 220)',
     );
     await page.screenshot({ path: testInfo.outputPath(`exercises-${mode}.png`), fullPage: true });
   });

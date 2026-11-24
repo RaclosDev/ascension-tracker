@@ -1,5 +1,4 @@
 import { QueryErrorNotice } from './QueryErrorNotice';
-import { ThemeTrial } from './dev/ThemeTrial';
 import { ThemeToggle } from './ThemeToggle';
 import {
   useState,
@@ -332,7 +331,6 @@ export default function Layout() {
                 </button>
               );
             })}
-            {import.meta.env.DEV && isCoach && <ThemeTrial />}
             <ThemeToggle variant="nav" />
             <div className="sidebar-account">
               {isCoach && (

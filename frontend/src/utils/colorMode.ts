@@ -5,11 +5,11 @@ export type ColorMode = 'light' | 'dark' | 'system';
 
 export const COLOR_MODE_KEY = 'ascension_color_mode';
 
-const WALL_COLORS = { light: '#e6e0d3', dark: '#0f172a' } as const;
+const WALL_COLORS = { light: '#e6e0d3', dark: '#0a0a0a' } as const;
 const DARK_QUERY = '(prefers-color-scheme: dark)';
 const CHANGE_EVENT = 'ascension:color-mode';
-/** Sin elección guardada la app sigue al sistema; la demo arranca en oscuro. */
-const DEFAULT_MODE: ColorMode = DEMO ? 'dark' : 'system';
+/** Sin elección guardada la app sigue al sistema; la demo arranca en claro. */
+const DEFAULT_MODE: ColorMode = DEMO ? 'light' : 'system';
 
 function isColorMode(value: string | null): value is ColorMode {
   return value === 'light' || value === 'dark' || value === 'system';
