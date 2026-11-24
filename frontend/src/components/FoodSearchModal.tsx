@@ -6,6 +6,7 @@ import { updateManualFoodForm } from '../utils/manualFoodForm';
 import { useFoodAiEntry } from '../hooks/food/useFoodAiEntry';
 import { useState, useRef, useEffect, useEffectEvent, ChangeEvent, Suspense } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
+import { shrinkAiImage } from '../utils/aiImage';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import { useSpeechToText } from '../hooks/useSpeechToText';
@@ -158,10 +159,12 @@ export default function FoodSearchModal({
     setActiveOverlay('manual');
     toast('Analizando etiqueta con IA... (puedes ir poniendo el nombre)', { duration: 4000 });
 
-    const formData = new FormData();
-    formData.append('image', file);
-
     try {
+      const image = await shrinkAiImage(file);
+      if (!image) return;
+      const formData = new FormData();
+      formData.append('image', image, file.name);
+
       const res = await api.post('/nutrition/ai/ocr', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 45000,

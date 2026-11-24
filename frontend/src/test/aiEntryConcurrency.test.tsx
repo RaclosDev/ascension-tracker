@@ -98,7 +98,8 @@ it('does not process the same OCR file twice while it is pending', async () => {
     first = result.current.handleOcrUpload(event);
     second = result.current.handleOcrUpload(event);
   });
-  expect(api.post).toHaveBeenCalledTimes(1);
+  // The photo is shrunk before it is sent, so the request starts a tick later.
+  await vi.waitFor(() => expect(api.post).toHaveBeenCalledTimes(1));
   await act(async () => {
     release?.();
     await Promise.all([first, second]);

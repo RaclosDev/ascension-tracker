@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/client';
+import { readAiImage } from '../../utils/aiImage';
 import { getLocalDateString } from '../../utils/dateHelper';
 import { useSpeechToText } from '../useSpeechToText';
 import { useQueryClient } from '@tanstack/react-query';
@@ -134,13 +135,9 @@ export function useAiNutritionChef() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          setSelectedImage(reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
+      void readAiImage(file).then((image) => {
+        if (image) setSelectedImage(image);
+      });
     }
   };
 

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
+import { shrinkAiImage } from '../../utils/aiImage';
 import { getSanitizedKcal, extractPortions } from '../../utils/portionHelper';
 import type { FoodLog } from '../../types/api';
 import type { DragFoodData } from '../../components/my-foods/FoodCard';
@@ -72,8 +73,10 @@ export function useScannerAndOCR(
     });
 
     try {
+      const image = await shrinkAiImage(file);
+      if (!image || controller.signal.aborted) return;
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('image', image, file.name);
 
       const { data } = await api.post('/nutrition/ai/ocr', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
