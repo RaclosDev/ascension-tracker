@@ -7,6 +7,7 @@ import {
 import type { FoodLog, Meal, Recipe, SavedFood, UserSettings } from '../types/api';
 import type { CompletedWorkout, Exercise, Template } from '../lib/workout/types';
 import { DEMO_COACH, DEMO_TOKEN } from './mode';
+import { dayAt, daysAgo, round, seeded, weekly, weightDashboard, weightList } from './series';
 
 /** Servidor ficticio de la demo: todo vive en memoria y se pierde al recargar. */
 
@@ -21,31 +22,9 @@ class HttpError extends Error {
 type Json = Record<string, unknown>;
 
 const HISTORY_DAYS = 70;
-const pad = (n: number) => String(n).padStart(2, '0');
-const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-const dayAt = (offset: number) => {
-  const d = new Date();
-  d.setHours(12, 0, 0, 0);
-  d.setDate(d.getDate() - offset);
-  return d;
-};
-const daysAgo = (offset: number) => iso(dayAt(offset));
-const mondayOf = (d: Date) => {
-  const copy = new Date(d);
-  copy.setDate(copy.getDate() - ((copy.getDay() + 6) % 7));
-  return copy;
-};
-const round = (value: number, decimals = 1) => {
-  const factor = 10 ** decimals;
-  return Math.round(value * factor) / factor;
-};
 
 // Generador con semilla fija: la demo enseña siempre los mismos datos.
-let seed = 20261117;
-const rand = () => {
-  seed = (seed * 1664525 + 1013904223) % 4294967296;
-  return seed / 4294967296;
-};
+const rand = seeded(20261117);
 
 let sequence = 1000;
 const nextId = () => ++sequence;
@@ -87,80 +66,7 @@ for (let offset = HISTORY_DAYS; offset >= 0; offset--) {
   if (offset > 0 && rand() > 0.08) steps.set(date, Math.round(6500 + rand() * 5500));
 }
 
-function weekly(values: Map<string, number>, decimals: number) {
-  const dates = [...values.keys()].sort();
-  if (dates.length === 0) return [];
-  const [y, m, d] = dates[0].split('-').map(Number);
-  const cursor = mondayOf(new Date(y, m - 1, d, 12));
-  const last = mondayOf(dayAt(0));
-  const weeks = [];
-  let previous: number | null = null;
-  while (cursor <= last) {
-    const days: (number | null)[] = [];
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(cursor);
-      day.setDate(day.getDate() + i);
-      days.push(values.get(iso(day)) ?? null);
-    }
-    const valid = days.filter((v): v is number => v !== null);
-    const average = valid.length
-      ? round(valid.reduce((a, b) => a + b, 0) / valid.length, decimals)
-      : null;
-    weeks.push({
-      weekStart: iso(cursor),
-      days,
-      average,
-      delta: average !== null && previous !== null ? round(average - previous, decimals) : null,
-      entries: valid.length,
-    });
-    if (average !== null) previous = average;
-    cursor.setDate(cursor.getDate() + 7);
-  }
-  return weeks;
-}
-
-function weightList() {
-  return [...weights.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, weight], index) => ({ id: index + 1, date, weight }));
-}
-
-function dashboard() {
-  const list = weightList();
-  const weeks = weekly(weights, 2).filter((week) => week.average !== null);
-  const current = list.at(-1)?.weight ?? settings.startWeight;
-  const deltas = weeks.filter((week) => week.delta !== null);
-  const avgWeeklyChange = deltas.length
-    ? round(deltas.reduce((sum, week) => sum + (week.delta ?? 0), 0) / deltas.length, 2)
-    : 0;
-  const best = deltas.reduce<(typeof deltas)[number] | null>(
-    (min, week) => (!min || (week.delta ?? 0) < (min.delta ?? 0) ? week : min),
-    null,
-  );
-  const remaining = round(current - settings.goalWeight, 1);
-  const total = settings.startWeight - settings.goalWeight;
-  const weeksLeft = avgWeeklyChange < 0 ? Math.ceil(remaining / -avgWeeklyChange) : 12;
-  let streak = 0;
-  while (weights.has(daysAgo(streak))) streak++;
-  return {
-    currentWeight: current,
-    currentWeeklyAverage: weeks.at(-1)?.average ?? current,
-    totalEntries: list.length,
-    totalLost: round(current - settings.startWeight, 1),
-    remaining,
-    progress: total ? round(((settings.startWeight - current) / total) * 100, 1) : 0,
-    estimatedDate: iso(dayAt(-weeksLeft * 7)),
-    avgWeeklyChange,
-    weeksActive: weeks.length,
-    bestWeekDelta: best?.delta ?? 0,
-    bestWeekDate: best?.weekStart ?? daysAgo(0),
-    streak,
-    streakDays: [6, 5, 4, 3, 2, 1, 0].map((offset) => ({
-      date: daysAgo(offset),
-      hasData: weights.has(daysAgo(offset)),
-    })),
-  };
-}
+const dashboard = () => weightDashboard(weights, settings.startWeight, settings.goalWeight);
 
 // ── Nutrición ──────────────────────────────────────────────────────────────
 
@@ -372,18 +278,21 @@ const ROUTINES: { name: string; exercises: [string, number, number, number][] }[
 ];
 
 let workouts: CompletedWorkout[] = [];
-for (let offset = HISTORY_DAYS; offset >= 1; offset--) {
+for (let offset = HISTORY_DAYS; offset >= 0; offset--) {
   const day = dayAt(offset);
   const routine = [1, 3, 5].indexOf(day.getDay());
   if (routine < 0) continue;
   const week = Math.floor((HISTORY_DAYS - offset) / 7);
-  const startedAt = new Date(day).setHours(18, 30, 0, 0);
+  // Hoy, si toca, el entreno ya está hecho por la mañana.
+  const startedAt = new Date(day).setHours(offset ? 18 : 7, 30, 0, 0);
+  const finishedAt = startedAt + (55 + Math.round(rand() * 20)) * 60_000;
+  if (finishedAt > Date.now()) continue;
   const id = `demo-workout-${offset}`;
   workouts.push({
     id,
     name: ROUTINES[routine].name,
     startedAt,
-    finishedAt: startedAt + (55 + Math.round(rand() * 20)) * 60_000,
+    finishedAt,
     notes: '',
     exercises: ROUTINES[routine].exercises.map(([exerciseId, kg, reps, sets], e) => ({
       id: `${id}-e${e}`,
@@ -494,7 +403,7 @@ async function route(
   if (a === 'user') {
     if (b === 'export')
       return new Blob(
-        [JSON.stringify({ settings, weights: weightList(), workouts, logs }, null, 2)],
+        [JSON.stringify({ settings, weights: weightList(weights), workouts, logs }, null, 2)],
         { type: 'application/json' },
       );
     throw new HttpError(403, 'No disponible en la demo.');
@@ -506,7 +415,7 @@ async function route(
     const values = a === 'weights' ? weights : steps;
     if (b === 'dashboard') return dashboard();
     if (b === 'weekly') return weekly(values, a === 'weights' ? 2 : 0);
-    if (read) return weightList();
+    if (read) return weightList(weights);
     if (method === 'delete') {
       values.delete(b);
       return '';
@@ -624,10 +533,12 @@ async function route(
       throw new HttpError(403, 'Entra en /demo/entrenador para ver el panel de entrenador.');
     }
     if (!read) throw new HttpError(403, READ_ONLY);
-    // La zona de entrenador enseña los atletas de ejemplo del recorrido guiado.
+    // La zona de entrenador enseña los atletas de ejemplo del recorrido guiado;
+    // Lucía, la primera, llega con su bloque, sus registros y su competición.
     const { tourResponse } = await import('../components/coach/tour/CoachTourPreview');
+    const { luciaResponse } = await import('./lucia');
     try {
-      return tourResponse(path);
+      return luciaResponse(path, query, () => tourResponse(path));
     } catch {
       throw new HttpError(404, 'Sin datos en la demo.');
     }
