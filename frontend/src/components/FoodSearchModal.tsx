@@ -20,7 +20,7 @@ import ManualFoodForm from './food/ManualFoodForm';
 import { FoodPortionEditor } from './food/FoodPortionEditor';
 import { FoodSearchResultsList, SavedFoodExtended } from './food/FoodSearchResultsList';
 
-import { Mic, ImageIcon, ScanLine } from 'lucide-react';
+import { Camera, Mic, ImageIcon, ScanLine } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { FoodLog, Meal } from '../types/api';
 
@@ -71,6 +71,7 @@ export default function FoodSearchModal({
   const addingRef = useRef(false);
   const [adding, setAdding] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
+  const dishPhotoInputRef = useRef<HTMLInputElement | null>(null);
 
   const { isListening, toggleListening, stopListening } = useSpeechToText({
     onTranscript: (text) => setQuery(text),
@@ -416,7 +417,7 @@ export default function FoodSearchModal({
                 )}
               </Select>
             </div>
-            <form onSubmit={handleSearch} style={{ position: 'relative', marginBottom: '1rem' }}>
+            <form onSubmit={handleSearch} style={{ marginBottom: '0.75rem' }}>
               <input
                 type="search"
                 enterKeyHint="search"
@@ -427,62 +428,68 @@ export default function FoodSearchModal({
                 value={query}
                 onChange={(e) => handleQueryChange(e.target.value)}
                 style={{
-                  paddingRight: '144px',
+                  paddingRight: '1rem',
                   paddingLeft: '1rem',
                   height: '50px',
                   fontSize: '1rem',
                   borderRadius: '12px',
                 }}
               />
-
-              <div
-                style={{
-                  position: 'absolute',
-                  right: '2px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  display: 'flex',
-                  gap: '2px',
-                }}
-              >
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  ref={fileInputRef}
-                  style={{ display: 'none' }}
-                  onChange={handleOcrUpload}
-                />
-
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                  className="food-search-tool-btn"
-                  title="Etiqueta Nutricional (OCR)"
-                  aria-label="Etiqueta Nutricional (OCR)"
-                >
-                  <ImageIcon size={18} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveOverlay('scanner')}
-                  className="food-search-tool-btn"
-                  title="Código de barras"
-                  aria-label="Código de barras"
-                >
-                  <ScanLine size={18} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveOverlay('ai')}
-                  className="food-search-tool-btn food-search-tool-btn--ai"
-                  title="Asistente de IA"
-                  aria-label="Asistente de IA"
-                >
-                  <Mic size={18} aria-hidden="true" />
-                </button>
-              </div>
             </form>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              onChange={handleOcrUpload}
+            />
+            <input
+              type="file"
+              accept="image/*"
+              ref={dishPhotoInputRef}
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                if (!e.target.files?.length) return;
+                void handleImageChange(e);
+                e.target.value = '';
+                setActiveOverlay('ai');
+              }}
+            />
+            <div className="food-search-tools">
+              <button
+                type="button"
+                onClick={() => dishPhotoInputRef.current?.click()}
+                className="food-search-tool-btn food-search-tool-btn--ai"
+              >
+                <Camera size={20} aria-hidden="true" />
+                <span>Foto del plato</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveOverlay('ai')}
+                className="food-search-tool-btn"
+              >
+                <Mic size={20} aria-hidden="true" />
+                <span>Describir o dictar</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveOverlay('scanner')}
+                className="food-search-tool-btn"
+              >
+                <ScanLine size={20} aria-hidden="true" />
+                <span>Código de barras</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="food-search-tool-btn"
+              >
+                <ImageIcon size={20} aria-hidden="true" />
+                <span>Foto de etiqueta</span>
+              </button>
+            </div>
             <FoodSearchResultsList
               query={query}
               savedFoods={savedFoods}

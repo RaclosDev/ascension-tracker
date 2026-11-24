@@ -1,5 +1,5 @@
 import React, { RefObject, ChangeEvent } from 'react';
-import { Mic, ImageIcon, X, Loader2 } from 'lucide-react';
+import { Mic, Camera, X, Loader2 } from 'lucide-react';
 
 export interface AiFoodAssistantViewProps {
   query: string;
@@ -40,7 +40,7 @@ export const AiFoodAssistantView: React.FC<AiFoodAssistantViewProps> = ({
         <textarea
           className="form-input"
           rows={4}
-          placeholder="Ej: 'Me he comido una hamburguesa con queso y patatas fritas' o '150g de pechuga de pollo y 200g de arroz'"
+          placeholder="Haz una foto al plato o descríbelo. Ej: 'Me he comido una hamburguesa con queso y patatas fritas' o '150g de pechuga de pollo y 200g de arroz'"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           style={{ resize: 'none', paddingBottom: '3rem' }}
@@ -109,19 +109,20 @@ export const AiFoodAssistantView: React.FC<AiFoodAssistantViewProps> = ({
             style={{
               background: 'var(--bg-secondary)',
               border: '1px solid var(--border-color)',
-              borderRadius: '50%',
-              width: '34px',
+              borderRadius: '999px',
               height: '34px',
+              padding: '0 0.75rem',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              gap: '0.4rem',
               cursor: 'pointer',
               color: 'var(--text-primary)',
-              transition: 'all 0.2s ease',
+              fontSize: '0.8rem',
+              fontWeight: 600,
             }}
-            title="Adjuntar foto"
           >
-            <ImageIcon size={16} />
+            <Camera size={16} aria-hidden="true" />
+            {selectedImage ? 'Cambiar foto' : 'Añadir foto'}
           </button>
           <button
             type="button"
