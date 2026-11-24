@@ -307,6 +307,19 @@ button.tv-step:focus-visible {
 .tv-step[aria-expanded='true'] .tv-step-chevron {
   transform: rotate(180deg);
 }
+/* Móviles muy estrechos (320 px): se gana ancho para que 12.235 quepa con letra legible. */
+@media (max-width: 359px) {
+  .tv-ladder {
+    padding-inline: 4px;
+  }
+  .tv-ladder .tv-days {
+    padding-inline: 2px;
+    gap: 2px;
+  }
+  .tv-day-value:is([data-metric='steps'], [data-metric='calories']) {
+    font-size: max(10px, min(var(--fs), 27cqi));
+  }
+}
 @media (max-width: 480px) {
   .tv-ladder[data-metrics='3'] .tv-step-figs strong {
     font-size: 1.05rem;
