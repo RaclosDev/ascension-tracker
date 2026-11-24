@@ -57,8 +57,8 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     // 2. Cabecera de resumen con media y delta
     const firstWeekStats = firstWeek.locator('.tv-step');
     await expect(firstWeekStats).toBeVisible();
-    await expect(firstWeekStats).toContainText('81.2');
-    await expect(firstWeekStats).toContainText('−0.50');
+    await expect(firstWeekStats).toContainText('81,2');
+    await expect(firstWeekStats).toContainText('−0,50');
 
     // 3. Días lunes a domingo en la cuadrícula semanal
     const days = firstWeek.locator('.tv-day');
@@ -96,26 +96,26 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
 
     // Celda de lunes con valores iniciales
     const firstDayCell = page.locator('.tv-day').first();
-    await expect(firstDayCell).toContainText('81.2');
-    await expect(firstDayCell).toContainText('8,5k');
-    await expect(firstDayCell).toContainText('2,0k');
+    await expect(firstDayCell).toContainText('81,2');
+    await expect(firstDayCell).toContainText('8.500');
+    await expect(firstDayCell).toContainText('2.000');
 
     // 3. Visibilidad condicional y persistencia de Peso
     await weightToggle.click();
     await expect(weightToggle).toHaveAttribute('aria-pressed', 'false');
-    await expect(firstDayCell).not.toContainText('81.2');
+    await expect(firstDayCell).not.toContainText('81,2');
     expect(await page.evaluate(() => localStorage.getItem('tracking_showWeight'))).toBe('false');
 
     // Visibilidad condicional y persistencia de Pasos
     await stepsToggle.click();
     await expect(stepsToggle).toHaveAttribute('aria-pressed', 'false');
-    await expect(firstDayCell).not.toContainText('8,5k');
+    await expect(firstDayCell).not.toContainText('8.500');
     expect(await page.evaluate(() => localStorage.getItem('tracking_showSteps'))).toBe('false');
 
     // La última métrica visible no se puede ocultar: la hoja nunca queda vacía
     await kcalToggle.click();
     await expect(kcalToggle).toHaveAttribute('aria-pressed', 'true');
-    await expect(firstDayCell).toContainText('2,0k');
+    await expect(firstDayCell).toContainText('2.000');
     expect(await page.evaluate(() => localStorage.getItem('tracking_showCalories'))).toBe('true');
 
     // 4. Persistencia tras recargar la página
@@ -142,14 +142,14 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await expect(reloadedKcalToggle).toHaveAttribute('aria-pressed', 'true');
 
     const reloadedCell = page.locator('.tv-day').first();
-    await expect(reloadedCell).not.toContainText('81.2');
-    await expect(reloadedCell).not.toContainText('8,5k');
-    await expect(reloadedCell).toContainText('2,0k');
+    await expect(reloadedCell).not.toContainText('81,2');
+    await expect(reloadedCell).not.toContainText('8.500');
+    await expect(reloadedCell).toContainText('2.000');
 
     // Reactivar Peso y comprobar que vuelve a mostrarse
     await reloadedWeightToggle.click();
     await expect(reloadedWeightToggle).toHaveAttribute('aria-pressed', 'true');
-    await expect(reloadedCell).toContainText('81.2');
+    await expect(reloadedCell).toContainText('81,2');
     expect(await page.evaluate(() => localStorage.getItem('tracking_showWeight'))).toBe('true');
   });
 
@@ -352,8 +352,8 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     });
 
     const firstDayCell = page.locator('.tv-day').first();
-    await expect(firstDayCell).toContainText('81.2');
-    await expect(firstDayCell).toContainText('8,5k');
+    await expect(firstDayCell).toContainText('81,2');
+    await expect(firstDayCell).toContainText('8.500');
 
     await firstDayCell.click();
 
@@ -380,7 +380,7 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await expect(page.getByRole('dialog')).not.toBeVisible();
 
     // Celda queda limpia sin valores numéricos
-    await expect(firstDayCell).not.toContainText('81.2');
-    await expect(firstDayCell).not.toContainText('8,5k');
+    await expect(firstDayCell).not.toContainText('81,2');
+    await expect(firstDayCell).not.toContainText('8.500');
   });
 });
