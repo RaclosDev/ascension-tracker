@@ -321,13 +321,6 @@
   flex: 0 0 auto;
   min-width: 48px;
 }
-.trend-legend {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
 .legend-key {
   display: inline-block;
   width: 14px;
@@ -478,4 +471,53 @@
     outline: 2px solid var(--accent-primary);
     outline-offset: -2px;
   }
+}
+
+/* Evolución: pestañas entre gráficas, con el periodo compartido. */
+.evo-head .info-tip {
+  margin-left: -4px;
+}
+.evo-tabs {
+  display: flex;
+  flex-basis: 100%;
+  gap: 18px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.evo-tabs button {
+  min-height: 40px;
+  margin-bottom: -1px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.evo-tabs button:hover {
+  color: var(--text-primary);
+}
+.evo-tabs button[aria-selected='true'] {
+  border-bottom-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+.evo-tabs button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+.info-tip-pop .legend-key {
+  margin-left: 0;
+}
+.legend-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+.legend-toward {
+  background: var(--color-success);
+}
+.legend-away {
+  background: var(--color-danger);
 }

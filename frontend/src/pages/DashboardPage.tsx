@@ -23,6 +23,9 @@ import { HomeOverview } from '../components/dashboard/HomeOverview';
 const WeightTrendChart = lazyWithRetry<ComponentProps<typeof Charts.WeightTrendChart>>(() =>
   import('../components/dashboard/WeightCharts').then((m) => ({ default: m.WeightTrendChart })),
 );
+const WeightEvolution = lazyWithRetry<ComponentProps<typeof Charts.WeightEvolution>>(() =>
+  import('../components/dashboard/WeightCharts').then((m) => ({ default: m.WeightEvolution })),
+);
 const WeeklyChangeChart = lazyWithRetry<ComponentProps<typeof Charts.WeeklyChangeChart>>(() =>
   import('../components/dashboard/WeightCharts').then((m) => ({ default: m.WeeklyChangeChart })),
 );
@@ -245,7 +248,13 @@ export default function DashboardPage() {
     showNutrition,
     chart: (
       <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
-        <WeightTrendChart data={weightChartData} goalWeight={settings.goalWeight} height={280} />
+        <WeightEvolution
+          weights={weightChartData}
+          deltas={deltaData}
+          goalWeight={settings.goalWeight}
+          gaining={settings.goalWeight > settings.startWeight}
+          height={280}
+        />
       </Suspense>
     ),
   };

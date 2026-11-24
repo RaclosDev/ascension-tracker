@@ -10,6 +10,7 @@ import {
   calcBodyFatNavy,
   calcBodyComposition,
 } from '../../utils/nutritionCalculators';
+import { InfoTip } from '@/components/ui/InfoTip';
 
 export default function NutritionCalculators() {
   const [sex, setSex] = useState<'M' | 'F'>('M');
@@ -160,7 +161,12 @@ export default function NutritionCalculators() {
         {bfPct ? (
           <>
             <div className="util-result" role="status" aria-live="polite">
-              <span className="util-result-label">Grasa corporal estimada</span>
+              <span className="util-result-label">
+                Grasa corporal estimada{' '}
+                <InfoTip label="Precisión de la estimación" align="start">
+                  Margen de error de ±3-4 %. Un plicómetro o una DEXA afinan más.
+                </InfoTip>
+              </span>
               <span className="util-result-value tabular-nums">{one(bfPct)} %</span>
               {bodyComp && (
                 <span className="util-result-note tabular-nums">
@@ -168,9 +174,6 @@ export default function NutritionCalculators() {
                 </span>
               )}
             </div>
-            <p className="util-note">
-              Margen de error de ±3-4 %. Un plicómetro o una DEXA afinan más.
-            </p>
           </>
         ) : (
           <p className="calc-intro">

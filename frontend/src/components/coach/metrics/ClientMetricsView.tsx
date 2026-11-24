@@ -21,6 +21,7 @@ import { PhotoGallery } from '../../photos/PhotoGallery';
 import { QueryErrorNotice } from '../../QueryErrorNotice';
 import { QueryState } from '../ClientSection';
 import '../../../styles/coach-metrics.css';
+import { InfoTip } from '@/components/ui/InfoTip';
 
 const MetricsWeightChart = lazyWithRetry(() => import('./MetricsWeightChart'));
 
@@ -186,8 +187,16 @@ function WeightCard({ linkId, href }: { linkId: string; href: string }) {
               <MetricsWeightChart entries={entries.data} />
             </Suspense>
             <figcaption>
-              <span className="metrics-key metrics-key-dot" /> Pesaje
-              <span className="metrics-key metrics-key-line" /> Media 7 días
+              <InfoTip label="Cómo leer la gráfica de peso">
+                <strong>
+                  <span className="metrics-key metrics-key-dot" /> Pesaje
+                </strong>
+                Cada punto es un pesaje registrado.
+                <strong>
+                  <span className="metrics-key metrics-key-line" /> Media 7 días
+                </strong>
+                La media de la última semana suaviza las subidas y bajadas diarias.
+              </InfoTip>
             </figcaption>
           </figure>
         </div>

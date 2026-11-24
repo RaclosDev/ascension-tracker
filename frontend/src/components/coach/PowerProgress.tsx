@@ -6,6 +6,7 @@ import { LIFT_LABELS, type Lift } from '../../lib/powerlifting';
 import type { CompletedWorkout } from '../../lib/workout/types';
 import { QueryErrorNotice } from '../QueryErrorNotice';
 import { Select } from '@/components/ui/select';
+import { InfoTip } from '@/components/ui/InfoTip';
 
 const DAY = 24 * 60 * 60 * 1000;
 const number = (value: number) => value.toLocaleString('es-ES', { maximumFractionDigits: 1 });
@@ -73,7 +74,13 @@ export function PowerProgress({ linkId, profile }: { linkId: string; profile: Po
     <div className="pw-progress">
       <div className="pw-toolbar">
         <div className="pw-toolbar-text">
-          <h3>Seguimiento de los tres básicos</h3>
+          <h3 className="pw-title-tip">
+            Seguimiento de los tres básicos
+            <InfoTip label="Cómo se calcula" align="start">
+              Series completadas de los básicos del catálogo, sin calentamientos. 1RM estimado con
+              Epley (2 a 10 reps), redondeado a 0,5 kg; el % usa el TM actual.
+            </InfoTip>
+          </h3>
           <p className="pw-hint">
             Del {date(since)} al {date(now)}
           </p>
@@ -210,10 +217,6 @@ export function PowerProgress({ linkId, profile }: { linkId: string; profile: Po
               </>
             )}
           </section>
-          <p className="pw-hint">
-            Series completadas de los básicos del catálogo, sin calentamientos. 1RM estimado con
-            Epley (2 a 10 reps), redondeado a 0,5 kg; el % usa el TM actual.
-          </p>
         </>
       )}
     </div>

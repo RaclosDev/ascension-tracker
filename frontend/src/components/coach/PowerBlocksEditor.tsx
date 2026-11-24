@@ -2,6 +2,7 @@ import type { PowerBlock } from '../../lib/coach/powerMeets';
 import { Link } from 'react-router-dom';
 import { shiftWeek, weekDate } from '../../lib/coach/weeks';
 import { DatePicker } from '@/components/ui/date-picker';
+import { InfoTip } from '@/components/ui/InfoTip';
 
 export function PowerBlocksEditor({
   blocks,
@@ -20,11 +21,13 @@ export function PowerBlocksEditor({
     onChange(blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)));
   return (
     <section className="card pw-card">
-      <h4>Bloques de preparación</h4>
-      <p className="pw-hint">
-        Define fechas y objetivos y abre cada semana para programar sus sesiones. Cambiar estas
-        fechas no modifica las pautas ya publicadas.
-      </p>
+      <h4 className="pw-title-tip">
+        Bloques de preparación
+        <InfoTip label="Sobre los bloques" align="start">
+          Define fechas y objetivos y abre cada semana para programar sus sesiones. Cambiar estas
+          fechas no modifica las pautas ya publicadas.
+        </InfoTip>
+      </h4>
       {blocks.length === 0 && <p>No hay bloques definidos.</p>}
       {blocks.map((block, index) => (
         <fieldset key={block.id} className="pw-block">
