@@ -1,6 +1,7 @@
 import { useState, useRef, type ChangeEvent, type Dispatch, type SetStateAction } from 'react';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
+import { readAiImage } from '../../utils/aiImage';
 
 type Options = {
   query: string;
@@ -28,15 +29,11 @@ export function useFoodAiEntry({
   const [aiSubmitting, setAiSubmitting] = useState(false);
   const submitting = useRef(false);
   const [aiElapsedSeconds, setAiElapsedSeconds] = useState(0);
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+    const image = await readAiImage(file);
+    if (image) setSelectedImage(image);
   };
 
   const getAiStatusText = (seconds: number) => {

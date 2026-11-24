@@ -9,11 +9,9 @@ export function isChunkLoadError(error: unknown): boolean {
   if (!error) return false;
   const msg = (error instanceof Error ? error.message : String(error)).toLowerCase();
   return (
+    // A bare "failed to fetch" or "text/html" is any failed API call, not a stale chunk.
     msg.includes('mime type') ||
-    msg.includes('text/html') ||
     msg.includes('dynamically imported module') ||
-    msg.includes('failed to fetch dynamically') ||
-    msg.includes('failed to fetch') ||
     msg.includes('importing a module script failed') ||
     msg.includes('importing module script failed') ||
     msg.includes('module script failed') ||

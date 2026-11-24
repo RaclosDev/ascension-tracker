@@ -253,14 +253,17 @@ function AppContent() {
   );
 }
 
-class GlobalErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
+class GlobalErrorBoundary extends Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error) {
@@ -275,6 +278,8 @@ class GlobalErrorBoundary extends Component<{ children: React.ReactNode }, { has
 
   render() {
     if (this.state.hasError) {
+      // Only a stale chunk means a new version; any other failure must say what it is.
+      const stale = isChunkLoadError(this.state.error);
       return (
         <div
           style={{
@@ -289,9 +294,13 @@ class GlobalErrorBoundary extends Component<{ children: React.ReactNode }, { has
             textAlign: 'center',
           }}
         >
-          <h2 style={{ marginBottom: '10px' }}>Nueva versión disponible</h2>
+          <h2 style={{ marginBottom: '10px' }}>
+            {stale ? 'Nueva versión disponible' : 'Algo salió mal'}
+          </h2>
           <p style={{ color: '#94a3b8', marginBottom: '20px' }}>
-            Estamos actualizando la app. Por favor, recarga.
+            {stale
+              ? 'Estamos actualizando la app. Por favor, recarga.'
+              : this.state.error?.message || 'Ha ocurrido un error en la aplicación.'}
           </p>
           <button className="btn btn-primary" onClick={() => window.location.reload()}>
             Recargar
