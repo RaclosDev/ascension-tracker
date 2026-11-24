@@ -9,7 +9,7 @@ export const dayAt = (offset: number) => {
   return d;
 };
 export const daysAgo = (offset: number) => iso(dayAt(offset));
-export const mondayOf = (d: Date) => {
+const mondayOf = (d: Date) => {
   const copy = new Date(d);
   copy.setDate(copy.getDate() - ((copy.getDay() + 6) % 7));
   return copy;
