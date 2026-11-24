@@ -6,6 +6,7 @@ import App from './App';
 import { isCoachTourFrame } from './components/coach/tour/frame';
 import './index.css';
 import './paper.css';
+import './dark.css';
 import { applyColorMode, readColorMode } from './utils/colorMode';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
