@@ -25,22 +25,20 @@ const LABEL: Record<TrackingMetric, string> = {
 };
 const LETTERS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
-const count = (n: number) => Math.round(n).toLocaleString('es-ES');
+// es-ES only groups from five digits by default; "always" writes 9.230 like 12.235.
+const countFmt = new Intl.NumberFormat('es-ES', {
+  maximumFractionDigits: 0,
+  useGrouping: 'always',
+} as unknown as Intl.NumberFormatOptions);
+const count = (n: number) => countFmt.format(Math.round(n));
 const show = (m: TrackingMetric, v: number | null | undefined) =>
   v == null ? '—' : m === 'weight' ? formatBodyKg(v) : count(v);
-/** Steps and calories shortened to fit a day column: 8.432 → 8,4k. */
-const compact = (m: TrackingMetric, v: number) =>
-  m === 'weight'
-    ? formatBodyKg(v)
-    : v >= 1000
-      ? `${(v / 1000).toFixed(1).replace('.', ',')}k`
-      : `${v}`;
 const average = (m: TrackingMetric, w: WeekData) =>
   m === 'weight' ? w.averageWeight : m === 'steps' ? w.averageSteps : w.averageCalories;
 const delta = (m: TrackingMetric, w: WeekData) =>
   m === 'weight' ? w.deltaWeight : m === 'steps' ? w.deltaSteps : w.deltaCalories;
 const signed = (m: TrackingMetric, n: number) =>
-  `${n > 0 ? '+' : n < 0 ? '−' : ''}${m === 'weight' ? Math.abs(n).toFixed(2) : count(Math.abs(n))}`;
+  `${n > 0 ? '+' : n < 0 ? '−' : ''}${m === 'weight' ? Math.abs(n).toFixed(2).replace('.', ',') : count(Math.abs(n))}`;
 
 /** The seven days of a week as tappable cells, one line per metric shown. */
 function DayCells({ week, metrics, onOpenDay }: { week: WeekData } & Omit<Props, 'weeks'>) {
@@ -81,7 +79,7 @@ function DayCells({ week, metrics, onOpenDay }: { week: WeekData } & Omit<Props,
                 const value = day[m];
                 return (
                   <span key={m} className="tv-day-value tabular-nums" data-metric={m}>
-                    {value === null ? '·' : compact(m, value)}
+                    {show(m, value)}
                   </span>
                 );
               })
