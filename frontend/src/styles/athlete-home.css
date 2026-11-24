@@ -429,3 +429,53 @@
     align-items: start;
   }
 }
+
+/* En el móvil lo de hoy (entrenar, anotar comidas) va lo primero; las gráficas, después. */
+@media (max-width: 1023px) {
+  .home-lower {
+    display: contents;
+  }
+  .home-today {
+    order: -1;
+  }
+  /* Tira compacta: cada pendiente es una casilla que se toca entera, sin título ni botón. */
+  .home-today .today-card {
+    padding: 0;
+  }
+  .home-today .today-card > h2 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .home-today .today-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .home-today .today-row {
+    position: relative;
+    gap: 10px;
+    padding: 10px 12px;
+    border-top: 0;
+  }
+  .home-today .today-row:nth-child(even) {
+    border-left: 1px solid var(--border-subtle);
+  }
+  .home-today .today-row:nth-child(n + 3) {
+    border-top: 1px solid var(--border-subtle);
+  }
+  .home-today .today-row:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .home-today .today-row > .btn {
+    position: absolute;
+    inset: 0;
+    min-height: 0;
+    opacity: 0;
+  }
+  .home-today .today-row:has(> .btn:focus-visible) {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: -2px;
+  }
+}

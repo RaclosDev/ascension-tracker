@@ -1,4 +1,17 @@
+import { useState } from 'react';
 import { Play, Trash2, Plus } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import type { Template } from '@/lib/workout/types';
+import '@/styles/workout-session-summary.css';
 import { EmptyCard } from '@/components/workout/dashboard';
 import { getExerciseMap } from '@/lib/workout/exercises';
 import { useWorkoutStore } from '@/lib/workout/store';
@@ -19,7 +32,7 @@ export default function TemplatesView() {
   const deleteMutation = useDeleteTemplate();
 
   const startFromTemplate = useWorkoutStore((s) => s.startFromTemplate);
-  const deleteTemplate = (id: string) => deleteMutation.mutate(id);
+  const [deleting, setDeleting] = useState<Template | null>(null);
   const startEmpty = useWorkoutStore((s) => s.startEmpty);
   const catalog = getExerciseMap(customExercises);
 
@@ -67,99 +80,77 @@ export default function TemplatesView() {
           body="Guarda un entreno como plantilla para reutilizarlo."
         />
       ) : (
-        <ul
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: '1rem',
-            padding: 0,
-            margin: 0,
-            listStyle: 'none',
-          }}
-        >
-          {templates.map((tpl: import('@/lib/workout/types').Template) => {
+        <ul className="wk-tpl-grid">
+          {templates.map((tpl: Template) => {
             const names = tpl.exercises.map(
-              (e: { exerciseId: string; variant?: { grip?: string; machine?: string } }) =>
-                catalog.get(e.exerciseId)?.name ?? 'Ejercicio',
+              (e: { exerciseId: string }) => catalog.get(e.exerciseId)?.name ?? 'Ejercicio',
             );
+            const count = tpl.exercises.length;
             return (
-              <li
-                key={tpl.id}
-                className="card"
-                style={{ display: 'flex', flexDirection: 'column', padding: '1.25rem' }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                    gap: '0.75rem',
-                  }}
-                >
-                  <div>
-                    <h2
-                      style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}
-                    >
-                      {tpl.name}
-                    </h2>
-                    <p
-                      style={{
-                        marginTop: '0.25rem',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        color: 'var(--text-secondary)',
-                      }}
-                    >
-                      {tpl.exercises.length} ejercicios
-                    </p>
-                  </div>
-                  <button
-                    aria-label="Eliminar plantilla"
-                    onClick={() => deleteTemplate(tpl.id)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--color-danger)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      padding: '0.25rem',
-                    }}
-                  >
-                    <Trash2 size={18} />
-                  </button>
+              <li key={tpl.id} className="card wk-session wk-tpl">
+                <div className="wk-tpl-body">
+                  <h2 className="wk-tpl-name">{tpl.name}</h2>
+                  <p className="workout-session-date">
+                    {count} {count === 1 ? 'ejercicio' : 'ejercicios'}
+                  </p>
+                  <p className="wk-tpl-list">
+                    {names.slice(0, 6).join(' · ')}
+                    {names.length > 6 ? ` y ${names.length - 6} más` : ''}
+                  </p>
                 </div>
-                <p
-                  style={{
-                    marginTop: '0.75rem',
-                    flex: 1,
-                    fontSize: '0.85rem',
-                    lineHeight: 1.5,
-                    color: 'var(--text-secondary)',
-                  }}
-                >
-                  {names.slice(0, 6).join(' · ')}
-                  {names.length > 6 ? '...' : ''}
-                </p>
-                <button
-                  onClick={() => startFromTemplate(tpl, recentWorkouts)}
-                  className="btn btn-primary"
-                  style={{
-                    marginTop: '1.25rem',
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                  }}
-                >
-                  <Play size={18} />
-                  Empezar
-                </button>
+                <div className="wk-session-actions">
+                  <button
+                    type="button"
+                    onClick={() => startFromTemplate(tpl, recentWorkouts)}
+                    className="btn btn-primary btn-sm wk-tpl-start"
+                  >
+                    <Play size={15} aria-hidden="true" />
+                    Empezar
+                  </button>
+                  <span>
+                    <button
+                      type="button"
+                      className="icon-btn wk-session-delete"
+                      aria-label={`Eliminar la plantilla ${tpl.name}`}
+                      onClick={() => setDeleting(tpl)}
+                    >
+                      <Trash2 size={18} aria-hidden="true" />
+                    </button>
+                  </span>
+                </div>
               </li>
             );
           })}
         </ul>
       )}
+
+      <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
+        <AlertDialogContent className="card wk-confirm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="wk-confirm-title">
+              ¿Eliminar la plantilla «{deleting?.name}»?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="wk-confirm-text">
+              Los entrenamientos que hiciste con ella siguen en tu historial.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="wk-confirm-actions">
+            <AlertDialogCancel className="btn btn-secondary" onClick={() => setDeleting(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="btn btn-danger btn-press"
+              onClick={() => {
+                if (!deleting) return;
+                deleteMutation.mutate(deleting.id);
+                setDeleting(null);
+              }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

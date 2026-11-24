@@ -197,7 +197,7 @@ export function FoodSearchResultsList({
                           color: 'var(--text-secondary)',
                         }}
                       >
-                        {food.kcal} kcal | P: {food.protein}g | C: {food.carbs}g | G: {food.fat}g
+                        {food.kcal} kcal | P: {food.protein}g | H: {food.carbs}g | G: {food.fat}g
                         <span style={{ marginLeft: '0.5rem', opacity: 0.7 }}>
                           [{food.servingSize}
                           {food.servingLabel}]
@@ -264,7 +264,7 @@ export function FoodSearchResultsList({
                       )}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      100g: <strong>{kcal} kcal</strong> | P: {prot}g | C: {carb}g | G: {fat}g
+                      100g: <strong>{kcal} kcal</strong> | P: {prot}g | H: {carb}g | G: {fat}g
                     </div>
                   </div>
                 </div>

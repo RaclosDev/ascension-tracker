@@ -2,7 +2,7 @@ import type { CompletedWorkout, Exercise } from '../../lib/workout/types';
 import {
   completedSets,
   formatDay,
-  formatDuration,
+  formatSessionLength,
   formatKg,
   formatVariant,
   sessionVolume,
@@ -23,7 +23,7 @@ export function WorkoutSessionStats({ workout }: { workout: CompletedWorkout }) 
       </div>
       <div>
         <dt>Tiempo</dt>
-        <dd>{formatDuration(workout.finishedAt - workout.startedAt)}</dd>
+        <dd>{formatSessionLength(workout.finishedAt - workout.startedAt)}</dd>
       </div>
     </dl>
   );

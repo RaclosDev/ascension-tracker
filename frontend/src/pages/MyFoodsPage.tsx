@@ -20,10 +20,39 @@ import FoodCard from '../components/my-foods/FoodCard';
 import RecipeCard from '../components/my-foods/RecipeCard';
 import AiFoodModal from '../components/my-foods/AiFoodModal';
 
-import { ChevronDown, ChevronRight, ScanLine, Pencil, Loader2, Check } from 'lucide-react';
+import { Barcode, Check, ChevronDown, Loader2, Pencil, Plus, ScanLine, Sparkles } from 'lucide-react';
 import { Recipe, FoodLog, SavedFood } from '../types/api';
 import { isFoodRegistered } from '../utils/nutritionHelpers';
+import '../styles/athlete-workout.css';
+import '../styles/my-foods.css';
 const BarcodeScanner = lazyWithRetry(() => import('../components/BarcodeScanner'));
+
+function SectionHead({
+  title,
+  count,
+  note,
+  open,
+  onToggle,
+}: {
+  title: string;
+  count: number;
+  note?: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <h2 className="mf-section-head">
+      <button type="button" aria-expanded={open} onClick={onToggle}>
+        <span className="wk-title">{title}</span>
+        <span className="wk-note tabular-nums">
+          {count}
+          {note && ` · ${note}`}
+        </span>
+        <ChevronDown size={16} aria-hidden="true" className="mf-chevron" />
+      </button>
+    </h2>
+  );
+}
 
 export default function MyFoodsPage() {
   const {
@@ -73,6 +102,9 @@ export default function MyFoodsPage() {
   const toggleSection = (sec: keyof typeof expandedSections) =>
     setExpandedSections((p) => ({ ...p, [sec]: !p[sec] }));
 
+  const emptyText = (fallback: string) =>
+    filters.searchQuery ? 'Nada coincide con la búsqueda.' : fallback;
+
   if (isLoading)
     return (
       <div className="fade-in">
@@ -81,7 +113,7 @@ export default function MyFoodsPage() {
     );
 
   return (
-    <div className="fade-in">
+    <div className="fade-in mf-page">
       {isError && <QueryErrorNotice retry={fetchData} pending={isFetching} />}
       <FoodFiltersBar
         searchQuery={filters.searchQuery}
@@ -100,142 +132,128 @@ export default function MyFoodsPage() {
         setSortBy={filters.setSortBy}
       />
 
-      <div className="flex flex-col lg:flex-row gap-5">
+      <div className="mf-layout" data-filter={searchFilter}>
         {['all', 'foods'].includes(searchFilter) && (
-          <div
-            className={`flex flex-col gap-5 ${searchFilter === 'all' ? 'w-full lg:w-2/3' : 'w-full'}`}
+          <section
+            className="card wk-panel mf-section mf-foods"
+            data-drop={scanner.dragOverTarget === 'foods' || undefined}
+            onDragOver={(e) => scanner.handleDragOver(e, 'foods')}
+            onDragLeave={scanner.handleDragLeave}
+            onDrop={scanner.handleDropOnFoods}
           >
-            <div
-              className={`card ${scanner.dragOverTarget === 'foods' ? 'border-2 border-dashed border-[var(--color-carbs)]' : ''}`}
-              onDragOver={(e) => scanner.handleDragOver(e, 'foods')}
-              onDragLeave={scanner.handleDragLeave}
-              onDrop={scanner.handleDropOnFoods}
-            >
-              <button
-                type="button"
-                aria-expanded={expandedSections.foods}
-                onClick={() => toggleSection('foods')}
-                className="flex justify-between items-center bg-white/5 p-2 rounded-lg cursor-pointer"
-              >
-                <span className="text-xl m-0 font-semibold">Mis Alimentos</span>
-                {expandedSections.foods ? (
-                  <ChevronDown className="w-4 h-4" />
+            <SectionHead
+              title="Mis alimentos"
+              count={filters.filteredFoods.length}
+              note="valores por 100 g"
+              open={expandedSections.foods}
+              onToggle={() => toggleSection('foods')}
+            />
+            {expandedSections.foods && (
+              <>
+                <BulkSelectionToolbar
+                  selectedCount={meals.selectedFoods.size}
+                  onBulkDelete={async () => {
+                    if (await deleteFoodsBulk(meals.selectedFoods)) meals.clearSelection();
+                  }}
+                  onClearSelection={meals.clearSelection}
+                  onOpenMealSelector={meals.openMealSelector}
+                />
+                {filters.filteredFoods.length === 0 ? (
+                  <p className="wk-empty">{emptyText('Aún no has guardado ningún alimento.')}</p>
                 ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-
-              {expandedSections.foods && (
-                <div className="flex flex-col gap-4 mt-4">
-                  <BulkSelectionToolbar
-                    selectedCount={meals.selectedFoods.size}
-                    onBulkDelete={async () => {
-                      if (await deleteFoodsBulk(meals.selectedFoods)) meals.clearSelection();
-                    }}
-                    onClearSelection={meals.clearSelection}
-                    onOpenMealSelector={meals.openMealSelector}
-                  />
-
-                  <div
-                    className={
-                      filters.viewMode === 'grid'
-                        ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2'
-                        : 'flex flex-col gap-2'
-                    }
-                  >
+                  <ul className="mf-list" data-view={filters.viewMode}>
                     {filters.filteredFoods.map((f: SavedFood) => (
                       <FoodCard
                         key={f.id}
-                        food={f as unknown as SavedFood}
+                        food={f}
                         isSelected={f.id !== undefined && meals.selectedFoods.has(Number(f.id))}
                         onToggleSelect={meals.toggleFoodSelection}
                         onEdit={(food) => forms.handleEditFood(food)}
                         onDelete={deleteSavedFood}
-                        viewMode={filters.viewMode as 'grid' | 'list'}
                         onDragStart={(e, d) => scanner.handleDragStart(e, d)}
                       />
                     ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+                  </ul>
+                )}
+              </>
+            )}
+          </section>
         )}
 
-        {['all', 'recent', 'recipes'].includes(searchFilter) && (
-          <div
-            className={`flex flex-col gap-5 ${searchFilter === 'all' ? 'w-full lg:w-1/3' : 'w-full'}`}
+        {['all', 'recipes'].includes(searchFilter) && (
+          <section
+            className="card wk-panel mf-section mf-recipes"
+            data-drop={scanner.dragOverTarget === 'recipes' || undefined}
+            onDragOver={(e) => scanner.handleDragOver(e, 'recipes')}
+            onDragLeave={scanner.handleDragLeave}
+            onDrop={scanner.handleDropOnRecipes}
           >
-            {['all', 'recent'].includes(searchFilter) && (
-              <div className="card flex flex-col">
-                <button
-                  type="button"
-                  aria-expanded={expandedSections.recent}
-                  onClick={() => toggleSection('recent')}
-                  className="flex justify-between items-center bg-white/5 p-2 rounded-lg cursor-pointer mb-3"
-                >
-                  <span className="text-lg m-0 font-semibold">Recientes</span>
-                </button>
-                {expandedSections.recent && (
-                  <div className="flex flex-col gap-2 flex-1">
-                    {filters.filteredRecent.map((f: FoodLog) => {
-                      const registered = isFoodRegistered(f.product, savedFoods, recipes);
-                      return (
-                        <div
-                          key={f.id}
-                          className="p-2 bg-white/10 rounded-lg flex justify-between items-center"
-                        >
-                          <div className="text-sm font-medium">{f.product}</div>
-                          {registered ? (
-                            <span className="text-xs text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-1 rounded-lg flex items-center gap-1 font-medium select-none">
-                              <Check className="w-3.5 h-3.5" /> Guardado
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => scanner.saveRecentAsFood(f)}
-                              className="text-xs bg-[var(--accent-glow)] text-[var(--accent-primary-light)] border border-[var(--accent-primary)]/30 px-2 py-1 rounded-lg hover:bg-[var(--accent-primary)]/30 transition-colors"
-                            >
-                              Añadir
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+            <SectionHead
+              title="Mis recetas"
+              count={filters.filteredRecipes.length}
+              open={expandedSections.recipes}
+              onToggle={() => toggleSection('recipes')}
+            />
+            {expandedSections.recipes &&
+              (filters.filteredRecipes.length === 0 ? (
+                <p className="wk-empty">{emptyText('Aún no has guardado ninguna receta.')}</p>
+              ) : (
+                <ul className="mf-list">
+                  {filters.filteredRecipes.map((r: Recipe) => (
+                    <RecipeCard key={r.id} recipe={r} onEdit={forms.handleEditRecipe} />
+                  ))}
+                </ul>
+              ))}
+          </section>
+        )}
 
-            {['all', 'recipes'].includes(searchFilter) && (
-              <div
-                className={`card ${scanner.dragOverTarget === 'recipes' ? 'border-2 border-dashed border-[var(--color-warning)]' : ''}`}
-                onDragOver={(e) => scanner.handleDragOver(e, 'recipes')}
-                onDragLeave={scanner.handleDragLeave}
-                onDrop={scanner.handleDropOnRecipes}
-              >
-                <button
-                  type="button"
-                  aria-expanded={expandedSections.recipes}
-                  onClick={() => toggleSection('recipes')}
-                  className="flex justify-between items-center bg-white/5 p-2 rounded-lg cursor-pointer"
-                >
-                  <span className="text-lg m-0 font-semibold">Mis Recetas</span>
-                  {expandedSections.recipes ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4" />
-                  )}
-                </button>
-                {expandedSections.recipes && (
-                  <div className="flex flex-col gap-2 mt-4">
-                    {filters.filteredRecipes.map((r: Recipe) => (
-                      <RecipeCard key={r.id} recipe={r} onEdit={forms.handleEditRecipe} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+        {['all', 'recent'].includes(searchFilter) && (
+          <section className="card wk-panel mf-section mf-recent">
+            <SectionHead
+              title="Recientes"
+              count={filters.filteredRecent.length}
+              open={expandedSections.recent}
+              onToggle={() => toggleSection('recent')}
+            />
+            {expandedSections.recent &&
+              (filters.filteredRecent.length === 0 ? (
+                <p className="wk-empty">
+                  {emptyText('Lo que registres en el diario aparecerá aquí.')}
+                </p>
+              ) : (
+                <ul className="mf-list">
+                  {filters.filteredRecent.map((f: FoodLog) => {
+                    const registered = isFoodRegistered(f.product, savedFoods, recipes);
+                    return (
+                      <li key={f.id} className="mf-item">
+                        <div className="mf-item-main">
+                          <span className="mf-item-text">
+                            <span className="mf-item-name">{f.product}</span>
+                            <span className="mf-item-meta tabular-nums">
+                              {Math.round(f.quantity)} g · {Math.round(f.kcal)} kcal
+                            </span>
+                          </span>
+                        </div>
+                        {registered ? (
+                          <span className="mf-saved">
+                            <Check size={14} aria-hidden="true" /> Guardado
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="wk-link"
+                            aria-label={`Guardar ${f.product} en mis alimentos`}
+                            onClick={() => scanner.saveRecentAsFood(f)}
+                          >
+                            Guardar
+                          </button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              ))}
+          </section>
         )}
       </div>
 
@@ -289,57 +307,79 @@ export default function MyFoodsPage() {
 
       <button
         ref={addButtonRef}
+        type="button"
         aria-label="Crear alimento"
-        className="fixed z-50 bottom-[calc(75px+env(safe-area-inset-bottom))] right-5 w-14 h-14 rounded-full flex items-center justify-center bg-[var(--accent-primary)] hover:brightness-110 active:scale-95 text-[var(--accent-text)] text-2xl font-bold shadow-lg border-none transition-all cursor-pointer"
+        className="mf-fab"
         onClick={() => setIsActionMenuOpen(true)}
       >
-        +
+        <Plus size={26} aria-hidden="true" />
       </button>
 
       <BottomSheet
         isOpen={isActionMenuOpen}
         onClose={() => setIsActionMenuOpen(false)}
-        title="Crear Alimento"
+        title="Crear alimento"
       >
-        <div className="flex flex-col gap-3">
+        <div className="mf-create">
           <button
-            className="btn btn-secondary w-full text-left justify-start"
+            type="button"
+            className="mf-create-option"
             onClick={() => {
               setIsActionMenuOpen(false);
               ai.setIsAiModalOpen(true);
             }}
           >
-            Crear con IA (Texto / Voz)
+            <Sparkles size={20} aria-hidden="true" />
+            <span>
+              <strong>Describirlo</strong>
+              <small>Escribe o dicta lo que has comido y la IA calcula los macros</small>
+            </span>
           </button>
           <button
-            className="btn btn-secondary w-full text-left justify-start"
+            type="button"
+            className="mf-create-option"
             onClick={() => {
               setIsActionMenuOpen(false);
               scanner.setIsScannerOpen(true);
             }}
           >
-            Escanear Código (Barras/QR)
+            <Barcode size={20} aria-hidden="true" />
+            <span>
+              <strong>Escanear el código de barras</strong>
+              <small>Busca el producto y rellena sus datos</small>
+            </span>
           </button>
           <button
-            className="btn btn-secondary w-full text-left justify-start"
+            type="button"
+            className="mf-create-option"
             onClick={() => {
               if (scanner.ocrFileRef.current) scanner.ocrFileRef.current.click();
             }}
           >
-            <ScanLine className="w-5 h-5 mr-2" /> Escanear Etiqueta Nutricional
+            <ScanLine size={20} aria-hidden="true" />
+            <span>
+              <strong>Fotografiar la etiqueta</strong>
+              <small>Lee la tabla nutricional del envase</small>
+            </span>
           </button>
           <button
-            className="btn btn-secondary w-full text-left justify-start"
+            type="button"
+            className="mf-create-option"
             onClick={() => {
               setIsActionMenuOpen(false);
               forms.openNewFoodForm();
             }}
           >
-            <Pencil className="w-5 h-5 mr-2" /> Crear Manualmente
+            <Pencil size={20} aria-hidden="true" />
+            <span>
+              <strong>Rellenarlo a mano</strong>
+              <small>Nombre, kcal y macros por 100 g</small>
+            </span>
           </button>
         </div>
         <button
-          className="btn btn-secondary w-full mt-6 border-zinc-700"
+          type="button"
+          className="btn btn-secondary w-full mt-4"
           onClick={() => setIsActionMenuOpen(false)}
         >
           Cancelar
@@ -357,7 +397,7 @@ export default function MyFoodsPage() {
         >
           <DialogTitle>Escanear</DialogTitle>
           {scanner.lookupError && (
-            <div className="p-3 mb-4 bg-red-500/20 border border-red-500/40 rounded-xl text-red-300 text-sm">
+            <div className="mf-scan-error" role="alert">
               {scanner.lookupError}
             </div>
           )}
@@ -365,17 +405,17 @@ export default function MyFoodsPage() {
           {scanner.isLookingUpCode ? (
             <div className="flex flex-col items-center justify-center py-10 gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-primary)]" />
-              <p className="text-zinc-300 text-sm m-0">Buscando producto...</p>
+              <p className="mf-scan-wait">Buscando el producto…</p>
             </div>
           ) : scanner.scannedProduct ? (
-            <div className="flex flex-col gap-4 p-4 bg-zinc-800/80 rounded-xl border border-zinc-700">
+            <div className="mf-scan">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h4 className="text-white font-semibold text-lg m-0">
+                  <h4 className="mf-scan-name">
                     {scanner.scannedProduct.name}
                   </h4>
                   {scanner.scannedProduct.brand && (
-                    <p className="text-zinc-400 text-sm m-0">{scanner.scannedProduct.brand}</p>
+                    <p className="mf-scan-brand">{scanner.scannedProduct.brand}</p>
                   )}
                 </div>
                 {scanner.scannedProduct.imageUrl && (
@@ -387,32 +427,24 @@ export default function MyFoodsPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-4 gap-2 text-center py-2 bg-zinc-900/60 rounded-lg">
+              <dl className="wk-stats mf-scan-facts" data-cols="4">
                 <div>
-                  <span className="block text-xs text-zinc-400">Kcal</span>
-                  <span className="text-sm font-semibold text-white">
-                    {scanner.scannedProduct.kcal}
-                  </span>
+                  <dt>Kcal</dt>
+                  <dd className="tabular-nums">{scanner.scannedProduct.kcal}</dd>
                 </div>
                 <div>
-                  <span className="block text-xs text-zinc-400">Prot</span>
-                  <span className="text-sm font-semibold text-[var(--color-protein)]">
-                    {scanner.scannedProduct.protein}g
-                  </span>
+                  <dt>Proteína</dt>
+                  <dd className="tabular-nums">{scanner.scannedProduct.protein} g</dd>
                 </div>
                 <div>
-                  <span className="block text-xs text-zinc-400">Carbs</span>
-                  <span className="text-sm font-semibold text-[var(--color-carbs)]">
-                    {scanner.scannedProduct.carbs}g
-                  </span>
+                  <dt>Hidratos</dt>
+                  <dd className="tabular-nums">{scanner.scannedProduct.carbs} g</dd>
                 </div>
                 <div>
-                  <span className="block text-xs text-zinc-400">Grasa</span>
-                  <span className="text-sm font-semibold text-[var(--color-fat)]">
-                    {scanner.scannedProduct.fat}g
-                  </span>
+                  <dt>Grasa</dt>
+                  <dd className="tabular-nums">{scanner.scannedProduct.fat} g</dd>
                 </div>
-              </div>
+              </dl>
 
               <div className="flex gap-2 mt-2">
                 <button

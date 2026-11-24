@@ -2,7 +2,11 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { CompletedWorkout, WorkoutExercise } from './types';
 
-const kgFmt = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
+// es-ES only groups from five digits by default; "always" keeps 6.295 kg consistent with 13.300 kg.
+const kgFmt = new Intl.NumberFormat('es-ES', {
+  maximumFractionDigits: 1,
+  useGrouping: 'always',
+} as unknown as Intl.NumberFormatOptions);
 
 export function formatKg(n: number) {
   return `${kgFmt.format(n)} kg`;
@@ -17,6 +21,14 @@ export function formatDuration(ms: number) {
     return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+/** Session length for summaries: "58 min", "1 h 09 min". */
+export function formatSessionLength(ms: number) {
+  const totalMin = Math.max(0, Math.round(ms / 60000));
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return h > 0 ? `${h} h ${String(m).padStart(2, '0')} min` : `${m} min`;
 }
 
 export function formatRest(sec: number) {

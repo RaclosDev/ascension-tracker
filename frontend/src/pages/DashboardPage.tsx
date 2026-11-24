@@ -11,7 +11,6 @@ import { es } from 'date-fns/locale';
 import { Skeleton } from '../components/ui/skeleton';
 import { DashboardChartsSkeleton } from '../components/workout/skeletons/DashboardChartsSkeleton';
 import { QuickWeightCard } from '../components/dashboard/QuickWeightCard';
-import { GoalTrack } from '../components/dashboard/GoalTrack';
 import { RatePicker } from '../components/dashboard/RatePicker';
 import { useRatePreference, calcEstimatedDate, formatEstimate } from '../hooks/useRatePreference';
 import { hasBodyTracking, hasNutrition } from '../lib/appModules';
@@ -19,6 +18,7 @@ import { PowerliftingCard } from '../components/workout/PowerliftingCard';
 import { TodayCard } from '../components/dashboard/TodayCard';
 import { useMyCoaches } from '../lib/coach/api';
 import '../styles/athlete-home.css';
+import { HomeOverview } from '../components/dashboard/HomeOverview';
 
 const WeightTrendChart = lazyWithRetry<ComponentProps<typeof Charts.WeightTrendChart>>(() =>
   import('../components/dashboard/WeightCharts').then((m) => ({ default: m.WeightTrendChart })),
@@ -26,9 +26,6 @@ const WeightTrendChart = lazyWithRetry<ComponentProps<typeof Charts.WeightTrendC
 const WeeklyChangeChart = lazyWithRetry<ComponentProps<typeof Charts.WeeklyChangeChart>>(() =>
   import('../components/dashboard/WeightCharts').then((m) => ({ default: m.WeeklyChangeChart })),
 );
-
-const signed = (n: number, digits = 1) =>
-  `${n > 0 ? '+' : n < 0 ? '−' : ''}${Math.abs(n).toFixed(digits)}`;
 
 export default function DashboardPage() {
   const { pref, update: updateRatePref } = useRatePreference();
@@ -207,7 +204,6 @@ export default function DashboardPage() {
 
   if (!dashboard || !settings) return <QueryErrorNotice retry={retry} pending={isFetching} />;
 
-  const gaining = settings.goalWeight > settings.startWeight;
   const historyRate = Math.abs(dashboard.avgWeeklyChange ?? 0);
   const effectiveRate =
     pref.mode === 'goal'
@@ -224,95 +220,40 @@ export default function DashboardPage() {
           calcEstimatedDate(dashboard.currentWeight, settings.goalWeight, effectiveRate),
         );
   const change = dashboard.totalLost;
-  const pace = dashboard.avgWeeklyChange ?? 0;
 
+  const props = {
+    todayDateStr,
+    todayWeight: todayEntry?.weight,
+    previousWeight: yesterdayWeight,
+    currentWeight: dashboard.currentWeight,
+    weights,
+    start: settings.startWeight,
+    goal: settings.goalWeight,
+    arrival,
+    rate: effectiveRate,
+    ratePicker: (
+      <RatePicker
+        rate={effectiveRate}
+        pref={pref}
+        onChange={updateRatePref}
+        weeklyGoal={settings.weeklyGoal}
+      />
+    ),
+    weeklyAverage: dashboard.currentWeeklyAverage || undefined,
+    change,
+    streak: dashboard.streak,
+    showNutrition,
+    chart: (
+      <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
+        <WeightTrendChart data={weightChartData} goalWeight={settings.goalWeight} height={280} />
+      </Suspense>
+    ),
+  };
   return (
     <div className="fade-in home">
       {hasError && <QueryErrorNotice retry={retry} pending={isFetching} />}
       <h1 className="page-title-desktop">Inicio</h1>
-
-      <section className="card home-hero" aria-label="Peso">
-        <div className="home-hero-side">
-          <QuickWeightCard
-            variant="hero"
-            gaining={gaining}
-            todayLabel={todayLabel}
-            todayDateStr={todayDateStr}
-            todayWeight={todayEntry?.weight}
-            recentWeight={recentWeight}
-            yesterdayWeight={yesterdayWeight}
-            hasTodayWeight={hasTodayWeight}
-          />
-          <GoalTrack
-            start={settings.startWeight}
-            current={dashboard.currentWeight}
-            goal={settings.goalWeight}
-            arrival={arrival}
-            pace={
-              <RatePicker
-                rate={effectiveRate}
-                pref={pref}
-                onChange={updateRatePref}
-                weeklyGoal={settings.weeklyGoal}
-              />
-            }
-          />
-        </div>
-        <div className="home-hero-chart">
-          <Suspense fallback={<Skeleton className="h-[340px] w-full" />}>
-            <WeightTrendChart
-              data={weightChartData}
-              goalWeight={settings.goalWeight}
-              height={300}
-            />
-          </Suspense>
-        </div>
-      </section>
-
-      <dl className="card home-stats">
-        <div className="home-stat">
-          <dt>Media 7 días</dt>
-          <dd className="tabular-nums">
-            {dashboard.currentWeeklyAverage ? dashboard.currentWeeklyAverage.toFixed(1) : '—'}
-            <small>kg</small>
-          </dd>
-        </div>
-        <div className="home-stat">
-          <dt>Desde el inicio</dt>
-          <dd
-            className="tabular-nums"
-            data-tone={(gaining ? change > 0 : change < 0) ? 'good' : undefined}
-          >
-            {signed(change)}
-            <small>kg</small>
-          </dd>
-        </div>
-        <div className="home-stat">
-          <dt>Ritmo medio</dt>
-          <dd className="tabular-nums">
-            {signed(pace, 2)}
-            <small>kg/sem</small>
-          </dd>
-        </div>
-        <div className="home-stat">
-          <dt>Racha de registro</dt>
-          <dd className="tabular-nums">
-            {dashboard.streak}
-            <small>{dashboard.streak === 1 ? 'día' : 'días'}</small>
-          </dd>
-        </div>
-      </dl>
-
-      <div className="home-lower">
-        <section className="card home-change">
-          <Suspense fallback={<Skeleton className="h-[240px] w-full" />}>
-            <WeeklyChangeChart data={deltaData} gaining={gaining} />
-          </Suspense>
-        </section>
-        <aside className="home-today" aria-label="Plan de hoy">
-          <TodayCard showNutrition={showNutrition} />
-        </aside>
-      </div>
+      <HomeOverview {...props} />
     </div>
   );
 }

@@ -407,7 +407,7 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
                       );
                     })()}
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      {Math.round(editingLog.kcal)} kcal | P: {editingLog.protein.toFixed(1)}g | C:{' '}
+                      {Math.round(editingLog.kcal)} kcal | P: {editingLog.protein.toFixed(1)}g | H:{' '}
                       {editingLog.carbs.toFixed(1)}g | G: {editingLog.fat.toFixed(1)}g
                     </div>
                     <div
@@ -477,7 +477,7 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
                           </span>
                           {' • '}
                           {Math.round(Number(log.kcal) || 0)} kcal | P:{' '}
-                          {(Number(log.protein) || 0).toFixed(1)}g | C:{' '}
+                          {(Number(log.protein) || 0).toFixed(1)}g | H:{' '}
                           {(Number(log.carbs) || 0).toFixed(1)}g | G:{' '}
                           {(Number(log.fat) || 0).toFixed(1)}g
                         </div>

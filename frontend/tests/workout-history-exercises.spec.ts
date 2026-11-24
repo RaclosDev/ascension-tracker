@@ -143,9 +143,9 @@ test.describe('Workout History and Exercise Catalog', () => {
     await expect(detailModal).toBeVisible({ timeout: 10000 });
     await expect(detailModal.getByRole('heading', { name: 'Torso Potencia' })).toBeVisible();
 
-    // Verificar duración (1:00:00)
+    // Verificar duración (1 h 00 min)
     await expect(detailModal.getByRole('term').filter({ hasText: /^Duración$/ })).toBeVisible();
-    await expect(detailModal.getByText('1:00:00')).toBeVisible();
+    await expect(detailModal.getByText('1 h 00 min')).toBeVisible();
 
     // Verificar volumen total (80*8 + 80*8 = 1280 kg)
     await expect(detailModal.getByRole('term').filter({ hasText: /^Volumen$/ })).toBeVisible();
@@ -250,7 +250,7 @@ test.describe('Workout History and Exercise Catalog', () => {
     await expect(workoutCard).toBeVisible({ timeout: 15000 });
 
     // Click en el botón de editar en la tarjeta (primer botón secundario de acciones de la tarjeta)
-    const editBtn = workoutCard.locator('.btn-secondary, button:has(svg)').first();
+    const editBtn = workoutCard.getByRole('button', { name: 'Editar entrenamiento' });
     await expect(editBtn).toBeVisible({ timeout: 10000 });
     await editBtn.click();
 
@@ -492,7 +492,7 @@ test.describe('Workout History and Exercise Catalog', () => {
     await expect(customCard).toBeVisible({ timeout: 15000 });
 
     // Abrir menú de opciones
-    const moreMenuBtn = customCard.getByRole('button', { name: 'Más opciones' });
+    const moreMenuBtn = customCard.getByRole('button', { name: /^Opciones de /i });
     await expect(moreMenuBtn).toBeVisible({ timeout: 10000 });
     await moreMenuBtn.click();
 

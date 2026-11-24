@@ -17,7 +17,7 @@
     transition: width 0.28s var(--rail-ease) 0.22s;
   }
   .has-rail > .sidebar:hover,
-  .has-rail > .sidebar:focus-within {
+  .has-rail > .sidebar:has(:focus-visible) {
     width: var(--sidebar-width);
     transition-delay: 0.06s;
   }
@@ -25,7 +25,7 @@
   .has-rail > .main-content {
     transition: transform 0.28s var(--rail-ease) 0.22s;
   }
-  .has-rail:has(> .sidebar:hover, > .sidebar:focus-within) > .main-content {
+  .has-rail:has(> .sidebar:hover, > .sidebar :focus-visible) > .main-content {
     transform: translateX(calc(var(--sidebar-width) - var(--rail-width)));
     transition-delay: 0.06s;
   }
@@ -74,14 +74,14 @@
   }
 
   .has-rail > .sidebar:hover .nav-label,
-  .has-rail > .sidebar:focus-within .nav-label,
+  .has-rail > .sidebar:has(:focus-visible) .nav-label,
   .has-rail > .sidebar:hover .sidebar-brand-container,
-  .has-rail > .sidebar:focus-within .sidebar-brand-container {
+  .has-rail > .sidebar:has(:focus-visible) .sidebar-brand-container {
     opacity: 1;
     transition-delay: 0.16s;
   }
   .has-rail > .sidebar:hover .sidebar-mono,
-  .has-rail > .sidebar:focus-within .sidebar-mono {
+  .has-rail > .sidebar:has(:focus-visible) .sidebar-mono {
     opacity: 0;
     transition-delay: 0s;
   }

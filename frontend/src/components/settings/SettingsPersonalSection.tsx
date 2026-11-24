@@ -109,7 +109,7 @@ export function SettingsPersonalSection({
           <div className="settings-fields">
             <div className="form-group">
               <label htmlFor="settings-personal-section-peso-inicial-kg" className="form-label">
-                Peso Inicial (kg)
+                Peso inicial (kg)
               </label>
               <input
                 id="settings-personal-section-peso-inicial-kg"
@@ -160,7 +160,7 @@ export function SettingsPersonalSection({
             </div>
             <div className="form-group is-wide-narrow">
               <label htmlFor="settings-personal-section-fecha-de-inicio" className="form-label">
-                Fecha de Inicio
+                Fecha de inicio
               </label>
               <DatePicker
                 id="settings-personal-section-fecha-de-inicio"
@@ -178,7 +178,7 @@ export function SettingsPersonalSection({
           onClick={onSave}
           disabled={isSaving}
         >
-          {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+          {isSaving ? 'Guardando...' : 'Guardar cambios'}
         </button>
       </div>
     </div>

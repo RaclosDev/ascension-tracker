@@ -3,7 +3,6 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { ComponentProps } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import type { TrackingEntryModal } from '../components/tracking/TrackingEntryModal';
-import type { TrackingDayCell } from '../components/tracking/TrackingDayCell';
 import TrackingPage from '../pages/TrackingPage';
 
 const mocks = vi.hoisted(() => ({
@@ -17,16 +16,19 @@ vi.mock('react-hot-toast', () => ({ default: { error: mocks.error, success: vi.f
 vi.mock('@tanstack/react-query', () => ({
   useQueryClient: () => ({ invalidateQueries: mocks.invalidate }),
   useQuery: () => ({
-    data: [{ weekStart: '2026-10-26', days: [{ weight: 80, steps: 100, calories: null }] }],
+    data: [
+      {
+        weekStart: '2026-10-26',
+        averageWeight: 80,
+        averageSteps: 100,
+        averageCalories: null,
+        days: [{ weight: 80, steps: 100, calories: null }],
+      },
+    ],
     isLoading: false,
   }),
 }));
 vi.mock('../components/photos/ProgressPhotosSection', () => ({ default: () => null }));
-vi.mock('../components/tracking/TrackingDayCell', () => ({
-  TrackingDayCell: (props: ComponentProps<typeof TrackingDayCell>) => (
-    <button onClick={() => props.onOpenModal(props)}>Open day</button>
-  ),
-}));
 vi.mock('../components/tracking/TrackingEntryModal', () => ({
   TrackingEntryModal: (props: ComponentProps<typeof TrackingEntryModal>) =>
     props.modalData && (
@@ -50,6 +52,11 @@ vi.mock('../components/tracking/TrackingEntryModal', () => ({
       </div>
     ),
 }));
+/** Past weeks start collapsed: open the week, then its Monday. */
+const openDay = () => {
+  fireEvent.click(screen.getByRole('button', { expanded: false }));
+  fireEvent.click(screen.getByRole('button', { name: /lunes 26 de octubre/ }));
+};
 beforeEach(() => {
   mocks.post.mockResolvedValue({});
   mocks.delete.mockResolvedValue({});
@@ -62,7 +69,7 @@ afterEach(() => {
 
 it('rejects invalid steps before saving an otherwise valid weight', async () => {
   render(<TrackingPage />, { wrapper: MemoryRouter });
-  fireEvent.click(screen.getByText('Open day'));
+  openDay();
   fireEvent.change(screen.getByLabelText('Weight'), { target: { value: '81' } });
   fireEvent.change(screen.getByLabelText('Steps'), { target: { value: '12.5' } });
   fireEvent.click(screen.getByText('Save day'));
@@ -79,7 +86,7 @@ it.each(['Save day', 'Delete day'])(
       .mockRejectedValueOnce(new Error('offline'))
       .mockResolvedValue({});
     render(<TrackingPage />, { wrapper: MemoryRouter });
-    fireEvent.click(screen.getByText('Open day'));
+    openDay();
     fireEvent.change(screen.getByLabelText('Weight'), { target: { value: '81' } });
     fireEvent.change(screen.getByLabelText('Steps'), { target: { value: '200' } });
     fireEvent.click(screen.getByText(action));

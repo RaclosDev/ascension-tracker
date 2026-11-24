@@ -26,7 +26,7 @@ export default function NutritionSection({
   const ownLine = plan.isSuccess && !plan.data && own && (
     <p className="athlete-nutrition-own">
       Objetivos propios de tu atleta: {num(own.kcal, ' kcal')} · P{' '}
-      {num(own.customProteinGrams, ' g')} · C {num(own.customCarbsGrams, ' g')} · G{' '}
+      {num(own.customProteinGrams, ' g')} · H {num(own.customCarbsGrams, ' g')} · G{' '}
       {num(own.customFatGrams, ' g')}
     </p>
   );

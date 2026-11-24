@@ -135,12 +135,12 @@ test.describe('Nutrition Diary & Barcode Scanner Flows', () => {
     await page.getByRole('button', { name: /^Mis Alimentos$/i }).click();
 
     // Click floating action button "+" to open menu
-    const fabBtn = page.locator('button:has-text("+")').last();
+    const fabBtn = page.getByRole('button', { name: 'Crear alimento', exact: true });
     await expect(fabBtn).toBeVisible({ timeout: 10000 });
     await fabBtn.click();
 
     // Click "Escanear Código (Barras/QR)"
-    const scanOption = page.getByRole('button', { name: /Escanear Código/i });
+    const scanOption = page.getByRole('button', { name: /Escanear el código de barras/i });
     await expect(scanOption).toBeVisible({ timeout: 5000 });
     await scanOption.click();
 
@@ -171,9 +171,9 @@ test.describe('Nutrition Diary & Barcode Scanner Flows', () => {
     await expect(page.getByText('Avena Integral Suave')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Hacendado')).toBeVisible();
     await expect(page.getByText('375')).toBeVisible();
-    await expect(page.getByText('13.5g')).toBeVisible();
-    await expect(page.getByText('58.7g')).toBeVisible();
-    await expect(page.getByText('7g', { exact: true })).toBeVisible();
+    await expect(page.getByText('13.5 g')).toBeVisible();
+    await expect(page.getByText('58.7 g')).toBeVisible();
+    await expect(page.getByText('7 g', { exact: true })).toBeVisible();
 
     // Action buttons "Guardar" and "Editar" must be visible
     const saveScannedBtn = page.getByRole('button', { name: 'Guardar', exact: true });
@@ -213,9 +213,9 @@ test.describe('Nutrition Diary & Barcode Scanner Flows', () => {
     await page.getByRole('button', { name: /^Mis Alimentos$/i }).click();
 
     // Open scanner modal
-    const fabBtn = page.locator('button:has-text("+")').last();
+    const fabBtn = page.getByRole('button', { name: 'Crear alimento', exact: true });
     await fabBtn.click();
-    await page.getByRole('button', { name: /Escanear Código/i }).click();
+    await page.getByRole('button', { name: /Escanear el código de barras/i }).click();
 
     await expect(page.getByRole('heading', { name: 'Escanear' })).toBeVisible({ timeout: 5000 });
 

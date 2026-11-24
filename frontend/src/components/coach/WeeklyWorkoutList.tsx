@@ -17,7 +17,7 @@ import { WorkoutSessionStats } from '../workout/WorkoutSessionSummary';
 import {
   completedSets,
   formatDay,
-  formatDuration,
+  formatSessionLength,
   formatKg,
   sessionVolume,
 } from '../../lib/workout/format';
@@ -104,7 +104,7 @@ export function WeeklyWorkoutList({
           </div>
           <div>
             <dt>Tiempo</dt>
-            <dd>{time ? formatDuration(time) : '—'}</dd>
+            <dd>{time ? formatSessionLength(time) : '—'}</dd>
           </div>
         </dl>
       </header>
@@ -126,7 +126,7 @@ export function WeeklyWorkoutList({
                     </span>
                     <span className="coach-workout-calendar-meta">
                       {completedSets(workout.exercises)} series ·{' '}
-                      {formatDuration(workout.finishedAt - workout.startedAt)}
+                      {formatSessionLength(workout.finishedAt - workout.startedAt)}
                     </span>
                     {workout.exercises.length > 0 && (
                       <ul className="coach-workout-calendar-exercises" aria-label="Ejercicios">

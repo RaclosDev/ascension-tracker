@@ -35,40 +35,39 @@ export function ExerciseFilterBar({
   hiddenEquipments = [],
 }: ExerciseFilterBarProps) {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="relative">
+    <div className="ex-filters">
+      <div className="ex-search">
         <label htmlFor="exercise-search-input" className="sr-only">
           Buscar ejercicios
         </label>
         <Search
-          size={14}
-          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+          size={16}
+          className="ex-search-icon"
           aria-hidden="true"
         />
         <input
           id="exercise-search-input"
           type="search"
           aria-label="Buscar ejercicio por nombre"
-          className="form-input w-full py-1.5 pr-2 text-sm"
-          style={{ paddingLeft: '2.25rem' }}
+          className="form-input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar press, sentadilla"
+          placeholder="Buscar ejercicio"
         />
       </div>
 
-      <div className="flex gap-2">
+      <div className="ex-selects">
         <label htmlFor="filter-muscle-select" className="sr-only">
           Filtrar por grupo muscular
         </label>
         <Select
           id="filter-muscle-select"
           aria-label="Filtrar por grupo muscular"
-          className="form-input flex-1 p-1.5 text-xs"
+          className="form-input"
           value={filterMuscle}
           onChange={(e) => setFilterMuscle(e.target.value as MuscleGroup | 'ALL')}
         >
-          <option value="ALL">Músculo (Todos)</option>
+          <option value="ALL">Músculo</option>
           {MUSCLE_OPTIONS.map((m) => (
             <option key={m.id} value={m.id}>
               {m.label}
@@ -81,11 +80,11 @@ export function ExerciseFilterBar({
         <Select
           id="filter-equipment-select"
           aria-label="Filtrar por equipamiento"
-          className="form-input flex-1 p-1.5 text-xs"
+          className="form-input"
           value={filterEquip}
           onChange={(e) => setFilterEquip(e.target.value as Equipment | 'ALL')}
         >
-          <option value="ALL">Material (Todos)</option>
+          <option value="ALL">Material</option>
           {EQUIPMENT_OPTIONS.filter((eq) => !hiddenEquipments.includes(eq.id)).map((eq) => (
             <option key={eq.id} value={eq.id}>
               {eq.label}
@@ -94,11 +93,7 @@ export function ExerciseFilterBar({
         </Select>
       </div>
 
-      <div
-        className="flex bg-secondary p-1 rounded-lg"
-        role="tablist"
-        aria-label="Filtro de ejercicios"
-      >
+      <div className="ex-kinds" role="tablist" aria-label="Filtro de ejercicios">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -106,11 +101,7 @@ export function ExerciseFilterBar({
             role="tab"
             aria-selected={filter === tab.id}
             onClick={() => setFilter(tab.id)}
-            className={`flex-1 py-1 px-3 rounded-md text-xs font-semibold transition-all ${
-              filter === tab.id
-                ? 'bg-primary text-primary-foreground'
-                : 'text-[var(--text-secondary)]'
-            }`}
+            className="ex-kind"
           >
             {tab.label}
           </button>

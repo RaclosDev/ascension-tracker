@@ -393,7 +393,7 @@ export default function SettingsPage() {
                     setForm({ ...form, kcal });
                     goToSection('macros');
                     toast.success(
-                      `Calorías aplicadas (${kcal} kcal). Recuerda pulsar "Guardar Macros" para confirmar los cambios.`,
+                      `Calorías aplicadas (${kcal} kcal). Recuerda pulsar «Guardar macros» para confirmar los cambios.`,
                       { duration: 4500 },
                     );
                   }}
@@ -422,7 +422,7 @@ export default function SettingsPage() {
                     style={{ width: '100%', marginTop: '0.5rem' }}
                     onClick={handleSaveMacros}
                   >
-                    Guardar Macros
+                    Guardar macros
                   </button>
                 </MacroEditorGate>
               </div>

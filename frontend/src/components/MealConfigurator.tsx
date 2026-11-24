@@ -340,7 +340,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
           onClick={handleAddMeal}
           disabled={saving}
         >
-          Añadir Comida
+          Añadir comida
         </button>
         <button
           className="btn btn-secondary"
@@ -349,7 +349,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
           disabled={saving}
           title="Restablecer las 4 comidas por defecto (Desayuno, Comida, Cena, Snacks)"
         >
-          Por Defecto
+          Por defecto
         </button>
       </div>
 
@@ -358,7 +358,7 @@ export default function MealConfigurator({ onSaved }: { onSaved?: () => void }) 
         onClick={handleSaveAll}
         disabled={saving || loading || meals.length === 0}
       >
-        {saving ? 'Guardando...' : 'Guardar Comidas y Macros'}
+        {saving ? 'Guardando...' : 'Guardar comidas y macros'}
       </button>
     </div>
   );

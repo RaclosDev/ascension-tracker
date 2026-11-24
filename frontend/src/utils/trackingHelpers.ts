@@ -4,6 +4,9 @@ export const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 export const WEIGHT_DELTAS = [-0.5, -0.1, 0.1, 0.5];
 export const STEPS_DELTAS = [-1000, -100, 100, 1000];
 
+/** Body weight with one decimal, or two when the scale gave a second one (80.6, 80.65). */
+export const formatBodyKg = (w: number) => (Math.round(w * 100) % 10 ? w.toFixed(2) : w.toFixed(1));
+
 export function getMondayStr(date: Date = new Date()): string {
   const d = new Date(date);
   const day = d.getDay();

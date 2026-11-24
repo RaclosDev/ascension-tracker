@@ -25,65 +25,23 @@ export default function CalculatorCard({
   };
 
   return (
-    <div
-      className={`card accordion-card transition-all duration-300 ease-out ${isOpen ? 'open' : ''}`}
-      style={{
-        background: 'var(--bg-card, #1C1C1E)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: '16px',
-        padding: isOpen ? '1.15rem 1.25rem' : '0.875rem 1.15rem',
-      }}
-    >
-      <button
-        className="accordion-header flex justify-between items-center w-full min-h-11 cursor-pointer select-none text-left p-0 border-none bg-transparent"
-        onClick={toggle}
-        aria-expanded={isOpen}
-        type="button"
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          {icon && (
-            <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[var(--accent-primary)] flex-shrink-0">
-              {icon}
-            </div>
-          )}
-          <div className="min-w-0">
-            <div className="card-title m-0 text-base font-semibold text-white leading-snug text-balance">
-              {title}
-            </div>
-            {subtitle && (
-              <div className="text-xs text-[var(--text-secondary)] mt-0.5 leading-snug text-pretty">
-                {subtitle}
-              </div>
-            )}
-          </div>
-        </div>
-        <span
-          className={`text-xs text-[var(--text-secondary)] transition-transform duration-300 flex-shrink-0 ml-2 ${
-            isOpen ? 'rotate-180' : 'rotate-0'
-          }`}
-        >
-          <ChevronDown size={18} />
+    <div className="card calc-card" data-open={isOpen || undefined}>
+      <button className="calc-head" onClick={toggle} aria-expanded={isOpen} type="button">
+        {icon && (
+          <span className="calc-icon" aria-hidden="true">
+            {icon}
+          </span>
+        )}
+        <span className="calc-text">
+          <span className="calc-title">{title}</span>
+          {subtitle && <span className="calc-sub">{subtitle}</span>}
         </span>
+        <ChevronDown size={18} aria-hidden="true" className="calc-chevron" />
       </button>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateRows: isOpen ? '1fr' : '0fr',
-          transition: 'grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-      >
-        <div style={{ overflow: 'hidden' }}>
-          <div
-            className="accordion-content"
-            style={{
-              marginTop: '0.85rem',
-              paddingTop: '0.85rem',
-              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-            }}
-          >
-            {children}
-          </div>
+      <div className="calc-fold">
+        <div className="calc-fold-inner" inert={!isOpen}>
+          <div className="calc-body">{children}</div>
         </div>
       </div>
     </div>

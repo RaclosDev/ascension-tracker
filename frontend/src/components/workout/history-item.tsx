@@ -36,95 +36,44 @@ export const HistoryItem = React.memo(function HistoryItem({
 
   return (
     <li>
-      <article className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex' }}>
-        <button
-          type="button"
-          onClick={handleSetDetail}
-          style={{
-            flex: 1,
-            minWidth: 0,
-            padding: '1rem',
-            textAlign: 'left',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'inherit',
-          }}
-        >
-          <WorkoutSessionSummary workout={w} catalog={catalog} />
-        </button>
-
-        <div
-          style={{
-            width: '130px',
-            flexShrink: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1rem 0.25rem',
-            gap: '0.5rem',
-          }}
-        >
-          <div style={{ width: '100%', opacity: 0.8 }}>
+      <article className="card wk-session">
+        <div className="wk-session-body">
+          <button type="button" className="wk-session-main" onClick={handleSetDetail}>
+            <WorkoutSessionSummary workout={w} catalog={catalog} />
+          </button>
+          <div className="wk-session-map" aria-hidden="true">
             <BodyHeatmap history={[w]} customExercises={customExercises} hideTitle />
           </div>
-
-          <div
-            style={{
-              display: 'flex',
-              gap: '0.35rem',
-              flexWrap: 'nowrap',
-              justifyContent: 'center',
-            }}
+        </div>
+        <div className="wk-session-actions">
+          <button
+            type="button"
+            onClick={handleStart}
+            className="wk-link"
+            aria-label="Repetir entrenamiento"
           >
+            <Repeat2 size={16} aria-hidden="true" /> Repetir
+          </button>
+          <span>
             <button
+              type="button"
               onClick={handleEdit}
-              className="btn btn-secondary"
-              style={{
-                padding: '0.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '38px',
-                height: '38px',
-              }}
+              className="icon-btn"
+              title="Editar"
               aria-label="Editar entrenamiento"
             >
-              <Edit3 size={16} />
+              <Edit3 size={16} aria-hidden="true" />
             </button>
             <button
-              onClick={handleStart}
-              className="btn btn-secondary"
-              style={{
-                padding: '0.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '38px',
-                height: '38px',
-              }}
-              aria-label="Repetir entrenamiento"
-            >
-              <Repeat2 size={16} />
-            </button>
-            <button
+              type="button"
               onClick={handleDelete}
-              className="btn btn-secondary"
-              style={{
-                padding: '0.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '38px',
-                height: '38px',
-                color: 'var(--color-danger)',
-              }}
+              className="icon-btn wk-session-delete"
+              title="Borrar"
               aria-label="Borrar entrenamiento"
             >
-              <Trash2 size={16} />
+              <Trash2 size={16} aria-hidden="true" />
             </button>
-          </div>
+          </span>
         </div>
       </article>
     </li>

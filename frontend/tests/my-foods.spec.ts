@@ -178,9 +178,7 @@ function getSearchBox(page: Page) {
 }
 
 function getViewModeButton(page: Page) {
-  return page
-    .getByRole('button', { name: /cuadr[ií]cula|lista/i })
-    .or(page.locator('.mobile-scroll-x + button'));
+  return page.getByRole('button', { name: /^ver como (cuadr[ií]cula|lista)$/i });
 }
 
 async function openNewFoodModal(page: Page) {
@@ -193,7 +191,7 @@ async function openNewFoodModal(page: Page) {
     .getByRole('button', { name: 'Crear alimento' })
     .or(page.getByRole('button', { name: /crear nuevo alimento/i }));
   await fab.click();
-  const manualBtn = page.getByRole('button', { name: /crear manualmente/i });
+  const manualBtn = page.getByRole('button', { name: /rellenarlo a mano/i });
   await manualBtn.click();
 }
 
@@ -230,34 +228,30 @@ test.describe('Mis Alimentos & Recetas (MyFoodsPage)', () => {
 
     // 1.2 Filtro por tipo (Todos, Mis Alimentos, Recetas)
     // Filtro Recetas
-    const recipesTab = page
-      .locator('.mobile-scroll-x button')
-      .filter({ has: page.locator('svg.lucide-chef-hat') });
+    const kinds = page.getByRole('group', { name: 'Qué mostrar' });
+    const recipesTab = kinds.getByRole('button', { name: /^Recetas/ });
     await recipesTab.click();
     await expect(page.getByText('Tortilla de Avena')).toBeVisible();
     await expect(page.getByText('Pechuga de Pollo')).not.toBeVisible();
 
     // Filtro Alimentos
-    const foodsTab = page
-      .locator('.mobile-scroll-x button')
-      .filter({ has: page.locator('svg.lucide-apple') });
+    const foodsTab = kinds.getByRole('button', { name: /^Alimentos/ });
     await foodsTab.click();
     await expect(page.getByText('Pechuga de Pollo')).toBeVisible();
     await expect(page.getByText('Tortilla de Avena')).not.toBeVisible();
 
     // Filtro Todos
-    const allTab = page
-      .locator('.mobile-scroll-x button')
-      .filter({ has: page.locator('svg.lucide-layout-grid') });
+    const allTab = kinds.getByRole('button', { name: /^Todo/ });
     await allTab.click();
     await expect(page.getByText('Pechuga de Pollo')).toBeVisible();
     await expect(page.getByText('Tortilla de Avena')).toBeVisible();
 
     // 1.3 Filtro por macro predominante (Proteína, Hidratos, Grasas)
-    const proteinBtn = page.getByRole('button', { name: /^Prote[ií]na$/i });
-    const carbsBtn = page.getByRole('button', { name: /^Carbos$/i });
-    const fatBtn = page.getByRole('button', { name: /^Grasa$/i });
-    const allMacroBtn = page.getByRole('button', { name: /^Todos$/i });
+    const macros = page.getByRole('group', { name: 'Macro predominante' });
+    const proteinBtn = macros.getByRole('button', { name: 'Proteína', exact: true });
+    const carbsBtn = macros.getByRole('button', { name: 'Hidratos', exact: true });
+    const fatBtn = macros.getByRole('button', { name: 'Grasa', exact: true });
+    const allMacroBtn = macros.getByRole('button', { name: 'Todos', exact: true });
 
     // Filtrar por Proteína
     await proteinBtn.click();
@@ -290,9 +284,7 @@ test.describe('Mis Alimentos & Recetas (MyFoodsPage)', () => {
     await chooseOption(sortSelect, 'name_asc');
 
     // Verificar orden alfabético A-Z
-    const foodCards = page
-      .locator('.food-card')
-      .or(page.locator('div[draggable="true"]').filter({ hasText: /kcal/i }));
+    const foodCards = page.locator('.mf-list[data-view] > li.mf-item');
     await expect(foodCards.first()).toBeVisible();
 
     const firstCardText = await foodCards.nth(0).innerText();
@@ -317,24 +309,20 @@ test.describe('Mis Alimentos & Recetas (MyFoodsPage)', () => {
     await navigateToMyFoods(page);
 
     const toggleButton = getViewModeButton(page);
-    const gridContainer = page.locator('.grid.grid-cols-1.md\\:grid-cols-2');
+    const foodList = page.locator('.mf-list[data-view]');
 
     // Por defecto inicia en vista cuadrícula (grid)
-    await expect(gridContainer).toBeVisible();
+    await expect(foodList).toHaveAttribute('data-view', 'grid');
+    await expect(toggleButton).toHaveAccessibleName('Ver como lista');
 
     // Alternar a vista lista
     await toggleButton.click();
-    await expect(gridContainer).not.toBeVisible();
-
-    // Verificar que los alimentos ahora se listan con la estructura de fila/lista
-    const listContainer = page
-      .locator('.flex.flex-col.gap-2')
-      .filter({ hasText: 'Pechuga de Pollo' });
-    await expect(listContainer).toBeVisible();
+    await expect(foodList).toHaveAttribute('data-view', 'list');
+    await expect(foodList.getByText('Pechuga de Pollo')).toBeVisible();
 
     // Alternar de regreso a vista cuadrícula
     await toggleButton.click();
-    await expect(gridContainer).toBeVisible();
+    await expect(foodList).toHaveAttribute('data-view', 'grid');
   });
 
   test('3. Crear y editar alimento manual: cálculo automático de Kcal, POST y PUT', async ({
@@ -403,11 +391,7 @@ test.describe('Mis Alimentos & Recetas (MyFoodsPage)', () => {
     });
 
     // 3.2 Editar alimento manual existente con PUT /api/nutrition/my-foods/{id}
-    const chickenCard = page
-      .locator('.food-card')
-      .or(page.locator('div[draggable="true"]'))
-      .filter({ hasText: 'Pechuga de Pollo' })
-      .first();
+    const chickenCard = page.locator('li.mf-item').filter({ hasText: 'Pechuga de Pollo' }).first();
     await chickenCard.getByTitle('Editar').click();
 
     await expect(modal).toBeVisible();
@@ -487,10 +471,7 @@ test.describe('Mis Alimentos & Recetas (MyFoodsPage)', () => {
     });
 
     // 4.2 Eliminar receta existente con DELETE /api/nutrition/recipes/{id}
-    const recipeCard = page
-      .locator('.recipe-card')
-      .or(page.locator('div[draggable]').filter({ hasText: 'Tortilla de Avena' }))
-      .first();
+    const recipeCard = page.locator('li.mf-item').filter({ hasText: 'Tortilla de Avena' }).first();
     await recipeCard.getByTitle('Editar').click();
 
     // Formulario de edición abierto
@@ -522,30 +503,22 @@ test.describe('Mis Alimentos & Recetas (MyFoodsPage)', () => {
 
     await navigateToMyFoods(page);
 
-    const bulkToolbar = page.locator('.bulk-action-bar');
+    const bulkToolbar = page.getByRole('region', { name: 'Alimentos seleccionados' });
 
     // Inicialmente no debe haber ninguna barra de acciones en masa
     await expect(bulkToolbar).not.toBeVisible();
 
-    const chickenCard = page
-      .locator('.food-card')
-      .or(page.locator('div[draggable="true"]'))
-      .filter({ hasText: 'Pechuga de Pollo' })
-      .first();
+    const chickenCard = page.locator('li.mf-item').filter({ hasText: 'Pechuga de Pollo' }).first();
 
-    const riceCard = page
-      .locator('.food-card')
-      .or(page.locator('div[draggable="true"]'))
-      .filter({ hasText: 'Arroz Basmati' })
-      .first();
+    const riceCard = page.locator('li.mf-item').filter({ hasText: 'Arroz Basmati' }).first();
 
     // Seleccionar primer alimento (Pechuga de Pollo)
-    await chickenCard.click();
+    await chickenCard.locator('.mf-item-main').click();
     await expect(bulkToolbar).toBeVisible();
-    await expect(bulkToolbar.getByText('1 seleccionados')).toBeVisible();
+    await expect(bulkToolbar.getByText('1 seleccionado', { exact: true })).toBeVisible();
 
     // Seleccionar segundo alimento (Arroz Basmati)
-    await riceCard.click();
+    await riceCard.locator('.mf-item-main').click();
     await expect(bulkToolbar.getByText('2 seleccionados')).toBeVisible();
 
     // Ejecutar borrado en lote

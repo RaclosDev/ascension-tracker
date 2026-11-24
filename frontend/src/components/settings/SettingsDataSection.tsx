@@ -55,7 +55,7 @@ export function SettingsDataSection({
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
             Descarga una copia de seguridad completa con todos tus entrenamientos, ejercicios
             personalizados, plantillas, registros de comidas, recetas, alimentos guardados, pasos,
-            peso y ajustes en formato JSON (GDPR).
+            peso y ajustes en formato JSON.
           </p>
           <div
             style={{
@@ -103,7 +103,7 @@ export function SettingsDataSection({
             onClick={onExportCsv}
             aria-label="Exportar datos a CSV"
           >
-            Exportar Datos a CSV
+            Exportar el peso a CSV
           </button>
         </div>
       </div>
@@ -154,7 +154,7 @@ export function SettingsDataSection({
             onClick={onLogout}
             aria-label="Cerrar sesión"
           >
-            Cerrar Sesión
+            Cerrar sesión
           </button>
         </div>
       </div>

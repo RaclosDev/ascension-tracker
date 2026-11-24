@@ -24,6 +24,17 @@ const ALL_EQUIPMENTS = [
   'peso corporal',
 ];
 
+const EQUIPMENT_LABELS: Record<string, string> = {
+  barra: 'Barra',
+  mancuernas: 'Mancuernas',
+  maquina: 'Máquina',
+  multipower: 'Multipower (Smith)',
+  polea: 'Polea',
+  banda: 'Banda elástica',
+  kettlebell: 'Kettlebell',
+  'peso corporal': 'Peso corporal',
+};
+
 export function SettingsWorkoutSection({
   restPreset,
   onRestPresetChange,
@@ -54,7 +65,7 @@ export function SettingsWorkoutSection({
           <div className="settings-rows">
             <div className="form-group settings-row">
               <div className="settings-row-text">
-                <span className="form-label">Descanso Base (segundos)</span>
+                <span className="form-label">Descanso base (segundos)</span>
                 <div className="form-hint">
                   El tiempo que se aplicará por defecto a todos los ejercicios si no configuras uno
                   específico.
@@ -102,7 +113,7 @@ export function SettingsWorkoutSection({
 
             <div className="form-group settings-row">
               <div className="settings-row-text">
-                <span className="form-label">Mostrar RPE (Esfuerzo Percibido)</span>
+                <span className="form-label">Mostrar RPE (esfuerzo percibido)</span>
                 <div className="form-hint">
                   Muestra una columna de RPE en los ejercicios para medir la intensidad (1-10)
                 </div>
@@ -145,7 +156,6 @@ export function SettingsWorkoutSection({
                     color: isHidden ? 'var(--text-muted)' : 'var(--text-primary)',
                     textDecoration: isHidden ? 'line-through' : 'none',
                     cursor: 'pointer',
-                    textTransform: 'capitalize',
                   }}
                 >
                   <input
@@ -154,7 +164,7 @@ export function SettingsWorkoutSection({
                     onChange={() => onToggleHiddenEquipment(eq)}
                     aria-label={`Ocultar material ${eq}`}
                   />
-                  {eq === 'multipower' ? 'Multipower (Smith)' : eq}
+                  {EQUIPMENT_LABELS[eq] ?? eq}
                 </label>
               );
             })}

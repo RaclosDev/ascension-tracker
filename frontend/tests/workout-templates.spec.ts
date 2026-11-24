@@ -66,7 +66,7 @@ test.describe('Workout Templates & Routines Flows', () => {
     await expect(cards.nth(0)).toContainText('Torso Hipertrofia');
     await expect(cards.nth(0)).toContainText('2 ejercicios');
     await expect(cards.nth(1)).toContainText('Pierna Fuerza');
-    await expect(cards.nth(1)).toContainText('1 ejercicios');
+    await expect(cards.nth(1)).toContainText('1 ejercicio');
   });
 
   test('2. Crear nueva plantilla agregando ejercicios y enviando POST /api/workouts/templates', async ({
@@ -332,9 +332,14 @@ test.describe('Workout Templates & Routines Flows', () => {
     await expect(cards.first()).toContainText('Rutina a Eliminar');
 
     // Botón eliminar: page.getByRole('button', { name: /eliminar plantilla/i })
-    const deleteBtn = page.getByRole('button', { name: /eliminar plantilla/i });
+    const deleteBtn = page.getByRole('button', { name: /eliminar la plantilla/i });
     await expect(deleteBtn).toBeVisible({ timeout: 5000 });
     await deleteBtn.click();
+
+    // El borrado pide confirmación antes de enviar el DELETE
+    const confirm = page.getByRole('alertdialog');
+    await expect(confirm).toContainText('Rutina a Eliminar');
+    await confirm.getByRole('button', { name: 'Eliminar', exact: true }).click();
 
     // Verificaciones: toast de éxito, llamada DELETE y tarjeta removida
     await expect(page.getByText(/plantilla eliminada/i)).toBeVisible({ timeout: 10000 });

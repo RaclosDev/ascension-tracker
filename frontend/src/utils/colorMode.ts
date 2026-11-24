@@ -1,9 +1,15 @@
+import { useSyncExternalStore } from 'react';
+import { DEMO } from '../demo/mode';
+
 export type ColorMode = 'light' | 'dark' | 'system';
 
 export const COLOR_MODE_KEY = 'ascension_color_mode';
 
 const WALL_COLORS = { light: '#e6e0d3', dark: '#0f172a' } as const;
 const DARK_QUERY = '(prefers-color-scheme: dark)';
+const CHANGE_EVENT = 'ascension:color-mode';
+/** Sin elección guardada la app sigue al sistema; la demo arranca en oscuro. */
+const DEFAULT_MODE: ColorMode = DEMO ? 'dark' : 'system';
 
 function isColorMode(value: string | null): value is ColorMode {
   return value === 'light' || value === 'dark' || value === 'system';
@@ -12,9 +18,9 @@ function isColorMode(value: string | null): value is ColorMode {
 export function readColorMode(): ColorMode {
   try {
     const stored = localStorage.getItem(COLOR_MODE_KEY);
-    return isColorMode(stored) ? stored : 'system';
+    return isColorMode(stored) ? stored : DEFAULT_MODE;
   } catch {
-    return 'system';
+    return DEFAULT_MODE;
   }
 }
 
@@ -30,6 +36,24 @@ export function applyColorMode(mode: ColorMode): void {
   document
     .querySelectorAll('meta[name="theme-color"]')
     .forEach((meta) => meta.setAttribute('content', WALL_COLORS[resolved]));
+  window.dispatchEvent(new Event(CHANGE_EVENT));
+}
+
+function subscribe(onChange: () => void) {
+  window.addEventListener(CHANGE_EVENT, onChange);
+  return () => window.removeEventListener(CHANGE_EVENT, onChange);
+}
+
+/** El modo elegido (claro, oscuro o sistema), lo cambie quien lo cambie. */
+export function useColorMode(): ColorMode {
+  return useSyncExternalStore(subscribe, readColorMode);
+}
+
+/** El modo que se está viendo: claro u oscuro. */
+export function useResolvedColorMode(): 'light' | 'dark' {
+  return useSyncExternalStore(subscribe, () =>
+    document.documentElement.getAttribute('data-mode') === 'light' ? 'light' : 'dark',
+  );
 }
 
 export function saveColorMode(mode: ColorMode): void {

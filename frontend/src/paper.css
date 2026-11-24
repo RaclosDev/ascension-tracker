@@ -616,6 +616,22 @@ html:not([data-mode='light']) .kpi-card:not(.landing *) {
   gap: 8px;
   margin-left: auto;
 }
+.mobile-theme-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--wall-ink);
+  cursor: pointer;
+}
+.mobile-theme-btn:focus-visible {
+  outline: 2px solid var(--wall-ink);
+  outline-offset: 2px;
+}
 .mobile-avatar-btn {
   display: grid;
   place-items: center;
@@ -624,7 +640,7 @@ html:not([data-mode='light']) .kpi-card:not(.landing *) {
   padding: 0;
   overflow: hidden;
   border: 2px solid var(--wall-ink);
-  border-radius: 4px;
+  border-radius: 50%;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-display);

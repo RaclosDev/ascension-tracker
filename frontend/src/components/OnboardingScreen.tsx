@@ -422,7 +422,7 @@ export default function OnboardingScreen({
                     className="form-label"
                     style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
-                    <Scale size={14} /> Peso Inicial (kg)
+                    <Scale size={14} /> Peso inicial (kg)
                   </label>
                   <input
                     id="onboarding-screen-peso-inicial-kg"
