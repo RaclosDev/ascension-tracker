@@ -156,6 +156,7 @@
   gap: 3px;
   min-height: 56px;
   padding: 8px 0;
+  container-type: inline-size;
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   background: none;
@@ -180,7 +181,7 @@
 }
 .tv-day-name {
   margin-bottom: 2px;
-  font-size: 0.66rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--text-muted);
 }
@@ -201,9 +202,6 @@
   color: var(--text-secondary);
 }
 /* Pasos y calorías van enteros (12.235): en columnas estrechas la letra se encoge para caber. */
-.tv-day {
-  container-type: inline-size;
-}
 .tv-day-value:is([data-metric='steps'], [data-metric='calories']) {
   font-size: min(var(--fs), 28cqi);
 }
@@ -294,7 +292,7 @@ button.tv-step:focus-visible {
 .tv-step-figs em {
   margin-left: 3px;
   font-family: var(--font-body, inherit);
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   font-style: normal;
   color: var(--text-muted);
 }
@@ -323,13 +321,12 @@ button.tv-step:focus-visible {
     gap: 24px;
     padding: 10px 14px;
   }
+  /* Las medias de la semana van juntas a la derecha, al lado de la flecha. */
   .tv-ladder[data-metrics='2'] .tv-step {
-    grid-template-columns: 72px repeat(2, 140px) 16px;
-    justify-content: space-between;
+    grid-template-columns: minmax(72px, 1fr) repeat(2, 120px) 16px;
   }
   .tv-ladder[data-metrics='3'] .tv-step {
-    grid-template-columns: 72px repeat(3, 140px) 16px;
-    justify-content: space-between;
+    grid-template-columns: minmax(72px, 1fr) repeat(3, 120px) 16px;
   }
   .tv-ladder .tv-days {
     padding: 0 14px 16px;

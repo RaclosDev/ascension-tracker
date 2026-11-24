@@ -38,7 +38,7 @@ const average = (m: TrackingMetric, w: WeekData) =>
 const delta = (m: TrackingMetric, w: WeekData) =>
   m === 'weight' ? w.deltaWeight : m === 'steps' ? w.deltaSteps : w.deltaCalories;
 const signed = (m: TrackingMetric, n: number) =>
-  `${n > 0 ? '+' : n < 0 ? '−' : ''}${m === 'weight' ? Math.abs(n).toFixed(2) : count(Math.abs(n))}`;
+  `${n > 0 ? '+' : n < 0 ? '−' : ''}${m === 'weight' ? Math.abs(n).toFixed(2).replace('.', ',') : count(Math.abs(n))}`;
 
 /** The seven days of a week as tappable cells, one line per metric shown. */
 function DayCells({ week, metrics, onOpenDay }: { week: WeekData } & Omit<Props, 'weeks'>) {
@@ -79,7 +79,7 @@ function DayCells({ week, metrics, onOpenDay }: { week: WeekData } & Omit<Props,
                 const value = day[m];
                 return (
                   <span key={m} className="tv-day-value tabular-nums" data-metric={m}>
-                    {value === null ? '·' : show(m, value)}
+                    {show(m, value)}
                   </span>
                 );
               })
