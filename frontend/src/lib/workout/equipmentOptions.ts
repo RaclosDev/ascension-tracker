@@ -11,13 +11,13 @@ export interface MuscleOption {
 }
 
 const RAW_EQUIPMENT_OPTIONS: readonly EquipmentOption[] = [
-  { id: 'banda', label: 'Banda Elástica' },
+  { id: 'banda', label: 'Banda elástica' },
   { id: 'barra', label: 'Barra' },
   { id: 'kettlebell', label: 'Kettlebell' },
   { id: 'mancuernas', label: 'Mancuernas' },
   { id: 'maquina', label: 'Máquina' },
   { id: 'multipower', label: 'Multipower (Smith)' },
-  { id: 'peso corporal', label: 'Peso Corporal' },
+  { id: 'peso corporal', label: 'Peso corporal' },
   { id: 'polea', label: 'Polea' },
 ];
 

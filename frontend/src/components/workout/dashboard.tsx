@@ -6,7 +6,7 @@ import { ActivityHeatmap } from '@/components/workout/heatmap';
 import { MuscleRecovery } from '@/components/workout/muscle-recovery';
 import { BodyHeatmap } from '@/components/workout/body-heatmap';
 import { getExerciseMap } from '@/lib/workout/exercises';
-import { completedSets, formatDuration, formatKg, sessionVolume } from '@/lib/workout/format';
+import { completedSets, formatSessionLength, formatKg, sessionVolume } from '@/lib/workout/format';
 import type { Template, CompletedWorkout } from '@/lib/workout/types';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { useRecentWorkouts, useWorkoutTemplates, useCustomExercises } from '@/lib/workout/api';
@@ -232,7 +232,7 @@ function Dashboard() {
           </div>
           <div>
             <dt>Tiempo</dt>
-            <dd className="tabular-nums">{week.time > 0 ? formatDuration(week.time) : '—'}</dd>
+            <dd className="tabular-nums">{week.time > 0 ? formatSessionLength(week.time) : '—'}</dd>
           </div>
           <div>
             <dt>Series</dt>
@@ -407,7 +407,7 @@ function Dashboard() {
                           when={whenLabel(w.finishedAt)}
                           name={w.name}
                           detail={exerciseLine(w.exercises, exerciseName)}
-                          figure={formatDuration(w.finishedAt - w.startedAt)}
+                          figure={formatSessionLength(w.finishedAt - w.startedAt)}
                           note={`${w.exercises?.length || 0} ejercicios`}
                           onClick={() => {
                             startFromHistory(w);
@@ -482,7 +482,7 @@ function Dashboard() {
                     </span>
                     <span className="wk-recent-figs tabular-nums">
                       <strong>{formatKg(sessionVolume(w.exercises))}</strong>
-                      <small>{formatDuration(w.finishedAt - w.startedAt)}</small>
+                      <small>{formatSessionLength(w.finishedAt - w.startedAt)}</small>
                     </span>
                   </button>
                 </li>

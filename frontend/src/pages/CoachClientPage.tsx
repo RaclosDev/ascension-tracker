@@ -98,7 +98,7 @@ function AthleteSections({ link }: { link: CoachClient }) {
               <h2>{personName(link.client)} aún no comparte su nutrición contigo</h2>
               <p>
                 El servicio de nutrición está contratado, pero falta su permiso. Se concede desde su
-                aplicación, en Configuración → Entrenador, marcando «Nutrición» y «Pautar
+                aplicación, en Ajustes → Entrenador, marcando «Nutrición» y «Pautar
                 nutrición». En cuanto lo haga, aquí verás su pauta y sus comidas registradas.
               </p>
               <Link to={sectionHref('gestion')} className="btn btn-secondary mt-3">

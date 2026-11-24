@@ -2,6 +2,7 @@ import React from 'react';
 import { Edit3 } from 'lucide-react';
 import { Recipe } from '../../types/api';
 import { DragFoodData } from './FoodCard';
+import { MacroLine } from '../nutrition/MacroLine';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -9,112 +10,64 @@ interface RecipeCardProps {
   onDragStart?: (e: React.DragEvent, data: DragFoodData) => void;
 }
 
-const macroLine = (kcal: number, p: number, c: number, f: number) => (
-  <span className="meal-subtotal-row" style={{ fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
-    <span className="subtotal-val kcal">
-      <strong style={{ color: 'var(--text-primary)' }}>{Math.round(kcal)}</strong> kcal
-    </span>
-    <span className="subtotal-dot">·</span>
-    <span className="subtotal-val">P: {Number(p).toFixed(1)}g</span>
-    <span className="subtotal-dot">·</span>
-    <span className="subtotal-val">C: {Number(c).toFixed(1)}g</span>
-    <span className="subtotal-dot">·</span>
-    <span className="subtotal-val">G: {Number(f).toFixed(1)}g</span>
-  </span>
-);
-
-const itemStyle = (highlight: boolean) => ({
-  padding: '0.5rem 0.7rem',
-  background: highlight ? 'var(--bg-glass-strong)' : 'var(--bg-secondary)',
-  borderRadius: '10px',
-  border: `1px solid ${highlight ? 'var(--color-success)' : 'var(--border-subtle)'}`,
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  gap: '0.5rem',
-  cursor: 'pointer',
-  transition: 'all 0.2s',
-});
-
-const EditBtn = ({ onClick }: { onClick: () => void }) => (
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      onClick();
-    }}
-    className="icon-btn edit-btn min-w-[44px] min-h-[44px] flex items-center justify-center"
-    title="Editar"
-  >
-    <Edit3 className="w-4 h-4 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" />
-  </button>
-);
+/** Ingredients are stored either as free text or as a JSON list of { quantity, product }. */
+function ingredientsText(description?: string | null) {
+  if (!description) return null;
+  try {
+    if (description.startsWith('[')) {
+      const parsed = JSON.parse(description);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((ing) => `${ing.quantity} g ${ing.product}`).join(', ');
+      }
+    }
+  } catch {
+    /* free text */
+  }
+  return description;
+}
 
 export default function RecipeCard({ recipe, onEdit, onDragStart }: RecipeCardProps) {
   const handleDrag = (e: React.DragEvent) => {
-    if (onDragStart) {
-      onDragStart(e, {
-        name: recipe.name,
-        brand: '',
-        kcal: recipe.totalKcal,
-        protein: recipe.totalProtein,
-        carbs: recipe.totalCarbs,
-        fat: recipe.totalFat,
-      });
-    }
+    onDragStart?.(e, {
+      name: recipe.name,
+      brand: '',
+      kcal: recipe.totalKcal,
+      protein: recipe.totalProtein,
+      carbs: recipe.totalCarbs,
+      fat: recipe.totalFat,
+    });
   };
-
-  const renderDescription = () => {
-    if (!recipe.description) return null;
-    let text = recipe.description;
-    try {
-      if (text.startsWith('[')) {
-        const parsed = JSON.parse(text);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          text = parsed.map((ing) => `${ing.quantity}g ${ing.product}`).join(', ');
-        }
-      }
-    } catch {
-      /* empty */
-    }
-    return (
-      <div
-        style={{
-          fontSize: '0.7rem',
-          color: 'var(--text-secondary)',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        }}
-      >
-        {text}
-      </div>
-    );
-  };
+  const ingredients = ingredientsText(recipe.description);
 
   return (
-    <div
-      draggable={!!onDragStart}
-      onDragStart={onDragStart ? handleDrag : undefined}
-      style={itemStyle(false)}
-    >
-      <div style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontWeight: 600,
-            fontSize: '0.9rem',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {recipe.name}
-        </div>
-        {renderDescription()}
-        <div>
-          {macroLine(recipe.totalKcal, recipe.totalProtein, recipe.totalCarbs, recipe.totalFat)}
-        </div>
+    <li className="mf-item">
+      <div
+        className="mf-item-main"
+        draggable={!!onDragStart}
+        onDragStart={onDragStart ? handleDrag : undefined}
+      >
+        <span className="mf-item-text">
+          <span className="mf-item-name">{recipe.name}</span>
+          {ingredients && <span className="mf-item-meta">{ingredients}</span>}
+          <MacroLine
+            kcal={recipe.totalKcal}
+            protein={recipe.totalProtein}
+            carbs={recipe.totalCarbs}
+            fat={recipe.totalFat}
+          />
+        </span>
       </div>
-      <EditBtn onClick={() => onEdit(recipe)} />
-    </div>
+      <span className="mf-item-actions">
+        <button
+          type="button"
+          className="icon-btn mf-icon-btn"
+          title="Editar"
+          aria-label={`Editar ${recipe.name}`}
+          onClick={() => onEdit(recipe)}
+        >
+          <Edit3 size={16} aria-hidden="true" />
+        </button>
+      </span>
+    </li>
   );
 }

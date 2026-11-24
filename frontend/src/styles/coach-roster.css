@@ -272,11 +272,30 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
+  /* En el móvil cada dato va en una línea (cifra y rótulo) para que la lista asome sin scroll. */
+  .roster-glance {
+    margin-bottom: 12px;
+  }
   .roster-tile {
-    padding: 10px 12px 12px;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 6px 10px;
+  }
+  .roster-tile-head {
+    font-size: 0.66rem;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+  }
+  .roster-tile-head svg {
+    display: none;
   }
   .roster-tile strong {
-    font-size: 1.8rem;
+    min-width: 1.1em;
+    font-size: 1.6rem;
+    text-align: center;
   }
   .roster-tile small {
     display: none;
@@ -284,10 +303,17 @@
   .coach-roster-toolbar .coach-search {
     flex-basis: 100%;
   }
+  /* Mostrar y Ordenar comparten fila, con su rótulo encima. */
   .coach-roster-toolbar .coach-sort {
-    flex: 1 1 100%;
+    flex: 1 1 calc(50% - 8px);
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    font-size: 0.72rem;
   }
-  .coach-roster-toolbar .coach-sort .ui-select {
-    flex: 1;
+  .coach-roster-toolbar .coach-sort :is(select, .ui-select) {
+    width: 100%;
+    min-width: 0;
   }
 }

@@ -4,17 +4,6 @@ export interface DayData {
   calories: number | null;
 }
 
-export interface DayCellProps {
-  dateStr: string;
-  dayName: string;
-  dayData: DayData;
-  isToday: boolean;
-  onOpenModal: (data: { dateStr: string; dayName: string; dayData: DayData }) => void;
-  showWeight: boolean;
-  showSteps: boolean;
-  showCalories: boolean;
-}
-
 export interface WeekData {
   weekStart: string;
   averageWeight: number | null;

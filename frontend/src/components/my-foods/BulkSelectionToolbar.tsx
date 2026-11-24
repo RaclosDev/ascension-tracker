@@ -16,64 +16,28 @@ export function BulkSelectionToolbar({
   if (selectedCount === 0) return null;
 
   return (
-    <div
-      className="bulk-action-bar fade-in"
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        background: 'var(--color-danger-bg)',
-        border: '1px solid rgba(239,68,68,0.3)',
-        padding: '0.75rem 1rem',
-        borderRadius: '10px',
-      }}
-    >
-      <span style={{ fontSize: '0.85rem', color: 'var(--color-danger)', fontWeight: 600 }}>
-        {selectedCount} seleccionados
+    <div className="mf-bulk fade-in" role="region" aria-label="Alimentos seleccionados">
+      <span className="mf-bulk-count tabular-nums">
+        {selectedCount} {selectedCount === 1 ? 'seleccionado' : 'seleccionados'}
       </span>
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-        <button
-          onClick={onOpenMealSelector}
-          style={{
-            background: 'var(--accent-primary)',
-            color: 'var(--accent-text, white)',
-            border: 'none',
-            padding: '0.4rem 0.8rem',
-            borderRadius: '6px',
-            fontSize: '0.85rem',
-            cursor: 'pointer',
-            fontWeight: 600,
-          }}
-        >
-          <Utensils className="w-4 h-4" /> Añadir
+      <div className="mf-bulk-actions">
+        <button type="button" className="btn btn-primary btn-sm" onClick={onOpenMealSelector}>
+          <Utensils size={16} aria-hidden="true" /> Añadir a una comida
         </button>
         <button
+          type="button"
+          className="btn btn-secondary btn-sm mf-bulk-delete"
           onClick={onBulkDelete}
-          style={{
-            background: 'var(--bg-glass)',
-            color: 'var(--color-danger)',
-            border: '1px solid rgba(239,68,68,0.3)',
-            padding: '0.4rem 0.8rem',
-            borderRadius: '6px',
-            fontSize: '0.85rem',
-            cursor: 'pointer',
-            fontWeight: 600,
-          }}
         >
-          <Trash2 className="w-4 h-4" /> Borrar
+          <Trash2 size={16} aria-hidden="true" /> Borrar
         </button>
         <button
+          type="button"
+          className="icon-btn mf-icon-btn"
+          aria-label="Quitar la selección"
           onClick={onClearSelection}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-secondary)',
-            cursor: 'pointer',
-            fontSize: '0.85rem',
-            padding: '0.4rem 0.5rem',
-          }}
         >
-          <X className="w-4 h-4" />
+          <X size={16} aria-hidden="true" />
         </button>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { X, LayoutGrid, Clock, Apple, ChefHat, List } from 'lucide-react';
+import { LayoutGrid, List, Search, X } from 'lucide-react';
 import { Select } from '@/components/ui/select';
 
 interface FoodFiltersBarProps {
@@ -18,6 +18,13 @@ interface FoodFiltersBarProps {
   setSortBy?: (val: string) => void;
 }
 
+const MACROS = [
+  { id: 'all', label: 'Todos' },
+  { id: 'protein', label: 'Proteína' },
+  { id: 'carbs', label: 'Hidratos' },
+  { id: 'fat', label: 'Grasa' },
+];
+
 export function FoodFiltersBar({
   searchQuery,
   setSearchQuery,
@@ -34,242 +41,111 @@ export function FoodFiltersBar({
   sortBy,
   setSortBy,
 }: FoodFiltersBarProps) {
+  const kinds = [
+    { id: 'all', label: 'Todo', count: totalResults },
+    { id: 'foods', label: 'Alimentos', count: filteredFoodsCount },
+    { id: 'recipes', label: 'Recetas', count: filteredRecipesCount },
+    { id: 'recent', label: 'Recientes', count: filteredRecentCount },
+  ];
+  const showsFoods = searchFilter === 'all' || searchFilter === 'foods';
+
   return (
-    <div
-      className="card"
-      style={{
-        marginBottom: '1.25rem',
-        padding: '0.85rem 1rem',
-        background: 'var(--bg-secondary)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: '14px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.65rem',
-      }}
-    >
-      <div style={{ position: 'relative', width: '100%' }}>
+    <div className="mf-filters">
+      <div className="mf-search">
+        <Search size={16} aria-hidden="true" className="mf-search-icon" />
         <input
-          type="text"
+          type="search"
           className="form-input"
-          placeholder="Buscar en recientes, alimentos o recetas..."
+          aria-label="Buscar en mis alimentos"
+          placeholder="Buscar alimento o receta"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          style={{
-            width: '100%',
-            paddingLeft: '2.4rem',
-            paddingRight: searchQuery ? '2.4rem' : '0.85rem',
-            height: '40px',
-            fontSize: '0.88rem',
-            borderRadius: '10px',
-            background: 'var(--bg-primary)',
-            border: '1px solid var(--border-subtle)',
-          }}
         />
         {searchQuery && (
           <button
             type="button"
+            className="icon-btn mf-search-clear"
+            aria-label="Borrar la búsqueda"
             onClick={() => setSearchQuery('')}
-            style={{
-              position: 'absolute',
-              right: '0.65rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
           >
-            <X className="w-4 h-4" />
+            <X size={16} aria-hidden="true" />
           </button>
         )}
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '0.5rem',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div
-          className="mobile-scroll-x"
-          style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', flex: 1 }}
-        >
-          {[
-            { id: 'all', icon: LayoutGrid, label: 'Todo', count: totalResults },
-            { id: 'recent', icon: Clock, label: 'Recientes', count: filteredRecentCount },
-            { id: 'foods', icon: Apple, label: 'Alimentos', count: filteredFoodsCount },
-            { id: 'recipes', icon: ChefHat, label: 'Recetas', count: filteredRecipesCount },
-          ].map((tab) => {
-            const active = searchFilter === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setSearchFilter(tab.id)}
-                style={{
-                  padding: '0.25rem 0.5rem',
-                  borderRadius: '8px',
-                  fontSize: '0.75rem',
-                  fontWeight: active ? 600 : 400,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  border: active
-                    ? `1px solid var(--text-primary)`
-                    : '1px solid var(--border-subtle)',
-                  background: active ? 'var(--bg-glass-strong)' : 'var(--bg-primary)',
-                  color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.3rem',
-                }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  <tab.icon size={14} style={{ marginRight: '0.15rem' }} />
-                  {active && (
-                    <span style={{ marginLeft: '0.3rem' }} className="fade-in-anim">
-                      {tab.label}
-                    </span>
-                  )}
-                </span>
-                <span
-                  style={{
-                    fontSize: '0.65rem',
-                    opacity: 0.8,
-                    background: active ? 'rgba(255,255,255,0.1)' : 'var(--bg-secondary)',
-                    padding: '0.05rem 0.3rem',
-                    borderRadius: '4px',
-                  }}
-                >
-                  {tab.count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        <button
-          onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-          className="btn btn-secondary btn-sm"
-          aria-label={viewMode === 'grid' ? 'Ver como lista' : 'Ver como cuadrícula'}
-          style={{
-            padding: '0.3rem',
-            width: '32px',
-            height: '32px',
-            flexShrink: 0,
-            borderRadius: '8px',
-          }}
-        >
-          {viewMode === 'grid' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
-        </button>
+      <div className="mf-chips" role="group" aria-label="Qué mostrar">
+        {kinds.map((kind) => (
+          <button
+            key={kind.id}
+            type="button"
+            className="mf-chip"
+            aria-pressed={searchFilter === kind.id}
+            onClick={() => setSearchFilter(kind.id)}
+          >
+            {kind.label}
+            <span className="mf-chip-count tabular-nums">{kind.count}</span>
+          </button>
+        ))}
       </div>
 
-      {((macroFilter && setMacroFilter) || (sortBy && setSortBy)) && (
-        <div
-          style={{
-            display: 'flex',
-            gap: '0.75rem',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            paddingTop: '0.35rem',
-            borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-          }}
-        >
-          {macroFilter && setMacroFilter && (
-            <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Macro:</span>
-              {[
-                { id: 'all', label: 'Todos' },
-                { id: 'protein', label: 'Proteína' },
-                { id: 'carbs', label: 'Carbos' },
-                { id: 'fat', label: 'Grasa' },
-              ].map((m) => {
-                const active = macroFilter === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setMacroFilter(m.id)}
-                    style={{
-                      padding: '0.2rem 0.45rem',
-                      borderRadius: '6px',
-                      fontSize: '0.7rem',
-                      fontWeight: active ? 600 : 400,
-                      border: active
-                        ? '1px solid var(--text-primary)'
-                        : '1px solid var(--border-subtle)',
-                      background: active ? 'var(--bg-glass-strong)' : 'transparent',
-                      color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {m.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {sortBy && setSortBy && (
+      {showsFoods && macroFilter && setMacroFilter && sortBy && setSortBy && (
+        <div className="mf-refine">
+          <div className="mf-chips" role="group" aria-label="Macro predominante">
+            <span className="mf-refine-label">Rico en</span>
+            {MACROS.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                className="mf-chip mf-chip-sm"
+                aria-pressed={macroFilter === m.id}
+                onClick={() => setMacroFilter(m.id)}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+          <div className="mf-refine-end">
             <Select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="form-input"
+              className="form-input mf-sort"
               aria-label="Ordenar alimentos"
-              style={{
-                padding: '0.2rem 0.5rem',
-                height: '28px',
-                fontSize: '0.72rem',
-                width: 'auto',
-                borderRadius: '6px',
-                background: 'var(--bg-primary)',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-secondary)',
-              }}
             >
               <option value="recent">Más recientes</option>
               <option value="name_asc">Nombre (A-Z)</option>
             </Select>
-          )}
+            <button
+              type="button"
+              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+              className="icon-btn mf-icon-btn mf-view-toggle"
+              aria-label={viewMode === 'grid' ? 'Ver como lista' : 'Ver como cuadrícula'}
+            >
+              {viewMode === 'grid' ? (
+                <List size={16} aria-hidden="true" />
+              ) : (
+                <LayoutGrid size={16} aria-hidden="true" />
+              )}
+            </button>
+          </div>
         </div>
       )}
+
       {searchQuery && (
-        <div
-          style={{
-            fontSize: '0.78rem',
-            color: 'var(--text-secondary)',
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}
-        >
+        <p className="mf-results" role="status">
           <span>
-            Resultados para "<strong>{searchQuery}</strong>": {totalResults} coincidencia
-            {totalResults === 1 ? '' : 's'}
+            {totalResults} {totalResults === 1 ? 'resultado' : 'resultados'} para «{searchQuery}»
           </span>
           <button
             type="button"
+            className="wk-link"
             onClick={() => {
               setSearchQuery('');
               setSearchFilter('all');
             }}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--color-carbs)',
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            }}
           >
-            Restablecer filtros
+            Quitar filtros
           </button>
-        </div>
+        </p>
       )}
     </div>
   );

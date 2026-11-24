@@ -2120,21 +2120,30 @@ textarea,
   gap: 1.25rem;
 }
 /* Meal Headers */
-.meal-subtotal-row {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+.macro-line {
   display: flex;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 0.78rem;
   font-weight: 500;
-}
-.subtotal-val {
   color: var(--text-muted);
 }
-.subtotal-val.kcal {
+.macro-line strong {
+  font-weight: 700;
   color: var(--text-primary);
 }
-.subtotal-dot {
-  opacity: 0.5;
+.macro-line abbr {
+  font-weight: 700;
+  text-decoration: none;
+}
+.macro-line [data-macro='protein'] abbr {
+  color: var(--color-protein);
+}
+.macro-line [data-macro='carbs'] abbr {
+  color: var(--color-carbs);
+}
+.macro-line [data-macro='fat'] abbr {
+  color: var(--color-fat);
 }
 
 /* Close (X) buttons: always a perfect circle, everywhere. */
@@ -3603,6 +3612,28 @@ input[type='range']:active::-moz-range-thumb {
 .demo-banner a {
   color: inherit;
   text-decoration: underline;
+}
+
+/* En el móvil el aviso cabe en una línea: fuera el detalle, enlaces cortos. */
+.demo-banner__short {
+  display: none;
+}
+@media (max-width: 640px) {
+  .demo-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+  .demo-banner__long {
+    display: none;
+  }
+  .demo-banner__short {
+    display: inline;
+  }
 }
 
 /* Demo dentro de un visor móvil (landing o portfolio): sin barras de desplazamiento, ni la de la página ni las de dentro, como en un teléfono. */

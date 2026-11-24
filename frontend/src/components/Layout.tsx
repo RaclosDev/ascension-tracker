@@ -1,5 +1,6 @@
 import { QueryErrorNotice } from './QueryErrorNotice';
 import { ThemeTrial } from './dev/ThemeTrial';
+import { ThemeToggle } from './ThemeToggle';
 import {
   useState,
   useCallback,
@@ -91,7 +92,7 @@ const navItems = [
   {
     path: '/settings',
     icon: <Settings className="w-5 h-5" />,
-    label: 'Configuración',
+    label: 'Ajustes',
     shortLabel: 'Ajustes',
   },
 ];
@@ -332,6 +333,7 @@ export default function Layout() {
               );
             })}
             {import.meta.env.DEV && isCoach && <ThemeTrial />}
+            <ThemeToggle variant="nav" />
             <div className="sidebar-account">
               {isCoach && (
                 <button
@@ -406,14 +408,23 @@ export default function Layout() {
         <main className="main-content">
           {DEMO && !EMBED && (
             <p className="demo-banner" role="note">
-              Modo demo. Datos ficticios: los cambios se pierden al recargar.{' '}
-              <a href={DEMO_COACH ? '/demo' : '/demo/entrenador'} data-reload>
-                {DEMO_COACH ? 'Ver la demo de atleta' : 'Ver la demo de entrenador'}
-              </a>
-              {' · '}
-              <a href="/" data-reload>
-                Salir y crear una cuenta
-              </a>
+              <span>
+                Modo demo
+                <span className="demo-banner__long">
+                  . Datos ficticios: los cambios se pierden al recargar.
+                </span>
+              </span>{' '}
+              <span>
+                <a href={DEMO_COACH ? '/demo' : '/demo/entrenador'} data-reload>
+                  <span className="demo-banner__long">Ver la demo de </span>
+                  <span className="demo-banner__short">Demo </span>
+                  {DEMO_COACH ? 'atleta' : 'entrenador'}
+                </a>
+                {' · '}
+                <a href="/" data-reload>
+                  Salir<span className="demo-banner__long"> y crear una cuenta</span>
+                </a>
+              </span>
             </p>
           )}
           {/* Cabecera móvil: marca a la izquierda y sesión a la derecha; se desplaza con el contenido */}
@@ -423,6 +434,7 @@ export default function Layout() {
             </span>
             <div className="mobile-top-actions">
               {hideNav && <WorkoutElapsedTimer />}
+              <ThemeToggle variant="icon" />
               <button
                 type="button"
                 className="mobile-avatar-btn"

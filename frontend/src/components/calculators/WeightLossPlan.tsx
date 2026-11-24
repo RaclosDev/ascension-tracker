@@ -160,7 +160,7 @@ export default function WeightLossPlan({
   if (!tdee) {
     return (
       <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-        Faltan datos básicos para calcular tu TDEE.
+        Faltan datos básicos para calcular tu gasto diario.
       </p>
     );
   }
@@ -233,8 +233,8 @@ export default function WeightLossPlan({
             </div>
             <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               {goal === 'maintain'
-                ? `Tu gasto estimado (TDEE): ${Math.round(tdee)} kcal`
-                : `TDEE ${Math.round(tdee)} + superávit ${Math.round(altPlan.surplus)} kcal · ${altPlan.weeklyRate.toFixed(2)} kg/semana`}
+                ? `Tu gasto diario estimado: ${Math.round(tdee)} kcal`
+                : `Gasto diario ${Math.round(tdee)} + superávit ${Math.round(altPlan.surplus)} kcal · ${altPlan.weeklyRate.toFixed(2)} kg/semana`}
             </div>
           </div>
           {altPlan.warnings.map((w, i) => (
@@ -409,7 +409,7 @@ export default function WeightLossPlan({
             </div>
             <div className="kpi-detail">Calorías diarias a comer</div>
             <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              TDEE {Math.round(tdee)} − restricción {Math.round(plan.dietDeficit)} kcal
+              Gasto diario {Math.round(tdee)} − recorte {Math.round(plan.dietDeficit)} kcal
             </div>
           </div>
 

@@ -101,11 +101,11 @@ export default function AiNutritionChef() {
             <div className="text-base sm:text-lg font-black text-[var(--accent-primary-light,#339cff)]">
               {remaining.protein}g
             </div>
-            <div className="text-[11px] text-gray-400 font-semibold">Prot</div>
+            <div className="text-[11px] text-gray-400 font-semibold">Proteína</div>
           </div>
           <div className="bg-white/5 p-2 rounded-lg border border-white/5">
             <div className="text-base sm:text-lg font-black text-gray-200">{remaining.carbs}g</div>
-            <div className="text-[11px] text-gray-400 font-semibold">Carbs</div>
+            <div className="text-[11px] text-gray-400 font-semibold">Hidratos</div>
           </div>
           <div className="bg-white/5 p-2 rounded-lg border border-white/5">
             <div className="text-base sm:text-lg font-black text-gray-300">{remaining.fat}g</div>

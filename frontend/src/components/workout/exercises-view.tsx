@@ -1,3 +1,4 @@
+import '@/styles/exercise-library.css';
 import { useState, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { BASE_EXERCISES, EXERCISE_CATALOG } from '@/lib/workout/exercises';
@@ -114,7 +115,7 @@ export default function ExercisesView() {
         </button>
       </TabAction>
 
-      <section className="card p-3 flex flex-col gap-3">
+      <section className="card ex-panel">
         <ExerciseFilterBar {...filterState} hiddenEquipments={hiddenEquipments} />
 
         {filter === 'variantes' ? (
@@ -137,11 +138,9 @@ export default function ExercisesView() {
             }
           />
         ) : filteredExercises.length === 0 ? (
-          <div className="text-center py-12 px-4 text-muted">
-            <p>No hay ejercicios que coincidan con la búsqueda.</p>
-          </div>
+          <p className="wk-empty">Ningún ejercicio coincide con la búsqueda.</p>
         ) : (
-          <ul className="flex flex-col gap-1.5 m-0 p-0 list-none">
+          <ul className="ex-list">
             {filteredExercises.map((ex) => (
               <ExerciseCardItem
                 key={ex.id}

@@ -41,32 +41,32 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await page.goto('/tracking');
 
     await expect(page).toHaveURL(/.*tracking.*/, { timeout: 15000 });
-    const container = page.getByRole('region', { name: 'Registro diario por semanas' });
+    const container = page.getByRole('region', { name: 'Medias semanales' });
     await expect(container).toBeVisible({ timeout: 15000 });
 
-    const weekCards = page.locator('.track-week[role="group"]');
+    const weekCards = container.locator('.tv-ladder > li');
     await expect(weekCards).toHaveCount(2);
 
     // 1. Carga de cuadrícula ordenada cronológicamente inverso
     const firstWeek = weekCards.nth(0);
     const secondWeek = weekCards.nth(1);
 
-    await expect(firstWeek.locator('.track-week-label')).toContainText('12 oct');
-    await expect(secondWeek.locator('.track-week-label')).toContainText('5 oct');
+    await expect(firstWeek.locator('.tv-step-when')).toHaveText('Esta');
+    await expect(secondWeek.locator('.tv-step-when')).toContainText('5 oct');
 
     // 2. Cabecera de resumen con media y delta
-    const firstWeekStats = firstWeek.locator('.track-week-sum');
+    const firstWeekStats = firstWeek.locator('.tv-step');
     await expect(firstWeekStats).toBeVisible();
     await expect(firstWeekStats).toContainText('81.2');
     await expect(firstWeekStats).toContainText('−0.50');
 
     // 3. Días lunes a domingo en la cuadrícula semanal
-    const days = firstWeek.locator('.track-day');
+    const days = firstWeek.locator('.tv-day');
     await expect(days).toHaveCount(7);
 
-    const expectedDayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const expectedDayNames = ['L 12', 'M 13', 'X 14', 'J 15', 'V 16', 'S 17', 'D 18'];
     for (let i = 0; i < 7; i++) {
-      await expect(days.nth(i).locator('.track-day-name')).toHaveText(expectedDayNames[i]);
+      await expect(days.nth(i).locator('.tv-day-name')).toHaveText(expectedDayNames[i]);
     }
   });
 
@@ -95,10 +95,10 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await expect(kcalToggle).toHaveAttribute('aria-pressed', 'true');
 
     // Celda de lunes con valores iniciales
-    const firstDayCell = page.locator('.track-day').first();
+    const firstDayCell = page.locator('.tv-day').first();
     await expect(firstDayCell).toContainText('81.2');
-    await expect(firstDayCell).toContainText('8500');
-    await expect(firstDayCell).toContainText('2000');
+    await expect(firstDayCell).toContainText('8,5k');
+    await expect(firstDayCell).toContainText('2,0k');
 
     // 3. Visibilidad condicional y persistencia de Peso
     await weightToggle.click();
@@ -109,14 +109,14 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     // Visibilidad condicional y persistencia de Pasos
     await stepsToggle.click();
     await expect(stepsToggle).toHaveAttribute('aria-pressed', 'false');
-    await expect(firstDayCell).not.toContainText('8500');
+    await expect(firstDayCell).not.toContainText('8,5k');
     expect(await page.evaluate(() => localStorage.getItem('tracking_showSteps'))).toBe('false');
 
-    // Visibilidad condicional y persistencia de Kcal
+    // La última métrica visible no se puede ocultar: la hoja nunca queda vacía
     await kcalToggle.click();
-    await expect(kcalToggle).toHaveAttribute('aria-pressed', 'false');
-    await expect(firstDayCell).not.toContainText('2000');
-    expect(await page.evaluate(() => localStorage.getItem('tracking_showCalories'))).toBe('false');
+    await expect(kcalToggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(firstDayCell).toContainText('2,0k');
+    expect(await page.evaluate(() => localStorage.getItem('tracking_showCalories'))).toBe('true');
 
     // 4. Persistencia tras recargar la página
     await page.reload();
@@ -139,12 +139,12 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
 
     await expect(reloadedWeightToggle).toHaveAttribute('aria-pressed', 'false');
     await expect(reloadedStepsToggle).toHaveAttribute('aria-pressed', 'false');
-    await expect(reloadedKcalToggle).toHaveAttribute('aria-pressed', 'false');
+    await expect(reloadedKcalToggle).toHaveAttribute('aria-pressed', 'true');
 
-    const reloadedCell = page.locator('.track-day').first();
+    const reloadedCell = page.locator('.tv-day').first();
     await expect(reloadedCell).not.toContainText('81.2');
-    await expect(reloadedCell).not.toContainText('8500');
-    await expect(reloadedCell).not.toContainText('2000');
+    await expect(reloadedCell).not.toContainText('8,5k');
+    await expect(reloadedCell).toContainText('2,0k');
 
     // Reactivar Peso y comprobar que vuelve a mostrarse
     await reloadedWeightToggle.click();
@@ -159,7 +159,7 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     await page.goto('/tracking');
 
     // Click en una celda de día abre TrackingEntryModal
-    const firstDayCell = page.locator('.track-day').first();
+    const firstDayCell = page.locator('.tv-day').first();
     await firstDayCell.click();
 
     const modal = page.locator('.modal-content');
@@ -245,7 +245,7 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
 
     await page.goto('/tracking');
 
-    const firstDayCell = page.locator('.track-day').first();
+    const firstDayCell = page.locator('.tv-day').first();
     await firstDayCell.click();
 
     const modal = page.locator('.modal-content');
@@ -347,13 +347,13 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
     });
 
     await page.goto('/tracking');
-    await expect(page.getByRole('region', { name: 'Registro diario por semanas' })).toBeVisible({
+    await expect(page.getByRole('region', { name: 'Medias semanales' })).toBeVisible({
       timeout: 15000,
     });
 
-    const firstDayCell = page.locator('.track-day').first();
+    const firstDayCell = page.locator('.tv-day').first();
     await expect(firstDayCell).toContainText('81.2');
-    await expect(firstDayCell).toContainText('8500');
+    await expect(firstDayCell).toContainText('8,5k');
 
     await firstDayCell.click();
 
@@ -381,6 +381,6 @@ test.describe('Tracking Page - Seguimiento Semanal & Deltas', () => {
 
     // Celda queda limpia sin valores numéricos
     await expect(firstDayCell).not.toContainText('81.2');
-    await expect(firstDayCell).not.toContainText('8500');
+    await expect(firstDayCell).not.toContainText('8,5k');
   });
 });

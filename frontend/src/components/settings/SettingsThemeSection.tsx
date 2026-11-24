@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import { Palette } from 'lucide-react';
 import { SettingsSectionHeader } from './SettingsSectionHeader';
 import { SegmentedControl } from '../ui/segmented-control';
-import { readColorMode, saveColorMode, type ColorMode } from '../../utils/colorMode';
+import { saveColorMode, useColorMode, type ColorMode } from '../../utils/colorMode';
 
 interface SettingsThemeSectionProps {
   customColor: string;
@@ -27,11 +26,10 @@ export function SettingsThemeSection({
   onColorChange,
   presets = DEFAULT_PRESETS,
 }: SettingsThemeSectionProps) {
-  const [colorMode, setColorMode] = useState<ColorMode>(readColorMode);
+  const colorMode = useColorMode();
 
   const handleModeChange = (value: string) => {
     if (!isColorMode(value)) return;
-    setColorMode(value);
     saveColorMode(value);
   };
 
@@ -114,8 +112,7 @@ export function SettingsThemeSection({
               marginTop: '0.75rem',
             }}
           >
-            El color acento que elegiste es el {customColor}. ¡Se aplicará instantáneamente en toda
-            la aplicación!
+            El color acento que elegiste es el {customColor}. Se aplica al momento en toda la app.
           </p>
         </div>
       </div>

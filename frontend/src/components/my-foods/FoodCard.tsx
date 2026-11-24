@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle2, Circle, Edit3, Trash2 } from 'lucide-react';
 import { SavedFood } from '../../types/api';
+import { MacroLine } from '../nutrition/MacroLine';
 
 export interface DragFoodData {
   name: string;
@@ -17,42 +18,16 @@ interface FoodCardProps {
   onToggleSelect: (id: number) => void;
   onEdit: (food: SavedFood) => void;
   onDelete?: (id: number | string) => void;
-  viewMode: string;
   onDragStart: (e: React.DragEvent, data: DragFoodData) => void;
 }
-const itemStyle = (highlight: boolean) => ({
-  padding: '0.5rem 0.7rem',
-  background: highlight ? 'var(--bg-glass-strong)' : 'var(--bg-secondary)',
-  borderRadius: '10px',
-  border: `1px solid ${highlight ? 'var(--color-success)' : 'var(--border-subtle)'}`,
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  gap: '0.5rem',
-  cursor: 'pointer',
-  transition: 'all 0.2s',
-});
 
-const EditBtn = ({ onClick }: { onClick: () => void }) => (
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      onClick();
-    }}
-    className="icon-btn edit-btn min-w-[44px] min-h-[44px] flex items-center justify-center"
-    title="Editar"
-  >
-    <Edit3 className="w-4 h-4 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" />
-  </button>
-);
-
+/** One saved food: tap to select it (to add several to a meal at once), or edit / delete it. */
 export default function FoodCard({
   food,
   isSelected,
   onToggleSelect,
   onEdit,
   onDelete,
-  viewMode,
   onDragStart,
 }: FoodCardProps) {
   const handleDrag = (e: React.DragEvent) => {
@@ -65,200 +40,60 @@ export default function FoodCard({
       fat: food.fatPer100g,
     });
   };
+  const serving =
+    food.servingSize && food.servingSize > 0
+      ? `${food.servingSize} g por ${food.servingLabel || 'unidad'}`
+      : null;
+  const meta = [food.brand, serving].filter(Boolean).join(' · ');
 
-  if (viewMode === 'grid') {
-    return (
-      <div
+  return (
+    <li className="mf-item" data-selected={isSelected || undefined}>
+      <button
+        type="button"
+        className="mf-item-main"
         draggable
+        aria-pressed={isSelected}
         onClick={() => {
           if (food.id) onToggleSelect(food.id);
         }}
         onDragStart={handleDrag}
-        style={{
-          ...itemStyle(isSelected),
-          flexDirection: 'column',
-          alignItems: 'stretch',
-          gap: '0.4rem',
-        }}
       >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            gap: '0.5rem',
-          }}
+        <span className="mf-check" aria-hidden="true">
+          {isSelected ? <CheckCircle2 size={18} /> : <Circle size={18} />}
+        </span>
+        <span className="mf-item-text">
+          <span className="mf-item-name">{food.name}</span>
+          {meta && <span className="mf-item-meta">{meta}</span>}
+          <MacroLine
+            kcal={food.kcalPer100g}
+            protein={food.proteinPer100g}
+            carbs={food.carbsPer100g}
+            fat={food.fatPer100g}
+          />
+        </span>
+      </button>
+      <span className="mf-item-actions">
+        <button
+          type="button"
+          className="icon-btn mf-icon-btn"
+          title="Editar"
+          aria-label={`Editar ${food.name}`}
+          onClick={() => onEdit(food)}
         >
-          <div
-            style={{
-              fontWeight: 600,
-              fontSize: '0.9rem',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              flex: 1,
-              paddingTop: '0.2rem',
-            }}
-          >
-            {food.name}
-          </div>
-          <div
-            style={{
-              flexShrink: 0,
-              marginTop: '-0.2rem',
-              marginRight: '-0.2rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '2px',
-            }}
-          >
-            <EditBtn onClick={() => onEdit(food)} />
-            {onDelete && food.id && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(food.id!);
-                }}
-                className="icon-btn delete-btn min-w-[36px] min-h-[36px] flex items-center justify-center text-[var(--color-danger)] hover:opacity-80"
-                title="Eliminar"
-                aria-label="Eliminar"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div
-          style={{
-            fontSize: '0.75rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-            {Math.round(food.kcalPer100g)} kcal
-          </span>
-
-          {((food.servingSize && food.servingSize > 0) || food.brand) && (
-            <span style={{ opacity: 0.5 }}>•</span>
-          )}
-
-          {food.servingSize && food.servingSize > 0 && (
-            <span
-              style={{
-                background: 'var(--bg-primary)',
-                padding: '0.1rem 0.3rem',
-                borderRadius: '4px',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              {food.servingSize}g/{food.servingLabel || 'ud'}
-            </span>
-          )}
-
-          {food.servingSize && food.servingSize > 0 && food.brand && (
-            <span style={{ opacity: 0.5 }}>•</span>
-          )}
-
-          {food.brand && (
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', opacity: 0.8 }}>
-              {food.brand}
-            </span>
-          )}
-        </div>
-
-        <div
-          style={{
-            fontSize: '0.75rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          <span>P: {Number(food.proteinPer100g).toFixed(1)}g</span>
-          <span style={{ opacity: 0.5 }}>•</span>
-          <span>C: {Number(food.carbsPer100g).toFixed(1)}g</span>
-          <span style={{ opacity: 0.5 }}>•</span>
-          <span>G: {Number(food.fatPer100g).toFixed(1)}g</span>
-        </div>
-      </div>
-    );
-  }
-
-  // list mode
-  return (
-    <div
-      draggable
-      onClick={() => {
-        if (food.id) onToggleSelect(food.id);
-      }}
-      onDragStart={handleDrag}
-      style={{
-        display: 'flex',
-        padding: '0.5rem',
-        borderBottom: '1px solid var(--border-subtle)',
-        fontSize: '0.8rem',
-        alignItems: 'center',
-        background: isSelected ? 'var(--bg-glass-strong)' : 'transparent',
-        cursor: 'pointer',
-      }}
-    >
-      <div
-        style={{
-          width: '30px',
-          color: isSelected ? 'var(--color-success)' : 'var(--text-secondary)',
-          opacity: isSelected ? 1 : 0.3,
-        }}
-      >
-        {isSelected ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
-      </div>
-      <div
-        style={{
-          flex: 2,
-          minWidth: '120px',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          fontWeight: 500,
-        }}
-      >
-        {food.name}{' '}
-        {food.brand && <span style={{ opacity: 0.5, fontSize: '0.7rem' }}>({food.brand})</span>}
-      </div>
-      <div style={{ flex: 1, textAlign: 'right', fontWeight: 600, color: 'var(--text-primary)' }}>
-        {Math.round(food.kcalPer100g)}
-      </div>
-      <div style={{ flex: 1, textAlign: 'right' }}>{Number(food.proteinPer100g).toFixed(1)}</div>
-      <div style={{ flex: 1, textAlign: 'right' }}>{Number(food.carbsPer100g).toFixed(1)}</div>
-      <div style={{ flex: 1, textAlign: 'right' }}>{Number(food.fatPer100g).toFixed(1)}</div>
-      <div
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '2px' }}
-      >
-        <EditBtn onClick={() => onEdit(food)} />
+          <Edit3 size={16} aria-hidden="true" />
+        </button>
         {onDelete && food.id && (
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(food.id!);
-            }}
-            className="icon-btn delete-btn min-w-[32px] min-h-[32px] flex items-center justify-center text-[var(--color-danger)] hover:opacity-80"
+            className="icon-btn mf-icon-btn mf-icon-danger"
             title="Eliminar"
-            aria-label="Eliminar"
+            aria-label={`Eliminar ${food.name}`}
+            onClick={() => onDelete(food.id!)}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 size={16} aria-hidden="true" />
           </button>
         )}
-      </div>
-    </div>
+      </span>
+    </li>
   );
 }

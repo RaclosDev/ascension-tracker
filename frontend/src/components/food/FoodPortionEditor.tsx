@@ -102,7 +102,7 @@ export function FoodPortionEditor({
         >
           <span>{Math.round(selectedProduct.kcal || 0)} kcal / 100g</span>
           <span>P: {Math.round(selectedProduct.protein || 0)}g</span>
-          <span>C: {Math.round(selectedProduct.carbs || 0)}g</span>
+          <span>H: {Math.round(selectedProduct.carbs || 0)}g</span>
           <span>G: {Math.round(selectedProduct.fat || 0)}g</span>
         </div>
       </div>
@@ -270,7 +270,7 @@ export function FoodPortionEditor({
             <span style={{ color: 'var(--color-protein)' }}>P:</span> {calculatedProtein}g
           </div>
           <div>
-            <span style={{ color: 'var(--color-carbs)' }}>C:</span> {calculatedCarbs}g
+            <span style={{ color: 'var(--color-carbs)' }}>H:</span> {calculatedCarbs}g
           </div>
           <div>
             <span style={{ color: 'var(--color-fat)' }}>G:</span> {calculatedFat}g

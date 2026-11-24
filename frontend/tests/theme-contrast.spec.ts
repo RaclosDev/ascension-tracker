@@ -128,7 +128,7 @@ for (const mode of ['dark', 'light']) {
     await filters.getByRole('tab', { name: 'Básicos', exact: true }).click();
     await expect(filters.getByRole('tab', { name: 'Básicos', exact: true })).toHaveCSS(
       'color',
-      mode === 'dark' ? 'rgb(17, 24, 39)' : 'rgb(243, 236, 220)',
+      mode === 'dark' ? 'rgb(15, 23, 42)' : 'rgb(243, 236, 220)',
     );
     await page.screenshot({ path: testInfo.outputPath(`exercises-${mode}.png`), fullPage: true });
   });

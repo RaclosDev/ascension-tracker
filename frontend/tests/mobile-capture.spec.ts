@@ -26,7 +26,7 @@ test.describe('Visual Screenshots Capture Suite', () => {
       });
 
       // 2. Open AI Nutrition Chef
-      const chefButton = page.getByRole('button', { name: /Estratega Nutricional IA/i });
+      const chefButton = page.getByRole('button', { name: /recetas con tus macros/i });
       if (await chefButton.isVisible()) {
         await chefButton.click();
         await page.waitForTimeout(400);

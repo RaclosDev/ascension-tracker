@@ -7,17 +7,17 @@ test.describe('Utilities & Biomechanical Calculators Flows', () => {
 
     await page.goto('/utilities');
     await expect(page).toHaveURL(/.*utilities.*/, { timeout: 15000 });
-    await expect(page.getByRole('heading', { name: /utilidades y calculadoras/i })).toBeVisible({
+    await expect(page.getByRole('heading', { name: /^utilidades$/i })).toBeVisible({
       timeout: 15000,
     });
 
     // Secciones principales visibles
-    await expect(page.getByRole('button', { name: /Estratega Nutricional IA/i })).toBeVisible({
+    await expect(page.getByRole('button', { name: /recetas con tus macros/i })).toBeVisible({
       timeout: 15000,
     });
-    await expect(page.getByText('Gasto por Pasos')).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('Gasto Metabólico por Tiempo')).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('Calculadoras de Nutrición')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Calorías por pasos')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Calorías por carrera o caminata')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Mantenimiento y composición')).toBeVisible({ timeout: 15000 });
   });
 
   test('2. Calculadora de Gasto por Pasos (Weyand): cálculo biomecánico reactivo', async ({
@@ -29,7 +29,7 @@ test.describe('Utilities & Biomechanical Calculators Flows', () => {
     await expect(page).toHaveURL(/.*utilities.*/, { timeout: 15000 });
 
     // Desplegar acordeón de Gasto por Pasos
-    const stepsButton = page.getByRole('button', { name: /gasto por pasos/i });
+    const stepsButton = page.getByRole('button', { name: /calorías por pasos/i });
     await expect(stepsButton).toBeVisible({ timeout: 15000 });
     await stepsButton.click();
 
@@ -44,7 +44,10 @@ test.describe('Utilities & Biomechanical Calculators Flows', () => {
     await stepsInput.fill('10000');
 
     // Comprobar cálculo reactivo de calorías quemadas (~261.95 kcal según Weyand)
-    const stepsStatus = page.getByRole('status').filter({ hasText: /calorías quemadas/i });
+    const stepsStatus = page
+      .getByRole('status')
+      .filter({ hasText: /calorías quemadas/i })
+      .first();
     await expect(stepsStatus).toBeVisible({ timeout: 15000 });
     await expect(stepsStatus).toContainText(/261|262/);
   });
@@ -58,7 +61,7 @@ test.describe('Utilities & Biomechanical Calculators Flows', () => {
     await expect(page).toHaveURL(/.*utilities.*/, { timeout: 15000 });
 
     // Desplegar acordeón de Gasto Metabólico
-    const metabolicButton = page.getByRole('button', { name: /gasto metabólico por tiempo/i });
+    const metabolicButton = page.getByRole('button', { name: /calorías por carrera o caminata/i });
     await expect(metabolicButton).toBeVisible({ timeout: 15000 });
     await metabolicButton.click();
 
@@ -79,10 +82,10 @@ test.describe('Utilities & Biomechanical Calculators Flows', () => {
     await secondsInput.fill('0');
 
     // Comprobar cálculo de gasto metabólico total y VO2
-    const metabolicStatus = page.getByRole('status').filter({ hasText: /gasto metabólico total/i });
+    const metabolicStatus = page.getByRole('status').filter({ hasText: /vo2/i });
     await expect(metabolicStatus).toBeVisible({ timeout: 15000 });
     await expect(metabolicStatus).toContainText(/kcal/);
-    await expect(metabolicStatus).toContainText(/vo2 consumido/i);
+    await expect(metabolicStatus).toContainText(/consumo de oxígeno/i);
   });
 
   test('4. Calculadoras de Nutrición: precarga de datos y cálculo de TDEE y grasa corporal', async ({
@@ -111,8 +114,8 @@ test.describe('Utilities & Biomechanical Calculators Flows', () => {
     await expect(page).toHaveURL(/.*utilities.*/, { timeout: 15000 });
 
     // Verificar presencia de tarjetas de nutrición
-    await expect(page.getByText('Gasto de mantenimiento (TDEE)')).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(/% Grasa Corporal \(Marina\)/i)).toBeVisible({
+    await expect(page.getByText('Calorías de mantenimiento')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('button', { name: /grasa corporal/i })).toBeVisible({
       timeout: 15000,
     });
 
@@ -138,7 +141,7 @@ test.describe('Utilities & Biomechanical Calculators Flows', () => {
     await page.goto('/utilities');
     await expect(page).toHaveURL(/.*utilities.*/, { timeout: 15000 });
 
-    const aiHeader = page.getByRole('button', { name: /Estratega Nutricional IA/i });
+    const aiHeader = page.getByRole('button', { name: /recetas con tus macros/i });
     await expect(aiHeader).toBeVisible({ timeout: 15000 });
     await aiHeader.click();
 

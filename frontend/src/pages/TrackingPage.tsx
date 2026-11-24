@@ -8,19 +8,12 @@ import { es } from 'date-fns/locale';
 import { applyTrackingChanges, parseTrackingInputs } from '../utils/trackingMutations';
 import { Skeleton } from '../components/ui/skeleton';
 import { DayData, WeekData, TrackingModalData, WeeklyMetricResponse } from '../types/tracking';
-import {
-  DAY_NAMES,
-  WEIGHT_DELTAS,
-  STEPS_DELTAS,
-  getMondayStr,
-  mergeWeeksData,
-} from '../utils/trackingHelpers';
+import { WEIGHT_DELTAS, STEPS_DELTAS, mergeWeeksData } from '../utils/trackingHelpers';
 import { TrackingMetricToggle } from '../components/tracking/TrackingMetricToggle';
-import { TrackingDayCell, formatKg } from '../components/tracking/TrackingDayCell';
-import { WeekSpark } from '../components/tracking/WeekSpark';
 import { TrackingEntryModal } from '../components/tracking/TrackingEntryModal';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import '../styles/athlete-tracking.css';
+import { TrackingLadder, type TrackingMetric } from '../components/tracking/TrackingLadder';
 
 const ProgressPhotosSection = lazyWithRetry(
   () => import('../components/photos/ProgressPhotosSection'),
@@ -200,33 +193,25 @@ export default function TrackingPage() {
     }
   };
 
-  const todayStr = format(new Date(), 'yyyy-MM-dd');
-  const currentMonday = getMondayStr();
-
-  const signed = (n: number) => `${n > 0 ? '+' : n < 0 ? '−' : ''}${Math.abs(n).toFixed(2)}`;
-  const columns = [showWeight, showSteps, showCalories].filter(Boolean).length;
+  const picked: TrackingMetric[] = [
+    ...(showWeight ? (['weight'] as const) : []),
+    ...(showSteps ? (['steps'] as const) : []),
+    ...(showCalories ? (['calories'] as const) : []),
+  ];
+  const metrics: TrackingMetric[] = picked.length ? picked : ['weight'];
+  // The last metric left stays on: an empty sheet would look broken.
+  const canHide = picked.length > 1;
 
   if (isLoading && weeks.length === 0) {
     return (
       <div className="fade-in track">
         <h1 className="page-title-desktop">Seguimiento</h1>
         <Skeleton className="h-10 w-72 rounded-md" />
-        <div className="card track-sheet" aria-hidden>
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="track-week">
-              <div className="track-week-label">
-                <Skeleton className="h-5 w-20" />
-              </div>
-              {[1, 2, 3, 4, 5, 6, 7].map((d) => (
-                <div key={d} className="track-day">
-                  <Skeleton className="h-4 w-8" />
-                  <Skeleton className="mt-2 h-5 w-full" />
-                </div>
-              ))}
-              <div className="track-week-sum">
-                <Skeleton className="h-5 w-24" />
-              </div>
-            </div>
+        <div className="card" aria-hidden>
+          <Skeleton className="h-4 w-40 mb-4" />
+          <Skeleton className="h-16 w-48 mb-6" />
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-10 w-full mb-3" />
           ))}
         </div>
       </div>
@@ -239,134 +224,25 @@ export default function TrackingPage() {
       <header className="track-head">
         <h1 className="page-title-desktop">Seguimiento</h1>
         <TrackingMetricToggle
-          showWeight={showWeight}
+          showWeight={metrics.includes('weight')}
           showSteps={showSteps}
           showCalories={showCalories}
-          onToggleWeight={() => setShowWeight(!showWeight)}
-          onToggleSteps={() => setShowSteps(!showSteps)}
-          onToggleCalories={() => setShowCalories(!showCalories)}
+          onToggleWeight={() =>
+            showWeight ? canHide && setShowWeight(false) : setShowWeight(true)
+          }
+          onToggleSteps={() => (showSteps ? canHide && setShowSteps(false) : setShowSteps(true))}
+          onToggleCalories={() =>
+            showCalories ? canHide && setShowCalories(false) : setShowCalories(true)
+          }
         />
       </header>
-
-      <section
-        className="card track-sheet"
-        aria-label="Registro diario por semanas"
-        data-rows={columns}
-        style={{ opacity: isLoading ? 0.5 : 1, transition: 'opacity 0.2s' }}
-      >
-        <div className="track-week track-cols" aria-hidden>
-          <span className="track-week-label">Semana</span>
-          {DAY_NAMES.map((d) => (
-            <span key={d} className="track-col">
-              {d}
-            </span>
-          ))}
-          <span className="track-week-sum">Media</span>
+      {weeks.length === 0 && !isError ? (
+        <p className="card chart-empty track-empty">Aún no hay registros.</p>
+      ) : (
+        <div style={{ opacity: isLoading ? 0.5 : 1, transition: 'opacity 0.2s' }}>
+          <TrackingLadder weeks={weeks} metrics={metrics} onOpenDay={handleOpenDayModal} />
         </div>
-        {[...weeks].reverse().map((week) => {
-          const isCurrentWeek = week.weekStart === currentMonday;
-          const monday = new Date(week.weekStart + 'T00:00:00');
-          return (
-            <div
-              key={week.weekStart}
-              className="track-week"
-              data-current={isCurrentWeek || undefined}
-              role="group"
-              aria-label={`Semana del ${format(monday, "d 'de' MMMM", { locale: es })}`}
-            >
-              <div className="track-week-label">
-                <strong>
-                  {isCurrentWeek ? 'Esta semana' : format(monday, 'd MMM', { locale: es })}
-                </strong>
-                {isCurrentWeek && <span>{format(monday, 'd MMM', { locale: es })}</span>}
-              </div>
-              <div className="track-legend" aria-hidden>
-                <span className="track-day-date">&nbsp;</span>
-                {showWeight && <span className="track-line track-weight">kg</span>}
-                {showSteps && <span className="track-line track-minor">pas</span>}
-                {showCalories && <span className="track-line track-minor">kcal</span>}
-              </div>
-              {week.days.map((dayData: DayData, d: number) => {
-                const date = new Date(monday);
-                date.setDate(date.getDate() + d);
-                const dateStr = format(date, 'yyyy-MM-dd');
-                return (
-                  <TrackingDayCell
-                    key={dateStr}
-                    dateStr={dateStr}
-                    dayName={DAY_NAMES[d]}
-                    dayData={dayData}
-                    isToday={dateStr === todayStr}
-                    onOpenModal={handleOpenDayModal}
-                    showWeight={showWeight}
-                    showSteps={showSteps}
-                    showCalories={showCalories}
-                  />
-                );
-              })}
-              <dl className="track-week-sum">
-                {showWeight && (
-                  <div className="track-sum-weight">
-                    <dt className="track-sum-label">
-                      Media<span className="sr-only"> de peso</span>
-                    </dt>
-                    <dd className="track-sum-avg tabular-nums">
-                      {week.averageWeight != null ? (
-                        <>
-                          {formatKg(week.averageWeight)}
-                          <span className="track-unit"> kg</span>
-                        </>
-                      ) : (
-                        '—'
-                      )}
-                    </dd>
-                    {week.deltaWeight != null && (
-                      <>
-                        <dt className="track-sum-label">
-                          <span className="track-sum-long">
-                            Vs. anterior<span className="sr-only"> semana</span>
-                          </span>
-                          <span className="track-sum-short" aria-hidden>
-                            Dif.
-                          </span>
-                        </dt>
-                        <dd className="track-sum-delta tabular-nums">
-                          {signed(week.deltaWeight)}
-                          <span className="track-unit"> kg</span>
-                        </dd>
-                      </>
-                    )}
-                    <dd className="track-spark-cell" aria-hidden>
-                      <WeekSpark days={week.days} />
-                    </dd>
-                  </div>
-                )}
-                {showSteps && week.averageSteps != null && (
-                  <div className="track-sum-line tabular-nums">
-                    <dt className="sr-only">Pasos medios</dt>
-                    <dd className="track-minor">
-                      {Math.round(week.averageSteps).toLocaleString('es-ES')}
-                      <span className="track-unit"> pas</span>
-                    </dd>
-                  </div>
-                )}
-                {showCalories && week.averageCalories != null && (
-                  <div className="track-sum-line tabular-nums">
-                    <dt className="sr-only">Calorías medias</dt>
-                    <dd className="track-minor">
-                      {Math.round(week.averageCalories).toLocaleString('es-ES')}
-                      <span className="track-unit"> kcal</span>
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-          );
-        })}
-        {weeks.length === 0 && !isLoading && !isError && (
-          <p className="chart-empty track-empty">Aún no hay registros.</p>
-        )}
-      </section>
+      )}
 
       <Suspense fallback={null}>
         <ProgressPhotosSection />

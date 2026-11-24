@@ -65,10 +65,10 @@ export default function MacroConfigurator({
 
   return (
     <div>
-      <h4 className="subsection-title">Estrategia General</h4>
+      <h4 className="subsection-title">Estrategia general</h4>
       <div className="form-group" style={{ marginBottom: 'var(--space-md)' }}>
         <label htmlFor="macro-configurator-modo-de-calculo" className="form-label">
-          Modo de Cálculo
+          Modo de cálculo
         </label>
         <Select
           id="macro-configurator-modo-de-calculo"
@@ -78,7 +78,7 @@ export default function MacroConfigurator({
         >
           <option value="CUSTOM_GRAMS">Gramos Exactos (Recomendado )</option>
           <option value="CUSTOM_PCT">Porcentajes (%)</option>
-          <option value="BALANCED">Balanceada Automática </option>
+          <option value="BALANCED">Balanceada automática</option>
         </Select>
       </div>
 
@@ -265,7 +265,7 @@ export default function MacroConfigurator({
           <div className="form-group" style={{ marginBottom: 'var(--space-md)' }}>
             <label htmlFor="macro-configurator-calorias-totales-objetivo" className="form-label">
               {' '}
-              Calorías Totales Objetivo
+              Calorías totales objetivo
             </label>
             <input
               id="macro-configurator-calorias-totales-objetivo"
@@ -401,7 +401,7 @@ export default function MacroConfigurator({
           <div className="form-group" style={{ marginBottom: 'var(--space-md)' }}>
             <label htmlFor="macro-configurator-calorias-totales-objetivo-2" className="form-label">
               {' '}
-              Calorías Totales Objetivo
+              Calorías totales objetivo
             </label>
             <input
               id="macro-configurator-calorias-totales-objetivo-2"

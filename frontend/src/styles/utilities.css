@@ -48,14 +48,181 @@
   color: var(--wall-ink, var(--text-muted));
   opacity: 0.7;
 }
+/* A Utilidades se llega desde «Más»: en el móvil ninguna pestaña la nombra, así que el título se ve. */
+@media (max-width: 1023px) {
+  .util-head .page-title-desktop {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    font-size: 1.6rem;
+  }
+}
 @media (max-width: 768px) {
   .util-head {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.9rem;
   }
   .util-lede {
     display: none;
   }
   .util-section + .util-section {
     margin-top: 1.1rem;
+  }
+}
+
+/* Tarjeta plegable de cada calculadora */
+.calc-card.card {
+  padding: 0;
+  overflow: hidden;
+}
+.calc-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.calc-head:hover {
+  background: var(--bg-glass-strong);
+}
+.calc-head:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.calc-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--bg-glass-strong);
+  color: var(--accent-primary);
+}
+.calc-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.calc-title {
+  font-family: var(--font-main);
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+.calc-sub {
+  font-family: var(--font-main);
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+.calc-chevron {
+  flex: none;
+  color: var(--text-muted);
+  transition: transform 0.25s ease;
+}
+.calc-card[data-open] .calc-chevron {
+  transform: rotate(180deg);
+}
+.calc-fold {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.calc-card[data-open] .calc-fold {
+  grid-template-rows: 1fr;
+}
+.calc-fold-inner {
+  overflow: hidden;
+}
+.calc-body {
+  padding: 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+.calc-intro {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.calc-intro:last-child {
+  margin-bottom: 0;
+}
+.calc-fields {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.calc-fields[data-cols='2'] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.calc-fields .form-group,
+.calc-field-wide.form-group {
+  margin-bottom: 0;
+}
+.calc-field-wide.form-group {
+  margin-bottom: 12px;
+}
+.calc-fields .calc-field-wide.form-group {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+@media (min-width: 640px) {
+  .calc-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.util-result {
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-glass-strong);
+}
+.util-result-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.util-result-value {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+.util-result-value small {
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.util-result-note {
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+@media (prefers-reduced-motion: reduce) {
+  .calc-chevron,
+  .calc-fold {
+    transition: none;
   }
 }

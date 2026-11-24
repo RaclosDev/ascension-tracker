@@ -4,35 +4,43 @@
 }
 .workout-session-summary h3 {
   margin: 0;
-  font-family: inherit;
+  font-family: var(--font-display);
   font-size: 1.15rem;
-  font-weight: 600;
-  line-height: 1.4;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  text-transform: uppercase;
   color: var(--text-primary);
 }
 .workout-session-date {
-  margin-top: 3px;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 .workout-session-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 24px;
+  gap: 8px 0;
   margin: 12px 0;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
+}
+.workout-session-stats > div {
+  padding-right: 14px;
+}
+.workout-session-stats > div + div {
+  padding-left: 14px;
+  border-left: 1px solid var(--border-subtle);
 }
 .workout-session-stats dt {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  font-size: 0.72rem;
+  color: var(--text-muted);
 }
 .workout-session-stats dd {
-  margin: 3px 0 0;
-  font-size: 0.9rem;
-  font-weight: 600;
+  margin: 2px 0 0;
+  font-size: 0.92rem;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text-primary);
 }
 .workout-session-exercises {
   display: -webkit-box;
@@ -42,4 +50,125 @@
   font-size: 0.8rem;
   color: var(--text-secondary);
   line-height: 1.5;
+}
+
+/* Tarjeta de sesión del historial */
+.wk-session.card {
+  padding: 0;
+  overflow: hidden;
+}
+.wk-session-body {
+  display: flex;
+  align-items: center;
+}
+.wk-session-main {
+  flex: 1;
+  min-width: 0;
+  padding: 16px;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.wk-session-main:hover {
+  background: var(--bg-glass-strong);
+}
+.wk-session-main:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+.wk-session-map {
+  flex: none;
+  width: 104px;
+  padding-right: 12px;
+  opacity: 0.85;
+}
+.wk-session-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 8px 2px 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+.wk-session-actions .wk-link {
+  margin: 0 0 0 -8px;
+}
+.wk-session-actions > span {
+  display: flex;
+}
+.wk-session-actions .icon-btn {
+  width: 44px;
+  height: 44px;
+}
+.wk-session-delete:hover {
+  color: var(--color-danger);
+}
+@media (min-width: 768px) {
+  .wk-session-map {
+    width: 132px;
+  }
+}
+
+/* Plantillas: la misma tarjeta, con «Empezar» como acción principal */
+.wk-tpl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wk-tpl {
+  display: flex;
+  flex-direction: column;
+}
+.wk-tpl-body {
+  flex: 1;
+  padding: 16px;
+}
+.wk-tpl-name {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+.wk-tpl-list {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.wk-tpl .wk-session-actions {
+  padding: 8px 8px 8px 16px;
+}
+.wk-tpl-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 18px;
+}
+.wk-confirm.card {
+  max-width: 400px;
+  padding: 1.5rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 16px;
+  background: var(--bg-card);
+}
+.wk-confirm-title {
+  font-size: 1.15rem;
+  color: var(--text-primary);
+}
+.wk-confirm-text {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+.wk-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
 }

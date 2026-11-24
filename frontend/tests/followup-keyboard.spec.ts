@@ -4,7 +4,9 @@ import { setupAuthMocks } from './helpers/auth';
 test('tracking dialog traps focus and restores the day button on Escape', async ({ page }) => {
   await setupAuthMocks(page);
   await page.goto('/tracking');
-  const trigger = page.locator('.track-day').first();
+  // Las semanas pasadas llegan plegadas: se abre la primera para ver sus días
+  await page.locator('button.tv-step').first().click();
+  const trigger = page.locator('.tv-day').first();
   await trigger.click();
   const dialog = page.getByRole('dialog');
   const close = dialog.getByRole('button', { name: /Cerrar modal/ });

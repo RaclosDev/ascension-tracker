@@ -41,6 +41,10 @@
     width: 44px;
     padding: 0;
   }
+  .workout-tabs-row .segmented button {
+    min-width: 0;
+    padding-inline: 4px;
+  }
   .workout-tab-action .tab-action-label {
     position: absolute;
     width: 1px;

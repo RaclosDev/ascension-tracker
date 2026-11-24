@@ -15,7 +15,7 @@ import {
 import {
   completedSets,
   formatDayLong,
-  formatDuration,
+  formatSessionLength,
   formatKg,
   sessionVolume,
 } from '@/lib/workout/format';
@@ -117,7 +117,7 @@ export function WorkoutHistoryDetail({
             <dl className="hd-stats">
               <div>
                 <dt>Duración</dt>
-                <dd>{formatDuration(detail.finishedAt - detail.startedAt)}</dd>
+                <dd>{formatSessionLength(detail.finishedAt - detail.startedAt)}</dd>
               </div>
               <div>
                 <dt>Volumen</dt>

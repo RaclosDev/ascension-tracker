@@ -83,7 +83,7 @@ test('the installed PWA redirects in the same window and restores its session th
   await page.goto('/login');
   await page.getByRole('button', { name: 'Abrir cuenta de prueba' }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByRole('region', { name: 'Peso' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Peso de hoy', exact: true })).toBeVisible();
   expect(returnedToApp).toBe(true);
   expect(popupCount).toBe(0);
 });
