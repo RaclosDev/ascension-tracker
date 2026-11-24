@@ -34,7 +34,7 @@ describe('TrackingLadder', () => {
 
     fireEvent.click(screen.getByRole('button', { expanded: false }));
     const monday = screen.getByRole('button', { name: /lunes 5 de enero: 81.25 kg, 8.?432 pasos/ });
-    expect(monday.textContent).toContain('8,4k');
+    expect(monday.textContent).toContain('8.432');
 
     fireEvent.click(monday);
     expect(onOpenDay).toHaveBeenCalledWith(

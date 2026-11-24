@@ -148,14 +148,14 @@
 .tv-days {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
+  gap: 3px;
 }
 .tv-day {
   display: grid;
   align-content: start;
   gap: 3px;
   min-height: 56px;
-  padding: 8px 2px;
+  padding: 8px 0;
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   background: none;
@@ -188,15 +188,24 @@
   color: var(--accent-primary);
 }
 .tv-day-value {
-  font-size: 0.86rem;
+  --fs: 0.86rem;
+  font-size: var(--fs);
   font-weight: 700;
   line-height: 1.2;
+  white-space: nowrap;
 }
 /* Con varias métricas, la primera manda y las demás acompañan. */
 .tv-day-value + .tv-day-value {
-  font-size: 0.74rem;
+  --fs: 0.74rem;
   font-weight: 500;
   color: var(--text-secondary);
+}
+/* Pasos y calorías van enteros (12.235): en columnas estrechas la letra se encoge para caber. */
+.tv-day {
+  container-type: inline-size;
+}
+.tv-day-value:is([data-metric='steps'], [data-metric='calories']) {
+  font-size: min(var(--fs), 28cqi);
 }
 .tv-day[data-empty] .tv-day-value {
   font-weight: 400;
@@ -327,9 +336,9 @@ button.tv-step:focus-visible {
     gap: 8px;
   }
   .tv-day-value {
-    font-size: 1rem;
+    --fs: 1rem;
   }
   .tv-day-value + .tv-day-value {
-    font-size: 0.84rem;
+    --fs: 0.84rem;
   }
 }
