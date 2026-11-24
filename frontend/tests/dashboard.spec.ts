@@ -187,7 +187,7 @@ test.describe('Dashboard Page & KPI Metrics Suite', () => {
     await expect(evolutionCard).toBeVisible();
     await expect(evolutionCard.locator('.recharts-surface').first()).toBeVisible();
 
-    const today = page.getByRole('complementary', { name: 'Hoy', exact: true });
+    const today = page.getByRole('region', { name: 'Hoy', exact: true });
     await expect(today.getByText('Entreno', { exact: true })).toBeVisible();
     await expect(today.getByRole('link', { name: /entrenar|empezar|ver/i })).toBeVisible();
   });

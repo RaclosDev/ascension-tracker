@@ -6,6 +6,7 @@ import {
   type PowerAttempt,
 } from '../../lib/coach/powerMeets';
 import { Select } from '@/components/ui/select';
+import { InfoTip } from '@/components/ui/InfoTip';
 
 export function PowerAttemptsEditor({
   attempts,
@@ -25,11 +26,13 @@ export function PowerAttemptsEditor({
     );
   return (
     <section className="card pw-card">
-      <h4>Intentos y resultado</h4>
-      <p className="pw-hint">
-        Mantén el plan previsto y registra aparte el peso realizado. Los resultados los anota el
-        entrenador.
-      </p>
+      <h4 className="pw-title-tip">
+        Intentos y resultado
+        <InfoTip label="Sobre los intentos" align="start">
+          Mantén el plan previsto y registra aparte el peso realizado. Los resultados los anota el
+          entrenador.
+        </InfoTip>
+      </h4>
       <dl className="pw-best" aria-live="polite">
         <div>
           <dt>Total previsto</dt>

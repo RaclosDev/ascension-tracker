@@ -306,27 +306,25 @@ export function HomeOverview(p: HomeOverviewProps) {
           <WeighButtons w={w} className="wk-start" />
         </div>
       </section>
-      <div className="wk-grid">
-        <div className="wk-main">
-          <section className="card wk-panel" aria-labelledby="hv-goal-a">
-            <header className="wk-panel-head">
-              <h3 id="hv-goal-a" className="wk-title">
-                Meta
-              </h3>
-              <span className="wk-note hv-pace">Proyectado a {p.ratePicker}</span>
-            </header>
-            <GoalRule {...p} />
-          </section>
-          <ChartPanel p={p} />
-        </div>
-        <aside className="card wk-panel wk-recent" aria-labelledby="hv-today-a">
+      <div className="wk-grid hv-grid">
+        <section className="card wk-panel" aria-labelledby="hv-goal-a">
+          <header className="wk-panel-head">
+            <h3 id="hv-goal-a" className="wk-title">
+              Meta
+            </h3>
+            <span className="wk-note hv-pace">Proyectado a {p.ratePicker}</span>
+          </header>
+          <GoalRule {...p} />
+        </section>
+        <section className="card wk-panel wk-recent" aria-labelledby="hv-today-a">
           <header className="wk-panel-head">
             <h3 id="hv-today-a" className="wk-title">
               Hoy
             </h3>
           </header>
           <TodayRows p={p} />
-        </aside>
+        </section>
+        <ChartPanel p={p} />
       </div>
     </div>
   );

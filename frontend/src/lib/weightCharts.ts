@@ -14,6 +14,7 @@ export const toWeeklyDeltaData = (weeks: WeekSummary[]) =>
   weeks
     .filter((w): w is WeekSummary & { delta: number } => w.delta !== null)
     .map((w) => ({
+      date: w.weekStart,
       week: shortDay(w.weekStart),
       delta: w.delta,
       fill:
