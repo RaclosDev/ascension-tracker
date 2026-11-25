@@ -73,7 +73,7 @@ describe('CSP Policy Synchronization (Single Source of Truth)', () => {
       .join('; ');
     expect(demo).toHaveLength(1);
     expect(header(demo[0], 'Content-Security-Policy')).toBe(demoCsp);
-    expect(demoCsp).toContain("frame-ancestors 'self' https://raclosdev.github.io");
+    expect(demoCsp).toContain("frame-ancestors 'self' https://portfolio.raclos.es");
     expect(header(demo[0], 'X-Frame-Options')).toBeUndefined();
   });
 
