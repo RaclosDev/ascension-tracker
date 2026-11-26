@@ -94,23 +94,22 @@ function WeightFigure({ w, value }: { w: WeighIn; value: number }) {
   );
 }
 
-function WeighButtons({ w, className = '' }: { w: WeighIn; className?: string }) {
+function WeighButtons({ w, secondary = false }: { w: WeighIn; secondary?: boolean }) {
   return w.editing ? (
     <>
       <button type="button" className="btn btn-secondary" onClick={w.cancel} disabled={w.pending}>
         Cancelar
       </button>
-      <button
-        type="button"
-        className={`btn btn-primary ${className}`}
-        onClick={w.submit}
-        disabled={w.pending}
-      >
+      <button type="button" className="btn btn-primary" onClick={w.submit} disabled={w.pending}>
         Guardar
       </button>
     </>
   ) : (
-    <button type="button" className={`btn btn-primary ${className}`} onClick={w.open}>
+    <button
+      type="button"
+      className={`btn ${secondary ? 'btn-secondary' : 'btn-primary'}`}
+      onClick={w.open}
+    >
       {w.label}
     </button>
   );
@@ -266,15 +265,43 @@ function ChartPanel({ p }: { p: HomeOverviewProps }) {
   );
 }
 
-const left = (p: HomeOverviewProps) => Math.abs(p.goal - p.currentWeight);
 const shortDate = (arrival: string) => arrival.replace(/ \d{4}$/, '');
+const kg = (v: number) => `${v.toFixed(1)} kg`;
 
-/** A · Como Entreno: el peso de hoy manda, con la semana y tres cifras de la meta. */
+/** Las cifras de la meta, en dos columnas junto al peso de hoy. */
+function GoalStats(p: HomeOverviewProps) {
+  const moved = p.currentWeight - p.start;
+  const gaining = p.goal > p.start;
+  const towardGoal = gaining ? moved : -moved;
+  const stats: [string, string][] = [
+    [
+      gaining ? 'Total ganado' : 'Total perdido',
+      `${towardGoal < 0 ? '−' : ''}${kg(Math.abs(moved))}`,
+    ],
+    ['Faltan', kg(Math.abs(p.goal - p.currentWeight))],
+    ['Llegada', p.arrival ? shortDate(p.arrival) : '—'],
+    ['Kg por semana', p.rate.toFixed(2)],
+    ['Media semanal', p.weeklyAverage ? kg(p.weeklyAverage) : '—'],
+    ['Racha', `${p.streak} ${p.streak === 1 ? 'día' : 'días'}`],
+  ];
+  return (
+    <dl className="wk-stats hv-stats">
+      {stats.map(([label, value]) => (
+        <div key={label}>
+          <dt>{label}</dt>
+          <dd className="tabular-nums">{value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/** A · Como Entreno: el peso de hoy manda, con la semana y seis cifras de la meta. */
 export function HomeOverview(p: HomeOverviewProps) {
   const w = useWeighIn(p);
   return (
     <div className="wk">
-      <section className="card wk-hero" aria-label="Peso de hoy">
+      <section className="card wk-hero hv-today" aria-label="Peso de hoy">
         <div className="wk-hero-week">
           <div className="wk-week-head">
             <div>
@@ -282,29 +309,13 @@ export function HomeOverview(p: HomeOverviewProps) {
               <WeightFigure w={w} value={p.todayWeight ?? p.currentWeight} />
               <p className="wk-compare">{vsPrevious(p)}</p>
             </div>
-            <div className="wk-quick">
-              <WeighButtons w={w} className="wk-quick-start" />
+            <div className="hv-weigh">
+              <WeighButtons w={w} secondary />
             </div>
           </div>
           <WeekRow {...p} />
         </div>
-        <dl className="wk-stats">
-          <div>
-            <dt>Faltan</dt>
-            <dd className="tabular-nums">{left(p).toFixed(1)} kg</dd>
-          </div>
-          <div>
-            <dt>Llegada</dt>
-            <dd>{p.arrival ? shortDate(p.arrival) : '—'}</dd>
-          </div>
-          <div>
-            <dt>Kg por semana</dt>
-            <dd className="tabular-nums">{p.rate.toFixed(2)}</dd>
-          </div>
-        </dl>
-        <div className="wk-actions">
-          <WeighButtons w={w} className="wk-start" />
-        </div>
+        <GoalStats {...p} />
       </section>
       <div className="wk-grid hv-grid">
         <section className="card wk-panel" aria-labelledby="hv-goal-a">
