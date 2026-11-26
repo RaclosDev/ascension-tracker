@@ -211,6 +211,16 @@
     flex: none;
   }
 }
+/* Con «Borrar día», Cancelar y Guardar no caben en 320 px: Guardar se salía de la pantalla. */
+@media (max-width: 360px) {
+  .te-foot {
+    flex-wrap: wrap;
+  }
+  .te-delete {
+    flex-basis: 100%;
+    margin-right: 0;
+  }
+}
 @keyframes te-rise {
   from {
     transform: translateY(24px);
