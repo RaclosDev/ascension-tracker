@@ -37,6 +37,30 @@ export async function signInWithPassword(email: string, password: string) {
   return sessionToken(data);
 }
 
+/** Confirms the address with the token of the link that was emailed. */
+export async function verifyEmail(token: string): Promise<void> {
+  await api.post('/auth/password/verify-email', { token });
+}
+
+export interface EmailStatus {
+  verified: boolean;
+  /** Left when the real owner of the address took the account over; shown until dismissed. */
+  notice: string | null;
+}
+
+export async function getEmailStatus(): Promise<EmailStatus> {
+  const { data } = await api.get<EmailStatus>('/account/email');
+  return data;
+}
+
+export async function resendVerificationEmail(): Promise<void> {
+  await api.post('/account/email/resend');
+}
+
+export async function dismissEmailNotice(): Promise<void> {
+  await api.delete('/account/email/notice');
+}
+
 export async function requestPasswordReset(email: string): Promise<void> {
   await api.post('/auth/password/reset-request', { email });
 }

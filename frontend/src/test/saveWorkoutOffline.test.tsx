@@ -52,7 +52,9 @@ describe('saving a workout without a connection', () => {
   let client: QueryClient;
 
   beforeEach(() => {
-    vi.mocked(api.post).mockReset().mockResolvedValue({ data: { id: 'saved-1' } });
+    vi.mocked(api.post)
+      .mockReset()
+      .mockResolvedValue({ data: { id: 'saved-1' } });
     client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
     useWorkoutStore.setState({ active: session(1_000), restUntil: null, pickerOpen: false });
     onlineManager.setOnline(false);

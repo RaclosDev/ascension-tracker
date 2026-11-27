@@ -26,8 +26,6 @@ import { Camera, Mic, ImageIcon, ScanLine } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { FoodLog, Meal } from '../types/api';
 
-export type { SavedFoodExtended };
-
 export default function FoodSearchModal({
   isOpen,
   onClose,
@@ -209,7 +207,9 @@ export default function FoodSearchModal({
       if (res.data) {
         const data = res.data;
         if (data.product) {
-          const offName = String(data.product.product_name || data.product.product_name_es || '').trim();
+          const offName = String(
+            data.product.product_name || data.product.product_name_es || '',
+          ).trim();
           const offBrand = String(data.product.brands || '');
 
           // Without a name nothing can be told apart from another food: the user names it.
@@ -228,11 +228,17 @@ export default function FoodSearchModal({
               fat: text(per100('fat')),
             });
             setActiveOverlay('manual');
-            toast(`El producto ${decodedText} no tiene nombre en Open Food Facts. Ponle uno para guardarlo.`);
+            toast(
+              `El producto ${decodedText} no tiene nombre en Open Food Facts. Ponle uno para guardarlo.`,
+            );
             return;
           }
 
-          const savedMatch = findSavedFoodForScan(savedFoods as SavedFoodExtended[], offName, offBrand);
+          const savedMatch = findSavedFoodForScan(
+            savedFoods as SavedFoodExtended[],
+            offName,
+            offBrand,
+          );
           if (savedMatch) {
             handleSelectSaved(savedMatch);
           } else {

@@ -27,7 +27,10 @@ vi.mock('../components/BarcodeScanner', () => ({
 
 function scan(product: Record<string, unknown>) {
   vi.mocked(api.get).mockImplementation((url: string) =>
-    Promise.resolve({ status: 200, data: url.startsWith('/food-external/barcode') ? { product } : [] }),
+    Promise.resolve({
+      status: 200,
+      data: url.startsWith('/food-external/barcode') ? { product } : [],
+    }),
   );
 }
 
@@ -41,7 +44,10 @@ describe('scanning a barcode', () => {
   beforeEach(() => vi.resetAllMocks());
 
   it('opens the form instead of picking a saved food when the product has no name', async () => {
-    scan({ brands: 'Marca', nutriments: { proteins_100g: 10, carbohydrates_100g: 20, fat_100g: 5 } });
+    scan({
+      brands: 'Marca',
+      nutriments: { proteins_100g: 10, carbohydrates_100g: 20, fat_100g: 5 },
+    });
     await openScanner();
 
     const name = await screen.findByLabelText(/nombre/i);
@@ -79,10 +85,7 @@ describe('findSavedFoodForScan', () => {
   });
 
   it('never returns a recipe or an entry without id', () => {
-    const list = [
-      { name: 'Tortilla', isRecipe: true, id: 9 },
-      { name: 'Tortilla' },
-    ];
+    const list = [{ name: 'Tortilla', isRecipe: true, id: 9 }, { name: 'Tortilla' }];
     expect(findSavedFoodForScan(list, 'Tortilla', '')).toBeUndefined();
   });
 });

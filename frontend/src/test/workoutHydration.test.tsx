@@ -138,7 +138,9 @@ it('keeps a saved workout whose bodyweight sets have no weight, instead of disca
   // A copy already persisted with nulls (before the fix) is repaired on load, not rejected.
   const persisted = JSON.stringify({
     version: 1,
-    state: { active: { name: 'Calistenia', startedAt: 1, editingId: 'w1', exercises: completed.exercises } },
+    state: {
+      active: { name: 'Calistenia', startedAt: 1, editingId: 'w1', exercises: completed.exercises },
+    },
   });
   vi.mocked(get).mockResolvedValueOnce(persisted);
   const value = await workoutStorage.getItem('ascension-workout-v1');

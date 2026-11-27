@@ -21,6 +21,7 @@ import { useQuery } from '@tanstack/react-query';
 import { WorkoutElapsedTimer } from './workout/WorkoutElapsedTimer';
 import OnboardingScreen from './OnboardingScreen';
 import { PasskeyPrompt } from './PasskeyPrompt';
+import { EmailVerificationNotice } from './EmailVerificationNotice';
 import { preloadRoute } from '../utils/routePreload';
 
 import { Skeleton } from './ui/skeleton';
@@ -459,6 +460,7 @@ export default function Layout() {
                 </div>
               }
             >
+              {user?.email && !isCoachTourFrame() && <EmailVerificationNotice />}
               <div key={location.pathname} className="route-fade">
                 {user?.email && !isCoachTourFrame() && location.pathname !== '/entrenador/guia' && (
                   <PasskeyPrompt email={user.email} />
