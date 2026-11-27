@@ -3,6 +3,8 @@ import { ModalFrame } from './ui/ModalFrame';
 import { QueryErrorNotice } from './QueryErrorNotice';
 import { useFoodSearchLists } from '../hooks/food/useFoodSearchLists';
 import { updateManualFoodForm } from '../utils/manualFoodForm';
+import { findSavedFoodForScan } from '../utils/scannedFood';
+import { getSanitizedKcal } from '../utils/portionHelper';
 import { useFoodAiEntry } from '../hooks/food/useFoodAiEntry';
 import { useState, useRef, useEffect, useEffectEvent, ChangeEvent, Suspense } from 'react';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
@@ -207,18 +209,31 @@ export default function FoodSearchModal({
       if (res.data) {
         const data = res.data;
         if (data.product) {
-          const offName = data.product.product_name || data.product.product_name_es || '';
-          const offBrand = data.product.brands || '';
+          const offName = String(data.product.product_name || data.product.product_name_es || '').trim();
+          const offBrand = String(data.product.brands || '');
 
-          const savedMatch = (savedFoods as SavedFoodExtended[]).find((sf: SavedFoodExtended) => {
-            const sfName = sf.name || '';
-            const n1 = sfName.toLowerCase();
-            const n2 = offName.toLowerCase();
-            const n3 = `${offName} - ${offBrand}`.toLowerCase();
-            return n1 === n2 || n1 === n3 || n1.includes(n2);
-          });
+          // Without a name nothing can be told apart from another food: the user names it.
+          if (!offName) {
+            const nutriments = (data.product.nutriments || {}) as Record<string, unknown>;
+            const per100 = (key: string) =>
+              Number(nutriments[`${key}_100g`] ?? nutriments[key] ?? 0) || 0;
+            const text = (value: number) => (value > 0 ? String(value) : '');
+            setOffResults([]);
+            setManualForm({
+              name: '',
+              brand: offBrand,
+              kcal: text(getSanitizedKcal(nutriments)),
+              protein: text(per100('proteins')),
+              carbs: text(per100('carbohydrates')),
+              fat: text(per100('fat')),
+            });
+            setActiveOverlay('manual');
+            toast(`El producto ${decodedText} no tiene nombre en Open Food Facts. Ponle uno para guardarlo.`);
+            return;
+          }
 
-          if (savedMatch && savedMatch.id && !savedMatch.isRecipe) {
+          const savedMatch = findSavedFoodForScan(savedFoods as SavedFoodExtended[], offName, offBrand);
+          if (savedMatch) {
             handleSelectSaved(savedMatch);
           } else {
             setOffResults([data.product]);
