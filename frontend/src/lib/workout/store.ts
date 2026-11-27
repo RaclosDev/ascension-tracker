@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { useSyncExternalStore } from 'react';
-import { workoutStorage, UNBOUND_WORKOUT_KEY } from './storage';
+import { workoutStorage, UNBOUND_WORKOUT_KEY, onRemoteWorkoutChange } from './storage';
 import { uid } from '@/lib/utils';
 import { previousFill, matchVariant } from './format';
 import {
@@ -678,6 +678,11 @@ export const useWorkoutStore = create<WorkoutState>()(
     },
   ),
 );
+
+// Another tab saved this account's session: follow it instead of overwriting it with a stale copy.
+onRemoteWorkoutChange((name) => {
+  if (useWorkoutStore.persist.getOptions().name === name) void useWorkoutStore.persist.rehydrate();
+});
 
 const subscribeHydration = (listener: () => void) => {
   const unsubscribeStart = useWorkoutStore.persist.onHydrate(listener);

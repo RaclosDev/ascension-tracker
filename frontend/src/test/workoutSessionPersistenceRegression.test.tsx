@@ -294,6 +294,31 @@ describe('Workout Session & Stepper Anti-Regression Suite', () => {
     expect(input.value).toBe('120');
   });
 
+  it('names the weight and reps fields of every set for screen readers', () => {
+    const exerciseRow = {
+      id: 'row-bench',
+      exerciseId: 'bench-press',
+      notes: '',
+      variant: {},
+      sets: [
+        { id: 'set-1', type: 'normal' as const, weight: '80', reps: '10', completed: false },
+        { id: 'set-2', type: 'normal' as const, weight: '85', reps: '8', completed: false },
+      ],
+    };
+    useWorkoutStore.setState({
+      active: { name: 'Test Workout', startedAt: Date.now(), exercises: [exerciseRow] },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ExerciseCard rowId="row-bench" row={exerciseRow} index={0} total={1} />
+      </QueryClientProvider>,
+    );
+    expect(screen.getByLabelText('Peso de la serie 1')).toBeDefined();
+    expect(screen.getByLabelText('Repeticiones de la serie 1')).toBeDefined();
+    expect(screen.getByLabelText('Peso de la serie 2')).toBeDefined();
+    expect(screen.getByLabelText('Repeticiones de la serie 2')).toBeDefined();
+  });
+
   it('manages single active stepper state and prevents multiple steppers open simultaneously', () => {
     const exerciseRow = {
       id: 'row-bench',

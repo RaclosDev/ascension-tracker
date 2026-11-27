@@ -217,6 +217,7 @@ export const SwipeableSetRow = React.memo(
 
             <input
               inputMode="decimal"
+              aria-label={`${isCardio ? 'Distancia' : 'Peso'} de la serie ${i + 1}`}
               value={isCardio ? s.distance || '' : s.weight || ''}
               placeholder={coachTarget ? undefined : prev === '' ? '0' : prev.split('×')[0]?.trim()}
               onFocus={(e) => {
@@ -264,6 +265,7 @@ export const SwipeableSetRow = React.memo(
             <input
               inputMode="numeric"
               pattern="[0-9]*"
+              aria-label={`${isCardio ? 'Duración' : 'Repeticiones'} de la serie ${i + 1}`}
               value={isCardio ? s.duration || '' : s.reps || ''}
               placeholder={
                 coachTarget

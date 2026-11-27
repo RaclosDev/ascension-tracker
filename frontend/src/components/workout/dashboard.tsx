@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { addDays, format, isToday, isYesterday, startOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ArrowRight, Play, Repeat2, X } from 'lucide-react';
@@ -13,14 +13,18 @@ import { useRecentWorkouts, useWorkoutTemplates, useCustomExercises } from '@/li
 import { Skeleton } from '@/components/ui/skeleton';
 import { PowerliftingCard } from '@/components/workout/PowerliftingCard';
 import { useMyCoaches } from '@/lib/coach/api';
+import { useRetryingImport } from '@/hooks/use-retrying-import';
 import '@/styles/workout-sheets.css';
 
-// Outside the precache like the coach pages: it needs the network, and offline it just renders nothing.
-const TodayProgramCard = lazy(() =>
-  import('@/components/workout/TodayProgramCard')
-    .then((m) => ({ default: m.TodayProgramCard }))
-    .catch(() => ({ default: () => null })),
-);
+// Outside the precache like the coach pages: it needs the network. Offline it renders nothing, and
+// it comes back by itself when the network does (a `lazy` import would stay failed until a reload).
+const loadTodayProgramCard = () =>
+  import('@/components/workout/TodayProgramCard').then((m) => m.TodayProgramCard);
+
+function TodayProgramSlot({ exerciseName }: { exerciseName: (id: string) => string }) {
+  const Card = useRetryingImport(loadTodayProgramCard);
+  return Card ? <Card exerciseName={exerciseName} /> : null;
+}
 
 const DAY_LETTERS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
@@ -273,11 +277,7 @@ function Dashboard() {
         </div>
       </section>
 
-      {!active && (
-        <Suspense fallback={null}>
-          <TodayProgramCard exerciseName={(id) => catalog.get(id)?.name ?? id} />
-        </Suspense>
-      )}
+      {!active && <TodayProgramSlot exerciseName={(id) => catalog.get(id)?.name ?? id} />}
 
       {repeatOpen && (
         <>

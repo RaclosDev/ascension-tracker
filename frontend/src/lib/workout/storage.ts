@@ -12,6 +12,50 @@ let legacyOwner: string | null | undefined;
 let unclaimedBackup: string | null = null;
 const latestValues = new Map<string, string>();
 const pendingWrites = new Map<string, Promise<void>>();
+const unsaved = new Set<string>();
+
+// Two tabs with the same session open would overwrite each other, the last write winning. Every write is
+// announced to the other tabs, which pick it up and follow it, so they edit one session instead of two.
+const TAB_ID = Math.random().toString(36).slice(2);
+const remoteListeners = new Set<(name: string) => void>();
+let channel: BroadcastChannel | null = null;
+try {
+  if (typeof BroadcastChannel !== 'undefined') {
+    channel = new BroadcastChannel('ascension-workout-sync');
+    channel.onmessage = (event: MessageEvent<{ name?: unknown; from?: unknown }>) => {
+      const { name, from } = event.data ?? {};
+      if (typeof name !== 'string' || from === TAB_ID) return;
+      void get<string>(name)
+        .then((value) => {
+          if (!value) return;
+          latestValues.set(name, value);
+          remoteListeners.forEach((listener) => listener(name));
+        })
+        .catch(() => undefined);
+    };
+  }
+} catch {
+  channel = null;
+}
+/** Calls back when another tab saved the session stored under `name`. */
+export const onRemoteWorkoutChange = (listener: (name: string) => void) => {
+  remoteListeners.add(listener);
+  return () => {
+    remoteListeners.delete(listener);
+  };
+};
+/** Same state regardless of the order of its keys, so a tab following another one does not echo it back. */
+const canonical = (value: string): string => {
+  try {
+    return JSON.stringify(JSON.parse(value), (_key, v: unknown) =>
+      v && typeof v === 'object' && !Array.isArray(v)
+        ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b)))
+        : v,
+    );
+  } catch {
+    return value;
+  }
+};
 export const workoutAccountKey = (email: string) =>
   `${ACCOUNT_PREFIX}${encodeURIComponent(email.trim().toLowerCase())}`;
 export const registerLegacyWorkoutOwner = (email: string | null) => {
@@ -100,12 +144,23 @@ export const workoutStorage: StateStorage = {
   },
   setItem: async (name, value) => {
     if (name === UNBOUND_WORKOUT_KEY) return;
+    const previous = latestValues.get(name);
+    // Nothing new (for instance, this tab just followed another one): no write and no echo to the others.
+    if (
+      previous !== undefined &&
+      !unsaved.has(name) &&
+      (previous === value || canonical(previous) === canonical(value))
+    )
+      return;
     latestValues.set(name, value);
     const pending = (pendingWrites.get(name) ?? Promise.resolve()).then(async () => {
       try {
         await set(name, value);
+        unsaved.delete(name);
         clearFailure();
+        channel?.postMessage({ name, from: TAB_ID });
       } catch {
+        unsaved.add(name);
         reportFailure();
       }
     });

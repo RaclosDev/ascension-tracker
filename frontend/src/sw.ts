@@ -6,6 +6,11 @@ import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { showRestPush } from './lib/workout/pushPayload';
+import {
+  focusOrOpen,
+  notificationTargetUrl,
+  type ClientsApi,
+} from './lib/workout/notificationClick';
 
 // Precache versioned static assets. Workbox manages old precache revisions.
 precacheAndRoute(self.__WB_MANIFEST);
@@ -64,20 +69,8 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
 
   if (event.action === 'dismiss') return;
 
-  const data = event.notification.data as { url?: unknown } | null;
-  const url = typeof data?.url === 'string' && /^\/(?!\/)/.test(data.url) ? data.url : '/workout';
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (new URL(client.url).pathname === url && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      if (self.clients.openWindow) {
-        return self.clients.openWindow(url);
-      }
-    }),
-  );
+  const url = notificationTargetUrl(event.notification.data);
+  event.waitUntil(focusOrOpen(self.clients as unknown as ClientsApi, url, self.location.origin));
 });
 
 self.addEventListener('activate', (event: ExtendableEvent) => {
