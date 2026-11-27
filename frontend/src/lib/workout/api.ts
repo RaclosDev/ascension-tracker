@@ -89,6 +89,8 @@ export const useSaveWorkout = () => {
       queryClient.invalidateQueries({ queryKey: ['workoutHistory'] });
       queryClient.invalidateQueries({ queryKey: ['recentWorkouts'] });
       queryClient.invalidateQueries({ queryKey: ['workouts'] });
+      // Home offers the prescribed session until this refresh says it is done.
+      queryClient.invalidateQueries({ queryKey: ['coaching', 'today'] });
       toast.success('Entrenamiento guardado');
     },
     onError: () => {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { invalidateDiary } from '../../lib/nutrition/invalidateDiary';
 import api from '../../api/client';
 import { readAiImage } from '../../utils/aiImage';
 import { getLocalDateString } from '../../utils/dateHelper';
@@ -255,13 +256,8 @@ export function useAiNutritionChef() {
 
       toast.success(`${option.title || 'Opción'} añadida a tu diario de hoy.`);
       setAppliedOptionKeys((prev) => new Set([...prev, optionKey]));
-      for (const key of [
-        'nutritionData',
-        'dashboard',
-        'trackingWeeks',
-        'foodLists',
-        'myFoodsData',
-      ]) {
+      void invalidateDiary(queryClient);
+      for (const key of ['foodLists', 'myFoodsData']) {
         void queryClient.invalidateQueries({ queryKey: [key] });
       }
       fetchSummary(todayStr);

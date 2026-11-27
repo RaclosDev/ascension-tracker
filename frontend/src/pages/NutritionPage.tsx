@@ -12,6 +12,7 @@ import MacroSummaryHeader from '../components/nutrition/MacroSummaryHeader';
 import { MealFoodGroup } from '../components/nutrition/MealFoodGroup';
 import { useNutritionDiary } from '../hooks/nutrition/useNutritionDiary';
 import { useAnyInView } from '../hooks/use-any-in-view';
+import { invalidateDiary } from '../lib/nutrition/invalidateDiary';
 
 const MyFoodsPage = lazyWithRetry(() => import('./MyFoodsPage'));
 const FoodSearchModal = lazyWithRetry(() => import('../components/FoodSearchModal'));
@@ -267,10 +268,7 @@ export default function NutritionPage() {
                 mealIndex={selectedMealIndex}
                 date={selectedDate}
                 onLogAdded={() => {
-                  fetchData();
-                  queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-                  queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
-                  queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
+                  void invalidateDiary(queryClient);
                 }}
                 meals={meals}
               />

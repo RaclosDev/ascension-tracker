@@ -2,6 +2,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { Check, Plus } from 'lucide-react';
+import { invalidateDiary } from '@/lib/nutrition/invalidateDiary';
 import api from '@/api/client';
 import { apiErrorMessage } from '@/lib/coach/api';
 import { useMyNutritionPlan, type DayType, type PlannedMeal } from '@/lib/coach/nutritionPlan';
@@ -59,9 +60,7 @@ export default function PlannedMealsCard({
       });
       setLogged((l) => ({ ...l, [`${date}:${slotIndex}`]: true }));
       toast.success(`${planned.name} registrado en ${meal?.name ?? 'tu diario'}`);
-      for (const key of ['nutritionData', 'dashboard', 'trackingWeeks', 'weekSummaries']) {
-        queryClient.invalidateQueries({ queryKey: [key] });
-      }
+      void invalidateDiary(queryClient);
     } catch (e) {
       toast.error(apiErrorMessage(e, 'No se pudo registrar la comida'));
     } finally {

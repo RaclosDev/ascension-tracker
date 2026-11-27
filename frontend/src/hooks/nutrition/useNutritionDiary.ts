@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 import { FoodLog, Macros, Meal, UserSettings } from '../../types/api';
 import { EditingLog } from '../../types/nutrition';
 import { getLocalDateString, addDaysToDateString } from '../../utils/dateHelper';
 import { belongsToMeal } from '../../utils/mealGroups';
+import { invalidateDiary } from '../../lib/nutrition/invalidateDiary';
 
 export function useNutritionDiary() {
   const queryClient = useQueryClient();
@@ -45,7 +46,6 @@ export function useNutritionDiary() {
         settings: settingsRes.data,
       };
     },
-    placeholderData: keepPreviousData,
   });
 
   const { foodLogs = [], macros = null, meals = [], settings = null } = data || {};
@@ -167,10 +167,7 @@ export function useNutritionDiary() {
         mealKey: targetMeal.mealKey,
         portionsJson: parsed.portionsJson,
       });
-      fetchData();
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
-      queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
+      void invalidateDiary(queryClient);
       toast.success('Movido correctamente');
     } catch {
       toast.error('Error al mover');
@@ -237,10 +234,7 @@ export function useNutritionDiary() {
         ),
       );
 
-      await queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
-      queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
+      await invalidateDiary(queryClient);
       toast.dismiss(loadingToast);
       const failures = results.filter((result) => result.status === 'rejected').length;
       if (failures > 0) {
@@ -267,10 +261,7 @@ export function useNutritionDiary() {
   const deleteLogMutation = useMutation<unknown, Error, { id: number | string; log?: FoodLog }>({
     mutationFn: ({ id }) => api.delete(`/nutrition/logs/${id}`),
     onSuccess: (_, { log }) => {
-      queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
-      queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
+      void invalidateDiary(queryClient);
       if (!log) {
         toast.success('Alimento eliminado');
         return;
@@ -304,10 +295,7 @@ export function useNutritionDiary() {
                       fat: log.fat,
                       portionsJson: log.portionsJson || null,
                     });
-                    queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
-                    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-                    queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
-                    queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
+                    void invalidateDiary(queryClient);
                     toast.success('¡Alimento restaurado!');
                   } catch {
                     toast.error('Error al restaurar alimento');
@@ -383,10 +371,7 @@ export function useNutritionDiary() {
   const updateLogMutation = useMutation({
     mutationFn: (data: Partial<FoodLog>) => api.put(`/nutrition/logs/${data.id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['nutritionData'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
-      queryClient.invalidateQueries({ queryKey: ['trackingWeeks'] });
+      void invalidateDiary(queryClient);
       setEditingLog(null);
       toast.success('Registro actualizado');
     },
@@ -397,6 +382,11 @@ export function useNutritionDiary() {
 
   const handleUpdateLog = () => {
     if (!editingLog) return;
+    // A blank or zero amount would save 0 g and wipe the macros of the entry.
+    if (!(Number(editingLog.quantity) > 0)) {
+      toast.error('Indica una cantidad mayor que 0');
+      return;
+    }
     updateLogMutation.mutate({
       id: editingLog.id,
       date: editingLog.date,
