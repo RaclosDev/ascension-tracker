@@ -41,6 +41,7 @@ interface Props {
   ) => Promise<void> | void;
   isSaving?: boolean;
   saveError?: string | null;
+  saveNotice?: string | null;
   // Viewing a previously completed workout.
   workout?: CompletedWorkout | null;
 }
@@ -69,6 +70,7 @@ export function WorkoutCelebrationModal({
   onSave,
   isSaving = false,
   saveError = null,
+  saveNotice = null,
   workout,
 }: Props) {
   const { data: catalogExercises } = useExerciseCatalog();
@@ -417,6 +419,14 @@ export function WorkoutCelebrationModal({
           {saveError && (
             <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs leading-relaxed">
               {saveError}
+            </div>
+          )}
+          {saveNotice && !saveError && (
+            <div
+              role="status"
+              className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs leading-relaxed"
+            >
+              {saveNotice}
             </div>
           )}
         </div>

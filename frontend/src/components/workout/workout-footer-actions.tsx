@@ -21,12 +21,13 @@ import { useSaveWorkout, useSaveTemplate } from '@/lib/workout/api';
 import { haptics } from '@/lib/haptics';
 import toast from 'react-hot-toast';
 
+const OFFLINE_NOTICE = 'Sin conexión: se enviará al volver.';
+
 export function FooterActions() {
   const activeWorkout = useWorkoutStore((s) => s.active);
   const prescribed = !!activeWorkout?.programDayId && !activeWorkout.editingId;
   const isEditing = Boolean(activeWorkout?.editingId);
   const finishWorkout = useWorkoutStore((s) => s.finishWorkout);
-  const clearActiveWorkout = useWorkoutStore((s) => s.clearActiveWorkout);
   const cancelEditWorkout = useWorkoutStore((s) => s.cancelEditWorkout);
   const discardWorkout = useWorkoutStore((s) => s.discardWorkout);
   const saveAsTemplate = useWorkoutStore((s) => s.saveAsTemplate);
@@ -110,9 +111,6 @@ export function FooterActions() {
     if (!record) return;
 
     saveWorkoutMutation.mutate(record, {
-      onSuccess: () => {
-        clearActiveWorkout();
-      },
       onError: () => {
         toast.error('Error al guardar los cambios del entrenamiento');
       },
@@ -137,6 +135,7 @@ export function FooterActions() {
           <Save size={18} />
           {saveWorkoutMutation.isPending ? 'Guardando cambios...' : 'Guardar Cambios'}
         </button>
+        {saveWorkoutMutation.isPaused && <p className="workout-plan-hint">{OFFLINE_NOTICE}</p>}
 
         <button className="workout-secondary-btn btn-press" onClick={() => setCancelEditOpen(true)}>
           <X size={16} />
@@ -333,7 +332,6 @@ export function FooterActions() {
             saveWorkoutMutation.mutate(record, {
               onSuccess: () => {
                 setFinishOpen(false);
-                clearActiveWorkout();
               },
               onError: () => {
                 setSaveError(
@@ -345,7 +343,11 @@ export function FooterActions() {
         }
         isSaving={saveWorkoutMutation.isPending}
         saveError={saveError}
+        saveNotice={saveWorkoutMutation.isPaused ? OFFLINE_NOTICE : null}
       />
+      {saveWorkoutMutation.isPaused && !finishOpen && (
+        <p className="workout-plan-hint">{OFFLINE_NOTICE}</p>
+      )}
       {incompleteReview}
     </div>
   );
