@@ -5,6 +5,7 @@ import com.ascension.util.Emails;
 import com.ascension.util.PiiMasker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,8 +18,9 @@ import java.time.Duration;
 import java.util.regex.Pattern;
 
 /**
- * Sign-up and sign-in with email and password. New accounts can sign in immediately; their email is
- * unverified until they use the link sent to it (see {@link EmailVerificationService}).
+ * Sign-up and sign-in with email and password. Signing up never opens a session and answers the same
+ * whether or not the address already has an account: a new account is created unverified and gets a
+ * confirmation link ({@link EmailVerificationService}); an existing one gets an email saying so.
  */
 @Service
 public class PasswordAuthService {
@@ -36,17 +38,22 @@ public class PasswordAuthService {
     private final AuthAccounts accounts;
     private final EmailSender emailSender;
     private final EmailVerificationService verification;
+    private final AccountEmailThrottle throttle;
+    private final String publicBaseUrl;
     private final BCryptPasswordEncoder encoder;
     private final String dummyHash;
     private final EmailKeyedLimiter loginFailures;
     private final Clock clock;
 
     public PasswordAuthService(JdbcTemplate jdbc, AuthAccounts accounts, EmailSender emailSender,
-                               EmailVerificationService verification) {
+                               EmailVerificationService verification, AccountEmailThrottle throttle,
+                               @Value("${app.public-base-url:https://ascension.raclos.es}") String publicBaseUrl) {
         this.jdbc = jdbc;
         this.accounts = accounts;
         this.emailSender = emailSender;
         this.verification = verification;
+        this.throttle = throttle;
+        this.publicBaseUrl = stripTrailingSlash(publicBaseUrl);
         this.encoder = new BCryptPasswordEncoder(12);
         // Compared against when the email has no password, so the answer takes as long either way.
         this.dummyHash = encoder.encode(AuthHashes.randomToken(16));
@@ -58,23 +65,34 @@ public class PasswordAuthService {
         return encoder;
     }
 
+    /**
+     * Sign-up. The caller cannot tell from the answer (nor, as far as possible, from the time it takes)
+     * whether the address already had an account: the password is always hashed and the emails are
+     * sent without waiting for the provider. Invalid emails and weak passwords are rejected before
+     * looking at any account. Needs an email provider, since nothing else can confirm the address.
+     */
     @Transactional
-    public Account register(String rawEmail, String password) {
+    public void register(String rawEmail, String password) {
         String email = validEmail(rawEmail);
         PasswordPolicy.validate(password, email);
+        if (!emailSender.enabled()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "El registro por email no está disponible ahora mismo.");
+        }
         String passwordHash = encoder.encode(password);
         int created = jdbc.update("""
                 INSERT INTO users (email, name, password_hash, email_verified, tokens_valid_after)
                 VALUES (?, ?, ?, FALSE, NOW() - INTERVAL '1 second')
                 ON CONFLICT (email) DO NOTHING
                 """, email, email.split("@", 2)[0], passwordHash);
-        if (created == 0) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya tienes una cuenta con este email. Inicia sesión.");
+        if (created > 0) {
+            log.info("Account created with a password: {}", PiiMasker.maskEmail(email));
+            Account account = accounts.findByEmail(email).orElseThrow();
+            verification.sendLink(account.id(), account.email());
+        } else if (throttle.tryAcquire(email)) {
+            emailSender.send(AccountEmails.alreadyRegistered(email, publicBaseUrl));
+            log.info("Sign-up for an existing account: {}", PiiMasker.maskEmail(email));
         }
-        log.info("Account created with a password: {}", PiiMasker.maskEmail(email));
-        Account account = accounts.findByEmail(email).orElseThrow();
-        verification.sendLink(account.id(), account.email());
-        return account;
     }
 
     /**

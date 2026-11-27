@@ -86,22 +86,36 @@ class PasswordAuthIntegrationTest {
     }
 
     @Test
-    void signUpOpensASessionWithoutEmailAndThenSignsInWithThePassword() throws Exception {
+    void signUpOpensNoSessionSendsTheLinkAndThenSignsInWithThePassword() throws Exception {
+        String email = email();
+        call("/api/auth/password/register", body(email.toUpperCase(), PASSWORD))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.token").doesNotExist())
+                .andExpect(jsonPath("$.message").isString())
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
+        assertThat(users.findByEmail(email)).isPresent();
+        assertThat(jdbc.queryForObject("SELECT email_verified FROM users WHERE email = ?",
+                Boolean.class, email)).isFalse();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM refresh_tokens WHERE email = ?",
+                Integer.class, email)).isZero();
+        assertThat(mail.sent).singleElement().satisfies(sent -> {
+            assertThat(sent.to()).isEqualTo(email);
+            assertThat(sent.text()).contains("/verificar-email#token=");
+        });
+
+        call("/api/auth/password/login", body(email.toUpperCase(), PASSWORD))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isString());
+    }
+
+    @Test
+    void withoutAnEmailProviderSigningUpIsUnavailableAndCreatesNothing() throws Exception {
         String email = email();
         mail.available = false;
         try {
-            call("/api/auth/password/register", body(email, PASSWORD))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.token").isString())
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refreshToken=")));
-            assertThat(users.findByEmail(email)).isPresent();
-            assertThat(jdbc.queryForObject("SELECT email_verified FROM users WHERE email = ?",
-                    Boolean.class, email)).isFalse();
+            call("/api/auth/password/register", body(email, PASSWORD)).andExpect(status().isServiceUnavailable());
+            assertThat(users.findByEmail(email)).isEmpty();
             assertThat(mail.sent).isEmpty();
-
-            call("/api/auth/password/login", body(email.toUpperCase(), PASSWORD))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.token").isString());
         } finally {
             mail.available = true;
         }
@@ -110,7 +124,8 @@ class PasswordAuthIntegrationTest {
     @Test
     void googleClaimsTheSameAccountAndDisablesItsPasswordAndOldSessions() throws Exception {
         String email = email();
-        call("/api/auth/password/register", body(email, PASSWORD)).andExpect(status().isOk());
+        call("/api/auth/password/register", body(email, PASSWORD)).andExpect(status().isAccepted());
+        call("/api/auth/password/login", body(email, PASSWORD)).andExpect(status().isOk());
         UUID before = jdbc.queryForObject("SELECT id FROM users WHERE email = ?", UUID.class, email);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM refresh_tokens WHERE email = ?",
                 Integer.class, email)).isPositive();
@@ -156,12 +171,32 @@ class PasswordAuthIntegrationTest {
     }
 
     @Test
-    void signingUpWithATakenEmailReturnsConflict() throws Exception {
-        String email = registeredWithoutEmail();
+    void signingUpAnswersTheSameForANewAndForATakenEmailAndTheOwnerGetsANotice() throws Exception {
+        String taken = registeredWithoutEmail();
         mail.sent.clear();
-        call("/api/auth/password/register", body(email, PASSWORD))
-                .andExpect(status().isConflict());
-        assertThat(mail.sent).isEmpty();
+        String existing = call("/api/auth/password/register", body(taken, PASSWORD))
+                .andExpect(status().isAccepted())
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE))
+                .andReturn().getResponse().getContentAsString();
+        String created = call("/api/auth/password/register", body(email(), PASSWORD))
+                .andExpect(status().isAccepted())
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE))
+                .andReturn().getResponse().getContentAsString();
+
+        assertThat(existing).isEqualTo(created);
+        // The owner is told, and the existing account is left as it was.
+        assertThat(mail.sent).filteredOn(sent -> sent.to().equals(taken)).singleElement().satisfies(sent -> {
+            assertThat(sent.subject()).contains("Ya tienes una cuenta");
+            assertThat(sent.text()).contains("/login").doesNotContain("#token=");
+        });
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM users WHERE email = ?", Integer.class, taken)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM email_verification_tokens t JOIN users u ON u.id = t.user_id "
+                + "WHERE u.email = ?", Integer.class, taken)).isZero();
+        call("/api/auth/password/login", body(taken, PASSWORD)).andExpect(status().isOk());
+
+        // Repeating it right away does not send another notice to the owner.
+        call("/api/auth/password/register", body(taken, PASSWORD)).andExpect(status().isAccepted());
+        assertThat(mail.sent).filteredOn(sent -> sent.to().equals(taken)).hasSize(1);
     }
 
     @Test
@@ -244,7 +279,7 @@ class PasswordAuthIntegrationTest {
 
     String registered() throws Exception {
         String email = email();
-        call("/api/auth/password/register", body(email, PASSWORD)).andExpect(status().isOk());
+        call("/api/auth/password/register", body(email, PASSWORD)).andExpect(status().isAccepted());
         return email;
     }
 

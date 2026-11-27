@@ -91,7 +91,7 @@ class EmailVerificationIntegrationTest {
     void anUnverifiedAdministratorEmailIsNotAnAdministrator() throws Exception {
         String boss = "boss@verification.test";
         call("/api/auth/password/register", PasswordAuthIntegrationTest.body(boss, PasswordAuthIntegrationTest.PASSWORD))
-                .andExpect(status().isOk());
+                .andExpect(status().isAccepted());
         mvc.perform(as(get("/api/admin/me"), boss)).andExpect(jsonPath("$.admin").value(false));
         mvc.perform(as(get("/api/admin/coaches"), boss)).andExpect(status().isForbidden());
 
@@ -183,7 +183,7 @@ class EmailVerificationIntegrationTest {
     private String register() throws Exception {
         String email = PasswordAuthIntegrationTest.email();
         call("/api/auth/password/register", PasswordAuthIntegrationTest.body(email, PasswordAuthIntegrationTest.PASSWORD))
-                .andExpect(status().isOk());
+                .andExpect(status().isAccepted());
         assertThat(jdbc.queryForObject("SELECT email_verified FROM users WHERE email = ?", Boolean.class, email)).isFalse();
         return email;
     }
