@@ -32,17 +32,28 @@ describe('accountAccess', () => {
   it('calls the password endpoints and returns the session token', async () => {
     mocks.post.mockResolvedValue({ data: { token: 't' } });
 
-    expect(await startSignUp('a@b.es', 'clave')).toBe('t');
     expect(await signInWithPassword('a@b.es', 'clave')).toBe('t');
     await requestPasswordReset('a@b.es');
     expect(await resetPassword('tok', 'clave')).toBe('t');
 
     expect(mocks.post.mock.calls.map(([url]) => url)).toEqual([
-      '/auth/password/register',
       '/auth/password/login',
       '/auth/password/reset-request',
       '/auth/password/reset',
     ]);
+  });
+
+  it('signing up opens no session and returns the message to show', async () => {
+    mocks.post.mockResolvedValue({ data: { message: 'Te hemos enviado un correo.' } });
+
+    expect(await startSignUp('a@b.es', 'clave')).toBe('Te hemos enviado un correo.');
+    expect(mocks.post).toHaveBeenCalledWith('/auth/password/register', {
+      email: 'a@b.es',
+      password: 'clave',
+    });
+
+    mocks.post.mockResolvedValue({ data: {} });
+    expect(await startSignUp('a@b.es', 'clave')).toBeTruthy();
   });
 
   it('rejects an answer without a token', async () => {
@@ -66,7 +77,14 @@ describe('accountAccess', () => {
       credential: { id: 'signed' },
     });
 
-    expect(await addPasskeyOnThisDevice()).toEqual({ id: 1, name: 'Android' });
+    expect(await addPasskeyOnThisDevice({ password: 'una-clave' })).toEqual({
+      id: 1,
+      name: 'Android',
+    });
+    expect(mocks.post).toHaveBeenNthCalledWith(3, '/passkeys/options', {
+      password: 'una-clave',
+      googleCredential: undefined,
+    });
     expect(mocks.post).toHaveBeenNthCalledWith(4, '/passkeys', {
       requestId: 'r2',
       credential: { id: 'created' },

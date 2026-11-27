@@ -62,16 +62,25 @@ describe('EmailAccess', () => {
     expect(mocks.login).not.toHaveBeenCalled();
   });
 
-  it('creates an account and signs in directly', async () => {
-    mocks.startSignUp.mockResolvedValue('new-session');
+  it('creates an account, asks to check the email and opens no session', async () => {
+    mocks.startSignUp.mockResolvedValue('Te hemos enviado un correo.');
     render(<EmailAccess />);
     fireEvent.click(screen.getByRole('button', { name: 'Crea una gratis' }));
     type('Email', 'ana@example.com');
     type('Contraseña', 'una-frase-larga');
     fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
 
-    await waitFor(() => expect(mocks.login).toHaveBeenCalledWith('new-session'));
+    const status = await screen.findByRole('status');
+    expect(status).toHaveTextContent('Revisa tu correo');
+    expect(status).toHaveTextContent('Te hemos enviado un correo.');
     expect(mocks.startSignUp).toHaveBeenCalledWith('ana@example.com', 'una-frase-larga');
+    expect(mocks.login).not.toHaveBeenCalled();
+    // The password is not kept once it has been sent.
+    expect(screen.queryByLabelText('Contraseña')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ir a iniciar sesión' }));
+    expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument();
+    expect((screen.getByLabelText('Contraseña') as HTMLInputElement).value).toBe('');
   });
 
   it('sends the reset link and goes back to sign-in', async () => {
