@@ -47,6 +47,9 @@ class SecurityHeadersIntegrationTest {
     private AccountDeletionService accountDeletionService;
 
     @MockitoBean
+    private com.ascension.service.PushNotificationService pushNotificationService;
+
+    @MockitoBean
     private com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier googleIdTokenVerifier;
 
     @Test
