@@ -20,7 +20,16 @@ import FoodCard from '../components/my-foods/FoodCard';
 import RecipeCard from '../components/my-foods/RecipeCard';
 import AiFoodModal from '../components/my-foods/AiFoodModal';
 
-import { Barcode, Check, ChevronDown, Loader2, Pencil, Plus, ScanLine, Sparkles } from 'lucide-react';
+import {
+  Barcode,
+  Check,
+  ChevronDown,
+  Loader2,
+  Pencil,
+  Plus,
+  ScanLine,
+  Sparkles,
+} from 'lucide-react';
 import { Recipe, FoodLog, SavedFood } from '../types/api';
 import { isFoodRegistered } from '../utils/nutritionHelpers';
 import '../styles/athlete-workout.css';
@@ -266,6 +275,7 @@ export default function MyFoodsPage() {
         foodForm={forms.foodForm}
         updateFoodForm={forms.updateFoodForm}
         handleAddSavedFood={forms.handleAddSavedFood}
+        saving={forms.saving}
         editingFoodId={forms.editingFoodId}
         handleDeleteFood={deleteSavedFood}
       />
@@ -275,6 +285,7 @@ export default function MyFoodsPage() {
         recipeForm={forms.recipeForm}
         updateRecipeForm={forms.updateRecipeForm}
         handleAddRecipe={forms.handleAddRecipe}
+        saving={forms.saving}
         editingRecipeId={forms.editingRecipeId}
         onCancelEdit={() => forms.setIsRecipeFormOpen(false)}
         handleDeleteRecipe={deleteRecipe}
@@ -411,9 +422,7 @@ export default function MyFoodsPage() {
             <div className="mf-scan">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h4 className="mf-scan-name">
-                    {scanner.scannedProduct.name}
-                  </h4>
+                  <h4 className="mf-scan-name">{scanner.scannedProduct.name}</h4>
                   {scanner.scannedProduct.brand && (
                     <p className="mf-scan-brand">{scanner.scannedProduct.brand}</p>
                   )}
