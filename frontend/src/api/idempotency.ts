@@ -9,6 +9,9 @@ const PATHS = new Set([
   '/nutrition/meals',
   '/nutrition/recipes',
   '/nutrition/my-foods',
+  '/nutrition/ai/log',
+  '/nutrition/ai/food',
+  '/workouts/import',
 ]);
 const STORAGE = 'ascension_idempotency_v1';
 const TTL = 24 * 60 * 60 * 1000;

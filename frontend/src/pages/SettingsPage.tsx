@@ -18,6 +18,7 @@ import { SettingsDataSection } from '../components/settings/SettingsDataSection'
 import { SettingsConsentCard } from '../components/settings/SettingsConsentCard';
 import { PasskeysCard } from '../components/settings/PasskeysCard';
 import { useCoachProfile } from '../lib/coach/api';
+import { macroPercentagesError } from '../utils/macroPercentages';
 import { SettingsCoachSection } from '../components/settings/SettingsCoachSection';
 import { SettingsModulesSection } from '../components/settings/SettingsModulesSection';
 import { useAuth } from '../context/AuthContext';
@@ -269,9 +270,9 @@ export default function SettingsPage() {
       if (strategy === 'CUSTOM_GRAMS') {
         payloadKcal = Math.round(pG * 4 + fG * 9 + cG * 4);
       } else if (strategy === 'CUSTOM_PCT') {
-        const total = Math.round((pP + fP + cP) * 10) / 10;
-        if (Math.abs(total - 100) > 1.5) {
-          toast.error(`Los porcentajes deben sumar 100% (actual: ${total}%)`);
+        const pctError = macroPercentagesError(pP, fP, cP);
+        if (pctError) {
+          toast.error(pctError);
           return;
         }
       }

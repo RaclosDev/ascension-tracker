@@ -1,6 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { isSessionLogoutPending, markSessionLogoutPending } from '../auth/sessionBoundary';
+import { currentPushEndpoint } from '../lib/pushEndpoint';
 import { gzipJson } from './gzip';
 import { clearIdempotencyIntents, prepareIdempotency, settleIdempotency } from './idempotency';
 import { getWorkoutAccountRevision } from '../lib/workout/accountIdentity';
@@ -228,7 +229,10 @@ export const logoutSession = async () => {
   // Let a pending Set-Cookie finish before revoking it, so it cannot restore the cookie after logout.
   try {
     await activeRefreshPromise?.catch(() => null);
-    await api.post('/auth/logout');
+    const pushEndpoint = await currentPushEndpoint();
+    await api.post('/auth/logout', undefined, {
+      headers: pushEndpoint ? { 'X-Push-Endpoint': pushEndpoint } : undefined,
+    });
   } finally {
     logoutInProgress = false;
   }
@@ -289,9 +293,16 @@ api.interceptors.response.use(
   },
 );
 
+/**
+ * A whole account's export or restore takes far longer than a normal call. With the default 10 s a slow
+ * (but working) request is cut off and reported as a failure while the server keeps going.
+ */
+const BACKUP_TIMEOUT_MS = 120_000;
+
 export const exportUserData = async (): Promise<void> => {
   const response = await api.get<Blob>('/user/export', {
     responseType: 'blob',
+    timeout: BACKUP_TIMEOUT_MS,
   });
 
   const contentDisposition = response.headers['content-disposition'] as string | undefined;
@@ -344,8 +355,9 @@ export const restoreUserData = async (
   const response = compressed
     ? await api.post<UserDataRestoreSummary>(url, compressed, {
         headers: { 'Content-Type': 'application/json', 'Content-Encoding': 'gzip' },
+        timeout: BACKUP_TIMEOUT_MS,
       })
-    : await api.post<UserDataRestoreSummary>(url, backup);
+    : await api.post<UserDataRestoreSummary>(url, backup, { timeout: BACKUP_TIMEOUT_MS });
   return response.data;
 };
 
