@@ -52,5 +52,27 @@ jobs:
             echo "Quedan checks obligatorios sin terminar en verde: fusionará el workflow que falta."
             exit 0
           fi
-          gh pr merge "$pr" --squash --delete-branch --match-head-commit "$SHA"
+          # El ruleset exige la rama al día con main. Si otro PR entró antes, no es un fallo de este
+          # workflow: se avisa y termina en verde; al actualizar la rama, su CI volverá a decidir.
+          for _ in $(seq 1 10); do
+            status=$(gh pr view "$pr" --json mergeStateStatus --jq .mergeStateStatus)
+            [ "$status" != "UNKNOWN" ] && break
+            sleep 3
+          done
+          if [ "$status" = "BEHIND" ] || [ "$status" = "DIRTY" ]; then
+            echo "::notice title=PR #$pr sin fusionar::La rama está por detrás de main o tiene conflictos ($status). Actualízala y se fusionará sola cuando la CI pase."
+            exit 0
+          fi
+          if ! gh pr merge "$pr" --squash --delete-branch --match-head-commit "$SHA"; then
+            sleep 5
+            estado=$(gh pr view "$pr" --json state,mergeStateStatus,headRefOid \
+              --jq '[.state, .mergeStateStatus, .headRefOid] | join(" ")')
+            read -r state status head <<< "$estado"
+            if [ "$state" = "MERGED" ] || [ "$status" = "BEHIND" ] || [ "$status" = "DIRTY" ] || [ "$head" != "$SHA" ]; then
+              echo "::notice::PR #$pr no fusionado por este job ($state, $status): ya fusionado, por detrás de main o con commits nuevos."
+              exit 0
+            fi
+            echo "::error::No se pudo fusionar el PR #$pr ($state, $status)."
+            exit 1
+          fi
           gh workflow run ci.yml --ref main
