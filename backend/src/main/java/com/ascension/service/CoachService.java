@@ -291,6 +291,10 @@ public class CoachService {
         if (activeLinkExists(invitation.coachUserId(), clientId)) {
             throw new InvalidInputException("Ya estás vinculado con este entrenador.");
         }
+        // Two clients accepting different invitations of the same coach must not both pass the limit check:
+        // serialise on the coach (same lock as createInvitation) before counting.
+        jdbcTemplate.queryForObject("SELECT user_id FROM coach_profiles WHERE user_id = ? FOR UPDATE",
+                UUID.class, invitation.coachUserId());
         if (activeClientCount(invitation.coachUserId()) >= subscriptionService.maxClients(invitation.coachUserId())) {
             throw new InvalidInputException("Este entrenador no admite más atletas ahora mismo.");
         }
