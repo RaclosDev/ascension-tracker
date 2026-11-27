@@ -31,18 +31,23 @@ Aplicación full-stack con Java y React: desde el registro de una serie en el gi
 
 <table>
   <tr>
-    <td align="center" width="33%"><img src="docs/screenshots/dashboard.png" alt="Inicio con el peso, el entreno y las comidas del día" width="240"><br><sub><b>Tu día</b> · entreno, comidas y progreso</sub></td>
-    <td align="center" width="33%"><img src="docs/screenshots/workout.png" alt="Entreno en curso con series, cronómetro y descansos" width="240"><br><sub><b>Entreno en curso</b> · series, descansos y cronómetro</sub></td>
-    <td align="center" width="33%"><img src="docs/screenshots/nutrition.png" alt="Diario de nutrición con calorías y macronutrientes" width="240"><br><sub><b>Nutrición</b> · calorías y macros del día</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/dashboard.png" alt="Inicio con el peso de hoy, la meta y las comidas y el entreno del día" width="240"><br><sub><b>Tu día</b> · peso, meta y comidas</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/workout.png" alt="Entreno de empuje en curso con las series completadas y la demostración de cada ejercicio" width="240"><br><sub><b>Entreno en curso</b> · series, descansos y técnica</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/nutrition.png" alt="Diario de nutrición con las calorías y los macronutrientes de desayuno y comida" width="240"><br><sub><b>Nutrición</b> · calorías y macros del día</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/coach.png" alt="Inicio del entrenador con las semanas por entregar, el último registro de cada atleta y los seguimientos por responder" width="240"><br><sub><b>Entrenador</b> · qué vence esta semana</sub></td>
-    <td align="center"><img src="docs/screenshots/coach-clients.png" alt="Listado de atletas con búsqueda y acceso a su ficha" width="240"><br><sub><b>Atletas</b> · una ficha para cada persona</sub></td>
-    <td align="center"><img src="docs/screenshots/coach-review.png" alt="Ficha de una atleta con sus pestañas y el seguimiento semanal pendiente de respuesta" width="240"><br><sub><b>Ficha de atleta</b> · seguimiento y respuesta semanal</sub></td>
+    <td align="center"><img src="docs/screenshots/training.png" alt="Resumen de entreno con la semana, la recuperación por músculo y el 1RM estimado de los tres básicos" width="240"><br><sub><b>Entreno</b> · recuperación y 1RM estimado</sub></td>
+    <td align="center"><img src="docs/screenshots/tracking.png" alt="Seguimiento semanal de peso, pasos y calorías" width="240"><br><sub><b>Seguimiento</b> · peso, pasos y calorías por semana</sub></td>
+    <td align="center"><img src="docs/screenshots/coach.png" alt="Inicio del entrenador con las semanas por entregar y el último registro de cada atleta" width="240"><br><sub><b>Entrenador</b> · qué vence esta semana</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/coach-clients.png" alt="Lista de atletas con foto, último registro y seguimientos por responder" width="240"><br><sub><b>Atletas</b> · prioridad y seguimientos</sub></td>
+    <td align="center"><img src="docs/screenshots/coach-review.png" alt="Seguimiento semanal de una atleta con sus valoraciones, respuestas y comentarios día a día" width="240"><br><sub><b>Seguimiento semanal</b> · respuestas y día a día</sub></td>
+    <td align="center"><img src="docs/screenshots/coach-nutrition.png" alt="Pauta de nutrición de una atleta con calorías y macros para días de entreno y de descanso" width="240"><br><sub><b>Pauta de nutrición</b> · entreno y descanso</sub></td>
   </tr>
 </table>
 
-<sub>Interfaz React real con la sesión iniciada, capturada en noviembre de 2026 con datos ficticios y API simulada. [Más pantallas y cómo reproducirlas](docs/screenshots/README.md).</sub>
+<sub>Interfaz React real con la sesión iniciada, capturada en noviembre de 2026 con datos ficticios, API simulada y fotos de stock de randomuser.me. [Más pantallas y cómo reproducirlas](docs/screenshots/README.md).</sub>
 
 ## Qué hace
 

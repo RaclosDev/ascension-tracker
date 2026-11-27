@@ -1,328 +1,305 @@
 // Capturas móviles del README con la interfaz React real y datos ficticios.
-// La API se simula: no hace falta backend, cuenta de Google ni Gemini.
+// La API se simula en el navegador: no hace falta backend, cuenta de Google ni Gemini.
 // Uso: con `npm run dev -- --host localhost --port 5173` en frontend/, desde la raíz:
-//      node docs/screenshots/capture.mjs
+//      node docs/screenshots/capture.mjs [origen] [captura ...]
 import { createRequire } from 'node:module';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const require = createRequire(new URL('../../frontend/package.json', import.meta.url));
 const { chromium, expect } = require('@playwright/test');
-const ts = require('typescript');
-const origin = process.argv[2] ?? 'http://localhost:5173';
+const [origin = 'http://localhost:5173', ...only] = process.argv.slice(2);
 const output = fileURLToPath(new URL('./', import.meta.url));
-// Avatares ilustrados (DiceBear Lorelei, CC0) para el entrenador y sus atletas.
-const avatars = JSON.parse(await readFile(new URL('./avatars.json', import.meta.url), 'utf8'));
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
-const SESSION_JWT = b64({ alg: 'none' }) + '.' + b64({ sub: 'showcase', email: 'carlos@example.invalid', name: 'Carlos Sanz', picture: avatars[0], exp: 4102444800 }) + '.fixture';
 
-// Reutiliza las fixtures de navegador del repositorio para la sesión y los ajustes.
-const asModule = (source) =>
-  'data:text/javascript;base64,' +
-  Buffer.from(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText).toString('base64');
-const fixtures = asModule(await readFile(new URL('../../frontend/tests/helpers/fixtures.ts', import.meta.url), 'utf8'));
-const auth = await readFile(new URL('../../frontend/tests/helpers/auth.ts', import.meta.url), 'utf8');
-const { setupAuthMocks } = await import(asModule(auth.replace("'./fixtures'", JSON.stringify(fixtures))));
+// ---------- Personas ----------
+// Retratos de stock de randomuser.me guardados en avatars/: la captura no depende de la red.
+const portrait = (id) => `https://randomuser.me/api/portraits/${id.replace('-', '/')}.jpg`;
+const person = (name, email, id) => ({ name, email, picture: portrait(id) });
+const ATHLETE = person('Javier Ortega', 'javier@example.test', 'men-32');
+const COACH = person('Laura Díaz', 'laura@example.test', 'women-75');
+const session = ({ name, email, picture }) =>
+  b64({ alg: 'none' }) + '.' + b64({ sub: email, email, name, picture, exp: 4102444800 }) + '.fixture';
 
-// ---------- Datos de demo ----------
+// ---------- Fechas ----------
 const DAY = 86_400_000;
-// «Hoy» es el jueves de la semana en curso, para que la semana enseñe varios días con registros.
+// «Hoy» es el jueves de la semana en curso: la semana enseña varios días con registros.
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 today.setDate(today.getDate() - ((today.getDay() + 6) % 7) + 3);
 const iso = (d) => d.toLocaleDateString('en-CA');
-const daysAgo = (n) => new Date(today.getTime() - n * DAY);
-const monday = (d) => new Date(d.getTime() - ((d.getDay() + 6) % 7) * DAY);
+const daysAgo = (n) => iso(new Date(today.getTime() - n * DAY));
+const monday = iso(new Date(today.getTime() - 3 * DAY));
+const shiftWeek = (week, n) => iso(new Date(new Date(`${week}T12:00`).getTime() + n * 7 * DAY));
+const at = (h, m) => new Date(today.getTime() + (h * 60 + m) * 60_000);
 
-// Peso: de 85,0 a 81,2 kg en 8 semanas, con el ruido normal de una báscula.
-const noise = [0.3, -0.2, 0.1, 0.4, -0.1, 0.2, -0.3];
-const weightOn = (n) => +(81.2 + n * 0.068 + noise[n % 7] * 0.6).toFixed(1);
-const weights = Array.from({ length: 56 }, (_, i) => ({ id: 100 + i, date: iso(daysAgo(55 - i)), weight: weightOn(55 - i) }));
-
-const weekly = (valueOn, weeks = 8) => {
-  const start = monday(today);
-  return Array.from({ length: weeks }, (_, w) => {
-    const ws = new Date(start.getTime() - w * 7 * DAY);
-    const days = Array.from({ length: 7 }, (_, d) => {
-      const date = new Date(ws.getTime() + d * DAY);
-      return date > today ? null : valueOn(Math.round((today - date) / DAY));
-    });
-    const vals = days.filter((v) => v != null);
-    const average = vals.length ? +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : null;
-    return { weekStart: iso(ws), average, entries: vals.length, days };
-  }).map((w, i, all) => ({ ...w, delta: all[i + 1]?.average != null ? +(w.average - all[i + 1].average).toFixed(1) : 0 }));
-};
-const stepsOn = (n) => [9840, 11230, 7650, 12410, 8920, 10350, 6480][n % 7];
-const kcalOn = (n) => [2010, 1945, 2120, 1890, 2060, 1980, 2230][n % 7];
-
-const meals = [
-  { mealIndex: 0, product: 'Avena con yogur griego y arándanos', quantity: 320, kcal: 486, protein: 32, carbs: 62, fat: 11 },
-  { mealIndex: 0, product: 'Café con leche', quantity: 250, kcal: 92, protein: 6, carbs: 9, fat: 3 },
-  { mealIndex: 1, product: 'Pechuga de pollo a la plancha', quantity: 200, kcal: 330, protein: 62, carbs: 0, fat: 7 },
-  { mealIndex: 1, product: 'Arroz basmati', quantity: 180, kcal: 234, protein: 5, carbs: 51, fat: 1 },
-  { mealIndex: 1, product: 'Ensalada con aceite de oliva', quantity: 150, kcal: 138, protein: 2, carbs: 6, fat: 12 },
-  { mealIndex: 2, product: 'Salmón al horno', quantity: 160, kcal: 333, protein: 34, carbs: 0, fat: 21 },
-  { mealIndex: 2, product: 'Patata asada', quantity: 200, kcal: 172, protein: 4, carbs: 38, fat: 0 },
-].map((m, i) => ({ id: 900 + i, date: iso(today), portionsJson: null, ...m }));
-
-// Entrenamientos: rutina torso/pierna 4 días por semana durante 6 semanas.
-const ROUTINES = {
-  'Torso A': [
-    ['base-pecho-press-de-pecho-plano-barra', 80, 8],
-    ['base-espalda_alta-remo-con-barra-barra', 70, 10],
-    ['base-hombros-press-militar-barra', 50, 8],
-    ['base-dorsales-dominadas-peso-corporal', 0, 10],
-  ],
-  'Pierna A': [
-    ['base-cuadriceps-sentadilla-libre-barra', 100, 6],
-    ['base-femorales-peso-muerto-rumano-barra', 90, 10],
-    ['base-cuadriceps-sentadilla-hack-maquina', 120, 12],
-  ],
-  'Torso B': [
-    ['base-pecho-press-inclinado-mancuernas', 30, 10],
-    ['base-dorsales-dominadas-peso-corporal', 0, 8],
-    ['base-biceps-curl-de-biceps-barra', 35, 12],
-  ],
-  'Pierna B': [
-    ['base-lumbares-peso-muerto-tradicional-barra', 140, 5],
-    ['base-cuadriceps-sentadilla-frontal-barra', 80, 8],
-    ['base-femorales-peso-muerto-rumano-mancuernas', 32, 12],
-  ],
-};
-const order = ['Torso A', 'Pierna A', 'Torso B', 'Pierna B'];
-const trainingDays = [1, 3, 5, 6]; // días atrás dentro de cada semana
-let seq = 0;
-const recent = [];
-for (let week = 0; week < 6; week++) {
-  trainingDays.forEach((offset, i) => {
-    const name = order[i];
-    const startedAt = daysAgo(week * 7 + offset).getTime() + 18.5 * 3_600_000;
-    recent.push({
-      id: `demo-${++seq}`,
-      name,
-      startedAt,
-      finishedAt: startedAt + 68 * 60_000,
-      notes: '',
-      exercises: ROUTINES[name].map(([exerciseId, kg, reps], e) => ({
-        id: `demo-${seq}-${e}`,
-        exerciseId,
-        notes: '',
-        sets: Array.from({ length: 3 }, (_, s) => ({
-          id: `demo-${seq}-${e}-${s}`,
-          type: 'normal',
-          weight: kg ? String(Math.max(kg - week * 2.5, 20)) : '',
-          reps: String(reps - (s === 2 ? 1 : 0)),
-          completed: true,
-        })),
-      })),
-    });
-  });
-}
-const templates = order.map((name, i) => ({
-  id: `tpl-${i}`,
-  name,
-  exercises: ROUTINES[name].map(([exerciseId]) => ({ exerciseId })),
+// ---------- Atletas del entrenador ----------
+// Lucía Vega trae el bloque completo de la demo (src/demo/lucia.ts); el resto solo aparece en las listas.
+const setup = (goal, experience, trainingDays, equipment, nutrition = true) => ({
+  services: { training: true, nutrition, progress: true },
+  goal,
+  experience,
+  trainingDays,
+  equipment,
+  reviewed: true,
+});
+const permissions = (nutrition = true) => ({ training: true, editTraining: true, nutrition, editNutrition: nutrition, body: true });
+const ROSTER = [
+  ['tour-lucia', person('Lucía Vega', 'lucia@example.test', 'women-46'), 6, setup('Preparar powerlifting', 'Intermedia', 3, 'Gimnasio completo')],
+  ['tour-mateo', person('Mateo Gil', 'mateo@example.test', 'men-22'), 10, setup('Ganar masa muscular', 'Principiante', 4, 'Gimnasio completo')],
+  ['ana', person('Ana García', 'ana@example.test', 'women-32'), 14, setup('Perder grasa', 'Intermedia', 3, 'Gimnasio completo')],
+  ['bruno', person('Bruno Martín', 'bruno@example.test', 'men-75'), 4, setup('Primera media maratón', 'Avanzado', 3, 'Mancuernas', false)],
+  ['carla', person('Carla López', 'carla@example.test', 'women-52'), 21, setup('Fuerza general', 'Principiante', 2, 'Casa con bandas')],
+  ['diego', person('Diego Romero', 'diego@example.test', 'men-14'), 3, setup('Recomposición corporal', 'Intermedia', 4, 'Gimnasio completo')],
+];
+const clients = ROSTER.map(([linkId, client, weeks, clientSetup]) => ({
+  linkId,
+  client,
+  since: shiftWeek(monday, -weeks),
+  permissions: permissions(clientSetup.services.nutrition),
+  setup: clientSetup,
 }));
-
-const dashboard = {
-  avgWeight: 82.6,
-  currentWeight: weightOn(0),
-  currentWeeklyAverage: 81.4,
-  totalEntries: weights.length,
-  totalLost: -3.8,
-  remaining: 3.2,
-  progress: 54.3,
-  estimatedDate: iso(new Date(today.getTime() + 56 * DAY)),
-  avgWeeklyChange: -0.48,
-  weeksActive: 8,
-  bestWeekDelta: -0.9,
-  bestWeekDate: iso(daysAgo(35)),
-  streak: 12,
-  streakDays: [],
+const STATUS = {
+  'tour-mateo': { level: 'GREEN', lastActivity: daysAgo(0), lastWorkout: daysAgo(1), lastCheckin: daysAgo(4), nextWeekStatus: 'SCHEDULED', pendingReplies: 0, weightChange: 0.6, signals: [] },
+  ana: { level: 'AMBER', lastActivity: daysAgo(1), lastWorkout: daysAgo(2), lastCheckin: daysAgo(4), nextWeekStatus: 'DRAFT', pendingReplies: 1, weightChange: -1.1, signals: [{ reason: 'FEW_FOOD_LOGS', level: 'AMBER', value: 4 }] },
+  bruno: { level: 'GREEN', lastActivity: daysAgo(0), lastWorkout: daysAgo(0), lastCheckin: daysAgo(4), nextWeekStatus: 'SCHEDULED', pendingReplies: 0, weightChange: -0.3, signals: [] },
+  carla: { level: 'RED', lastActivity: daysAgo(5), lastWorkout: daysAgo(6), lastCheckin: daysAgo(11), nextWeekStatus: 'MISSING', pendingReplies: 0, weightChange: null, signals: [{ reason: 'INACTIVE', level: 'RED', value: 5 }, { reason: 'CHECKIN_MISSING', level: 'AMBER', value: 1 }] },
+  diego: { level: 'GREEN', lastActivity: daysAgo(0), lastWorkout: daysAgo(1), lastCheckin: daysAgo(4), nextWeekStatus: 'SCHEDULED', pendingReplies: 1, weightChange: -0.8, signals: [] },
 };
 
-async function mockDemoApi(page) {
-  const json = (data) => (route) => route.fulfill({ json: data });
-  await setupAuthMocks(page);
-  await page.route('**/api/auth/refresh**', (route) => route.fulfill({ json: { token: SESSION_JWT } }));
-  await page.route('**/api/passkeys', json([{ id: 'demo-passkey', name: 'Este dispositivo', createdAt: '2026-11-01T12:00:00Z' }]));
-  await page.route('**/api/coach/profile', json({ coach: false }));
-  // Las rutas registradas después tienen prioridad sobre las fixtures base.
-  await page.route('**/exercises.json**', (route) => route.continue());
-  await page.route('**/exercises-base.json**', (route) => route.continue());
-  await page.route('**/api/weights/dashboard**', json(dashboard));
-  await page.route('**/api/weights/weekly**', json(weekly(weightOn)));
-  await page.route(/\/api\/weights(\?.*)?$/, json(weights));
-  await page.route('**/api/steps/weekly**', json(weekly(stepsOn)));
-  await page.route('**/api/nutrition/calories/weekly**', json(weekly(kcalOn)));
-  await page.route('**/api/nutrition/macros**', json({ kcal: 2000, protein: 160, carbs: 200, fat: 65 }));
-  await page.route('**/api/nutrition/logs**', json(meals));
-  await page.route('**/api/workouts/recent**', json(recent));
-  await page.route('**/api/workouts/templates**', json(templates));
-  await page.route('**/api/coaching/today**', json(null));
-  await page.route('**/api/coaching/coaches', json([]));
-  await page.route('**/api/progress-photos**', json([]));
-}
+// ---------- API simulada ----------
+// Lo que no es propio de esta captura lo contesta el mismo servidor ficticio que usa /demo.
+const demoAnswer = (page, coach, method, url, body) =>
+  page.evaluate(
+    async ({ coach, method, url, body }) => {
+      const target = new URL(url);
+      const path = target.pathname.replace(/^\/api/, '');
+      try {
+        if (coach && /^\/coach(\/|$)/.test(path)) {
+          const [{ luciaResponse }, { tourResponse }] = await Promise.all([
+            import('/src/demo/lucia.ts'),
+            import('/src/components/coach/tour/CoachTourPreview.ts'),
+          ]);
+          return { status: 200, data: luciaResponse(path, target.searchParams, () => tourResponse(path)) ?? null };
+        }
+        const { demoAdapter } = await import('/src/demo/backend.ts');
+        const response = await demoAdapter({ url: path + target.search, method, data: body ?? undefined });
+        return { status: 200, data: response.data instanceof Blob ? null : response.data };
+      } catch (error) {
+        return { status: error?.response?.status ?? 404, data: { message: String(error?.message ?? error) } };
+      }
+    },
+    { coach, method, url, body },
+  );
 
-async function mockCoachApi(page) {
-  const json = (data) => (route) => route.fulfill({ json: data });
-  const clients = ['Ana García', 'Bruno Martín', 'Carla López'].map((name, i) => ({
-    linkId: `showcase-${i}`,
-    client: { name, email: `atleta${i}@example.invalid`, picture: avatars[i + 1] },
-    permissions: { training: true, nutrition: true, body: true, editTraining: true, editNutrition: true },
-    since: '2026-11-01T10:00:00Z',
-  }));
-  await page.route('**/api/coach/profile', json({ coach: true }));
-  await page.route('**/api/coach/invitations', json([]));
-  await page.route('**/api/coach/clients', json(clients));
-  await page.route('**/api/coach/clients/status', json(clients.map((client, i) => ({
-    linkId: client.linkId,
-    level: i === 1 ? 'RED' : 'GREEN',
-    lastActivity: iso(daysAgo(i + 1)),
-    pendingReplies: i === 0 ? 1 : 0,
-    weightChange: i === 0 ? -0.4 : null,
-    signals: i === 1 ? [{ reason: 'CHECKIN_MISSING', level: 'RED', value: 2 }] : [],
-  }))));
-  await page.route('**/api/coach/clients/showcase-0', json(clients[0]));
-  await page.route('**/api/coach/clients/showcase-0/status', json({ linkId: 'showcase-0', level: 'GREEN', lastActivity: iso(daysAgo(1)), pendingReplies: 1, weightChange: -0.4, signals: [] }));
-  await page.route('**/api/coach/home', json({ lifts: [], meets: [] }));
-  await page.route('**/api/coach/programs', json([]));
-  await page.route('**/api/coach/library-items', json([]));
-  // El día a día del seguimiento reutiliza los registros del atleta de ejemplo.
-  await page.route('**/api/coach/clients/showcase-0/workouts/recent**', json(recent));
-  await page.route('**/api/coach/clients/showcase-0/weights/weekly', json(weekly(weightOn)));
-  await page.route('**/api/coach/clients/showcase-0/nutrition/calories/weekly', json(weekly(kcalOn)));
-  await page.route('**/api/coach/clients/showcase-0/day-comments**', json([]));
-  await page.route('**/api/coach/clients/showcase-0/programs', json([]));
-  await page.route('**/api/coach/clients/showcase-0/weeks/**', json([]));
-  await page.route('**/api/coach/clients/showcase-0/workouts/custom-exercises', json([]));
-  await page.route('**/api/coach/clients/showcase-0/workouts/*/comment', json({ text: '' }));
-  await page.route('**/api/coach/clients/showcase-0/nutrition-plan', json(null));
-  await page.route('**/api/coach/clients/showcase-0/powerlifting', (route) => route.fulfill({ status: 404, json: {} }));
-  await page.route('**/api/coach/clients/showcase-0/checkins', json([{
-    id: 'showcase-checkin',
-    linkId: 'showcase-0',
-    weekStart: iso(monday(today)),
-    weightAvg: 80.2,
-    energy: 4,
-    sleep: 3,
-    trainingAdherence: 4,
-    dietAdherence: 4,
-    answers: [{ question: '¿Cómo te has encontrado esta semana?', answer: 'Con más energía. He completado las cuatro sesiones y mejorado el press de banca.' }],
-    notes: null,
-    coachReply: null,
-    repliedAt: null,
-    createdAt: `${iso(daysAgo(1))}T10:00:00Z`,
-    updatedAt: `${iso(daysAgo(1))}T10:00:00Z`,
-  }]));
+async function mockApi(page, { coach }, failures) {
+  const user = coach ? COACH : ATHLETE;
+  // Guía del entrenador y propuesta de llave de acceso ya vistas, como en una cuenta en uso.
+  await page.addInitScript((email) => {
+    localStorage.setItem(`ascension:coach-tour:v2:${encodeURIComponent(email)}`, JSON.stringify({ status: 'dismissed', step: 0 }));
+    localStorage.setItem(`ascension_passkey_prompt:${email}`, '1');
+  }, user.email);
+  await page.route((url) => url.origin === origin && url.pathname.startsWith('/api/'), async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const path = url.pathname.replace(/^\/api/, '');
+    const method = request.method().toLowerCase();
+    const json = (data, status = 200) => route.fulfill({ status, json: data });
+    if (path === '/auth/refresh') return json({ token: session(user) });
+    if (path === '/auth/config') return json({ googleClientId: 'showcase' });
+    if (path === '/push/vapid-key') return json({}, 404);
+    if (path === '/passkeys') return json([{ id: 'passkey', name: 'Este teléfono', createdAt: `${daysAgo(40)}T12:00:00Z` }]);
+    if (path === '/coach/profile') return json({ coach });
+    if (path === '/account/email') return json({ verified: true, notice: null });
+    if (coach) {
+      if (path === '/coach/clients') return json(clients);
+      if (path === '/coach/clients/status') {
+        const lucia = await demoAnswer(page, true, 'get', `${url.origin}/api/coach/clients/tour-lucia/status`);
+        return json(clients.map(({ linkId }) => (linkId === 'tour-lucia' ? lucia.data : { linkId, ...STATUS[linkId] })));
+      }
+      const client = clients.find(({ linkId }) => path === `/coach/clients/${linkId}`);
+      if (client) return json(client);
+      if (path === '/coach/home') {
+        const meets = await demoAnswer(page, true, 'get', `${url.origin}/api/coach/clients/tour-lucia/powerlifting/meets`);
+        return json({
+          lifts: [
+            { linkId: 'tour-lucia', exerciseId: 'base-cuadriceps-sentadilla-libre-barra', customName: null, workoutId: 'lucia-squat', date: daysAgo(3), weight: 102.5, reps: 3, e1rm: 112, trend: 2.5 },
+            { linkId: 'diego', exerciseId: 'base-pecho-press-de-pecho-plano-barra', customName: null, workoutId: 'diego-bench', date: daysAgo(1), weight: 85, reps: 5, e1rm: 99, trend: 2 },
+            { linkId: 'tour-mateo', exerciseId: 'base-lumbares-peso-muerto-tradicional-barra', customName: null, workoutId: 'mateo-deadlift', date: daysAgo(1), weight: 140, reps: 5, e1rm: 163, trend: 5 },
+            { linkId: 'ana', exerciseId: 'base-cuadriceps-sentadilla-libre-barra', customName: null, workoutId: 'ana-squat', date: daysAgo(2), weight: 60, reps: 8, e1rm: 76, trend: 0 },
+          ],
+          meets: (meets.data ?? [])
+            .filter((meet) => meet.content.date >= daysAgo(0))
+            .map((meet) => ({ linkId: 'tour-lucia', id: meet.id, name: meet.content.name, date: meet.content.date })),
+        });
+      }
+      if (path === '/coach/settings') {
+        const answer = await demoAnswer(page, true, 'get', request.url());
+        return json({ ...answer.data, displayName: 'Laura Díaz · Entrenadora', showAccountPhoto: true });
+      }
+    }
+    const body = request.postData() ? request.postDataJSON() : undefined;
+    const answer = await demoAnswer(page, coach, method, request.url(), body);
+    if (answer.status >= 400) failures.push(`${method.toUpperCase()} ${path}: ${answer.data.message}`);
+    return json(answer.data, answer.status);
+  });
+  // Ajustes al conjunto de datos de la demo: el atleta hace los tres básicos (la tarjeta de powerlifting
+  // los muestra) con cargas coherentes entre sí.
+  await page.route((url) => url.origin === origin && url.pathname === '/src/demo/backend.ts', async (route) => {
+    const response = await route.fetch();
+    // Vite sirve el módulo ya transformado: se sustituye la tupla [ejercicio, kg, reps, series] sin depender del formato.
+    const routine = (id) => new RegExp(String.raw`\[\s*["']${id}["'],\s*[\d.]+,\s*\d+,\s*\d+\s*\]`);
+    const source = (await response.text())
+      .replace(routine('base-pecho-press-de-pecho-plano-barra'), '["base-pecho-press-de-pecho-plano-barra", 65, 8, 4]')
+      .replace(routine('base-cuadriceps-sentadilla-libre-barra'), '["base-cuadriceps-sentadilla-libre-barra", 97.5, 6, 4]')
+      .replace(routine('base-femorales-peso-muerto-rumano-barra'), '["base-lumbares-peso-muerto-tradicional-barra", 122.5, 5, 3]');
+    // Hoy también lleva pasos: la demo los deja vacíos para que los apunte quien la prueba.
+    const withSteps = source.replace(/steps\.set\(date, Math\.round\(6500 \+ rand\(\) \* 5500\)\);/, (call) => `${call} if (offset === 0) steps.set(date, 6342);`);
+    if (withSteps === source) throw new Error('No se han podido completar los pasos de hoy');
+    if (!withSteps.includes('peso-muerto-tradicional')) throw new Error('No se ha podido ajustar la rutina de la demo');
+    await route.fulfill({ response, body: withSteps });
+  });
+  // Las fotos de perfil se sirven desde el repositorio.
+  await page.route('https://randomuser.me/api/portraits/**', async (route) => {
+    const [, gender, file] = new URL(route.request().url()).pathname.match(/portraits\/(\w+)\/(\d+\.jpg)$/);
+    route.fulfill({ contentType: 'image/jpeg', body: await readFile(new URL(`./avatars/${gender}-${file}`, import.meta.url)) });
+  });
 }
 
 // ---------- Captura ----------
 const browser = await chromium.launch();
 // Miniaturas de ejercicios: dataset público enlazado desde exercises-base.json.
-const allowedOrigins = [origin, 'https://fonts.googleapis.com', 'https://fonts.gstatic.com', 'https://raw.githubusercontent.com'];
-// Hora fija de media tarde para que la fecha y el cronómetro del entreno sean verosímiles.
-const at = (h, m) => new Date(today.getTime() + (h * 60 + m) * 60_000);
+const allowedOrigins = [origin, 'https://fonts.googleapis.com', 'https://fonts.gstatic.com', 'https://raw.githubusercontent.com', 'https://randomuser.me'];
 const contextOptions = {
   viewport: { width: 430, height: 932 },
   deviceScaleFactor: 3,
   isMobile: true,
   hasTouch: true,
   locale: 'es-ES',
+  timezoneId: 'Europe/Madrid',
   colorScheme: 'dark', // la app sigue el tema del sistema por defecto
   reducedMotion: 'reduce',
   serviceWorkers: 'block',
 };
-try {
-  const failures = [];
-  const open = async (withSession) => {
-    const context = await browser.newContext(contextOptions);
-    await context.clock.setFixedTime(at(18, 40));
-    const page = await context.newPage();
-    await page.route('**/*', (route) => {
-      const url = new URL(route.request().url());
-      if (url.pathname.startsWith('/api/')) {
-        failures.push(url.pathname);
-        return route.fulfill({ status: 501, json: {} });
-      }
-      if (!allowedOrigins.includes(url.origin)) return route.abort();
-      return route.continue();
-    });
-    if (withSession) await mockDemoApi(page);
-    else {
-      await page.route('**/api/auth/config**', (route) => route.fulfill({ json: { googleClientId: 'demo' } }));
-      await page.route('**/api/auth/refresh**', (route) => route.fulfill({ status: 401, json: {} }));
-      await page.route('**/api/public/info**', (route) => route.fulfill({ json: { plans: [], annualMonths: 12, contactEmail: null } }));
+const failures = [];
+const wanted = (name) => !only.length || only.includes(name);
+
+const open = async (role, time) => {
+  const context = await browser.newContext(contextOptions);
+  // Hora fija: el atleta ya ha desayunado y comido; el entrenador revisa a última hora de la tarde.
+  await context.clock.setFixedTime(time);
+  const page = await context.newPage();
+  await page.route('**/*', (route) => {
+    const url = new URL(route.request().url());
+    if (!allowedOrigins.includes(url.origin)) return route.abort();
+    if (url.origin === origin && url.pathname.startsWith('/api/')) {
+      failures.push(`${route.request().method()} ${url.pathname}: sin simular`);
+      return route.fulfill({ status: 501, json: {} });
     }
-    page.on('pageerror', (error) => failures.push(error.message));
-    return page;
-  };
-  const capture = async (page, name) => {
-    await page.evaluate(async () => {
-      await Promise.all(['400 16px Inter', '400 16px Anton'].map((font) => document.fonts.load(font)));
-      await document.fonts.ready;
-      for (const family of ['Inter', 'Anton']) {
-        if (![...document.fonts].some((font) => font.family.replaceAll('"', '').replaceAll("'", '') === family && font.status === 'loaded')) {
-          throw new Error(`No se ha cargado la fuente ${family}`);
-        }
+    return route.continue();
+  });
+  if (role === 'guest') {
+    await page.route('**/api/auth/config**', (route) => route.fulfill({ json: { googleClientId: 'showcase' } }));
+    await page.route('**/api/auth/refresh**', (route) => route.fulfill({ status: 401, json: {} }));
+    await page.route('**/api/public/info**', (route) => route.fulfill({ json: { plans: [], annualMonths: 12, contactEmail: null } }));
+  } else {
+    await mockApi(page, { coach: role === 'coach' }, failures);
+  }
+  page.on('pageerror', (error) => failures.push(error.message));
+  return page;
+};
+
+const settle = async (page) => {
+  await page.waitForLoadState('networkidle');
+  await page.evaluate(async () => {
+    await Promise.all(['400 16px Inter', '400 16px Anton'].map((font) => document.fonts.load(font)));
+    await document.fonts.ready;
+    for (const family of ['Inter', 'Anton']) {
+      if (![...document.fonts].some((font) => font.family.replace(/["']/g, '') === family && font.status === 'loaded')) {
+        throw new Error(`No se ha cargado la fuente ${family}`);
       }
-      window.scrollTo(0, 0);
-    });
-    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    await page.waitForTimeout(800);
-    await page.screenshot({ path: `${output}/${name}.png`, animations: 'disabled' });
-    console.log(`✓ ${name}.png`);
-  };
+    }
+  });
+  // Sin esqueletos de carga ni imágenes a medias (fotos de perfil, GIF de los ejercicios).
+  await expect(page.locator('[aria-busy="true"], .skeleton, [class*="skeleton"]')).toHaveCount(0, { timeout: 10_000 });
+  await expect
+    .poll(() => page.evaluate(() => [...document.images].filter((img) => img.getBoundingClientRect().height > 0 && !(img.complete && img.naturalWidth > 0)).map((img) => img.src)), { timeout: 20_000 })
+    .toEqual([]);
+};
 
-  const guest = await open(false);
-  await guest.goto(origin + '/');
-  await guest.waitForLoadState('networkidle');
-  await capture(guest, 'landing');
-  await guest.context().close();
+const capture = async (page, name) => {
+  await settle(page);
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.waitForTimeout(600);
+  const shot = await page.screenshot({ animations: 'disabled' });
+  // Se captura a 3× y se reduce a 860×1864 (2×) para que los PNG del repositorio no pesen tanto.
+  const resize = await browser.newPage({ viewport: { width: 860, height: 1864 }, deviceScaleFactor: 1 });
+  await resize.setContent(`<style>body{margin:0}img{display:block;width:860px;height:1864px}</style><img src="data:image/png;base64,${shot.toString('base64')}">`);
+  await resize.locator('img').evaluate((img) => img.decode());
+  await resize.screenshot({ path: `${output}/${name}.png` });
+  await resize.close();
+  console.log(`✓ ${name}.png`);
+};
 
-  const page = await open(true);
-  await page.goto(origin + '/dashboard');
-  await expect(page.getByRole('heading', { name: 'Cambio semanal' })).toBeVisible();
-  await capture(page, 'dashboard');
+try {
+  if (wanted('landing')) {
+    const guest = await open('guest', at(18, 40));
+    await guest.goto(origin + '/');
+    await capture(guest, 'landing');
+    await guest.context().close();
+  }
 
-  await page.goto(origin + '/tracking');
-  await page.waitForLoadState('networkidle');
-  await capture(page, 'tracking');
+  const athlete = await open('athlete', at(15, 10));
+  for (const [name, path] of [
+    ['dashboard', '/dashboard'],
+    ['tracking', '/tracking'],
+    ['nutrition', '/nutrition'],
+    ['training', '/workout'],
+  ]) {
+    if (!wanted(name)) continue;
+    await athlete.goto(origin + path);
+    await capture(athlete, name);
+  }
 
-  await page.goto(origin + '/nutrition');
-  await page.waitForLoadState('networkidle');
-  await capture(page, 'nutrition');
+  if (wanted('workout')) {
+    // Entreno en curso a partir de una plantilla, con las dos primeras series hechas.
+    await athlete.context().clock.setFixedTime(at(18, 5));
+    await athlete.goto(origin + '/workout');
+    await settle(athlete);
+    await athlete.getByRole('button', { name: 'Empezar entrenamiento' }).first().click();
+    await athlete.getByRole('dialog').locator('.ws-section', { hasText: 'Plantillas' }).getByRole('button', { name: /Empuje/ }).first().click();
+    await expect(athlete.locator('.exercise-card-header').first()).toBeVisible();
+    await athlete.getByRole('button', { name: 'Completar serie' }).nth(0).click();
+    await athlete.getByRole('button', { name: 'Completar serie' }).nth(0).click();
+    await athlete.context().clock.setFixedTime(at(18, 23));
+    await expect(athlete.locator('.workout-saved')).toBeEmpty({ timeout: 10_000 });
+    await athlete.evaluate(() => scrollTo(0, 0));
+    await capture(athlete, 'workout');
+  }
 
-  await page.goto(origin + '/workout');
-  await page.waitForLoadState('networkidle');
-  await capture(page, 'training');
+  const coach = await open('coach', at(18, 40));
+  for (const [name, path] of [
+    ['coach', '/entrenador'],
+    ['coach-clients', '/entrenador/atletas'],
+    ['coach-nutrition', '/entrenador/atletas/tour-lucia?seccion=pauta'],
+  ]) {
+    if (!wanted(name)) continue;
+    await coach.goto(origin + path);
+    await capture(coach, name);
+  }
 
-  await page.getByRole('button', { name: /empezar entrenamiento/i }).first().click();
-  await page.getByRole('dialog').locator('.ws-section', { hasText: 'Plantillas' }).getByRole('button', { name: /Torso A/ }).first().click();
-  await expect(page.locator('.exercise-card-header').first()).toBeVisible();
-  await page.getByRole('button', { name: 'Completar serie' }).nth(0).click();
-  await page.getByRole('button', { name: 'Completar serie' }).nth(0).click();
-  await page.context().clock.setFixedTime(at(19, 12));
-  // El aviso de «Guardado en este dispositivo» dura un par de segundos tras cada cambio.
-  await expect(page.locator('.workout-saved')).toBeEmpty();
-  await capture(page, 'workout');
-
-  const coach = await open(true);
-  await mockCoachApi(coach);
-  await coach.goto(origin + '/entrenador');
-  await coach.getByRole('button', { name: 'Ahora no' }).click({ timeout: 8000 }).catch(() => {});
-  await expect(coach.getByRole('region', { name: 'Seguimientos' })).toBeVisible();
-  await capture(coach, 'coach');
-
-  await coach.goto(origin + '/entrenador/atletas');
-  await expect(coach.getByRole('searchbox', { name: 'Buscar atleta' })).toBeVisible();
-  await capture(coach, 'coach-clients');
-
-  await coach.goto(origin + '/entrenador/atletas/showcase-0?seccion=revisiones');
-  await expect(coach.getByRole('heading', { name: 'Seguimientos semanales' })).toBeVisible();
-  await capture(coach, 'coach-review');
-
-  if (failures.length) throw new Error('Llamadas sin simular o errores: ' + [...new Set(failures)].join(', '));
+  if (wanted('coach-review')) {
+    // Seguimiento de la semana pasada pendiente de respuesta: valoraciones, respuestas y caja para contestar.
+    await coach.goto(origin + '/entrenador/atletas/tour-lucia?seccion=revisiones');
+    await settle(coach);
+    await expect(coach.locator('.checkin-past-toggle[aria-expanded="true"]')).toHaveCount(1);
+    await coach.locator('#checkin-past').evaluate((heading) => { heading.style.scrollMarginTop = '16px'; heading.scrollIntoView({ block: 'start' }); });
+    await capture(coach, 'coach-review');
+  }
 } finally {
   await browser.close();
+  if (failures.length) {
+    console.error('Llamadas sin simular o errores:\n' + [...new Set(failures)].join('\n'));
+    process.exitCode = 1;
+  }
 }
