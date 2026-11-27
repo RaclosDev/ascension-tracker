@@ -17,8 +17,8 @@ import java.time.Duration;
 import java.util.regex.Pattern;
 
 /**
- * Sign-up and sign-in with email and password. New accounts can sign in immediately;
- * their email is recorded as unverified.
+ * Sign-up and sign-in with email and password. New accounts can sign in immediately; their email is
+ * unverified until they use the link sent to it (see {@link EmailVerificationService}).
  */
 @Service
 public class PasswordAuthService {
@@ -35,15 +35,18 @@ public class PasswordAuthService {
     private final JdbcTemplate jdbc;
     private final AuthAccounts accounts;
     private final EmailSender emailSender;
+    private final EmailVerificationService verification;
     private final BCryptPasswordEncoder encoder;
     private final String dummyHash;
     private final EmailKeyedLimiter loginFailures;
     private final Clock clock;
 
-    public PasswordAuthService(JdbcTemplate jdbc, AuthAccounts accounts, EmailSender emailSender) {
+    public PasswordAuthService(JdbcTemplate jdbc, AuthAccounts accounts, EmailSender emailSender,
+                               EmailVerificationService verification) {
         this.jdbc = jdbc;
         this.accounts = accounts;
         this.emailSender = emailSender;
+        this.verification = verification;
         this.encoder = new BCryptPasswordEncoder(12);
         // Compared against when the email has no password, so the answer takes as long either way.
         this.dummyHash = encoder.encode(AuthHashes.randomToken(16));
@@ -69,7 +72,9 @@ public class PasswordAuthService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya tienes una cuenta con este email. Inicia sesión.");
         }
         log.info("Account created with a password: {}", PiiMasker.maskEmail(email));
-        return accounts.findByEmail(email).orElseThrow();
+        Account account = accounts.findByEmail(email).orElseThrow();
+        verification.sendLink(account.id(), account.email());
+        return account;
     }
 
     /**

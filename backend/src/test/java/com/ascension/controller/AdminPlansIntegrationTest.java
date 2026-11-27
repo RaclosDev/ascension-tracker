@@ -4,6 +4,7 @@ import com.ascension.TestcontainersConfiguration;
 import com.ascension.service.CoachSubscriptionService;
 import com.ascension.service.UserService;
 import com.ascension.support.DisabledIfDockerUnavailable;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,9 +38,14 @@ class AdminPlansIntegrationTest {
     @Autowired UserService users;
     @Autowired CoachSubscriptionService subscriptions;
 
+    /** An administrator has to be a real, verified account: an unverified one with that address is not. */
+    @BeforeEach
+    void theAdministratorHasSignedIn() {
+        users.ensureUserExists(ADMIN, "Boss", null);
+    }
+
     @Test
     void onlyAdminsSeeAndChangePlans() throws Exception {
-        users.ensureUserExists(ADMIN, "Boss", null);
         String coach = coach();
         mvc.perform(as(get("/api/admin/me"), ADMIN)).andExpect(jsonPath("$.admin").value(true));
         mvc.perform(as(get("/api/admin/me"), coach)).andExpect(jsonPath("$.admin").value(false));

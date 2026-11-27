@@ -1,6 +1,7 @@
 package com.ascension.controller;
 
 import com.ascension.service.PushNotificationService;
+import com.ascension.service.auth.EmailVerificationService;
 import nl.martijndwars.webpush.Subscription;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,9 +17,11 @@ import java.util.Map;
 public class PushController {
 
     private final PushNotificationService pushService;
+    private final EmailVerificationService verification;
 
-    public PushController(PushNotificationService pushService) {
+    public PushController(PushNotificationService pushService, EmailVerificationService verification) {
         this.pushService = pushService;
+        this.verification = verification;
     }
 
     @GetMapping("/vapid-key")
@@ -33,6 +36,8 @@ public class PushController {
     ) {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(401).build();
+        // Notifications of an address nobody has proved yet could go to whoever typed it at sign-up.
+        verification.requireVerified(email);
         Subscription sub = new Subscription(
                 request.endpoint,
                 new Subscription.Keys(request.keys.p256dh, request.keys.auth)

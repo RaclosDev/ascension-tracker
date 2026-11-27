@@ -30,6 +30,13 @@ final class AccountEmails {
                         + "Si no has sido tú, ignora este correo.");
     }
 
+    static Email verifyLink(String to, String link) {
+        return email(to, "Verifica tu email de Ascension",
+                "Para confirmar que este email es tuyo abre este enlace: " + link,
+                "Caduca en 24 horas y solo sirve una vez. Hasta que lo confirmes no podrás vincular un entrenador "
+                        + "ni activar notificaciones. Si no has creado tú la cuenta, ignora este correo.");
+    }
+
     static Email resetLink(String to, String link) {
         return email(to, "Restablece tu contraseña de Ascension",
                 "Para elegir una contraseña nueva abre este enlace: " + link,

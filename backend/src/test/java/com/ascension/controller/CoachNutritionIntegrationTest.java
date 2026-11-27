@@ -221,6 +221,30 @@ class CoachNutritionIntegrationTest {
     }
 
     @Test
+    void publishingANewProgramDoesNotTurnThePastDaysOfThePreviousOneIntoRestDays() throws Exception {
+        String coach = coach();
+        String client = user();
+        String linkId = accept(client, invite(coach), EDIT_ALL);
+        mvc.perform(as(put(PATH, linkId), coach).contentType("application/json").content(PLAN))
+                .andExpect(status().isOk());
+        LocalDate lastMonday = monday.minusWeeks(1);
+        assign(coach, linkId, createProgram(coach), lastMonday);
+        mvc.perform(as(get("/api/nutrition/macros").param("date", lastMonday.toString()), client))
+                .andExpect(jsonPath("$.dayType").value("TRAINING"));
+
+        // The replacement starts today: the previous program is closed, but last Monday still had its session.
+        assign(coach, linkId, createProgram(coach), LocalDate.now());
+        assertThat(jdbc.queryForObject("""
+                SELECT status FROM program_assignments WHERE coach_link_id = ?::uuid AND start_date = ?
+                """, String.class, linkId, java.sql.Date.valueOf(lastMonday))).isEqualTo("ENDED");
+        mvc.perform(as(get("/api/nutrition/macros").param("date", lastMonday.toString()), client))
+                .andExpect(jsonPath("$.dayType").value("TRAINING"))
+                .andExpect(jsonPath("$.carbs").value(300.0));
+        mvc.perform(as(get("/api/nutrition/macros").param("date", lastMonday.plusDays(1).toString()), client))
+                .andExpect(jsonPath("$.dayType").value("REST"));
+    }
+
+    @Test
     void adherenceComparesWhatTheClientLoggedWithThePlanOfEachDay() throws Exception {
         String coach = coach();
         String client = user();
@@ -345,6 +369,27 @@ class CoachNutritionIntegrationTest {
         mvc.perform(as(put(PATH, otherLink), other).contentType("application/json")
                 .content(PLAN)).andExpect(status().isConflict());
         mvc.perform(as(get(PATH, link), coach)).andExpect(status().isOk());
+    }
+
+    @Test
+    void endingTheLinkClosesItsPlanSoTheNextCoachCanPublish() throws Exception {
+        String coach = coach();
+        String next = coach();
+        String client = user();
+        String link = accept(client, invite(coach), EDIT_ALL);
+        mvc.perform(as(post(PATH + "/publish", link), coach).contentType("application/json")
+                .content("{\"plan\":" + PLAN + "}")).andExpect(status().isOk());
+        mvc.perform(as(post("/api/coaching/coaches/{linkId}/end", link), client))
+                .andExpect(status().isNoContent());
+
+        String nextLink = accept(client, invite(next), EDIT_ALL);
+        mvc.perform(as(post(PATH + "/publish", nextLink), next).contentType("application/json")
+                .content("{\"plan\":" + PLAN + "}")).andExpect(status().isOk());
+
+        assertThat(jdbc.queryForObject("SELECT status FROM nutrition_plans WHERE coach_link_id = ?::uuid",
+                String.class, link)).isEqualTo("ENDED");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM nutrition_plans WHERE coach_link_id = ?::uuid AND status = 'ACTIVE'",
+                Integer.class, nextLink)).isEqualTo(1);
     }
 
     @Test

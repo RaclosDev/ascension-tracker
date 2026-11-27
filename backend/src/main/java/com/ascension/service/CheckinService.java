@@ -226,23 +226,29 @@ public class CheckinService {
 
     // ---- GDPR export ----
 
+    /**
+     * Everything the user sent as a client, plus what clients sent them as a coach. The coach side follows the
+     * same rules as the coach's screen: only links still active, and the weight only with the body consent.
+     */
     @Transactional(readOnly = true)
     public List<CheckinExport> exportFor(UUID userId) {
         return jdbcTemplate.query("""
                 SELECT %s, CASE WHEN c.client_user_id = ? THEN 'CLIENT' ELSE 'COACH' END AS role,
+                       (c.client_user_id = ? OR cc.can_view_body) AS show_weight,
                        COALESCE(cp.name, u.name) AS name, u.email, CASE WHEN cp.id IS NULL THEN u.picture ELSE cp.picture END AS picture
                 FROM checkins c
+                LEFT JOIN coach_clients cc ON cc.id = c.link_id
                 LEFT JOIN users u ON u.id = CASE WHEN c.client_user_id = ? THEN c.coach_user_id
                                                  ELSE c.client_user_id END
                 LEFT JOIN coach_public_profiles cp ON cp.id = u.id AND cp.id = c.coach_user_id
-                WHERE c.client_user_id = ? OR c.coach_user_id = ?
+                WHERE c.client_user_id = ? OR (c.coach_user_id = ? AND cc.status = 'ACTIVE')
                 ORDER BY c.week_start, c.created_at
                 """.formatted(COLUMNS),
                 (rs, n) -> new CheckinExport(rs.getString("role"),
                         rs.getString("email") == null ? null
                                 : new Person(rs.getString("name"), rs.getString("email"), rs.getString("picture")),
-                        checkin(true).mapRow(rs, n)),
-                userId, userId, userId, userId);
+                        checkin(rs.getBoolean("show_weight")).mapRow(rs, n)),
+                userId, userId, userId, userId, userId);
     }
 
     // ---- Helpers ----

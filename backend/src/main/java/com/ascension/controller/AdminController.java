@@ -8,6 +8,7 @@ import com.ascension.dto.AdminDtos.PlanChange;
 import com.ascension.dto.ContactDtos.AdminContactRequest;
 import com.ascension.service.CoachSubscriptionService;
 import com.ascension.service.ContactRequestService;
+import com.ascension.service.auth.EmailVerificationService;
 import com.ascension.util.PiiMasker;
 import com.ascension.util.SecurityUtils;
 import jakarta.validation.Valid;
@@ -32,12 +33,13 @@ public class AdminController {
     private final AdminProperties adminProperties;
     private final CoachSubscriptionService subscriptionService;
     private final ContactRequestService contactRequestService;
+    private final EmailVerificationService verification;
 
     @GetMapping("/me")
     public ResponseEntity<AdminStatus> me(@AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(new AdminStatus(adminProperties.isAdmin(email)));
+        return ResponseEntity.ok(new AdminStatus(isAdmin(email)));
     }
 
     @GetMapping("/coaches")
@@ -75,9 +77,14 @@ public class AdminController {
 
     private String requireAdmin(Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);
-        if (!adminProperties.isAdmin(email)) {
+        if (!isAdmin(email)) {
             throw new SecurityException("Solo para administradores");
         }
         return email;
+    }
+
+    /** Being in the list is not enough: anyone can sign up with an address they do not own, so it must be verified. */
+    private boolean isAdmin(String email) {
+        return adminProperties.isAdmin(email) && verification.isVerified(email);
     }
 }

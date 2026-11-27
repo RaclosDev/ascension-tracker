@@ -133,6 +133,15 @@ public class NutritionPlanService {
         end(access);
     }
 
+    /** The link ended: the plan its coach set stops with it. */
+    @Transactional
+    public void endForLink(UUID linkId) {
+        jdbcTemplate.update("""
+                UPDATE nutrition_plans SET status = 'ENDED', ended_at = NOW()
+                WHERE coach_link_id = ? AND status = 'ACTIVE'
+                """, linkId);
+    }
+
     private void lockClient(UUID clientId) {
         jdbcTemplate.queryForObject("SELECT id FROM users WHERE id = ? FOR UPDATE", UUID.class, clientId);
     }
@@ -154,11 +163,23 @@ public class NutritionPlanService {
         boolean own = actualId == null || Boolean.TRUE.equals(jdbcTemplate.queryForObject(
                 "SELECT coach_link_id = ? FROM nutrition_plans WHERE id = ?", Boolean.class,
                 access.linkId(), actualId));
+        if (!own && !planOfLiveLink(actualId)) {
+            // Left by a link that ended before plans were closed with it: it no longer binds anyone.
+            jdbcTemplate.update("UPDATE nutrition_plans SET status = 'ENDED', ended_at = NOW() WHERE id = ?", actualId);
+            return null;
+        }
         if (!own) {
             throw new OptimisticLockingFailureException(
                     "El atleta tiene una pauta activa de otro entrenador. Debe finalizarse antes de publicar otra.");
         }
         return actualId;
+    }
+
+    private boolean planOfLiveLink(UUID planId) {
+        return Boolean.TRUE.equals(jdbcTemplate.queryForObject("""
+                SELECT EXISTS(SELECT 1 FROM nutrition_plans p JOIN coach_clients cc ON cc.id = p.coach_link_id
+                              WHERE p.id = ? AND cc.status = 'ACTIVE')
+                """, Boolean.class, planId));
     }
 
     @Transactional(readOnly = true)
