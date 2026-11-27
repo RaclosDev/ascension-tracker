@@ -4,7 +4,21 @@ const finite = (value: unknown) => typeof value === 'number' && Number.isFinite(
 const optionalString = (value: unknown) => value == null || typeof value === 'string';
 const optionalNumber = (value: unknown) => value == null || finite(value);
 
+const REQUIRED_TEXT_FIELDS = ['weight', 'reps'] as const;
+
+/**
+ * Sets without a weight (bodyweight, cardio) come from the server with null weight or reps. They are text in the
+ * editor, so they are turned into '' here, in place, instead of rejecting the whole saved workout.
+ */
+function repairSet(value: unknown): void {
+  if (!record(value)) return;
+  for (const key of REQUIRED_TEXT_FIELDS) {
+    if (value[key] === null) value[key] = '';
+  }
+}
+
 function validSet(value: unknown): boolean {
+  repairSet(value);
   return (
     record(value) &&
     typeof value.id === 'string' &&
