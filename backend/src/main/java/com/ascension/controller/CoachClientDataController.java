@@ -1,5 +1,6 @@
 package com.ascension.controller;
 
+import com.ascension.util.AppClock;
 import com.ascension.dto.CoachDtos.CommentRequest;
 import com.ascension.dto.CoachDtos.Targets;
 import com.ascension.dto.CustomExerciseDTO;
@@ -68,7 +69,7 @@ public class CoachClientDataController {
             @PathVariable UUID linkId,
             @RequestParam(defaultValue = "365") @Min(value = 1, message = "Indica al menos 1 día") @Max(value = 3660, message = "Como mucho 10 años") int days,
             @AuthenticationPrincipal Jwt jwt) {
-        LocalDate from = LocalDate.now().minusDays(days);
+        LocalDate from = AppClock.today().minusDays(days);
         return read(jwt, linkId, Action.VIEW_WEIGHT, email -> weightService.getEntriesSince(email, from));
     }
 

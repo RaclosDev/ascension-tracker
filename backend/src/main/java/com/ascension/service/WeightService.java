@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.AppClock;
 import com.ascension.dto.*;
 import com.ascension.model.WeightEntry;
 import com.ascension.repository.WeightEntryRepository;
@@ -150,7 +151,7 @@ public class WeightService {
         if (allEntries.isEmpty()) return List.of();
 
         LocalDate firstMonday = WeeklyReportingWindow.start(allEntries.get(0).getDate());
-        LocalDate currentMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate currentMonday = AppClock.today().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
         Map<LocalDate, Double> entryMap = allEntries.stream()
                 .collect(Collectors.toMap(WeightEntry::getDate, WeightEntry::getWeight, (v1, v2) -> v2));
@@ -227,7 +228,7 @@ public class WeightService {
         double direction = Math.signum(goal - start);
         if (direction == 0 && current != goal) return "--";
         double remaining = (goal - current) * direction;
-        if (remaining <= 0) return LocalDate.now().format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-ES")));
+        if (remaining <= 0) return AppClock.today().format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-ES")));
 
         double weeklyProgress = avgWeekly * direction;
         if (weeklyProgress < 0) return "--";
@@ -236,13 +237,13 @@ public class WeightService {
         }
         if (weeklyProgress == 0) return "--";
         long days = Math.round((remaining / weeklyProgress) * 7);
-        return LocalDate.now().plusDays(days).format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-ES")));
+        return AppClock.today().plusDays(days).format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-ES")));
     }
 
     private int calculateStreak(List<WeightEntry> entries) {
         Set<LocalDate> dateSet = entries.stream().map(WeightEntry::getDate).collect(Collectors.toSet());
         int streak = 0;
-        LocalDate check = LocalDate.now();
+        LocalDate check = AppClock.today();
 
         // If today has no entry, start from yesterday
         if (!dateSet.contains(check)) {
@@ -259,7 +260,7 @@ public class WeightService {
     private List<DashboardDTO.StreakDay> getStreakDays(List<WeightEntry> entries) {
         Set<LocalDate> dateSet = entries.stream().map(WeightEntry::getDate).collect(Collectors.toSet());
         List<DashboardDTO.StreakDay> days = new ArrayList<>();
-        LocalDate today = LocalDate.now();
+        LocalDate today = AppClock.today();
         for (int i = 13; i >= 0; i--) {
             LocalDate d = today.minusDays(i);
             days.add(DashboardDTO.StreakDay.builder().date(d).hasData(dateSet.contains(d)).build());

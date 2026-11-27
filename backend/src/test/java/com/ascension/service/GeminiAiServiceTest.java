@@ -285,4 +285,21 @@ class GeminiAiServiceTest {
         );
         org.junit.jupiter.api.Assertions.assertTrue(ex.getMessage().contains("supera el máximo de 25 megapíxeles"));
     }
+
+    @Test
+    void generateMealAssistantResponse_usesMacroTargetsOfRequestedDate() {
+        String email = "test@test.com";
+        LocalDate past = LocalDate.of(2026, 1, 15);
+        when(macroCalculatorService.getMacros(email, past)).thenReturn(new com.ascension.dto.MacrosDTO());
+
+        // Only the macro lookup matters here; whatever happens later with unmocked collaborators is irrelevant.
+        try {
+            geminiAiService.generateMealAssistantResponse(email, "¿Qué ceno?", null, past, null, List.of());
+        } catch (RuntimeException ignored) {
+            // downstream mocks return null
+        }
+
+        verify(macroCalculatorService).getMacros(email, past);
+        verify(macroCalculatorService, never()).getMacros(email);
+    }
 }

@@ -3,6 +3,8 @@ package com.ascension.service;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -19,10 +21,26 @@ public class FoodExternalService {
     private final FatSecretResponseMapper fatSecretMapper;
     private final ObjectMapper objectMapper;
     private final ExternalApiExecution execution;
+    private final CacheManager cacheManager;
 
-    @Cacheable(value = "foodSearch", key = "'q:' + #query", unless = "#result == null or #result.contains('error')")
-    public String searchOpenFoodFacts(String query) {
-        if (query == null || query.isBlank() || query.length() > 100) return "{\"products\": []}";
+    /**
+     * Cached for 24 h only when both providers answered: a result with one provider down is partial and must
+     * not hide the missing products for a day. The key ignores case and extra spaces.
+     */
+    public String searchOpenFoodFacts(String rawQuery) {
+        if (rawQuery == null || rawQuery.isBlank() || rawQuery.length() > 100) return "{\"products\": []}";
+        String query = rawQuery.trim().replaceAll("\s+", " ").toLowerCase(java.util.Locale.ROOT);
+        Cache cache = cacheManager.getCache("foodSearch");
+        String key = "q:" + query;
+        String cached = cache != null ? cache.get(key, String.class) : null;
+        if (cached != null) return cached;
+        boolean[] complete = new boolean[1];
+        String body = fetchCombined(query, complete);
+        if (cache != null && complete[0]) cache.put(key, body);
+        return body;
+    }
+
+    private String fetchCombined(String query, boolean[] complete) {
         try {
             tools.jackson.databind.node.ArrayNode combinedProducts = objectMapper.createArrayNode();
 
@@ -51,6 +69,7 @@ public class FoodExternalService {
                 }
             }
 
+            complete[0] = offSuccess && fsSuccess;
             if (!offSuccess && !fsSuccess) {
                 throw new com.ascension.exception.ExternalApiException("ExternalFoodApis", org.springframework.http.HttpStatus.BAD_GATEWAY, "Both external food APIs failed or timed out");
             }

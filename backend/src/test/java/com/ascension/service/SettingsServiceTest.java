@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -35,7 +36,7 @@ class SettingsServiceTest {
 
     private UserSettingsDTO firstSettings(String appModules) {
         when(settingsRepository.findSettings(USER_EMAIL)).thenReturn(Optional.empty());
-        when(settingsRepository.save(any(UserSettings.class))).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(settingsRepository.save(any(UserSettings.class))).thenAnswer(inv -> inv.getArgument(0));
         return UserSettingsDTO.builder()
                 .startWeight(82.0)
                 .goalWeight(78.0)
@@ -59,6 +60,45 @@ class SettingsServiceTest {
         settingsService.updateSettings(USER_EMAIL, firstSettings(null));
 
         verify(weightEntryRepository).save(any(WeightEntry.class));
+    }
+
+    @Test
+    void doesNotSeedTheFirstWeighInWhenTheDayAlreadyHasOne() {
+        UserSettingsDTO dto = firstSettings("FULL");
+        when(weightEntryRepository.findByUserEmailAndDate(eq(USER_EMAIL), any(LocalDate.class)))
+                .thenReturn(Optional.of(new WeightEntry()));
+
+        settingsService.updateSettings(USER_EMAIL, dto);
+
+        verify(weightEntryRepository, never()).save(any(WeightEntry.class));
+        verify(settingsRepository).save(any(UserSettings.class));
+    }
+
+    @Test
+    void rejectsACustomPercentageSplitThatDoesNotAddUpTo100() {
+        UserSettingsDTO dto = firstSettings("FULL");
+        dto.setMacroStrategy("CUSTOM_PCT");
+        dto.setCustomProteinPct(40.0);
+        dto.setCustomFatPct(40.0);
+        dto.setCustomCarbsPct(40.0);
+
+        assertThatThrownBy(() -> settingsService.updateSettings(USER_EMAIL, dto))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("100");
+        verify(settingsRepository, never()).save(any(UserSettings.class));
+    }
+
+    @Test
+    void acceptsACustomPercentageSplitThatAddsUpTo100() {
+        UserSettingsDTO dto = firstSettings("FULL");
+        dto.setMacroStrategy("CUSTOM_PCT");
+        dto.setCustomProteinPct(30.0);
+        dto.setCustomFatPct(30.0);
+        dto.setCustomCarbsPct(40.0);
+
+        settingsService.updateSettings(USER_EMAIL, dto);
+
+        verify(settingsRepository).save(any(UserSettings.class));
     }
 
     @ParameterizedTest

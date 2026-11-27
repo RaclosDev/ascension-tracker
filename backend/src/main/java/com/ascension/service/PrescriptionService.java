@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.AppClock;
 import com.ascension.dto.PrescriptionDtos.*;
 import com.ascension.dto.ProgramDtos.*;
 import com.ascension.exception.InvalidInputException;
@@ -46,7 +47,7 @@ public class PrescriptionService {
         BigDecimal kg = reference.multiply(load.amount()).divide(new BigDecimal("100"))
                 .divide(step, 0, RoundingMode.HALF_UP).multiply(step);
         if (kg.compareTo(new BigDecimal("2000")) > 0) throw new InvalidInputException("La carga calculada supera el límite de 2000 kg. Revisa el TM y el porcentaje.");
-        return new Load(load.mode(), load.amount(), load.unit(), load.lift(), step, reference, kg, LocalDate.now());
+        return new Load(load.mode(), load.amount(), load.unit(), load.lift(), step, reference, kg, AppClock.today());
     }
 
     static void validate(Exercise e) {

@@ -24,7 +24,8 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
 public class IdempotencyFilter extends OncePerRequestFilter {
     private static final Set<String> PATHS = Set.of("/api/workouts", "/api/workouts/templates",
             "/api/nutrition/logs", "/api/nutrition/ai/assistant-apply", "/api/user/restore",
-            "/api/nutrition/meals", "/api/nutrition/recipes", "/api/nutrition/my-foods");
+            "/api/nutrition/meals", "/api/nutrition/recipes", "/api/nutrition/my-foods",
+            "/api/nutrition/ai/log", "/api/nutrition/ai/food", "/api/workouts/import");
     private final org.springframework.beans.factory.ObjectProvider<IdempotencyService> service;
     private final org.springframework.beans.factory.ObjectProvider<com.ascension.interceptor.RateLimitInterceptor> rateLimit;
     public IdempotencyFilter(org.springframework.beans.factory.ObjectProvider<IdempotencyService> service,

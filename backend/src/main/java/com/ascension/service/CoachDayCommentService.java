@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.AppClock;
 import com.ascension.dto.CoachDtos.DayComment;
 import com.ascension.dto.CoachDtos.DayCommentExport;
 import com.ascension.dto.CoachDtos.Person;
@@ -45,7 +46,7 @@ public class CoachDayCommentService {
     @Transactional
     public void save(ClientAccess access, LocalDate day, String text) {
         // One day of slack: the coach's local date may be ahead of the server's.
-        if (day.isAfter(LocalDate.now().plusDays(1))) {
+        if (day.isAfter(AppClock.today().plusDays(1))) {
             throw new InvalidInputException("No se puede comentar un día que aún no ha llegado");
         }
         jdbcTemplate.update("""

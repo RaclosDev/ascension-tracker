@@ -65,6 +65,43 @@ public class PowerliftingService {
                 """, MAPPER, Emails.normalize(email));
     }
 
+    /**
+     * Points the coach's exercise mappings from a merged exercise to its replacement. When a profile already
+     * had the same variant mapped to the replacement, the duplicate is dropped so the profile stays valid.
+     * Returns how many profiles changed.
+     */
+    @Transactional
+    public int renameExercise(String coachEmail, String source, String target) {
+        String needle = JSON.writeValueAsString(List.of(java.util.Map.of("exerciseId", source)));
+        var rows = jdbc.query("""
+                SELECT p.link_id, p.content::text AS content
+                FROM coach_powerlifting_profiles p JOIN coach_clients c ON c.id = p.link_id
+                WHERE c.coach_user_id = (SELECT id FROM users WHERE email = ?)
+                  AND jsonb_typeof(p.content->'exerciseMappings') = 'array'
+                  AND p.content->'exerciseMappings' @> CAST(? AS jsonb)
+                FOR UPDATE OF p
+                """, (rs, n) -> new Object[] {rs.getObject("link_id", UUID.class), rs.getString("content")},
+                Emails.normalize(coachEmail), needle);
+        for (Object[] row : rows) {
+            tools.jackson.databind.node.ObjectNode content = (tools.jackson.databind.node.ObjectNode) JSON.readTree((String) row[1]);
+            tools.jackson.databind.node.ArrayNode renamed = JSON.createArrayNode();
+            java.util.Set<String> seen = new java.util.HashSet<>();
+            for (tools.jackson.databind.JsonNode mapping : content.path("exerciseMappings")) {
+                tools.jackson.databind.node.ObjectNode copy = ((tools.jackson.databind.node.ObjectNode) mapping).deepCopy();
+                if (source.equals(copy.path("exerciseId").asString(""))) copy.put("exerciseId", target);
+                String key = copy.path("exerciseId").asString("") + "|" + copy.path("grip").asString("")
+                        + "|" + copy.path("machine").asString("");
+                if (seen.add(key)) renamed.add(copy);
+            }
+            content.set("exerciseMappings", renamed);
+            jdbc.update("""
+                    UPDATE coach_powerlifting_profiles SET content = CAST(? AS jsonb),
+                        version = version + 1, updated_at = NOW() WHERE link_id = ?
+                    """, JSON.writeValueAsString(content), row[0]);
+        }
+        return rows.size();
+    }
+
     private Saved current(UUID linkId) {
         return jdbc.query("SELECT * FROM coach_powerlifting_profiles WHERE link_id = ?", MAPPER, linkId)
                 .stream().findFirst().orElseGet(() -> new Saved(linkId,

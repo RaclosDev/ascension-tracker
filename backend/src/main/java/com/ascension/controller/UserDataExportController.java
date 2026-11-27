@@ -1,5 +1,6 @@
 package com.ascension.controller;
 
+import com.ascension.util.AppClock;
 import com.ascension.dto.UserDataExportDTO;
 import com.ascension.dto.UserDataRestoreSummaryDTO;
 import com.ascension.service.UserDataExportService;
@@ -33,7 +34,7 @@ public class UserDataExportController {
 
         UserDataExportDTO exportDTO = userDataExportService.exportUserData(email);
 
-        String dateStr = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+        String dateStr = AppClock.today().format(DateTimeFormatter.ISO_LOCAL_DATE);
         String filename = "ascension-backup-" + dateStr + ".json";
 
         return ResponseEntity.ok()

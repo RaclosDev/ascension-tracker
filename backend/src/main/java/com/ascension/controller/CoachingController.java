@@ -1,5 +1,6 @@
 package com.ascension.controller;
 
+import com.ascension.util.AppClock;
 import com.ascension.dto.CheckinDtos.Checkin;
 import com.ascension.dto.CheckinDtos.CheckinRequest;
 import com.ascension.dto.CheckinDtos.ClientCheckin;
@@ -56,7 +57,7 @@ public class CoachingController {
                                                  @AuthenticationPrincipal Jwt jwt) {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        LocalDate serverToday = LocalDate.now();
+        LocalDate serverToday = AppClock.today();
         LocalDate day = date == null ? serverToday : date;
         if (day.isBefore(serverToday.minusDays(2)) || day.isAfter(serverToday.plusDays(2))) {
             throw new InvalidInputException("La fecha debe ser la de hoy");
