@@ -31,6 +31,9 @@ import java.util.concurrent.TimeoutException;
 @Service
 public class PushNotificationService {
 
+    /** Devices one account can keep registered; past that the oldest are dropped. */
+    static final int MAX_SUBSCRIPTIONS_PER_USER = 10;
+
     @Value("${app.push.vapid-public-key:CHANGE_ME}")
     private String vapidPublicKey;
 
@@ -82,6 +85,13 @@ public class PushNotificationService {
                     subscriptionRepo.save(sub);
                 },
                 () -> {
+                    List<PushSubscription> existing = new java.util.ArrayList<>(subscriptionRepo.findByUserEmail(userEmail));
+                    existing.sort(java.util.Comparator.comparing(PushSubscription::getId));
+                    int excess = existing.size() - (MAX_SUBSCRIPTIONS_PER_USER - 1);
+                    if (excess > 0) {
+                        subscriptionRepo.deleteAll(existing.subList(0, excess));
+                        subscriptionRepo.flush();
+                    }
                     PushSubscription sub = PushSubscription.builder()
                             .userEmail(userEmail)
                             .endpoint(subscription.endpoint)

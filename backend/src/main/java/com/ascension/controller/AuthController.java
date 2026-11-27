@@ -7,6 +7,7 @@ import com.ascension.security.AccessTokenIssuer;
 import com.ascension.security.RefreshCookies;
 import com.ascension.security.TrustedOrigins;
 import com.ascension.service.AccountDeletionService;
+import com.ascension.service.PushNotificationService;
 import com.ascension.service.RefreshTokenService;
 import com.ascension.service.UserService;
 import com.ascension.service.UserService.User;
@@ -55,6 +56,7 @@ public class AuthController {
     private final AccessTokenIssuer accessTokens;
     private final RefreshCookies refreshCookies;
     private final TrustedOrigins trustedOrigins;
+    private final PushNotificationService pushService;
 
     @Value("${google.client-id:CHANGE_ME}")
     private String googleClientId;
@@ -67,7 +69,8 @@ public class AuthController {
             UserService userService,
             AccessTokenIssuer accessTokens,
             RefreshCookies refreshCookies,
-            TrustedOrigins trustedOrigins) {
+            TrustedOrigins trustedOrigins,
+            PushNotificationService pushService) {
         this.verifier = verifier;
         this.jwtDecoder = jwtDecoder;
         this.refreshTokenService = refreshTokenService;
@@ -76,6 +79,7 @@ public class AuthController {
         this.accessTokens = accessTokens;
         this.refreshCookies = refreshCookies;
         this.trustedOrigins = trustedOrigins;
+        this.pushService = pushService;
     }
 
     @PostMapping("/login")
@@ -271,10 +275,17 @@ public class AuthController {
             if (targetEmail != null && !targetEmail.isBlank()) {
                 userService.updateTokensValidAfter(targetEmail, Instant.now());
                 refreshTokenService.deleteByEmail(targetEmail);
+                // A closed session must stop receiving this account's notifications on shared devices.
+                pushService.removeSubscription(targetEmail);
+                pushService.cancelRestNotification(targetEmail);
             }
         } else if (requestCookieRefreshToken != null && !requestCookieRefreshToken.isBlank()) {
             refreshTokenService.findByToken(RefreshToken.hashToken(requestCookieRefreshToken)).ifPresent(token -> {
                 refreshTokenService.delete(token);
+                String pushEndpoint = request == null ? null : request.getHeader("X-Push-Endpoint");
+                if (pushEndpoint != null && !pushEndpoint.isBlank() && token.getEmail() != null) {
+                    pushService.removeSubscriptionByEndpoint(pushEndpoint.trim(), token.getEmail());
+                }
                 if (token.getFamilyId() != null && !token.getFamilyId().isBlank()) {
                     refreshTokenService.deleteByFamilyId(token.getFamilyId());
                 }

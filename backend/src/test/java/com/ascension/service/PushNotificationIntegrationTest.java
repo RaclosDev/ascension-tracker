@@ -126,6 +126,25 @@ class PushNotificationIntegrationTest {
     }
 
     @Test
+    @DisplayName("Límite de suscripciones por usuario: al pasarse se descartan las más antiguas")
+    void saveSubscription_dropsOldestBeyondLimit() {
+        int max = PushNotificationService.MAX_SUBSCRIPTIONS_PER_USER;
+        for (int i = 0; i < max + 3; i++) {
+            pushNotificationService.saveSubscription(USER_EMAIL,
+                    new Subscription("https://push.example/device-" + i, new Subscription.Keys(validP256dh, validAuth)));
+        }
+        pushNotificationService.saveSubscription(USER_EMAIL_2,
+                new Subscription("https://push.example/other-user", new Subscription.Keys(validP256dh, validAuth)));
+
+        List<String> endpoints = pushSubscriptionRepository.findByUserEmail(USER_EMAIL).stream()
+                .map(PushSubscription::getEndpoint).toList();
+        assertThat(endpoints).hasSize(max);
+        assertThat(endpoints).doesNotContain("https://push.example/device-0", "https://push.example/device-1", "https://push.example/device-2");
+        assertThat(endpoints).contains("https://push.example/device-" + (max + 2));
+        assertThat(pushSubscriptionRepository.findByUserEmail(USER_EMAIL_2)).hasSize(1);
+    }
+
+    @Test
     @DisplayName("1. Soporte de múltiples suscripciones: envío de notificaciones a todos los endpoints del usuario")
     void sendPush_deliversToAllRegisteredEndpointsOfUser() throws Exception {
         // Registrar suscripción de teléfono

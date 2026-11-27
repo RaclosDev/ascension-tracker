@@ -245,6 +245,9 @@ class AuthControllerTest {
     private AccountDeletionService accountDeletionService;
 
     @MockitoBean
+    private com.ascension.service.PushNotificationService pushNotificationService;
+
+    @MockitoBean
     private GoogleIdTokenVerifier googleIdTokenVerifier;
 
     @MockitoBean
@@ -592,6 +595,40 @@ class AuthControllerTest {
 
         verify(userService).updateTokensValidAfter(org.mockito.ArgumentMatchers.eq("user@example.com"), org.mockito.ArgumentMatchers.any());
         verify(refreshTokenService).deleteByEmail("user@example.com");
+    }
+
+    @Test
+    void logout_WhenAllDevicesTrue_RemovesPushSubscriptionsAndRestTimer() throws Exception {
+        RefreshToken rt = new RefreshToken();
+        rt.setEmail("user@example.com");
+        when(refreshTokenService.findByToken(anyString())).thenReturn(Optional.of(rt));
+
+        mockMvc.perform(post("/api/auth/logout")
+                .header("Origin", "http://localhost:5173")
+                .param("allDevices", "true")
+                .with(csrf())
+                .cookie(new jakarta.servlet.http.Cookie("refreshToken", "my_refresh_cookie")))
+                .andExpect(status().isOk());
+
+        verify(pushNotificationService).removeSubscription("user@example.com");
+        verify(pushNotificationService).cancelRestNotification("user@example.com");
+    }
+
+    @Test
+    void logout_WhenPushEndpointHeaderSent_RemovesOnlyThatDeviceSubscription() throws Exception {
+        RefreshToken rt = new RefreshToken();
+        rt.setEmail("user@example.com");
+        when(refreshTokenService.findByToken(anyString())).thenReturn(Optional.of(rt));
+
+        mockMvc.perform(post("/api/auth/logout")
+                .header("Origin", "http://localhost:5173")
+                .header("X-Push-Endpoint", "https://push.example/device-1")
+                .with(csrf())
+                .cookie(new jakarta.servlet.http.Cookie("refreshToken", "my_refresh_cookie")))
+                .andExpect(status().isOk());
+
+        verify(pushNotificationService).removeSubscriptionByEndpoint("https://push.example/device-1", "user@example.com");
+        verify(pushNotificationService, org.mockito.Mockito.never()).removeSubscription(anyString());
     }
 
     @Test
