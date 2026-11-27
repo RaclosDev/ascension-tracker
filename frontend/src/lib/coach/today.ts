@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/client';
 import type { ProgramExercise } from './coachPrograms';
 import type { PrescribedDay } from '../workout/store';
+import { useLocalToday } from '../../hooks/use-local-today';
 import { loadText, prescribedSet, protocolText } from './prescription';
 
 /** Mirrors the backend ProgramDtos.TodayDay: the prescribed day, with its id for linking the workout. */
@@ -41,7 +42,7 @@ export function localIsoDate(date = new Date()): string {
 const todayKey = (date: string) => ['coaching', 'today', date] as const;
 
 export function useTodayPlans() {
-  const date = localIsoDate();
+  const date = useLocalToday();
   return useQuery({
     queryKey: todayKey(date),
     queryFn: async () => (await api.get<TodayPlan[]>('/coaching/today', { params: { date } })).data,
