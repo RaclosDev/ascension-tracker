@@ -1,7 +1,6 @@
 package com.ascension.controller;
 
 import com.ascension.TestcontainersConfiguration;
-import com.ascension.service.UserService;
 import com.ascension.support.DisabledIfDockerUnavailable;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
@@ -27,10 +28,13 @@ import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -44,9 +48,11 @@ class PasskeyIntegrationTest {
     static final String ORIGIN = "http://localhost:5173";
     static final Base64.Encoder B64 = Base64.getUrlEncoder().withoutPadding();
     static final Base64.Decoder B64D = Base64.getUrlDecoder();
+    static final String PASSWORD = "caballo-bateria-grapa";
+    static final String PASSWORD_HASH = new BCryptPasswordEncoder(4).encode(PASSWORD);
 
     @Autowired MockMvc mvc;
-    @Autowired UserService users;
+    @Autowired JdbcTemplate jdbc;
 
     private String ip;
 
@@ -111,7 +117,7 @@ class PasskeyIntegrationTest {
     @Test
     void registrationNeedsItsOwnChallengeAndAValidCredential() throws Exception {
         String email = account();
-        String options = postJson(post("/api/passkeys/options").with(user(email)), "{}");
+        String options = options(email);
         String requestId = JsonPath.read(options, "$.requestId");
 
         // A challenge issued to one account is useless to another.
@@ -120,11 +126,81 @@ class PasskeyIntegrationTest {
                         .content("{\"requestId\":\"" + requestId + "\",\"credential\":{}}"))
                 .andExpect(status().isBadRequest());
 
-        String fresh = postJson(post("/api/passkeys/options").with(user(email)), "{}");
+        String fresh = options(email);
         mvc.perform(post("/api/passkeys").with(user(email)).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"requestId\":\"" + JsonPath.read(fresh, "$.requestId") + "\",\"credential\":{\"id\":\"x\"}}"))
                 .andExpect(status().isBadRequest());
         mvc.perform(get("/api/passkeys").with(user(email))).andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void addingAPasskeyNeedsTheCurrentPassword() throws Exception {
+        String email = account();
+
+        // Without proof, with an empty one, with a wrong password or with a credential of another kind.
+        for (String body : new String[]{"", "{}", "{\"password\":\"\"}", "{\"password\":\"no-es-esta-clave\"}",
+                "{\"googleCredential\":\"abc\"}"}) {
+            mvc.perform(optionsRequest(email, body)).andExpect(status().isForbidden());
+        }
+        // The password is never echoed back.
+        mvc.perform(optionsRequest(email, "{\"password\":\"no-es-esta-clave\"}"))
+                .andExpect(content().string(not(containsString("no-es-esta-clave"))));
+        mvc.perform(get("/api/passkeys").with(user(email))).andExpect(jsonPath("$.length()").value(0));
+
+        mvc.perform(optionsRequest(email, "{\"password\":\"" + PASSWORD + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.requestId").isString())
+                .andExpect(jsonPath("$.options.publicKey.challenge").isString());
+    }
+
+    @Test
+    void repeatedWrongPasswordsLockTheConfirmationEvenForTheRightOne() throws Exception {
+        String email = account();
+        for (int i = 0; i < 10; i++) {
+            mvc.perform(optionsRequest(email, "{\"password\":\"no-es-esta-clave\"}")).andExpect(status().isForbidden());
+        }
+        mvc.perform(optionsRequest(email, "{\"password\":\"" + PASSWORD + "\"}"))
+                .andExpect(status().isTooManyRequests());
+        // The lock is per account.
+        mvc.perform(optionsRequest(account(), "{\"password\":\"" + PASSWORD + "\"}")).andExpect(status().isOk());
+    }
+
+    @Test
+    void signingOutOfAllDevicesKeepsThePasskeys() throws Exception {
+        String email = account();
+        Authenticator device = new Authenticator();
+        register(email, device, "Móvil");
+
+        mvc.perform(post("/api/auth/logout").param("allDevices", "true").header("Origin", ORIGIN).with(user(email)))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/api/passkeys").with(user(email)))
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].name").value("Móvil"));
+        login(device).andExpect(status().isOk()).andExpect(jsonPath("$.token").isString());
+    }
+
+    @Test
+    void eachAccountOnlySeesItsOwnPasskeys() throws Exception {
+        String email = account();
+        String other = account();
+        register(email, new Authenticator(), "Mío");
+
+        mvc.perform(get("/api/passkeys").with(user(other))).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get("/api/passkeys").with(user(email)))
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].createdAt").isNotEmpty());
+    }
+
+    String options(String email) throws Exception {
+        return mvc.perform(optionsRequest(email, "{\"password\":\"" + PASSWORD + "\"}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+    }
+
+    MockHttpServletRequestBuilder optionsRequest(String email, String json) {
+        MockHttpServletRequestBuilder request = client(post("/api/passkeys/options").with(user(email)));
+        return json.isEmpty() ? request : request.contentType(MediaType.APPLICATION_JSON).content(json);
     }
 
     String register(String email, Authenticator device, String name) throws Exception {
@@ -134,7 +210,7 @@ class PasskeyIntegrationTest {
     }
 
     MockHttpServletRequestBuilder registerRequest(String email, Authenticator device, String name) throws Exception {
-        String options = postJson(post("/api/passkeys/options").with(user(email)), "{}");
+        String options = options(email);
         String credential = device.attestation(JsonPath.read(options, "$.options.publicKey.challenge"),
                 JsonPath.read(options, "$.options.publicKey.user.id"));
         String nameJson = name == null ? "null" : "\"" + name.replace("\u0007", "\\u0007") + "\"";
@@ -171,7 +247,8 @@ class PasskeyIntegrationTest {
 
     String account() {
         String email = "pk-" + UUID.randomUUID() + "@login.test";
-        users.ensureUserExists(email, "Llaves", null);
+        jdbc.update("INSERT INTO users (email, name, password_hash, email_verified) VALUES (?, ?, ?, TRUE)",
+                email, "Llaves", PASSWORD_HASH);
         return email;
     }
 

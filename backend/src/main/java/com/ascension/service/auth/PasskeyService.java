@@ -63,17 +63,25 @@ public class PasskeyService {
     private final JdbcTemplate jdbc;
     private final RelyingParty relyingParty;
     private final AuthAccounts accounts;
+    private final IdentityConfirmation identity;
 
-    public PasskeyService(JdbcTemplate jdbc, RelyingParty relyingParty, AuthAccounts accounts) {
+    public PasskeyService(JdbcTemplate jdbc, RelyingParty relyingParty, AuthAccounts accounts,
+                          IdentityConfirmation identity) {
         this.jdbc = jdbc;
         this.relyingParty = relyingParty;
         this.accounts = accounts;
+        this.identity = identity;
     }
 
-    /** Options to create a passkey for the signed-in account. */
-    @Transactional
-    public Ceremony startRegistration(String email) {
+    /**
+     * Options to create a passkey for the signed-in account. Needs recent proof of identity (the
+     * password, or a Google credential for accounts without one): a stolen access token must not be
+     * enough to plant a passkey that outlives the session. 403 without it, 429 after repeated failures.
+     */
+    @Transactional(noRollbackFor = ResponseStatusException.class)
+    public Ceremony startRegistration(String email, String password, String googleCredential) {
         Account account = requireAccount(email);
+        identity.confirm(account, password, googleCredential);
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM passkeys WHERE user_id = ?", Integer.class, account.id());
         if (count != null && count >= MAX_PASSKEYS) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

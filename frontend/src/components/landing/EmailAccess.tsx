@@ -13,7 +13,7 @@ import { markPasskeyPromptAnswered } from '../../utils/passkeyPrompt';
 
 export type AccessMode = 'login' | 'register';
 type Mode = AccessMode;
-type Step = 'form' | 'forgot' | 'forgot-sent';
+type Step = 'form' | 'forgot' | 'forgot-sent' | 'signed-up';
 
 const field = 'fam-input';
 const primary = 'fam-btn fam-btn--ink fam-btn--block';
@@ -44,6 +44,7 @@ export default function EmailAccess({
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [signUpNotice, setSignUpNotice] = useState('');
   const registering = mode === 'register';
 
   const run = async (action: () => Promise<void>, fallback: string) => {
@@ -66,7 +67,12 @@ export default function EmailAccess({
     }
     if (registering) {
       void run(async () => {
-        await login(await startSignUp(email.trim(), password));
+        const message = await startSignUp(email.trim(), password);
+        // The password is not needed any more, and there is no session yet: the email comes first.
+        setPassword('');
+        setShowPassword(false);
+        setSignUpNotice(message);
+        setStep('signed-up');
       }, 'No se ha podido crear la cuenta. Inténtalo de nuevo.');
     } else {
       void run(
@@ -108,6 +114,19 @@ export default function EmailAccess({
       {error}
     </p>
   );
+
+  if (step === 'signed-up') {
+    return (
+      <div className="flex w-full flex-col gap-3">
+        <p role="status" className="text-[0.95rem]">
+          <strong>Revisa tu correo.</strong> {signUpNotice}
+        </p>
+        <button type="button" className={primary} onClick={() => switchTo('login')}>
+          Ir a iniciar sesión
+        </button>
+      </div>
+    );
+  }
 
   if (step === 'forgot' || step === 'forgot-sent') {
     return (
@@ -200,7 +219,7 @@ export default function EmailAccess({
         )}
         {registering && (
           <p id={`${ids}-hint`} className="text-[0.8rem] text-[var(--fam-muted)]">
-            Mínimo 8 caracteres. Entrarás directamente al crear la cuenta.
+            Mínimo 8 caracteres. Te enviaremos un correo para confirmar tu email.
           </p>
         )}
         {alert}

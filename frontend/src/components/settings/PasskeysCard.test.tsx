@@ -15,6 +15,13 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('react-hot-toast', () => ({ default: mocks.toast }));
+vi.mock('@react-oauth/google', () => ({
+  GoogleLogin: ({ onSuccess }: { onSuccess: (response: { credential?: string }) => void }) => (
+    <button type="button" onClick={() => onSuccess({ credential: 'google-credential' })}>
+      Continuar con Google
+    </button>
+  ),
+}));
 vi.mock('../../auth/accountAccess', () => ({
   listPasskeys: mocks.listPasskeys,
   deletePasskey: mocks.deletePasskey,
@@ -28,6 +35,13 @@ vi.mock('../../utils/webauthn', () => ({
   isDuplicatePasskey: (error: unknown) =>
     error instanceof DOMException && error.name === 'InvalidStateError',
 }));
+
+const confirmWithPassword = (password = 'una-clave') => {
+  fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: password } });
+  fireEvent.submit(screen.getByLabelText('Contraseña').closest('form')!);
+};
+
+const apiError = (status: number, error: string) => ({ response: { status, data: { error } } });
 
 const withQueries = (ui: React.ReactNode) =>
   render(
@@ -63,9 +77,14 @@ describe('PasskeysCard', () => {
     expect(screen.getByText(/usada el/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Añadir llave en este dispositivo' }));
+    // Nothing is created before the identity is confirmed.
+    expect(mocks.addPasskeyOnThisDevice).not.toHaveBeenCalled();
+    confirmWithPassword();
     await waitFor(() =>
       expect(mocks.toast.success).toHaveBeenCalledWith('Llave de acceso guardada'),
     );
+    expect(mocks.addPasskeyOnThisDevice).toHaveBeenCalledWith({ password: 'una-clave' });
+    await waitFor(() => expect(screen.queryByLabelText('Contraseña')).not.toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: 'Borrar la llave iPhone' }));
     await waitFor(() => expect(mocks.deletePasskey).toHaveBeenCalledWith(7));
@@ -81,15 +100,57 @@ describe('PasskeysCard', () => {
 
     mocks.addPasskeyOnThisDevice.mockRejectedValueOnce(new DOMException('x', 'NotAllowedError'));
     fireEvent.click(add);
+    confirmWithPassword();
     await waitFor(() => expect(mocks.addPasskeyOnThisDevice).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.queryByLabelText('Contraseña')).not.toBeInTheDocument());
     expect(mocks.toast.error).not.toHaveBeenCalled();
 
     mocks.addPasskeyOnThisDevice.mockRejectedValueOnce(new DOMException('x', 'InvalidStateError'));
     fireEvent.click(add);
+    confirmWithPassword();
+    expect(
+      await screen.findByText('Este dispositivo ya tiene una llave de esta cuenta.'),
+    ).toBeInTheDocument();
+  });
+
+  it('shows a wrong password and too many attempts inside the dialog and clears the password', async () => {
+    mocks.listPasskeys.mockResolvedValue([]);
+    withQueries(<PasskeysCard />);
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir llave en este dispositivo' }));
+
+    mocks.addPasskeyOnThisDevice.mockRejectedValueOnce(apiError(403, 'No hemos podido confirmar.'));
+    confirmWithPassword('mala-clave');
+    expect(await screen.findByRole('alert')).toHaveTextContent('No hemos podido confirmar.');
+    expect((screen.getByLabelText('Contraseña') as HTMLInputElement).value).toBe('');
+
+    mocks.addPasskeyOnThisDevice.mockRejectedValueOnce(apiError(429, 'Demasiados intentos.'));
+    confirmWithPassword('mala-clave');
     await waitFor(() =>
-      expect(mocks.toast.error).toHaveBeenCalledWith(
-        'Este dispositivo ya tiene una llave de esta cuenta.',
-      ),
+      expect(screen.getByRole('alert')).toHaveTextContent('Demasiados intentos.'),
+    );
+    expect(mocks.toast.success).not.toHaveBeenCalled();
+    expect(mocks.toast.error).not.toHaveBeenCalled();
+  });
+
+  it('confirms with a Google credential and forgets the password when cancelled', async () => {
+    mocks.listPasskeys.mockResolvedValue([]);
+    mocks.addPasskeyOnThisDevice.mockResolvedValue({});
+    withQueries(<PasskeysCard />);
+    const open = screen.getByRole('button', { name: 'Añadir llave en este dispositivo' });
+
+    fireEvent.click(open);
+    fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'sin-enviar' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    await waitFor(() => expect(screen.queryByLabelText('Contraseña')).not.toBeInTheDocument());
+    expect(mocks.addPasskeyOnThisDevice).not.toHaveBeenCalled();
+
+    fireEvent.click(open);
+    expect((screen.getByLabelText('Contraseña') as HTMLInputElement).value).toBe('');
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar con Google' }));
+    await waitFor(() =>
+      expect(mocks.addPasskeyOnThisDevice).toHaveBeenCalledWith({
+        googleCredential: 'google-credential',
+      }),
     );
   });
 
@@ -134,10 +195,13 @@ describe('PasskeyPrompt', () => {
     mocks.addPasskeyOnThisDevice.mockResolvedValue({});
     withQueries(<PasskeyPrompt email="ana@example.com" />);
     fireEvent.click(await screen.findByRole('button', { name: 'Activar huella' }));
+    expect(mocks.addPasskeyOnThisDevice).not.toHaveBeenCalled();
+    confirmWithPassword();
 
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: 'Activar huella' })).not.toBeInTheDocument(),
     );
+    expect(mocks.addPasskeyOnThisDevice).toHaveBeenCalledWith({ password: 'una-clave' });
     expect(mocks.toast.success).toHaveBeenCalled();
   });
 
@@ -145,9 +209,21 @@ describe('PasskeyPrompt', () => {
     mocks.addPasskeyOnThisDevice.mockRejectedValue(new Error('x'));
     withQueries(<PasskeyPrompt email="ana@example.com" />);
     fireEvent.click(await screen.findByRole('button', { name: 'Activar huella' }));
+    confirmWithPassword();
 
-    await waitFor(() => expect(mocks.toast.error).toHaveBeenCalled());
-    expect(screen.getByRole('button', { name: 'Activar huella' })).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No se ha podido activar la huella.',
+    );
+    expect(screen.getByLabelText('Contraseña')).toBeInTheDocument();
+  });
+
+  it('shows the confirmation error when the password is wrong', async () => {
+    mocks.addPasskeyOnThisDevice.mockRejectedValue(apiError(403, 'No hemos podido confirmar.'));
+    withQueries(<PasskeyPrompt email="ana@example.com" />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Activar huella' }));
+    confirmWithPassword('mala-clave');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No hemos podido confirmar.');
   });
 
   it('does not show without a fingerprint or face unlock', async () => {

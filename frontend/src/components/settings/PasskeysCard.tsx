@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { Fingerprint, Trash2 } from 'lucide-react';
 import { addPasskeyOnThisDevice, deletePasskey, listPasskeys } from '../../auth/accountAccess';
+import { reauthMessage, type Reauth } from '../../auth/reauth';
 import { apiErrorMessage } from '../../lib/coach/api';
 import { isDuplicatePasskey, isPasskeyCancel, passkeysSupported } from '../../utils/webauthn';
 import { QueryErrorNotice } from '../QueryErrorNotice';
+import ReauthDialog from '../ReauthDialog';
 import { Button } from '../ui/button';
 
 const PASSKEYS_KEY = ['passkeys'] as const;
@@ -16,22 +19,30 @@ export function PasskeysCard() {
   const queryClient = useQueryClient();
   const passkeys = useQuery({ queryKey: PASSKEYS_KEY, queryFn: listPasskeys });
   const supported = passkeysSupported();
+  const [confirming, setConfirming] = useState(false);
 
   const add = useMutation({
-    mutationFn: addPasskeyOnThisDevice,
+    mutationFn: (proof: Reauth) => addPasskeyOnThisDevice(proof),
     onSuccess: () => {
       toast.success('Llave de acceso guardada');
       void queryClient.invalidateQueries({ queryKey: PASSKEYS_KEY });
     },
-    onError: (err) => {
-      if (isPasskeyCancel(err)) return;
-      toast.error(
-        isDuplicatePasskey(err)
-          ? 'Este dispositivo ya tiene una llave de esta cuenta.'
-          : apiErrorMessage(err, 'No se ha podido guardar la llave de acceso.'),
-      );
-    },
   });
+
+  /** Message to show in the confirmation dialog, or null when it is over (saved or cancelled). */
+  const addWithProof = async (proof: Reauth): Promise<string | null> => {
+    try {
+      await add.mutateAsync(proof);
+      return null;
+    } catch (err) {
+      const confirmation = reauthMessage(err);
+      if (confirmation) return confirmation;
+      if (isPasskeyCancel(err)) return null;
+      return isDuplicatePasskey(err)
+        ? 'Este dispositivo ya tiene una llave de esta cuenta.'
+        : apiErrorMessage(err, 'No se ha podido guardar la llave de acceso.');
+    }
+  };
 
   const remove = useMutation({
     mutationFn: (id: number) => deletePasskey(id),
@@ -89,7 +100,7 @@ export function PasskeysCard() {
           type="button"
           variant="outline"
           disabled={add.isPending}
-          onClick={() => add.mutate()}
+          onClick={() => setConfirming(true)}
         >
           {add.isPending ? 'Esperando al dispositivo…' : 'Añadir llave en este dispositivo'}
         </Button>
@@ -98,6 +109,14 @@ export function PasskeysCard() {
           Este navegador no admite llaves de acceso.
         </p>
       )}
+      <ReauthDialog
+        open={confirming}
+        title="Confirma que eres tú"
+        description="Para añadir una llave de acceso, confirma tu identidad. Así nadie que use tu sesión puede dejarse una llave puesta."
+        confirmLabel="Añadir llave"
+        onConfirm={addWithProof}
+        onClose={() => setConfirming(false)}
+      />
     </div>
   );
 }

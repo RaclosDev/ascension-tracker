@@ -34,6 +34,14 @@ public class PasskeyController {
     public record LoginRequest(String requestId, JsonNode credential) {
     }
 
+    /** Proof of identity to add a passkey: the password, or a Google credential if the account has none. */
+    public record Reauth(String password, String googleCredential) {
+        @Override
+        public String toString() {
+            return "Reauth[]";
+        }
+    }
+
     public record RegisterRequest(String requestId, JsonNode credential, String name) {
     }
 
@@ -72,8 +80,11 @@ public class PasskeyController {
     }
 
     @PostMapping("/api/passkeys/options")
-    public Map<String, Object> registrationOptions(@AuthenticationPrincipal Jwt jwt) {
-        return ceremony(passkeys.startRegistration(SecurityUtils.extractEmail(jwt)));
+    public Map<String, Object> registrationOptions(@AuthenticationPrincipal Jwt jwt,
+                                                   @RequestBody(required = false) Reauth proof) {
+        String password = proof == null ? null : proof.password();
+        String googleCredential = proof == null ? null : proof.googleCredential();
+        return ceremony(passkeys.startRegistration(SecurityUtils.extractEmail(jwt), password, googleCredential));
     }
 
     @PostMapping("/api/passkeys")

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Fingerprint } from 'lucide-react';
 import { addPasskeyOnThisDevice, listPasskeys } from '../auth/accountAccess';
+import { reauthMessage, type Reauth } from '../auth/reauth';
 import { apiErrorMessage } from '../lib/coach/api';
 import { markPasskeyPromptAnswered, passkeyPromptAnswered } from '../utils/passkeyPrompt';
 import {
@@ -10,12 +11,13 @@ import {
   passkeysSupported,
   platformPasskeyAvailable,
 } from '../utils/webauthn';
+import ReauthDialog from './ReauthDialog';
 import { Button } from './ui/button';
 
 /** Offers, once per account and device, to sign in with the fingerprint next time. */
 export function PasskeyPrompt({ email }: { email: string }) {
   const [visible, setVisible] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -39,20 +41,22 @@ export function PasskeyPrompt({ email }: { email: string }) {
     setVisible(false);
   };
 
-  const activate = async () => {
-    setBusy(true);
+  /** Message to show in the confirmation dialog, or null when it is over (saved, duplicate or cancelled). */
+  const activate = async (proof: Reauth): Promise<string | null> => {
     try {
-      await addPasskeyOnThisDevice();
+      await addPasskeyOnThisDevice(proof);
       toast.success('Listo: la próxima vez entra con la huella');
       close();
+      return null;
     } catch (err) {
+      const confirmation = reauthMessage(err);
+      if (confirmation) return confirmation;
       if (isDuplicatePasskey(err)) {
         close();
-      } else if (!isPasskeyCancel(err)) {
-        toast.error(apiErrorMessage(err, 'No se ha podido activar la huella.'));
+        return null;
       }
-    } finally {
-      setBusy(false);
+      if (isPasskeyCancel(err)) return null;
+      return apiErrorMessage(err, 'No se ha podido activar la huella.');
     }
   };
 
@@ -69,13 +73,21 @@ export function PasskeyPrompt({ email }: { email: string }) {
         </span>
       </p>
       <div className="flex gap-2">
-        <Button type="button" size="sm" disabled={busy} onClick={() => void activate()}>
-          {busy ? 'Esperando…' : 'Activar huella'}
+        <Button type="button" size="sm" onClick={() => setConfirming(true)}>
+          Activar huella
         </Button>
-        <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={close}>
+        <Button type="button" size="sm" variant="ghost" onClick={close}>
           Ahora no
         </Button>
       </div>
+      <ReauthDialog
+        open={confirming}
+        title="Confirma que eres tú"
+        description="Para activar la huella en este dispositivo, confirma tu identidad."
+        confirmLabel="Confirmar"
+        onConfirm={activate}
+        onClose={() => setConfirming(false)}
+      />
     </section>
   );
 }

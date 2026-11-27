@@ -23,6 +23,8 @@ import java.util.Map;
 @RequestMapping("/api/auth/password")
 public class PasswordAuthController {
 
+    static final String CHECK_SIGN_UP = "Te hemos enviado un correo. Ábrelo para confirmar tu email y después inicia sesión. "
+            + "Revisa también la carpeta de spam.";
     static final String CHECK_EMAIL = "Si el email es correcto, te hemos enviado un correo. Revisa también la carpeta de spam.";
 
     public record RegisterRequest(String email, String password) {
@@ -80,7 +82,9 @@ public class PasswordAuthController {
     @Transactional
     public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest body, HttpServletRequest request) {
         requireTrustedOrigin(request);
-        return open(passwords.register(body.email(), body.password()), request);
+        passwords.register(body.email(), body.password());
+        // No session and the same answer for every address: the response never says whether it had an account.
+        return ResponseEntity.accepted().body(Map.of("message", CHECK_SIGN_UP));
     }
 
     @PostMapping("/login")
