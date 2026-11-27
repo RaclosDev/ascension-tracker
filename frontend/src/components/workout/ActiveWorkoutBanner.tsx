@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { useNow } from '@/hooks/use-now';
+import { useRestFinishedAlert } from '@/hooks/workout/use-rest-finished-alert';
 import { formatDuration } from '@/lib/workout/format';
 import { Dumbbell, ChevronUp, Timer, Edit3 } from 'lucide-react';
 
@@ -11,6 +12,7 @@ export function ActiveWorkoutBanner() {
   const restUntil = useWorkoutStore((s) => s.restUntil);
   const isEditing = Boolean(activeWorkout?.editingId);
   const now = useNow(activeWorkout !== null && !isEditing, 500);
+  useRestFinishedAlert();
 
   // Solo mostrar cuando hay un entreno activo y NO estamos en la pantalla de entreno
   if (!activeWorkout || location.pathname.startsWith('/workout')) {

@@ -42,7 +42,10 @@ describe('exportUserData', () => {
 
     await exportUserData();
 
-    expect(api.get).toHaveBeenCalledWith('/user/export', { responseType: 'blob' });
+    expect(api.get).toHaveBeenCalledWith('/user/export', {
+      responseType: 'blob',
+      timeout: 120_000,
+    });
     expect(window.URL.createObjectURL).toHaveBeenCalled();
     expect(appendSpy).toHaveBeenCalled();
     expect(clickSpy).toHaveBeenCalled();

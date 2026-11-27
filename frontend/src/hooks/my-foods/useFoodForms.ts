@@ -1,7 +1,15 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Recipe, SavedFood } from '../../types/api';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
+import { parseNumber } from '../../utils/nutritionCalculators';
+
+/** Blank means 0 (an empty macro), but text that is not a number is an error, not a silent 0. */
+const amount = (value: string): number | null => {
+  if (value.trim() === '') return 0;
+  const n = parseNumber(value);
+  return n !== null && n >= 0 ? n : null;
+};
 
 export function useFoodForms(fetchData: () => void) {
   const [foodForm, setFoodForm] = useState({
@@ -23,6 +31,8 @@ export function useFoodForms(fetchData: () => void) {
     kcal: '',
   });
 
+  const savingRef = useRef(false);
+  const [saving, setSaving] = useState(false);
   const [isFoodFormOpen, setIsFoodFormOpen] = useState(false);
   const [isRecipeFormOpen, setIsRecipeFormOpen] = useState(false);
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
@@ -83,19 +93,37 @@ export function useFoodForms(fetchData: () => void) {
 
   const handleAddSavedFood = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (savingRef.current) return;
+    const kcal = amount(foodForm.kcal);
+    const protein = amount(foodForm.protein);
+    const carbs = amount(foodForm.carbs);
+    const fat = amount(foodForm.fat);
+    const servingSize =
+      foodForm.servingSize !== '' && foodForm.servingSize !== null
+        ? parseNumber(foodForm.servingSize)
+        : null;
+    if (
+      kcal === null ||
+      protein === null ||
+      carbs === null ||
+      fat === null ||
+      (foodForm.servingSize !== '' && (servingSize === null || servingSize <= 0))
+    ) {
+      toast.error('Revisa los números: usa solo cifras positivas');
+      return;
+    }
     const dto = {
       name: foodForm.name,
       brand: foodForm.brand,
-      kcalPer100g: parseFloat(foodForm.kcal) || 0,
-      proteinPer100g: parseFloat(foodForm.protein) || 0,
-      carbsPer100g: parseFloat(foodForm.carbs) || 0,
-      fatPer100g: parseFloat(foodForm.fat) || 0,
-      servingSize:
-        foodForm.servingSize !== '' && foodForm.servingSize !== null
-          ? parseFloat(foodForm.servingSize)
-          : null,
+      kcalPer100g: kcal,
+      proteinPer100g: protein,
+      carbsPer100g: carbs,
+      fatPer100g: fat,
+      servingSize,
       servingLabel: foodForm.servingLabel || null,
     };
+    savingRef.current = true;
+    setSaving(true);
     try {
       if (editingFoodId) {
         await api.put(`/nutrition/my-foods/${editingFoodId}`, dto);
@@ -119,6 +147,9 @@ export function useFoodForms(fetchData: () => void) {
       fetchData();
     } catch {
       toast.error('Error al guardar');
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
     }
   };
 
@@ -139,14 +170,25 @@ export function useFoodForms(fetchData: () => void) {
 
   const handleAddRecipe = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (savingRef.current) return;
+    const totalKcal = amount(recipeForm.kcal);
+    const totalProtein = amount(recipeForm.protein);
+    const totalCarbs = amount(recipeForm.carbs);
+    const totalFat = amount(recipeForm.fat);
+    if (totalKcal === null || totalProtein === null || totalCarbs === null || totalFat === null) {
+      toast.error('Revisa los números: usa solo cifras positivas');
+      return;
+    }
     const dto = {
       name: recipeForm.name,
       description: recipeForm.description,
-      totalKcal: parseFloat(recipeForm.kcal) || 0,
-      totalProtein: parseFloat(recipeForm.protein) || 0,
-      totalCarbs: parseFloat(recipeForm.carbs) || 0,
-      totalFat: parseFloat(recipeForm.fat) || 0,
+      totalKcal,
+      totalProtein,
+      totalCarbs,
+      totalFat,
     };
+    savingRef.current = true;
+    setSaving(true);
     try {
       if (editingRecipeId) {
         await api.put(`/nutrition/recipes/${editingRecipeId}`, dto);
@@ -161,6 +203,9 @@ export function useFoodForms(fetchData: () => void) {
       fetchData();
     } catch {
       toast.error('Error al guardar receta');
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
     }
   };
 
@@ -211,6 +256,7 @@ export function useFoodForms(fetchData: () => void) {
     editingRecipeId,
     updateFoodForm,
     updateRecipeForm,
+    saving,
     handleAddSavedFood,
     handleEditFood,
     handleAddRecipe,

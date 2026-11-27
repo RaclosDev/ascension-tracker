@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, useRef } from 'react';
+import { invalidateDiary } from '../../lib/nutrition/invalidateDiary';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 import { SavedFood } from '../../types/api';
@@ -61,13 +62,8 @@ export function useMealSelection(savedFoods: SavedFood[]) {
       const savedCount = foodsToAdd.length - failedIds.size;
       setSelectedFoods(failedIds);
       if (savedCount > 0) {
-        for (const key of [
-          'nutritionData',
-          'dashboard',
-          'trackingWeeks',
-          'foodLists',
-          'myFoodsData',
-        ]) {
+        void invalidateDiary(queryClient);
+        for (const key of ['foodLists', 'myFoodsData']) {
           void queryClient.invalidateQueries({ queryKey: [key] });
         }
         toast.success(`${savedCount} añadidos al diario`);

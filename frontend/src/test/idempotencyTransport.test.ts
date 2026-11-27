@@ -42,3 +42,16 @@ it('reuses the request key when a committed write loses its HTTP response', asyn
   expect((await api.post('/workouts', payload)).data).toEqual({ id: 'saved-2' });
   expect(receipts.size).toBe(2);
 });
+
+it.each(['/nutrition/ai/log', '/nutrition/ai/food', '/workouts/import'])(
+  'sends an Idempotency-Key on POST %s',
+  async (path) => {
+    let key: unknown;
+    api.defaults.adapter = async (config) => {
+      key = config.headers.get('Idempotency-Key');
+      return { config, data: {}, status: 200, statusText: 'OK', headers: {} };
+    };
+    await api.post(path, { any: 'payload' });
+    expect(key).toBeTypeOf('string');
+  },
+);

@@ -37,7 +37,7 @@ export function useMyFoodsData() {
     queryClient.invalidateQueries({ queryKey: ['foodLists'] });
   };
 
-  const deleteSavedFood = async (id: number | string) => {
+  const deleteSavedFood = async (id: number | string): Promise<boolean> => {
     if (
       !(await confirmAction({
         title: 'Borrar alimento',
@@ -46,13 +46,15 @@ export function useMyFoodsData() {
         destructive: true,
       }))
     )
-      return;
+      return false;
     try {
       await api.delete(`/nutrition/my-foods/${id}`);
       toast.success('Eliminado');
       fetchData();
+      return true;
     } catch {
       toast.error('Error al eliminar');
+      return false;
     }
   };
 

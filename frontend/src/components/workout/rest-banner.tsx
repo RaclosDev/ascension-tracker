@@ -1,8 +1,6 @@
-import { useEffect, useRef } from 'react';
 import { useNow } from '@/hooks/use-now';
 import { formatRest } from '@/lib/workout/format';
 import { useWorkoutStore } from '@/lib/workout/store';
-import { playRestSound, notifyRestFinished } from '@/lib/workout/notifications';
 
 export function RestBanner() {
   const restUntil = useWorkoutStore((s) => s.restUntil);
@@ -11,28 +9,7 @@ export function RestBanner() {
   const restPreset = useWorkoutStore((s) => s.restPreset);
   const now = useNow(!!restUntil, 200);
 
-  const notified = useRef(false);
-
-  useEffect(() => {
-    if (restUntil) {
-      notified.current = false;
-    }
-  }, [restUntil]);
-
-  useEffect(() => {
-    if (restUntil && restUntil <= now) {
-      if (!notified.current) {
-        // Solo reproducir aviso sonoro si es reciente (< 15s tras expirar el descanso)
-        // Evita campanadas sorpresa si el móvil estuvo bloqueado en el bolsillo 10 minutos
-        if (now - restUntil < 15000) {
-          playRestSound();
-          notifyRestFinished();
-        }
-        notified.current = true;
-      }
-      skipRest();
-    }
-  }, [restUntil, now, skipRest]);
+  // The sound and the notification at the end of the rest come from useRestFinishedAlert, mounted in the app shell.
 
   if (!restUntil || restUntil <= now) return null;
 

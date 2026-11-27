@@ -18,6 +18,7 @@ import { PowerliftingCard } from '../components/workout/PowerliftingCard';
 import { TodayCard } from '../components/dashboard/TodayCard';
 import { useMyCoaches } from '../lib/coach/api';
 import '../styles/athlete-home.css';
+import { useLocalToday } from '../hooks/use-local-today';
 import { HomeOverview } from '../components/dashboard/HomeOverview';
 
 const WeightTrendChart = lazyWithRetry<ComponentProps<typeof Charts.WeightTrendChart>>(() =>
@@ -103,8 +104,8 @@ export default function DashboardPage() {
 
   const isLoading = loadingDash || loadingWeights || loadingWeekly || loadingSettings;
 
-  const today = new Date();
-  const todayDateStr = format(today, 'yyyy-MM-dd');
+  const todayDateStr = useLocalToday();
+  const today = new Date(`${todayDateStr}T00:00:00`);
   const todayEntry = weights.find((w: WeightEntry) => w.date === todayDateStr);
   const hasTodayWeight = !!todayEntry;
   const recentWeight =

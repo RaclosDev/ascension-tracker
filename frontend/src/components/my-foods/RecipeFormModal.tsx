@@ -26,6 +26,7 @@ interface RecipeFormModalProps {
   recipeForm: RecipeForm;
   updateRecipeForm: (field: keyof RecipeForm | Partial<RecipeForm>, value?: string | null) => void;
   handleAddRecipe: (e: React.FormEvent) => void;
+  saving?: boolean;
   editingRecipeId: number | string | null;
   onCancelEdit: () => void;
   handleDeleteRecipe: (id: number | string) => void;
@@ -37,6 +38,7 @@ export default function RecipeFormModal({
   recipeForm,
   updateRecipeForm,
   handleAddRecipe,
+  saving = false,
   editingRecipeId,
   onCancelEdit,
   handleDeleteRecipe,
@@ -298,6 +300,8 @@ export default function RecipeFormModal({
             )}
             <button
               type="submit"
+              disabled={saving}
+              aria-busy={saving}
               className="btn btn-primary"
               style={{ padding: '0.4rem', flex: 2, fontSize: '0.85rem', fontWeight: 600 }}
             >

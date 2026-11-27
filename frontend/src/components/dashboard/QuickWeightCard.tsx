@@ -53,6 +53,19 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
     queryClient.invalidateQueries({ queryKey: ['weekSummaries'] });
   }, [queryClient]);
 
+  /** Puts the day back as it was before the save: no weight at all, or the one it had. */
+  const undoSave = async (date: string, previous: number | undefined) => {
+    try {
+      if (previous === undefined) await api.delete(`/weights/${date}`);
+      else await api.post('/weights', { date, weight: previous });
+      setQuickWeight(previous === undefined ? '' : previous.toString());
+      invalidateQueries();
+      toast.success(previous === undefined ? 'Peso eliminado' : `Peso restaurado: ${previous} kg`);
+    } catch {
+      toast.error('No se pudo deshacer el peso');
+    }
+  };
+
   const addWeightMutation = useMutation({
     mutationFn: (val: number) => api.post('/weights', { date: todayDateStr, weight: val }),
     onSuccess: (_, val) => {
@@ -63,6 +76,8 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
       // Undo toast: dismiss previous if still pending
       if (undoToastIdRef.current) toast.dismiss(undoToastIdRef.current);
 
+      const savedDate = todayDateStr;
+      const previous = todayWeight;
       const toastId = toast.success(
         (t) => (
           <span className="flex items-center gap-3">
@@ -73,8 +88,7 @@ export const QuickWeightCard = React.memo(function QuickWeightCard({
               className="text-xs font-bold underline opacity-80 hover:opacity-100"
               onClick={() => {
                 toast.dismiss(t.id);
-                const prev = yesterdayWeight ?? recentWeight;
-                if (prev !== undefined) setQuickWeight(prev.toFixed(2));
+                void undoSave(savedDate, previous);
               }}
             >
               Deshacer

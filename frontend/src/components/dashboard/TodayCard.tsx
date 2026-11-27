@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Dumbbell, MessageSquare, Utensils } from 'lucide-react';
 import api from '../../api/client';
-import { localIsoDate, useTodayPlans } from '../../lib/coach/today';
+import { useTodayPlans } from '../../lib/coach/today';
+import { useLocalToday } from '../../hooks/use-local-today';
 import { personName, useMyCoaches, type MyCoach } from '../../lib/coach/api';
 import { useMyCheckin } from '../../lib/coach/checkins';
 import type { FoodLog, Macros } from '../../types/api';
@@ -89,7 +90,7 @@ function WorkoutRow() {
 }
 
 function NutritionRow() {
-  const date = localIsoDate();
+  const date = useLocalToday();
   const { data } = useQuery({
     queryKey: ['nutrition', 'today-summary', date],
     queryFn: async () => {

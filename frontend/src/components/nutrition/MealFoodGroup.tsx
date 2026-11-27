@@ -430,6 +430,7 @@ export const MealFoodGroup: React.FC<MealFoodGroupProps> = ({
                         className="btn btn-primary btn-sm min-h-11"
                         style={{ padding: '0.3rem 0.6rem' }}
                         onClick={onUpdateLog}
+                        disabled={!(Number(editingLog.quantity) > 0)}
                       >
                         Guardar
                       </button>

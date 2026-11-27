@@ -18,8 +18,10 @@ interface FoodFormModalProps {
   foodForm: FoodForm;
   updateFoodForm: (field: string, value: string) => void;
   handleAddSavedFood: (e: React.FormEvent) => void;
+  saving?: boolean;
   editingFoodId: number | string | null;
-  handleDeleteFood?: (id: number | string) => void;
+  /** Resolves true once the food is really deleted; false if the user backed out or it failed. */
+  handleDeleteFood?: (id: number | string) => Promise<boolean> | void;
 }
 
 export default function FoodFormModal({
@@ -28,6 +30,7 @@ export default function FoodFormModal({
   foodForm,
   updateFoodForm,
   handleAddSavedFood,
+  saving = false,
   editingFoodId,
   handleDeleteFood,
 }: FoodFormModalProps) {
@@ -219,8 +222,10 @@ export default function FoodFormModal({
                   justifyContent: 'center',
                 }}
                 onClick={() => {
-                  handleDeleteFood(editingFoodId);
-                  onClose();
+                  // Close only once the deletion is confirmed and done: backing out keeps the form open.
+                  void (async () => {
+                    if ((await handleDeleteFood(editingFoodId)) === true) onClose();
+                  })();
                 }}
                 title="Eliminar alimento"
                 aria-label="Eliminar alimento"
@@ -236,7 +241,13 @@ export default function FoodFormModal({
             >
               Cancelar
             </button>
-            <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ flex: 1 }}
+              disabled={saving}
+              aria-busy={saving}
+            >
               {editingFoodId ? 'Actualizar' : 'Guardar'}
             </button>
           </div>

@@ -6,7 +6,8 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import api from '../../api/client';
 import { parseSafeWeight } from '../../utils/weightHelper';
-import { localIsoDate, useTodayPlans } from '../../lib/coach/today';
+import { useTodayPlans } from '../../lib/coach/today';
+import { useLocalToday } from '../../hooks/use-local-today';
 import type { FoodLog, Macros, WeightEntry } from '../../types/api';
 import '../../styles/athlete-workout.css';
 import '../../styles/athlete-overview.css';
@@ -177,7 +178,7 @@ function GoalRule({ start, goal, currentWeight }: HomeOverviewProps) {
 
 function useToday(showNutrition: boolean) {
   const { data: plans } = useTodayPlans();
-  const date = localIsoDate();
+  const date = useLocalToday();
   const { data: food } = useQuery({
     queryKey: ['nutrition', 'today-summary', date],
     enabled: showNutrition,

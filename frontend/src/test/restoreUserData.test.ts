@@ -32,7 +32,9 @@ describe('restoreUserData', () => {
     const payload = { version: '1.0', workouts: [] };
     const result = await restoreUserData(payload);
 
-    expect(postSpy).toHaveBeenCalledWith('/user/restore?mode=MERGE', payload);
+    expect(postSpy).toHaveBeenCalledWith('/user/restore?mode=MERGE', payload, {
+      timeout: 120_000,
+    });
     expect(result).toEqual(mockSummary);
     expect(result.workoutsRestored).toBe(8);
     expect(result.mode).toBe('MERGE');
@@ -61,7 +63,11 @@ describe('restoreUserData', () => {
     const payload = { version: '1.0', workouts: [] };
     const result = await restoreUserData(payload, 'OVERWRITE', true);
 
-    expect(postSpy).toHaveBeenCalledWith('/user/restore?mode=OVERWRITE&confirmEmpty=true', payload);
+    expect(postSpy).toHaveBeenCalledWith(
+      '/user/restore?mode=OVERWRITE&confirmEmpty=true',
+      payload,
+      { timeout: 120_000 },
+    );
     expect(result).toEqual(mockSummary);
     expect(result.mode).toBe('OVERWRITE');
   });
@@ -77,6 +83,7 @@ describe('restoreUserData', () => {
     expect(gzipJson).toHaveBeenCalledWith(JSON.stringify(payload));
     expect(postSpy).toHaveBeenCalledWith('/user/restore?mode=MERGE', compressed, {
       headers: { 'Content-Type': 'application/json', 'Content-Encoding': 'gzip' },
+      timeout: 120_000,
     });
   });
 });

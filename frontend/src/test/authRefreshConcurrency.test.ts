@@ -272,3 +272,31 @@ it('does not restore a logged-out session on reconnect even if server logout fai
   expect(await refreshAccessToken()).toBeNull();
   expect(memoryToken).toBeNull();
 });
+
+it('tells the server which push subscription to delete when logging out of this device', async () => {
+  setMemoryToken(jwt('account-a'));
+  const getSubscription = vi.fn().mockResolvedValue({ endpoint: 'https://push.example/abc' });
+  vi.stubGlobal('navigator', {
+    ...navigator,
+    serviceWorker: { getRegistration: async () => ({ pushManager: { getSubscription } }) },
+  });
+  let header: unknown;
+  api.defaults.adapter = async (config) => {
+    if (config.url === '/auth/logout') header = config.headers.get('X-Push-Endpoint');
+    return response(config, {});
+  };
+  await logoutSession();
+  vi.unstubAllGlobals();
+  expect(header).toBe('https://push.example/abc');
+});
+
+it('logs out without the push header when there is no subscription', async () => {
+  setMemoryToken(jwt('account-a'));
+  let header: unknown = 'unset';
+  api.defaults.adapter = async (config) => {
+    if (config.url === '/auth/logout') header = config.headers.get('X-Push-Endpoint');
+    return response(config, {});
+  };
+  await logoutSession();
+  expect(header ?? null).toBeNull();
+});

@@ -89,6 +89,7 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
                 type="button"
                 className="close-btn"
                 onClick={onClose}
+                disabled={pending}
                 aria-label="Cerrar modal de edición"
               >
                 <X size={18} aria-hidden="true" />
@@ -159,7 +160,12 @@ export const TrackingEntryModal: React.FC<TrackingEntryModalProps> = ({
                   <Trash2 size={16} aria-hidden="true" /> Borrar día
                 </button>
               )}
-              <button type="button" className="btn btn-secondary te-cancel" onClick={onClose}>
+              <button
+                type="button"
+                className="btn btn-secondary te-cancel"
+                onClick={onClose}
+                disabled={pending}
+              >
                 Cancelar
               </button>
               <button

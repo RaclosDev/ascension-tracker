@@ -19,7 +19,6 @@ import type { ActiveWorkout } from '@/lib/workout/types';
 import { useWorkoutStore } from '@/lib/workout/store';
 import { useSaveWorkout, useSaveTemplate } from '@/lib/workout/api';
 import { haptics } from '@/lib/haptics';
-import toast from 'react-hot-toast';
 
 const OFFLINE_NOTICE = 'Sin conexión: se enviará al volver.';
 
@@ -110,11 +109,8 @@ export function FooterActions() {
     const record = finishWorkout(active.name, durationMs, active.startedAt);
     if (!record) return;
 
-    saveWorkoutMutation.mutate(record, {
-      onError: () => {
-        toast.error('Error al guardar los cambios del entrenamiento');
-      },
-    });
+    // useSaveWorkout already reports a failure with its own toast; a second one would repeat it.
+    saveWorkoutMutation.mutate(record);
   }
 
   if (isEditing) {
@@ -328,7 +324,8 @@ export function FooterActions() {
             setSaveError(null);
             const record = finishWorkout(name, durationMin * 60000, selectedStartedAt);
             if (!record) return;
-            if (notes) record.notes = notes;
+            // Cleared notes must clear them: an empty string is a value, not "keep the old ones".
+            if (notes !== undefined) record.notes = notes.trim();
             saveWorkoutMutation.mutate(record, {
               onSuccess: () => {
                 setFinishOpen(false);
