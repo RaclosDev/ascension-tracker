@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.AppClock;
 import com.ascension.dto.ProgramDtos.AssignRequest;
 import com.ascension.dto.ProgramDtos.AdaptRequest;
 import com.ascension.dto.ProgramDtos.Assignment;
@@ -146,7 +147,7 @@ public class ProgramAssignmentService {
     @Transactional
     public Assignment adapt(ClientAccess access, UUID assignmentId, AdaptRequest request) {
         validateDate(request.startDate());
-        if (request.startDate().isBefore(LocalDate.now())) {
+        if (request.startDate().isBefore(AppClock.today())) {
             throw new InvalidInputException("La adaptación debe empezar hoy o más adelante; el historial anterior se conserva.");
         }
         ProgramService.validate(request.program());
@@ -202,7 +203,7 @@ public class ProgramAssignmentService {
     }
 
     private static void validateDate(LocalDate startDate) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = AppClock.today();
         if (startDate.isBefore(today.minusDays(MAX_START_OFFSET_DAYS))
                 || startDate.isAfter(today.plusDays(MAX_START_OFFSET_DAYS))) {
             throw new InvalidInputException("La fecha de inicio debe estar a menos de un año de hoy");

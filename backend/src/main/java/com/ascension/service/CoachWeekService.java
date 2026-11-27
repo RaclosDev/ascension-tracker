@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.AppClock;
 import com.ascension.dto.CoachWeekDtos.*;
 import com.ascension.dto.ProgramDtos.Program;
 import com.ascension.exception.InvalidInputException;
@@ -153,7 +154,7 @@ public class CoachWeekService {
         requireVersion(draft, expectedVersion);
         if (draft.version() == 0) throw new InvalidInputException("Guarda el borrador antes de publicar.");
         if (Integer.valueOf(draft.version()).equals(draft.publishedVersion())) return draft;
-        LocalDate start = week.isBefore(LocalDate.now()) ? LocalDate.now() : week;
+        LocalDate start = week.isBefore(AppClock.today()) ? AppClock.today() : week;
         // Days already elapsed are retained in the draft for review, but never republished as overdue work.
         var assigned = assignments.publishWeek(client, draft.content().program(), start);
         jdbc.update("""
@@ -219,7 +220,7 @@ public class CoachWeekService {
     }
 
     private static LocalDate thisMonday() {
-        return LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        return AppClock.today().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
     }
 
     private static void validateEditableWeek(LocalDate week) {

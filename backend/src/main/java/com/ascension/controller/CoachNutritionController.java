@@ -1,5 +1,6 @@
 package com.ascension.controller;
 
+import com.ascension.util.AppClock;
 import com.ascension.dto.NutritionPlanDtos.AdherenceWeek;
 import com.ascension.dto.NutritionPlanDtos.NutritionPlan;
 import com.ascension.dto.NutritionPlanDtos.PlanRequest;
@@ -59,7 +60,7 @@ public class CoachNutritionController {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.ok(adherenceService.weeks(accessPolicy.require(email, linkId, Action.VIEW_NUTRITION),
-                Math.max(1, Math.min(12, weeks)), LocalDate.now()));
+                Math.max(1, Math.min(12, weeks)), AppClock.today()));
     }
 
     @PostMapping("/publish")

@@ -5,6 +5,7 @@ import com.ascension.model.UserSettings;
 import com.ascension.model.WeightEntry;
 import com.ascension.repository.UserSettingsRepository;
 import com.ascension.repository.WeightEntryRepository;
+import com.ascension.util.AppClock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +36,7 @@ public class SettingsService {
             s.setStartWeight(80.0);
             s.setGoalWeight(75.0);
             s.setWeeklyGoal(0.5);
-            s.setStartDate(LocalDate.now());
+            s.setStartDate(AppClock.today());
             s.setKcal(2000);
             s.setMacroStrategy("BALANCED");
             s.setCustomProteinPct(30.0);
@@ -63,6 +64,14 @@ public class SettingsService {
         if (dto.getAppModules() != null) settings.setAppModules(dto.getAppModules().isEmpty() ? null : dto.getAppModules());
         if (dto.getWorkoutData() != null) settings.setWorkoutData(dto.getWorkoutData());
 
+        if ("CUSTOM_PCT".equals(settings.getMacroStrategy())) {
+            double total = orZero(settings.getCustomProteinPct()) + orZero(settings.getCustomFatPct())
+                    + orZero(settings.getCustomCarbsPct());
+            if (Math.abs(total - 100.0) > 0.5) {
+                throw new IllegalArgumentException("El reparto de macros debe sumar 100 %");
+            }
+        }
+
         if ("CUSTOM_GRAMS".equals(settings.getMacroStrategy())) {
             double p = settings.getCustomProteinGrams() != null ? settings.getCustomProteinGrams() : 150.0;
             double f = settings.getCustomFatGrams() != null ? settings.getCustomFatGrams() : 60.0;
@@ -71,10 +80,13 @@ public class SettingsService {
         }
 
         // Solo sembramos el primer pesaje si el usuario lleva peso y medidas (null = todo activo).
-        if (isNew && dto.getStartWeight() != null && tracksBody(settings.getAppModules())) {
+        // Si ese día ya hay un pesaje (UNIQUE usuario+fecha), se respeta en vez de chocar con él.
+        LocalDate today = AppClock.today();
+        if (isNew && dto.getStartWeight() != null && tracksBody(settings.getAppModules())
+                && weightEntryRepository.findByUserEmailAndDate(userEmail, today).isEmpty()) {
             WeightEntry entry = new WeightEntry();
             entry.setUserEmail(userEmail);
-            entry.setDate(LocalDate.now());
+            entry.setDate(today);
             entry.setWeight(dto.getStartWeight());
             weightEntryRepository.save(entry);
         }
@@ -83,6 +95,10 @@ public class SettingsService {
     }
 
 
+
+    private static double orZero(Double value) {
+        return value != null ? value : 0.0;
+    }
 
     private static boolean tracksBody(String appModules) {
         return appModules == null || "FULL".equals(appModules) || "TRAINING_BODY".equals(appModules);

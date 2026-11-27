@@ -8,6 +8,7 @@ import com.ascension.dto.NutritionPlanDtos;
 import com.ascension.dto.UserSettingsDTO;
 import com.ascension.model.WeightEntry;
 import com.ascension.repository.WeightEntryRepository;
+import com.ascension.util.AppClock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +35,7 @@ public class MacroCalculatorService {
     private static final double DEFAULT_WEIGHT_KG = 75.0;
 
     public MacrosDTO getMacros(String userEmail) {
-        return getMacros(userEmail, LocalDate.now());
+        return getMacros(userEmail, AppClock.today());
     }
 
     /**
@@ -91,8 +92,9 @@ public class MacroCalculatorService {
             carbs = (kcal * (cPct / 100.0)) / 4.0;
         } else {
             // Default BALANCED
-            protein = currentWeight * 2;
             fat = (kcal * 0.22) / 9;
+            // La proteína no puede pasar de lo que deja la grasa: así los macros nunca suman más que las kcal.
+            protein = Math.min(currentWeight * 2, (kcal - fat * 9) / 4);
             carbs = (kcal - protein * 4 - fat * 9) / 4;
         }
 

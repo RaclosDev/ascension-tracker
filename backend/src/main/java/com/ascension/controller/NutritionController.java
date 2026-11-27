@@ -1,5 +1,6 @@
 package com.ascension.controller;
 
+import com.ascension.util.AppClock;
 import com.ascension.dto.MacrosDTO;
 import com.ascension.service.MacroCalculatorService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,6 @@ public class NutritionController {
                                                @AuthenticationPrincipal Jwt jwt) {
         String userEmail = SecurityUtils.extractEmail(jwt);
         if (userEmail == null) return ResponseEntity.status(401).build();
-        return ResponseEntity.ok(macroCalculatorService.getMacros(userEmail, date == null ? LocalDate.now() : date));
+        return ResponseEntity.ok(macroCalculatorService.getMacros(userEmail, date == null ? AppClock.today() : date));
     }
 }

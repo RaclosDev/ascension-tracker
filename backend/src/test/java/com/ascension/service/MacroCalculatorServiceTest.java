@@ -2,7 +2,9 @@ package com.ascension.service;
 
 import com.ascension.dto.MacrosDTO;
 import com.ascension.dto.UserSettingsDTO;
+import com.ascension.model.WeightEntry;
 import com.ascension.repository.WeightEntryRepository;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -71,5 +73,39 @@ class MacroCalculatorServiceTest {
         assertThat(macros.getProtein()).isEqualTo(160.0);
         assertThat(macros.getFat()).isEqualTo(70.0);
         assertThat(macros.getCarbs()).isEqualTo(200.0);
+    }
+
+    @Test
+    void getMacros_balancedWithHeavyAthleteAndLowKcal_neverSumsMoreThanTheCalories() {
+        String email = "heavy@example.com";
+        UserSettingsDTO settings = UserSettingsDTO.builder().macroStrategy("BALANCED").kcal(1200).build();
+        WeightEntry heavy = new WeightEntry();
+        heavy.setWeight(140.0);
+        when(settingsService.getSettings(email)).thenReturn(settings);
+        when(weightEntryRepository.findTopByUserEmailOrderByDateDesc(email)).thenReturn(Optional.of(heavy));
+
+        MacrosDTO macros = macroCalculatorService.getMacros(email);
+
+        double total = macros.getProtein() * 4 + macros.getCarbs() * 4 + macros.getFat() * 9;
+        assertThat(macros.getKcal()).isEqualTo(1200);
+        assertThat(total).isLessThanOrEqualTo(1200.0 + 0.5);
+        assertThat(macros.getCarbs()).isGreaterThanOrEqualTo(0.0);
+        assertThat(macros.getProtein()).isLessThan(280.0);
+    }
+
+    @Test
+    void getMacros_balancedWithNormalWeight_keepsTwoGramsOfProteinPerKilo() {
+        String email = "normal@example.com";
+        UserSettingsDTO settings = UserSettingsDTO.builder().macroStrategy("BALANCED").kcal(2500).build();
+        WeightEntry normal = new WeightEntry();
+        normal.setWeight(80.0);
+        when(settingsService.getSettings(email)).thenReturn(settings);
+        when(weightEntryRepository.findTopByUserEmailOrderByDateDesc(email)).thenReturn(Optional.of(normal));
+
+        MacrosDTO macros = macroCalculatorService.getMacros(email);
+
+        assertThat(macros.getProtein()).isEqualTo(160.0);
+        double total = macros.getProtein() * 4 + macros.getCarbs() * 4 + macros.getFat() * 9;
+        assertThat(total).isBetween(2499.0, 2501.0);
     }
 }

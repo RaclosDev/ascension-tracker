@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.AppClock;
 import com.ascension.dto.StepsEntryDTO;
 import com.ascension.dto.WeekSummaryDTO;
 import com.ascension.model.StepsEntry;
@@ -52,7 +53,7 @@ public class StepsService {
         if (allEntries.isEmpty()) return List.of();
 
         LocalDate firstMonday = WeeklyReportingWindow.start(allEntries.get(0).getDate());
-        LocalDate currentMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate currentMonday = AppClock.today().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
         Map<LocalDate, Integer> entryMap = allEntries.stream()
                 .collect(Collectors.toMap(StepsEntry::getDate, StepsEntry::getSteps, (v1, v2) -> v2));

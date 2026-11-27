@@ -1,5 +1,6 @@
 package com.ascension.service;
 
+import com.ascension.util.AppClock;
 import com.ascension.dto.AiApplyRequestDTO;
 import com.ascension.dto.FoodLogDTO;
 import com.ascension.dto.SavedFoodDTO;
@@ -59,7 +60,7 @@ public class NutritionLogService {
         if (dailyCalorieResults.isEmpty()) return List.of();
 
         java.time.LocalDate firstMonday = WeeklyReportingWindow.start((java.time.LocalDate) dailyCalorieResults.get(0)[0]);
-        java.time.LocalDate currentMonday = java.time.LocalDate.now().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+        java.time.LocalDate currentMonday = AppClock.today().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
 
         java.util.Map<java.time.LocalDate, Double> entryMap = dailyCalorieResults.stream()
                 .collect(Collectors.toMap(

@@ -1,5 +1,6 @@
 package com.ascension.controller;
 
+import com.ascension.util.AppClock;
 import com.ascension.dto.AiApplyRequestDTO;
 import com.ascension.dto.AiChatRequestDTO;
 import com.ascension.dto.AiFoodRequestDTO;
@@ -75,7 +76,7 @@ public class NutritionAiController {
             @AuthenticationPrincipal Jwt jwt) {
         String userEmail = SecurityUtils.extractEmail(jwt);
         if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        LocalDate targetDate = date != null ? LocalDate.parse(date) : LocalDate.now();
+        LocalDate targetDate = date != null ? LocalDate.parse(date) : AppClock.today();
         return ResponseEntity.ok(macroCalculatorService.getAssistantSummary(userEmail, targetDate));
     }
 
@@ -87,7 +88,7 @@ public class NutritionAiController {
         if (userEmail == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         String message = request.getMessage();
         String dateStr = request.getDate();
-        LocalDate date = dateStr != null ? LocalDate.parse(dateStr) : LocalDate.now();
+        LocalDate date = dateStr != null ? LocalDate.parse(dateStr) : AppClock.today();
         Integer mealIndex = request.getMealIndex();
         List<AiChatRequestDTO.ChatMessageDTO> chatHistory = request.getChatHistory();
         String base64Image = request.getBase64Image();

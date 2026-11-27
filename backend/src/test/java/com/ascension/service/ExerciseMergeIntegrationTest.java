@@ -89,6 +89,63 @@ class ExerciseMergeIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM workout_exercises e JOIN workouts w ON w.id=e.workout_id WHERE w.user_email=? AND e.exercise_id=?", Integer.class, other, source)).isEqualTo(1);
     }
 
+    @Test
+    void mergeAlsoRepointsOwnedProgramsAndPowerliftingMappings() throws Exception {
+        String coach = user();
+        String client = user();
+        String source = custom.saveCustomExercise(coach, CustomExerciseDTO.builder().name("Old press").muscle("pecho").equipment("barra").build()).getId();
+        String target = custom.saveCustomExercise(coach, CustomExerciseDTO.builder().name("New press").muscle("pecho").equipment("barra").build()).getId();
+        UUID coachId = jdbc.queryForObject("SELECT id FROM users WHERE email=?", UUID.class, coach);
+        UUID clientId = jdbc.queryForObject("SELECT id FROM users WHERE email=?", UUID.class, client);
+        UUID program = UUID.randomUUID();
+        UUID day = UUID.randomUUID();
+        jdbc.update("INSERT INTO programs(id,owner_user_id,name,weeks) VALUES (?,?,?,4)", program, coachId, "Block");
+        jdbc.update("INSERT INTO program_days(id,program_id,week,day_index,name) VALUES (?,?,1,1,'Day')", day, program);
+        jdbc.update("INSERT INTO program_exercises(program_day_id,order_index,exercise_id,exercise_name,sets) VALUES (?,0,?,?,3)", day, source, "Old press");
+        // Another coach's program that happens to use the same id must stay untouched.
+        UUID foreignCoach = jdbc.queryForObject("SELECT id FROM users WHERE email=?", UUID.class, user());
+        UUID foreignProgram = UUID.randomUUID();
+        UUID foreignDay = UUID.randomUUID();
+        jdbc.update("INSERT INTO programs(id,owner_user_id,name,weeks) VALUES (?,?,?,4)", foreignProgram, foreignCoach, "Other");
+        jdbc.update("INSERT INTO program_days(id,program_id,week,day_index,name) VALUES (?,?,1,1,'Day')", foreignDay, foreignProgram);
+        jdbc.update("INSERT INTO program_exercises(program_day_id,order_index,exercise_id,sets) VALUES (?,0,?,3)", foreignDay, source);
+
+        UUID link = UUID.randomUUID();
+        jdbc.update("INSERT INTO coach_clients(id,coach_user_id,client_user_id,status,can_view_training,can_view_nutrition,can_view_body) VALUES (?,?,?,'ACTIVE',true,true,true)", link, coachId, clientId);
+        String mappings = "{\"exerciseMappings\":[{\"exerciseId\":\"" + source + "\",\"lift\":\"BENCH\",\"kind\":\"VARIATION\"},"
+                + "{\"exerciseId\":\"" + target + "\",\"lift\":\"BENCH\",\"kind\":\"VARIATION\"},"
+                + "{\"exerciseId\":\"" + source + "\",\"grip\":\"wide\",\"lift\":\"BENCH\",\"kind\":\"COMPETITION\"}]}";
+        jdbc.update("INSERT INTO coach_powerlifting_profiles(link_id,content,version) VALUES (?,CAST(? AS jsonb),1)", link, mappings);
+
+        mvc.perform(post("/api/workouts/exercises/{id}/merge", source)
+                .with(jwt().jwt(j -> j.subject(coach).claim("email", coach)))
+                .contentType("application/json").content("{\"targetExerciseId\":\"" + target + "\"}"))
+                .andExpect(status().isOk());
+
+        assertThat(jdbc.queryForObject("SELECT exercise_id FROM program_exercises WHERE program_day_id=?", String.class, day)).isEqualTo(target);
+        assertThat(jdbc.queryForObject("SELECT exercise_name FROM program_exercises WHERE program_day_id=?", String.class, day)).isEqualTo("New press");
+        assertThat(jdbc.queryForObject("SELECT exercise_id FROM program_exercises WHERE program_day_id=?", String.class, foreignDay)).isEqualTo(source);
+        // The plain variant already mapped to the target collapses; the grip variant is kept under the target.
+        assertThat(jdbc.queryForObject("SELECT jsonb_array_length(content->'exerciseMappings') FROM coach_powerlifting_profiles WHERE link_id=?", Integer.class, link)).isEqualTo(2);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM coach_powerlifting_profiles p, jsonb_array_elements(p.content->'exerciseMappings') m WHERE p.link_id=? AND m->>'exerciseId'=?", Integer.class, link, source)).isZero();
+        assertThat(jdbc.queryForObject("SELECT version FROM coach_powerlifting_profiles WHERE link_id=?", Integer.class, link)).isEqualTo(2);
+    }
+
+    @Test
+    void cannotMergeIntoACustomIdThatDoesNotExist() throws Exception {
+        String email = user();
+        String source = custom.saveCustomExercise(email, CustomExerciseDTO.builder().name("Keep me").muscle("pecho").equipment("barra").build()).getId();
+        fixture(email, source);
+
+        mvc.perform(post("/api/workouts/exercises/{id}/merge", source)
+                .with(jwt().jwt(j -> j.subject(email).claim("email", email)))
+                .contentType("application/json").content("{\"targetExerciseId\":\"" + UUID.randomUUID() + "\"}"))
+                .andExpect(status().isNotFound());
+
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM custom_exercises WHERE id=?", Integer.class, source)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM workout_exercises WHERE exercise_id=?", Integer.class, source)).isEqualTo(1);
+    }
+
     private String user() {
         String email = UUID.randomUUID()+"@merge.test";
         users.ensureUserExists(email, "Merge", null);

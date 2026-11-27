@@ -259,7 +259,7 @@ public class GeminiAiService {
             mimeType = AiImageValidator.validate(decoded);
         }
 
-        MacrosDTO targetMacros = macroCalculatorService.getMacros(userEmail);
+        MacrosDTO targetMacros = macroCalculatorService.getMacros(userEmail, date);
         int targetKcal = targetMacros.getKcal() != null ? targetMacros.getKcal() : 2000;
         double targetProtein = targetMacros.getProtein() != null ? targetMacros.getProtein() : 150.0;
         double targetCarbs = targetMacros.getCarbs() != null ? targetMacros.getCarbs() : 200.0;

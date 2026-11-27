@@ -1,5 +1,6 @@
 package com.ascension.controller;
 
+import com.ascension.util.AppClock;
 import com.ascension.dto.ProgressPhotoDtos.Photo;
 import com.ascension.dto.ProgressPhotoDtos.PhotoList;
 import com.ascension.dto.ProgressPhotoDtos.Pose;
@@ -40,7 +41,7 @@ public class ProgressPhotoController {
         String email = SecurityUtils.extractEmail(jwt);
         if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(photoService.upload(email, pose, takenOn, ProgressPhotoService.read(file), LocalDate.now()));
+                .body(photoService.upload(email, pose, takenOn, ProgressPhotoService.read(file), AppClock.today()));
     }
 
     @DeleteMapping("/{photoId}")
