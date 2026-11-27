@@ -1,7 +1,6 @@
 package com.ascension.service.auth;
 
 import com.ascension.service.auth.AuthAccounts.Account;
-import com.ascension.util.PiiMasker;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import org.slf4j.Logger;
@@ -60,7 +59,7 @@ public class IdentityConfirmation {
                 : googleMatches(account, googleCredential);
         if (!confirmed) {
             failures.record(key);
-            log.info("Identity confirmation failed for {}", PiiMasker.maskEmail(account.email()));
+            log.info("Identity confirmation failed for account {}", account.id());
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, NOT_CONFIRMED);
         }
         failures.reset(key);
