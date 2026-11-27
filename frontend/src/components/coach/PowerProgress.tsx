@@ -190,30 +190,33 @@ export function PowerProgress({ linkId, profile }: { linkId: string; profile: Po
                   <h4>Volumen semanal</h4>
                   <span className="pw-hint">toneladas por semana (kg × reps)</span>
                 </div>
-                <ol className="pw-chart" aria-label="Volumen semanal">
-                  {chart.map((w, index) => {
-                    const detail =
-                      w.sets === 0
-                        ? `Semana del ${weekDate(w.week)}: sin series`
-                        : `Semana del ${weekDate(w.week)}: ${number(w.volume)} kg de volumen, ${w.sets} ${w.sets === 1 ? 'serie' : 'series'}, carga máxima ${number(w.maxLoad)} kg${w.rpe === null ? '' : `, RPE ${number(w.rpe)}`}`;
-                    return (
-                      <li key={w.week} title={detail}>
-                        <span className="sr-only">{detail}</span>
-                        <span className="pw-chart-value" aria-hidden="true">
-                          {chart.length <= 16 && w.volume > 0
-                            ? `${number(Math.round(w.volume / 100) / 10)} t`
-                            : ''}
-                        </span>
-                        <span className="pw-chart-bar" aria-hidden="true">
-                          <span style={{ height: `${(w.volume / highestVolume) * 100}%` }} />
-                        </span>
-                        <span className="pw-chart-label" aria-hidden="true">
-                          {index % labelEvery === 0 ? weekDate(w.week) : ''}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ol>
+                {/* Con foco de teclado para poder desplazarlo cuando no cabe. */}
+                <div className="pw-chart-scroll" tabIndex={0}>
+                  <ol className="pw-chart" aria-label="Volumen semanal">
+                    {chart.map((w, index) => {
+                      const detail =
+                        w.sets === 0
+                          ? `Semana del ${weekDate(w.week)}: sin series`
+                          : `Semana del ${weekDate(w.week)}: ${number(w.volume)} kg de volumen, ${w.sets} ${w.sets === 1 ? 'serie' : 'series'}, carga máxima ${number(w.maxLoad)} kg${w.rpe === null ? '' : `, RPE ${number(w.rpe)}`}`;
+                      return (
+                        <li key={w.week} title={detail}>
+                          <span className="sr-only">{detail}</span>
+                          <span className="pw-chart-value" aria-hidden="true">
+                            {chart.length <= 16 && w.volume > 0
+                              ? `${number(Math.round(w.volume / 100) / 10)} t`
+                              : ''}
+                          </span>
+                          <span className="pw-chart-bar" aria-hidden="true">
+                            <span style={{ height: `${(w.volume / highestVolume) * 100}%` }} />
+                          </span>
+                          <span className="pw-chart-label" aria-hidden="true">
+                            {index % labelEvery === 0 ? weekDate(w.week) : ''}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
               </>
             )}
           </section>

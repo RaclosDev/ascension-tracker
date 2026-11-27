@@ -2585,9 +2585,17 @@ textarea,
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--text-primary);
-  white-space: nowrap;
+}
+/* Los nombres largos parten en dos líneas en vez de cortarse; a partir de la tercera, puntos suspensivos. */
+.exercise-card-name-text {
+  display: -webkit-box;
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 .exercise-card-meta {
   margin-top: 0.25rem;

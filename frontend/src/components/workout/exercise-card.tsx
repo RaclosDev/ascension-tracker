@@ -171,7 +171,7 @@ export const ExerciseCard = React.memo(function ExerciseCard({
         onClick={() => setCollapsed(!collapsed)}
         style={{ cursor: 'pointer' }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0, flex: 1 }}>
           {meta &&
             customGifs[meta.id] !== 'none' &&
             ((meta && customGifs[meta.id]) || meta?.gifUrl) && (
@@ -187,7 +187,9 @@ export const ExerciseCard = React.memo(function ExerciseCard({
               className="exercise-card-name"
               style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}
             >
-              <span>{meta?.name ?? 'Ejercicio'}</span>
+              <span className="exercise-card-name-text" title={meta?.name}>
+                {meta?.name ?? 'Ejercicio'}
+              </span>
               <button
                 type="button"
                 onClick={(e) => {

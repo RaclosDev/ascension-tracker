@@ -4,6 +4,11 @@
   gap: 16px;
   min-width: 0;
 }
+/* Una sola columna que no crece con las pestañas: en el móvil se desplazan dentro de su barra
+   en vez de ensanchar la cabecera y el panel por fuera de la pantalla. */
+.pw.athlete-manage {
+  grid-template-columns: minmax(0, 1fr);
+}
 .pw .power-areas {
   margin-bottom: 0;
 }
@@ -18,7 +23,6 @@
 }
 @media (min-width: 1000px) {
   .pw.athlete-manage {
-    grid-template-columns: minmax(0, 1fr);
     gap: 20px;
   }
   .pw .athlete-manage-tabs {
@@ -166,6 +170,8 @@
 }
 .pw-tm-field {
   display: grid;
+  /* Si una etiqueta parte en dos líneas, las cifras siguen alineadas abajo. */
+  grid-template-rows: 1fr auto;
   gap: 6px;
   min-width: 0;
   font-size: 0.72rem;
@@ -591,6 +597,7 @@
 /* Pestañas de powerlifting en horizontal, con Ajustes aparte a la derecha. */
 .pw-head {
   display: flex;
+  min-width: 0;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
@@ -905,7 +912,11 @@
 /* Seguimiento S/B/D: se elige un levantamiento y se ven sus cifras y su volumen semanal. */
 .pw-progress {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
+  min-width: 0;
+}
+.pw-progress > .pw-card {
   min-width: 0;
 }
 .pw-lift-picker {
@@ -987,8 +998,20 @@
 .pw-chart-head h4 {
   margin: 0;
 }
+/* En el móvil las columnas no caben con sus cifras: el gráfico se desplaza dentro de la tarjeta. */
+.pw-chart-scroll {
+  /* Relativo para que los textos sr-only de cada columna se recorten dentro y no ensanchen la página. */
+  position: relative;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.pw-chart-scroll:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
 .pw-chart {
   display: flex;
+  min-width: 36rem;
   align-items: stretch;
   gap: 4px;
   height: 200px;
