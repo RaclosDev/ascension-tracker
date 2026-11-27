@@ -104,6 +104,8 @@ public class PasswordResetService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, INVALID_LINK);
         }
         jdbc.update("DELETE FROM password_reset_tokens WHERE user_id = ?", account.id());
+        // The link reached the mailbox, so its owner is the one resetting: whatever was set up before is closed.
+        userService.confirmOwnership(account.id(), account.email());
         jdbc.update("DELETE FROM passkeys WHERE user_id = ?", account.id());
         jdbc.update("DELETE FROM passkey_challenges WHERE user_id = ?", account.id());
         userService.updateTokensValidAfter(account.email(), Instant.now());

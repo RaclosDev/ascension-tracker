@@ -20,6 +20,7 @@ import com.ascension.dto.CoachDtos.Person;
 import com.ascension.exception.EntityNotFoundException;
 import com.ascension.exception.InvalidInputException;
 import com.ascension.model.RefreshToken;
+import com.ascension.service.auth.EmailVerificationService;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -60,12 +61,15 @@ public class CoachService {
     private final UserIdLookup userIdLookup;
     private final CoachSetupService setupService;
     private final CoachDayCommentService dayCommentService;
+    private final ProgramSchedule programSchedule;
+    private final EmailVerificationService verification;
     private final SecureRandom random = new SecureRandom();
 
     public CoachService(JdbcTemplate jdbcTemplate, NutritionPlanService nutritionPlanService,
                         CheckinService checkinService, CoachSubscriptionService subscriptionService,
                         UserIdLookup userIdLookup, CoachSetupService setupService,
-                        CoachDayCommentService dayCommentService) {
+                        CoachDayCommentService dayCommentService, ProgramSchedule programSchedule,
+                        EmailVerificationService verification) {
         this.jdbcTemplate = jdbcTemplate;
         this.nutritionPlanService = nutritionPlanService;
         this.checkinService = checkinService;
@@ -73,12 +77,15 @@ public class CoachService {
         this.userIdLookup = userIdLookup;
         this.setupService = setupService;
         this.dayCommentService = dayCommentService;
+        this.programSchedule = programSchedule;
+        this.verification = verification;
     }
 
     // ---- Coach side ----
 
     @Transactional
     public void activateCoach(String coachEmail) {
+        verification.requireVerified(coachEmail);
         jdbcTemplate.update("""
                 INSERT INTO coach_profiles (user_id)
                 SELECT id FROM users WHERE email = ?
@@ -107,6 +114,7 @@ public class CoachService {
     /** {@code request} may be null: a bare link that asks for nothing and knows nothing about the client. */
     @Transactional
     public CreatedInvitation createInvitation(String coachEmail, InvitationRequest request) {
+        verification.requireVerified(coachEmail);
         UUID coachId = requireCoachId(coachEmail);
         // Serialises invitation creation per coach so the limits below hold under concurrency.
         jdbcTemplate.queryForObject("SELECT user_id FROM coach_profiles WHERE user_id = ? FOR UPDATE",
@@ -219,6 +227,20 @@ public class CoachService {
         if (updated == 0) {
             throw new EntityNotFoundException("Atleta no encontrado");
         }
+        closeDependents(linkId);
+    }
+
+    /**
+     * What a coach set through a link stops with it: the nutrition plan in force and the programs still
+     * running. Otherwise the plan would keep blocking the next coach, and a program would keep prescribing
+     * sessions the client no longer agreed to follow. Past days keep their program through its dates.
+     */
+    private void closeDependents(UUID linkId) {
+        nutritionPlanService.endForLink(linkId);
+        programSchedule.lock(linkId);
+        List<UUID> running = jdbcTemplate.queryForList(
+                "SELECT id FROM program_assignments WHERE coach_link_id = ? AND status = 'ACTIVE'", UUID.class, linkId);
+        running.forEach(programSchedule::end);
     }
 
     // ---- Client side ----
@@ -260,6 +282,7 @@ public class CoachService {
         if (permissions == null || !permissions.any()) {
             throw new InvalidInputException("Elige al menos un área que tu entrenador pueda ver.");
         }
+        verification.requireVerified(clientEmail);
         OpenInvitation invitation = findOpenInvitation(token, true);
         UUID clientId = requireUserId(clientEmail);
         if (invitation.coachUserId().equals(clientId)) {
@@ -343,6 +366,7 @@ public class CoachService {
         if (updated == 0) {
             throw new EntityNotFoundException("Entrenador no encontrado");
         }
+        closeDependents(linkId);
     }
 
     public List<AccessLogEntry> accessLog(String clientEmail) {

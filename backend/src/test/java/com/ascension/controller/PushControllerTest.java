@@ -1,6 +1,7 @@
 package com.ascension.controller;
 
 import com.ascension.service.PushNotificationService;
+import com.ascension.service.auth.EmailVerificationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,9 @@ class PushControllerTest {
 
     @MockitoBean
     private PushNotificationService pushService;
+
+    @MockitoBean
+    private EmailVerificationService verification;
 
     private static final String TEST_EMAIL = "athlete@example.com";
 
@@ -67,6 +71,24 @@ class PushControllerTest {
                 .andExpect(status().isOk());
 
         verify(pushService).saveSubscription(eq(TEST_EMAIL), any());
+    }
+
+    @Test
+    @DisplayName("POST /api/push/subscribe is refused while the email is unverified")
+    void subscribe_unverifiedEmailIsForbidden() throws Exception {
+        org.mockito.Mockito.doThrow(new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.FORBIDDEN, EmailVerificationService.VERIFY_FIRST))
+                .when(verification).requireVerified(TEST_EMAIL);
+
+        mockMvc.perform(post("/api/push/subscribe")
+                        .with(jwt())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"endpoint\":\"https://fcm.googleapis.com/fcm/send/d\","
+                                + "\"keys\":{\"p256dh\":\"k\",\"auth\":\"a\"}}"))
+                .andExpect(status().isForbidden());
+
+        org.mockito.Mockito.verify(pushService, org.mockito.Mockito.never()).saveSubscription(any(), any());
     }
 
     @Test

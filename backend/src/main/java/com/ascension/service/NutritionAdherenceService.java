@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * How closely a client follows the nutrition plans one coach set: what they logged each day
@@ -50,27 +51,29 @@ public class NutritionAdherenceService {
         LocalDate from = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(weeks - 1L);
         List<PlanSpan> plans = plans(access, from, today);
         Map<LocalDate, Intake> intake = intake(access.clientEmail(), from, today);
+        // One lookup for the whole range, judged by the program that applied on each day.
+        Set<LocalDate> trainingDays = plans.isEmpty() ? Set.of()
+                : clientProgramService.trainingDays(access.clientEmail(), from, today);
 
         List<AdherenceWeek> result = new ArrayList<>();
         for (LocalDate monday = from; !monday.isAfter(today); monday = monday.plusWeeks(1)) {
             List<AdherenceDay> days = new ArrayList<>();
             for (LocalDate date = monday; date.isBefore(monday.plusWeeks(1)) && !date.isAfter(today);
                  date = date.plusDays(1)) {
-                days.add(day(access.clientEmail(), date, plans, intake.get(date)));
+                days.add(day(date, plans, intake.get(date), trainingDays.contains(date)));
             }
             result.add(week(monday, days));
         }
         return result;
     }
 
-    private AdherenceDay day(String clientEmail, LocalDate date, List<PlanSpan> plans, Intake logged) {
+    private AdherenceDay day(LocalDate date, List<PlanSpan> plans, Intake logged, boolean training) {
         // The latest plan that covers the day: on the day a plan is replaced, the new one applies.
         PlanSpan plan = null;
         for (PlanSpan span : plans) {
             if (span.covers(date)) plan = span;
         }
         if (plan == null) return new AdherenceDay(date, null, null, logged, false);
-        boolean training = clientProgramService.isTrainingDay(clientEmail, date);
         DayTargets target = training ? plan.training() : plan.rest();
         return new AdherenceDay(date, training ? NutritionPlanDtos.TRAINING : NutritionPlanDtos.REST, target,
                 logged, onTarget(target, logged));

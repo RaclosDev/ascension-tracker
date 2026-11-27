@@ -20,6 +20,7 @@ const TrackingMetricPage = lazyWithRetry(() => import('./pages/TrackingMetricPag
 const NutritionPage = lazyWithRetry(() => import('./pages/NutritionPage'));
 const SettingsPage = lazyWithRetry(() => import('./pages/SettingsPage'));
 const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage'));
+const VerifyEmailPage = lazyWithRetry(() => import('./pages/VerifyEmailPage'));
 const WorkoutPage = lazyWithRetry(() => import('./pages/WorkoutPage'));
 const UtilitiesPage = lazyWithRetry(() => import('./pages/UtilitiesPage'));
 const CoachPage = lazyWithRetry(() => import('./pages/CoachPage'));
@@ -159,6 +160,14 @@ function AppContent() {
               </Suspense>
             }
           />
+          <Route
+            path="/verificar-email"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <VerifyEmailPage />
+              </Suspense>
+            }
+          />
           {legalRoutes}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
@@ -244,6 +253,7 @@ function AppContent() {
               <Route path="invitacion/:token" element={<InvitationPage />} />
             </Route>
             <Route path="/restablecer-contrasena" element={<ResetPasswordPage />} />
+            <Route path="/verificar-email" element={<VerifyEmailPage />} />
             <Route path="/login" element={<HomeRedirect />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

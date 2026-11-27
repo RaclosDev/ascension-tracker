@@ -269,6 +269,32 @@ class CoachCheckinIntegrationTest {
         mvc.perform(as(get(COACH_PATH, link), coach)).andExpect(jsonPath("$[0].notes").value("Mejor esta semana"));
     }
 
+    @Test
+    void theCoachExportOnlyCarriesTheWeightTheClientSharesAndOnlyWhileTheLinkIsActive() throws Exception {
+        String coach = coach();
+        String client = user();
+        String link = accept(client, invite(coach), WITH_BODY);
+        mvc.perform(as(post("/api/weights"), client).contentType("application/json")
+                .content("{\"date\":\"" + monday + "\",\"weight\":80.4}")).andExpect(status().isOk());
+        mvc.perform(as(put(CLIENT_PATH, link), client).contentType("application/json").content(CHECKIN))
+                .andExpect(status().isOk());
+
+        mvc.perform(as(get("/api/user/export"), coach))
+                .andExpect(jsonPath("$.coaching.checkins[0].checkin.weightAvg").value(80.4));
+
+        mvc.perform(as(patch("/api/coaching/coaches/{linkId}", link), client).contentType("application/json")
+                .content(WITHOUT_BODY)).andExpect(status().isNoContent());
+        mvc.perform(as(get("/api/user/export"), coach))
+                .andExpect(jsonPath("$.coaching.checkins[0].role").value("COACH"))
+                .andExpect(jsonPath("$.coaching.checkins[0].checkin.weightAvg").doesNotExist());
+
+        mvc.perform(as(post("/api/coaching/coaches/{linkId}/end", link), client)).andExpect(status().isNoContent());
+        mvc.perform(as(get("/api/user/export"), coach))
+                .andExpect(jsonPath("$.coaching.checkins.length()").value(0));
+        mvc.perform(as(get("/api/user/export"), client))
+                .andExpect(jsonPath("$.coaching.checkins[0].checkin.weightAvg").value(80.4));
+    }
+
     private void configure(String coach, String link, boolean training, boolean nutrition) throws Exception {
         String setup = "{\"services\":{\"training\":" + training + ",\"nutrition\":" + nutrition
                 + ",\"progress\":false},\"reviewed\":true}";

@@ -24,6 +24,15 @@ import { SET_TYPE_CYCLE } from './types';
 
 const DEFAULT_SETS = 3;
 
+/** A set coming from the server: bodyweight and cardio sets carry null fields that the editor handles as text. */
+function withoutNulls(set: WorkoutSet): WorkoutSet {
+  const copy: Record<string, unknown> = { ...set };
+  for (const key of ['weight', 'reps', 'distance', 'duration', 'rpe', 'rir']) {
+    if (copy[key] === null) copy[key] = '';
+  }
+  return copy as unknown as WorkoutSet;
+}
+
 function blankSet(fill?: { weight: string; reps: string }): WorkoutSet {
   return {
     id: uid(),
@@ -297,7 +306,7 @@ export const useWorkoutStore = create<WorkoutState>()(
             programOrigin: w.programOrigin ?? undefined,
             exercises: w.exercises.map((ex: import('./types').WorkoutExercise) => ({
               ...ex,
-              sets: ex.sets.map((s: import('./types').WorkoutSet) => ({ ...s })),
+              sets: ex.sets.map((s: import('./types').WorkoutSet) => withoutNulls(s)),
             })),
           },
           restUntil: null,
@@ -319,8 +328,8 @@ export const useWorkoutStore = create<WorkoutState>()(
               notes: '',
               sets: ex.sets.map((s: import('./types').WorkoutSet) =>
                 blankSet({
-                  weight: s.weight,
-                  reps: s.reps,
+                  weight: s.weight ?? '',
+                  reps: s.reps ?? '',
                 }),
               ),
             })),

@@ -39,6 +39,11 @@ const reportFailure = () => {
     'No se puede guardar el entrenamiento en este dispositivo. No cierres la aplicación hasta guardarlo en el servidor.';
   listeners.forEach((listener) => listener());
 };
+const clearFailure = () => {
+  if (persistenceError === null) return;
+  persistenceError = null;
+  listeners.forEach((listener) => listener());
+};
 const subscribe = (listener: () => void) => {
   listeners.add(listener);
   return () => {
@@ -99,6 +104,7 @@ export const workoutStorage: StateStorage = {
     const pending = (pendingWrites.get(name) ?? Promise.resolve()).then(async () => {
       try {
         await set(name, value);
+        clearFailure();
       } catch {
         reportFailure();
       }

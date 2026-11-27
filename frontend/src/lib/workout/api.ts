@@ -1,5 +1,12 @@
 import { useMemo, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+  useIsMutating,
+  useMutationState,
+} from '@tanstack/react-query';
 import api from '@/api/client';
 import { CompletedWorkout, Template, Exercise } from './types';
 import { useWorkoutStore } from './store';
@@ -44,9 +51,21 @@ export const useRecentWorkouts = (days: number = 60) => {
   return { ...q, data };
 };
 
+const SAVE_WORKOUT_KEY = ['saveWorkout'];
+
+/**
+ * Saving lives here, not in the screen that asked for it: offline the request waits paused, and the user
+ * may leave the screen (or come back to it) before the network returns. The session is closed by this
+ * mutation's own success, once it knows the session it saved is still the one that is open.
+ */
 export const useSaveWorkout = () => {
   const queryClient = useQueryClient();
-  return useMutation({
+  const mutation = useMutation({
+    mutationKey: SAVE_WORKOUT_KEY,
+    onMutate: () => {
+      const active = useWorkoutStore.getState().active;
+      return { startedAt: active?.startedAt, editingId: active?.editingId };
+    },
     mutationFn: async (workout: CompletedWorkout) => {
       // If it's an existing workout with a valid id, use PUT
       if (workout.id && !workout.id.startsWith('temp') && workout.id.trim() !== '') {
@@ -56,7 +75,17 @@ export const useSaveWorkout = () => {
       const { data } = await api.post('/workouts', workout);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, _workout, saved) => {
+      const store = useWorkoutStore.getState();
+      const active = store.active;
+      if (
+        active &&
+        saved &&
+        active.startedAt === saved.startedAt &&
+        active.editingId === saved.editingId
+      ) {
+        store.clearActiveWorkout();
+      }
       queryClient.invalidateQueries({ queryKey: ['workoutHistory'] });
       queryClient.invalidateQueries({ queryKey: ['recentWorkouts'] });
       queryClient.invalidateQueries({ queryKey: ['workouts'] });
@@ -66,6 +95,13 @@ export const useSaveWorkout = () => {
       toast.error('Error al guardar entrenamiento');
     },
   });
+  // A save started by another mounting of the screen still counts: it must not be sent twice.
+  const saving = useIsMutating({ mutationKey: SAVE_WORKOUT_KEY }) > 0;
+  const waitingForNetwork = useMutationState({
+    filters: { mutationKey: SAVE_WORKOUT_KEY, status: 'pending' },
+    select: (item) => item.state.isPaused,
+  }).some(Boolean);
+  return { ...mutation, isPending: mutation.isPending || saving, isPaused: waitingForNetwork };
 };
 
 export const useDeleteWorkout = () => {

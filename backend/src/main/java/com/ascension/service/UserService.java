@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -35,6 +36,7 @@ public class UserService {
     ) {}
 
     private final JdbcTemplate jdbcTemplate;
+    private final AccountTakeover takeover;
 
     private final RowMapper<User> userRowMapper = (rs, rowNum) -> {
         Timestamp ts = rs.getTimestamp("tokens_valid_after");
@@ -49,6 +51,7 @@ public class UserService {
 
     public UserService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.takeover = new AccountTakeover(jdbcTemplate);
     }
 
     public Optional<User> findByEmail(String email) {
@@ -98,20 +101,23 @@ public class UserService {
                 ON CONFLICT (email) DO NOTHING
                 """, cleanEmail, name, picture, googleSub);
         GoogleLinkState current = jdbcTemplate.query("""
-                SELECT google_sub, password_hash FROM users WHERE email = ? FOR UPDATE
-                """, (rs, row) -> new GoogleLinkState(
-                        rs.getString("google_sub"), rs.getString("password_hash")), cleanEmail).getFirst();
+                SELECT id, google_sub, password_hash, email_verified FROM users WHERE email = ? FOR UPDATE
+                """, (rs, row) -> new GoogleLinkState(rs.getObject("id", UUID.class),
+                        rs.getString("google_sub"), rs.getString("password_hash"), rs.getBoolean("email_verified")),
+                cleanEmail).getFirst();
         if (current.googleSub() != null && !current.googleSub().equals(googleSub)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Security identity mismatch");
         }
         boolean converting = current.googleSub() == null || current.passwordHash() != null;
         if (converting) {
+            // Whoever signed up with this address without verifying it may have linked a coach or a browser.
+            String notice = current.verified() ? null : takeover.close(current.id(), cleanEmail);
             jdbcTemplate.update("""
                     UPDATE users SET google_sub = ?, password_hash = NULL, email_verified = TRUE,
                         name = COALESCE(?, name), picture = COALESCE(?, picture),
-                        tokens_valid_after = NOW()
+                        account_notice = COALESCE(?, account_notice), tokens_valid_after = NOW()
                     WHERE email = ?
-                    """, googleSub, name, picture, cleanEmail);
+                    """, googleSub, name, picture, notice, cleanEmail);
             jdbcTemplate.update("DELETE FROM refresh_tokens WHERE email = ?", cleanEmail);
             jdbcTemplate.update("DELETE FROM passkeys WHERE user_id = (SELECT id FROM users WHERE email = ?)", cleanEmail);
             jdbcTemplate.update("DELETE FROM passkey_challenges WHERE user_id = (SELECT id FROM users WHERE email = ?)", cleanEmail);
@@ -121,7 +127,23 @@ public class UserService {
         }
     }
 
-    private record GoogleLinkState(String googleSub, String passwordHash) {}
+    private record GoogleLinkState(UUID id, String googleSub, String passwordHash, boolean verified) {}
+
+    /**
+     * The owner of the address has just proved it (a reset link sent to it). If the account was still
+     * unverified, closes what had been set up before and marks the email as verified.
+     */
+    @Transactional
+    public void confirmOwnership(UUID userId, String email) {
+        Boolean unverified = jdbcTemplate.queryForObject(
+                "SELECT NOT email_verified FROM users WHERE id = ? FOR UPDATE", Boolean.class, userId);
+        if (!Boolean.TRUE.equals(unverified)) {
+            return;
+        }
+        String notice = takeover.close(userId, Emails.normalize(email));
+        jdbcTemplate.update("UPDATE users SET email_verified = TRUE, account_notice = COALESCE(?, account_notice) WHERE id = ?",
+                notice, userId);
+    }
 
     @Transactional
     public void ensureUserExists(String email, String name, String picture) {

@@ -110,3 +110,53 @@ it('finishes hydration and reports unavailable persistence instead of blocking o
   await waitFor(() => expect(result.current).toContain('No se puede guardar'));
   expect(useWorkoutStore.getState().active?.name).toBe('Unsaved');
 });
+
+it('keeps a saved workout whose bodyweight sets have no weight, instead of discarding the session', async () => {
+  const completed = {
+    id: 'w1',
+    name: 'Calistenia',
+    startedAt: 1,
+    finishedAt: 2,
+    exercises: [
+      {
+        id: 'e',
+        exerciseId: 'pull-up',
+        sets: [
+          { id: 's1', type: 'normal', weight: null, reps: '8', completed: true },
+          { id: 's2', type: 'normal', weight: '10', reps: null, completed: true },
+        ],
+      },
+    ],
+  };
+  useWorkoutStore.getState().editWorkout(completed as never);
+  const sets = useWorkoutStore.getState().active?.exercises[0].sets;
+  expect(sets?.map((s) => [s.weight, s.reps])).toEqual([
+    ['', '8'],
+    ['10', ''],
+  ]);
+
+  // A copy already persisted with nulls (before the fix) is repaired on load, not rejected.
+  const persisted = JSON.stringify({
+    version: 1,
+    state: {
+      active: { name: 'Calistenia', startedAt: 1, editingId: 'w1', exercises: completed.exercises },
+    },
+  });
+  vi.mocked(get).mockResolvedValueOnce(persisted);
+  const value = await workoutStorage.getItem('ascension-workout-v1');
+  const loaded = JSON.parse(value ?? '{}').state.active.exercises[0].sets;
+  expect(loaded.map((s: { weight: string; reps: string }) => [s.weight, s.reps])).toEqual([
+    ['', '8'],
+    ['10', ''],
+  ]);
+});
+
+it('clears the persistence warning once a later write succeeds', async () => {
+  vi.mocked(set).mockRejectedValueOnce(new Error('quota'));
+  workoutStorage.setItem('ascension-workout-v1', '{"state":{},"version":1}');
+  const { result } = renderHook(() => useWorkoutPersistenceError());
+  await waitFor(() => expect(result.current).toMatch(/No se puede guardar/));
+
+  workoutStorage.setItem('ascension-workout-v1', '{"state":{},"version":1}');
+  await waitFor(() => expect(result.current).toBeNull());
+});

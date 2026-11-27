@@ -10,10 +10,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -33,33 +39,96 @@ public class ClientProgramService {
         this.schedule = schedule;
     }
 
-    private record Active(UUID assignmentId, UUID programId, String programName, String coachName,
-                          LocalDate startDate, LocalDate effectiveUntil, int weeks, String notes) {
+    /** {@code endedOn} is the day the assignment was closed, or null while it is still open. */
+    private record Active(UUID assignmentId, UUID programId, UUID linkId, String programName, String coachName,
+                          LocalDate startDate, LocalDate effectiveUntil, LocalDate endedOn, Instant createdAt,
+                          int weeks, String notes) {
+
+        /**
+         * An open assignment applies from its start on (before it, as upcoming). A closed one still applies to
+         * the days it ran before it was closed, unless a later assignment on the same link already took over.
+         * Closing a program therefore never rewrites what the days before it were.
+         */
+        boolean inForceOn(LocalDate date, List<Active> all) {
+            if (effectiveUntil != null && !effectiveUntil.isAfter(date)) return false;
+            if (endedOn == null) return true;
+            if (startDate.isAfter(date) || !date.isBefore(endedOn)) return false;
+            return all.stream().noneMatch(later -> later.replaces(this, date));
+        }
+
+        private boolean replaces(Active other, LocalDate date) {
+            boolean later = startDate.isAfter(other.startDate)
+                    || (startDate.equals(other.startDate) && createdAt.isAfter(other.createdAt));
+            return later && Objects.equals(linkId, other.linkId) && !startDate.isAfter(date)
+                    && (effectiveUntil == null || effectiveUntil.isAfter(date))
+                    && (endedOn == null || date.isBefore(endedOn));
+        }
     }
 
-    @Transactional(readOnly = true)
-    public List<TodayPlan> today(String email, LocalDate date) {
-        List<Active> active = jdbcTemplate.query("""
-                SELECT a.id, a.program_id, p.name, p.weeks, p.notes, a.start_date, a.effective_until, c.name AS coach_name
+    /** The assignments that may apply on some day of {@code from..to}, newest first. */
+    private List<Active> assignments(String email, LocalDate from, LocalDate to) {
+        return jdbcTemplate.query("""
+                SELECT a.id, a.program_id, a.coach_link_id, p.name, p.weeks, p.notes, a.start_date, a.effective_until,
+                       a.created_at, CASE WHEN a.status = 'ENDED' THEN CAST(a.ended_at AS date) END AS ended_on,
+                       c.name AS coach_name
                 FROM program_assignments a
                 JOIN programs p ON p.id = a.program_id
                 JOIN users u ON u.id = a.client_user_id
                 LEFT JOIN coach_public_profiles c ON c.id = a.coach_user_id
-                WHERE u.email = ? AND a.status = 'ACTIVE' AND p.owner_user_id = u.id
+                WHERE u.email = ? AND p.owner_user_id = u.id
                   AND (a.effective_until IS NULL OR a.effective_until > ?)
+                  AND (a.status = 'ACTIVE' OR (CAST(a.ended_at AS date) > ? AND a.start_date <= ?))
                 ORDER BY a.start_date DESC, a.created_at DESC
                 """,
                 (rs, n) -> new Active(rs.getObject("id", UUID.class), rs.getObject("program_id", UUID.class),
-                        rs.getString("name"), rs.getString("coach_name"),
-                        rs.getObject("start_date", LocalDate.class), rs.getObject("effective_until", LocalDate.class), rs.getInt("weeks"), rs.getString("notes")),
-                Emails.normalize(email), date);
-        return active.stream().map(a -> plan(email, a, date)).toList();
+                        rs.getObject("coach_link_id", UUID.class), rs.getString("name"), rs.getString("coach_name"),
+                        rs.getObject("start_date", LocalDate.class), rs.getObject("effective_until", LocalDate.class),
+                        rs.getObject("ended_on", LocalDate.class), rs.getTimestamp("created_at").toInstant(),
+                        rs.getInt("weeks"), rs.getString("notes")),
+                Emails.normalize(email), from, from, to);
     }
 
-    /** True when an active program prescribes a session on {@code date}. */
+    @Transactional(readOnly = true)
+    public List<TodayPlan> today(String email, LocalDate date) {
+        List<Active> all = assignments(email, date, date);
+        return all.stream().filter(a -> a.inForceOn(date, all)).map(a -> plan(email, a, date)).toList();
+    }
+
+    /** True when a program prescribes a session on {@code date}. */
     @Transactional(readOnly = true)
     public boolean isTrainingDay(String email, LocalDate date) {
-        return today(email, date).stream().anyMatch(plan -> plan.day() != null);
+        return trainingDays(email, date, date).contains(date);
+    }
+
+    /**
+     * The days of {@code from..to} on which the program in force that day prescribes a session, in a single
+     * pass. A day is judged by the program that applied then, not by the one that is active now.
+     */
+    @Transactional(readOnly = true)
+    public Set<LocalDate> trainingDays(String email, LocalDate from, LocalDate to) {
+        List<Active> all = assignments(email, from, to);
+        Set<LocalDate> result = new HashSet<>();
+        if (all.isEmpty()) return result;
+        Map<UUID, Set<Integer>> slots = new HashMap<>();
+        String marks = String.join(",", java.util.Collections.nCopies(all.size(), "?"));
+        jdbcTemplate.query("SELECT program_id, week, day_index FROM program_days WHERE program_id IN (" + marks + ")",
+                rs -> {
+                    slots.computeIfAbsent(rs.getObject("program_id", UUID.class), k -> new HashSet<>())
+                            .add(rs.getInt("week") * 10 + rs.getInt("day_index"));
+                }, all.stream().map(Active::programId).toArray());
+        for (LocalDate date = from; !date.isAfter(to); date = date.plusDays(1)) {
+            LocalDate day = date;
+            for (Active a : all) {
+                if (day.isBefore(a.startDate()) || !a.inForceOn(day, all)) continue;
+                LocalDate firstMonday = a.startDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                int week = (int) (ChronoUnit.DAYS.between(firstMonday, day) / 7) + 1;
+                if (week <= a.weeks() && slots.getOrDefault(a.programId(), Set.of())
+                        .contains(week * 10 + day.getDayOfWeek().getValue())) {
+                    result.add(day);
+                }
+            }
+        }
+        return result;
     }
 
     /** True when the day belongs to an assigned program copy this user owns. */

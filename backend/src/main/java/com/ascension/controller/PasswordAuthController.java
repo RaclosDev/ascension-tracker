@@ -3,6 +3,7 @@ package com.ascension.controller;
 import com.ascension.security.SessionIssuer;
 import com.ascension.security.TrustedOrigins;
 import com.ascension.service.auth.AuthAccounts.Account;
+import com.ascension.service.auth.EmailVerificationService;
 import com.ascension.service.auth.PasswordAuthService;
 import com.ascension.service.auth.PasswordResetService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -52,15 +53,25 @@ public class PasswordAuthController {
         }
     }
 
+    public record VerifyRequest(String token) {
+        @Override
+        public String toString() {
+            return "VerifyRequest[]";
+        }
+    }
+
     private final PasswordAuthService passwords;
     private final PasswordResetService resets;
+    private final EmailVerificationService verification;
     private final SessionIssuer sessions;
     private final TrustedOrigins trustedOrigins;
 
     public PasswordAuthController(PasswordAuthService passwords, PasswordResetService resets,
+                                  EmailVerificationService verification,
                                   SessionIssuer sessions, TrustedOrigins trustedOrigins) {
         this.passwords = passwords;
         this.resets = resets;
+        this.verification = verification;
         this.sessions = sessions;
         this.trustedOrigins = trustedOrigins;
     }
@@ -89,6 +100,13 @@ public class PasswordAuthController {
     public ResponseEntity<Map<String, String>> reset(@RequestBody NewPasswordRequest body, HttpServletRequest request) {
         requireTrustedOrigin(request);
         return open(resets.reset(body.token(), body.password()), request);
+    }
+
+    /** The link of the verification email; the token is the proof, so no session is needed. */
+    @PostMapping("/verify-email")
+    public ResponseEntity<Void> verifyEmail(@RequestBody VerifyRequest body) {
+        verification.verify(body.token());
+        return ResponseEntity.noContent().build();
     }
 
     private ResponseEntity<Map<String, String>> open(Account account, HttpServletRequest request) {
